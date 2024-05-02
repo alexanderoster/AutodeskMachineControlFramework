@@ -129,6 +129,7 @@
 		<error name="SCANAHEADMISSINGRTCRESPONSE" code="1077" description="Scanahead missing rtc response." />		
 		<error name="SCANAHEADPCIERROR" code="1078" description="Scanahead PCI error." />		
 		<error name="SCANAHEADUNKNOWNERROR" code="1079" description="Scanahead unknown error." />		
+		<error name="INVALIDOIECHANNELSIZE" code="1080" description="Invalid OIE Channel size." />		
 		
 						
 	</errors>
