@@ -1130,6 +1130,10 @@ void CRTCContext::InitializeForOIE(const LibMCDriver_ScanLab_uint64 nSignalChann
 			m_OIEOperationMode = LibMCDriver_ScanLab::eOIEOperationMode::OIEVersion3Compatibility;
 			break;
 
+		case LibMCDriver_ScanLab::eOIEOperationMode::OIEVersion3:
+			m_OIEOperationMode = LibMCDriver_ScanLab::eOIEOperationMode::OIEVersion3;
+			break;
+
 		default:
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDOIEOPERATIONMODE);
 	}
