@@ -695,11 +695,11 @@ typedef LibMCDataResult (*PLibMCDataStorage_RetrieveStreamPtr) (LibMCData_Storag
 * @param[in] pMimeType - Mime type of the content. MUST NOT be empty.
 * @param[in] nContentBufferSize - Number of elements in buffer
 * @param[in] pContentBuffer - uint8 buffer of Data of stream
-* @param[in] pUserID - Currently authenticated user
+* @param[in] pUserUUID - Currently authenticated user
 * @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataStorage_StoreNewStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, LibMCData_uint64 nContentBufferSize, const LibMCData_uint8 * pContentBuffer, const char * pUserID, LibMCData_uint64 nAbsoluteTimeStamp);
+typedef LibMCDataResult (*PLibMCDataStorage_StoreNewStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, LibMCData_uint64 nContentBufferSize, const LibMCData_uint8 * pContentBuffer, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp);
 
 /**
 * starts storing a stream with partial uploads.
@@ -709,11 +709,11 @@ typedef LibMCDataResult (*PLibMCDataStorage_StoreNewStreamPtr) (LibMCData_Storag
 * @param[in] pName - Name of the stream.
 * @param[in] pMimeType - Mime type of the content. MUST NOT be empty.
 * @param[in] nSize - Final size of the stream. MUST NOT be 0.
-* @param[in] pUserID - Currently authenticated user
+* @param[in] pUserUUID - Currently authenticated user
 * @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataStorage_BeginPartialStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, LibMCData_uint64 nSize, const char * pUserID, LibMCData_uint64 nAbsoluteTimeStamp);
+typedef LibMCDataResult (*PLibMCDataStorage_BeginPartialStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, LibMCData_uint64 nSize, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp);
 
 /**
 * stores data in a stream with partial uploads. Uploads should be sequential for optimal performance, but may be in arbitrary order.
@@ -754,11 +754,11 @@ typedef LibMCDataResult (*PLibMCDataStorage_FinishPartialStreamBlockwiseSHA256Pt
 * @param[in] pUUID - UUID of storage stream. MUST be unique and newly generated.
 * @param[in] pName - Name of the stream.
 * @param[in] pMimeType - Mime type of the content. MUST NOT be empty.
-* @param[in] pUserID - Currently authenticated user
+* @param[in] pUserUUID - Currently authenticated user
 * @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataStorage_BeginRandomWriteStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, const char * pUserID, LibMCData_uint64 nAbsoluteTimeStamp);
+typedef LibMCDataResult (*PLibMCDataStorage_BeginRandomWriteStreamPtr) (LibMCData_Storage pStorage, const char * pUUID, const char * pName, const char * pMimeType, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp);
 
 /**
 * stores data in a stream with random write access. Writing may be in arbitrary order.
@@ -1093,6 +1093,46 @@ typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetExecutionUUIDPtr) (LibM
 typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobUUIDPtr) (LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nUUIDBufferSize, LibMCData_uint32* pUUIDNeededChars, char * pUUIDBuffer);
 
 /**
+* returns the name of the parent build job.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Build job name, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobNamePtr) (LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nNameBufferSize, LibMCData_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* returns the status of the parent build job.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pJobStatus - Build job status
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobStatusPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData::eBuildJobStatus * pJobStatus);
+
+/**
+* returns the status of the parent build job as string.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nJobStatusBufferSize - size of the buffer (including trailing 0)
+* @param[out] pJobStatusNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pJobStatusBuffer -  buffer of Build job status, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobStatusStringPtr) (LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nJobStatusBufferSize, LibMCData_uint32* pJobStatusNeededChars, char * pJobStatusBuffer);
+
+/**
+* returns the number of layers of the parent build job.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pLayerCount - Build job layer count
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobLayerCountPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint32 * pLayerCount);
+
+/**
 * returns the build job execution status.
 *
 * @param[in] pBuildJobExecution - BuildJobExecution instance.
@@ -1100,6 +1140,17 @@ typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetJobUUIDPtr) (LibMCData_
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetStatusPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData::eBuildJobExecutionStatus * pExecutionStatus);
+
+/**
+* returns the build job execution status as string.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nExecutionStatusBufferSize - size of the buffer (including trailing 0)
+* @param[out] pExecutionStatusNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pExecutionStatusBuffer -  buffer of Status Value, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetStatusStringPtr) (LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nExecutionStatusBufferSize, LibMCData_uint32* pExecutionStatusNeededChars, char * pExecutionStatusBuffer);
 
 /**
 * sets the new build job execution status. Will fail if current status is not InProcess.
@@ -1176,10 +1227,11 @@ typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetEndTimeStampInMicroseco
 *
 * @param[in] pBuildJobExecution - BuildJobExecution instance.
 * @param[in] nGlobalTimerInMicroseconds - The current session global timer.
+* @param[in] bThrowExceptionInFailure - If true, the method will throw exceptions in any error case. If false, it will just return 0 in any error case.
 * @param[out] pElapsedTimeInMicroseconds - Elapsed time in Microseconds.
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataBuildJobExecution_ComputeElapsedTimeInMicrosecondsPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint64 nGlobalTimerInMicroseconds, LibMCData_uint64 * pElapsedTimeInMicroseconds);
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_ComputeElapsedTimeInMicrosecondsPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint64 nGlobalTimerInMicroseconds, bool bThrowExceptionInFailure, LibMCData_uint64 * pElapsedTimeInMicroseconds);
 
 /**
 * Adds additional data to the Job Execution.
@@ -1348,6 +1400,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_GetStatusPtr) (LibMCData_BuildJob p
 typedef LibMCDataResult (*PLibMCDataBuildJob_GetLayerCountPtr) (LibMCData_BuildJob pBuildJob, LibMCData_uint32 * pLayerCount);
 
 /**
+* returns the number of executions of a build job.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[out] pExecutionCount - Number of executions of a build job
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetExecutionCountPtr) (LibMCData_BuildJob pBuildJob, LibMCData_uint32 * pExecutionCount);
+
+/**
 * returns the timestamp when the job was created.
 *
 * @param[in] pBuildJob - BuildJob instance.
@@ -1357,6 +1418,28 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_GetLayerCountPtr) (LibMCData_BuildJ
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJob_GetTimeStampPtr) (LibMCData_BuildJob pBuildJob, const LibMCData_uint32 nTimestampBufferSize, LibMCData_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
+* returns the UUID of the user that created the job.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of User UUID, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetCreatorUUIDPtr) (LibMCData_BuildJob pBuildJob, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
+
+/**
+* returns the current name of the user that created the job.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[in] nUserNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserNameBuffer -  buffer of User UUID, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetCreatorNamePtr) (LibMCData_BuildJob pBuildJob, const LibMCData_uint32 nUserNameBufferSize, LibMCData_uint32* pUserNameNeededChars, char * pUserNameBuffer);
 
 /**
 * returns the storage stream of the build.
@@ -1436,14 +1519,14 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_JobCanBeArchivedPtr) (LibMCData_Bui
 * @param[in] pName - Name of the job data
 * @param[in] pStream - Storage Stream Instance
 * @param[in] eDataType - Datatype of Job data
-* @param[in] pUserID - Currently authenticated user
+* @param[in] pUserUUID - Currently authenticated user
 * @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970
 * @param[in] nDataUUIDBufferSize - size of the buffer (including trailing 0)
 * @param[out] pDataUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
 * @param[out] pDataUUIDBuffer -  buffer of Data UUID, may be NULL
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataBuildJob_AddJobDataPtr) (LibMCData_BuildJob pBuildJob, const char * pIdentifier, const char * pName, LibMCData_StorageStream pStream, LibMCData::eCustomDataType eDataType, const char * pUserID, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nDataUUIDBufferSize, LibMCData_uint32* pDataUUIDNeededChars, char * pDataUUIDBuffer);
+typedef LibMCDataResult (*PLibMCDataBuildJob_AddJobDataPtr) (LibMCData_BuildJob pBuildJob, const char * pIdentifier, const char * pName, LibMCData_StorageStream pStream, LibMCData::eCustomDataType eDataType, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nDataUUIDBufferSize, LibMCData_uint32* pDataUUIDNeededChars, char * pDataUUIDBuffer);
 
 /**
 * Retrieves a list of build job data objects, filtered by type.
@@ -1603,13 +1686,13 @@ typedef LibMCDataResult (*PLibMCDataBuildJobIterator_GetCurrentJobPtr) (LibMCDat
 * @param[in] pBuildJobHandler - BuildJobHandler instance.
 * @param[in] pJobUUID - UUID String for the build job. Must be unique and newly generated.
 * @param[in] pName - Name String
-* @param[in] pUserID - Currently authenticated user
+* @param[in] pUserUUID - Currently authenticated user
 * @param[in] pStorageStreamUUID - Storage stream uuid for the job. Needs not exist yet.
 * @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 * @param[out] pJobInstance - Build Job Instance.
 * @return error code or 0 (success)
 */
-typedef LibMCDataResult (*PLibMCDataBuildJobHandler_CreateJobPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pJobUUID, const char * pName, const char * pUserID, const char * pStorageStreamUUID, LibMCData_uint64 nAbsoluteTimeStamp, LibMCData_BuildJob * pJobInstance);
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_CreateJobPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pJobUUID, const char * pName, const char * pUserUUID, const char * pStorageStreamUUID, LibMCData_uint64 nAbsoluteTimeStamp, LibMCData_BuildJob * pJobInstance);
 
 /**
 * Retrieves a job with a specific UUID.
@@ -1662,6 +1745,28 @@ typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ConvertBuildStatusToStringPt
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ConvertStringToBuildStatusPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pString, LibMCData::eBuildJobStatus * pStatus);
+
+/**
+* Retrieves a new build job execution by uuid.
+*
+* @param[in] pBuildJobHandler - BuildJobHandler instance.
+* @param[in] pExecutionUUID - UUID of the execution to retrieve.
+* @param[out] pExecutionInstance - If UUID exists, returns execution instance. Otherwise, returns null.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pExecutionUUID, LibMCData_BuildJobExecution * pExecutionInstance);
+
+/**
+* Retrieves build executions, filtered by time or journal.
+*
+* @param[in] pBuildJobHandler - BuildJobHandler instance.
+* @param[in] pMinTimestamp - Minimum Timestamp in ISO8601 UTC format. May be empty for no filter.
+* @param[in] pMaxTimestamp - Maximum Timestamp in ISO8601 UTC format. May be empty for no filter.
+* @param[in] pJournalUUIDFilter - UUID of the journal to filter from. Ignored if empty string.
+* @param[out] pIteratorInstance - Returns the list of execution instances that are queried. List may be empty.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ListJobExecutionsPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pMinTimestamp, const char * pMaxTimestamp, const char * pJournalUUIDFilter, LibMCData_BuildJobExecutionIterator * pIteratorInstance);
 
 /*************************************************************************************************************************
  Class definition for UserList
@@ -2508,7 +2613,12 @@ typedef struct {
 	PLibMCDataBuildJobExecutionDataIterator_GetCurrentJobExecutionDataPtr m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData;
 	PLibMCDataBuildJobExecution_GetExecutionUUIDPtr m_BuildJobExecution_GetExecutionUUID;
 	PLibMCDataBuildJobExecution_GetJobUUIDPtr m_BuildJobExecution_GetJobUUID;
+	PLibMCDataBuildJobExecution_GetJobNamePtr m_BuildJobExecution_GetJobName;
+	PLibMCDataBuildJobExecution_GetJobStatusPtr m_BuildJobExecution_GetJobStatus;
+	PLibMCDataBuildJobExecution_GetJobStatusStringPtr m_BuildJobExecution_GetJobStatusString;
+	PLibMCDataBuildJobExecution_GetJobLayerCountPtr m_BuildJobExecution_GetJobLayerCount;
 	PLibMCDataBuildJobExecution_GetStatusPtr m_BuildJobExecution_GetStatus;
+	PLibMCDataBuildJobExecution_GetStatusStringPtr m_BuildJobExecution_GetStatusString;
 	PLibMCDataBuildJobExecution_ChangeStatusPtr m_BuildJobExecution_ChangeStatus;
 	PLibMCDataBuildJobExecution_GetDescriptionPtr m_BuildJobExecution_GetDescription;
 	PLibMCDataBuildJobExecution_SetDescriptionPtr m_BuildJobExecution_SetDescription;
@@ -2532,7 +2642,10 @@ typedef struct {
 	PLibMCDataBuildJob_GetNamePtr m_BuildJob_GetName;
 	PLibMCDataBuildJob_GetStatusPtr m_BuildJob_GetStatus;
 	PLibMCDataBuildJob_GetLayerCountPtr m_BuildJob_GetLayerCount;
+	PLibMCDataBuildJob_GetExecutionCountPtr m_BuildJob_GetExecutionCount;
 	PLibMCDataBuildJob_GetTimeStampPtr m_BuildJob_GetTimeStamp;
+	PLibMCDataBuildJob_GetCreatorUUIDPtr m_BuildJob_GetCreatorUUID;
+	PLibMCDataBuildJob_GetCreatorNamePtr m_BuildJob_GetCreatorName;
 	PLibMCDataBuildJob_GetStorageStreamPtr m_BuildJob_GetStorageStream;
 	PLibMCDataBuildJob_GetStorageStreamUUIDPtr m_BuildJob_GetStorageStreamUUID;
 	PLibMCDataBuildJob_StartValidatingPtr m_BuildJob_StartValidating;
@@ -2562,6 +2675,8 @@ typedef struct {
 	PLibMCDataBuildJobHandler_ListJobsByStatusPtr m_BuildJobHandler_ListJobsByStatus;
 	PLibMCDataBuildJobHandler_ConvertBuildStatusToStringPtr m_BuildJobHandler_ConvertBuildStatusToString;
 	PLibMCDataBuildJobHandler_ConvertStringToBuildStatusPtr m_BuildJobHandler_ConvertStringToBuildStatus;
+	PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr m_BuildJobHandler_RetrieveJobExecution;
+	PLibMCDataBuildJobHandler_ListJobExecutionsPtr m_BuildJobHandler_ListJobExecutions;
 	PLibMCDataUserList_CountPtr m_UserList_Count;
 	PLibMCDataUserList_GetUserPropertiesPtr m_UserList_GetUserProperties;
 	PLibMCDataLoginHandler_UserExistsPtr m_LoginHandler_UserExists;

@@ -55,6 +55,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_imagedata.hpp"
 #include "libmcenv_testenvironment.hpp"
 #include "libmcenv_build.hpp"
+#include "libmcenv_buildexecution.hpp"
 #include "libmcenv_journalvariable.hpp"
 #include "libmcenv_streamreader.hpp"
 #include "libmcenv_datatable.hpp"
@@ -520,7 +521,7 @@ bool CUIEnvironment::HasBuildJob(const std::string& sBuildUUID)
         auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
         auto pBuildJob = pBuildJobHandler->RetrieveJob(sNormalizedBuildUUID);
 
-        return true;
+        return (pBuildJob.get () != nullptr);
     }
     catch (std::exception) {
         return false;
@@ -535,6 +536,33 @@ IBuild* CUIEnvironment::GetBuildJob(const std::string& sBuildUUID)
     auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
     auto pBuildJob = pBuildJobHandler->RetrieveJob(sNormalizedBuildUUID);
     return new CBuild(pDataModel, pBuildJob->GetUUID (), m_pUISystemState->getToolpathHandler(), m_pUISystemState->getGlobalChronoInstance ());
+}
+
+bool CUIEnvironment::HasBuildExecution(const std::string& sExecutionUUID)
+{
+    std::string sNormalizedExecutionUUID = AMCCommon::CUtils::normalizeUUIDString(sExecutionUUID);
+
+    try {
+        auto pDataModel = m_pUISystemState->getDataModel();
+        auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
+        auto pExecution = pBuildJobHandler->RetrieveJobExecution(sNormalizedExecutionUUID);
+
+        return (pExecution.get () != nullptr);
+    }
+    catch (std::exception) {
+        return false;
+    }
+
+}
+
+IBuildExecution* CUIEnvironment::GetBuildExecution(const std::string& sExecutionUUID)
+{
+    std::string sNormalizedExecutionUUID = AMCCommon::CUtils::normalizeUUIDString(sExecutionUUID);
+    auto pDataModel = m_pUISystemState->getDataModel();
+    auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
+    auto pBuildExecution = pBuildJobHandler->RetrieveJobExecution(sNormalizedExecutionUUID);
+    return new CBuildExecution (pBuildExecution, pDataModel, m_pUISystemState->getToolpathHandler(), m_pUISystemState->getGlobalChronoInstance());
+
 }
 
 
@@ -744,7 +772,7 @@ IAlert* CUIEnvironment::FindAlert(const std::string& sUUID)
     auto pAlertSession = pDataModel->CreateAlertSession();
 
     if (!pAlertSession->HasAlert(sNormalizedUUID))
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_ALERTNOTFOUND, "alert not found: " + sNormalizedUUID);
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_ALERTNOTFOUND, "alert not found: " + sNormalizedUUID + " (in UIEnvironment::FindAlert)");
 
     auto pAlertData = pAlertSession->GetAlertByUUID(sNormalizedUUID);
     auto pUserInformation = m_pAPIAuth->getUserInformation();
@@ -836,7 +864,9 @@ IZIPStreamWriter* CUIEnvironment::CreateZIPStream(const std::string& sName)
 
     auto pChrono = m_pUISystemState->getGlobalChronoInstance();
 
-    std::string sUserUUID = AMCCommon::CUtils::createEmptyUUID();
+    auto pUserInformation = m_pAPIAuth->getUserInformation();
+    std::string sUserUUID = pUserInformation->getUUID();
+
     std::string sStreamUUID = AMCCommon::CUtils::createUUID();
 
     auto pDataModel = m_pUISystemState->getDataModel();
@@ -886,4 +916,10 @@ IDateTime* CUIEnvironment::GetStartDateTime()
 {
     auto pGlobalChrono = m_pUISystemState->getGlobalChronoInstance();
     return new CDateTime(pGlobalChrono->getStartTimeStampInMicrosecondsSince1970());
+}
+
+void CUIEnvironment::Sleep(const LibMCEnv_uint32 nDelay)
+{
+    AMCCommon::CChrono chrono;
+    chrono.sleepMilliseconds(nDelay);
 }

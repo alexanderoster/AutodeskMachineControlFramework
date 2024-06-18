@@ -578,6 +578,8 @@ public:
 			case LIBMCDATA_ERROR_INVALIDZIPSTREAMENTRYID: return "INVALIDZIPSTREAMENTRYID";
 			case LIBMCDATA_ERROR_ZIPSTREAMENTRYIDNOTFOUND: return "ZIPSTREAMENTRYIDNOTFOUND";
 			case LIBMCDATA_ERROR_ZIPWRITINGALREADYFINISHED: return "ZIPWRITINGALREADYFINISHED";
+			case LIBMCDATA_ERROR_INVALIDBUILDJOBLAYERCOUNT: return "INVALIDBUILDJOBLAYERCOUNT";
+			case LIBMCDATA_ERROR_COULDNOTDETERMINEEXECUTIONCOUNT: return "COULDNOTDETERMINEEXECUTIONCOUNT";
 		}
 		return "UNKNOWN";
 	}
@@ -907,6 +909,8 @@ public:
 			case LIBMCDATA_ERROR_INVALIDZIPSTREAMENTRYID: return "Invalid ZIP Stream entry ID.";
 			case LIBMCDATA_ERROR_ZIPSTREAMENTRYIDNOTFOUND: return "ZIP Stream entry ID not found.";
 			case LIBMCDATA_ERROR_ZIPWRITINGALREADYFINISHED: return "ZIP Writing already finished.";
+			case LIBMCDATA_ERROR_INVALIDBUILDJOBLAYERCOUNT: return "Invalid build job layer count.";
+			case LIBMCDATA_ERROR_COULDNOTDETERMINEEXECUTIONCOUNT: return "Could not determine execution count.";
 		}
 		return "unknown error";
 	}
@@ -1324,12 +1328,12 @@ public:
 	
 	inline bool StreamIsReady(const std::string & sUUID);
 	inline PStorageStream RetrieveStream(const std::string & sUUID);
-	inline void StoreNewStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const CInputVector<LibMCData_uint8> & ContentBuffer, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp);
-	inline void BeginPartialStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const LibMCData_uint64 nSize, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void StoreNewStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const CInputVector<LibMCData_uint8> & ContentBuffer, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void BeginPartialStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const LibMCData_uint64 nSize, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline void StorePartialStream(const std::string & sUUID, const LibMCData_uint64 nOffset, const CInputVector<LibMCData_uint8> & ContentBuffer);
 	inline void FinishPartialStream(const std::string & sUUID, const std::string & sSHA2);
 	inline void FinishPartialStreamBlockwiseSHA256(const std::string & sUUID, const std::string & sBlockwiseSHA2);
-	inline void BeginRandomWriteStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void BeginRandomWriteStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline void StoreRandomWriteStream(const std::string & sUUID, const LibMCData_uint64 nOffset, const CInputVector<LibMCData_uint8> & ContentBuffer);
 	inline LibMCData_uint64 GetRandomWriteStreamSize(const std::string & sUUID);
 	inline void FinishRandomWriteStream(const std::string & sUUID);
@@ -1454,7 +1458,12 @@ public:
 	
 	inline std::string GetExecutionUUID();
 	inline std::string GetJobUUID();
+	inline std::string GetJobName();
+	inline eBuildJobStatus GetJobStatus();
+	inline std::string GetJobStatusString();
+	inline LibMCData_uint32 GetJobLayerCount();
 	inline eBuildJobExecutionStatus GetStatus();
+	inline std::string GetStatusString();
 	inline void ChangeStatus(const eBuildJobExecutionStatus eNewExecutionStatus, const LibMCData_uint64 nAbsoluteEndTimeStampInMicrosecondsSince1970);
 	inline std::string GetDescription();
 	inline void SetDescription(const std::string & sNewDescription);
@@ -1462,7 +1471,7 @@ public:
 	inline std::string GetUserUUID();
 	inline LibMCData_uint64 GetStartTimeStampInMicroseconds();
 	inline LibMCData_uint64 GetEndTimeStampInMicroseconds();
-	inline LibMCData_uint64 ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds);
+	inline LibMCData_uint64 ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure);
 	inline std::string AddJobExecutionData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline PBuildJobExecutionDataIterator ListJobExecutionDataByType(const eCustomDataType eDataType);
 	inline PBuildJobExecutionDataIterator ListJobExecutionData();
@@ -1510,7 +1519,10 @@ public:
 	inline std::string GetName();
 	inline eBuildJobStatus GetStatus();
 	inline LibMCData_uint32 GetLayerCount();
+	inline LibMCData_uint32 GetExecutionCount();
 	inline std::string GetTimeStamp();
+	inline std::string GetCreatorUUID();
+	inline std::string GetCreatorName();
 	inline PStorageStream GetStorageStream();
 	inline std::string GetStorageStreamUUID();
 	inline void StartValidating();
@@ -1519,7 +1531,7 @@ public:
 	inline void UnArchiveJob();
 	inline void DeleteJob();
 	inline bool JobCanBeArchived();
-	inline std::string AddJobData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline std::string AddJobData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline PBuildJobDataIterator ListJobDataByType(const eCustomDataType eDataType);
 	inline PBuildJobDataIterator ListJobData();
 	inline PBuildJobData RetrieveJobData(const std::string & sDataUUID);
@@ -1566,12 +1578,14 @@ public:
 	{
 	}
 	
-	inline PBuildJob CreateJob(const std::string & sJobUUID, const std::string & sName, const std::string & sUserID, const std::string & sStorageStreamUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline PBuildJob CreateJob(const std::string & sJobUUID, const std::string & sName, const std::string & sUserUUID, const std::string & sStorageStreamUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline PBuildJob RetrieveJob(const std::string & sJobUUID);
 	inline PBuildJob FindJobOfData(const std::string & sDataUUID);
 	inline PBuildJobIterator ListJobsByStatus(const eBuildJobStatus eStatus);
 	inline std::string ConvertBuildStatusToString(const eBuildJobStatus eStatus);
 	inline eBuildJobStatus ConvertStringToBuildStatus(const std::string & sString);
+	inline PBuildJobExecution RetrieveJobExecution(const std::string & sExecutionUUID);
+	inline PBuildJobExecutionIterator ListJobExecutions(const std::string & sMinTimestamp, const std::string & sMaxTimestamp, const std::string & sJournalUUIDFilter);
 };
 	
 /*************************************************************************************************************************
@@ -1899,7 +1913,12 @@ public:
 		pWrapperTable->m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetExecutionUUID = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetJobUUID = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetJobName = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetJobStatus = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetJobStatusString = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetJobLayerCount = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetStatus = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetStatusString = nullptr;
 		pWrapperTable->m_BuildJobExecution_ChangeStatus = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetDescription = nullptr;
 		pWrapperTable->m_BuildJobExecution_SetDescription = nullptr;
@@ -1923,7 +1942,10 @@ public:
 		pWrapperTable->m_BuildJob_GetName = nullptr;
 		pWrapperTable->m_BuildJob_GetStatus = nullptr;
 		pWrapperTable->m_BuildJob_GetLayerCount = nullptr;
+		pWrapperTable->m_BuildJob_GetExecutionCount = nullptr;
 		pWrapperTable->m_BuildJob_GetTimeStamp = nullptr;
+		pWrapperTable->m_BuildJob_GetCreatorUUID = nullptr;
+		pWrapperTable->m_BuildJob_GetCreatorName = nullptr;
 		pWrapperTable->m_BuildJob_GetStorageStream = nullptr;
 		pWrapperTable->m_BuildJob_GetStorageStreamUUID = nullptr;
 		pWrapperTable->m_BuildJob_StartValidating = nullptr;
@@ -1953,6 +1975,8 @@ public:
 		pWrapperTable->m_BuildJobHandler_ListJobsByStatus = nullptr;
 		pWrapperTable->m_BuildJobHandler_ConvertBuildStatusToString = nullptr;
 		pWrapperTable->m_BuildJobHandler_ConvertStringToBuildStatus = nullptr;
+		pWrapperTable->m_BuildJobHandler_RetrieveJobExecution = nullptr;
+		pWrapperTable->m_BuildJobHandler_ListJobExecutions = nullptr;
 		pWrapperTable->m_UserList_Count = nullptr;
 		pWrapperTable->m_UserList_GetUserProperties = nullptr;
 		pWrapperTable->m_LoginHandler_UserExists = nullptr;
@@ -2879,12 +2903,57 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobName = (PLibMCDataBuildJobExecution_GetJobNamePtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getjobname");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobName = (PLibMCDataBuildJobExecution_GetJobNamePtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getjobname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetJobName == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobStatus = (PLibMCDataBuildJobExecution_GetJobStatusPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getjobstatus");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobStatus = (PLibMCDataBuildJobExecution_GetJobStatusPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getjobstatus");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetJobStatus == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobStatusString = (PLibMCDataBuildJobExecution_GetJobStatusStringPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getjobstatusstring");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobStatusString = (PLibMCDataBuildJobExecution_GetJobStatusStringPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getjobstatusstring");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetJobStatusString == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobLayerCount = (PLibMCDataBuildJobExecution_GetJobLayerCountPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getjoblayercount");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobLayerCount = (PLibMCDataBuildJobExecution_GetJobLayerCountPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getjoblayercount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetJobLayerCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_BuildJobExecution_GetStatus = (PLibMCDataBuildJobExecution_GetStatusPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getstatus");
 		#else // _WIN32
 		pWrapperTable->m_BuildJobExecution_GetStatus = (PLibMCDataBuildJobExecution_GetStatusPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getstatus");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobExecution_GetStatus == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetStatusString = (PLibMCDataBuildJobExecution_GetStatusStringPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getstatusstring");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetStatusString = (PLibMCDataBuildJobExecution_GetStatusStringPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getstatusstring");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetStatusString == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -3095,12 +3164,39 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildJob_GetExecutionCount = (PLibMCDataBuildJob_GetExecutionCountPtr) GetProcAddress(hLibrary, "libmcdata_buildjob_getexecutioncount");
+		#else // _WIN32
+		pWrapperTable->m_BuildJob_GetExecutionCount = (PLibMCDataBuildJob_GetExecutionCountPtr) dlsym(hLibrary, "libmcdata_buildjob_getexecutioncount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJob_GetExecutionCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_BuildJob_GetTimeStamp = (PLibMCDataBuildJob_GetTimeStampPtr) GetProcAddress(hLibrary, "libmcdata_buildjob_gettimestamp");
 		#else // _WIN32
 		pWrapperTable->m_BuildJob_GetTimeStamp = (PLibMCDataBuildJob_GetTimeStampPtr) dlsym(hLibrary, "libmcdata_buildjob_gettimestamp");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJob_GetTimeStamp == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJob_GetCreatorUUID = (PLibMCDataBuildJob_GetCreatorUUIDPtr) GetProcAddress(hLibrary, "libmcdata_buildjob_getcreatoruuid");
+		#else // _WIN32
+		pWrapperTable->m_BuildJob_GetCreatorUUID = (PLibMCDataBuildJob_GetCreatorUUIDPtr) dlsym(hLibrary, "libmcdata_buildjob_getcreatoruuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJob_GetCreatorUUID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJob_GetCreatorName = (PLibMCDataBuildJob_GetCreatorNamePtr) GetProcAddress(hLibrary, "libmcdata_buildjob_getcreatorname");
+		#else // _WIN32
+		pWrapperTable->m_BuildJob_GetCreatorName = (PLibMCDataBuildJob_GetCreatorNamePtr) dlsym(hLibrary, "libmcdata_buildjob_getcreatorname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJob_GetCreatorName == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -3362,6 +3458,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobHandler_ConvertStringToBuildStatus == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobHandler_RetrieveJobExecution = (PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr) GetProcAddress(hLibrary, "libmcdata_buildjobhandler_retrievejobexecution");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobHandler_RetrieveJobExecution = (PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr) dlsym(hLibrary, "libmcdata_buildjobhandler_retrievejobexecution");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobHandler_RetrieveJobExecution == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobHandler_ListJobExecutions = (PLibMCDataBuildJobHandler_ListJobExecutionsPtr) GetProcAddress(hLibrary, "libmcdata_buildjobhandler_listjobexecutions");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobHandler_ListJobExecutions = (PLibMCDataBuildJobHandler_ListJobExecutionsPtr) dlsym(hLibrary, "libmcdata_buildjobhandler_listjobexecutions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobHandler_ListJobExecutions == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4325,8 +4439,28 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobUUID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getjobname", (void**)&(pWrapperTable->m_BuildJobExecution_GetJobName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobName == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getjobstatus", (void**)&(pWrapperTable->m_BuildJobExecution_GetJobStatus));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobStatus == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getjobstatusstring", (void**)&(pWrapperTable->m_BuildJobExecution_GetJobStatusString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobStatusString == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getjoblayercount", (void**)&(pWrapperTable->m_BuildJobExecution_GetJobLayerCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobLayerCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getstatus", (void**)&(pWrapperTable->m_BuildJobExecution_GetStatus));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetStatus == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getstatusstring", (void**)&(pWrapperTable->m_BuildJobExecution_GetStatusString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetStatusString == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_changestatus", (void**)&(pWrapperTable->m_BuildJobExecution_ChangeStatus));
@@ -4421,8 +4555,20 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetLayerCount == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_buildjob_getexecutioncount", (void**)&(pWrapperTable->m_BuildJob_GetExecutionCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetExecutionCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_buildjob_gettimestamp", (void**)&(pWrapperTable->m_BuildJob_GetTimeStamp));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetTimeStamp == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjob_getcreatoruuid", (void**)&(pWrapperTable->m_BuildJob_GetCreatorUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetCreatorUUID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjob_getcreatorname", (void**)&(pWrapperTable->m_BuildJob_GetCreatorName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetCreatorName == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_buildjob_getstoragestream", (void**)&(pWrapperTable->m_BuildJob_GetStorageStream));
@@ -4539,6 +4685,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobhandler_convertstringtobuildstatus", (void**)&(pWrapperTable->m_BuildJobHandler_ConvertStringToBuildStatus));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_ConvertStringToBuildStatus == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobhandler_retrievejobexecution", (void**)&(pWrapperTable->m_BuildJobHandler_RetrieveJobExecution));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_RetrieveJobExecution == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobhandler_listjobexecutions", (void**)&(pWrapperTable->m_BuildJobHandler_ListJobExecutions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_ListJobExecutions == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_userlist_count", (void**)&(pWrapperTable->m_UserList_Count));
@@ -5649,12 +5803,12 @@ public:
 	* @param[in] sName - Name Description of the stream.
 	* @param[in] sMimeType - Mime type of the content. MUST NOT be empty.
 	* @param[in] ContentBuffer - Data of stream
-	* @param[in] sUserID - Currently authenticated user
+	* @param[in] sUserUUID - Currently authenticated user
 	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 	*/
-	void CStorage::StoreNewStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const CInputVector<LibMCData_uint8> & ContentBuffer, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	void CStorage::StoreNewStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const CInputVector<LibMCData_uint8> & ContentBuffer, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Storage_StoreNewStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), (LibMCData_uint64)ContentBuffer.size(), ContentBuffer.data(), sUserID.c_str(), nAbsoluteTimeStamp));
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_StoreNewStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), (LibMCData_uint64)ContentBuffer.size(), ContentBuffer.data(), sUserUUID.c_str(), nAbsoluteTimeStamp));
 	}
 	
 	/**
@@ -5663,12 +5817,12 @@ public:
 	* @param[in] sName - Name of the stream.
 	* @param[in] sMimeType - Mime type of the content. MUST NOT be empty.
 	* @param[in] nSize - Final size of the stream. MUST NOT be 0.
-	* @param[in] sUserID - Currently authenticated user
+	* @param[in] sUserUUID - Currently authenticated user
 	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 	*/
-	void CStorage::BeginPartialStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const LibMCData_uint64 nSize, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	void CStorage::BeginPartialStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const LibMCData_uint64 nSize, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Storage_BeginPartialStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), nSize, sUserID.c_str(), nAbsoluteTimeStamp));
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_BeginPartialStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), nSize, sUserUUID.c_str(), nAbsoluteTimeStamp));
 	}
 	
 	/**
@@ -5707,12 +5861,12 @@ public:
 	* @param[in] sUUID - UUID of storage stream. MUST be unique and newly generated.
 	* @param[in] sName - Name of the stream.
 	* @param[in] sMimeType - Mime type of the content. MUST NOT be empty.
-	* @param[in] sUserID - Currently authenticated user
+	* @param[in] sUserUUID - Currently authenticated user
 	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 	*/
-	void CStorage::BeginRandomWriteStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	void CStorage::BeginRandomWriteStream(const std::string & sUUID, const std::string & sName, const std::string & sMimeType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Storage_BeginRandomWriteStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), sUserID.c_str(), nAbsoluteTimeStamp));
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_BeginRandomWriteStream(m_pHandle, sUUID.c_str(), sName.c_str(), sMimeType.c_str(), sUserUUID.c_str(), nAbsoluteTimeStamp));
 	}
 	
 	/**
@@ -6150,6 +6304,60 @@ public:
 	}
 	
 	/**
+	* CBuildJobExecution::GetJobName - returns the name of the parent build job.
+	* @return Build job name
+	*/
+	std::string CBuildJobExecution::GetJobName()
+	{
+		LibMCData_uint32 bytesNeededName = 0;
+		LibMCData_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* CBuildJobExecution::GetJobStatus - returns the status of the parent build job.
+	* @return Build job status
+	*/
+	eBuildJobStatus CBuildJobExecution::GetJobStatus()
+	{
+		eBuildJobStatus resultJobStatus = (eBuildJobStatus) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobStatus(m_pHandle, &resultJobStatus));
+		
+		return resultJobStatus;
+	}
+	
+	/**
+	* CBuildJobExecution::GetJobStatusString - returns the status of the parent build job as string.
+	* @return Build job status
+	*/
+	std::string CBuildJobExecution::GetJobStatusString()
+	{
+		LibMCData_uint32 bytesNeededJobStatus = 0;
+		LibMCData_uint32 bytesWrittenJobStatus = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobStatusString(m_pHandle, 0, &bytesNeededJobStatus, nullptr));
+		std::vector<char> bufferJobStatus(bytesNeededJobStatus);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobStatusString(m_pHandle, bytesNeededJobStatus, &bytesWrittenJobStatus, &bufferJobStatus[0]));
+		
+		return std::string(&bufferJobStatus[0]);
+	}
+	
+	/**
+	* CBuildJobExecution::GetJobLayerCount - returns the number of layers of the parent build job.
+	* @return Build job layer count
+	*/
+	LibMCData_uint32 CBuildJobExecution::GetJobLayerCount()
+	{
+		LibMCData_uint32 resultLayerCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobLayerCount(m_pHandle, &resultLayerCount));
+		
+		return resultLayerCount;
+	}
+	
+	/**
 	* CBuildJobExecution::GetStatus - returns the build job execution status.
 	* @return Status Value
 	*/
@@ -6159,6 +6367,21 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetStatus(m_pHandle, &resultExecutionStatus));
 		
 		return resultExecutionStatus;
+	}
+	
+	/**
+	* CBuildJobExecution::GetStatusString - returns the build job execution status as string.
+	* @return Status Value
+	*/
+	std::string CBuildJobExecution::GetStatusString()
+	{
+		LibMCData_uint32 bytesNeededExecutionStatus = 0;
+		LibMCData_uint32 bytesWrittenExecutionStatus = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetStatusString(m_pHandle, 0, &bytesNeededExecutionStatus, nullptr));
+		std::vector<char> bufferExecutionStatus(bytesNeededExecutionStatus);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetStatusString(m_pHandle, bytesNeededExecutionStatus, &bytesWrittenExecutionStatus, &bufferExecutionStatus[0]));
+		
+		return std::string(&bufferExecutionStatus[0]);
 	}
 	
 	/**
@@ -6252,12 +6475,13 @@ public:
 	/**
 	* CBuildJobExecution::ComputeElapsedTimeInMicroseconds - Computes the relative time of the build execution. If status is Finished or Failed, the full duration is returned. Fails if the journal UUID does not match the current journaling session.
 	* @param[in] nGlobalTimerInMicroseconds - The current session global timer.
+	* @param[in] bThrowExceptionInFailure - If true, the method will throw exceptions in any error case. If false, it will just return 0 in any error case.
 	* @return Elapsed time in Microseconds.
 	*/
-	LibMCData_uint64 CBuildJobExecution::ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds)
+	LibMCData_uint64 CBuildJobExecution::ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure)
 	{
 		LibMCData_uint64 resultElapsedTimeInMicroseconds = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_ComputeElapsedTimeInMicroseconds(m_pHandle, nGlobalTimerInMicroseconds, &resultElapsedTimeInMicroseconds));
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_ComputeElapsedTimeInMicroseconds(m_pHandle, nGlobalTimerInMicroseconds, bThrowExceptionInFailure, &resultElapsedTimeInMicroseconds));
 		
 		return resultElapsedTimeInMicroseconds;
 	}
@@ -6491,6 +6715,18 @@ public:
 	}
 	
 	/**
+	* CBuildJob::GetExecutionCount - returns the number of executions of a build job.
+	* @return Number of executions of a build job
+	*/
+	LibMCData_uint32 CBuildJob::GetExecutionCount()
+	{
+		LibMCData_uint32 resultExecutionCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetExecutionCount(m_pHandle, &resultExecutionCount));
+		
+		return resultExecutionCount;
+	}
+	
+	/**
 	* CBuildJob::GetTimeStamp - returns the timestamp when the job was created.
 	* @return Timestamp in ISO8601 UTC format
 	*/
@@ -6503,6 +6739,36 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetTimeStamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
 		
 		return std::string(&bufferTimestamp[0]);
+	}
+	
+	/**
+	* CBuildJob::GetCreatorUUID - returns the UUID of the user that created the job.
+	* @return User UUID
+	*/
+	std::string CBuildJob::GetCreatorUUID()
+	{
+		LibMCData_uint32 bytesNeededUserUUID = 0;
+		LibMCData_uint32 bytesWrittenUserUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetCreatorUUID(m_pHandle, 0, &bytesNeededUserUUID, nullptr));
+		std::vector<char> bufferUserUUID(bytesNeededUserUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetCreatorUUID(m_pHandle, bytesNeededUserUUID, &bytesWrittenUserUUID, &bufferUserUUID[0]));
+		
+		return std::string(&bufferUserUUID[0]);
+	}
+	
+	/**
+	* CBuildJob::GetCreatorName - returns the current name of the user that created the job.
+	* @return User UUID
+	*/
+	std::string CBuildJob::GetCreatorName()
+	{
+		LibMCData_uint32 bytesNeededUserName = 0;
+		LibMCData_uint32 bytesWrittenUserName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetCreatorName(m_pHandle, 0, &bytesNeededUserName, nullptr));
+		std::vector<char> bufferUserName(bytesNeededUserName);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetCreatorName(m_pHandle, bytesNeededUserName, &bytesWrittenUserName, &bufferUserName[0]));
+		
+		return std::string(&bufferUserName[0]);
 	}
 	
 	/**
@@ -6594,18 +6860,18 @@ public:
 	* @param[in] sName - Name of the job data
 	* @param[in] pStream - Storage Stream Instance
 	* @param[in] eDataType - Datatype of Job data
-	* @param[in] sUserID - Currently authenticated user
+	* @param[in] sUserUUID - Currently authenticated user
 	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970
 	* @return Data UUID
 	*/
-	std::string CBuildJob::AddJobData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	std::string CBuildJob::AddJobData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 	{
 		LibMCDataHandle hStream = pStream.GetHandle();
 		LibMCData_uint32 bytesNeededDataUUID = 0;
 		LibMCData_uint32 bytesWrittenDataUUID = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_AddJobData(m_pHandle, sIdentifier.c_str(), sName.c_str(), hStream, eDataType, sUserID.c_str(), nAbsoluteTimeStamp, 0, &bytesNeededDataUUID, nullptr));
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_AddJobData(m_pHandle, sIdentifier.c_str(), sName.c_str(), hStream, eDataType, sUserUUID.c_str(), nAbsoluteTimeStamp, 0, &bytesNeededDataUUID, nullptr));
 		std::vector<char> bufferDataUUID(bytesNeededDataUUID);
-		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_AddJobData(m_pHandle, sIdentifier.c_str(), sName.c_str(), hStream, eDataType, sUserID.c_str(), nAbsoluteTimeStamp, bytesNeededDataUUID, &bytesWrittenDataUUID, &bufferDataUUID[0]));
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_AddJobData(m_pHandle, sIdentifier.c_str(), sName.c_str(), hStream, eDataType, sUserUUID.c_str(), nAbsoluteTimeStamp, bytesNeededDataUUID, &bytesWrittenDataUUID, &bufferDataUUID[0]));
 		
 		return std::string(&bufferDataUUID[0]);
 	}
@@ -6834,15 +7100,15 @@ public:
 	* CBuildJobHandler::CreateJob - Creates a new build job.
 	* @param[in] sJobUUID - UUID String for the build job. Must be unique and newly generated.
 	* @param[in] sName - Name String
-	* @param[in] sUserID - Currently authenticated user
+	* @param[in] sUserUUID - Currently authenticated user
 	* @param[in] sStorageStreamUUID - Storage stream uuid for the job. Needs not exist yet.
 	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
 	* @return Build Job Instance.
 	*/
-	PBuildJob CBuildJobHandler::CreateJob(const std::string & sJobUUID, const std::string & sName, const std::string & sUserID, const std::string & sStorageStreamUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	PBuildJob CBuildJobHandler::CreateJob(const std::string & sJobUUID, const std::string & sName, const std::string & sUserUUID, const std::string & sStorageStreamUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 	{
 		LibMCDataHandle hJobInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_CreateJob(m_pHandle, sJobUUID.c_str(), sName.c_str(), sUserID.c_str(), sStorageStreamUUID.c_str(), nAbsoluteTimeStamp, &hJobInstance));
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_CreateJob(m_pHandle, sJobUUID.c_str(), sName.c_str(), sUserUUID.c_str(), sStorageStreamUUID.c_str(), nAbsoluteTimeStamp, &hJobInstance));
 		
 		if (!hJobInstance) {
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
@@ -6925,6 +7191,41 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_ConvertStringToBuildStatus(m_pHandle, sString.c_str(), &resultStatus));
 		
 		return resultStatus;
+	}
+	
+	/**
+	* CBuildJobHandler::RetrieveJobExecution - Retrieves a new build job execution by uuid.
+	* @param[in] sExecutionUUID - UUID of the execution to retrieve.
+	* @return If UUID exists, returns execution instance. Otherwise, returns null.
+	*/
+	PBuildJobExecution CBuildJobHandler::RetrieveJobExecution(const std::string & sExecutionUUID)
+	{
+		LibMCDataHandle hExecutionInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_RetrieveJobExecution(m_pHandle, sExecutionUUID.c_str(), &hExecutionInstance));
+		
+		if (hExecutionInstance) {
+			return std::make_shared<CBuildJobExecution>(m_pWrapper, hExecutionInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CBuildJobHandler::ListJobExecutions - Retrieves build executions, filtered by time or journal.
+	* @param[in] sMinTimestamp - Minimum Timestamp in ISO8601 UTC format. May be empty for no filter.
+	* @param[in] sMaxTimestamp - Maximum Timestamp in ISO8601 UTC format. May be empty for no filter.
+	* @param[in] sJournalUUIDFilter - UUID of the journal to filter from. Ignored if empty string.
+	* @return Returns the list of execution instances that are queried. List may be empty.
+	*/
+	PBuildJobExecutionIterator CBuildJobHandler::ListJobExecutions(const std::string & sMinTimestamp, const std::string & sMaxTimestamp, const std::string & sJournalUUIDFilter)
+	{
+		LibMCDataHandle hIteratorInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_ListJobExecutions(m_pHandle, sMinTimestamp.c_str(), sMaxTimestamp.c_str(), sJournalUUIDFilter.c_str(), &hIteratorInstance));
+		
+		if (!hIteratorInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CBuildJobExecutionIterator>(m_pWrapper, hIteratorInstance);
 	}
 	
 	/**

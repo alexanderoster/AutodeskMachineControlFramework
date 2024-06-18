@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 
+#include <thread>
+
 using namespace LibMCUI::Impl;
 
 #ifdef _MSC_VER
@@ -181,7 +183,28 @@ public:
 
 	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
 	{
-		pUIEnvironment->LogMessage("Clicked on Test Journal Button");
+
+
+		pUIEnvironment->LogMessage("Clicked on Test Journal Button: " + pUIEnvironment->RetrieveEventSender ());
+		//pUIEnvironment->SetUIProperty("main.machineimage.testimage", "imageresource", "ui_logo");
+
+		auto pImage = pUIEnvironment->CreateEmptyImage(500, 400, 10.0, 10, LibMCEnv::eImagePixelFormat::RGB24bit);
+		pImage->Clear(0x228899);
+
+		std::vector<uint8_t> dataBuffer;
+		auto pPNGImage = pImage->CreatePNGImage(nullptr);
+		pPNGImage->GetPNGDataStream(dataBuffer);
+
+		auto pTempStream = pUIEnvironment->CreateTemporaryStream("tempimage", "image/png");
+		pTempStream->WriteData(dataBuffer);
+		pTempStream->Finish();
+
+		std::string sImageUUID = pTempStream->GetUUID();
+		pUIEnvironment->LogMessage("temp UUID: " + sImageUUID);
+
+		pUIEnvironment->SetUIProperty("main.machineimage.testimage", "imageresource", sImageUUID);
+
+		/*
 
 		auto pZIPStream = pUIEnvironment->CreateZIPStream("test_zip");
 		auto pEntry1 = pZIPStream->CreateZIPEntry("file1.txt");
@@ -193,7 +216,7 @@ public:
 
 		pZIPStream->Finish();
 
-		pUIEnvironment->StartStreamDownload(pZIPStream->GetUUID(), "download.zip");
+		pUIEnvironment->StartStreamDownload(pZIPStream->GetUUID(), "download.zip"); */
 
 		/*auto pUserManagement = pUIEnvironment->CreateUserManagement();
 		auto activeUsers = pUserManagement->GetActiveUsers();
@@ -210,6 +233,7 @@ public:
 
 		//pUserManagement->CreateUser("dummy", "administrator", "3fbde1f66fb512223edb195d247fe770130f59fdd914e3ffa7327af53fe4cb46", "dd9a86491eb7572c1a9cda800e6eb81bb9dad55576b01416d06cdf6ae181fb33", "This is the new dummy user."); */
 
+		/*
 
 		auto pJournal = pUIEnvironment->GetCurrentJournal();
 		auto pJournalVariable = pJournal->RetrieveJournalVariable ("main.jobinfo.countertest", 10000);
@@ -249,7 +273,7 @@ public:
 			pUIEnvironment->SetUIPropertyAsUUID("main.infobox.chart1", "dataseries", sUUID);
 		}
 
-
+		 */
 
 	}
 
@@ -390,6 +414,37 @@ public:
 
 };
 
+
+class CEvent_OnFakeJob : public virtual CEvent {
+
+public:
+
+	static std::string getEventName()
+	{
+		return "onfakejob";
+	}
+
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		auto sSender = pUIEnvironment->RetrieveEventSender();
+		pUIEnvironment->LogMessage("Build item selected from " + sSender);
+
+		auto sBuildUUID = pUIEnvironment->GetUIPropertyAsUUID(sSender, "selecteduuid");
+		pUIEnvironment->LogMessage("Build job ID " + sBuildUUID);
+
+		auto sButtonUUID = pUIEnvironment->GetUIPropertyAsUUID(sSender, "buttonuuid");
+		pUIEnvironment->LogMessage("Button UUID " + sButtonUUID);
+
+		auto pBuildJob = pUIEnvironment->GetBuildJob(sBuildUUID);
+		auto pExecution = pBuildJob->StartExecution("This is a test description", pUIEnvironment->GetCurrentUserUUID());
+
+		std::this_thread::sleep_for(std::chrono::milliseconds (5000));
+
+		pExecution->SetStatusToFinished();
+
+	}
+
+};
 
 class CEvent_OnChangeSimulationParameterEvent : public virtual CEvent {
 
@@ -590,6 +645,9 @@ IEvent* CEventHandler::CreateEvent(const std::string& sEventName, LibMCEnv::PUIE
 		return pEventInstance;
 	if (createEventInstanceByName<CEvent_TestJournal>(sEventName, pEventInstance))
 		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnFakeJob>(sEventName, pEventInstance))
+		return pEventInstance;
+	
 
 	throw ELibMCUIInterfaceException(LIBMCUI_ERROR_INVALIDEVENTNAME, "invalid event name: " + sEventName);
 }

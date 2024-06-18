@@ -47,7 +47,7 @@ namespace AMCData {
 			sBuildJobsQuery += "`status`  varchar ( 64 ) NOT NULL,";
 			sBuildJobsQuery += "`storagestreamuuid`  varchar ( 64 ) NOT NULL,";
 			sBuildJobsQuery += "`layercount` integer DEFAULT 0,";
-			sBuildJobsQuery += "`userid`  varchar ( 64 ) NOT NULL,";
+			sBuildJobsQuery += "`userid`  varchar ( 64 ) DEFAULT '',";
 			sBuildJobsQuery += "`updateuuid`  varchar ( 64 ),";
 			sBuildJobsQuery += "`timestamp`  varchar ( 64 ) NOT NULL)";
 			pTransaction->executeStatement(sBuildJobsQuery);
@@ -58,7 +58,7 @@ namespace AMCData {
 			sBuildJobDataQuery += "`storagestreamuuid`  varchar ( 64 ) NOT NULL,";
 			sBuildJobDataQuery += "`name`  varchar ( 256 ) NOT NULL,";
 			sBuildJobDataQuery += "`datatype`  varchar ( 64 ) NOT NULL,";
-			sBuildJobDataQuery += "`userid`  varchar ( 64 ) NOT NULL,";
+			sBuildJobDataQuery += "`userid`  varchar ( 64 ) DEFAULT '',";
 			sBuildJobDataQuery += "`updateuuid`  varchar ( 64 ),";
 			sBuildJobDataQuery += "`active`  integer DEFAULT 0,";
 			sBuildJobDataQuery += "`timestamp`  varchar ( 64 ) NOT NULL)";
@@ -105,7 +105,7 @@ namespace AMCData {
 			sBuildJobExecutionDataQuery += "`storagestreamuuid`  varchar ( 64 ) NOT NULL,";
 			sBuildJobExecutionDataQuery += "`name`  varchar ( 256 ) NOT NULL,";
 			sBuildJobExecutionDataQuery += "`datatype`  varchar ( 64 ) NOT NULL,";
-			sBuildJobExecutionDataQuery += "`userid`  varchar ( 64 ) NOT NULL,";
+			sBuildJobExecutionDataQuery += "`userid`  varchar ( 64 ) DEFAULT '',";
 			sBuildJobExecutionDataQuery += "`updateuuid`  varchar ( 64 ),";
 			sBuildJobExecutionDataQuery += "`active`  integer DEFAULT 0,";
 			sBuildJobExecutionDataQuery += "`timestamp`  varchar ( 64 ) NOT NULL)";
@@ -127,6 +127,19 @@ namespace AMCData {
 		case 10: {
 			std::string sIdentifierAddQuery = "ALTER TABLE `buildjobexecutiondata` ADD `identifier` varchar ( 256 ) DEFAULT ``";
 			pTransaction->executeStatement(sIdentifierAddQuery);
+			break;
+		}
+
+		case 11: {
+			std::string sBuildJobUserUUIDQuery = "ALTER TABLE `buildjobs` ADD `useruuid` varchar ( 256 ) DEFAULT `00000000-0000-0000-0000-000000000000`";
+			pTransaction->executeStatement(sBuildJobUserUUIDQuery);
+
+			std::string sBuildJobDataUserUUIDQuery = "ALTER TABLE `buildjobdata` ADD `useruuid` varchar ( 256 ) DEFAULT `00000000-0000-0000-0000-000000000000`";
+			pTransaction->executeStatement(sBuildJobDataUserUUIDQuery);
+
+			std::string sBuildJobExecutionDataUserUUIDQuery = "ALTER TABLE `buildjobexecutiondata` ADD `useruuid` varchar ( 256 ) DEFAULT `00000000-0000-0000-0000-000000000000`";
+			pTransaction->executeStatement(sBuildJobExecutionDataUserUUIDQuery);
+
 			break;
 		}
 

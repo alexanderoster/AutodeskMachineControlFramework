@@ -61,10 +61,12 @@ CStorage::CStorage(AMCData::PSQLHandler pSQLHandler, AMCData::PStorageState pSto
 }
 
 
-void CStorage::insertDBEntry(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nSize, const std::string& sSHA2, const std::string& sUserID, uint64_t nAbsoluteTimeStamp)
+void CStorage::insertDBEntry(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nSize, const std::string& sSHA2, uint64_t nAbsoluteTimeStamp, const std::string& sUserUUID)
 {
 
     auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
 
     std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
 
@@ -77,16 +79,17 @@ void CStorage::insertDBEntry(const std::string& sUUID, const std::string& sName,
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_DUPLICATESTORAGESTREAM);
     pStatement = nullptr;
 
-    std::string sInsertQuery = "INSERT INTO storage_streams (uuid, name, mimetype, sha2, size, userid, timestamp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    std::string sInsertQuery = "INSERT INTO storage_streams (uuid, name, mimetype, sha2, size, userid, timestamp, status, useruuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     auto pInsertStatement = pTransaction->prepareStatement(sInsertQuery);
     pInsertStatement->setString(1, sParsedUUID);
     pInsertStatement->setString(2, sName);
     pInsertStatement->setString(3, sMimeType);
     pInsertStatement->setString(4, sSHA2);
     pInsertStatement->setInt64(5, nSize);
-    pInsertStatement->setString(6, sUserID);
+    pInsertStatement->setString(6, "");
     pInsertStatement->setString(7, sTimestamp);
     pInsertStatement->setString(8, AMCData::CStorageState::storageStreamStatusToString (AMCData::eStorageStreamStatus::sssNew));
+    pInsertStatement->setString(9, sNormalizedUserUUID);
     pInsertStatement->execute();
     pInsertStatement = nullptr;
 
@@ -110,7 +113,7 @@ IStorageStream* CStorage::RetrieveStream(const std::string& sUUID)
     return CStorageStream::makeFromDatabase(sUUID, m_pSQLHandler, m_pStorageState);
 }
 
-void CStorage::StoreNewStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nContentBufferSize, const LibMCData_uint8* pContentBuffer, const std::string& sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+void CStorage::StoreNewStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nContentBufferSize, const LibMCData_uint8* pContentBuffer, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 {
     if (nContentBufferSize == 0)
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDBUFFERSIZE);
@@ -120,8 +123,10 @@ void CStorage::StoreNewStream(const std::string& sUUID, const std::string& sName
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
     if (sMimeType.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
-    if (sUserID.empty())
+    if (sUserUUID.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+
+    std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
 
     // sContextUUID is depreciated and not used anymore!
 
@@ -139,7 +144,7 @@ void CStorage::StoreNewStream(const std::string& sUUID, const std::string& sName
 	
     // From here, we lock storage database write access
     {       
-        insertDBEntry(sUUID, sName, sMimeType, nContentBufferSize, sSHA256, sUserID, nAbsoluteTimeStamp);        
+        insertDBEntry(sUUID, sName, sMimeType, nContentBufferSize, sSHA256, nAbsoluteTimeStamp, sNormalizedUserUUID);
     }
 
     std::string sCalculatedSHA256, sCalculatedBlockSHA256;
@@ -151,7 +156,7 @@ void CStorage::StoreNewStream(const std::string& sUUID, const std::string& sName
  
 }
 
-void CStorage::BeginPartialStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nSize, const std::string& sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+void CStorage::BeginPartialStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const LibMCData_uint64 nSize, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 {
 
     if (nSize == 0)
@@ -160,14 +165,16 @@ void CStorage::BeginPartialStream(const std::string& sUUID, const std::string& s
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
     if (sMimeType.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
-    if (sUserID.empty())
+    if (sUserUUID.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+
+    std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
 
     // sContextUUID is depreciated and not used anymore!
 
     {
         std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
-        insertDBEntry(sParsedUUID, sName, sMimeType, nSize, "", sUserID, nAbsoluteTimeStamp);
+        insertDBEntry(sParsedUUID, sName, sMimeType, nSize, "", nAbsoluteTimeStamp, sNormalizedUserUUID);
 
         auto pWriter = std::make_shared<AMCData::CStorageWriter_Partial>(sParsedUUID, m_pStorageState->getStreamPath(sUUID), nSize);
         m_pStorageState->addPartialWriter(pWriter);
@@ -241,18 +248,20 @@ void CStorage::FinishPartialStreamEx(const std::string& sUUID, const std::string
 
 }
 
-void CStorage::BeginRandomWriteStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const std::string& sUserID, const LibMCData_uint64 nAbsoluteTimeStamp)
+void CStorage::BeginRandomWriteStream(const std::string& sUUID, const std::string& sName, const std::string& sMimeType, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
 {
     if (sName.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
     if (sMimeType.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
-    if (sUserID.empty())
+    if (sUserUUID.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+
+    std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
 
     {
         std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
-        insertDBEntry(sParsedUUID, sName, sMimeType, 0, "", sUserID, nAbsoluteTimeStamp);
+        insertDBEntry(sParsedUUID, sName, sMimeType, 0, "", nAbsoluteTimeStamp, sNormalizedUserUUID);
 
         auto pWriter = std::make_shared<AMCData::CStorageWriter_RandomAccess>(sParsedUUID, m_pStorageState->getStreamPath(sUUID));
         m_pStorageState->addPartialWriter(pWriter);
@@ -287,9 +296,11 @@ IStorageZIPWriter* CStorage::CreateZIPStream(const std::string& sUUID, const std
     if (sUserUUID.empty())
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
 
+    std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
+
     {
         std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
-        insertDBEntry(sParsedUUID, sName, "application/zip", 0, "", sUserUUID, nAbsoluteTimeStamp);
+        insertDBEntry(sParsedUUID, sName, "application/zip", 0, "", nAbsoluteTimeStamp, sNormalizedUserUUID);
 
         auto pWriter = std::make_shared<AMCData::CStorageWriter_ZIPStream>(sParsedUUID, m_pStorageState->getStreamPath(sUUID));
         m_pStorageState->addPartialWriter(pWriter);
@@ -365,7 +376,7 @@ bool CStorage::StreamIsImage(const std::string& sUUID)
     auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
     pStatement->setString(1, sParsedUUID);
     if (!pStatement->nextRow())
-        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STORAGESTREAMNOTFOUND);
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STORAGESTREAMNOTFOUND, "storage stream not found: " + sParsedUUID);
 
     auto sMimeType = pStatement->getColumnString(1);
     auto sLowerMimeType = AMCCommon::CUtils::toLowerString(AMCCommon::CUtils::trimString(sMimeType));

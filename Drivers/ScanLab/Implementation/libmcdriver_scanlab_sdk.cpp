@@ -257,6 +257,7 @@ CScanLabSDK::CScanLabSDK(const std::string& sDLLNameUTF8)
 	this->ptr_n_write_da_x = (PScanLabPtr_n_write_da_x)_loadScanLabAddress(hLibrary, "n_write_da_x");
 	this->ptr_n_set_laser_pin_out = (PScanLabPtr_n_set_laser_pin_out)_loadScanLabAddress(hLibrary, "n_set_laser_pin_out");
 	this->ptr_n_get_laser_pin_in = (PScanLabPtr_n_get_laser_pin_in)_loadScanLabAddress(hLibrary, "n_get_laser_pin_in");
+	this->ptr_n_set_laser_pin_out_list = (PScanLabPtr_n_set_laser_pin_out_list)_loadScanLabAddress(hLibrary, "n_set_laser_pin_out_list");
 	this->ptr_n_set_sky_writing_para = (PScanLabPtr_n_set_sky_writing_para)_loadScanLabAddress(hLibrary, "n_set_sky_writing_para");
 	this->ptr_n_set_sky_writing_limit = (PScanLabPtr_n_set_sky_writing_limit)_loadScanLabAddress(hLibrary, "n_set_sky_writing_limit");
 	this->ptr_n_set_sky_writing_mode = (PScanLabPtr_n_set_sky_writing_mode)_loadScanLabAddress(hLibrary, "n_set_sky_writing_mode");
@@ -303,6 +304,7 @@ CScanLabSDK::CScanLabSDK(const std::string& sDLLNameUTF8)
 	this->ptr_n_set_fly_y_pos = (PScanLabPtr_n_set_fly_y_pos)_loadScanLabAddress(hLibrary, "n_set_fly_y_pos");
 	this->ptr_n_set_fly_x = (PScanLabPtr_n_set_fly_x)_loadScanLabAddress(hLibrary, "n_set_fly_x");
 	this->ptr_n_set_fly_y = (PScanLabPtr_n_set_fly_y)_loadScanLabAddress(hLibrary, "n_set_fly_y");
+	this->ptr_n_fly_return = (PScanLabPtr_n_fly_return)_loadScanLabAddress(hLibrary, "n_fly_return");
 	this->ptr_n_get_encoder = (PScanLabPtr_n_get_encoder)_loadScanLabAddress(hLibrary, "n_get_encoder");
 	this->ptr_n_get_marking_info = (PScanLabPtr_n_get_marking_info)_loadScanLabAddress(hLibrary, "n_get_marking_info");
 	this->ptr_n_wait_for_encoder = (PScanLabPtr_n_wait_for_encoder)_loadScanLabAddress(hLibrary, "n_wait_for_encoder");
@@ -455,6 +457,7 @@ void CScanLabSDK::resetFunctionPtrs()
 	ptr_n_write_da_x = nullptr;
 	ptr_n_set_laser_pin_out = nullptr;
 	ptr_n_get_laser_pin_in = nullptr;
+	ptr_n_set_laser_pin_out_list = nullptr;
 	ptr_n_set_sky_writing_para = nullptr;
 	ptr_n_set_sky_writing_limit = nullptr;
 	ptr_n_set_sky_writing_mode = nullptr;
@@ -503,6 +506,7 @@ void CScanLabSDK::resetFunctionPtrs()
 	ptr_n_set_fly_x = nullptr;
 	ptr_n_set_fly_y = nullptr;
 	ptr_n_get_encoder = nullptr;
+	ptr_n_fly_return = nullptr;
 
 	ptr_n_get_marking_info = nullptr;
 	ptr_n_wait_for_encoder = nullptr;
@@ -1091,6 +1095,7 @@ void CScanLabSDK::n_set_trigger4(uint32_t nCardNo, uint32_t nPeriod, uint32_t nS
 }
 
 void CScanLabSDK::n_set_trigger8(uint32_t nCardNo, uint32_t nPeriod, uint32_t nSignal1, uint32_t nSignal2, uint32_t nSignal3, uint32_t nSignal4, uint32_t nSignal5, uint32_t nSignal6, uint32_t nSignal7, uint32_t nSignal8)
+
 {
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_set_trigger8", std::to_string(nCardNo) + ", " + std::to_string(nPeriod) + ", " + std::to_string(nSignal1) + ", " + std::to_string(nSignal2) + ", " + std::to_string(nSignal3) + ", " + std::to_string(nSignal4) + ", " + std::to_string(nSignal5) + ", " + std::to_string(nSignal6) + ", " + std::to_string(nSignal7) + ", " + std::to_string(nSignal8));
@@ -1178,6 +1183,14 @@ void CScanLabSDK::n_set_laser_pin_out(uint32_t nCardNo, uint32_t nPins)
 		m_pLogJournal->logCall("n_set_laser_pin_out", std::to_string(nCardNo) + ", " + std::to_string(nPins));
 
 	ptr_n_set_laser_pin_out(nCardNo, nPins);
+}
+
+void CScanLabSDK::n_set_laser_pin_out_list(uint32_t nCardNo, uint32_t nPins)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_set_laser_pin_out_list", std::to_string(nCardNo) + ", " + std::to_string(nPins));
+
+	ptr_n_set_laser_pin_out_list(nCardNo, nPins);
 }
 
 uint32_t CScanLabSDK::n_get_laser_pin_in(uint32_t nCardNo)
@@ -1516,6 +1529,15 @@ void CScanLabSDK::n_set_fly_y(uint32_t nCardNo, const double ScaleY)
 
 	ptr_n_set_fly_y(nCardNo, ScaleY);
 }
+
+void CScanLabSDK::n_fly_return(uint32_t nCardNo, int32_t nX, int32_t nY)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_fly_return", std::to_string(nCardNo) + ", " + std::to_string(nX) + ", " + std::to_string(nY));
+
+	ptr_n_fly_return(nCardNo, nX, nY);
+}
+
 
 void CScanLabSDK::n_get_encoder(uint32_t nCardNo, const int32_t* pEncoderX, const int32_t* pEncoderY)
 {
