@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2024 Autodesk Inc.
 
 All rights reserved.
 
@@ -27,44 +27,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+Abstract: This is the class declaration of CFrameBufferAccess
+
 */
 
 
-#ifndef __LIBMCDRIVER_BUR_SOCKETS
-#define __LIBMCDRIVER_BUR_SOCKETS
+#ifndef __LIBMCDRIVER_FRAMEBUFFER_FRAMEBUFFERDEVICE
+#define __LIBMCDRIVER_FRAMEBUFFER_FRAMEBUFFERDEVICE
 
-#include <string>
-#include <vector>
-#include <memory>
+#include "libmcdriver_framebuffer_interfaces.hpp"
+#include "libmcdriver_framebuffer_framebufferinstance.hpp"
 
 
-namespace LibMCDriver_BuR {
+namespace LibMCDriver_FrameBuffer {
 namespace Impl {
 
 
-class CDriver_BuRSocketConnection {
+/*************************************************************************************************************************
+ Class declaration of CFrameBufferAccess 
+**************************************************************************************************************************/
+
+class CFrameBufferDeviceInstance : public CFrameBufferInstance {
 private:
-    uint64_t m_Socket;
-protected:
+
+	int m_nFBDeviceHandle;
+	uint8_t* m_pFramebufferPtr;
+	uint32_t m_nCurrentBufferIndex;
+	bool m_bDoubleBufferingEnabled;
+
+	uint32_t m_nVirtualResolutionY;
+	uint32_t m_nMemorySize;
+
+	uint32_t m_nScanLineLength;
+
+
 public:
+	
+	CFrameBufferDeviceInstance (const std::string & sIdentifier, const std::string & sDevicePath);
+	
+	virtual ~CFrameBufferDeviceInstance ();
+	
+	virtual void flip() override;
 
-    CDriver_BuRSocketConnection(const std::string & sIPAddress, uint32_t nPort); 
-    ~CDriver_BuRSocketConnection();
-    void sendBuffer (const uint8_t * pBuffer, size_t nCount);
-
-    void receiveBuffer(std::vector<uint8_t>& Buffer, size_t nCount, bool bMustReceiveAll);
-
-    void disconnect();
-
-    bool isConnected();
-
-    bool waitForData(uint32_t timeOutInMS);
-
-    static void initializeNetworking();
+	virtual bool usesDoubleBuffering() override;
 
 };
 
-} // namespace Impl
-} // namespace LibMCDriver_BuR
+typedef std::shared_ptr<CFrameBufferDeviceInstance> PFrameBufferDeviceInstance;
 
-#endif // __LIBMCDRIVER_BUR_SOCKETS
+} // namespace Impl
+} // namespace LibMCDriver_FrameBuffer
+
+#endif // __LIBMCDRIVER_FRAMEBUFFER_FRAMEBUFFERDEVICE
