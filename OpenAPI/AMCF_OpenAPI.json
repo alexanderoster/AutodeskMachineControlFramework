@@ -582,6 +582,11 @@
             "type": "integer",
             "description": "The number of layers of the build job",
             "example": 120
+          },
+          "thumbnail": {
+            "type": "string",
+            "description": "The UUID of the thumbnail",
+            "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
           }
         }
       },
