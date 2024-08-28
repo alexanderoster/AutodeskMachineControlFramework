@@ -36,7 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_exceptiontypes.hpp"
 #include "libmcdata_interfaces.hpp"
 
-#include <iostream>
+
+#include <stdexcept>
 
 #define STATEJOURNALSTREAMMINCAPACITY 65536
 
@@ -47,245 +48,135 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace AMC {
 
-	typedef struct {
-		uint32_t m_RelativeTimeStampInMicroseconds;
-		int64_t m_IntegerValue;
-	} sJournalChunkIntegerEntry;
 
+
+	
 
 	class CStateJournalStreamChunk_Dynamic : public CStateJournalStreamChunk
 	{
 	private:
 
+		// Index of the chunk in the journal stream
 		uint64_t m_nChunkIndex;
+
+		// Start and end timestamps for this chunk in microseconds
 		uint64_t m_nStartTimeStampInMicroSeconds;
 		uint64_t m_nEndTimeStampInMicroSeconds;
+
+		// The latest timestamp written to this chunk, used for ensuring sequential writes
 		uint64_t m_nCurrentTimeStampInMicroSeconds;
 
-		std::vector<std::list<sJournalChunkIntegerEntry>> m_Entries;
+		// Vector holding maps for each variable, mapping relative timestamps to values
+		std::vector<std::map<uint32_t, int64_t>> m_Data;
 
 	public:
 
-		CStateJournalStreamChunk_Dynamic(uint64_t nChunkIndex, uint64_t nStartTimeStampInMicroSeconds, uint64_t nEndTimeStampInMicroSeconds, uint32_t nVariableCount)
-			: CStateJournalStreamChunk(), m_nChunkIndex(nChunkIndex), m_nStartTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds), m_nEndTimeStampInMicroSeconds(nEndTimeStampInMicroSeconds), m_nCurrentTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds)
+		// Constructor: Initializes chunk with given index, start/end timestamps, and number of variables
+		CStateJournalStreamChunk_Dynamic(uint64_t nChunkIndex, uint64_t nStartTimeStampInMicroSeconds, uint64_t nEndTimeStampInMicroSeconds, uint32_t nVariableCount, AMC::PLogger pDebugLogger)
+			: CStateJournalStreamChunk(pDebugLogger), m_nChunkIndex(nChunkIndex), m_nStartTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds), m_nEndTimeStampInMicroSeconds(nEndTimeStampInMicroSeconds), m_nCurrentTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds)
 		{
-			m_Entries.resize(nVariableCount);
-			//std::cout << "creating dynamic chunk " << m_nChunkIndex << std::endl;
+			// Resize the data vector to hold maps for the specified number of variables
+			m_Data.resize(nVariableCount);
+
+			debugLog("created dynamic chunk " + std::to_string(m_nChunkIndex));
 		}
 
 
+		// Destructor: Virtual to allow proper cleanup in derived classes
 		virtual ~CStateJournalStreamChunk_Dynamic()
 		{
-			//std::cout << "destroying dynamic chunk " << m_nChunkIndex << std::endl;
+			debugLog("destroyed dynamic chunk " + std::to_string(m_nChunkIndex));
 		}
 
+		// Get the index of this chunk in the journal stream
 		uint64_t getChunkIndex() override
 		{
 			return m_nChunkIndex;
 		}
 
+		// Get the start timestamp for this chunk
 		uint64_t getStartTimeStampInMicroSeconds() override
 		{
 			return m_nStartTimeStampInMicroSeconds;
 		}
 
+		// Get the start timestamp for this chunk
 		uint64_t getEndTimeStampInMicroSeconds() override
 		{
 			return m_nEndTimeStampInMicroSeconds;
 		}
 
-
-		/*void readRawIntegerData(uint32_t nStorageIndex, uint64_t nIntervalStartTimeStampInMicroSeconds, uint64_t nIntervalEndTimeStampInMicroSeconds, std::vector<sJournalTimeStreamInt64Entry>& rawTimeStream) override
-		{
-
-			uint64_t nTimeOffset = m_nStartTimeStampInMicroSeconds;
-
-			uint64_t nClampedIntervalStartTime = nIntervalStartTimeStampInMicroSeconds;
-			if (nClampedIntervalStartTime < m_nStartTimeStampInMicroSeconds)
-				nClampedIntervalStartTime = m_nStartTimeStampInMicroSeconds;
-			if (nClampedIntervalStartTime > m_nEndTimeStampInMicroSeconds)
-				nClampedIntervalStartTime = m_nEndTimeStampInMicroSeconds;
-
-			uint64_t nClampedIntervalEndTime = nIntervalEndTimeStampInMicroSeconds;
-			if (nClampedIntervalEndTime < m_nStartTimeStampInMicroSeconds)
-				nClampedIntervalEndTime = m_nStartTimeStampInMicroSeconds;
-			if (nClampedIntervalEndTime > m_nEndTimeStampInMicroSeconds)
-				nClampedIntervalEndTime = m_nEndTimeStampInMicroSeconds;
-
-			uint64_t nRelativeIntervalStartTime = nClampedIntervalStartTime - nTimeOffset;
-			uint64_t nRelativeIntervalEndTime = nClampedIntervalEndTime - nTimeOffset;
-
-			if (nStorageIndex >= m_Entries.size())
-				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
-
-			int64_t nCurrentValue = 0;
-			uint64_t nCurrentRelativeTime = 0;
-			bool isFirst = true;
-
-			auto& variable = m_Entries.at(nStorageIndex);
-			for (auto& entry : variable) {
-				if (entry.m_RelativeTimeStampInMicroseconds <= nRelativeIntervalEndTime) {
-					if (entry.m_RelativeTimeStampInMicroseconds > nRelativeIntervalStartTime) {
-
-						if (isFirst) {
-							sJournalTimeStreamInt64Entry firstEntry;
-							firstEntry.m_nTimeStampInMicroSeconds = nRelativeIntervalStartTime + nTimeOffset;
-							firstEntry.m_nValue = nCurrentValue;
-							rawTimeStream.push_back(firstEntry);
-
-							isFirst = false;
-						}
-
-						sJournalTimeStreamInt64Entry resultEntry;
-						resultEntry.m_nTimeStampInMicroSeconds = entry.m_RelativeTimeStampInMicroseconds + nTimeOffset;
-						resultEntry.m_nValue = entry.m_IntegerValue;
-						rawTimeStream.push_back(resultEntry);
-					}
-
-					nCurrentRelativeTime = entry.m_RelativeTimeStampInMicroseconds;
-					nCurrentValue = entry.m_IntegerValue;
-
-				}
-				else {
-					break;
-				}
-
-			}
-
-			if (nCurrentRelativeTime < nRelativeIntervalEndTime) {
-				sJournalTimeStreamInt64Entry lastEntry;
-				lastEntry.m_nTimeStampInMicroSeconds = nRelativeIntervalEndTime + nTimeOffset;
-				lastEntry.m_nValue = nCurrentValue;
-				rawTimeStream.push_back(lastEntry);
-			}
-
-		}
-
-
-		void readRawDoubleData(uint32_t nStorageIndex, uint64_t nIntervalStartTimeStampInMicroSeconds, uint64_t nIntervalEndTimeStampInMicroSeconds, double dUnits, std::vector<sJournalTimeStreamDoubleEntry>& rawTimeStream) override
-		{
-			uint64_t nTimeOffset = m_nStartTimeStampInMicroSeconds;
-
-			uint64_t nClampedIntervalStartTime = nIntervalStartTimeStampInMicroSeconds;
-			if (nClampedIntervalStartTime < m_nStartTimeStampInMicroSeconds)
-				nClampedIntervalStartTime = m_nStartTimeStampInMicroSeconds;
-			if (nClampedIntervalStartTime > m_nEndTimeStampInMicroSeconds)
-				nClampedIntervalStartTime = m_nEndTimeStampInMicroSeconds;
-
-			uint64_t nClampedIntervalEndTime = nIntervalEndTimeStampInMicroSeconds;
-			if (nClampedIntervalEndTime < m_nStartTimeStampInMicroSeconds)
-				nClampedIntervalEndTime = m_nStartTimeStampInMicroSeconds;
-			if (nClampedIntervalEndTime > m_nEndTimeStampInMicroSeconds)
-				nClampedIntervalEndTime = m_nEndTimeStampInMicroSeconds;
-
-			uint64_t nRelativeIntervalStartTime = nClampedIntervalStartTime - nTimeOffset;
-			uint64_t nRelativeIntervalEndTime = nClampedIntervalEndTime - nTimeOffset;
-
-			if (nStorageIndex >= m_Entries.size())
-				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
-
-			int64_t nCurrentValue = 0;
-			uint64_t nCurrentRelativeTime = 0;
-			bool isFirst = true;
-
-			auto& variable = m_Entries.at(nStorageIndex);
-			for (auto& entry : variable) {
-				if (entry.m_RelativeTimeStampInMicroseconds <= nRelativeIntervalEndTime) {
-					if (entry.m_RelativeTimeStampInMicroseconds > nRelativeIntervalStartTime) {
-
-						if (isFirst) {
-							sJournalTimeStreamDoubleEntry firstEntry;
-							firstEntry.m_nTimeStampInMicroSeconds = nRelativeIntervalStartTime + nTimeOffset;
-							firstEntry.m_dValue = nCurrentValue * dUnits;
-							rawTimeStream.push_back(firstEntry);
-
-							isFirst = false;
-						}
-
-						sJournalTimeStreamDoubleEntry resultEntry;
-						resultEntry.m_nTimeStampInMicroSeconds = entry.m_RelativeTimeStampInMicroseconds + nTimeOffset;
-						resultEntry.m_dValue = entry.m_IntegerValue * dUnits;
-						rawTimeStream.push_back(resultEntry);
-					}
-
-					nCurrentRelativeTime = entry.m_RelativeTimeStampInMicroseconds;
-					nCurrentValue = entry.m_IntegerValue;
-
-				}
-				else {
-					break;
-				}
-
-			}
-
-			if (nCurrentRelativeTime < nRelativeIntervalEndTime) {
-				sJournalTimeStreamDoubleEntry lastEntry;
-				lastEntry.m_nTimeStampInMicroSeconds = nRelativeIntervalEndTime + nTimeOffset;
-				lastEntry.m_dValue = nCurrentValue * dUnits;
-				rawTimeStream.push_back(lastEntry);
-			}
-
-
-		} */
-	
-
+		// Retrieve the value for a given variable at a specific absolute timestamp
 		int64_t sampleIntegerData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds) override
 		{
+
+			// Ensure the requested timestamp is within the bounds of this chunk
 			if ((nAbsoluteTimeStampInMicroseconds < m_nStartTimeStampInMicroSeconds) || (nAbsoluteTimeStampInMicroseconds > m_nEndTimeStampInMicroSeconds))
-				return 0;
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALSAMPLINGOUTSIDEOFRECORDINGINTERVAL, "Journal sampling at " + std::to_string(nAbsoluteTimeStampInMicroseconds) + " outside of in dynamic recording interval [" + std::to_string(m_nStartTimeStampInMicroSeconds) + ".." + std::to_string(m_nEndTimeStampInMicroSeconds) + "], chunk#" + std::to_string (m_nChunkIndex));
 
-			uint64_t nTimeOffset = m_nStartTimeStampInMicroSeconds;
-			uint64_t nRelativeTime = nAbsoluteTimeStampInMicroseconds - nTimeOffset;
+			// Calculate relative timestamp within this chunk
+			uint64_t nRelativeTime = nAbsoluteTimeStampInMicroseconds - m_nStartTimeStampInMicroSeconds;
 
-			if (nStorageIndex >= m_Entries.size())
+			// Ensure the variable index is within bounds
+			if (nStorageIndex >= m_Data.size())
 				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
+			
+			// Retrieve the map for the specified variable
+			const auto& variableData = m_Data.at (nStorageIndex);
 
-			auto& variable = m_Entries.at(nStorageIndex);
-			auto iIter = variable.begin();
-			if (iIter != variable.end()) {
-				auto pPrevEntry = &*iIter;
-				iIter++;
+			// Empty chunks should not exist
+			if (variableData.empty())
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALRECORDINGCHUNKISEMPTY);
 
-				while (iIter != variable.end()) {
-					auto pCurrentEntry = &*iIter;
-					iIter++;
+			// Perform an upper_bound search to find the closest entry after the relative timestamp
+			auto it = variableData.upper_bound((uint32_t)nRelativeTime);
 
-					if ((nRelativeTime >= pPrevEntry->m_RelativeTimeStampInMicroseconds) &&
-						(nRelativeTime < pCurrentEntry->m_RelativeTimeStampInMicroseconds)) {
-						return pPrevEntry->m_IntegerValue;
-					}
-
-					pPrevEntry = pCurrentEntry;
-				}
-
-				return pPrevEntry->m_IntegerValue;
+			// If the timestamp is before the first recorded entry, return the first value
+			if (it == variableData.begin()) {
+				return it->second;
 			}
 
-			return 0;
+			// If the timestamp is beyond the last recorded entry, return the last value
+			if (it == variableData.end()) {
+				return variableData.rbegin()->second;
+			}
+
+			// Otherwise, return the value just before the found timestamp
+			return std::prev(it)->second;
 		}
 
 
-		void writeEntry (uint32_t nStorageIndex, uint64_t nAbsoluteTimeStamp, int64_t nValue)
+		// Write a new value to the journal for a specific variable at a specific timestamp
+		void writeEntry (uint32_t nStorageIndex, uint64_t nAbsoluteTimeStampInMicroseconds, int64_t nValue)
 		{
-			if (nStorageIndex >= m_Entries.size())
+			// Ensure the variable index is within bounds
+			if (nStorageIndex >= m_Data.size())
 				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
 
-			auto& variable = m_Entries.at(nStorageIndex);
+			// Ensure the timestamp is within the chunk's bounds
+			if ((nAbsoluteTimeStampInMicroseconds < m_nStartTimeStampInMicroSeconds) || (nAbsoluteTimeStampInMicroseconds > m_nEndTimeStampInMicroSeconds))
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALWRITINGOUTSIDEOFRECORDINGINTERVAL, "Journal writing at " + std::to_string(nAbsoluteTimeStampInMicroseconds) + " outside of in dynamic interval [" + std::to_string(m_nStartTimeStampInMicroSeconds) + ".." + std::to_string(m_nEndTimeStampInMicroSeconds) + "] chunk#" + std::to_string (m_nChunkIndex));
 
-			if ((nAbsoluteTimeStamp >= m_nStartTimeStampInMicroSeconds) && (nAbsoluteTimeStamp <= m_nEndTimeStampInMicroSeconds)) {
+			// Ensure timestamps are written in order
+			if (nAbsoluteTimeStampInMicroseconds < m_nCurrentTimeStampInMicroSeconds)
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALWRITINGISNOTINCREMENTAL);
 
-				sJournalChunkIntegerEntry newEntry;
-				newEntry.m_RelativeTimeStampInMicroseconds = (uint32_t) (nAbsoluteTimeStamp - m_nStartTimeStampInMicroSeconds);
-				newEntry.m_IntegerValue = nValue;
+			// Update the current timestamp to the new value
+			m_nCurrentTimeStampInMicroSeconds = nAbsoluteTimeStampInMicroseconds;
 
-				variable.push_back(newEntry);
-			}
+			// Calculate relative time within the chunk
+			uint64_t nRelativeTime = nAbsoluteTimeStampInMicroseconds - m_nStartTimeStampInMicroSeconds;
+
+			// Store the value in the map for the specified variable			
+			m_Data[nStorageIndex][(uint32_t)nRelativeTime] = nValue;
 		}
 
+		// Get the number of variables being tracked in this chunk
 		size_t getVariableCount() {
-			return m_Entries.size();
+			return m_Data.size();
 		}
 
+		// Serialize the journal data into provided buffers for efficient storage or transmission
 		void serialize(std::vector<LibMCData::sJournalChunkVariableInfo>& variableBuffer, std::vector<uint32_t> & timeStampBuffer, std::vector<int64_t> & valueBuffer)
 		{
 
@@ -293,39 +184,48 @@ namespace AMC {
 			if (nVariableCount > 0) {
 				size_t nTotalCount = 0;
 
+				// Prepare the buffer to hold metadata about each variable's entries
 				variableBuffer.resize(nVariableCount);
 
+				// Populate the buffer with metadata for each variable
 				for (size_t nVariableIndex = 0; nVariableIndex < nVariableCount; nVariableIndex++) {
 
-					auto& entry = m_Entries.at(nVariableIndex);
-					auto& variable = variableBuffer.at(nVariableIndex);
+					auto& sourceVariable = m_Data.at(nVariableIndex);
+					auto& targetVariable = variableBuffer.at(nVariableIndex);
 
-					if (entry.size() > STATEJOURNALSTORAGE_MAXENTRIESPERCHUNK)
+					// Ensure that the number of entries doesn't exceed the allowed maximum
+					if (sourceVariable.size() > STATEJOURNALSTORAGE_MAXENTRIESPERCHUNK)
 						throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALCHUNKHASTOOMANYENTRIES);
 
-					variable.m_VariableIndex = (uint32_t) nVariableIndex;
-					variable.m_EntryStartIndex = (uint32_t) nTotalCount;
-					variable.m_EntryCount = (uint32_t)entry.size();
-					nTotalCount += entry.size();
+					// Fill in metadata for this variable
+					targetVariable.m_VariableIndex = (uint32_t) nVariableIndex;
+					targetVariable.m_StorageType = 0;
+					targetVariable.m_EntryStartIndex = (uint32_t) nTotalCount;
+					targetVariable.m_EntryCount = (uint32_t)sourceVariable.size();
+					nTotalCount += sourceVariable.size();
 				}
 
+				// Resize the buffers to hold all timestamps and values
 				timeStampBuffer.resize(nTotalCount);
 				valueBuffer.resize(nTotalCount);
 
 				size_t nTotalIndex = 0;
 
+				// Copy the timestamp and value data into the buffers
 				for (size_t nVariableIndex = 0; nVariableIndex < nVariableCount; nVariableIndex++) {
 
-					auto& entry = m_Entries.at(nVariableIndex);
-					auto& variable = variableBuffer.at(nVariableIndex);
+					auto& sourceVariable = m_Data.at(nVariableIndex);
+					auto& targetVariable = variableBuffer.at(nVariableIndex);
 
-					for (auto & bufferItem : entry) {
-						timeStampBuffer.at(nTotalIndex) = bufferItem.m_RelativeTimeStampInMicroseconds;
-						valueBuffer.at(nTotalIndex) = bufferItem.m_IntegerValue;
+					// Copy each entry into the appropriate buffer
+					for (auto & iSourceIter : sourceVariable) {
+						timeStampBuffer.at(nTotalIndex) = iSourceIter.first;
+						valueBuffer.at(nTotalIndex) = iSourceIter.second;
 						nTotalIndex++;
 					}
 				}
 
+				// Sanity check to ensure the buffers were filled correctly
 				if (nTotalIndex != nTotalCount)
 					throw ELibMCInterfaceException(LIBMC_ERROR_COULDNOTSERIALIZEJOURNALENTRIES);
 
@@ -350,7 +250,8 @@ namespace AMC {
 
 	public:
 
-		CStateJournalStreamChunk_InMemory(CStateJournalStreamChunk_Dynamic* pDynamicChunk)
+		CStateJournalStreamChunk_InMemory(CStateJournalStreamChunk_Dynamic* pDynamicChunk, AMC::PLogger pDebugLogger)
+			: CStateJournalStreamChunk (pDebugLogger)
 		{
 			if (pDynamicChunk == nullptr)
 				throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -361,15 +262,29 @@ namespace AMC {
 
 			pDynamicChunk->serialize(m_VariableBuffer, m_TimeStampBuffer, m_ValueBuffer);
 
-			//std::cout << "creating in memory chunk " << m_nChunkIndex << ":  " << std::endl;
+			debugLog ("created in memory chunk " + std::to_string (m_nChunkIndex) + " from serialization");
+		}
 
+		CStateJournalStreamChunk_InMemory(LibMCData::PJournalChunkIntegerData pIntegerData, AMC::PLogger pDebugLogger)
+			: CStateJournalStreamChunk (pDebugLogger)
+		{
+			if (pIntegerData.get() == nullptr)
+				throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+			m_nChunkIndex = pIntegerData->GetChunkIndex();
+			m_nStartTimeStampInMicroSeconds = pIntegerData->GetStartTimeStamp();
+			m_nEndTimeStampInMicroSeconds = pIntegerData->GetEndTimeStamp();
+
+			pIntegerData->GetVariableInfo(m_VariableBuffer);
+			pIntegerData->GetTimeStampData(m_TimeStampBuffer);
+			pIntegerData->GetValueData(m_ValueBuffer);
+
+			debugLog("created in memory chunk " + std::to_string(m_nChunkIndex) + " from database");
 		}
 
 		virtual ~CStateJournalStreamChunk_InMemory()
 		{
-			//std::cout << "destroying in memory chunk " << m_nChunkIndex << std::endl;
-
+			debugLog("destroyed in memory chunk " + std::to_string(m_nChunkIndex));
 		}
 
 		uint64_t getStartTimeStampInMicroSeconds() override
@@ -392,16 +307,45 @@ namespace AMC {
 			if (pJournalSession.get() == nullptr)
 				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
 				
-			//std::cout << "writing chunk #" << m_nChunkIndex << " to disk " << std::endl;
-
 			 pJournalSession->WriteJournalChunkIntegerData((uint32_t)m_nChunkIndex, m_nStartTimeStampInMicroSeconds, m_nEndTimeStampInMicroSeconds, m_VariableBuffer, m_TimeStampBuffer, m_ValueBuffer);
 		}
 
 		int64_t sampleIntegerData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds) override
 		{
-			return 0;
+			if (nStorageIndex >= m_VariableBuffer.size())
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALVARIABLENOTFOUND);
+
+			if ((nAbsoluteTimeStampInMicroseconds < m_nStartTimeStampInMicroSeconds) || (nAbsoluteTimeStampInMicroseconds > m_nEndTimeStampInMicroSeconds))
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALSAMPLINGOUTSIDEOFRECORDINGINTERVAL, "Journal sampling at " + std::to_string(nAbsoluteTimeStampInMicroseconds) + " outside of in memory recording interval [" + std::to_string(m_nStartTimeStampInMicroSeconds) + ".." + std::to_string(m_nEndTimeStampInMicroSeconds) + "], chunk#" + std::to_string(m_nChunkIndex));
+
+			uint64_t nRelativeTime = nAbsoluteTimeStampInMicroseconds - m_nStartTimeStampInMicroSeconds;
+
+			auto & variableInfo = m_VariableBuffer.at (nStorageIndex);
+
+			size_t startIndex = variableInfo.m_EntryStartIndex;
+			size_t count = variableInfo.m_EntryCount;
+
+			auto it = std::lower_bound(m_TimeStampBuffer.begin() + startIndex, m_TimeStampBuffer.begin() + startIndex + count, (uint32_t)nRelativeTime);
+
+			if (it == m_TimeStampBuffer.begin() + startIndex) {
+				return m_ValueBuffer.at(startIndex); // If nTimeStamp is before the first timestamp
+			}
+
+			if (it == m_TimeStampBuffer.begin() + startIndex + count) {
+				return m_ValueBuffer.at (startIndex + count - 1); // If nTimeStamp is beyond the last timestamp
+			}
+
+			if (*it == (uint32_t)nRelativeTime) {
+				return m_ValueBuffer.at (it - m_TimeStampBuffer.begin());
+			}
+
+			return m_ValueBuffer.at ((it - m_TimeStampBuffer.begin()) - 1);
 		}
 
+		uint64_t getMemoryUsage()
+		{
+			return m_ValueBuffer.size() * sizeof(int64_t) + m_TimeStampBuffer.size() * sizeof(uint32_t) + m_VariableBuffer.size() * sizeof(LibMCData::sJournalChunkVariableInfo);
+		}
 
 	};
 
@@ -412,18 +356,24 @@ namespace AMC {
 		uint64_t m_nEndTimeStampInMicroSeconds;
 		uint64_t m_nChunkIndex;
 
-	public:
-		CStateJournalStreamChunk_OnDisk(uint64_t nStartTimeStampInMicroSeconds, uint64_t nEndTimeStampInMicroSeconds, uint64_t nChunkIndex)
-			: CStateJournalStreamChunk(), m_nStartTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds), m_nEndTimeStampInMicroSeconds(nEndTimeStampInMicroSeconds), m_nChunkIndex (nChunkIndex)
-		{
-			//std::cout << "creating on disk chunk " << m_nChunkIndex << std::endl;
+		PStateJournalStreamCache m_pStreamCache;
 
+	public:
+		CStateJournalStreamChunk_OnDisk(uint64_t nStartTimeStampInMicroSeconds, uint64_t nEndTimeStampInMicroSeconds, uint64_t nChunkIndex, PStateJournalStreamCache pStreamCache, AMC::PLogger pDebugLogger)
+			: CStateJournalStreamChunk(pDebugLogger),
+			m_nStartTimeStampInMicroSeconds(nStartTimeStampInMicroSeconds),
+			m_nEndTimeStampInMicroSeconds(nEndTimeStampInMicroSeconds),
+			m_nChunkIndex(nChunkIndex),
+			m_pStreamCache (pStreamCache)
+		{
+			if (pStreamCache.get() == nullptr)
+				throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+			debugLog("created on disk chunk " + std::to_string(m_nChunkIndex));
 		}
 
 		virtual ~CStateJournalStreamChunk_OnDisk()
 		{
-			//std::cout << "destroying on disk chunk " << m_nChunkIndex << std::endl;
-
 		}
 
 		uint64_t getStartTimeStampInMicroSeconds() override
@@ -441,26 +391,25 @@ namespace AMC {
 			return m_nChunkIndex;
 		}
 
-		/*void readRawIntegerData(uint32_t nStorageIndex, uint64_t nIntervalStartTimeStampInMicroSeconds, uint64_t nIntervalEndTimeStampInMicroSeconds, std::vector<sJournalTimeStreamInt64Entry>& rawTimeStream) override
-		{
-
-		}
-
-
-		void readRawDoubleData(uint32_t nStorageIndex, uint64_t nIntervalStartTimeStampInMicroSeconds, uint64_t nIntervalEndTimeStampInMicroSeconds, double dUnits, std::vector<sJournalTimeStreamDoubleEntry>& rawTimeStream) override
-		{
-
-		} */
-
 		int64_t sampleIntegerData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds) override
 		{
-			return 0;
+			auto pEntry = m_pStreamCache->retrieveEntry((uint32_t) m_nChunkIndex);
+			if (pEntry.get() != nullptr) {
+				return pEntry->sampleIntegerData(nStorageIndex, nAbsoluteTimeStampInMicroseconds);
+			} 
+
+			debugLog("journal cache miss " + std::to_string(m_nChunkIndex) + " memory usage: " + std::to_string (m_pStreamCache->getCurrentMemoryUsage()));
+
+			pEntry = m_pStreamCache->loadEntryFromJournal((uint32_t)m_nChunkIndex);
+			return pEntry->sampleIntegerData(nStorageIndex, nAbsoluteTimeStampInMicroseconds);
 		}
 
 
 	};
 
-	CStateJournalStreamChunk::CStateJournalStreamChunk()
+	CStateJournalStreamChunk::CStateJournalStreamChunk(AMC::PLogger pDebugLogger)
+		: m_pDebugLogger (pDebugLogger)
+
 	{
 
 	}
@@ -470,13 +419,173 @@ namespace AMC {
 
 	}
 
+	void CStateJournalStreamChunk::debugLog(const std::string& sDebugMessage)
+	{
+		if ((!sDebugMessage.empty()) && (m_pDebugLogger.get() != nullptr))
+			m_pDebugLogger->logMessage(sDebugMessage, "journal", AMC::eLogLevel::Debug);
+	}
 
-	CStateJournalStream::CStateJournalStream(LibMCData::PJournalSession pJournalSession)
-		: m_nChunkSizeInMicroseconds(5000000), m_pJournalSession(pJournalSession), m_nCurrentTimeStampInMicroseconds (0)
+
+	CStateJournalStreamCache::CStateJournalStreamCache(uint64_t nMemoryQuota, LibMCData::PJournalSession pJournalSession, PLogger pDebugLogger)
+		: m_nMemoryQuota(nMemoryQuota),
+		m_nMemoryUsage(0),
+		m_pJournalSession (pJournalSession),
+		m_pDebugLogger (pDebugLogger)
 	{
 		if (pJournalSession.get() == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	}
+
+	CStateJournalStreamCache::~CStateJournalStreamCache()
+	{
+
+	}
+
+	uint64_t CStateJournalStreamCache::getMemoryQuota()
+	{
+		return m_nMemoryQuota;
+	}
+
+	uint64_t CStateJournalStreamCache::getCurrentMemoryUsage()
+	{
+		return m_nMemoryUsage;
+	}
+
+	void CStateJournalStreamCache::writeToJournal(PStateJournalStreamChunk_InMemory pChunk)
+	{
+		if (pChunk.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		{
+			std::lock_guard<std::mutex> lockGuard(m_JournalSessionMutex);
+			pChunk->writeToJournal(m_pJournalSession);
+		}
+
+		addEntry(pChunk);
+	}
+
+	PStateJournalStreamChunk_InMemory CStateJournalStreamCache::loadEntryFromJournal(uint32_t nTimeChunkIndex)
+	{
+
+		PStateJournalStreamChunk_InMemory pChunk;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_JournalSessionMutex);
+			auto pChunkIntegerData = m_pJournalSession->ReadChunkIntegerData(nTimeChunkIndex);
+			pChunk = std::make_shared<CStateJournalStreamChunk_InMemory>(pChunkIntegerData, m_pDebugLogger);
+
+		}
+
+		addEntry(pChunk);
+
+		return pChunk;
+
+	}
+
+
+
+	void CStateJournalStreamCache::addEntry(PStateJournalStreamChunk_InMemory pChunk)
+	{
+		if (pChunk.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		uint64_t nChunkMemoryUsage = pChunk->getMemoryUsage();
+		uint32_t nTimeChunkIndex = (uint32_t)pChunk->getChunkIndex();
+
+
+
+		if (nChunkMemoryUsage > m_nMemoryQuota)
+			throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALCHUNKMEMORYEXCEEDSQUOTA);
+		if (nChunkMemoryUsage == 0)
+			throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALCHUNKMEMORYISZERO);
+
+		// If the entry already exists, remove it first (we'll update it)
+		auto it = m_CacheMap.find(nTimeChunkIndex);
+		if (it != m_CacheMap.end()) {
+			removeEntry(nTimeChunkIndex);
+		}
+
+		pChunk->debugLog ("adding to cache: " + std::to_string (nTimeChunkIndex) + " (memory use : " + std::to_string (nChunkMemoryUsage + m_nMemoryUsage) + ")");
+
+		{
+			std::lock_guard<std::mutex> lockGuard(m_CacheMutex);
+
+			enforceMemoryQuotaInternal(nChunkMemoryUsage);
+
+			// Add new entry to the front of the list
+			m_CacheList.push_front({ nTimeChunkIndex, pChunk });
+			m_CacheMap[nTimeChunkIndex] = m_CacheList.begin();
+
+			m_nMemoryUsage += nChunkMemoryUsage;
+		}
+
+	}
+
+	void CStateJournalStreamCache::enforceMemoryQuotaInternal(uint64_t nAdditionalMemory)
+	{
+		while (((m_nMemoryUsage + nAdditionalMemory) > m_nMemoryQuota) && !(m_CacheList.empty())) {
+			auto last = m_CacheList.back();
+			removeEntryInternal(last.first);  // Remove the least recently used entry
+		}
+
+	}
+
+	void CStateJournalStreamCache::removeEntry(uint32_t nTimeChunkIndex)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_CacheMutex);
+		removeEntryInternal(nTimeChunkIndex);
+
+	}
+
+	void CStateJournalStreamCache::removeEntryInternal(uint32_t nTimeChunkIndex)
+	{
+		auto it = m_CacheMap.find(nTimeChunkIndex);
+		if (it != m_CacheMap.end()) {
+			size_t nChunkMemoryUsage = it->second->second->getMemoryUsage();
+			m_CacheList.erase(it->second);  // Remove from list in O(1)
+			m_CacheMap.erase(it);           // Remove from map in O(1)
+
+			if (nChunkMemoryUsage > m_nMemoryUsage)
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALCHUNKINTERNALMEMORYBOOKKEEPINGERROR);
+			if (nChunkMemoryUsage == 0)
+				throw ELibMCInterfaceException(LIBMC_ERROR_JOURNALCHUNKMEMORYISZERO);
+
+			m_nMemoryUsage -= nChunkMemoryUsage;
+
+			if (m_pDebugLogger.get() != nullptr)
+				m_pDebugLogger->logMessage("removed from cache: " + std::to_string(nTimeChunkIndex) + " (memory use: " + std::to_string(m_nMemoryUsage) + ")", "journal", eLogLevel::Debug);
+
+		}
+	}
+
+
+	PStateJournalStreamChunk_InMemory CStateJournalStreamCache::retrieveEntry(uint32_t nTimeChunkIndex)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_CacheMutex);
+
+		auto it = m_CacheMap.find(nTimeChunkIndex);
+		if (it == m_CacheMap.end()) {
+			return nullptr; // Entry not found
+		}
+
+		// Move the accessed entry to the front of the list
+		m_CacheList.splice(m_CacheList.begin(), m_CacheList, it->second);
+
+		return it->second->second;
+	}
+
+	CStateJournalStream::CStateJournalStream(LibMCData::PJournalSession pJournalSession, PLogger pDebugLogger, bool bEnableDebugLogging)
+		: m_nChunkIntervalInMicroseconds(0), m_nCurrentTimeStampInMicroseconds (0)
+	{
+		if (pJournalSession.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		if (bEnableDebugLogging)
+			m_pDebugLogger = pDebugLogger;
 		
+		m_nChunkIntervalInMicroseconds = pJournalSession->GetChunkIntervalInMicroseconds();
+		uint64_t nCacheMemoryQuota = pJournalSession->GetChunkCacheQuota();
+
+		m_Cache = std::make_shared<CStateJournalStreamCache>(nCacheMemoryQuota, pJournalSession, m_pDebugLogger);
 	}
 
 	CStateJournalStream::~CStateJournalStream()
@@ -507,13 +616,11 @@ namespace AMC {
 	{
 
 		// Create new chunk in memory
-		uint64_t nNewChunkIndex = nAbsoluteTimeStampInMicroSeconds / m_nChunkSizeInMicroseconds;
-		uint64_t nNewChunkStart = nNewChunkIndex * m_nChunkSizeInMicroseconds;
-		uint64_t nNewChunkEnd = nNewChunkStart + m_nChunkSizeInMicroseconds - 1;
+		uint64_t nNewChunkIndex = nAbsoluteTimeStampInMicroSeconds / m_nChunkIntervalInMicroseconds;
+		uint64_t nNewChunkStart = nNewChunkIndex * m_nChunkIntervalInMicroseconds;
+		uint64_t nNewChunkEnd = nNewChunkStart + m_nChunkIntervalInMicroseconds - 1;
 
-		//std::cout << "starting new chunk " << nNewChunkIndex << std::endl;
-
-		auto pNewChunk = std::make_shared <CStateJournalStreamChunk_Dynamic>(nNewChunkIndex, nNewChunkStart, nNewChunkEnd, (uint32_t)m_CurrentVariableValues.size ());
+		auto pNewChunk = std::make_shared <CStateJournalStreamChunk_Dynamic>(nNewChunkIndex, nNewChunkStart, nNewChunkEnd, (uint32_t)m_CurrentVariableValues.size (), m_pDebugLogger);
 
 		std::lock_guard<std::mutex> lockGuard(m_ChunkChangeMutex);
 
@@ -533,7 +640,8 @@ namespace AMC {
 		// Store chunk in total timeline array
 		if (m_ChunkTimeline.size() < nNewChunkIndex) {
 			// In this case the timeline has gaps with no data...
-			m_ChunkTimeline.resize(nNewChunkIndex + 1);
+			size_t nNewSize = (size_t)nNewChunkIndex + 1;
+			m_ChunkTimeline.resize(nNewSize);
 			m_ChunkTimeline.at(nNewChunkIndex) = pNewChunk;
 		}
 		else {
@@ -543,7 +651,7 @@ namespace AMC {
 
 		uint32_t nVariableCount = (uint32_t) m_CurrentVariableValues.size();
 		for (uint32_t nStorageIndex = 0; nStorageIndex < nVariableCount; nStorageIndex++)
-			m_pCurrentChunk->writeEntry (nStorageIndex, (uint32_t) nNewChunkStart, m_CurrentVariableValues.at(nStorageIndex));
+			m_pCurrentChunk->writeEntry (nStorageIndex, nNewChunkStart, m_CurrentVariableValues.at(nStorageIndex));
 
 	}
 
@@ -591,12 +699,10 @@ namespace AMC {
 				m_ChunksToSerialize.pop();
 			}
 
-			auto pMemoryChunk = std::make_shared<CStateJournalStreamChunk_InMemory>(pChunkToSerialize.get ());
+			auto pMemoryChunk = std::make_shared<CStateJournalStreamChunk_InMemory>(pChunkToSerialize.get (), m_pDebugLogger);
 			{
 				std::lock_guard<std::mutex> lockGuard(m_ChunkChangeMutex);
 				m_ChunksToWrite.push(pMemoryChunk);
-
-				//std::cout << "serializing chunk " << pMemoryChunk->getChunkIndex () << std::endl;
 				
 				m_ChunkTimeline.at(pMemoryChunk->getChunkIndex()) = pMemoryChunk;
  
@@ -621,13 +727,10 @@ namespace AMC {
 
 			// Write Chunk to Journal
 			{
-				//std::cout << "writing chunk " << pChunkToWrite->getChunkIndex() << std::endl;
-
-				std::lock_guard<std::mutex> lockGuard(m_JournalSessionMutex);
-				pChunkToWrite->writeToJournal(m_pJournalSession);
+				m_Cache->writeToJournal (pChunkToWrite);
 
 				// Push disk chunk to the archive queue
-				auto pOnDiskChunk = std::make_shared<CStateJournalStreamChunk_OnDisk>(pChunkToWrite->getStartTimeStampInMicroSeconds(), pChunkToWrite->getEndTimeStampInMicroSeconds(), pChunkToWrite->getChunkIndex());
+				auto pOnDiskChunk = std::make_shared<CStateJournalStreamChunk_OnDisk>(pChunkToWrite->getStartTimeStampInMicroSeconds(), pChunkToWrite->getEndTimeStampInMicroSeconds(), pChunkToWrite->getChunkIndex(), m_Cache, m_pDebugLogger);
 				m_ChunksToArchive.push(pOnDiskChunk);
 
 				m_ChunkTimeline.at(pChunkToWrite->getChunkIndex()) = pOnDiskChunk;
@@ -639,56 +742,9 @@ namespace AMC {
 		
 	}
 
-	/*void CStateJournalStream::readRawIntegerData(const uint32_t nStorageIndex, const sStateJournalInterval& interval, std::vector<sJournalTimeStreamInt64Entry>& rawTimeStream)
-	{
-		if (interval.m_nStartTimeInMicroSeconds > interval.m_nEndTimeInMicroSeconds)
-			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDJOURNALSTREAMQUERY);
-
-		uint64_t nStartChunkIndex = interval.m_nStartTimeInMicroSeconds / m_nChunkSizeInMicroseconds;
-		uint64_t nEndChunkIndex = interval.m_nEndTimeInMicroSeconds / m_nChunkSizeInMicroseconds;
-
-		uint64_t nChunkCount = m_ChunkTimeline.size();
-
-		for (uint64_t nChunkIndex = nStartChunkIndex; nChunkIndex <= nEndChunkIndex; nChunkIndex++) {
-			PStateJournalStreamChunk pChunk;
-			if (nChunkIndex < nChunkCount) {
-				std::lock_guard<std::mutex> lockGuard(m_ChunkChangeMutex);
-				pChunk = m_ChunkTimeline.at(nChunkIndex);
-			}
-
-			if (pChunk.get () != nullptr)
-				pChunk->readRawIntegerData(nStorageIndex, interval.m_nStartTimeInMicroSeconds, interval.m_nEndTimeInMicroSeconds, rawTimeStream);
-		}
-
-
-	} 
-
-	void CStateJournalStream::readRawDoubleData(const uint32_t nStorageIndex, const sStateJournalInterval& interval, double dUnits, std::vector<sJournalTimeStreamDoubleEntry>& rawTimeStream)
-	{
-		if (interval.m_nStartTimeInMicroSeconds > interval.m_nEndTimeInMicroSeconds)
-			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDJOURNALSTREAMQUERY);
-
-		uint64_t nStartChunkIndex = interval.m_nStartTimeInMicroSeconds / m_nChunkSizeInMicroseconds;
-		uint64_t nEndChunkIndex = interval.m_nEndTimeInMicroSeconds / m_nChunkSizeInMicroseconds;
-		uint64_t nChunkCount = m_ChunkTimeline.size();
-
-		for (uint64_t nChunkIndex = nStartChunkIndex; nChunkIndex <= nEndChunkIndex; nChunkIndex++) {
-			PStateJournalStreamChunk pChunk;
-			if (nChunkIndex < nChunkCount) {
-				std::lock_guard<std::mutex> lockGuard(m_ChunkChangeMutex);
-				pChunk = m_ChunkTimeline.at(nChunkIndex);
-			}
-
-			if (pChunk.get() != nullptr)
-				pChunk->readRawDoubleData(nStorageIndex, interval.m_nStartTimeInMicroSeconds, interval.m_nEndTimeInMicroSeconds, dUnits, rawTimeStream);
-		}
-
-
-	} */
-
 	int64_t CStateJournalStream::sampleIntegerData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds)
 	{
-		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkSizeInMicroseconds;
+		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkIntervalInMicroseconds;
 		uint64_t nChunkCount = m_ChunkTimeline.size();
 
 		PStateJournalStreamChunk pChunk;
@@ -705,7 +761,7 @@ namespace AMC {
 
 	double CStateJournalStream::sampleDoubleData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds, double dUnits)
 	{
-		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkSizeInMicroseconds;
+		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkIntervalInMicroseconds;
 		uint64_t nChunkCount = m_ChunkTimeline.size();
 
 		PStateJournalStreamChunk pChunk;
@@ -722,7 +778,7 @@ namespace AMC {
 
 	bool CStateJournalStream::sampleBoolData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds)
 	{
-		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkSizeInMicroseconds;
+		uint64_t nChunkIndex = nAbsoluteTimeStampInMicroseconds / m_nChunkIntervalInMicroseconds;
 		uint64_t nChunkCount = m_ChunkTimeline.size();
 
 		PStateJournalStreamChunk pChunk;

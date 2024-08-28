@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <map>
 #include <queue>
+#include <unordered_map>
+#include "amc_logger.hpp"
 
 #include "Common/common_exportstream_native.hpp"
 #include "libmcdata_dynamic.hpp"
@@ -89,9 +91,12 @@ namespace AMC {
 	class CStateJournalStreamChunk
 	{
 	private:
+		AMC::PLogger m_pDebugLogger;
+
 	public:
 
-		CStateJournalStreamChunk();
+		// pDebugLogger may be null
+		CStateJournalStreamChunk(AMC::PLogger pDebugLogger);
 
 		virtual ~CStateJournalStreamChunk();
 
@@ -103,6 +108,7 @@ namespace AMC {
 
 		virtual int64_t sampleIntegerData(const uint32_t nStorageIndex, const uint64_t nAbsoluteTimeStampInMicroseconds) = 0;
 		
+		void debugLog(const std::string & sDebugMessage);
 
 	};
 
@@ -115,10 +121,59 @@ namespace AMC {
 	typedef std::shared_ptr<CStateJournalStreamChunk_InMemory> PStateJournalStreamChunk_InMemory;
 	typedef std::shared_ptr<CStateJournalStreamChunk_OnDisk> PStateJournalStreamChunk_OnDisk;
 
-	typedef struct _sJournalTimeStreamEntry {
-		uint32_t m_nCommand;
-		uint64_t m_nValue;
-	} sJournalTimeStreamEntry;
+	class CStateJournalStreamCache
+	{
+	private:
+
+		uint64_t m_nMemoryUsage;
+		uint64_t m_nMemoryQuota;
+
+		// Debug Logger Object, May be null
+		PLogger m_pDebugLogger;
+
+		// General Mutex for the cache
+		std::mutex m_CacheMutex;
+
+		// Special mutex for the journaling database session.
+		std::mutex m_JournalSessionMutex;
+		LibMCData::PJournalSession m_pJournalSession;
+
+		// Doubly linked list to store the cache entries in LRU order
+		std::list<std::pair<uint32_t, PStateJournalStreamChunk_InMemory>> m_CacheList;
+
+		// Hash map to store the mapping from time chunk index to list iterator
+		std::unordered_map<uint32_t, std::list<std::pair<uint32_t, PStateJournalStreamChunk_InMemory>>::iterator> m_CacheMap;
+
+		// Enforces the memory quota (no mutex protection)
+		void enforceMemoryQuotaInternal(uint64_t nAdditionalMemory);
+
+		// Removes an entry (no mutex protection)
+		void removeEntryInternal(uint32_t nTimeChunkIndex);
+
+		// Adds an in memory chunk entry (mutex protected)
+		void addEntry(PStateJournalStreamChunk_InMemory pChunk);
+
+	public:
+
+		CStateJournalStreamCache(uint64_t nMemoryQuota, LibMCData::PJournalSession pJournalSession, PLogger pDebugLogger);
+
+		virtual ~CStateJournalStreamCache();
+
+		uint64_t getMemoryQuota();
+
+		uint64_t getCurrentMemoryUsage();
+
+		void writeToJournal(PStateJournalStreamChunk_InMemory pChunk);
+
+		void removeEntry(uint32_t nTimeChunkIndex);
+
+		PStateJournalStreamChunk_InMemory retrieveEntry(uint32_t nTimeChunkIndex);
+
+		PStateJournalStreamChunk_InMemory loadEntryFromJournal(uint32_t nTimeChunkIndex);
+
+	};
+
+	typedef std::shared_ptr<CStateJournalStreamCache> PStateJournalStreamCache;
 
 
 	class CStateJournalStream
@@ -126,6 +181,12 @@ namespace AMC {
 	private:
 		std::mutex m_ChunkChangeMutex;
 		PStateJournalStreamChunk_Dynamic m_pCurrentChunk;
+
+		// Optional Debug logger, maybe optional
+		PLogger m_pDebugLogger;
+
+		// Memory Stream Cache
+		PStateJournalStreamCache m_Cache;
 
 		// Total list of chunks of the stream
 		std::vector<PStateJournalStreamChunk> m_ChunkTimeline;
@@ -139,10 +200,7 @@ namespace AMC {
 		// Queue that holds all chunks that have been written to disk and could be freed from memory.
 		std::queue<PStateJournalStreamChunk_OnDisk> m_ChunksToArchive;
 
-		std::mutex m_JournalSessionMutex;
-		LibMCData::PJournalSession m_pJournalSession;
-
-		uint64_t m_nChunkSizeInMicroseconds;
+		uint64_t m_nChunkIntervalInMicroseconds;
 		uint64_t m_nCurrentTimeStampInMicroseconds;
 
 		std::vector<uint64_t> m_CurrentVariableValues;
@@ -151,7 +209,7 @@ namespace AMC {
 		void ensureChunk(const uint64_t nAbsoluteTimeStampInMicroseconds);
 
 	public:
-		CStateJournalStream(LibMCData::PJournalSession pJournalSession);
+		CStateJournalStream(LibMCData::PJournalSession pJournalSession, PLogger pDebugLogger, bool bEnableDebugLogging);
 		virtual ~CStateJournalStream();
 
 		virtual void writeBool_MicroSecond(const uint64_t nAbsoluteTimeStampInMicroseconds, const uint32_t nStorageIndex, bool bValue);
