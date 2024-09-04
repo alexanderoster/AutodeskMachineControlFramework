@@ -103,25 +103,46 @@ IDriverContext * CDriver_ASL::FindContext(const std::string & sIdentifier)
 
 void CDriver_ASL::Configure(const std::string& sConfigurationString)
 {
-	m_pDriverEnvironment->RegisterDoubleParameter("headsettempone", "Set temperature of head one", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headsettemptwo", "Set temperature of head two", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headsettempthr", "Set temperature of head three", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headsettempfor", "Set temperature of head four", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("0_settemp", "Set temperature of head one", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("1_settemp", "Set temperature of head two", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("2_settemp", "Set temperature of head three", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("3_settemp", "Set temperature of head four", 0.0);
 
-	m_pDriverEnvironment->RegisterDoubleParameter("headcurtempone", "Actual temperature of head one", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headcurtemptwo", "Actual temperature of head two", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headcurtempthr", "Actual temperature of head three", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headcurtempfor", "Actual temperature of head four", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("0_curtemp", "Actual temperature of head one", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("1_curtemp", "Actual temperature of head two", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("2_curtemp", "Actual temperature of head three", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("3_curtemp", "Actual temperature of head four", 0.0);
 
-	m_pDriverEnvironment->RegisterDoubleParameter("headprintcountsone", "Print counts of head one", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headprintcountstwo", "Print counts of head two", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headprintcountsthr", "Print counts of head three", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headprintcountsfor", "Print counts of head four", 0.0);
-	
-	m_pDriverEnvironment->RegisterDoubleParameter("headstateone",   "State of head one", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headstatetwo",   "State of head two", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headstatethr", "State of head three", 0.0);
-	m_pDriverEnvironment->RegisterDoubleParameter("headstatefor",  "State of head four", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("0_printcnts", "Print counts of head one", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("1_printcnts", "Print counts of head two", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("2_printcnts", "Print counts of head three", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("3_printcnts", "Print counts of head four", 0.0);
+
+	m_pDriverEnvironment->RegisterDoubleParameter("0_state", "State of head one", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("1_state", "State of head two", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("2_state", "State of head three", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("3_state", "State of head four", 0.0);
+
+	m_pDriverEnvironment->RegisterDoubleParameter("0_progress", "Progress of image in head one", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("1_progress", "Progress of image in head two", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("2_progress", "Progress of image in head three", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("3_progress", "Progress of image in head four", 0.0);
+
+	m_pDriverEnvironment->RegisterBoolParameter("0_hasdata", "Flag to reflect if the board has data in head one", false);
+	m_pDriverEnvironment->RegisterBoolParameter("1_hasdata", "Flag to reflect if the board has data in head two", false);
+	m_pDriverEnvironment->RegisterBoolParameter("2_hasdata", "Flag to reflect if the board has data in head three", false);
+	m_pDriverEnvironment->RegisterBoolParameter("3_hasdata", "Flag to reflect if the board has data in head four", false);
+
+	m_pDriverEnvironment->RegisterBoolParameter("0_verified", "Image verified for head one", false);
+	m_pDriverEnvironment->RegisterBoolParameter("1_verified", "Image verified for head two", false);
+	m_pDriverEnvironment->RegisterBoolParameter("2_verified", "Image verified for head three", false);
+	m_pDriverEnvironment->RegisterBoolParameter("3_verified", "Image verified for head four", false);
+
+	m_pDriverEnvironment->RegisterDoubleParameter("frequency", "The set frequency of the driver board", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("currentlocation", "The current location read by the driver board", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("startlocation", "The index for start of print", 0.0);
+	m_pDriverEnvironment->RegisterDoubleParameter("timeon", "A counter on the board to show uptime", 0.0);
+
 
 }
 

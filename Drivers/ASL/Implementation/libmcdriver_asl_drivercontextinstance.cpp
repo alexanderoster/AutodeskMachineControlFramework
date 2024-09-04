@@ -97,9 +97,10 @@ void CDriverContextInstance::SetPower(const bool bPower)
 	if (!m_pConnection->isOpen()) {
 		throw ELibMCDriver_ASLInterfaceException(LIBMCDRIVER_ASL_ERROR_COULDNOTCONNECTTOCOMPORT, "port was not opened before call.");
 	}
-
-	m_pConnection->write("O");
-
+	if (bPower)
+		m_pConnection->write("O\n");
+	else
+		m_pConnection->write("F\n");
 }
 
 
@@ -189,7 +190,7 @@ void CDriverContextInstance::SendImage(const LibMCDriver_ASL_uint8 nIndex, const
 	}
 
 	// Convert image data to binary string, note reversal inside the byte
-	for (int i = 0; i < 128; ++i) {
+	for (int i = 0; i < imageHeight; ++i) {
 		for (int byt = 0; byt < 16; ++byt) {
 			curByte = 0;
 			for (int bit = 0; bit < 8; ++bit) {
@@ -235,27 +236,51 @@ void CDriverContextInstance::Poll()
 
 	int nTimeMillisToWait = 500;
 
-	auto toRead = m_pConnection->available();
-	while (toRead < 1300) //json should be over 1300
+	auto totalReadCount = 0; //read nothing so far
+	std::string totalRead; //storing nothing
+	while (true) //json should be over 1300
 	{
+		//if not timeout
 		if (nTimeMillisToWait > 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			nTimeMillisToWait--;
-			toRead = m_pConnection->available();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1)); //wait a millisecond
+			nTimeMillisToWait--; //decrement
+			auto toRead = m_pConnection->available(); //check whats availble to be read
+			if (toRead > 0) //if something read and add
+			{
+				totalRead += m_pConnection->read(toRead);
+				totalReadCount += toRead;
+			}
+
+			auto nEndvalue = totalRead.find("macAddress"); // "macAddress" "board":[{"
+			auto nStart = totalRead.find("board\":[{"); // "macAddress" "board":[{"
+
+			if ((nEndvalue + nStart) < 1000000)
+				break;
+
 		}
 		else {
+			auto wasRecieved = m_pConnection->read(totalRead);
 			throw ELibMCDriver_ASLInterfaceException(LIBMCDRIVER_ASL_ERROR_BOARDPOLLFAILED, "max retries reached for polling.");
 		}
 	}
 
 
 
-	auto msg = m_pConnection->read(toRead);
+	auto msg = totalRead;
 
 
 	m_cLastPollTime = std::chrono::system_clock::now();
 
 	m_nTimeOn = std::stod(CDriverContextInstance::FindAndExtract(msg, "timeOn", ","));
+	m_bPower = std::stod(CDriverContextInstance::FindAndExtract(msg, "power", ","));
+	auto sPosition = std::stod(CDriverContextInstance::FindAndExtract(msg, "startPosition", ","));
+	auto iPP = std::stod(CDriverContextInstance::FindAndExtract(msg, "internalPrintPeriod", ","));
+	auto nEncoderPosition = std::stod(CDriverContextInstance::FindAndExtract(msg, "[{\"encoder", ","));
+
+	m_pDriverEnvironment->SetDoubleParameter("frequency", iPP);
+	m_pDriverEnvironment->SetDoubleParameter("timeon", m_nTimeOn);
+	m_pDriverEnvironment->SetDoubleParameter("startlocation", sPosition);
+	m_pDriverEnvironment->SetDoubleParameter("currentlocation", nEncoderPosition);
 
 	for (int idx = 0; idx < 4; idx++) {
 
@@ -275,29 +300,25 @@ void CDriverContextInstance::Poll()
 		m_nImageVerifyDL[idx] = std::stod(CDriverContextInstance::FindAndExtract(sImageString, "image_stored_dl", ","));
 		m_nImageVerifyRC[idx] = std::stod(CDriverContextInstance::FindAndExtract(sImageString, "image_stored_rc", ","));
 
+		m_pDriverEnvironment->SetDoubleParameter(std::to_string(idx) + "_settemp",		m_dSetTemperatures[idx]);
+		m_pDriverEnvironment->SetDoubleParameter(std::to_string(idx) + "_curtemp",		m_dCurrentTemperatures[idx]);
+		m_pDriverEnvironment->SetDoubleParameter(std::to_string(idx) + "_printcnts",	m_dPrintCounts[idx]);
+		m_pDriverEnvironment->SetDoubleParameter(std::to_string(idx) + "_state",		m_dStates[idx]);
+		m_pDriverEnvironment->SetDoubleParameter(std::to_string(idx) + "_progress",		m_dProgress[idx]);
+		m_pDriverEnvironment->SetBoolParameter(std::to_string(idx) + "_hasdata",		m_bHasData[idx]);
+
+		bool isVerified = false;
+		if (m_nImageVerifyLV[idx] != m_nImageVerifyLV_INT[idx]) {
+			if (m_nImageVerifyRC[idx] != m_nImageVerifyRC_INT[idx]) {
+				if (m_nImageVerifyDL[idx] != m_nImageVerifyDL_INT[idx]) {
+					if(m_nImageVerifyDL[idx] != 0)
+						isVerified = true;
+				}
+			}
+		}
+
+		m_pDriverEnvironment->SetBoolParameter(std::to_string(idx) + "_verified", isVerified);
 	}
-
-
-	m_pDriverEnvironment->SetDoubleParameter("headsettempone", m_dSetTemperatures[0]);
-	m_pDriverEnvironment->SetDoubleParameter("headsettemptwo", m_dSetTemperatures[1]);
-	m_pDriverEnvironment->SetDoubleParameter("headsettempthr", m_dSetTemperatures[2]);
-	m_pDriverEnvironment->SetDoubleParameter("headsettempfor", m_dSetTemperatures[3]);
-
-	m_pDriverEnvironment->SetDoubleParameter("headcurtempone", m_dCurrentTemperatures[0]);
-	m_pDriverEnvironment->SetDoubleParameter("headcurtemptwo", m_dCurrentTemperatures[1]);
-	m_pDriverEnvironment->SetDoubleParameter("headcurtempthr", m_dCurrentTemperatures[2]);
-	m_pDriverEnvironment->SetDoubleParameter("headcurtempfor", m_dCurrentTemperatures[3]);
-
-	m_pDriverEnvironment->SetDoubleParameter("headprintcountsone", m_dPrintCounts[0]);
-	m_pDriverEnvironment->SetDoubleParameter("headprintcountstwo", m_dPrintCounts[1]);
-	m_pDriverEnvironment->SetDoubleParameter("headprintcountsthr", m_dPrintCounts[2]);
-	m_pDriverEnvironment->SetDoubleParameter("headprintcountsfor", m_dPrintCounts[3]);
-
-	m_pDriverEnvironment->SetDoubleParameter("headstateone", m_dStates[0]);
-	m_pDriverEnvironment->SetDoubleParameter("headstatetwo", m_dStates[1]);
-	m_pDriverEnvironment->SetDoubleParameter("headstatethr", m_dStates[2]);
-	m_pDriverEnvironment->SetDoubleParameter("headstatefor", m_dStates[3]);
-
 
 	//m_pDriverEnvironment->LogMessage("We polled!");
 
@@ -381,7 +402,7 @@ bool CDriverContextInstance::IsHeating(const LibMCDriver_ASL_uint8 nIndex)
 bool CDriverContextInstance::GetPower()
 {
 	CDriverContextInstance::SoftPoll();
-	throw ELibMCDriver_ASLInterfaceException(LIBMCDRIVER_ASL_ERROR_NOTIMPLEMENTED);
+	return m_bPower;
 }
 
 LibMCDriver_ASL_uint32 CDriverContextInstance::GetHeadTimeOn()

@@ -67,6 +67,7 @@ private:
 	double m_dPrintCounts[4];
 	double m_dImageLength[4];
 	bool   m_bHasData[4];
+	bool   m_bPower;
 	double m_dProgress[4];
 	double m_dStates[4];
 	uint32_t m_nImageVerifyRC[4];
