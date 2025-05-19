@@ -622,9 +622,10 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCContext_DrawLay
 * @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
 * @param[in] pSMCDLLResourceName - Resource name of SCANmotionControl DLL
 * @param[in] pRTCDLLResourceName - Resource name of RTC DLL
+* @param[in] pRTCServiceDLLResourceName - Resource name of RTC Service DLL
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetDLLResourcesPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName);
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetDLLResourcesPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName, const char * pRTCServiceDLLResourceName);
 
 /**
 * Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.
@@ -643,9 +644,11 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_
 * @param[in] pSMCDLLResourceDataBuffer - uint8 buffer of Resource data of SCANmotionControl DLL
 * @param[in] nRTCDLLResourceDataBufferSize - Number of elements in buffer
 * @param[in] pRTCDLLResourceDataBuffer - uint8 buffer of Resource data of RTC DLL
+* @param[in] nRTCServiceDLLResourceDataBufferSize - Number of elements in buffer
+* @param[in] pRTCServiceDLLResourceDataBuffer - uint8 buffer of Resource data of RTC Service DLL
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomDLLDataPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer);
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomDLLDataPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer);
 
 /**
 * Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.

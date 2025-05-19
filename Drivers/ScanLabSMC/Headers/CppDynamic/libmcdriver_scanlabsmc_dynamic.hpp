@@ -236,6 +236,9 @@ public:
 			case LIBMCDRIVER_SCANLABSMC_ERROR_LINEARPOWERVALUESAREINCOMPLETE: return "LINEARPOWERVALUESAREINCOMPLETE";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_NONLINEARPOWERVALUESAREINCOMPLETE: return "NONLINEARPOWERVALUESAREINCOMPLETE";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING: return "INTERPOLATIONDATAISNOTINCREASING";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME: return "EMPTYRTCSERVICEDLLRESOURCENAME";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND: return "RTCSERVICERESOURCENOTFOUND";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA: return "EMPTYRTCSERVICEDLLRESOURCEDATA";
 		}
 		return "UNKNOWN";
 	}
@@ -302,6 +305,9 @@ public:
 			case LIBMCDRIVER_SCANLABSMC_ERROR_LINEARPOWERVALUESAREINCOMPLETE: return "Linear power values are incomplete.";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_NONLINEARPOWERVALUESAREINCOMPLETE: return "Nonlinear power values are incomplete.";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING: return "Interpolation data is not increasing.";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME: return "Empty RTC Service DLL Resource Name.";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND: return "RTC Service Resource not found.";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA: return "Empty RTC Service DLL Resource Data.";
 		}
 		return "unknown error";
 	}
@@ -622,9 +628,9 @@ public:
 	{
 	}
 	
-	inline void SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName);
+	inline void SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName, const std::string & sRTCServiceDLLResourceName);
 	inline void SetXercesDLLResource(const std::string & sXercesDLLResourceName);
-	inline void SetCustomDLLData(const CInputVector<LibMCDriver_ScanLabSMC_uint8> & SMCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCDLLResourceDataBuffer);
+	inline void SetCustomDLLData(const CInputVector<LibMCDriver_ScanLabSMC_uint8> & SMCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCServiceDLLResourceDataBuffer);
 	inline void SetCustomXercesDLLData(const CInputVector<LibMCDriver_ScanLabSMC_uint8> & XercesDLLResourceDataBuffer);
 	inline void LoadSDK();
 	inline PSMCContext CreateContext(const std::string & sContextName, classParam<CSMCConfiguration> pSMCConfiguration);
@@ -2508,10 +2514,11 @@ public:
 	* CDriver_ScanLabSMC::SetDLLResources - Sets the default resource name of the SCANLAB DLLs. Overrides custom resource data if set before.
 	* @param[in] sSMCDLLResourceName - Resource name of SCANmotionControl DLL
 	* @param[in] sRTCDLLResourceName - Resource name of RTC DLL
+	* @param[in] sRTCServiceDLLResourceName - Resource name of RTC Service DLL
 	*/
-	void CDriver_ScanLabSMC::SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName)
+	void CDriver_ScanLabSMC::SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName, const std::string & sRTCServiceDLLResourceName)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLabSMC_SetDLLResources(m_pHandle, sSMCDLLResourceName.c_str(), sRTCDLLResourceName.c_str()));
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLabSMC_SetDLLResources(m_pHandle, sSMCDLLResourceName.c_str(), sRTCDLLResourceName.c_str(), sRTCServiceDLLResourceName.c_str()));
 	}
 	
 	/**
@@ -2527,10 +2534,11 @@ public:
 	* CDriver_ScanLabSMC::SetCustomDLLData - Sets custom binaries for the needed SCANLAB DLLs. Overrides custom resource data if set before.
 	* @param[in] SMCDLLResourceDataBuffer - Resource data of SCANmotionControl DLL
 	* @param[in] RTCDLLResourceDataBuffer - Resource data of RTC DLL
+	* @param[in] RTCServiceDLLResourceDataBuffer - Resource data of RTC Service DLL
 	*/
-	void CDriver_ScanLabSMC::SetCustomDLLData(const CInputVector<LibMCDriver_ScanLabSMC_uint8> & SMCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCDLLResourceDataBuffer)
+	void CDriver_ScanLabSMC::SetCustomDLLData(const CInputVector<LibMCDriver_ScanLabSMC_uint8> & SMCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCDLLResourceDataBuffer, const CInputVector<LibMCDriver_ScanLabSMC_uint8> & RTCServiceDLLResourceDataBuffer)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLabSMC_SetCustomDLLData(m_pHandle, (LibMCDriver_ScanLabSMC_uint64)SMCDLLResourceDataBuffer.size(), SMCDLLResourceDataBuffer.data(), (LibMCDriver_ScanLabSMC_uint64)RTCDLLResourceDataBuffer.size(), RTCDLLResourceDataBuffer.data()));
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLabSMC_SetCustomDLLData(m_pHandle, (LibMCDriver_ScanLabSMC_uint64)SMCDLLResourceDataBuffer.size(), SMCDLLResourceDataBuffer.data(), (LibMCDriver_ScanLabSMC_uint64)RTCDLLResourceDataBuffer.size(), RTCDLLResourceDataBuffer.data(), (LibMCDriver_ScanLabSMC_uint64)RTCServiceDLLResourceDataBuffer.size(), RTCServiceDLLResourceDataBuffer.data()));
 	}
 	
 	/**

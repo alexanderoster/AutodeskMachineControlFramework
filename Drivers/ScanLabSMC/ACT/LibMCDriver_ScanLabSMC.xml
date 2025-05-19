@@ -100,6 +100,9 @@
 		<error name="LINEARPOWERVALUESAREINCOMPLETE" code="1046" description="Linear power values are incomplete." />
 		<error name="NONLINEARPOWERVALUESAREINCOMPLETE" code="1047" description="Nonlinear power values are incomplete." />
 		<error name="INTERPOLATIONDATAISNOTINCREASING" code="1048" description="Interpolation data is not increasing." />
+		<error name="EMPTYRTCSERVICEDLLRESOURCENAME" code="1049" description="Empty RTC Service DLL Resource Name." />
+		<error name="RTCSERVICERESOURCENOTFOUND" code="1050" description="RTC Service Resource not found." />
+		<error name="EMPTYRTCSERVICEDLLRESOURCEDATA" code="1051" description="Empty RTC Service DLL Resource Data." />		
 											
 	</errors>
 
@@ -140,6 +143,7 @@
 	   <option name="Unknown" value="0" />
 	   <option name="Version_0_8" value="8" />
 	   <option name="Version_0_9" value="9" />
+	   <option name="Version_1_0" value="10" />
 	</enum>
 
 	<enum name="JobCharacteristic">
@@ -502,6 +506,7 @@ Custom implementation
 		<method name="SetDLLResources" description="Sets the default resource name of the SCANLAB DLLs. Overrides custom resource data if set before.">
 			<param name="SMCDLLResourceName" type="string" pass="in" description="Resource name of SCANmotionControl DLL" />
 			<param name="RTCDLLResourceName" type="string" pass="in" description="Resource name of RTC DLL" />
+			<param name="RTCServiceDLLResourceName" type="string" pass="in" description="Resource name of RTC Service DLL" />
 		</method>
 
 		<method name="SetXercesDLLResource" description="Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.">
@@ -511,6 +516,7 @@ Custom implementation
 		<method name="SetCustomDLLData" description="Sets custom binaries for the needed SCANLAB DLLs. Overrides custom resource data if set before.">
 			<param name="SMCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of SCANmotionControl DLL" />
 			<param name="RTCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC DLL" />
+			<param name="RTCServiceDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC Service DLL" />
 		</method>
 
 		<method name="SetCustomXercesDLLData" description="Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.">

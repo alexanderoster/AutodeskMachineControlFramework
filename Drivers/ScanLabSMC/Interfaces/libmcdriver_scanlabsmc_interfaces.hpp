@@ -706,8 +706,9 @@ public:
 	* IDriver_ScanLabSMC::SetDLLResources - Sets the default resource name of the SCANLAB DLLs. Overrides custom resource data if set before.
 	* @param[in] sSMCDLLResourceName - Resource name of SCANmotionControl DLL
 	* @param[in] sRTCDLLResourceName - Resource name of RTC DLL
+	* @param[in] sRTCServiceDLLResourceName - Resource name of RTC Service DLL
 	*/
-	virtual void SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName) = 0;
+	virtual void SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName, const std::string & sRTCServiceDLLResourceName) = 0;
 
 	/**
 	* IDriver_ScanLabSMC::SetXercesDLLResource - Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.
@@ -721,8 +722,10 @@ public:
 	* @param[in] pSMCDLLResourceDataBuffer - Resource data of SCANmotionControl DLL
 	* @param[in] nRTCDLLResourceDataBufferSize - Number of elements in buffer
 	* @param[in] pRTCDLLResourceDataBuffer - Resource data of RTC DLL
+	* @param[in] nRTCServiceDLLResourceDataBufferSize - Number of elements in buffer
+	* @param[in] pRTCServiceDLLResourceDataBuffer - Resource data of RTC Service DLL
 	*/
-	virtual void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer) = 0;
+	virtual void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer) = 0;
 
 	/**
 	* IDriver_ScanLabSMC::SetCustomXercesDLLData - Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.

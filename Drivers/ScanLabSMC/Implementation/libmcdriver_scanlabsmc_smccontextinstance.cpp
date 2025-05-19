@@ -81,7 +81,13 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 		case 9: configVersion = eSMCConfigVersion::Version_0_9; break;
 		default:
 			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_UNKNOWNSMCMINORVERSION, "unknown smc minor version: " + sVersionString);
-
+		}
+	}
+	else if (versionInfo.m_nMajor == 1) {
+		switch (versionInfo.m_nMinor) {
+		case 0: configVersion = eSMCConfigVersion::Version_1_0; break;
+		default:
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_UNKNOWNSMCMINORVERSION, "unknown smc minor version: " + sVersionString);
 		}
 	}
 	else {

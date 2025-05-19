@@ -325,6 +325,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     std::string sBoardsNodeName;
     std::string sVersionString;
     std::string sSchemaLocationString;
+    std::string sSimulationMode;
     std::vector<std::string> nodesToCopyFromTemplate;
 
     switch (configVersion) {
@@ -334,6 +335,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             sVersionString = "0.8";
             sSchemaLocationString = "cfg SCANmotionControl_0_8.xsd";
             sBoardsNodeName = "Boards";
+            sSimulationMode = "true";
             nodesToCopyFromTemplate.push_back("ScanDeviceConfig");
             nodesToCopyFromTemplate.push_back("LaserConfig");
             nodesToCopyFromTemplate.push_back("IOConfig");
@@ -345,6 +347,20 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             sVersionString = "0.9";
             sSchemaLocationString = "cfg SCANmotionControl_0_9.xsd";
             sBoardsNodeName = "BoardList";
+            sSimulationMode = "true";
+            nodesToCopyFromTemplate.push_back("AxesList");
+            nodesToCopyFromTemplate.push_back("ScanheadList");
+            nodesToCopyFromTemplate.push_back("KinematicsList");
+            nodesToCopyFromTemplate.push_back("LaserConfig");
+            nodesToCopyFromTemplate.push_back("IOConfig");
+
+            break;
+        case eSMCConfigVersion::Version_1_0:
+            // Customize writing to SMC Version 1.0
+            sVersionString = "1.0";
+            sSchemaLocationString = "cfg SCANmotionControlConfig_1_0.xsd";
+            sBoardsNodeName = "BoardList";
+            sSimulationMode = "Simulation";
             nodesToCopyFromTemplate.push_back("AxesList");
             nodesToCopyFromTemplate.push_back("ScanheadList");
             nodesToCopyFromTemplate.push_back("KinematicsList");
@@ -386,7 +402,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     pGeneralConfigNode->AddChildText("", "BaseDirectoryPath", sBaseDirectoryPath);
 
     auto pSimulationConfigNode = pGeneralConfigNode->AddChild("", "SimulationConfig");
-    pSimulationConfigNode->AddChildText("", "SimulationMode", "true");
+    pSimulationConfigNode->AddChildText("", "SimulationMode", sSimulationMode);
     pSimulationConfigNode->AddChildText("", "SimOutputFileDirectory", sSimulationDirectory);
     pSimulationConfigNode->AddChildText("", "BinaryOutput", "false");
     pSimulationConfigNode->AddChildText("", "DisableFileOutput", "false");
@@ -410,7 +426,8 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             break;
         }
 
-        case eSMCConfigVersion::Version_0_9: {
+        case eSMCConfigVersion::Version_0_9: 
+        case eSMCConfigVersion::Version_1_0: {
             if (!sRTCIPAddress.empty()) {
                 auto pEthSearchNode = pRTCConfigNode->AddChild("", "EthSearch");
                 auto pIPListNode = pEthSearchNode->AddChild("", "IPList");

@@ -1724,7 +1724,7 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_drawlayer(LibMCDr
 /*************************************************************************************************************************
  Class implementation for Driver_ScanLabSMC
 **************************************************************************************************************************/
-LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setdllresources(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName)
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setdllresources(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName, const char * pRTCServiceDLLResourceName)
 {
 	IBase* pIBaseClass = (IBase *)pDriver_ScanLabSMC;
 
@@ -1733,13 +1733,16 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setdllreso
 			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 		if (pRTCDLLResourceName == nullptr)
 			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+		if (pRTCServiceDLLResourceName == nullptr)
+			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 		std::string sSMCDLLResourceName(pSMCDLLResourceName);
 		std::string sRTCDLLResourceName(pRTCDLLResourceName);
+		std::string sRTCServiceDLLResourceName(pRTCServiceDLLResourceName);
 		IDriver_ScanLabSMC* pIDriver_ScanLabSMC = dynamic_cast<IDriver_ScanLabSMC*>(pIBaseClass);
 		if (!pIDriver_ScanLabSMC)
 			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
 		
-		pIDriver_ScanLabSMC->SetDLLResources(sSMCDLLResourceName, sRTCDLLResourceName);
+		pIDriver_ScanLabSMC->SetDLLResources(sSMCDLLResourceName, sRTCDLLResourceName, sRTCServiceDLLResourceName);
 
 		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
 	}
@@ -1781,7 +1784,7 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setxercesd
 	}
 }
 
-LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setcustomdlldata(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer)
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setcustomdlldata(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer)
 {
 	IBase* pIBaseClass = (IBase *)pDriver_ScanLabSMC;
 
@@ -1790,11 +1793,13 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setcustomd
 			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 		if ( (!pRTCDLLResourceDataBuffer) && (nRTCDLLResourceDataBufferSize>0))
 			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+		if ( (!pRTCServiceDLLResourceDataBuffer) && (nRTCServiceDLLResourceDataBufferSize>0))
+			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 		IDriver_ScanLabSMC* pIDriver_ScanLabSMC = dynamic_cast<IDriver_ScanLabSMC*>(pIBaseClass);
 		if (!pIDriver_ScanLabSMC)
 			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
 		
-		pIDriver_ScanLabSMC->SetCustomDLLData(nSMCDLLResourceDataBufferSize, pSMCDLLResourceDataBuffer, nRTCDLLResourceDataBufferSize, pRTCDLLResourceDataBuffer);
+		pIDriver_ScanLabSMC->SetCustomDLLData(nSMCDLLResourceDataBufferSize, pSMCDLLResourceDataBuffer, nRTCDLLResourceDataBufferSize, pRTCDLLResourceDataBuffer, nRTCServiceDLLResourceDataBufferSize, pRTCServiceDLLResourceDataBuffer);
 
 		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
 	}
