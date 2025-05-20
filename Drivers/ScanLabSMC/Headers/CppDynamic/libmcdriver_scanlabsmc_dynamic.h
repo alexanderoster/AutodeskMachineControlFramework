@@ -622,10 +622,18 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCContext_DrawLay
 * @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
 * @param[in] pSMCDLLResourceName - Resource name of SCANmotionControl DLL
 * @param[in] pRTCDLLResourceName - Resource name of RTC DLL
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetDLLResourcesPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName);
+
+/**
+* Sets the default resource name of the RTC Service DLL. Overrides custom resource data if set before.
+*
+* @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
 * @param[in] pRTCServiceDLLResourceName - Resource name of RTC Service DLL
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetDLLResourcesPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName, const char * pRTCServiceDLLResourceName);
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetRTCServiceDLLResourceNamePtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pRTCServiceDLLResourceName);
 
 /**
 * Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.
@@ -644,11 +652,19 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_
 * @param[in] pSMCDLLResourceDataBuffer - uint8 buffer of Resource data of SCANmotionControl DLL
 * @param[in] nRTCDLLResourceDataBufferSize - Number of elements in buffer
 * @param[in] pRTCDLLResourceDataBuffer - uint8 buffer of Resource data of RTC DLL
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomDLLDataPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer);
+
+/**
+* Sets custom binaries for the needed RTC Service DLLs. Overrides custom resource data if set before.
+*
+* @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
 * @param[in] nRTCServiceDLLResourceDataBufferSize - Number of elements in buffer
 * @param[in] pRTCServiceDLLResourceDataBuffer - uint8 buffer of Resource data of RTC Service DLL
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomDLLDataPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer);
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetRTCServiceDLLResourceDataPtr) (LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer);
 
 /**
 * Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.
@@ -859,8 +875,10 @@ typedef struct {
 	PLibMCDriver_ScanLabSMCSMCContext_GetUnfinishedJobPtr m_SMCContext_GetUnfinishedJob;
 	PLibMCDriver_ScanLabSMCSMCContext_DrawLayerPtr m_SMCContext_DrawLayer;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetDLLResourcesPtr m_Driver_ScanLabSMC_SetDLLResources;
+	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetRTCServiceDLLResourceNamePtr m_Driver_ScanLabSMC_SetRTCServiceDLLResourceName;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetXercesDLLResourcePtr m_Driver_ScanLabSMC_SetXercesDLLResource;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomDLLDataPtr m_Driver_ScanLabSMC_SetCustomDLLData;
+	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetRTCServiceDLLResourceDataPtr m_Driver_ScanLabSMC_SetRTCServiceDLLResourceData;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_SetCustomXercesDLLDataPtr m_Driver_ScanLabSMC_SetCustomXercesDLLData;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_LoadSDKPtr m_Driver_ScanLabSMC_LoadSDK;
 	PLibMCDriver_ScanLabSMCDriver_ScanLabSMC_CreateContextPtr m_Driver_ScanLabSMC_CreateContext;

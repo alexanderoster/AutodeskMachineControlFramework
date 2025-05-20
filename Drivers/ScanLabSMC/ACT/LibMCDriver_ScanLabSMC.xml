@@ -506,6 +506,9 @@ Custom implementation
 		<method name="SetDLLResources" description="Sets the default resource name of the SCANLAB DLLs. Overrides custom resource data if set before.">
 			<param name="SMCDLLResourceName" type="string" pass="in" description="Resource name of SCANmotionControl DLL" />
 			<param name="RTCDLLResourceName" type="string" pass="in" description="Resource name of RTC DLL" />
+		</method>
+
+		<method name="SetRTCServiceDLLResourceName" description="Sets the default resource name of the RTC Service DLL. Overrides custom resource data if set before.">
 			<param name="RTCServiceDLLResourceName" type="string" pass="in" description="Resource name of RTC Service DLL" />
 		</method>
 
@@ -516,6 +519,9 @@ Custom implementation
 		<method name="SetCustomDLLData" description="Sets custom binaries for the needed SCANLAB DLLs. Overrides custom resource data if set before.">
 			<param name="SMCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of SCANmotionControl DLL" />
 			<param name="RTCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC DLL" />
+		</method>
+
+		<method name="SetRTCServiceDLLResourceData" description="Sets custom binaries for the needed RTC Service DLLs. Overrides custom resource data if set before.">
 			<param name="RTCServiceDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC Service DLL" />
 		</method>
 

@@ -66,7 +66,7 @@ CDriver_ScanLabSMC::~CDriver_ScanLabSMC()
 
 }
 
-void CDriver_ScanLabSMC::SetDLLResources(const std::string& sSMCDLLResourceName, const std::string& sRTCDLLResourceName, const std::string& sRTCServiceDLLResourceName)
+void CDriver_ScanLabSMC::SetDLLResources(const std::string& sSMCDLLResourceName, const std::string& sRTCDLLResourceName)
 {
     if (m_pSDK.get() != nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
@@ -105,28 +105,31 @@ void CDriver_ScanLabSMC::SetDLLResources(const std::string& sSMCDLLResourceName,
 
     if (m_RTCDLLResourceData.empty())
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSTORERTCSDK);
+}
 
-    if (m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-latest") {
+void CDriver_ScanLabSMC::SetRTCServiceDLLResourceName(const std::string& sRTCServiceDLLResourceName)
+{
+    if (m_pSDK.get() != nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
 
-        m_RTCServiceDLLResourceData.resize(0);
+    m_RTCServiceDLLResourceData.resize(0);
 
-        if (sRTCServiceDLLResourceName.empty())
-            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME);
+    if (sRTCServiceDLLResourceName.empty())
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME);
 
-        if (m_pDriverEnvironment->MachineHasResourceData(sRTCServiceDLLResourceName)) {
-            m_pDriverEnvironment->RetrieveMachineResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
-        }
-        else {
-            if (m_pDriverEnvironment->DriverHasResourceData(sRTCServiceDLLResourceName)) {
-                m_pDriverEnvironment->RetrieveDriverResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
-            }
-            else
-                throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND, "RTC SDK Resource not found: " + sRTCServiceDLLResourceName);
-        }
-
-        if (m_RTCServiceDLLResourceData.empty())
-            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND);
+    if (m_pDriverEnvironment->MachineHasResourceData(sRTCServiceDLLResourceName)) {
+        m_pDriverEnvironment->RetrieveMachineResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
     }
+    else {
+        if (m_pDriverEnvironment->DriverHasResourceData(sRTCServiceDLLResourceName)) {
+            m_pDriverEnvironment->RetrieveDriverResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
+        }
+        else
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND, "RTC SDK Resource not found: " + sRTCServiceDLLResourceName);
+    }
+
+    if (m_RTCServiceDLLResourceData.empty())
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND);
 }
 
 void CDriver_ScanLabSMC::SetXercesDLLResource(const std::string& sXercesDLLResourceName)
@@ -155,7 +158,7 @@ void CDriver_ScanLabSMC::SetXercesDLLResource(const std::string& sXercesDLLResou
 
 }
 
-void CDriver_ScanLabSMC::SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer)
+void CDriver_ScanLabSMC::SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer)
 {
     if (m_pSDK.get() != nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
@@ -186,23 +189,26 @@ void CDriver_ScanLabSMC::SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nS
         m_RTCDLLResourceData.at(nRTCIndex) = *pRTCSrc;
         pRTCSrc++;
     }
+}
 
-    if (m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-latest") {
+void CDriver_ScanLabSMC::SetRTCServiceDLLResourceData(const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer)
+{
+    if (m_pSDK.get() != nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
 
-        m_RTCServiceDLLResourceData.resize(0);
+    m_RTCServiceDLLResourceData.resize(0);
 
-        if (nRTCServiceDLLResourceDataBufferSize == 0)
-            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA);
+    if (nRTCServiceDLLResourceDataBufferSize == 0)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA);
 
-        if (pRTCServiceDLLResourceDataBuffer == nullptr)
-            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+    if (pRTCServiceDLLResourceDataBuffer == nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
-        m_RTCServiceDLLResourceData.resize(nRTCServiceDLLResourceDataBufferSize);
-        auto pRTCSrvSrc = pRTCServiceDLLResourceDataBuffer;
-        for (size_t nRTCSrvIndex = 0; nRTCSrvIndex < nRTCServiceDLLResourceDataBufferSize; nRTCSrvIndex++) {
-            m_RTCServiceDLLResourceData.at(nRTCSrvIndex) = *pRTCSrvSrc;
-            pRTCSrvSrc++;
-        }
+    m_RTCServiceDLLResourceData.resize(nRTCServiceDLLResourceDataBufferSize);
+    auto pRTCSrvSrc = pRTCServiceDLLResourceDataBuffer;
+    for (size_t nRTCSrvIndex = 0; nRTCSrvIndex < nRTCServiceDLLResourceDataBufferSize; nRTCSrvIndex++) {
+        m_RTCServiceDLLResourceData.at(nRTCSrvIndex) = *pRTCSrvSrc;
+        pRTCSrvSrc++;
     }
 }
 
@@ -238,7 +244,11 @@ void CDriver_ScanLabSMC::LoadSDK()
         return;
 
     if (m_SMCDLLResourceData.empty() || m_RTCDLLResourceData.empty())
-        SetDLLResources(SCANLABSMC_DEFAULT_SMCDLLRESOURCENAME, SCANLABSMC_DEFAULT_RTCDLLRESOURCENAME, SCANLABSMC_DEFAULT_RTCSERVICEDLLRESOURCENAME);
+        SetDLLResources(SCANLABSMC_DEFAULT_SMCDLLRESOURCENAME, SCANLABSMC_DEFAULT_RTCDLLRESOURCENAME);
+
+    if ((m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-latest") && m_RTCServiceDLLResourceData.empty())
+        SetRTCServiceDLLResourceName(SCANLABSMC_DEFAULT_RTCSERVICEDLLRESOURCENAME);
+
     if (m_XercesDLLResourceData.empty())
         SetXercesDLLResource(SCANLABSMC_DEFAULT_XERCESDLLRESOURCENAME);
 

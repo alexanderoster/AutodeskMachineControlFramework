@@ -85,11 +85,15 @@ public:
 
     virtual ~CDriver_ScanLabSMC();
 
-	void SetDLLResources(const std::string& sSMCDLLResourceName, const std::string& sRTCDLLResourceName, const std::string& sRTCServiceDLLResourceName) override;
+	void SetDLLResources(const std::string& sSMCDLLResourceName, const std::string& sRTCDLLResourceName) override;
+
+    void SetRTCServiceDLLResourceName(const std::string& sRTCServiceDLLResourceName) override;
 
 	void SetXercesDLLResource(const std::string& sXercesDLLResourceName) override;
 
-    void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer) override;
+    void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer) override;
+
+    void SetRTCServiceDLLResourceData(const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer) override;
 	
 	void SetCustomXercesDLLData(const LibMCDriver_ScanLabSMC_uint64 nXercesDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pXercesDLLResourceDataBuffer) override;
 
