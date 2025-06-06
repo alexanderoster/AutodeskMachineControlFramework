@@ -35,6 +35,7 @@ Abstract: This is a stub class definition of CSMCJob
 #include "libmcdriver_scanlabsmc_interfaceexception.hpp"
 #include "libmcdriver_scanlabsmc_sdk.hpp"
 #include "libmcdriver_scanlabsmc_smcsimulationparser.hpp"
+#include "libmcdriver_scanlabsmc_smccsvparser.hpp"
 
 // Include custom headers here.
 #define SCANLABSMC_MICROSTEPSPERSECOND 100000
@@ -84,7 +85,12 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
     }
     // */
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_begin(contextHandle, &m_JobID));
+    
 
+    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
+    slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
+
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
 }
 
 CSMCJobInstance::~CSMCJobInstance()
@@ -103,6 +109,8 @@ void CSMCJobInstance::Finalize()
         throw std::runtime_error("Job is already finalized!");
     
     auto contextHandle = m_pContextHandle->getHandle();
+
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_stop_record(contextHandle));
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_end(contextHandle));
     m_bIsFinalized = true;
@@ -698,6 +706,144 @@ void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
     m_bHasJobDuration = true;
 }
 
+void CSMCJobInstance::ReadSimulationFile_SMC_v1(LibMCEnv::PDataTable pDataTable)
+{
+    if (pDataTable.get() == nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    std::vector<char> buffer;
+    buffer.resize(16384);
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_get_simulation_filename(contextHandle, m_JobID, buffer.data(), buffer.size()));
+    buffer.at(buffer.size() - 1) = 0;
+
+    std::string sSimulationFileName(buffer.data());
+
+    std::string sSimulationDirectory = m_pWorkingDirectory->GetAbsoluteFilePath() + "/";
+    if (!m_sSimulationSubDirectory.empty())
+        sSimulationDirectory += m_sSimulationSubDirectory + "/";
+
+    CSMCCSVParser parser(sSimulationDirectory + sSimulationFileName, ';');
+
+    std::vector<double>     scanheadX;            // DisplacedX_Galvo_1
+    std::vector<double>     scanheadY;            // DisplacedY_Galvo_1
+    std::vector<bool>       laserSignal;        // LaserSignal
+    std::vector<bool>        laserToggle;        // LaserToggle
+    std::vector<double>     activeChannel0;     // ActiveChannel0
+    std::vector<double>     activeChannel1;     // ActiveChannel1
+    std::vector<int>        cmdCount;           // CommandCount
+    std::vector<int>        triggerSignal;      // TriggerSignal
+    std::vector<int>        dummy;               //
+    std::vector<double>     timestampValues;    //
+
+    std::vector<CSMCCSVParser::FieldBinding> bindings = {
+        {{CSMCCSVParser::FieldParserType::Double, CSMCCSVParser::FieldProcessingStep::Extend | CSMCCSVParser::FieldProcessingStep::Interpolate }, &scanheadX},
+        {{CSMCCSVParser::FieldParserType::Double, CSMCCSVParser::FieldProcessingStep::Extend | CSMCCSVParser::FieldProcessingStep::Interpolate }, &scanheadY},
+        {{CSMCCSVParser::FieldParserType::LaserSignal,CSMCCSVParser::FieldProcessingStep::Nop}, &laserSignal},
+        {{CSMCCSVParser::FieldParserType::Bool,CSMCCSVParser::FieldProcessingStep::Nop}, &laserToggle},
+        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        {{CSMCCSVParser::FieldParserType::Int,CSMCCSVParser::FieldProcessingStep::Nop}, &cmdCount},
+        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        {{CSMCCSVParser::FieldParserType::Timestamp,CSMCCSVParser::FieldProcessingStep::Nop}, &timestampValues}
+    };
+
+    parser.Parse(bindings);
+
+#if NOT_IMPLEMENTED
+    const auto& headers = parser.getHeader();
+    const auto& types = parser.getColumnTypes();
+    const auto& rows = parser.getRows();
+#endif
+
+    pDataTable->AddColumn("timestamp", "Timestamp", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("y", "Y", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("laseron", "LaserOn", LibMCEnv::eDataTableColumnType::Int32Column);
+    pDataTable->AddColumn("active1", "Active Channel 1", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("active2", "Active Channel 2", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("cmdindex", "Command Index", LibMCEnv::eDataTableColumnType::Int32Column);
+
+    m_dJobDuration = (double)timestampValues.size() / (double)SCANLABSMC_MICROSTEPSPERSECOND;
+    m_bHasJobDuration = true;
+
+    pDataTable->SetDoubleColumnValues("timestamp", timestampValues);
+    timestampValues.resize(0);
+
+    pDataTable->SetDoubleColumnValues("x", scanheadX);
+    scanheadX.resize(0);
+
+    pDataTable->SetDoubleColumnValues("y", scanheadY);
+    scanheadY.resize(0);
+}
+
+void CSMCJobInstance::ReadLogRecordFile(LibMCEnv::PDataTable pDataTable)
+{
+    if (pDataTable.get() == nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    auto pLogRecordFile = m_pWorkingDirectory->AddManagedTempFile("csv");
+
+    //if(!pLogRecordFile->FileExists())
+    //    throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+
+    auto sLogRecordAbsoluteFileName = pLogRecordFile->GetAbsoluteFileName();
+
+    //auto eTransformationStep = slsc_TransformationStep::slsc_TransformationStep_Rtc; // needs scaling and rotation 
+    auto eTransformationStep = slsc_TransformationStep::slsc_TransformationStep_Corrected;
+
+    m_pSDK->slsc_ctrl_log_record(m_pContextHandle->getHandle(), sLogRecordAbsoluteFileName.c_str(), eTransformationStep);
+
+    //-----------------------------------
+
+    CSMCCSVParser parser(sLogRecordAbsoluteFileName, ';');
+
+    std::vector<double> timestampValues;
+    std::vector<double> scanheadX;
+    std::vector<double> scanheadY;
+    std::vector<bool>   laserSignal;
+
+    std::vector<CSMCCSVParser::FieldBinding> bindings = {
+        {{CSMCCSVParser::FieldParserType::Double, CSMCCSVParser::FieldProcessingStep::Extend | CSMCCSVParser::FieldProcessingStep::Interpolate }, &scanheadX},
+        {{CSMCCSVParser::FieldParserType::Double, CSMCCSVParser::FieldProcessingStep::Extend | CSMCCSVParser::FieldProcessingStep::Interpolate }, &scanheadY},
+        {{CSMCCSVParser::FieldParserType::LaserSignal,CSMCCSVParser::FieldProcessingStep::Nop}, &laserSignal},
+        {{CSMCCSVParser::FieldParserType::Timestamp,CSMCCSVParser::FieldProcessingStep::Nop}, &timestampValues}
+    };
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    parser.Parse(bindings);
+
+#if NOT_IMPLEMENTED
+    const auto& headers = parser.getHeader();
+    const auto& types = parser.getColumnTypes();
+    const auto& rows = parser.getRows();
+#endif
+
+    pDataTable->AddColumn("timestamp", "Timestamp", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("y", "Y", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("laseron", "LaserOn", LibMCEnv::eDataTableColumnType::Int32Column);
+    pDataTable->AddColumn("active1", "Active Channel 1", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("active2", "Active Channel 2", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("cmdindex", "Command Index", LibMCEnv::eDataTableColumnType::Int32Column);
+
+    m_dJobDuration = (double)timestampValues.size() / (double)SCANLABSMC_MICROSTEPSPERSECOND;
+    m_bHasJobDuration = true;
+
+    pDataTable->SetDoubleColumnValues("timestamp", timestampValues);
+    timestampValues.resize(0);
+
+    pDataTable->SetDoubleColumnValues("x", scanheadX);
+    scanheadX.resize(0);
+
+    pDataTable->SetDoubleColumnValues("y", scanheadY);
+    scanheadY.resize(0);
+}
 
 void CSMCJobInstance::AddLayerToList(LibMCEnv::PToolpathLayer pLayer)
 {

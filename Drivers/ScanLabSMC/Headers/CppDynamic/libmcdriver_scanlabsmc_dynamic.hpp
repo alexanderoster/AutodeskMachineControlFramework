@@ -544,6 +544,8 @@ public:
 	inline void WaitForExecution(const LibMCDriver_ScanLabSMC_uint32 nTimeOutInMilliseconds);
 	inline void StopExecution();
 	inline void LoadSimulationData(classParam<LibMCEnv::CDataTable> pSimulationDataTable);
+	inline void LoadSimulationData_SMC_v1(classParam<LibMCEnv::CDataTable> pSimulationDataTable);
+	inline void LoadLogRecordData(classParam<LibMCEnv::CDataTable> pLogRecordDataTable);
 	inline LibMCDriver_ScanLabSMC_double GetJobCharacteristic(const eJobCharacteristic eValueType);
 	inline LibMCDriver_ScanLabSMC_double GetJobDuration();
 };
@@ -786,6 +788,8 @@ public:
 		pWrapperTable->m_SMCJob_WaitForExecution = nullptr;
 		pWrapperTable->m_SMCJob_StopExecution = nullptr;
 		pWrapperTable->m_SMCJob_LoadSimulationData = nullptr;
+		pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1 = nullptr;
+		pWrapperTable->m_SMCJob_LoadLogRecordData = nullptr;
 		pWrapperTable->m_SMCJob_GetJobCharacteristic = nullptr;
 		pWrapperTable->m_SMCJob_GetJobDuration = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetDynamicViolationReaction = nullptr;
@@ -1063,6 +1067,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_SMCJob_LoadSimulationData == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1 = (PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationData_SMC_v1Ptr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1");
+		#else // _WIN32
+		pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1 = (PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationData_SMC_v1Ptr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1 == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCJob_LoadLogRecordData = (PLibMCDriver_ScanLabSMCSMCJob_LoadLogRecordDataPtr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcjob_loadlogrecorddata");
+		#else // _WIN32
+		pWrapperTable->m_SMCJob_LoadLogRecordData = (PLibMCDriver_ScanLabSMCSMCJob_LoadLogRecordDataPtr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcjob_loadlogrecorddata");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCJob_LoadLogRecordData == nullptr)
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1679,6 +1701,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_LoadSimulationData == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1", (void**)&(pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_LoadSimulationData_SMC_v1 == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcjob_loadlogrecorddata", (void**)&(pWrapperTable->m_SMCJob_LoadLogRecordData));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_LoadLogRecordData == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcjob_getjobcharacteristic", (void**)&(pWrapperTable->m_SMCJob_GetJobCharacteristic));
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_GetJobCharacteristic == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -2145,6 +2175,26 @@ public:
 	{
 		LibMCEnvHandle hSimulationDataTable = pSimulationDataTable.GetHandle();
 		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_LoadSimulationData(m_pHandle, hSimulationDataTable));
+	}
+	
+	/**
+	* CSMCJob::LoadSimulationData_SMC_v1 - Reads the SMC Simulation data into a data table.
+	* @param[in] pSimulationDataTable - Data table object to read the simulation into.
+	*/
+	void CSMCJob::LoadSimulationData_SMC_v1(classParam<LibMCEnv::CDataTable> pSimulationDataTable)
+	{
+		LibMCEnvHandle hSimulationDataTable = pSimulationDataTable.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_LoadSimulationData_SMC_v1(m_pHandle, hSimulationDataTable));
+	}
+	
+	/**
+	* CSMCJob::LoadLogRecordData - Reads the SMC Log Record data into a data table.
+	* @param[in] pLogRecordDataTable - Data table object to read the simulation into.
+	*/
+	void CSMCJob::LoadLogRecordData(classParam<LibMCEnv::CDataTable> pLogRecordDataTable)
+	{
+		LibMCEnvHandle hLogRecordDataTable = pLogRecordDataTable.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_LoadLogRecordData(m_pHandle, hLogRecordDataTable));
 	}
 	
 	/**

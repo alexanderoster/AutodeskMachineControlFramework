@@ -653,6 +653,64 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadsimulationdata(Li
 	}
 }
 
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable)
+{
+	IBase* pIBaseClass = (IBase *)pSMCJob;
+
+	try {
+		LibMCEnv::PDataTable pISimulationDataTable = std::make_shared<LibMCEnv::CDataTable>(CWrapper::sPLibMCEnvWrapper.get(), pSimulationDataTable);
+		CWrapper::sPLibMCEnvWrapper->AcquireInstance(pISimulationDataTable.get());
+		if (!pISimulationDataTable)
+			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		ISMCJob* pISMCJob = dynamic_cast<ISMCJob*>(pIBaseClass);
+		if (!pISMCJob)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		pISMCJob->LoadSimulationData_SMC_v1(pISimulationDataTable);
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadlogrecorddata(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pLogRecordDataTable)
+{
+	IBase* pIBaseClass = (IBase *)pSMCJob;
+
+	try {
+		LibMCEnv::PDataTable pILogRecordDataTable = std::make_shared<LibMCEnv::CDataTable>(CWrapper::sPLibMCEnvWrapper.get(), pLogRecordDataTable);
+		CWrapper::sPLibMCEnvWrapper->AcquireInstance(pILogRecordDataTable.get());
+		if (!pILogRecordDataTable)
+			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		ISMCJob* pISMCJob = dynamic_cast<ISMCJob*>(pIBaseClass);
+		if (!pISMCJob)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		pISMCJob->LoadLogRecordData(pILogRecordDataTable);
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_getjobcharacteristic(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, eLibMCDriver_ScanLabSMCJobCharacteristic eValueType, LibMCDriver_ScanLabSMC_double * pValue)
 {
 	IBase* pIBaseClass = (IBase *)pSMCJob;
@@ -2197,6 +2255,10 @@ LibMCDriver_ScanLabSMCResult LibMCDriver_ScanLabSMC::Impl::LibMCDriver_ScanLabSM
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_stopexecution;
 	if (sProcName == "libmcdriver_scanlabsmc_smcjob_loadsimulationdata") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_loadsimulationdata;
+	if (sProcName == "libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1;
+	if (sProcName == "libmcdriver_scanlabsmc_smcjob_loadlogrecorddata") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_loadlogrecorddata;
 	if (sProcName == "libmcdriver_scanlabsmc_smcjob_getjobcharacteristic") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_getjobcharacteristic;
 	if (sProcName == "libmcdriver_scanlabsmc_smcjob_getjobduration") 

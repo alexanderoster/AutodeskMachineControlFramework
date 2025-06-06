@@ -176,6 +176,23 @@ namespace LibMCDriver_ScanLabSMC {
 
 		};
 
+		enum class slsc_RecordSet : uint8_t
+		{
+			slsc_RecordSet_HeadAPosition = 0,
+			slsc_RecordSet_HeadBPosition = 1,
+			slsc_RecordSet_LaserSwitches = 2,
+			slsc_RecordSet_SetPositions = 3,
+			slsc_RecordSet_ActPositions = 4,
+			slsc_RecordSet_Empty = 5,
+		};
+
+		enum class slsc_TransformationStep : uint8_t
+		{
+			slsc_TransformationStep_Workspace = 0,
+			slsc_TransformationStep_Aligned = 1,
+			slsc_TransformationStep_Corrected = 2,
+			slsc_TransformationStep_Rtc = 3,
+		};
 
 		typedef struct _slsc_PolylineOptions slsc_PolylineOptions;
 		typedef struct _slsc_VersionInfo slsc_VersionInfo;
@@ -214,6 +231,10 @@ namespace LibMCDriver_ScanLabSMC {
 
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_cfg_get_blend_mode) (size_t Handle, slsc_BlendModes* BlendMode);
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_cfg_set_blend_mode) (size_t Handle, slsc_BlendModes BlendMode);
+
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_start_record) (size_t Handle, slsc_RecordSet RecordSetA, slsc_RecordSet RecordSetB);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_stop_record) (size_t Handle);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_log_record) (size_t Handle, const char* DatasetPath, slsc_TransformationStep Step);
 
 		class CScanLabSMCSDK_DLLDirectoryCache {
 		private:
@@ -270,6 +291,9 @@ namespace LibMCDriver_ScanLabSMC {
 			PScanLabSMCPtr_slsc_job_para_disable slsc_job_para_disable = nullptr;
 			PScanLabSMCPtr_slsc_job_para_line slsc_job_para_line = nullptr;
 			PScanLabSMCPtr_slsc_job_multi_para_line slsc_job_multi_para_line = nullptr;
+			PScanLabSMCPtr_slsc_job_start_record slsc_job_start_record = nullptr;
+			PScanLabSMCPtr_slsc_job_stop_record slsc_job_stop_record = nullptr;
+			PScanLabSMCPtr_slsc_ctrl_log_record slsc_ctrl_log_record  = nullptr;
 
 			CScanLabSMCSDK(const std::string & sDLLNameUTF8, const std::string& sDLLDirectoryUTF8);
 			~CScanLabSMCSDK();

@@ -326,6 +326,14 @@ Custom implementation
 		<method name="LoadSimulationData" description="Reads the SMC Simulation data into a data table.">
 			<param name="SimulationDataTable" type="class" class="LibMCEnv:DataTable" pass="in" description="Data table object to read the simulation into." />
 		</method>	
+
+		<method name="LoadSimulationData_SMC_v1" description="Reads the SMC Simulation data into a data table.">
+			<param name="SimulationDataTable" type="class" class="LibMCEnv:DataTable" pass="in" description="Data table object to read the simulation into." />
+		</method>	
+
+		<method name="LoadLogRecordData" description="Reads the SMC Log Record data into a data table.">
+			<param name="LogRecordDataTable" type="class" class="LibMCEnv:DataTable" pass="in" description="Data table object to read the simulation into." />
+		</method>	
 		
 		<method name="GetJobCharacteristic" description="Returns a characteristic value of a job.">
 			<param name="ValueType" type="enum" class="JobCharacteristic" pass="in" description="Type of job" />

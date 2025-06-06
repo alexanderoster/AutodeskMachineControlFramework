@@ -96,6 +96,10 @@ public:
 
 	void LoadSimulationData(LibMCEnv::PDataTable pSimulationDataTable) override;
 
+	void LoadSimulationData_SMC_v1(LibMCEnv::PDataTable pSimulationDataTable) override;
+
+	void LoadLogRecordData(LibMCEnv::PDataTable pLogRecordDataTable) override;
+
 	LibMCDriver_ScanLabSMC_double GetJobCharacteristic(const LibMCDriver_ScanLabSMC::eJobCharacteristic eValueType) override;
 
 	LibMCDriver_ScanLabSMC_double GetJobDuration() override;

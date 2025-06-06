@@ -266,6 +266,24 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadsimulationdata(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
 
 /**
+* Reads the SMC Simulation data into a data table.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @param[in] pSimulationDataTable - Data table object to read the simulation into.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadsimulationdata_smc_v1(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
+
+/**
+* Reads the SMC Log Record data into a data table.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @param[in] pLogRecordDataTable - Data table object to read the simulation into.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadlogrecorddata(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pLogRecordDataTable);
+
+/**
 * Returns a characteristic value of a job.
 *
 * @param[in] pSMCJob - SMCJob instance.

@@ -98,7 +98,11 @@ public:
 
 	void AddLayerToList(LibMCEnv::PToolpathLayer pLayer);
 
-	void ReadSimulationFile (LibMCEnv::PDataTable pDataTable);
+	void ReadSimulationFile(LibMCEnv::PDataTable pDataTable);
+		
+	void ReadSimulationFile_SMC_v1(LibMCEnv::PDataTable pDataTable);
+
+	void ReadLogRecordFile(LibMCEnv::PDataTable pDataTable);	
 
 	double GetJobCharacteristic(const LibMCDriver_ScanLabSMC::eJobCharacteristic eValueType);
 

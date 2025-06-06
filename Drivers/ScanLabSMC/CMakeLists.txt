@@ -39,6 +39,12 @@ set (DRIVERPROJECT ScanLabSMC)
 
 include (../CMakeDriverCommon.txt)
 
+set_property(TARGET libmcdriver_scanlabsmc PROPERTY CXX_STANDARD 17)
+set_property(TARGET libmcdriver_scanlabsmc PROPERTY CXX_STANDARD_REQUIRED ON)
+
+get_target_property(_std libmcdriver_scanlabsmc CXX_STANDARD)
+message(STATUS "libmcdriver_scanlabsmc uses C++ standard: ${_std}")
+
 ##########################################################################################
 ### Add custom code below
 ##########################################################################################
