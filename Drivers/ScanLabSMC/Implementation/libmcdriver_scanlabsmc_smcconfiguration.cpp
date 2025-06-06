@@ -255,6 +255,8 @@ void CSMCConfiguration::SetFirmwareResources(const std::string& sFirmwareDataRes
     if (sFirmwareDataResource.empty())
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCFIRMWARERESOURCENAME);
 
+    m_sFirmwareDataResource = sFirmwareDataResource;
+
     if (m_pDriverEnvironment->MachineHasResourceData(sFirmwareDataResource)) {
         m_pDriverEnvironment->RetrieveMachineResourceData(sFirmwareDataResource, m_FirmwareData);
     }
@@ -316,7 +318,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     newCorrectionFile = pWorkingDirectory->StoreCustomDataInTempFile("ct5", m_CorrectionFileData);
 
     pWorkingDirectory->StoreCustomData("RTC6RBF.rbf", m_FPGAData);
-    pWorkingDirectory->StoreCustomData("RTC6ETH.out", m_FirmwareData);
+    pWorkingDirectory->StoreCustomData(m_sFirmwareDataResource + ".out", m_FirmwareData);
     pWorkingDirectory->StoreCustomData("RTC6DAT.dat", m_AuxiliaryData);
 
     std::string sBaseDirectoryPath = pWorkingDirectory->GetAbsoluteFilePath();
@@ -389,6 +391,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             nodesToCopyFromTemplate.push_back("KinematicsList");
             nodesToCopyFromTemplate.push_back("LaserConfig");
             nodesToCopyFromTemplate.push_back("IOConfig");
+            nodesToCopyFromTemplate.push_back("SystemConfig");
 
             break;
         default:

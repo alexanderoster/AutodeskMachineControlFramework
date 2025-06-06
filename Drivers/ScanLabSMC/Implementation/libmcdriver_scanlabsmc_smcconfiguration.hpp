@@ -66,7 +66,10 @@ private:
     
     uint32_t m_nSerialNumber;
     std::vector<uint8_t> m_CorrectionFileData;
+    
+    std::string m_sFirmwareDataResource;
     std::vector<uint8_t> m_FirmwareData;
+
     std::vector<uint8_t> m_FPGAData;
     std::vector<uint8_t> m_AuxiliaryData;
     std::string m_sIPAddress;
