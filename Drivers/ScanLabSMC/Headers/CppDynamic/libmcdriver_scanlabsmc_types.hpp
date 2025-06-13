@@ -158,6 +158,9 @@ typedef void * LibMCDriver_ScanLabSMC_pvoid;
 #define LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND 1050 /** RTC Service Resource not found. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA 1051 /** Empty RTC Service DLL Resource Data. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED 1052 /** Simulation data loading is not supported for this version. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTREADSIMULATIONFILE 1053 /** Could not read simulation file. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERUNKNOWNFIELDPARSERTYPE 1054 /** Unknown Field Parser Type. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERINTERPOLATEINDEXOUTOFRANGE 1055 /** Index out of range in Interpolate. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLabSMC
@@ -228,6 +231,9 @@ inline const char * LIBMCDRIVER_SCANLABSMC_GETERRORSTRING (LibMCDriver_ScanLabSM
     case LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND: return "RTC Service Resource not found.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA: return "Empty RTC Service DLL Resource Data.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED: return "Simulation data loading is not supported for this version.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTREADSIMULATIONFILE: return "Could not read simulation file.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERUNKNOWNFIELDPARSERTYPE: return "Unknown Field Parser Type.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERINTERPOLATEINDEXOUTOFRANGE: return "Index out of range in Interpolate.";
     default: return "unknown error";
   }
 }

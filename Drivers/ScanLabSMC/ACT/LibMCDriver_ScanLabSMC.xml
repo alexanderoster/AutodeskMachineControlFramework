@@ -102,8 +102,11 @@
 		<error name="INTERPOLATIONDATAISNOTINCREASING" code="1048" description="Interpolation data is not increasing." />
 		<error name="EMPTYRTCSERVICEDLLRESOURCENAME" code="1049" description="Empty RTC Service DLL Resource Name." />
 		<error name="RTCSERVICERESOURCENOTFOUND" code="1050" description="RTC Service Resource not found." />
-		<error name="EMPTYRTCSERVICEDLLRESOURCEDATA" code="1051" description="Empty RTC Service DLL Resource Data." />		
-		<error name="SIMULATIONDATALOADINGISNOTSUPPORTED" code="1052" description="Simulation data loading is not supported for this version." />		
+		<error name="EMPTYRTCSERVICEDLLRESOURCEDATA" code="1051" description="Empty RTC Service DLL Resource Data." />
+		<error name="SIMULATIONDATALOADINGISNOTSUPPORTED" code="1052" description="Simulation data loading is not supported for this version." />
+		<error name="COULDNOTREADSIMULATIONFILE" code="1053" description="Could not read simulation file." />
+		<error name="CSVPARSERUNKNOWNFIELDPARSERTYPE" code="1054" description="Unknown Field Parser Type." />
+		<error name="CSVPARSERINTERPOLATEINDEXOUTOFRANGE" code="1055" description="Index out of range in Interpolate." />
 	</errors>
 
 	<struct name="Point2D">
