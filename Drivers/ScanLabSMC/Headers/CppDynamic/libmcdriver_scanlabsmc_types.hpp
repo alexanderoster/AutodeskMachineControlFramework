@@ -271,7 +271,8 @@ namespace LibMCDriver_ScanLabSMC {
     Unknown = 0,
     Version_0_8 = 8,
     Version_0_9 = 9,
-    Version_1_0 = 10
+    Version_1_0 = 10,
+    Version_1_1 = 11
   };
   
   enum class eJobCharacteristic : LibMCDriver_ScanLabSMC_int32 {

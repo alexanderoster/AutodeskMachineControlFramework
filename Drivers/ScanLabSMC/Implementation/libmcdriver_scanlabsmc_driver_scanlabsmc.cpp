@@ -246,7 +246,7 @@ void CDriver_ScanLabSMC::LoadSDK()
     if (m_SMCDLLResourceData.empty() || m_RTCDLLResourceData.empty())
         SetDLLResources(SCANLABSMC_DEFAULT_SMCDLLRESOURCENAME, SCANLABSMC_DEFAULT_RTCDLLRESOURCENAME);
 
-    if ((m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-latest") && m_RTCServiceDLLResourceData.empty())
+    if ((m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-1.1" || m_sType == "scanlab-smc-latest") && m_RTCServiceDLLResourceData.empty())
         SetRTCServiceDLLResourceName(SCANLABSMC_DEFAULT_RTCSERVICEDLLRESOURCENAME);
 
     if (m_XercesDLLResourceData.empty())
@@ -255,7 +255,7 @@ void CDriver_ScanLabSMC::LoadSDK()
     m_pSMCDLL = m_pDLLDirectory->StoreCustomData("SCANmotionControl_x64.dll", m_SMCDLLResourceData);
     m_pRTCDLL = m_pDLLDirectory->StoreCustomData("RTC6DLLx64.dll", m_RTCDLLResourceData);
     
-    if (m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-latest")
+    if (m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-1.1" || m_sType == "scanlab-smc-latest")
         m_pRTCServiceDLL = m_pDLLDirectory->StoreCustomData("RtcService_x64.dll", m_RTCServiceDLLResourceData);
 
     m_pXercesDLL = m_pDLLDirectory->StoreCustomData("xerces-c_3_2.dll", m_XercesDLLResourceData);

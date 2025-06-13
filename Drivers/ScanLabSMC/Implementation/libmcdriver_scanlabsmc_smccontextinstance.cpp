@@ -132,6 +132,7 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 	else if (versionInfo.m_nMajor == 1) {
 		switch (versionInfo.m_nMinor) {
 		case 0: configVersion = eSMCConfigVersion::Version_1_0; break;
+		case 1: configVersion = eSMCConfigVersion::Version_1_1; break;
 		default:
 			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_UNKNOWNSMCMINORVERSION, "unknown smc minor version: " + sVersionString);
 		}

@@ -400,6 +400,24 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             nodesToCopyFromTemplate.push_back("SystemConfig");
 
             break;
+        case eSMCConfigVersion::Version_1_1:
+            // Customize writing to SMC Version 1.1
+            sVersionString = "1.1";
+            sSchemaLocationString = "cfg SCANmotionControlConfig_1_1.xsd";
+            sBoardsNodeName = "BoardList";
+            if (m_bSendToHardware)
+                sSimulationMode = "Hardware";
+            else
+                sSimulationMode = "Simulation";
+
+            nodesToCopyFromTemplate.push_back("AxesList");
+            nodesToCopyFromTemplate.push_back("ScanheadList");
+            nodesToCopyFromTemplate.push_back("KinematicsList");
+            nodesToCopyFromTemplate.push_back("LaserConfig");
+            nodesToCopyFromTemplate.push_back("IOConfig");
+            nodesToCopyFromTemplate.push_back("SystemConfig");
+
+            break;
         default:
             throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_UNSUPPORTEDSMCVERSION);
     }
@@ -459,7 +477,8 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
         }
 
         case eSMCConfigVersion::Version_0_9: 
-        case eSMCConfigVersion::Version_1_0: {
+        case eSMCConfigVersion::Version_1_0: 
+        case eSMCConfigVersion::Version_1_1: {
             if (!sRTCIPAddress.empty()) {
                 auto pEthSearchNode = pRTCConfigNode->AddChild("", "EthSearch");
                 auto pIPListNode = pEthSearchNode->AddChild("", "IPList");
@@ -512,7 +531,7 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
         
     } 
 
-    if (configVersion == eSMCConfigVersion::Version_1_0) {
+    if (configVersion == eSMCConfigVersion::Version_1_0 || configVersion == eSMCConfigVersion::Version_1_1) {
         auto pKinematicsListNode = pXMLDocument->GetRootNode()->FindChild(sCfgNameSpace, "KinematicsList", true);
         auto pKinematicsListNodes = pKinematicsListNode->GetChildrenByName(sCfgNameSpace, "Kinematic");
         uint64_t nKinematicsListCount = pKinematicsListNodes->GetNodeCount();
@@ -532,14 +551,8 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
                 pPatchedCorrectionFileNode->AddAttribute("", "CalibrationFactor", "-1");
 
             }
-
-
         }
-      
-
-
     }
-
 
     // Patch Blend Mode!
     if (configVersion == eSMCConfigVersion::Version_0_8) {
@@ -551,11 +564,6 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
             case eBlendMode::MaxAccuracy: pBlendModeNode->SetTextContent("MaxAccuracy"); break;
             default: pBlendModeNode->SetTextContent("Deactivated");
         }
-        
-        
-        
-        
-
     }
 
     std::string sXMLString = pXMLDocument->SaveToString (true);

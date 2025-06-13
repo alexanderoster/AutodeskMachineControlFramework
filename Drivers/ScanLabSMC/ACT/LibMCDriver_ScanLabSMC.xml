@@ -144,6 +144,7 @@
 	   <option name="Version_0_8" value="8" />
 	   <option name="Version_0_9" value="9" />
 	   <option name="Version_1_0" value="10" />
+	   <option name="Version_1_1" value="11" />
 	</enum>
 
 	<enum name="JobCharacteristic">
