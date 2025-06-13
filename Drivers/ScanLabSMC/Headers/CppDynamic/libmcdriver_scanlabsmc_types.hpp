@@ -157,6 +157,7 @@ typedef void * LibMCDriver_ScanLabSMC_pvoid;
 #define LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME 1049 /** Empty RTC Service DLL Resource Name. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND 1050 /** RTC Service Resource not found. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA 1051 /** Empty RTC Service DLL Resource Data. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED 1052 /** Simulation data loading is not supported for this version. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLabSMC
@@ -226,6 +227,7 @@ inline const char * LIBMCDRIVER_SCANLABSMC_GETERRORSTRING (LibMCDriver_ScanLabSM
     case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME: return "Empty RTC Service DLL Resource Name.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND: return "RTC Service Resource not found.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA: return "Empty RTC Service DLL Resource Data.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED: return "Simulation data loading is not supported for this version.";
     default: return "unknown error";
   }
 }

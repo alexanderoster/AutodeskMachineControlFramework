@@ -63,6 +63,8 @@ private:
 
 	uint32_t m_nSerialNumber;
 
+	bool m_bSendToHardware;
+
 public:
 
 	CSMCContextInstance(const std::string & sContextName, ISMCConfiguration* pSMCConfiguration, PScanLabSMCSDK pSDK, LibMCEnv::PDriverEnvironment pDriverEnvironment, const std::string & sRTCDLLDirectory);

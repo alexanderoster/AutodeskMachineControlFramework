@@ -91,8 +91,8 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 	: m_pSDK (pSDK), 
 	m_pDriverEnvironment (pDriverEnvironment), 
 	m_sContextName (sContextName), 
-	m_nSerialNumber (0)
-
+	m_nSerialNumber (0),
+	m_bSendToHardware (false)
 {
 	if (pSDK.get() == nullptr)
 		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
@@ -114,6 +114,8 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 	m_pWorkingDirectory = m_pDriverEnvironment->CreateWorkingDirectory ();
 
 	m_sIPAddress = pSMCConfiguration->GetIPAddress();
+
+	m_bSendToHardware = pSMCConfiguration->GetSendToHardware();
 
 	auto pCorrectionFile = m_pWorkingDirectory->StoreCustomStringInTempFile("ct5", "");
 
@@ -220,7 +222,7 @@ std::string CSMCContextInstance::GetSimulationSubDirectory()
 
 PSMCJobInstance CSMCContextInstance::BeginJob(const double dStartPositionX, const double dStartPositionY)
 {
-	return std::make_shared<CSMCJobInstance> (m_pContextHandle, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory);
+	return std::make_shared<CSMCJobInstance> (m_pContextHandle, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory, m_bSendToHardware);
 }
 
 PSMCJobInstance CSMCContextInstance::GetUnfinishedJob()

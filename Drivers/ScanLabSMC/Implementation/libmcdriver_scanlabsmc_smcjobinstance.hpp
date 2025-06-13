@@ -62,6 +62,8 @@ private:
 	bool m_bHasJobDuration;
 	double m_dJobDuration;
 
+	bool m_bSendToHardware;
+
 	void drawPolylineEx(slscHandle contextHandle, const uint64_t nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D* pPointsBuffer, bool bIsClosed);
 	void drawHatchesEx(const LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPower, const LibMCDriver_ScanLabSMC_double dZValue);
 	void drawHatchesExLinearPower(const LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPower, const LibMCDriver_ScanLabSMC_double dZValue, std::vector<double>& PowerValues1, std::vector<double>& PowerValues2, double dMaxPower);
@@ -69,7 +71,7 @@ private:
 
 public:
 
-	CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory);
+	CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware);
 
 	virtual ~CSMCJobInstance();
 
@@ -99,16 +101,18 @@ public:
 	void AddLayerToList(LibMCEnv::PToolpathLayer pLayer);
 
 	void ReadSimulationFile(LibMCEnv::PDataTable pDataTable);
-		
-	void ReadSimulationFile_SMC_v1(LibMCEnv::PDataTable pDataTable);
-
-	void ReadLogRecordFile(LibMCEnv::PDataTable pDataTable);	
 
 	double GetJobCharacteristic(const LibMCDriver_ScanLabSMC::eJobCharacteristic eValueType);
 
 	double GetJobDuration();
 
+private:
 
+	void ReadSimulationFile_SMC_v0_8(LibMCEnv::PDataTable pDataTable);
+
+	void ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTable);
+
+	void ReadLogRecordFile(LibMCEnv::PDataTable pDataTable);
 };
 
 typedef std::shared_ptr<CSMCJobInstance> PSMCJobInstance;

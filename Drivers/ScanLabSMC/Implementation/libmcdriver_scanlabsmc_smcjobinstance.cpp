@@ -51,14 +51,15 @@ using namespace LibMCDriver_ScanLabSMC::Impl;
  Class definition of CSMCJob
 **************************************************************************************************************************/
 
-CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory)
+CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware)
     : m_pContextHandle(pContextHandle), 
     m_JobID(0), 
     m_bIsFinalized(false), 
     m_pWorkingDirectory (pWorkingDirectory), 
     m_sSimulationSubDirectory (sSimulationSubDirectory),
     m_bHasJobDuration (false),
-    m_dJobDuration (0.0)
+    m_dJobDuration (0.0),
+    m_bSendToHardware (bSendToHardware)
 {
 
     if (m_pWorkingDirectory.get() == nullptr)
@@ -661,6 +662,32 @@ double CSMCJobInstance::GetJobDuration()
 
 void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
 {
+    slsc_VersionInfo version = m_pSDK->slsc_cfg_get_scanmotioncontrol_version();
+
+    if (version.m_nMajor == 0) {
+        if (version.m_nMinor == 8 || version.m_nMinor == 9) {
+            ReadSimulationFile_SMC_v0_8(pDataTable);
+        }
+        else {
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED);
+        }
+    }
+    else if (version.m_nMajor == 1) {
+        if (version.m_nMinor == 0)
+        {
+            if (m_bSendToHardware)
+                ReadLogRecordFile(pDataTable);
+            else
+                ReadSimulationFile_SMC_v1_0(pDataTable);
+        }
+        else {
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED);
+        }
+    }
+}
+
+void CSMCJobInstance::ReadSimulationFile_SMC_v0_8(LibMCEnv::PDataTable pDataTable)
+{
     if (pDataTable.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
@@ -706,7 +733,7 @@ void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
     m_bHasJobDuration = true;
 }
 
-void CSMCJobInstance::ReadSimulationFile_SMC_v1(LibMCEnv::PDataTable pDataTable)
+void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTable)
 {
     if (pDataTable.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);

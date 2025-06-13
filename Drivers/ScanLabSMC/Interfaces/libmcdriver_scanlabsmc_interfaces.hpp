@@ -436,18 +436,6 @@ public:
 	virtual void LoadSimulationData(LibMCEnv::PDataTable pSimulationDataTable) = 0;
 
 	/**
-	* ISMCJob::LoadSimulationData_SMC_v1 - Reads the SMC Simulation data into a data table.
-	* @param[in] pSimulationDataTable - Data table object to read the simulation into.
-	*/
-	virtual void LoadSimulationData_SMC_v1(LibMCEnv::PDataTable pSimulationDataTable) = 0;
-
-	/**
-	* ISMCJob::LoadLogRecordData - Reads the SMC Log Record data into a data table.
-	* @param[in] pLogRecordDataTable - Data table object to read the simulation into.
-	*/
-	virtual void LoadLogRecordData(LibMCEnv::PDataTable pLogRecordDataTable) = 0;
-
-	/**
 	* ISMCJob::GetJobCharacteristic - Returns a characteristic value of a job.
 	* @param[in] eValueType - Type of job
 	* @return Characteristic Value

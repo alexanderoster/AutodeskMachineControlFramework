@@ -253,24 +253,6 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_StopExecuti
 typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationDataPtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
 
 /**
-* Reads the SMC Simulation data into a data table.
-*
-* @param[in] pSMCJob - SMCJob instance.
-* @param[in] pSimulationDataTable - Data table object to read the simulation into.
-* @return error code or 0 (success)
-*/
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationData_SMC_v1Ptr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
-
-/**
-* Reads the SMC Log Record data into a data table.
-*
-* @param[in] pSMCJob - SMCJob instance.
-* @param[in] pLogRecordDataTable - Data table object to read the simulation into.
-* @return error code or 0 (success)
-*/
-typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_LoadLogRecordDataPtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pLogRecordDataTable);
-
-/**
 * Returns a characteristic value of a job.
 *
 * @param[in] pSMCJob - SMCJob instance.
@@ -874,8 +856,6 @@ typedef struct {
 	PLibMCDriver_ScanLabSMCSMCJob_WaitForExecutionPtr m_SMCJob_WaitForExecution;
 	PLibMCDriver_ScanLabSMCSMCJob_StopExecutionPtr m_SMCJob_StopExecution;
 	PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationDataPtr m_SMCJob_LoadSimulationData;
-	PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationData_SMC_v1Ptr m_SMCJob_LoadSimulationData_SMC_v1;
-	PLibMCDriver_ScanLabSMCSMCJob_LoadLogRecordDataPtr m_SMCJob_LoadLogRecordData;
 	PLibMCDriver_ScanLabSMCSMCJob_GetJobCharacteristicPtr m_SMCJob_GetJobCharacteristic;
 	PLibMCDriver_ScanLabSMCSMCJob_GetJobDurationPtr m_SMCJob_GetJobDuration;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetDynamicViolationReactionPtr m_SMCConfiguration_SetDynamicViolationReaction;
