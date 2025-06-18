@@ -348,7 +348,7 @@ void CSMCCSVParser::ParseString(const char* data, size_t length, void* target, v
 
 void CSMCCSVParser::ParseLaserSignal(const char* data, size_t length, void* target, void* ts_target)
 {
-    auto* vec = static_cast<std::vector<bool>*>(target);
+    auto* vec = static_cast<std::vector<uint32_t>*>(target);
 
     std::vector<SubCycle> sub_cycles;
 
