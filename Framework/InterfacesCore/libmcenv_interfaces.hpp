@@ -70,6 +70,10 @@ class IDiscreteFieldData2DStoreOptions;
 class IDiscreteFieldData2D;
 class IDataTableWriteOptions;
 class IDataTableCSVWriteOptions;
+class IScatterPlotDataColumn;
+class IScatterPlotDataColumnIterator;
+class IScatterPlotDataChannel;
+class IScatterPlotDataChannelIterator;
 class IDataTableScatterPlotOptions;
 class IDataTable;
 class IDataSeries;
@@ -1121,6 +1125,98 @@ typedef IBaseSharedPtr<IDataTableCSVWriteOptions> PIDataTableCSVWriteOptions;
 
 
 /*************************************************************************************************************************
+ Class interface for ScatterPlotDataColumn 
+**************************************************************************************************************************/
+
+class IScatterPlotDataColumn : public virtual IBase {
+public:
+	/**
+	* IScatterPlotDataColumn::GetColumnIdentifier - Returns the Column Identifier.
+	* @return Identifier of the column to use. Must be alphanumeric and not empty.
+	*/
+	virtual std::string GetColumnIdentifier() = 0;
+
+	/**
+	* IScatterPlotDataColumn::GetScaleFactor - Returns Scale Factor to use.
+	* @return Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	virtual LibMCEnv_double GetScaleFactor() = 0;
+
+	/**
+	* IScatterPlotDataColumn::GetOffsetFactor - Returns Offset Factor to use.
+	* @return Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	virtual LibMCEnv_double GetOffsetFactor() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataColumn> PIScatterPlotDataColumn;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataColumnIterator 
+**************************************************************************************************************************/
+
+class IScatterPlotDataColumnIterator : public virtual IIterator {
+public:
+	/**
+	* IScatterPlotDataColumnIterator::GetCurrentScatterPlotDataColumn - Returns the Current Channel Column the iterator points at.
+	* @return returns the DataChannel instance.
+	*/
+	virtual IScatterPlotDataColumn * GetCurrentScatterPlotDataColumn() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataColumnIterator> PIScatterPlotDataColumnIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataChannel 
+**************************************************************************************************************************/
+
+class IScatterPlotDataChannel : public virtual IBase {
+public:
+	/**
+	* IScatterPlotDataChannel::GetChannelIdentifier - Returns the Scatter Plot Data Channel Identifier.
+	* @return Identifier of the channel. Must be alphanumeric and not empty.
+	*/
+	virtual std::string GetChannelIdentifier() = 0;
+
+	/**
+	* IScatterPlotDataChannel::AddScatterPlotDataColumn - Adds a new Columns to the Data Channel.
+	* @param[in] pColumnInstance - Column Instance
+	*/
+	virtual void AddScatterPlotDataColumn(IScatterPlotDataColumn* pColumnInstance) = 0;
+
+	/**
+	* IScatterPlotDataChannel::ListScatterPlotDataColumns - Lists all Columns of the Data Channel.
+	* @return Iterator instance.
+	*/
+	virtual IScatterPlotDataColumnIterator * ListScatterPlotDataColumns() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataChannel> PIScatterPlotDataChannel;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataChannelIterator 
+**************************************************************************************************************************/
+
+class IScatterPlotDataChannelIterator : public virtual IIterator {
+public:
+	/**
+	* IScatterPlotDataChannelIterator::GetCurrentScatterPlotDataChannel - Returns the Current Scatter Plot Data Channel the iterator points at.
+	* @return returns the ScatterPlotDataChannel instance.
+	*/
+	virtual IScatterPlotDataChannel * GetCurrentScatterPlotDataChannel() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataChannelIterator> PIScatterPlotDataChannelIterator;
+
+
+/*************************************************************************************************************************
  Class interface for DataTableScatterPlotOptions 
 **************************************************************************************************************************/
 
@@ -1187,6 +1283,12 @@ public:
 	* @param[in] nColor - Base color to use.
 	*/
 	virtual void AddDataChannel(const std::string & sChannelIdentifier, const std::string & sColumnIdentifier, const LibMCEnv_double dScaleFactor, const LibMCEnv_double dOffsetFactor, const LibMCEnv_uint32 nColor) = 0;
+
+	/**
+	* IDataTableScatterPlotOptions::ListDataChannels - Lists all DataChannels of the ScatterPlot.
+	* @return Iterator instance.
+	*/
+	virtual IScatterPlotDataChannelIterator * ListDataChannels() = 0;
 
 };
 

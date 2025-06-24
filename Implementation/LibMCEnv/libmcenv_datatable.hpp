@@ -96,6 +96,8 @@ public:
 	virtual void fillScatterplotXCoordinates (AMC::CScatterplot* pScatterplot, double dScaleFactor, double dOffset) = 0;
 
 	virtual void fillScatterplotYCoordinates(AMC::CScatterplot* pScatterplot, double dScaleFactor, double dOffset) = 0;
+
+	virtual void fillScatterplotChannel(AMC::CScatterplot* pScatterplot, const std::string& sChannel, const std::string& sColumn, double dScaleFactor, double dOffset) = 0;
 };
 
 typedef std::shared_ptr<CDataTableColumn> PDataTableColumn;

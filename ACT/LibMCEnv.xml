@@ -997,7 +997,42 @@
 		</method>
 
 	</class>
-	
+
+	<class name="ScatterPlotDataColumn" parent="Base">
+		<method name="GetColumnIdentifier" description="Returns the Column Identifier.">
+			<param name="ColumnIdentifier" type="string" pass="return" description="Identifier of the column to use. Must be alphanumeric and not empty." />
+		</method>
+		<method name="GetScaleFactor" description="Returns Scale Factor to use.">
+			<param name="ScaleFactor" type="double" pass="return" description="Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor." />
+		</method>
+		<method name="GetOffsetFactor" description="Returns Offset Factor to use.">
+			<param name="OffsetFactor" type="double" pass="return" description="Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor." />
+		</method>
+	</class>
+
+    <class name="ScatterPlotDataColumnIterator" parent="Iterator">
+		<method name="GetCurrentScatterPlotDataColumn" description="Returns the Current Channel Column the iterator points at.">
+			<param name="ScatterPlotDataColumnInstance" type="handle" class="ScatterPlotDataColumn" pass="return" description="returns the DataChannel instance."/>
+		</method>
+	</class>
+
+	<class name="ScatterPlotDataChannel" parent="Base">
+		<method name="GetChannelIdentifier" description="Returns the Scatter Plot Data Channel Identifier.">
+			<param name="ChannelIdentifier" type="string" pass="return" description="Identifier of the channel. Must be alphanumeric and not empty." />
+		</method>
+		<method name="AddScatterPlotDataColumn" description="Adds a new Columns to the Data Channel.">
+			<param name="ColumnInstance" type="class" class="ScatterPlotDataColumn" pass="in" description="Column Instance" />
+		</method>
+		<method name="ListScatterPlotDataColumns" description="Lists all Columns of the Data Channel.">
+			<param name="IteratorInstance" type="class" class="ScatterPlotDataColumnIterator" pass="return" description="Iterator instance." />
+		</method>
+	</class>
+
+	<class name="ScatterPlotDataChannelIterator" parent="Iterator">
+		<method name="GetCurrentScatterPlotDataChannel" description="Returns the Current Scatter Plot Data Channel the iterator points at.">
+			<param name="ScatterPlotDataChannelInstance" type="handle" class="ScatterPlotDataChannel" pass="return" description="returns the ScatterPlotDataChannel instance."/>
+		</method>
+	</class>
 
 	<class name="DataTableScatterPlotOptions" parent="Base" description="Configurates the creation of scatter plots from the data table.">
 
@@ -1045,9 +1080,11 @@
 			<param name="Color" type="uint32" pass="in" description="Base color to use." />
 		</method>
 
+		<method name="ListDataChannels" description="Lists all DataChannels of the ScatterPlot.">
+			<param name="IteratorInstance" type="class" class="ScatterPlotDataChannelIterator" pass="return" description="Iterator instance." />
+		</method>	
 	</class>
-	
-	
+
 	
 	<class name="DataTable" parent="Base" description="A in memory data table, streamable for example into a CSV file.">
 	

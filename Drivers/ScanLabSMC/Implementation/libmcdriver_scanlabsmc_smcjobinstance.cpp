@@ -674,7 +674,7 @@ void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
         }
     }
     else if (version.m_nMajor == 1) {
-        if (version.m_nMinor == 0)
+        if (version.m_nMinor == 0 || version.m_nMinor == 1)
         {
             if (m_bSendToHardware)
                 ReadLogRecordFile(pDataTable);

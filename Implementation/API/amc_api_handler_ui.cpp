@@ -255,6 +255,14 @@ APIHandler_UIType CAPIHandler_UI::parseRequest(const std::string& sURI, const eA
 			}
 		}
 
+		if (sParameterString.length() == 60) {
+			if (sParameterString.substr(0, 18) == "/pointchanneldata/") {
+				sParameterUUID = AMCCommon::CUtils::normalizeUUIDString(sParameterString.substr(18, 36));
+				sAdditionalParameter = sParameterString.substr(55);
+				return APIHandler_UIType::utPointChannel;
+			}
+		}
+
 	}
 
 
@@ -522,6 +530,32 @@ void CAPIHandler_UI::handleWidgetRequest(CJSONWriter& writer, const std::string&
 
 }
 
+void CAPIHandler_UI::handlePointChannelDataRequest(CJSONWriter& writer, const std::string& sParameterUUID, const std::string& sAdditionalParameter, PAPIAuth pAuth)
+{
+	auto pToolpathHandler = m_pSystemState->getToolpathHandlerInstance();
+	auto pScatterplot = pToolpathHandler->restoreScatterplot(sParameterUUID, false);
+
+	auto & channelEntries = pScatterplot->getChannelEntries();
+
+	auto channelIt = channelEntries.find(sAdditionalParameter);
+	if (channelIt != channelEntries.end()) {
+
+		auto& columnEntries = channelIt->second;
+		for (const auto& pair : columnEntries) {
+
+			auto sColumnName = pair.first;
+			auto& vecData = pair.second;
+
+			CJSONWriterArray dataArray(writer);
+
+			for (auto value : vecData)
+				dataArray.addDouble("", value);
+
+			writer.addArray(sColumnName, dataArray);
+		}
+	}
+}
+
 PAPIResponse CAPIHandler_UI::handleRequest(const std::string& sURI, const eAPIRequestType requestType, CAPIFormFields & pFormFields, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth)
 {
 	std::string sParameterUUID;
@@ -586,6 +620,11 @@ PAPIResponse CAPIHandler_UI::handleRequest(const std::string& sURI, const eAPIRe
 	case APIHandler_UIType::utWidgetRequest:
 		handleWidgetRequest (writer, sParameterUUID, sAdditionalParameter, pBodyData, nBodyDataSize, pAuth);
 		break;
+
+	case APIHandler_UIType::utPointChannel: {
+		handlePointChannelDataRequest(writer, sParameterUUID, sAdditionalParameter, pAuth);
+		break;
+	}
 
 	default:
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);

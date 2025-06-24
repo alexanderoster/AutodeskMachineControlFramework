@@ -2407,6 +2407,283 @@ LibMCEnvResult libmcenv_datatablecsvwriteoptions_setseparator(LibMCEnv_DataTable
 
 
 /*************************************************************************************************************************
+ Class implementation for ScatterPlotDataColumn
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_scatterplotdatacolumn_getcolumnidentifier(LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, const LibMCEnv_uint32 nColumnIdentifierBufferSize, LibMCEnv_uint32* pColumnIdentifierNeededChars, char * pColumnIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataColumn;
+
+	try {
+		if ( (!pColumnIdentifierBuffer) && !(pColumnIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sColumnIdentifier("");
+		IScatterPlotDataColumn* pIScatterPlotDataColumn = dynamic_cast<IScatterPlotDataColumn*>(pIBaseClass);
+		if (!pIScatterPlotDataColumn)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pColumnIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sColumnIdentifier = pIScatterPlotDataColumn->GetColumnIdentifier();
+
+			pIScatterPlotDataColumn->_setCache (new ParameterCache_1<std::string> (sColumnIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIScatterPlotDataColumn->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sColumnIdentifier);
+			pIScatterPlotDataColumn->_setCache (nullptr);
+		}
+		
+		if (pColumnIdentifierNeededChars)
+			*pColumnIdentifierNeededChars = (LibMCEnv_uint32) (sColumnIdentifier.size()+1);
+		if (pColumnIdentifierBuffer) {
+			if (sColumnIdentifier.size() >= nColumnIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iColumnIdentifier = 0; iColumnIdentifier < sColumnIdentifier.size(); iColumnIdentifier++)
+				pColumnIdentifierBuffer[iColumnIdentifier] = sColumnIdentifier[iColumnIdentifier];
+			pColumnIdentifierBuffer[sColumnIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_scatterplotdatacolumn_getscalefactor(LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, LibMCEnv_double * pScaleFactor)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataColumn;
+
+	try {
+		if (pScaleFactor == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IScatterPlotDataColumn* pIScatterPlotDataColumn = dynamic_cast<IScatterPlotDataColumn*>(pIBaseClass);
+		if (!pIScatterPlotDataColumn)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pScaleFactor = pIScatterPlotDataColumn->GetScaleFactor();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_scatterplotdatacolumn_getoffsetfactor(LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, LibMCEnv_double * pOffsetFactor)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataColumn;
+
+	try {
+		if (pOffsetFactor == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IScatterPlotDataColumn* pIScatterPlotDataColumn = dynamic_cast<IScatterPlotDataColumn*>(pIBaseClass);
+		if (!pIScatterPlotDataColumn)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pOffsetFactor = pIScatterPlotDataColumn->GetOffsetFactor();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for ScatterPlotDataColumnIterator
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn(LibMCEnv_ScatterPlotDataColumnIterator pScatterPlotDataColumnIterator, LibMCEnv_ScatterPlotDataColumn * pScatterPlotDataColumnInstance)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataColumnIterator;
+
+	try {
+		if (pScatterPlotDataColumnInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IBase* pBaseScatterPlotDataColumnInstance(nullptr);
+		IScatterPlotDataColumnIterator* pIScatterPlotDataColumnIterator = dynamic_cast<IScatterPlotDataColumnIterator*>(pIBaseClass);
+		if (!pIScatterPlotDataColumnIterator)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseScatterPlotDataColumnInstance = pIScatterPlotDataColumnIterator->GetCurrentScatterPlotDataColumn();
+
+		*pScatterPlotDataColumnInstance = (IBase*)(pBaseScatterPlotDataColumnInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for ScatterPlotDataChannel
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_scatterplotdatachannel_getchannelidentifier(LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataChannel;
+
+	try {
+		if ( (!pChannelIdentifierBuffer) && !(pChannelIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier("");
+		IScatterPlotDataChannel* pIScatterPlotDataChannel = dynamic_cast<IScatterPlotDataChannel*>(pIBaseClass);
+		if (!pIScatterPlotDataChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pChannelIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sChannelIdentifier = pIScatterPlotDataChannel->GetChannelIdentifier();
+
+			pIScatterPlotDataChannel->_setCache (new ParameterCache_1<std::string> (sChannelIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIScatterPlotDataChannel->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sChannelIdentifier);
+			pIScatterPlotDataChannel->_setCache (nullptr);
+		}
+		
+		if (pChannelIdentifierNeededChars)
+			*pChannelIdentifierNeededChars = (LibMCEnv_uint32) (sChannelIdentifier.size()+1);
+		if (pChannelIdentifierBuffer) {
+			if (sChannelIdentifier.size() >= nChannelIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iChannelIdentifier = 0; iChannelIdentifier < sChannelIdentifier.size(); iChannelIdentifier++)
+				pChannelIdentifierBuffer[iChannelIdentifier] = sChannelIdentifier[iChannelIdentifier];
+			pChannelIdentifierBuffer[sChannelIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_scatterplotdatachannel_addscatterplotdatacolumn(LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, LibMCEnv_ScatterPlotDataColumn pColumnInstance)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataChannel;
+
+	try {
+		IBase* pIBaseClassColumnInstance = (IBase *)pColumnInstance;
+		IScatterPlotDataColumn* pIColumnInstance = dynamic_cast<IScatterPlotDataColumn*>(pIBaseClassColumnInstance);
+		if (!pIColumnInstance)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDCAST);
+		
+		IScatterPlotDataChannel* pIScatterPlotDataChannel = dynamic_cast<IScatterPlotDataChannel*>(pIBaseClass);
+		if (!pIScatterPlotDataChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIScatterPlotDataChannel->AddScatterPlotDataColumn(pIColumnInstance);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_scatterplotdatachannel_listscatterplotdatacolumns(LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, LibMCEnv_ScatterPlotDataColumnIterator * pIteratorInstance)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataChannel;
+
+	try {
+		if (pIteratorInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IBase* pBaseIteratorInstance(nullptr);
+		IScatterPlotDataChannel* pIScatterPlotDataChannel = dynamic_cast<IScatterPlotDataChannel*>(pIBaseClass);
+		if (!pIScatterPlotDataChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseIteratorInstance = pIScatterPlotDataChannel->ListScatterPlotDataColumns();
+
+		*pIteratorInstance = (IBase*)(pBaseIteratorInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for ScatterPlotDataChannelIterator
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel(LibMCEnv_ScatterPlotDataChannelIterator pScatterPlotDataChannelIterator, LibMCEnv_ScatterPlotDataChannel * pScatterPlotDataChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pScatterPlotDataChannelIterator;
+
+	try {
+		if (pScatterPlotDataChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IBase* pBaseScatterPlotDataChannelInstance(nullptr);
+		IScatterPlotDataChannelIterator* pIScatterPlotDataChannelIterator = dynamic_cast<IScatterPlotDataChannelIterator*>(pIBaseClass);
+		if (!pIScatterPlotDataChannelIterator)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseScatterPlotDataChannelInstance = pIScatterPlotDataChannelIterator->GetCurrentScatterPlotDataChannel();
+
+		*pScatterPlotDataChannelInstance = (IBase*)(pBaseScatterPlotDataChannelInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
  Class implementation for DataTableScatterPlotOptions
 **************************************************************************************************************************/
 LibMCEnvResult libmcenv_datatablescatterplotoptions_setxaxiscolumn(LibMCEnv_DataTableScatterPlotOptions pDataTableScatterPlotOptions, const char * pColumnIdentifier, LibMCEnv_double dScaleFactor, LibMCEnv_double dOffsetFactor)
@@ -2680,6 +2957,34 @@ LibMCEnvResult libmcenv_datatablescatterplotoptions_adddatachannel(LibMCEnv_Data
 		
 		pIDataTableScatterPlotOptions->AddDataChannel(sChannelIdentifier, sColumnIdentifier, dScaleFactor, dOffsetFactor, nColor);
 
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_datatablescatterplotoptions_listdatachannels(LibMCEnv_DataTableScatterPlotOptions pDataTableScatterPlotOptions, LibMCEnv_ScatterPlotDataChannelIterator * pIteratorInstance)
+{
+	IBase* pIBaseClass = (IBase *)pDataTableScatterPlotOptions;
+
+	try {
+		if (pIteratorInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IBase* pBaseIteratorInstance(nullptr);
+		IDataTableScatterPlotOptions* pIDataTableScatterPlotOptions = dynamic_cast<IDataTableScatterPlotOptions*>(pIBaseClass);
+		if (!pIDataTableScatterPlotOptions)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseIteratorInstance = pIDataTableScatterPlotOptions->ListDataChannels();
+
+		*pIteratorInstance = (IBase*)(pBaseIteratorInstance);
 		return LIBMCENV_SUCCESS;
 	}
 	catch (ELibMCEnvInterfaceException & Exception) {
@@ -30378,6 +30683,22 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_datatablecsvwriteoptions_getseparator;
 	if (sProcName == "libmcenv_datatablecsvwriteoptions_setseparator") 
 		*ppProcAddress = (void*) &libmcenv_datatablecsvwriteoptions_setseparator;
+	if (sProcName == "libmcenv_scatterplotdatacolumn_getcolumnidentifier") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatacolumn_getcolumnidentifier;
+	if (sProcName == "libmcenv_scatterplotdatacolumn_getscalefactor") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatacolumn_getscalefactor;
+	if (sProcName == "libmcenv_scatterplotdatacolumn_getoffsetfactor") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatacolumn_getoffsetfactor;
+	if (sProcName == "libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn;
+	if (sProcName == "libmcenv_scatterplotdatachannel_getchannelidentifier") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatachannel_getchannelidentifier;
+	if (sProcName == "libmcenv_scatterplotdatachannel_addscatterplotdatacolumn") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatachannel_addscatterplotdatacolumn;
+	if (sProcName == "libmcenv_scatterplotdatachannel_listscatterplotdatacolumns") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatachannel_listscatterplotdatacolumns;
+	if (sProcName == "libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel") 
+		*ppProcAddress = (void*) &libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel;
 	if (sProcName == "libmcenv_datatablescatterplotoptions_setxaxiscolumn") 
 		*ppProcAddress = (void*) &libmcenv_datatablescatterplotoptions_setxaxiscolumn;
 	if (sProcName == "libmcenv_datatablescatterplotoptions_getxaxiscolumn") 
@@ -30396,6 +30717,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_datatablescatterplotoptions_getyaxisoffset;
 	if (sProcName == "libmcenv_datatablescatterplotoptions_adddatachannel") 
 		*ppProcAddress = (void*) &libmcenv_datatablescatterplotoptions_adddatachannel;
+	if (sProcName == "libmcenv_datatablescatterplotoptions_listdatachannels") 
+		*ppProcAddress = (void*) &libmcenv_datatablescatterplotoptions_listdatachannels;
 	if (sProcName == "libmcenv_datatable_addcolumn") 
 		*ppProcAddress = (void*) &libmcenv_datatable_addcolumn;
 	if (sProcName == "libmcenv_datatable_removecolumn") 

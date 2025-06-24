@@ -965,6 +965,98 @@ typedef LibMCEnvResult (*PLibMCEnvDataTableCSVWriteOptions_GetSeparatorPtr) (Lib
 typedef LibMCEnvResult (*PLibMCEnvDataTableCSVWriteOptions_SetSeparatorPtr) (LibMCEnv_DataTableCSVWriteOptions pDataTableCSVWriteOptions, const char * pSeparator);
 
 /*************************************************************************************************************************
+ Class definition for ScatterPlotDataColumn
+**************************************************************************************************************************/
+
+/**
+* Returns the Column Identifier.
+*
+* @param[in] pScatterPlotDataColumn - ScatterPlotDataColumn instance.
+* @param[in] nColumnIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pColumnIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pColumnIdentifierBuffer -  buffer of Identifier of the column to use. Must be alphanumeric and not empty., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataColumn_GetColumnIdentifierPtr) (LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, const LibMCEnv_uint32 nColumnIdentifierBufferSize, LibMCEnv_uint32* pColumnIdentifierNeededChars, char * pColumnIdentifierBuffer);
+
+/**
+* Returns Scale Factor to use.
+*
+* @param[in] pScatterPlotDataColumn - ScatterPlotDataColumn instance.
+* @param[out] pScaleFactor - Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataColumn_GetScaleFactorPtr) (LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, LibMCEnv_double * pScaleFactor);
+
+/**
+* Returns Offset Factor to use.
+*
+* @param[in] pScatterPlotDataColumn - ScatterPlotDataColumn instance.
+* @param[out] pOffsetFactor - Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataColumn_GetOffsetFactorPtr) (LibMCEnv_ScatterPlotDataColumn pScatterPlotDataColumn, LibMCEnv_double * pOffsetFactor);
+
+/*************************************************************************************************************************
+ Class definition for ScatterPlotDataColumnIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the Current Channel Column the iterator points at.
+*
+* @param[in] pScatterPlotDataColumnIterator - ScatterPlotDataColumnIterator instance.
+* @param[out] pScatterPlotDataColumnInstance - returns the DataChannel instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumnPtr) (LibMCEnv_ScatterPlotDataColumnIterator pScatterPlotDataColumnIterator, LibMCEnv_ScatterPlotDataColumn * pScatterPlotDataColumnInstance);
+
+/*************************************************************************************************************************
+ Class definition for ScatterPlotDataChannel
+**************************************************************************************************************************/
+
+/**
+* Returns the Scatter Plot Data Channel Identifier.
+*
+* @param[in] pScatterPlotDataChannel - ScatterPlotDataChannel instance.
+* @param[in] nChannelIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pChannelIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pChannelIdentifierBuffer -  buffer of Identifier of the channel. Must be alphanumeric and not empty., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataChannel_GetChannelIdentifierPtr) (LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer);
+
+/**
+* Adds a new Columns to the Data Channel.
+*
+* @param[in] pScatterPlotDataChannel - ScatterPlotDataChannel instance.
+* @param[in] pColumnInstance - Column Instance
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataChannel_AddScatterPlotDataColumnPtr) (LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, LibMCEnv_ScatterPlotDataColumn pColumnInstance);
+
+/**
+* Lists all Columns of the Data Channel.
+*
+* @param[in] pScatterPlotDataChannel - ScatterPlotDataChannel instance.
+* @param[out] pIteratorInstance - Iterator instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataChannel_ListScatterPlotDataColumnsPtr) (LibMCEnv_ScatterPlotDataChannel pScatterPlotDataChannel, LibMCEnv_ScatterPlotDataColumnIterator * pIteratorInstance);
+
+/*************************************************************************************************************************
+ Class definition for ScatterPlotDataChannelIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the Current Scatter Plot Data Channel the iterator points at.
+*
+* @param[in] pScatterPlotDataChannelIterator - ScatterPlotDataChannelIterator instance.
+* @param[out] pScatterPlotDataChannelInstance - returns the ScatterPlotDataChannel instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannelPtr) (LibMCEnv_ScatterPlotDataChannelIterator pScatterPlotDataChannelIterator, LibMCEnv_ScatterPlotDataChannel * pScatterPlotDataChannelInstance);
+
+/*************************************************************************************************************************
  Class definition for DataTableScatterPlotOptions
 **************************************************************************************************************************/
 
@@ -1060,6 +1152,15 @@ typedef LibMCEnvResult (*PLibMCEnvDataTableScatterPlotOptions_GetYAxisOffsetPtr)
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvDataTableScatterPlotOptions_AddDataChannelPtr) (LibMCEnv_DataTableScatterPlotOptions pDataTableScatterPlotOptions, const char * pChannelIdentifier, const char * pColumnIdentifier, LibMCEnv_double dScaleFactor, LibMCEnv_double dOffsetFactor, LibMCEnv_uint32 nColor);
+
+/**
+* Lists all DataChannels of the ScatterPlot.
+*
+* @param[in] pDataTableScatterPlotOptions - DataTableScatterPlotOptions instance.
+* @param[out] pIteratorInstance - Iterator instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvDataTableScatterPlotOptions_ListDataChannelsPtr) (LibMCEnv_DataTableScatterPlotOptions pDataTableScatterPlotOptions, LibMCEnv_ScatterPlotDataChannelIterator * pIteratorInstance);
 
 /*************************************************************************************************************************
  Class definition for DataTable
@@ -10182,6 +10283,14 @@ typedef struct {
 	PLibMCEnvDiscreteFieldData2D_DuplicatePtr m_DiscreteFieldData2D_Duplicate;
 	PLibMCEnvDataTableCSVWriteOptions_GetSeparatorPtr m_DataTableCSVWriteOptions_GetSeparator;
 	PLibMCEnvDataTableCSVWriteOptions_SetSeparatorPtr m_DataTableCSVWriteOptions_SetSeparator;
+	PLibMCEnvScatterPlotDataColumn_GetColumnIdentifierPtr m_ScatterPlotDataColumn_GetColumnIdentifier;
+	PLibMCEnvScatterPlotDataColumn_GetScaleFactorPtr m_ScatterPlotDataColumn_GetScaleFactor;
+	PLibMCEnvScatterPlotDataColumn_GetOffsetFactorPtr m_ScatterPlotDataColumn_GetOffsetFactor;
+	PLibMCEnvScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumnPtr m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn;
+	PLibMCEnvScatterPlotDataChannel_GetChannelIdentifierPtr m_ScatterPlotDataChannel_GetChannelIdentifier;
+	PLibMCEnvScatterPlotDataChannel_AddScatterPlotDataColumnPtr m_ScatterPlotDataChannel_AddScatterPlotDataColumn;
+	PLibMCEnvScatterPlotDataChannel_ListScatterPlotDataColumnsPtr m_ScatterPlotDataChannel_ListScatterPlotDataColumns;
+	PLibMCEnvScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannelPtr m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel;
 	PLibMCEnvDataTableScatterPlotOptions_SetXAxisColumnPtr m_DataTableScatterPlotOptions_SetXAxisColumn;
 	PLibMCEnvDataTableScatterPlotOptions_GetXAxisColumnPtr m_DataTableScatterPlotOptions_GetXAxisColumn;
 	PLibMCEnvDataTableScatterPlotOptions_GetXAxisScalingPtr m_DataTableScatterPlotOptions_GetXAxisScaling;
@@ -10191,6 +10300,7 @@ typedef struct {
 	PLibMCEnvDataTableScatterPlotOptions_GetYAxisScalingPtr m_DataTableScatterPlotOptions_GetYAxisScaling;
 	PLibMCEnvDataTableScatterPlotOptions_GetYAxisOffsetPtr m_DataTableScatterPlotOptions_GetYAxisOffset;
 	PLibMCEnvDataTableScatterPlotOptions_AddDataChannelPtr m_DataTableScatterPlotOptions_AddDataChannel;
+	PLibMCEnvDataTableScatterPlotOptions_ListDataChannelsPtr m_DataTableScatterPlotOptions_ListDataChannels;
 	PLibMCEnvDataTable_AddColumnPtr m_DataTable_AddColumn;
 	PLibMCEnvDataTable_RemoveColumnPtr m_DataTable_RemoveColumn;
 	PLibMCEnvDataTable_ClearPtr m_DataTable_Clear;

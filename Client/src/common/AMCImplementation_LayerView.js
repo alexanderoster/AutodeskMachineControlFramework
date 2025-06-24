@@ -325,6 +325,31 @@ class LayerViewImpl {
 		}
 
 	}
+
+	makeLaserOnColors ()
+	{		
+		this.laserOnPointsColorArray = null;
+
+		if (this.laser && this.laser.laseron && this.layerPointsArray) {
+
+			let pointCount = this.layerPointsArray.length / 2;
+			let colors = [];
+			
+			for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+
+				let laseron = this.laser.laseron[pointIndex];
+
+				// laseron = 0 => Blue
+				// laseron = 1 => Red
+				const hue = laseron * 240 / 360;
+				
+				colors.push (this.hslToRgb (hue, 1.0, 0.5));				
+			}
+			
+			this.layerPointsColorArray = colors;
+		}
+		
+	}
 	
 	hslToRgb(h, s, l) {
 		// Ensure h, s, l are in the range [0, 1]
@@ -396,6 +421,19 @@ class LayerViewImpl {
 		this.updateColors ();			
 		this.updateLayerPoints ();		
 	}
+
+	loadPointsChannelData(pointsChannelName, pointsColumnName, pointsChannelDataArray) {
+		
+		// Ensure the channel-level object exists
+  		if (!Object.prototype.hasOwnProperty.call(this, pointsChannelName)) {
+    		this[pointsChannelName] = {};
+  		}
+
+  		// Assign the data array to the corresponding column
+  		this[pointsChannelName][pointsColumnName] = pointsChannelDataArray;
+				
+		this.makeLaserOnColors ();
+	}
 	
 	clearPoints ()
 	{
@@ -410,6 +448,16 @@ class LayerViewImpl {
 		this.updateLayerPoints ();		
 	}
 	
+	clearPointsChannelData (pointsChannelName)
+	{
+		// Ensure the channel-level object exists
+  		if (Object.prototype.hasOwnProperty.call(this, pointsChannelName)) {
+    		this[pointsChannelName] = {};
+  		}
+	
+		this.layerPointsColorArray = null;
+	}
+
 	updateColors ()
 	{
 		this.layerPointsColorArray = null;
@@ -420,6 +468,10 @@ class LayerViewImpl {
 
 		if (this.layerPointsMode == "velocity") {
 			this.makeVelocityColors ();
+		} 
+
+		if (this.layerPointsMode == "laseron") {
+			this.makeLaserOnColors ();
 		} 
 
 	}

@@ -75,6 +75,10 @@ class CDiscreteFieldData2DStoreOptions;
 class CDiscreteFieldData2D;
 class CDataTableWriteOptions;
 class CDataTableCSVWriteOptions;
+class CScatterPlotDataColumn;
+class CScatterPlotDataColumnIterator;
+class CScatterPlotDataChannel;
+class CScatterPlotDataChannelIterator;
 class CDataTableScatterPlotOptions;
 class CDataTable;
 class CDataSeries;
@@ -150,6 +154,10 @@ typedef CDiscreteFieldData2DStoreOptions CLibMCEnvDiscreteFieldData2DStoreOption
 typedef CDiscreteFieldData2D CLibMCEnvDiscreteFieldData2D;
 typedef CDataTableWriteOptions CLibMCEnvDataTableWriteOptions;
 typedef CDataTableCSVWriteOptions CLibMCEnvDataTableCSVWriteOptions;
+typedef CScatterPlotDataColumn CLibMCEnvScatterPlotDataColumn;
+typedef CScatterPlotDataColumnIterator CLibMCEnvScatterPlotDataColumnIterator;
+typedef CScatterPlotDataChannel CLibMCEnvScatterPlotDataChannel;
+typedef CScatterPlotDataChannelIterator CLibMCEnvScatterPlotDataChannelIterator;
 typedef CDataTableScatterPlotOptions CLibMCEnvDataTableScatterPlotOptions;
 typedef CDataTable CLibMCEnvDataTable;
 typedef CDataSeries CLibMCEnvDataSeries;
@@ -225,6 +233,10 @@ typedef std::shared_ptr<CDiscreteFieldData2DStoreOptions> PDiscreteFieldData2DSt
 typedef std::shared_ptr<CDiscreteFieldData2D> PDiscreteFieldData2D;
 typedef std::shared_ptr<CDataTableWriteOptions> PDataTableWriteOptions;
 typedef std::shared_ptr<CDataTableCSVWriteOptions> PDataTableCSVWriteOptions;
+typedef std::shared_ptr<CScatterPlotDataColumn> PScatterPlotDataColumn;
+typedef std::shared_ptr<CScatterPlotDataColumnIterator> PScatterPlotDataColumnIterator;
+typedef std::shared_ptr<CScatterPlotDataChannel> PScatterPlotDataChannel;
+typedef std::shared_ptr<CScatterPlotDataChannelIterator> PScatterPlotDataChannelIterator;
 typedef std::shared_ptr<CDataTableScatterPlotOptions> PDataTableScatterPlotOptions;
 typedef std::shared_ptr<CDataTable> PDataTable;
 typedef std::shared_ptr<CDataSeries> PDataSeries;
@@ -300,6 +312,10 @@ typedef PDiscreteFieldData2DStoreOptions PLibMCEnvDiscreteFieldData2DStoreOption
 typedef PDiscreteFieldData2D PLibMCEnvDiscreteFieldData2D;
 typedef PDataTableWriteOptions PLibMCEnvDataTableWriteOptions;
 typedef PDataTableCSVWriteOptions PLibMCEnvDataTableCSVWriteOptions;
+typedef PScatterPlotDataColumn PLibMCEnvScatterPlotDataColumn;
+typedef PScatterPlotDataColumnIterator PLibMCEnvScatterPlotDataColumnIterator;
+typedef PScatterPlotDataChannel PLibMCEnvScatterPlotDataChannel;
+typedef PScatterPlotDataChannelIterator PLibMCEnvScatterPlotDataChannelIterator;
 typedef PDataTableScatterPlotOptions PLibMCEnvDataTableScatterPlotOptions;
 typedef PDataTable PLibMCEnvDataTable;
 typedef PDataSeries PLibMCEnvDataSeries;
@@ -1063,6 +1079,10 @@ private:
 	friend class CDiscreteFieldData2D;
 	friend class CDataTableWriteOptions;
 	friend class CDataTableCSVWriteOptions;
+	friend class CScatterPlotDataColumn;
+	friend class CScatterPlotDataColumnIterator;
+	friend class CScatterPlotDataChannel;
+	friend class CScatterPlotDataChannelIterator;
 	friend class CDataTableScatterPlotOptions;
 	friend class CDataTable;
 	friend class CDataSeries;
@@ -1496,6 +1516,78 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CScatterPlotDataColumn 
+**************************************************************************************************************************/
+class CScatterPlotDataColumn : public CBase {
+public:
+	
+	/**
+	* CScatterPlotDataColumn::CScatterPlotDataColumn - Constructor for ScatterPlotDataColumn class.
+	*/
+	CScatterPlotDataColumn(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetColumnIdentifier();
+	inline LibMCEnv_double GetScaleFactor();
+	inline LibMCEnv_double GetOffsetFactor();
+};
+	
+/*************************************************************************************************************************
+ Class CScatterPlotDataColumnIterator 
+**************************************************************************************************************************/
+class CScatterPlotDataColumnIterator : public CIterator {
+public:
+	
+	/**
+	* CScatterPlotDataColumnIterator::CScatterPlotDataColumnIterator - Constructor for ScatterPlotDataColumnIterator class.
+	*/
+	CScatterPlotDataColumnIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PScatterPlotDataColumn GetCurrentScatterPlotDataColumn();
+};
+	
+/*************************************************************************************************************************
+ Class CScatterPlotDataChannel 
+**************************************************************************************************************************/
+class CScatterPlotDataChannel : public CBase {
+public:
+	
+	/**
+	* CScatterPlotDataChannel::CScatterPlotDataChannel - Constructor for ScatterPlotDataChannel class.
+	*/
+	CScatterPlotDataChannel(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetChannelIdentifier();
+	inline void AddScatterPlotDataColumn(classParam<CScatterPlotDataColumn> pColumnInstance);
+	inline PScatterPlotDataColumnIterator ListScatterPlotDataColumns();
+};
+	
+/*************************************************************************************************************************
+ Class CScatterPlotDataChannelIterator 
+**************************************************************************************************************************/
+class CScatterPlotDataChannelIterator : public CIterator {
+public:
+	
+	/**
+	* CScatterPlotDataChannelIterator::CScatterPlotDataChannelIterator - Constructor for ScatterPlotDataChannelIterator class.
+	*/
+	CScatterPlotDataChannelIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PScatterPlotDataChannel GetCurrentScatterPlotDataChannel();
+};
+	
+/*************************************************************************************************************************
  Class CDataTableScatterPlotOptions 
 **************************************************************************************************************************/
 class CDataTableScatterPlotOptions : public CBase {
@@ -1518,6 +1610,7 @@ public:
 	inline LibMCEnv_double GetYAxisScaling();
 	inline LibMCEnv_double GetYAxisOffset();
 	inline void AddDataChannel(const std::string & sChannelIdentifier, const std::string & sColumnIdentifier, const LibMCEnv_double dScaleFactor, const LibMCEnv_double dOffsetFactor, const LibMCEnv_uint32 nColor);
+	inline PScatterPlotDataChannelIterator ListDataChannels();
 };
 	
 /*************************************************************************************************************************
@@ -3372,6 +3465,14 @@ public:
 		pWrapperTable->m_DiscreteFieldData2D_Duplicate = nullptr;
 		pWrapperTable->m_DataTableCSVWriteOptions_GetSeparator = nullptr;
 		pWrapperTable->m_DataTableCSVWriteOptions_SetSeparator = nullptr;
+		pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier = nullptr;
+		pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor = nullptr;
+		pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor = nullptr;
+		pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn = nullptr;
+		pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier = nullptr;
+		pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn = nullptr;
+		pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns = nullptr;
+		pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel = nullptr;
 		pWrapperTable->m_DataTableScatterPlotOptions_SetXAxisColumn = nullptr;
 		pWrapperTable->m_DataTableScatterPlotOptions_GetXAxisColumn = nullptr;
 		pWrapperTable->m_DataTableScatterPlotOptions_GetXAxisScaling = nullptr;
@@ -3381,6 +3482,7 @@ public:
 		pWrapperTable->m_DataTableScatterPlotOptions_GetYAxisScaling = nullptr;
 		pWrapperTable->m_DataTableScatterPlotOptions_GetYAxisOffset = nullptr;
 		pWrapperTable->m_DataTableScatterPlotOptions_AddDataChannel = nullptr;
+		pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels = nullptr;
 		pWrapperTable->m_DataTable_AddColumn = nullptr;
 		pWrapperTable->m_DataTable_RemoveColumn = nullptr;
 		pWrapperTable->m_DataTable_Clear = nullptr;
@@ -4984,6 +5086,78 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier = (PLibMCEnvScatterPlotDataColumn_GetColumnIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatacolumn_getcolumnidentifier");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier = (PLibMCEnvScatterPlotDataColumn_GetColumnIdentifierPtr) dlsym(hLibrary, "libmcenv_scatterplotdatacolumn_getcolumnidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor = (PLibMCEnvScatterPlotDataColumn_GetScaleFactorPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatacolumn_getscalefactor");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor = (PLibMCEnvScatterPlotDataColumn_GetScaleFactorPtr) dlsym(hLibrary, "libmcenv_scatterplotdatacolumn_getscalefactor");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor = (PLibMCEnvScatterPlotDataColumn_GetOffsetFactorPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatacolumn_getoffsetfactor");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor = (PLibMCEnvScatterPlotDataColumn_GetOffsetFactorPtr) dlsym(hLibrary, "libmcenv_scatterplotdatacolumn_getoffsetfactor");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn = (PLibMCEnvScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumnPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn = (PLibMCEnvScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumnPtr) dlsym(hLibrary, "libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier = (PLibMCEnvScatterPlotDataChannel_GetChannelIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatachannel_getchannelidentifier");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier = (PLibMCEnvScatterPlotDataChannel_GetChannelIdentifierPtr) dlsym(hLibrary, "libmcenv_scatterplotdatachannel_getchannelidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn = (PLibMCEnvScatterPlotDataChannel_AddScatterPlotDataColumnPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatachannel_addscatterplotdatacolumn");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn = (PLibMCEnvScatterPlotDataChannel_AddScatterPlotDataColumnPtr) dlsym(hLibrary, "libmcenv_scatterplotdatachannel_addscatterplotdatacolumn");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns = (PLibMCEnvScatterPlotDataChannel_ListScatterPlotDataColumnsPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatachannel_listscatterplotdatacolumns");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns = (PLibMCEnvScatterPlotDataChannel_ListScatterPlotDataColumnsPtr) dlsym(hLibrary, "libmcenv_scatterplotdatachannel_listscatterplotdatacolumns");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel = (PLibMCEnvScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannelPtr) GetProcAddress(hLibrary, "libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel");
+		#else // _WIN32
+		pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel = (PLibMCEnvScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannelPtr) dlsym(hLibrary, "libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_DataTableScatterPlotOptions_SetXAxisColumn = (PLibMCEnvDataTableScatterPlotOptions_SetXAxisColumnPtr) GetProcAddress(hLibrary, "libmcenv_datatablescatterplotoptions_setxaxiscolumn");
 		#else // _WIN32
 		pWrapperTable->m_DataTableScatterPlotOptions_SetXAxisColumn = (PLibMCEnvDataTableScatterPlotOptions_SetXAxisColumnPtr) dlsym(hLibrary, "libmcenv_datatablescatterplotoptions_setxaxiscolumn");
@@ -5062,6 +5236,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_DataTableScatterPlotOptions_AddDataChannel == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels = (PLibMCEnvDataTableScatterPlotOptions_ListDataChannelsPtr) GetProcAddress(hLibrary, "libmcenv_datatablescatterplotoptions_listdatachannels");
+		#else // _WIN32
+		pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels = (PLibMCEnvDataTableScatterPlotOptions_ListDataChannelsPtr) dlsym(hLibrary, "libmcenv_datatablescatterplotoptions_listdatachannels");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -13042,6 +13225,38 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableCSVWriteOptions_SetSeparator == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatacolumn_getcolumnidentifier", (void**)&(pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataColumn_GetColumnIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatacolumn_getscalefactor", (void**)&(pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataColumn_GetScaleFactor == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatacolumn_getoffsetfactor", (void**)&(pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataColumn_GetOffsetFactor == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatacolumniterator_getcurrentscatterplotdatacolumn", (void**)&(pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatachannel_getchannelidentifier", (void**)&(pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataChannel_GetChannelIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatachannel_addscatterplotdatacolumn", (void**)&(pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataChannel_AddScatterPlotDataColumn == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatachannel_listscatterplotdatacolumns", (void**)&(pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataChannel_ListScatterPlotDataColumns == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_scatterplotdatachanneliterator_getcurrentscatterplotdatachannel", (void**)&(pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_datatablescatterplotoptions_setxaxiscolumn", (void**)&(pWrapperTable->m_DataTableScatterPlotOptions_SetXAxisColumn));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableScatterPlotOptions_SetXAxisColumn == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -13076,6 +13291,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_datatablescatterplotoptions_adddatachannel", (void**)&(pWrapperTable->m_DataTableScatterPlotOptions_AddDataChannel));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableScatterPlotOptions_AddDataChannel == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablescatterplotoptions_listdatachannels", (void**)&(pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableScatterPlotOptions_ListDataChannels == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_datatable_addcolumn", (void**)&(pWrapperTable->m_DataTable_AddColumn));
@@ -17551,6 +17770,131 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CScatterPlotDataColumn
+	 */
+	
+	/**
+	* CScatterPlotDataColumn::GetColumnIdentifier - Returns the Column Identifier.
+	* @return Identifier of the column to use. Must be alphanumeric and not empty.
+	*/
+	std::string CScatterPlotDataColumn::GetColumnIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededColumnIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenColumnIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataColumn_GetColumnIdentifier(m_pHandle, 0, &bytesNeededColumnIdentifier, nullptr));
+		std::vector<char> bufferColumnIdentifier(bytesNeededColumnIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataColumn_GetColumnIdentifier(m_pHandle, bytesNeededColumnIdentifier, &bytesWrittenColumnIdentifier, &bufferColumnIdentifier[0]));
+		
+		return std::string(&bufferColumnIdentifier[0]);
+	}
+	
+	/**
+	* CScatterPlotDataColumn::GetScaleFactor - Returns Scale Factor to use.
+	* @return Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	LibMCEnv_double CScatterPlotDataColumn::GetScaleFactor()
+	{
+		LibMCEnv_double resultScaleFactor = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataColumn_GetScaleFactor(m_pHandle, &resultScaleFactor));
+		
+		return resultScaleFactor;
+	}
+	
+	/**
+	* CScatterPlotDataColumn::GetOffsetFactor - Returns Offset Factor to use.
+	* @return Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	LibMCEnv_double CScatterPlotDataColumn::GetOffsetFactor()
+	{
+		LibMCEnv_double resultOffsetFactor = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataColumn_GetOffsetFactor(m_pHandle, &resultOffsetFactor));
+		
+		return resultOffsetFactor;
+	}
+	
+	/**
+	 * Method definitions for class CScatterPlotDataColumnIterator
+	 */
+	
+	/**
+	* CScatterPlotDataColumnIterator::GetCurrentScatterPlotDataColumn - Returns the Current Channel Column the iterator points at.
+	* @return returns the DataChannel instance.
+	*/
+	PScatterPlotDataColumn CScatterPlotDataColumnIterator::GetCurrentScatterPlotDataColumn()
+	{
+		LibMCEnvHandle hScatterPlotDataColumnInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataColumnIterator_GetCurrentScatterPlotDataColumn(m_pHandle, &hScatterPlotDataColumnInstance));
+		
+		if (!hScatterPlotDataColumnInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CScatterPlotDataColumn>(m_pWrapper, hScatterPlotDataColumnInstance);
+	}
+	
+	/**
+	 * Method definitions for class CScatterPlotDataChannel
+	 */
+	
+	/**
+	* CScatterPlotDataChannel::GetChannelIdentifier - Returns the Scatter Plot Data Channel Identifier.
+	* @return Identifier of the channel. Must be alphanumeric and not empty.
+	*/
+	std::string CScatterPlotDataChannel::GetChannelIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededChannelIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenChannelIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataChannel_GetChannelIdentifier(m_pHandle, 0, &bytesNeededChannelIdentifier, nullptr));
+		std::vector<char> bufferChannelIdentifier(bytesNeededChannelIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataChannel_GetChannelIdentifier(m_pHandle, bytesNeededChannelIdentifier, &bytesWrittenChannelIdentifier, &bufferChannelIdentifier[0]));
+		
+		return std::string(&bufferChannelIdentifier[0]);
+	}
+	
+	/**
+	* CScatterPlotDataChannel::AddScatterPlotDataColumn - Adds a new Columns to the Data Channel.
+	* @param[in] pColumnInstance - Column Instance
+	*/
+	void CScatterPlotDataChannel::AddScatterPlotDataColumn(classParam<CScatterPlotDataColumn> pColumnInstance)
+	{
+		LibMCEnvHandle hColumnInstance = pColumnInstance.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataChannel_AddScatterPlotDataColumn(m_pHandle, hColumnInstance));
+	}
+	
+	/**
+	* CScatterPlotDataChannel::ListScatterPlotDataColumns - Lists all Columns of the Data Channel.
+	* @return Iterator instance.
+	*/
+	PScatterPlotDataColumnIterator CScatterPlotDataChannel::ListScatterPlotDataColumns()
+	{
+		LibMCEnvHandle hIteratorInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataChannel_ListScatterPlotDataColumns(m_pHandle, &hIteratorInstance));
+		
+		if (!hIteratorInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CScatterPlotDataColumnIterator>(m_pWrapper, hIteratorInstance);
+	}
+	
+	/**
+	 * Method definitions for class CScatterPlotDataChannelIterator
+	 */
+	
+	/**
+	* CScatterPlotDataChannelIterator::GetCurrentScatterPlotDataChannel - Returns the Current Scatter Plot Data Channel the iterator points at.
+	* @return returns the ScatterPlotDataChannel instance.
+	*/
+	PScatterPlotDataChannel CScatterPlotDataChannelIterator::GetCurrentScatterPlotDataChannel()
+	{
+		LibMCEnvHandle hScatterPlotDataChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_ScatterPlotDataChannelIterator_GetCurrentScatterPlotDataChannel(m_pHandle, &hScatterPlotDataChannelInstance));
+		
+		if (!hScatterPlotDataChannelInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CScatterPlotDataChannel>(m_pWrapper, hScatterPlotDataChannelInstance);
+	}
+	
+	/**
 	 * Method definitions for class CDataTableScatterPlotOptions
 	 */
 	
@@ -17665,6 +18009,21 @@ public:
 	void CDataTableScatterPlotOptions::AddDataChannel(const std::string & sChannelIdentifier, const std::string & sColumnIdentifier, const LibMCEnv_double dScaleFactor, const LibMCEnv_double dOffsetFactor, const LibMCEnv_uint32 nColor)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_DataTableScatterPlotOptions_AddDataChannel(m_pHandle, sChannelIdentifier.c_str(), sColumnIdentifier.c_str(), dScaleFactor, dOffsetFactor, nColor));
+	}
+	
+	/**
+	* CDataTableScatterPlotOptions::ListDataChannels - Lists all DataChannels of the ScatterPlot.
+	* @return Iterator instance.
+	*/
+	PScatterPlotDataChannelIterator CDataTableScatterPlotOptions::ListDataChannels()
+	{
+		LibMCEnvHandle hIteratorInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableScatterPlotOptions_ListDataChannels(m_pHandle, &hIteratorInstance));
+		
+		if (!hIteratorInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CScatterPlotDataChannelIterator>(m_pWrapper, hIteratorInstance);
 	}
 	
 	/**
