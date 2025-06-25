@@ -418,8 +418,6 @@ class LayerViewImpl {
 		this.layerPointsMinVelocity = LAYERVIEW_MINVELOCITYRANGE;
 		
 		this.computeVelocities ();		
-		this.updateColors ();			
-		this.updateLayerPoints ();		
 	}
 
 	loadPointsChannelData(pointsChannelName, pointsColumnName, pointsChannelDataArray) {
@@ -431,8 +429,6 @@ class LayerViewImpl {
 
   		// Assign the data array to the corresponding column
   		this[pointsChannelName][pointsColumnName] = pointsChannelDataArray;
-				
-		this.makeLaserOnColors ();
 	}
 	
 	clearPoints ()
@@ -472,8 +468,7 @@ class LayerViewImpl {
 
 		if (this.layerPointsMode == "laseron") {
 			this.makeLaserOnColors ();
-		} 
-
+		}
 	}
 	
 	setColorMode (newColorMode) {

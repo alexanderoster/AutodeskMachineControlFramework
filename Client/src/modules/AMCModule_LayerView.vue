@@ -306,20 +306,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 			queryPoints: function (scatterplotuuid)
 			{
-				this.loadingScatterplot = true;
-				this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
 				this.LayerViewerInstance.clearPoints ();
 			
-				this.Application.axiosGetArrayBufferRequest("/ui/pointcloud/" + scatterplotuuid)
+				return this.Application.axiosGetArrayBufferRequest("/ui/pointcloud/" + scatterplotuuid)
 				.then(responseData => {
 					let pointcoordinates = new Float32Array(responseData.data);
 					
 					if (this.LayerViewerInstance) {
 						this.LayerViewerInstance.loadPoints (pointcoordinates);
 					}
-				
-					this.loadingScatterplot = false;
-					
 				})
 				.catch(err => {
 					if (err.response) {
@@ -330,19 +325,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					if (this.LayerViewerInstance) {
 						this.LayerViewerInstance.RenderScene (true);
 					}
-					
-					this.loadingScatterplot = false;
 				});				
-				
 			},
 
 			queryPointsChannelData: function (scatterplotuuid, pointsChannelName)
 			{		
-				this.loadingScatterplot = true;
-
 				this.LayerViewerInstance.clearPointsChannelData (pointsChannelName);
 			
-				this.Application.axiosGetArrayBufferRequest("/ui/pointchanneldata/" + scatterplotuuid + "/" + pointsChannelName)
+				return this.Application.axiosGetArrayBufferRequest("/ui/pointchanneldata/" + scatterplotuuid + "/" + pointsChannelName)
 				.then(responseData => {
 
 					const contentType = responseData.headers['content-type'];
@@ -381,9 +371,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					} else {
 						console.error("Error while parsing response: not a JSON");
 					}
-
-					this.loadingScatterplot = false;
-					
 				})
 				.catch(err => {
 					if (err.response) {
@@ -394,11 +381,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					if (this.LayerViewerInstance) {
 						this.LayerViewerInstance.RenderScene (true);
 					}
-					
-					this.loadingScatterplot = false;
 				});				
 			},
-
 			
 			onLayerChanged: function (sender) {
 
@@ -437,9 +421,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 							if (platform.scatterplotuuid != "00000000-0000-0000-0000-000000000000") {
 							
-								this.queryPoints (platform.scatterplotuuid);
+								this.loadingScatterplot = true;
+								this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
 
-								this.queryPointsChannelData (platform.scatterplotuuid, "laser");
+								Promise.all([
+									this.queryPoints(platform.scatterplotuuid),
+									this.queryPointsChannelData(platform.scatterplotuuid, "laser")
+								]).then(() => {  
+									if (this.LayerViewerInstance && this.LayerViewerInstance.updateLayerPoints) {
+										this.LayerViewerInstance.updateColors ();			
+										this.LayerViewerInstance.updateLayerPoints();
+									}
+								});
+
+								this.loadingScatterplot = false;							
 
 							} else {
 							
@@ -447,7 +442,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 									this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
 									
 									this.LayerViewerInstance.clearPoints ();
-
 									this.LayerViewerInstance.clearPointsChannelData ("laser")
 
 							}						
