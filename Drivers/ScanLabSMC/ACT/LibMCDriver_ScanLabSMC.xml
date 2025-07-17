@@ -340,6 +340,11 @@ Custom implementation
 			<param name="JobDuration" type="double" pass="return" description="Duration in seconds." />
 		</method>	
 		
+		<method name="ExecuteLaserInitSequence" description="Starts the laser initialization sequence.">
+		</method>	
+
+		<method name="ExecuteLaserShutdownSequence" description="Starts the laser shutdown sequence.">
+		</method>	
 
 	</class>
 

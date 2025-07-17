@@ -271,6 +271,22 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_GetJobChara
 */
 typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_GetJobDurationPtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_double * pJobDuration);
 
+/**
+* Starts the laser initialization sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserInitSequencePtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
+/**
+* Starts the laser shutdown sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserShutdownSequencePtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
 /*************************************************************************************************************************
  Class definition for SMCConfiguration
 **************************************************************************************************************************/
@@ -858,6 +874,8 @@ typedef struct {
 	PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationDataPtr m_SMCJob_LoadSimulationData;
 	PLibMCDriver_ScanLabSMCSMCJob_GetJobCharacteristicPtr m_SMCJob_GetJobCharacteristic;
 	PLibMCDriver_ScanLabSMCSMCJob_GetJobDurationPtr m_SMCJob_GetJobDuration;
+	PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserInitSequencePtr m_SMCJob_ExecuteLaserInitSequence;
+	PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserShutdownSequencePtr m_SMCJob_ExecuteLaserShutdownSequence;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetDynamicViolationReactionPtr m_SMCConfiguration_SetDynamicViolationReaction;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_GetDynamicViolationReactionPtr m_SMCConfiguration_GetDynamicViolationReaction;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetWarnLevelPtr m_SMCConfiguration_SetWarnLevel;

@@ -236,6 +236,9 @@ namespace LibMCDriver_ScanLabSMC {
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_stop_record) (size_t Handle);
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_log_record) (size_t Handle, const char* DatasetPath, slsc_TransformationStep Step);
 
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_exec_init_laser_sequence) (size_t Handle);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence) (size_t Handle);
+
 		class CScanLabSMCSDK_DLLDirectoryCache {
 		private:
 #ifdef _WIN32
@@ -294,6 +297,8 @@ namespace LibMCDriver_ScanLabSMC {
 			PScanLabSMCPtr_slsc_job_start_record slsc_job_start_record = nullptr;
 			PScanLabSMCPtr_slsc_job_stop_record slsc_job_stop_record = nullptr;
 			PScanLabSMCPtr_slsc_ctrl_log_record slsc_ctrl_log_record  = nullptr;
+			PScanLabSMCPtr_slsc_ctrl_exec_init_laser_sequence slsc_ctrl_exec_init_laser_sequence = nullptr;
+			PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence slsc_ctrl_exec_shutdown_laser_sequence = nullptr;
 
 			CScanLabSMCSDK(const std::string & sDLLNameUTF8, const std::string& sDLLDirectoryUTF8);
 			~CScanLabSMCSDK();

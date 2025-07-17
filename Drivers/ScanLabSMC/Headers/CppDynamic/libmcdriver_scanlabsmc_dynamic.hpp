@@ -554,6 +554,8 @@ public:
 	inline void LoadSimulationData(classParam<LibMCEnv::CDataTable> pSimulationDataTable);
 	inline LibMCDriver_ScanLabSMC_double GetJobCharacteristic(const eJobCharacteristic eValueType);
 	inline LibMCDriver_ScanLabSMC_double GetJobDuration();
+	inline void ExecuteLaserInitSequence();
+	inline void ExecuteLaserShutdownSequence();
 };
 	
 /*************************************************************************************************************************
@@ -796,6 +798,8 @@ public:
 		pWrapperTable->m_SMCJob_LoadSimulationData = nullptr;
 		pWrapperTable->m_SMCJob_GetJobCharacteristic = nullptr;
 		pWrapperTable->m_SMCJob_GetJobDuration = nullptr;
+		pWrapperTable->m_SMCJob_ExecuteLaserInitSequence = nullptr;
+		pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetDynamicViolationReaction = nullptr;
 		pWrapperTable->m_SMCConfiguration_GetDynamicViolationReaction = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetWarnLevel = nullptr;
@@ -1089,6 +1093,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_SMCJob_GetJobDuration == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCJob_ExecuteLaserInitSequence = (PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserInitSequencePtr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcjob_executelaserinitsequence");
+		#else // _WIN32
+		pWrapperTable->m_SMCJob_ExecuteLaserInitSequence = (PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserInitSequencePtr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcjob_executelaserinitsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCJob_ExecuteLaserInitSequence == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence = (PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserShutdownSequencePtr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence");
+		#else // _WIN32
+		pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence = (PLibMCDriver_ScanLabSMCSMCJob_ExecuteLaserShutdownSequencePtr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence == nullptr)
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1695,6 +1717,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_GetJobDuration == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcjob_executelaserinitsequence", (void**)&(pWrapperTable->m_SMCJob_ExecuteLaserInitSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_ExecuteLaserInitSequence == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence", (void**)&(pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCJob_ExecuteLaserShutdownSequence == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcconfiguration_setdynamicviolationreaction", (void**)&(pWrapperTable->m_SMCConfiguration_SetDynamicViolationReaction));
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCConfiguration_SetDynamicViolationReaction == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -2178,6 +2208,22 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_GetJobDuration(m_pHandle, &resultJobDuration));
 		
 		return resultJobDuration;
+	}
+	
+	/**
+	* CSMCJob::ExecuteLaserInitSequence - Starts the laser initialization sequence.
+	*/
+	void CSMCJob::ExecuteLaserInitSequence()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_ExecuteLaserInitSequence(m_pHandle));
+	}
+	
+	/**
+	* CSMCJob::ExecuteLaserShutdownSequence - Starts the laser shutdown sequence.
+	*/
+	void CSMCJob::ExecuteLaserShutdownSequence()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCJob_ExecuteLaserShutdownSequence(m_pHandle));
 	}
 	
 	/**

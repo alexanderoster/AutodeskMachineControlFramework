@@ -106,6 +106,10 @@ public:
 
 	double GetJobDuration();
 
+	void ExecuteLaserInitSequence();
+	
+	void ExecuteLaserShutdownSequence();
+
 private:
 
 	void ReadSimulationFile_SMC_v0_8(LibMCEnv::PDataTable pDataTable);

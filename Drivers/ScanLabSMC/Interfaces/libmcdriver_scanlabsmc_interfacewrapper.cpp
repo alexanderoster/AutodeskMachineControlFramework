@@ -705,6 +705,54 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_getjobduration(LibMCD
 	}
 }
 
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelaserinitsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob)
+{
+	IBase* pIBaseClass = (IBase *)pSMCJob;
+
+	try {
+		ISMCJob* pISMCJob = dynamic_cast<ISMCJob*>(pIBaseClass);
+		if (!pISMCJob)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		pISMCJob->ExecuteLaserInitSequence();
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob)
+{
+	IBase* pIBaseClass = (IBase *)pSMCJob;
+
+	try {
+		ISMCJob* pISMCJob = dynamic_cast<ISMCJob*>(pIBaseClass);
+		if (!pISMCJob)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		pISMCJob->ExecuteLaserShutdownSequence();
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for SMCConfiguration
@@ -2201,6 +2249,10 @@ LibMCDriver_ScanLabSMCResult LibMCDriver_ScanLabSMC::Impl::LibMCDriver_ScanLabSM
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_getjobcharacteristic;
 	if (sProcName == "libmcdriver_scanlabsmc_smcjob_getjobduration") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_getjobduration;
+	if (sProcName == "libmcdriver_scanlabsmc_smcjob_executelaserinitsequence") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_executelaserinitsequence;
+	if (sProcName == "libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence;
 	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_setdynamicviolationreaction") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_setdynamicviolationreaction;
 	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_getdynamicviolationreaction") 

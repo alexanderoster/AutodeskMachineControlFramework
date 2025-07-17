@@ -448,6 +448,16 @@ public:
 	*/
 	virtual LibMCDriver_ScanLabSMC_double GetJobDuration() = 0;
 
+	/**
+	* ISMCJob::ExecuteLaserInitSequence - Starts the laser initialization sequence.
+	*/
+	virtual void ExecuteLaserInitSequence() = 0;
+
+	/**
+	* ISMCJob::ExecuteLaserShutdownSequence - Starts the laser shutdown sequence.
+	*/
+	virtual void ExecuteLaserShutdownSequence() = 0;
+
 };
 
 typedef IBaseSharedPtr<ISMCJob> PISMCJob;

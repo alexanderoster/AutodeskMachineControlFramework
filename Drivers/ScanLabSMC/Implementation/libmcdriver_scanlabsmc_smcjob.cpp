@@ -141,3 +141,13 @@ LibMCDriver_ScanLabSMC_double CSMCJob::GetJobDuration()
 {
     return m_pJobInstance->GetJobDuration ();
 }
+
+void CSMCJob::ExecuteLaserInitSequence()
+{
+    m_pJobInstance->ExecuteLaserInitSequence();
+}
+
+void CSMCJob::ExecuteLaserShutdownSequence()
+{
+    m_pJobInstance->ExecuteLaserShutdownSequence();
+}

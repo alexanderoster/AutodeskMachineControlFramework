@@ -284,6 +284,22 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_getjobduration(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_double * pJobDuration);
 
+/**
+* Starts the laser initialization sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelaserinitsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
+/**
+* Starts the laser shutdown sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
 /*************************************************************************************************************************
  Class definition for SMCConfiguration
 **************************************************************************************************************************/

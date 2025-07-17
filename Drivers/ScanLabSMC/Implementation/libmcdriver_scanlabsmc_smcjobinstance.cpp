@@ -661,6 +661,24 @@ double CSMCJobInstance::GetJobDuration()
 
 }
 
+void CSMCJobInstance::ExecuteLaserInitSequence()
+{
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    std::cout << "Executing laser init sequence" << std::endl;
+ 
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_exec_init_laser_sequence(contextHandle));
+}
+
+void CSMCJobInstance::ExecuteLaserShutdownSequence()
+{
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    std::cout << "Executing laser shutdown sequence" << std::endl;
+
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_exec_shutdown_laser_sequence(contextHandle));
+}
+
 void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
 {
     slsc_VersionInfo version = m_pSDK->slsc_cfg_get_scanmotioncontrol_version();
