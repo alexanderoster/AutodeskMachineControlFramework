@@ -32,23 +32,23 @@ Abstract: This is the class declaration of CMachineConfigurationVersionIterator
 */
 
 
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#ifndef __LIBMCENV_MACHINECONFIGURATIONVERSIONITERATOR
+#define __LIBMCENV_MACHINECONFIGURATIONVERSIONITERATOR
 
-#include "libmcdata_interfaces.hpp"
+#include "libmcenv_interfaces.hpp"
 
 // Parent classes
-#include "libmcdata_iterator.hpp"
+#include "libmcenv_iterator.hpp"
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4250)
 #endif
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
+#include "libmcenv_machineconfigurationversion.hpp"
 
 
-namespace LibMCData {
+namespace LibMCEnv {
 namespace Impl {
 
 
@@ -62,6 +62,8 @@ private:
 	/**
 	* Put private members here.
 	*/
+
+	LibMCData::PMachineConfigurationVersionIterator m_pMachineConfigurationVersionIterator;
 
 protected:
 
@@ -80,17 +82,22 @@ public:
 	* Public member functions to implement.
 	*/
 
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
+	CMachineConfigurationVersionIterator::CMachineConfigurationVersionIterator(LibMCData::PMachineConfigurationVersionIterator pMachineConfigurationVersionIterator);
 
-	IMachineConfigurationVersion* GetCurrent() override;
-	
+	virtual ~CMachineConfigurationVersionIterator();
+
+	bool MoveNext() override;
+
+	IMachineConfigurationVersion * GetCurrent() override;
+
 	IMachineConfigurationVersionIterator* Clone() override;
+
 };
 
 } // namespace Impl
-} // namespace LibMCData
+} // namespace LibMCEnv
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#endif // __LIBMCENV_MACHINECONFIGURATIONVERSIONITERATOR

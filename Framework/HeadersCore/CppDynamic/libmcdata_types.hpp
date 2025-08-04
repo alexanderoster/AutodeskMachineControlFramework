@@ -464,6 +464,12 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_SOURCEOFJOURNALALIASNOTFOUND 437 /** Source of Journal Alias not found */
 #define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONTYPE 438 /** Could not find machine configuration type. */
 #define LIBMCDATA_ERROR_INVALIDSTORAGESTREAMSIZE 439 /** Storage stream size for build is zero. */
+#define LIBMCDATA_ERROR_INVALIDMACHINECONFIGURATIONTYPEUUID 440 /** Invalid machine configuration type UUID. */
+#define LIBMCDATA_ERROR_MACHINECONFIGURATIONXSDVERSIONNOTINCREMENTING 441 /** Machine configuration version is not incrementing. */
+#define LIBMCDATA_ERROR_COULDNOTGETLATESTMACHINECONFIGURATIONXSDVERSION 442 /** Could not get latest machine configuration XSD version. */
+#define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID 443 /** Could not find latest machine configuration XSD by UUID. */
+#define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID 444 /** Could not find latest machine configuration version by UUID. */
+#define LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH 445 /** Machine configuration mismatch. */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -840,6 +846,12 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_SOURCEOFJOURNALALIASNOTFOUND: return "Source of Journal Alias not found";
     case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONTYPE: return "Could not find machine configuration type.";
     case LIBMCDATA_ERROR_INVALIDSTORAGESTREAMSIZE: return "Storage stream size for build is zero.";
+    case LIBMCDATA_ERROR_INVALIDMACHINECONFIGURATIONTYPEUUID: return "Invalid machine configuration type UUID.";
+    case LIBMCDATA_ERROR_MACHINECONFIGURATIONXSDVERSIONNOTINCREMENTING: return "Machine configuration version is not incrementing.";
+    case LIBMCDATA_ERROR_COULDNOTGETLATESTMACHINECONFIGURATIONXSDVERSION: return "Could not get latest machine configuration XSD version.";
+    case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID: return "Could not find latest machine configuration XSD by UUID.";
+    case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID: return "Could not find latest machine configuration version by UUID.";
+    case LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH: return "Machine configuration mismatch.";
     default: return "unknown error";
   }
 }
@@ -877,7 +889,9 @@ typedef LibMCDataHandle LibMCData_PersistencyHandler;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersion;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersionIterator;
 typedef LibMCDataHandle LibMCData_MachineConfigurationXSD;
+typedef LibMCDataHandle LibMCData_MachineConfigurationXSDIterator;
 typedef LibMCDataHandle LibMCData_MachineConfigurationType;
+typedef LibMCDataHandle LibMCData_MachineConfigurationTypeIterator;
 typedef LibMCDataHandle LibMCData_InstallationInformation;
 typedef LibMCDataHandle LibMCData_DataModel;
 

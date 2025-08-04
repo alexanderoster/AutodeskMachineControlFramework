@@ -27,70 +27,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is a stub class definition of CMachineConfigurationXSD
 
 */
 
-
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-
-#include "libmcdata_interfaces.hpp"
-
-// Parent classes
-#include "libmcdata_iterator.hpp"
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4250)
-#endif
+#include "libmcenv_machineconfigurationxsd.hpp"
+#include "libmcenv_interfaceexception.hpp"
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
+#include "libmcenv_machineconfigurationversioniterator.hpp"
 
-
-namespace LibMCData {
-namespace Impl {
-
+using namespace LibMCEnv::Impl;
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class definition of CMachineConfigurationXSD 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
-private:
 
-	/**
-	* Put private members here.
-	*/
+CMachineConfigurationXSD::CMachineConfigurationXSD(LibMCData::PMachineConfigurationXSD pMachineConfigurationXSD)
+	: m_pMachineConfigurationXSD(pMachineConfigurationXSD)
+{
+	if (pMachineConfigurationXSD.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+}
 
-protected:
+CMachineConfigurationXSD::~CMachineConfigurationXSD()
+{
+}
 
-	/**
-	* Put protected members here.
-	*/
+std::string CMachineConfigurationXSD::GetUUID()
+{
+	return m_pMachineConfigurationXSD->GetUUID();
+}
 
-public:
+std::string CMachineConfigurationXSD::GetTypeUUID()
+{
+	return m_pMachineConfigurationXSD->GetTypeUUID();
+}
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+LibMCEnv_uint32 CMachineConfigurationXSD::GetXSDVersion()
+{
+	return m_pMachineConfigurationXSD->GetXSDVersion();
+}
 
+std::string CMachineConfigurationXSD::GetXSDString()
+{
+	return m_pMachineConfigurationXSD->GetXSDString();
+}
 
-	/**
-	* Public member functions to implement.
-	*/
-
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
-
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
-};
-
-} // namespace Impl
-} // namespace LibMCData
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+std::string CMachineConfigurationXSD::GetTimestamp()
+{
+	return m_pMachineConfigurationXSD->GetTimestamp();
+}
