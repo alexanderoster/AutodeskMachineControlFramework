@@ -27,13 +27,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is the class declaration of CMachineConfigurationXSDIterator
 
 */
 
 
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#ifndef __LIBMCDATA_MACHINECONFIGURATIONXSDITERATOR
+#define __LIBMCDATA_MACHINECONFIGURATIONXSDITERATOR
 
 #include "libmcdata_interfaces.hpp"
 
@@ -45,18 +45,17 @@ Abstract: This is the class declaration of CMachineConfigurationVersionIterator
 #endif
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
-
+#include "libmcdata_machineconfigurationxsd.hpp"	
 
 namespace LibMCData {
 namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class declaration of CMachineConfigurationXSDIterator 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
+class CMachineConfigurationXSDIterator : public virtual IMachineConfigurationXSDIterator, public virtual CIterator {
 private:
 
 	/**
@@ -80,11 +79,12 @@ public:
 	* Public member functions to implement.
 	*/
 
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
+	void AddXSDVersion(std::shared_ptr<CMachineConfigurationXSD> pVersion);
 
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
+	IMachineConfigurationXSD* GetCurrent() override;
+
+	IMachineConfigurationXSDIterator* Clone() override;
+
 };
 
 } // namespace Impl
@@ -93,4 +93,4 @@ public:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#endif // __LIBMCDATA_MACHINECONFIGURATIONXSDITERATOR

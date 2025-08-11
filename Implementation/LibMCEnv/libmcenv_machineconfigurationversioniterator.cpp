@@ -27,70 +27,50 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is a stub class definition of CMachineConfigurationVersionIterator
 
 */
 
-
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-
-#include "libmcdata_interfaces.hpp"
-
-// Parent classes
-#include "libmcdata_iterator.hpp"
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4250)
-#endif
+#include "libmcenv_machineconfigurationversioniterator.hpp"
+#include "libmcenv_interfaceexception.hpp"
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
 
 
-namespace LibMCData {
-namespace Impl {
-
+using namespace LibMCEnv::Impl;
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class definition of CMachineConfigurationVersionIterator 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
-private:
+CMachineConfigurationVersionIterator::CMachineConfigurationVersionIterator(LibMCData::PMachineConfigurationVersionIterator pMachineConfigurationVersionIterator)
+    : m_pMachineConfigurationVersionIterator(pMachineConfigurationVersionIterator)
+{
+    if (pMachineConfigurationVersionIterator.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+}
 
-	/**
-	* Put private members here.
-	*/
+CMachineConfigurationVersionIterator::~CMachineConfigurationVersionIterator()
+{
+}
 
-protected:
+bool CMachineConfigurationVersionIterator::MoveNext()
+{
+	return m_pMachineConfigurationVersionIterator->MoveNext();
+}
 
-	/**
-	* Put protected members here.
-	*/
+IMachineConfigurationVersion * CMachineConfigurationVersionIterator::GetCurrent()
+{
+    auto pCurrentConfigurationVersion = m_pMachineConfigurationVersionIterator->GetCurrent();
 
-public:
+	if (pCurrentConfigurationVersion.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCDATA_ERROR_INVALIDITERATOR);
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+	return new CMachineConfigurationVersion(pCurrentConfigurationVersion);
+}
 
+IMachineConfigurationVersionIterator* CMachineConfigurationVersionIterator::Clone()
+{
+    throw ELibMCEnvInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED);
+}
 
-	/**
-	* Public member functions to implement.
-	*/
-
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
-
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
-};
-
-} // namespace Impl
-} // namespace LibMCData
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR

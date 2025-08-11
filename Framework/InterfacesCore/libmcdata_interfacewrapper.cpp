@@ -8309,41 +8309,19 @@ LibMCDataResult libmcdata_machineconfigurationversion_getxsduuid(LibMCData_Machi
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationversion_gettypeuuid(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nTypeUUIDBufferSize, LibMCData_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer)
+LibMCDataResult libmcdata_machineconfigurationversion_getnumericversion(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_uint32 * pConfigurationNumericVersion)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
 
 	try {
-		if ( (!pTypeUUIDBuffer) && !(pTypeUUIDNeededChars) )
+		if (pConfigurationNumericVersion == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sTypeUUID("");
 		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
 		if (!pIMachineConfigurationVersion)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		bool isCacheCall = (pTypeUUIDBuffer == nullptr);
-		if (isCacheCall) {
-			sTypeUUID = pIMachineConfigurationVersion->GetTypeUUID();
+		*pConfigurationNumericVersion = pIMachineConfigurationVersion->GetNumericVersion();
 
-			pIMachineConfigurationVersion->_setCache (new ParameterCache_1<std::string> (sTypeUUID));
-		}
-		else {
-			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationVersion->_getCache ());
-			if (cache == nullptr)
-				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-			cache->retrieveData (sTypeUUID);
-			pIMachineConfigurationVersion->_setCache (nullptr);
-		}
-		
-		if (pTypeUUIDNeededChars)
-			*pTypeUUIDNeededChars = (LibMCData_uint32) (sTypeUUID.size()+1);
-		if (pTypeUUIDBuffer) {
-			if (sTypeUUID.size() >= nTypeUUIDBufferSize)
-				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
-			for (size_t iTypeUUID = 0; iTypeUUID < sTypeUUID.size(); iTypeUUID++)
-				pTypeUUIDBuffer[iTypeUUID] = sTypeUUID[iTypeUUID];
-			pTypeUUIDBuffer[sTypeUUID.size()] = 0;
-		}
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -8391,128 +8369,6 @@ LibMCDataResult libmcdata_machineconfigurationversion_getparentuuid(LibMCData_Ma
 			for (size_t iParentUUID = 0; iParentUUID < sParentUUID.size(); iParentUUID++)
 				pParentUUIDBuffer[iParentUUID] = sParentUUID[iParentUUID];
 			pParentUUIDBuffer[sParentUUID.size()] = 0;
-		}
-		return LIBMCDATA_SUCCESS;
-	}
-	catch (ELibMCDataInterfaceException & Exception) {
-		return handleLibMCDataException(pIBaseClass, Exception);
-	}
-	catch (std::exception & StdException) {
-		return handleStdException(pIBaseClass, StdException);
-	}
-	catch (...) {
-		return handleUnhandledException(pIBaseClass);
-	}
-}
-
-LibMCDataResult libmcdata_machineconfigurationversion_getschematype(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nSchemaTypeBufferSize, LibMCData_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer)
-{
-	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
-
-	try {
-		if ( (!pSchemaTypeBuffer) && !(pSchemaTypeNeededChars) )
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sSchemaType("");
-		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
-		if (!pIMachineConfigurationVersion)
-			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-		
-		bool isCacheCall = (pSchemaTypeBuffer == nullptr);
-		if (isCacheCall) {
-			sSchemaType = pIMachineConfigurationVersion->GetSchemaType();
-
-			pIMachineConfigurationVersion->_setCache (new ParameterCache_1<std::string> (sSchemaType));
-		}
-		else {
-			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationVersion->_getCache ());
-			if (cache == nullptr)
-				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-			cache->retrieveData (sSchemaType);
-			pIMachineConfigurationVersion->_setCache (nullptr);
-		}
-		
-		if (pSchemaTypeNeededChars)
-			*pSchemaTypeNeededChars = (LibMCData_uint32) (sSchemaType.size()+1);
-		if (pSchemaTypeBuffer) {
-			if (sSchemaType.size() >= nSchemaTypeBufferSize)
-				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
-			for (size_t iSchemaType = 0; iSchemaType < sSchemaType.size(); iSchemaType++)
-				pSchemaTypeBuffer[iSchemaType] = sSchemaType[iSchemaType];
-			pSchemaTypeBuffer[sSchemaType.size()] = 0;
-		}
-		return LIBMCDATA_SUCCESS;
-	}
-	catch (ELibMCDataInterfaceException & Exception) {
-		return handleLibMCDataException(pIBaseClass, Exception);
-	}
-	catch (std::exception & StdException) {
-		return handleStdException(pIBaseClass, StdException);
-	}
-	catch (...) {
-		return handleUnhandledException(pIBaseClass);
-	}
-}
-
-LibMCDataResult libmcdata_machineconfigurationversion_getxsdversion(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_uint32 * pXSDVersion)
-{
-	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
-
-	try {
-		if (pXSDVersion == nullptr)
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
-		if (!pIMachineConfigurationVersion)
-			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-		
-		*pXSDVersion = pIMachineConfigurationVersion->GetXSDVersion();
-
-		return LIBMCDATA_SUCCESS;
-	}
-	catch (ELibMCDataInterfaceException & Exception) {
-		return handleLibMCDataException(pIBaseClass, Exception);
-	}
-	catch (std::exception & StdException) {
-		return handleStdException(pIBaseClass, StdException);
-	}
-	catch (...) {
-		return handleUnhandledException(pIBaseClass);
-	}
-}
-
-LibMCDataResult libmcdata_machineconfigurationversion_getxsdstring(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nXSDStringBufferSize, LibMCData_uint32* pXSDStringNeededChars, char * pXSDStringBuffer)
-{
-	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
-
-	try {
-		if ( (!pXSDStringBuffer) && !(pXSDStringNeededChars) )
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sXSDString("");
-		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
-		if (!pIMachineConfigurationVersion)
-			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-		
-		bool isCacheCall = (pXSDStringBuffer == nullptr);
-		if (isCacheCall) {
-			sXSDString = pIMachineConfigurationVersion->GetXSDString();
-
-			pIMachineConfigurationVersion->_setCache (new ParameterCache_1<std::string> (sXSDString));
-		}
-		else {
-			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationVersion->_getCache ());
-			if (cache == nullptr)
-				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-			cache->retrieveData (sXSDString);
-			pIMachineConfigurationVersion->_setCache (nullptr);
-		}
-		
-		if (pXSDStringNeededChars)
-			*pXSDStringNeededChars = (LibMCData_uint32) (sXSDString.size()+1);
-		if (pXSDStringBuffer) {
-			if (sXSDString.size() >= nXSDStringBufferSize)
-				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
-			for (size_t iXSDString = 0; iXSDString < sXSDString.size(); iXSDString++)
-				pXSDStringBuffer[iXSDString] = sXSDString[iXSDString];
-			pXSDStringBuffer[sXSDString.size()] = 0;
 		}
 		return LIBMCDATA_SUCCESS;
 	}
@@ -8575,7 +8431,103 @@ LibMCDataResult libmcdata_machineconfigurationversion_getconfigurationxmlstring(
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationversion_createnewversion(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const char * pXMLString, const char * pUserUUID, const char * pTimeStampUTC, LibMCData_MachineConfigurationVersion * pCurrentInstance)
+LibMCDataResult libmcdata_machineconfigurationversion_getuseruuid(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
+
+	try {
+		if ( (!pUserUUIDBuffer) && !(pUserUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID("");
+		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
+		if (!pIMachineConfigurationVersion)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pUserUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			sUserUUID = pIMachineConfigurationVersion->GetUserUUID();
+
+			pIMachineConfigurationVersion->_setCache (new ParameterCache_1<std::string> (sUserUUID));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationVersion->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sUserUUID);
+			pIMachineConfigurationVersion->_setCache (nullptr);
+		}
+		
+		if (pUserUUIDNeededChars)
+			*pUserUUIDNeededChars = (LibMCData_uint32) (sUserUUID.size()+1);
+		if (pUserUUIDBuffer) {
+			if (sUserUUID.size() >= nUserUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iUserUUID = 0; iUserUUID < sUserUUID.size(); iUserUUID++)
+				pUserUUIDBuffer[iUserUUID] = sUserUUID[iUserUUID];
+			pUserUUIDBuffer[sUserUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationversion_gettimestamp(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nTimeStampUTCBufferSize, LibMCData_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
+
+	try {
+		if ( (!pTimeStampUTCBuffer) && !(pTimeStampUTCNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sTimeStampUTC("");
+		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
+		if (!pIMachineConfigurationVersion)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pTimeStampUTCBuffer == nullptr);
+		if (isCacheCall) {
+			sTimeStampUTC = pIMachineConfigurationVersion->GetTimestamp();
+
+			pIMachineConfigurationVersion->_setCache (new ParameterCache_1<std::string> (sTimeStampUTC));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationVersion->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimeStampUTC);
+			pIMachineConfigurationVersion->_setCache (nullptr);
+		}
+		
+		if (pTimeStampUTCNeededChars)
+			*pTimeStampUTCNeededChars = (LibMCData_uint32) (sTimeStampUTC.size()+1);
+		if (pTimeStampUTCBuffer) {
+			if (sTimeStampUTC.size() >= nTimeStampUTCBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimeStampUTC = 0; iTimeStampUTC < sTimeStampUTC.size(); iTimeStampUTC++)
+				pTimeStampUTCBuffer[iTimeStampUTC] = sTimeStampUTC[iTimeStampUTC];
+			pTimeStampUTCBuffer[sTimeStampUTC.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationversion_createnewversion(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const char * pXMLString, const char * pUserUUID, LibMCData_MachineConfigurationVersion * pCurrentInstance)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
 
@@ -8584,19 +8536,16 @@ LibMCDataResult libmcdata_machineconfigurationversion_createnewversion(LibMCData
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		if (pUserUUID == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		if (pTimeStampUTC == nullptr)
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		if (pCurrentInstance == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		std::string sXMLString(pXMLString);
 		std::string sUserUUID(pUserUUID);
-		std::string sTimeStampUTC(pTimeStampUTC);
 		IBase* pBaseCurrentInstance(nullptr);
 		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
 		if (!pIMachineConfigurationVersion)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseCurrentInstance = pIMachineConfigurationVersion->CreateNewVersion(sXMLString, sUserUUID, sTimeStampUTC);
+		pBaseCurrentInstance = pIMachineConfigurationVersion->CreateNewVersion(sXMLString, sUserUUID);
 
 		*pCurrentInstance = (IBase*)(pBaseCurrentInstance);
 		return LIBMCDATA_SUCCESS;
@@ -8612,7 +8561,7 @@ LibMCDataResult libmcdata_machineconfigurationversion_createnewversion(LibMCData
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationversion_migratetonewxsd(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_MachineConfigurationXSD pNewXSD, const char * pXMLString, const char * pUserUUID, const char * pTimeStampUTC, LibMCData_MachineConfigurationVersion * pCurrentInstance)
+LibMCDataResult libmcdata_machineconfigurationversion_migratetonewxsd(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_MachineConfigurationXSD pNewXSD, const char * pXMLString, const char * pUserUUID, LibMCData_MachineConfigurationVersion * pCurrentInstance)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersion;
 
@@ -8620,8 +8569,6 @@ LibMCDataResult libmcdata_machineconfigurationversion_migratetonewxsd(LibMCData_
 		if (pXMLString == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		if (pUserUUID == nullptr)
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		if (pTimeStampUTC == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		if (pCurrentInstance == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
@@ -8632,13 +8579,12 @@ LibMCDataResult libmcdata_machineconfigurationversion_migratetonewxsd(LibMCData_
 		
 		std::string sXMLString(pXMLString);
 		std::string sUserUUID(pUserUUID);
-		std::string sTimeStampUTC(pTimeStampUTC);
 		IBase* pBaseCurrentInstance(nullptr);
 		IMachineConfigurationVersion* pIMachineConfigurationVersion = dynamic_cast<IMachineConfigurationVersion*>(pIBaseClass);
 		if (!pIMachineConfigurationVersion)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseCurrentInstance = pIMachineConfigurationVersion->MigrateToNewXSD(pINewXSD, sXMLString, sUserUUID, sTimeStampUTC);
+		pBaseCurrentInstance = pIMachineConfigurationVersion->MigrateToNewXSD(pINewXSD, sXMLString, sUserUUID);
 
 		*pCurrentInstance = (IBase*)(pBaseCurrentInstance);
 		return LIBMCDATA_SUCCESS;
@@ -8658,21 +8604,21 @@ LibMCDataResult libmcdata_machineconfigurationversion_migratetonewxsd(LibMCData_
 /*************************************************************************************************************************
  Class implementation for MachineConfigurationVersionIterator
 **************************************************************************************************************************/
-LibMCDataResult libmcdata_machineconfigurationversioniterator_getcurrentversion(LibMCData_MachineConfigurationVersionIterator pMachineConfigurationVersionIterator, LibMCData_MachineConfigurationVersion * pCurrentInstance)
+LibMCDataResult libmcdata_machineconfigurationversioniterator_getcurrent(LibMCData_MachineConfigurationVersionIterator pMachineConfigurationVersionIterator, LibMCData_MachineConfigurationVersion * pInstance)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationVersionIterator;
 
 	try {
-		if (pCurrentInstance == nullptr)
+		if (pInstance == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		IBase* pBaseCurrentInstance(nullptr);
+		IBase* pBaseInstance(nullptr);
 		IMachineConfigurationVersionIterator* pIMachineConfigurationVersionIterator = dynamic_cast<IMachineConfigurationVersionIterator*>(pIBaseClass);
 		if (!pIMachineConfigurationVersionIterator)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseCurrentInstance = pIMachineConfigurationVersionIterator->GetCurrentVersion();
+		pBaseInstance = pIMachineConfigurationVersionIterator->GetCurrent();
 
-		*pCurrentInstance = (IBase*)(pBaseCurrentInstance);
+		*pInstance = (IBase*)(pBaseInstance);
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -8786,54 +8732,6 @@ LibMCDataResult libmcdata_machineconfigurationxsd_gettypeuuid(LibMCData_MachineC
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationxsd_getschematype(LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nSchemaTypeBufferSize, LibMCData_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer)
-{
-	IBase* pIBaseClass = (IBase *)pMachineConfigurationXSD;
-
-	try {
-		if ( (!pSchemaTypeBuffer) && !(pSchemaTypeNeededChars) )
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sSchemaType("");
-		IMachineConfigurationXSD* pIMachineConfigurationXSD = dynamic_cast<IMachineConfigurationXSD*>(pIBaseClass);
-		if (!pIMachineConfigurationXSD)
-			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-		
-		bool isCacheCall = (pSchemaTypeBuffer == nullptr);
-		if (isCacheCall) {
-			sSchemaType = pIMachineConfigurationXSD->GetSchemaType();
-
-			pIMachineConfigurationXSD->_setCache (new ParameterCache_1<std::string> (sSchemaType));
-		}
-		else {
-			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationXSD->_getCache ());
-			if (cache == nullptr)
-				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-			cache->retrieveData (sSchemaType);
-			pIMachineConfigurationXSD->_setCache (nullptr);
-		}
-		
-		if (pSchemaTypeNeededChars)
-			*pSchemaTypeNeededChars = (LibMCData_uint32) (sSchemaType.size()+1);
-		if (pSchemaTypeBuffer) {
-			if (sSchemaType.size() >= nSchemaTypeBufferSize)
-				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
-			for (size_t iSchemaType = 0; iSchemaType < sSchemaType.size(); iSchemaType++)
-				pSchemaTypeBuffer[iSchemaType] = sSchemaType[iSchemaType];
-			pSchemaTypeBuffer[sSchemaType.size()] = 0;
-		}
-		return LIBMCDATA_SUCCESS;
-	}
-	catch (ELibMCDataInterfaceException & Exception) {
-		return handleLibMCDataException(pIBaseClass, Exception);
-	}
-	catch (std::exception & StdException) {
-		return handleStdException(pIBaseClass, StdException);
-	}
-	catch (...) {
-		return handleUnhandledException(pIBaseClass);
-	}
-}
-
 LibMCDataResult libmcdata_machineconfigurationxsd_getxsdversion(LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, LibMCData_uint32 * pXSDVersion)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationXSD;
@@ -8908,21 +8806,73 @@ LibMCDataResult libmcdata_machineconfigurationxsd_getxsdstring(LibMCData_Machine
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationxsd_listversions(LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, LibMCData_MachineConfigurationVersionIterator * pVersionIterator)
+LibMCDataResult libmcdata_machineconfigurationxsd_gettimestamp(LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nTimeStampUTCBufferSize, LibMCData_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationXSD;
 
 	try {
-		if (pVersionIterator == nullptr)
+		if ( (!pTimeStampUTCBuffer) && !(pTimeStampUTCNeededChars) )
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		IBase* pBaseVersionIterator(nullptr);
+		std::string sTimeStampUTC("");
 		IMachineConfigurationXSD* pIMachineConfigurationXSD = dynamic_cast<IMachineConfigurationXSD*>(pIBaseClass);
 		if (!pIMachineConfigurationXSD)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseVersionIterator = pIMachineConfigurationXSD->ListVersions();
+		bool isCacheCall = (pTimeStampUTCBuffer == nullptr);
+		if (isCacheCall) {
+			sTimeStampUTC = pIMachineConfigurationXSD->GetTimestamp();
 
-		*pVersionIterator = (IBase*)(pBaseVersionIterator);
+			pIMachineConfigurationXSD->_setCache (new ParameterCache_1<std::string> (sTimeStampUTC));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationXSD->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimeStampUTC);
+			pIMachineConfigurationXSD->_setCache (nullptr);
+		}
+		
+		if (pTimeStampUTCNeededChars)
+			*pTimeStampUTCNeededChars = (LibMCData_uint32) (sTimeStampUTC.size()+1);
+		if (pTimeStampUTCBuffer) {
+			if (sTimeStampUTC.size() >= nTimeStampUTCBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimeStampUTC = 0; iTimeStampUTC < sTimeStampUTC.size(); iTimeStampUTC++)
+				pTimeStampUTCBuffer[iTimeStampUTC] = sTimeStampUTC[iTimeStampUTC];
+			pTimeStampUTCBuffer[sTimeStampUTC.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for MachineConfigurationXSDIterator
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_machineconfigurationxsditerator_getcurrent(LibMCData_MachineConfigurationXSDIterator pMachineConfigurationXSDIterator, LibMCData_MachineConfigurationXSD * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationXSDIterator;
+
+	try {
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseInstance(nullptr);
+		IMachineConfigurationXSDIterator* pIMachineConfigurationXSDIterator = dynamic_cast<IMachineConfigurationXSDIterator*>(pIBaseClass);
+		if (!pIMachineConfigurationXSDIterator)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIMachineConfigurationXSDIterator->GetCurrent();
+
+		*pInstance = (IBase*)(pBaseInstance);
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -9084,6 +9034,54 @@ LibMCDataResult libmcdata_machineconfigurationtype_getschematype(LibMCData_Machi
 	}
 }
 
+LibMCDataResult libmcdata_machineconfigurationtype_gettimestamp(LibMCData_MachineConfigurationType pMachineConfigurationType, const LibMCData_uint32 nTimeStampUTCBufferSize, LibMCData_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if ( (!pTimeStampUTCBuffer) && !(pTimeStampUTCNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sTimeStampUTC("");
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pTimeStampUTCBuffer == nullptr);
+		if (isCacheCall) {
+			sTimeStampUTC = pIMachineConfigurationType->GetTimestamp();
+
+			pIMachineConfigurationType->_setCache (new ParameterCache_1<std::string> (sTimeStampUTC));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIMachineConfigurationType->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimeStampUTC);
+			pIMachineConfigurationType->_setCache (nullptr);
+		}
+		
+		if (pTimeStampUTCNeededChars)
+			*pTimeStampUTCNeededChars = (LibMCData_uint32) (sTimeStampUTC.size()+1);
+		if (pTimeStampUTCBuffer) {
+			if (sTimeStampUTC.size() >= nTimeStampUTCBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimeStampUTC = 0; iTimeStampUTC < sTimeStampUTC.size(); iTimeStampUTC++)
+				pTimeStampUTCBuffer[iTimeStampUTC] = sTimeStampUTC[iTimeStampUTC];
+			pTimeStampUTCBuffer[sTimeStampUTC.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDataResult libmcdata_machineconfigurationtype_getlatestxsd(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationXSD * pXSDInstance)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
@@ -9112,19 +9110,106 @@ LibMCDataResult libmcdata_machineconfigurationtype_getlatestxsd(LibMCData_Machin
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_getlatestxsdversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 * pXSDVersion)
+LibMCDataResult libmcdata_machineconfigurationtype_listxsdversions(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationXSDIterator * pXSDIterator)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
 	try {
-		if (pXSDVersion == nullptr)
+		if (pXSDIterator == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseXSDIterator(nullptr);
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseXSDIterator = pIMachineConfigurationType->ListXSDVersions();
+
+		*pXSDIterator = (IBase*)(pBaseXSDIterator);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationtype_getlatestxsdnumericversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 * pXSDNumericVersion)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if (pXSDNumericVersion == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		*pXSDVersion = pIMachineConfigurationType->GetLatestXSDVersion();
+		*pXSDNumericVersion = pIMachineConfigurationType->GetLatestXSDNumericVersion();
 
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationtype_registernewxsd(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCData_uint32 nXSDVersion, LibMCData_MachineConfigurationXSD * pXSDInstance)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if (pXSDString == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pXSDInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sXSDString(pXSDString);
+		IBase* pBaseXSDInstance(nullptr);
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseXSDInstance = pIMachineConfigurationType->RegisterNewXSD(sXSDString, nXSDVersion);
+
+		*pXSDInstance = (IBase*)(pBaseXSDInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationtype_findxsdbynumericversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 nXSDNumericVersion, LibMCData_MachineConfigurationXSD * pXSDInstance)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if (pXSDInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseXSDInstance(nullptr);
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseXSDInstance = pIMachineConfigurationType->FindXSDByNumericVersion(nXSDNumericVersion);
+
+		*pXSDInstance = (IBase*)(pBaseXSDInstance);
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -9169,27 +9254,30 @@ LibMCDataResult libmcdata_machineconfigurationtype_findxsdbyuuid(LibMCData_Machi
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_createnewxsd(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCData_uint32 nXSDVersion, const char * pDefaultConfigurationXML, LibMCData_MachineConfigurationXSD * pXSDInstance)
+LibMCDataResult libmcdata_machineconfigurationtype_createdefaultconfiguration(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, const char * pDefaultXML, const char * pTimeStampUTC, LibMCData_MachineConfigurationVersion * pVersionInstance)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
 	try {
-		if (pXSDString == nullptr)
+		if (pXSDUUID == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		if (pDefaultConfigurationXML == nullptr)
+		if (pDefaultXML == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		if (pXSDInstance == nullptr)
+		if (pTimeStampUTC == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sXSDString(pXSDString);
-		std::string sDefaultConfigurationXML(pDefaultConfigurationXML);
-		IBase* pBaseXSDInstance(nullptr);
+		if (pVersionInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sXSDUUID(pXSDUUID);
+		std::string sDefaultXML(pDefaultXML);
+		std::string sTimeStampUTC(pTimeStampUTC);
+		IBase* pBaseVersionInstance(nullptr);
 		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseXSDInstance = pIMachineConfigurationType->CreateNewXSD(sXSDString, nXSDVersion, sDefaultConfigurationXML);
+		pBaseVersionInstance = pIMachineConfigurationType->CreateDefaultConfiguration(sXSDUUID, sDefaultXML, sTimeStampUTC);
 
-		*pXSDInstance = (IBase*)(pBaseXSDInstance);
+		*pVersionInstance = (IBase*)(pBaseVersionInstance);
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -9203,35 +9291,7 @@ LibMCDataResult libmcdata_machineconfigurationtype_createnewxsd(LibMCData_Machin
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_getxsdversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 nXSDVersion, LibMCData_MachineConfigurationXSD * pXSDInstance)
-{
-	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
-
-	try {
-		if (pXSDInstance == nullptr)
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		IBase* pBaseXSDInstance(nullptr);
-		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
-		if (!pIMachineConfigurationType)
-			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
-		
-		pBaseXSDInstance = pIMachineConfigurationType->GetXSDVersion(nXSDVersion);
-
-		*pXSDInstance = (IBase*)(pBaseXSDInstance);
-		return LIBMCDATA_SUCCESS;
-	}
-	catch (ELibMCDataInterfaceException & Exception) {
-		return handleLibMCDataException(pIBaseClass, Exception);
-	}
-	catch (std::exception & StdException) {
-		return handleStdException(pIBaseClass, StdException);
-	}
-	catch (...) {
-		return handleUnhandledException(pIBaseClass);
-	}
-}
-
-LibMCDataResult libmcdata_machineconfigurationtype_listversions(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersionIterator * pVersionIterator)
+LibMCDataResult libmcdata_machineconfigurationtype_listallconfigurationversions(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersionIterator * pVersionIterator)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
@@ -9243,7 +9303,7 @@ LibMCDataResult libmcdata_machineconfigurationtype_listversions(LibMCData_Machin
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseVersionIterator = pIMachineConfigurationType->ListVersions();
+		pBaseVersionIterator = pIMachineConfigurationType->ListAllConfigurationVersions();
 
 		*pVersionIterator = (IBase*)(pBaseVersionIterator);
 		return LIBMCDATA_SUCCESS;
@@ -9259,7 +9319,38 @@ LibMCDataResult libmcdata_machineconfigurationtype_listversions(LibMCData_Machin
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_findversionbyuuid(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCData_MachineConfigurationVersion * pVersion)
+LibMCDataResult libmcdata_machineconfigurationtype_listconfigurationversionsforxsd(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, LibMCData_MachineConfigurationVersionIterator * pVersionIterator)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if (pXSDUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pVersionIterator == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sXSDUUID(pXSDUUID);
+		IBase* pBaseVersionIterator(nullptr);
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseVersionIterator = pIMachineConfigurationType->ListConfigurationVersionsForXSD(sXSDUUID);
+
+		*pVersionIterator = (IBase*)(pBaseVersionIterator);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationtype_findconfigurationversionbyuuid(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCData_MachineConfigurationVersion * pVersion)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
@@ -9274,7 +9365,7 @@ LibMCDataResult libmcdata_machineconfigurationtype_findversionbyuuid(LibMCData_M
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseVersion = pIMachineConfigurationType->FindVersionByUUID(sVersionUUID);
+		pBaseVersion = pIMachineConfigurationType->FindConfigurationVersionByUUID(sVersionUUID);
 
 		*pVersion = (IBase*)(pBaseVersion);
 		return LIBMCDATA_SUCCESS;
@@ -9290,22 +9381,19 @@ LibMCDataResult libmcdata_machineconfigurationtype_findversionbyuuid(LibMCData_M
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_getactiveversion(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCData_MachineConfigurationVersion * pVersion)
+LibMCDataResult libmcdata_machineconfigurationtype_getactiveconfigurationversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersion * pVersion)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
 	try {
-		if (pVersionUUID == nullptr)
-			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
 		if (pVersion == nullptr)
 			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
-		std::string sVersionUUID(pVersionUUID);
 		IBase* pBaseVersion(nullptr);
 		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseVersion = pIMachineConfigurationType->GetActiveVersion(sVersionUUID);
+		pBaseVersion = pIMachineConfigurationType->GetActiveConfigurationVersion();
 
 		*pVersion = (IBase*)(pBaseVersion);
 		return LIBMCDATA_SUCCESS;
@@ -9321,7 +9409,7 @@ LibMCDataResult libmcdata_machineconfigurationtype_getactiveversion(LibMCData_Ma
 	}
 }
 
-LibMCDataResult libmcdata_machineconfigurationtype_getlatestversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersion * pVersion)
+LibMCDataResult libmcdata_machineconfigurationtype_getlatestconfigurationversion(LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersion * pVersion)
 {
 	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
 
@@ -9333,9 +9421,68 @@ LibMCDataResult libmcdata_machineconfigurationtype_getlatestversion(LibMCData_Ma
 		if (!pIMachineConfigurationType)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pBaseVersion = pIMachineConfigurationType->GetLatestVersion();
+		pBaseVersion = pIMachineConfigurationType->GetLatestConfigurationVersion();
 
 		*pVersion = (IBase*)(pBaseVersion);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_machineconfigurationtype_setactiveconfigurationversion(LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationType;
+
+	try {
+		if (pVersionUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sVersionUUID(pVersionUUID);
+		IMachineConfigurationType* pIMachineConfigurationType = dynamic_cast<IMachineConfigurationType*>(pIBaseClass);
+		if (!pIMachineConfigurationType)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pIMachineConfigurationType->SetActiveConfigurationVersion(sVersionUUID);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for MachineConfigurationTypeIterator
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_machineconfigurationtypeiterator_getcurrent(LibMCData_MachineConfigurationTypeIterator pMachineConfigurationTypeIterator, LibMCData_MachineConfigurationType * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pMachineConfigurationTypeIterator;
+
+	try {
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseInstance(nullptr);
+		IMachineConfigurationTypeIterator* pIMachineConfigurationTypeIterator = dynamic_cast<IMachineConfigurationTypeIterator*>(pIBaseClass);
+		if (!pIMachineConfigurationTypeIterator)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIMachineConfigurationTypeIterator->GetCurrent();
+
+		*pInstance = (IBase*)(pBaseInstance);
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -10021,6 +10168,34 @@ LibMCDataResult libmcdata_datamodel_haslogcallback(LibMCData_DataModel pDataMode
 	}
 }
 
+LibMCDataResult libmcdata_datamodel_listregisteredconfigurationtypes(LibMCData_DataModel pDataModel, LibMCData_MachineConfigurationTypeIterator * pConfigurationTypeIterator)
+{
+	IBase* pIBaseClass = (IBase *)pDataModel;
+
+	try {
+		if (pConfigurationTypeIterator == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseConfigurationTypeIterator(nullptr);
+		IDataModel* pIDataModel = dynamic_cast<IDataModel*>(pIBaseClass);
+		if (!pIDataModel)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseConfigurationTypeIterator = pIDataModel->ListRegisteredConfigurationTypes();
+
+		*pConfigurationTypeIterator = (IBase*)(pBaseConfigurationTypeIterator);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDataResult libmcdata_datamodel_findconfigurationtypebyschema(LibMCData_DataModel pDataModel, const char * pSchemaType, LibMCData_MachineConfigurationType * pIteratorInstance)
 {
 	IBase* pIBaseClass = (IBase *)pDataModel;
@@ -10609,60 +10784,70 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getversionuuid;
 	if (sProcName == "libmcdata_machineconfigurationversion_getxsduuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getxsduuid;
-	if (sProcName == "libmcdata_machineconfigurationversion_gettypeuuid") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_gettypeuuid;
+	if (sProcName == "libmcdata_machineconfigurationversion_getnumericversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getnumericversion;
 	if (sProcName == "libmcdata_machineconfigurationversion_getparentuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getparentuuid;
-	if (sProcName == "libmcdata_machineconfigurationversion_getschematype") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getschematype;
-	if (sProcName == "libmcdata_machineconfigurationversion_getxsdversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getxsdversion;
-	if (sProcName == "libmcdata_machineconfigurationversion_getxsdstring") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getxsdstring;
 	if (sProcName == "libmcdata_machineconfigurationversion_getconfigurationxmlstring") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getconfigurationxmlstring;
+	if (sProcName == "libmcdata_machineconfigurationversion_getuseruuid") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getuseruuid;
+	if (sProcName == "libmcdata_machineconfigurationversion_gettimestamp") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_gettimestamp;
 	if (sProcName == "libmcdata_machineconfigurationversion_createnewversion") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_createnewversion;
 	if (sProcName == "libmcdata_machineconfigurationversion_migratetonewxsd") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_migratetonewxsd;
-	if (sProcName == "libmcdata_machineconfigurationversioniterator_getcurrentversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationversioniterator_getcurrentversion;
+	if (sProcName == "libmcdata_machineconfigurationversioniterator_getcurrent") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationversioniterator_getcurrent;
 	if (sProcName == "libmcdata_machineconfigurationxsd_getuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_getuuid;
 	if (sProcName == "libmcdata_machineconfigurationxsd_gettypeuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_gettypeuuid;
-	if (sProcName == "libmcdata_machineconfigurationxsd_getschematype") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_getschematype;
 	if (sProcName == "libmcdata_machineconfigurationxsd_getxsdversion") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_getxsdversion;
 	if (sProcName == "libmcdata_machineconfigurationxsd_getxsdstring") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_getxsdstring;
-	if (sProcName == "libmcdata_machineconfigurationxsd_listversions") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_listversions;
+	if (sProcName == "libmcdata_machineconfigurationxsd_gettimestamp") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsd_gettimestamp;
+	if (sProcName == "libmcdata_machineconfigurationxsditerator_getcurrent") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationxsditerator_getcurrent;
 	if (sProcName == "libmcdata_machineconfigurationtype_getuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getuuid;
 	if (sProcName == "libmcdata_machineconfigurationtype_getname") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getname;
 	if (sProcName == "libmcdata_machineconfigurationtype_getschematype") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getschematype;
+	if (sProcName == "libmcdata_machineconfigurationtype_gettimestamp") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_gettimestamp;
 	if (sProcName == "libmcdata_machineconfigurationtype_getlatestxsd") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getlatestxsd;
-	if (sProcName == "libmcdata_machineconfigurationtype_getlatestxsdversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getlatestxsdversion;
+	if (sProcName == "libmcdata_machineconfigurationtype_listxsdversions") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_listxsdversions;
+	if (sProcName == "libmcdata_machineconfigurationtype_getlatestxsdnumericversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getlatestxsdnumericversion;
+	if (sProcName == "libmcdata_machineconfigurationtype_registernewxsd") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_registernewxsd;
+	if (sProcName == "libmcdata_machineconfigurationtype_findxsdbynumericversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_findxsdbynumericversion;
 	if (sProcName == "libmcdata_machineconfigurationtype_findxsdbyuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_findxsdbyuuid;
-	if (sProcName == "libmcdata_machineconfigurationtype_createnewxsd") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_createnewxsd;
-	if (sProcName == "libmcdata_machineconfigurationtype_getxsdversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getxsdversion;
-	if (sProcName == "libmcdata_machineconfigurationtype_listversions") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_listversions;
-	if (sProcName == "libmcdata_machineconfigurationtype_findversionbyuuid") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_findversionbyuuid;
-	if (sProcName == "libmcdata_machineconfigurationtype_getactiveversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getactiveversion;
-	if (sProcName == "libmcdata_machineconfigurationtype_getlatestversion") 
-		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getlatestversion;
+	if (sProcName == "libmcdata_machineconfigurationtype_createdefaultconfiguration") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_createdefaultconfiguration;
+	if (sProcName == "libmcdata_machineconfigurationtype_listallconfigurationversions") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_listallconfigurationversions;
+	if (sProcName == "libmcdata_machineconfigurationtype_listconfigurationversionsforxsd") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_listconfigurationversionsforxsd;
+	if (sProcName == "libmcdata_machineconfigurationtype_findconfigurationversionbyuuid") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_findconfigurationversionbyuuid;
+	if (sProcName == "libmcdata_machineconfigurationtype_getactiveconfigurationversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getactiveconfigurationversion;
+	if (sProcName == "libmcdata_machineconfigurationtype_getlatestconfigurationversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_getlatestconfigurationversion;
+	if (sProcName == "libmcdata_machineconfigurationtype_setactiveconfigurationversion") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtype_setactiveconfigurationversion;
+	if (sProcName == "libmcdata_machineconfigurationtypeiterator_getcurrent") 
+		*ppProcAddress = (void*) &libmcdata_machineconfigurationtypeiterator_getcurrent;
 	if (sProcName == "libmcdata_installationinformation_getinstallationuuid") 
 		*ppProcAddress = (void*) &libmcdata_installationinformation_getinstallationuuid;
 	if (sProcName == "libmcdata_installationinformation_getinstallationsecret") 
@@ -10703,6 +10888,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_datamodel_clearlogcallback;
 	if (sProcName == "libmcdata_datamodel_haslogcallback") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_haslogcallback;
+	if (sProcName == "libmcdata_datamodel_listregisteredconfigurationtypes") 
+		*ppProcAddress = (void*) &libmcdata_datamodel_listregisteredconfigurationtypes;
 	if (sProcName == "libmcdata_datamodel_findconfigurationtypebyschema") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_findconfigurationtypebyschema;
 	if (sProcName == "libmcdata_datamodel_findconfigurationtypebyuuid") 

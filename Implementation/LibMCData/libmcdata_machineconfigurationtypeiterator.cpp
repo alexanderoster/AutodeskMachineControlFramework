@@ -27,70 +27,43 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is a stub class definition of CMachineConfigurationTypeIterator
 
 */
 
-
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-
-#include "libmcdata_interfaces.hpp"
-
-// Parent classes
-#include "libmcdata_iterator.hpp"
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4250)
-#endif
+#include "libmcdata_machineconfigurationtypeiterator.hpp"
+#include "libmcdata_interfaceexception.hpp"
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
 
 
-namespace LibMCData {
-namespace Impl {
-
+using namespace LibMCData::Impl;
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class definition of CMachineConfigurationTypeIterator 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
-private:
+void CMachineConfigurationTypeIterator::AddType(std::shared_ptr<CMachineConfigurationType> pType)
+{
+	if (!pType)
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
 
-	/**
-	* Put private members here.
-	*/
+    m_List.push_back(pType);
+}
 
-protected:
+IMachineConfigurationType* CMachineConfigurationTypeIterator::GetCurrent()
+{
+    if ((m_nCurrentIndex < 0) || (m_nCurrentIndex >= m_List.size()))
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDITERATOR);
 
-	/**
-	* Put protected members here.
-	*/
+    auto pType = std::dynamic_pointer_cast<CMachineConfigurationType> (m_List[m_nCurrentIndex]);
+    if (pType.get() == nullptr)
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 
-public:
+    return CMachineConfigurationType::makeFrom(pType.get());	
+}
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
-
-
-	/**
-	* Public member functions to implement.
-	*/
-
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
-
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
-};
-
-} // namespace Impl
-} // namespace LibMCData
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+IMachineConfigurationVersionIterator* CMachineConfigurationTypeIterator::Clone()
+{
+	throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED);
+}

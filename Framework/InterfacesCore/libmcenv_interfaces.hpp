@@ -125,8 +125,12 @@ class ILogEntryList;
 class IJournalHandler;
 class IUserDetailList;
 class IUserManagementHandler;
+class IMachineConfigurationXSD;
+class IMachineConfigurationXSDIterator;
 class IMachineConfigurationVersion;
+class IMachineConfigurationVersionIterator;
 class IMachineConfigurationType;
+class IMachineConfigurationTypeIterator;
 class IMachineConfigurationHandler;
 class IStateEnvironment;
 class IUIItem;
@@ -6735,61 +6739,148 @@ typedef IBaseSharedPtr<IUserManagementHandler> PIUserManagementHandler;
 
 
 /*************************************************************************************************************************
+ Class interface for MachineConfigurationXSD 
+**************************************************************************************************************************/
+
+class IMachineConfigurationXSD : public virtual IBase {
+public:
+	/**
+	* IMachineConfigurationXSD::GetUUID - Returns the UUID of the XSD.
+	* @return UUID of the configuration XSD.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IMachineConfigurationXSD::GetTypeUUID - Returns the UUID of the associated configuration type.
+	* @return UUID of the configuration type.
+	*/
+	virtual std::string GetTypeUUID() = 0;
+
+	/**
+	* IMachineConfigurationXSD::GetXSDVersion - Returns the version number of the XSD.
+	* @return Returns the XSD version.
+	*/
+	virtual LibMCEnv_uint32 GetXSDVersion() = 0;
+
+	/**
+	* IMachineConfigurationXSD::GetXSDString - Returns the XSD content as string.
+	* @return XSD String.
+	*/
+	virtual std::string GetXSDString() = 0;
+
+	/**
+	* IMachineConfigurationXSD::GetTimestamp - Returns the creation timestamp of the XSD version.
+	* @return UTC timestamp of XSD creation.
+	*/
+	virtual std::string GetTimestamp() = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationXSD> PIMachineConfigurationXSD;
+
+
+/*************************************************************************************************************************
+ Class interface for MachineConfigurationXSDIterator 
+**************************************************************************************************************************/
+
+class IMachineConfigurationXSDIterator : public virtual IIterator {
+public:
+	/**
+	* IMachineConfigurationXSDIterator::GetCurrent - Returns the current MachineConfigurationXSD instance.
+	* @return Currently selected configuration XSD instance.
+	*/
+	virtual IMachineConfigurationXSD * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationXSDIterator> PIMachineConfigurationXSDIterator;
+
+
+/*************************************************************************************************************************
  Class interface for MachineConfigurationVersion 
 **************************************************************************************************************************/
 
 class IMachineConfigurationVersion : public virtual IBase {
 public:
 	/**
-	* IMachineConfigurationVersion::GetSchemaType - Returns the schema type.
-	* @return Schema Type String.
+	* IMachineConfigurationVersion::GetVersionUUID - Returns the UUID of the configuration version.
+	* @return UUID of the configuration version.
 	*/
-	virtual std::string GetSchemaType() = 0;
+	virtual std::string GetVersionUUID() = 0;
 
 	/**
-	* IMachineConfigurationVersion::GetTypeName - Returns the Name the type.
-	* @return Type Name.
+	* IMachineConfigurationVersion::GetXSDUUID - Returns the UUID of the XSD used by this configuration version.
+	* @return UUID of the configuration XSD.
 	*/
-	virtual std::string GetTypeName() = 0;
+	virtual std::string GetXSDUUID() = 0;
 
 	/**
-	* IMachineConfigurationVersion::GetTypeUUID - Returns the UUID the type.
-	* @return Type UUID.
+	* IMachineConfigurationVersion::GetNumericVersion - Returns the numeric version of the configuration version.
+	* @return Returns the configuration numeric version.
 	*/
-	virtual std::string GetTypeUUID() = 0;
+	virtual LibMCEnv_uint32 GetNumericVersion() = 0;
 
 	/**
-	* IMachineConfigurationVersion::GetXSDVersion - Returns the XSD Version Number of this configuration.
-	* @return Returns XSD version number.
+	* IMachineConfigurationVersion::GetParentUUID - Returns the UUID of the parent version.
+	* @return UUID of the configuration version that is the parent of this version. Returns 00000000-0000-0000-0000-000000000000 if this is the default version.
 	*/
-	virtual LibMCEnv_uint32 GetXSDVersion() = 0;
+	virtual std::string GetParentUUID() = 0;
 
 	/**
-	* IMachineConfigurationVersion::GetXSDString - Returns the XSD String that this configuration uses.
-	* @return Returns XSD string.
-	*/
-	virtual std::string GetXSDString() = 0;
-
-	/**
-	* IMachineConfigurationVersion::GetConfigurationXMLString - Returns the configuration as XML String.
-	* @return Returns XML string.
+	* IMachineConfigurationVersion::GetConfigurationXMLString - Returns the configuration XML content as string.
+	* @return XML String.
 	*/
 	virtual std::string GetConfigurationXMLString() = 0;
 
 	/**
-	* IMachineConfigurationVersion::GetConfigurationXMLDocument - Returns the configuration as XML Document class.
-	* @return Returns XML document.
+	* IMachineConfigurationVersion::GetUserUUID - Returns the User UUID.
+	* @return UUID of the User.
 	*/
-	virtual IXMLDocument * GetConfigurationXMLDocument() = 0;
+	virtual std::string GetUserUUID() = 0;
 
 	/**
-	* IMachineConfigurationVersion::MakeActive - Makes the current configuration the active one.
+	* IMachineConfigurationVersion::GetTimestamp - Returns the creation timestamp of the configuration version.
+	* @return UTC timestamp of creation.
 	*/
-	virtual void MakeActive() = 0;
+	virtual std::string GetTimestamp() = 0;
+
+	/**
+	* IMachineConfigurationVersion::CreateNewVersion - Creates a new configuration version from this one with the same XSD.
+	* @param[in] sXMLString - New XML Configuration String. MUST conform to current XSD.
+	* @param[in] sUserUUID - User UUID for logging the user who initiated the change.
+	* @return Returns the newly created MachineConfigurationVersion instance.
+	*/
+	virtual IMachineConfigurationVersion * CreateNewVersion(const std::string & sXMLString, const std::string & sUserUUID) = 0;
+
+	/**
+	* IMachineConfigurationVersion::MigrateToNewXSD - Creates a new configuration version from this one but with a different XSD.
+	* @param[in] pNewXSD - New XSD to use. MUST be of the same type as the current. MUST have an increased version number.
+	* @param[in] sXMLString - New XML Configuration String. MUST conform to new XSD.
+	* @param[in] sUserUUID - User UUID for logging the user who initiated the change.
+	* @return Returns the newly created MachineConfigurationVersion instance.
+	*/
+	virtual IMachineConfigurationVersion * MigrateToNewXSD(IMachineConfigurationXSD* pNewXSD, const std::string & sXMLString, const std::string & sUserUUID) = 0;
 
 };
 
 typedef IBaseSharedPtr<IMachineConfigurationVersion> PIMachineConfigurationVersion;
+
+
+/*************************************************************************************************************************
+ Class interface for MachineConfigurationVersionIterator 
+**************************************************************************************************************************/
+
+class IMachineConfigurationVersionIterator : public virtual IIterator {
+public:
+	/**
+	* IMachineConfigurationVersionIterator::GetCurrent - Returns the current MachineConfigurationVersion instance.
+	* @return Currently selected configuration version instance.
+	*/
+	virtual IMachineConfigurationVersion * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationVersionIterator> PIMachineConfigurationVersionIterator;
 
 
 /*************************************************************************************************************************
@@ -6799,61 +6890,136 @@ typedef IBaseSharedPtr<IMachineConfigurationVersion> PIMachineConfigurationVersi
 class IMachineConfigurationType : public virtual IBase {
 public:
 	/**
-	* IMachineConfigurationType::GetSchemaType - Returns the schema type.
-	* @return Schema Type String.
+	* IMachineConfigurationType::GetUUID - Returns the UUID of the configuration type.
+	* @return UUID of the configuration type.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IMachineConfigurationType::GetName - Returns the name of the configuration type.
+	* @return Name of the configuration type.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IMachineConfigurationType::GetSchemaType - Returns the schema type string of the configuration type.
+	* @return Schema type of the configuration type.
 	*/
 	virtual std::string GetSchemaType() = 0;
 
 	/**
-	* IMachineConfigurationType::GetTypeName - Returns the Name the type.
-	* @return Type Name.
+	* IMachineConfigurationType::GetTimestamp - Returns the creation timestamp of the type.
+	* @return UTC timestamp of Type creation.
 	*/
-	virtual std::string GetTypeName() = 0;
+	virtual std::string GetTimestamp() = 0;
 
 	/**
-	* IMachineConfigurationType::GetTypeUUID - Returns the UUID the type.
-	* @return Type UUID.
+	* IMachineConfigurationType::GetLatestXSD - Returns the latest XSD registered for this configuration type.
+	* @return Latest XSD of the configuration type.
 	*/
-	virtual std::string GetTypeUUID() = 0;
+	virtual IMachineConfigurationXSD * GetLatestXSD() = 0;
 
 	/**
-	* IMachineConfigurationType::GetLatestXSDVersion - Returns the latest Machine Configuration XSD Version.
-	* @return Returns the latest XSD version, or 0 if no XSD exists.
+	* IMachineConfigurationType::ListXSDVersions - Returns all XSDs associated with this configuration type.
+	* @return List of XSDs.
 	*/
-	virtual LibMCEnv_uint32 GetLatestXSDVersion() = 0;
+	virtual IMachineConfigurationXSDIterator * ListXSDVersions() = 0;
 
 	/**
-	* IMachineConfigurationType::RegisterConfigurationXSD - Registers a new configuration XSD.
-	* @param[in] sXSDString - XSD String of the version. MUST be incremental.
+	* IMachineConfigurationType::GetLatestXSDNumericVersion - Returns the version number of the latest XSD for this type.
+	* @return Latest XSD version number, or 0 if none exist.
+	*/
+	virtual LibMCEnv_uint32 GetLatestXSDNumericVersion() = 0;
+
+	/**
+	* IMachineConfigurationType::RegisterNewXSD - Registers a new XSD Version. Fails if version already exists or is not incrementing.
+	* @param[in] sXSDString - XSD String of the version. MUST be a valid schema of this type.
 	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-	* @param[in] sDefaultConfigurationXML - Default configuration XML to use for this XSD. MUST conform to XSD in question.
+	* @return Returns the new XSD of the configuration type.
 	*/
-	virtual void RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML) = 0;
+	virtual IMachineConfigurationXSD * RegisterNewXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion) = 0;
 
 	/**
-	* IMachineConfigurationType::RegisterConfigurationXSDFromResource - Registers a new configuration XSD from machine resource files.
-	* @param[in] sXSDResourceName - Resource identifier of the XSD file of the version. MUST be incremental.
-	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-	* @param[in] sDefaultConfigurationResourceName - Resource identifier of the configuration XML to use for this XSD. MUST conform to XSD in question.
+	* IMachineConfigurationType::FindXSDByNumericVersion - Finds a specific XSD of this type by its Numeric Version Number.
+	* @param[in] nXSDNumericVersion - Requested version number.
+	* @return XSD instance if exists.
 	*/
-	virtual void RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName) = 0;
+	virtual IMachineConfigurationXSD * FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDNumericVersion) = 0;
 
 	/**
-	* IMachineConfigurationType::GetLatestConfiguration - Returns the latest Machine Configuration of this configuration type. Returns the default XML of the newest XSD if no configuration exists.
-	* @return Configuration Version instance.
+	* IMachineConfigurationType::FindXSDByUUID - Finds a specific XSD of this type by its UUID.
+	* @param[in] sXSDUUID - UUID of the XSD.
+	* @return Matching XSD instance.
 	*/
-	virtual IMachineConfigurationVersion * GetLatestConfiguration() = 0;
+	virtual IMachineConfigurationXSD * FindXSDByUUID(const std::string & sXSDUUID) = 0;
 
 	/**
-	* IMachineConfigurationType::GetActiveConfiguration - Returns the active Machine Configuration of this configuration type.
-	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-	* @return Configuration Version instance.
+	* IMachineConfigurationType::CreateDefaultConfiguration - Creates the default configuration for a given XSD version. Fails if a configuration for this XSD already exists.
+	* @param[in] sXSDUUID - UUID of the XSD to base the default configuration on.
+	* @param[in] sDefaultXML - Configuration XML string conforming to the given XSD.
+	* @param[in] sTimeStampUTC - Creation timestamp in UTC.
+	* @return Returns the created default configuration version.
 	*/
-	virtual IMachineConfigurationVersion * GetActiveConfiguration(const bool bFallBackToDefault) = 0;
+	virtual IMachineConfigurationVersion * CreateDefaultConfiguration(const std::string & sXSDUUID, const std::string & sDefaultXML, const std::string & sTimeStampUTC) = 0;
+
+	/**
+	* IMachineConfigurationType::ListAllConfigurationVersions - Lists all configuration versions registered under this type.
+	* @return List of configuration versions.
+	*/
+	virtual IMachineConfigurationVersionIterator * ListAllConfigurationVersions() = 0;
+
+	/**
+	* IMachineConfigurationType::ListConfigurationVersionsForXSD - Lists all configuration versions for specific XSD.
+	* @param[in] sXSDUUID - UUID of the XSD .
+	* @return List of configuration versions.
+	*/
+	virtual IMachineConfigurationVersionIterator * ListConfigurationVersionsForXSD(const std::string & sXSDUUID) = 0;
+
+	/**
+	* IMachineConfigurationType::FindConfigurationVersionByUUID - Finds a specific configuration version by UUID.
+	* @param[in] sVersionUUID - UUID of the configuration version.
+	* @return Matching configuration version if found.
+	*/
+	virtual IMachineConfigurationVersion * FindConfigurationVersionByUUID(const std::string & sVersionUUID) = 0;
+
+	/**
+	* IMachineConfigurationType::GetActiveConfigurationVersion - Returns the currently active configuration version for this type.
+	* @return Active version instance or null.
+	*/
+	virtual IMachineConfigurationVersion * GetActiveConfigurationVersion() = 0;
+
+	/**
+	* IMachineConfigurationType::GetLatestConfigurationVersion - Returns the most recently created version for this type.
+	* @return Latest configuration version or null.
+	*/
+	virtual IMachineConfigurationVersion * GetLatestConfigurationVersion() = 0;
+
+	/**
+	* IMachineConfigurationType::SetActiveConfigurationVersion - Sets the active configuration version for this type.
+	* @param[in] sVersionUUID - UUID of the version to set as active.
+	*/
+	virtual void SetActiveConfigurationVersion(const std::string & sVersionUUID) = 0;
 
 };
 
 typedef IBaseSharedPtr<IMachineConfigurationType> PIMachineConfigurationType;
+
+
+/*************************************************************************************************************************
+ Class interface for MachineConfigurationTypeIterator 
+**************************************************************************************************************************/
+
+class IMachineConfigurationTypeIterator : public virtual IIterator {
+public:
+	/**
+	* IMachineConfigurationTypeIterator::GetCurrent - Returns the current MachineConfigurationType instance.
+	* @return Currently selected configuration type instance.
+	*/
+	virtual IMachineConfigurationType * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationTypeIterator> PIMachineConfigurationTypeIterator;
 
 
 /*************************************************************************************************************************
@@ -6863,34 +7029,39 @@ typedef IBaseSharedPtr<IMachineConfigurationType> PIMachineConfigurationType;
 class IMachineConfigurationHandler : public virtual IBase {
 public:
 	/**
-	* IMachineConfigurationHandler::RegisterMachineConfigurationType - Registers a new machine configuration type, or returns the unique existing one with the same schema type.
-	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
-	* @param[in] sName - Type Name. MUST not be empty. If the configuration type already exists, the name will be checked for identity!
-	* @return Instance of machine configuration type.
+	* IMachineConfigurationHandler::RegisterMachineConfigurationType - Registers a new configuration type or returns existing one if already registered.
+	* @param[in] sSchemaType - Schema type string. MUST not be empty.
+	* @param[in] sName - Display name. MUST not be empty. Must match existing name if type exists.
+	* @return Instance of the configuration type.
 	*/
 	virtual IMachineConfigurationType * RegisterMachineConfigurationType(const std::string & sSchemaType, const std::string & sName) = 0;
 
 	/**
-	* IMachineConfigurationHandler::HasMachineConfigurationType - Checks if a certain configuration schema type has been registered.
-	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
-	* @return Returns true, if the system knows about a configuration schema type.
+	* IMachineConfigurationHandler::HasMachineConfigurationType - Checks if a schema type is already registered.
+	* @param[in] sSchemaType - Schema type string.
+	* @return True if known, false otherwise.
 	*/
 	virtual bool HasMachineConfigurationType(const std::string & sSchemaType) = 0;
 
 	/**
-	* IMachineConfigurationHandler::GetLatestConfiguration - Returns the latest Machine Configuration for a specific configuration type. Returns the default XML of the newest XSD if no configuration exists.
-	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
-	* @return Configuration Version instance.
+	* IMachineConfigurationHandler::ListRegisteredTypes - Returns all configuration types registered in the system.
+	* @return Iterator over configuration types.
 	*/
-	virtual IMachineConfigurationVersion * GetLatestConfiguration(const std::string & sSchemaType) = 0;
+	virtual IMachineConfigurationTypeIterator * ListRegisteredTypes() = 0;
 
 	/**
-	* IMachineConfigurationHandler::GetActiveConfiguration - Returns the active Machine Configuration for a specific configuration type.
-	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
-	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-	* @return Configuration Version instance.
+	* IMachineConfigurationHandler::FindConfigurationTypeByUUID - Returns configuration type by UUID.
+	* @param[in] sTypeUUID - UUID of the configuration type.
+	* @return Configuration type if found.
 	*/
-	virtual IMachineConfigurationVersion * GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault) = 0;
+	virtual IMachineConfigurationType * FindConfigurationTypeByUUID(const std::string & sTypeUUID) = 0;
+
+	/**
+	* IMachineConfigurationHandler::FindConfigurationTypeBySchema - Returns configuration type by Schema Type.
+	* @param[in] sSchemaType - Schema Type of the configuration type.
+	* @return Configuration type if found.
+	*/
+	virtual IMachineConfigurationType * FindConfigurationTypeBySchema(const std::string & sSchemaType) = 0;
 
 };
 
@@ -8129,6 +8300,12 @@ public:
 	* @return Parameter value.
 	*/
 	virtual IJSONObject * GetExternalEventResults() = 0;
+
+	/**
+	* IUIEnvironment::CreateMachineConfigurationHandler - creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.
+	* @return MachineConfigurationHandler instance.
+	*/
+	virtual IMachineConfigurationHandler * CreateMachineConfigurationHandler() = 0;
 
 };
 

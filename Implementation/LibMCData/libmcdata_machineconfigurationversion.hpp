@@ -45,7 +45,7 @@ Abstract: This is the class declaration of CMachineConfigurationVersion
 #endif
 
 // Include custom headers here.
-
+#include "amcdata_sqlhandler.hpp"
 
 namespace LibMCData {
 namespace Impl {
@@ -62,6 +62,16 @@ private:
 	* Put private members here.
 	*/
 
+	AMCData::PSQLHandler m_pSQLHandler;
+
+	std::string	m_sUUID;
+	std::string	m_sXSDUUID;
+	LibMCData_uint32 m_nConfigurationVersionNumber;
+	std::string m_sParentUUID;
+	std::string	m_sConfigurationXML;
+	std::string	m_sUserUUID;
+	std::string	m_sTimestampUTC;
+	
 protected:
 
 	/**
@@ -79,25 +89,43 @@ public:
 	* Public member functions to implement.
 	*/
 
+	CMachineConfigurationVersion(AMCData::PSQLHandler pSQLHandler, const std::string& sUUID, const std::string& sXSDUUID, LibMCData_uint32 nConfigurationVersionNumber, const std::string& sParentUUID, const std::string& sConfigurationXML, const std::string& sUserUUID, const std::string& sTimestampUTC);
+
+	virtual ~CMachineConfigurationVersion();
+
+	static CMachineConfigurationVersion* makeFrom(CMachineConfigurationVersion* pMachineConfigurationVersion);
+
+	static std::shared_ptr<CMachineConfigurationVersion> makeSharedFrom(CMachineConfigurationVersion* pMachineConfigurationVersion);
+
+	static CMachineConfigurationVersion* createDefaultConfigurationForXSD( AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID, const std::string& sConfigurationXML,	const std::string& sTimestampUTC);
+
+	static LibMCData_uint32 getLatestConfigurationNumericVersionForXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID);
+
+	static CMachineConfigurationVersion* getLatestConfigurationVersionForXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID);
+
+	static CMachineConfigurationVersion* findConfigurationVersionByUUID(AMCData::PSQLHandler pSQLHandler, const std::string& sVersionUUID);
+	
+	static IMachineConfigurationVersionIterator* listConfigurationVersionsForXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID);
+
+	AMCData::PSQLHandler GetSQLHandler();
+
 	std::string GetVersionUUID() override;
 
 	std::string GetXSDUUID() override;
 
-	std::string GetTypeUUID() override;
+	LibMCData_uint32 GetNumericVersion() override;
 
 	std::string GetParentUUID() override;
 
-	std::string GetSchemaType() override;
-
-	LibMCData_uint32 GetXSDVersion() override;
-
-	std::string GetXSDString() override;
-
 	std::string GetConfigurationXMLString() override;
 
-	IMachineConfigurationVersion * CreateNewVersion(const std::string & sXMLString, const std::string & sUserUUID, const std::string & sTimeStampUTC) override;
+	std::string GetUserUUID() override;
 
-	IMachineConfigurationVersion * MigrateToNewXSD(IMachineConfigurationXSD* pNewXSD, const std::string & sXMLString, const std::string & sUserUUID, const std::string & sTimeStampUTC) override;
+	std::string GetTimestamp() override;
+
+	IMachineConfigurationVersion* CreateNewVersion(const std::string & sXMLString, const std::string & sUserUUID) override;
+
+	IMachineConfigurationVersion* MigrateToNewXSD(IMachineConfigurationXSD* pNewXSD, const std::string & sXMLString, const std::string & sUserUUID) override;
 
 };
 
