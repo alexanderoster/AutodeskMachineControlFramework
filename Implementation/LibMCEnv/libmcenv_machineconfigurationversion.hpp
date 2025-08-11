@@ -45,7 +45,7 @@ Abstract: This is the class declaration of CMachineConfigurationVersion
 #endif
 
 // Include custom headers here.
-
+#include "libmcdata_dynamic.hpp"
 
 namespace LibMCEnv {
 namespace Impl {
@@ -61,6 +61,8 @@ private:
 	/**
 	* Put private members here.
 	*/
+
+	LibMCData::PMachineConfigurationVersion m_pMachineConfigurationVersion;
 
 protected:
 
@@ -79,21 +81,27 @@ public:
 	* Public member functions to implement.
 	*/
 
-	std::string GetSchemaType() override;
+	CMachineConfigurationVersion(LibMCData::PMachineConfigurationVersion pMachineConfigurationVersion);
 
-	std::string GetTypeName() override;
+	virtual ~CMachineConfigurationVersion();
 
-	std::string GetTypeUUID() override;
+	virtual std::string GetVersionUUID() override;
 
-	LibMCEnv_uint32 GetXSDVersion() override;
+	virtual std::string GetXSDUUID() override;
 
-	std::string GetXSDString() override;
+	virtual LibMCEnv_uint32 GetNumericVersion() override;
 
-	std::string GetConfigurationXMLString() override;
+	virtual std::string GetParentUUID() override;
 
-	IXMLDocument * GetConfigurationXMLDocument() override;
+	virtual std::string GetConfigurationXMLString() override;
 
-	void MakeActive() override;
+	virtual std::string GetUserUUID() override;
+
+	virtual std::string GetTimestamp() override;
+
+	virtual IMachineConfigurationVersion* CreateNewVersion(const std::string& sXMLString, const std::string& sUserUUID) override;
+
+	virtual IMachineConfigurationVersion* MigrateToNewXSD(IMachineConfigurationXSD* pNewXSD, const std::string& sXMLString, const std::string& sUserUUID) override;
 
 };
 

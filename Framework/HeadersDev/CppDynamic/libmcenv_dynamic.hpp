@@ -130,8 +130,12 @@ class CLogEntryList;
 class CJournalHandler;
 class CUserDetailList;
 class CUserManagementHandler;
+class CMachineConfigurationXSD;
+class CMachineConfigurationXSDIterator;
 class CMachineConfigurationVersion;
+class CMachineConfigurationVersionIterator;
 class CMachineConfigurationType;
+class CMachineConfigurationTypeIterator;
 class CMachineConfigurationHandler;
 class CStateEnvironment;
 class CUIItem;
@@ -212,8 +216,12 @@ typedef CLogEntryList CLibMCEnvLogEntryList;
 typedef CJournalHandler CLibMCEnvJournalHandler;
 typedef CUserDetailList CLibMCEnvUserDetailList;
 typedef CUserManagementHandler CLibMCEnvUserManagementHandler;
+typedef CMachineConfigurationXSD CLibMCEnvMachineConfigurationXSD;
+typedef CMachineConfigurationXSDIterator CLibMCEnvMachineConfigurationXSDIterator;
 typedef CMachineConfigurationVersion CLibMCEnvMachineConfigurationVersion;
+typedef CMachineConfigurationVersionIterator CLibMCEnvMachineConfigurationVersionIterator;
 typedef CMachineConfigurationType CLibMCEnvMachineConfigurationType;
+typedef CMachineConfigurationTypeIterator CLibMCEnvMachineConfigurationTypeIterator;
 typedef CMachineConfigurationHandler CLibMCEnvMachineConfigurationHandler;
 typedef CStateEnvironment CLibMCEnvStateEnvironment;
 typedef CUIItem CLibMCEnvUIItem;
@@ -294,8 +302,12 @@ typedef std::shared_ptr<CLogEntryList> PLogEntryList;
 typedef std::shared_ptr<CJournalHandler> PJournalHandler;
 typedef std::shared_ptr<CUserDetailList> PUserDetailList;
 typedef std::shared_ptr<CUserManagementHandler> PUserManagementHandler;
+typedef std::shared_ptr<CMachineConfigurationXSD> PMachineConfigurationXSD;
+typedef std::shared_ptr<CMachineConfigurationXSDIterator> PMachineConfigurationXSDIterator;
 typedef std::shared_ptr<CMachineConfigurationVersion> PMachineConfigurationVersion;
+typedef std::shared_ptr<CMachineConfigurationVersionIterator> PMachineConfigurationVersionIterator;
 typedef std::shared_ptr<CMachineConfigurationType> PMachineConfigurationType;
+typedef std::shared_ptr<CMachineConfigurationTypeIterator> PMachineConfigurationTypeIterator;
 typedef std::shared_ptr<CMachineConfigurationHandler> PMachineConfigurationHandler;
 typedef std::shared_ptr<CStateEnvironment> PStateEnvironment;
 typedef std::shared_ptr<CUIItem> PUIItem;
@@ -376,8 +388,12 @@ typedef PLogEntryList PLibMCEnvLogEntryList;
 typedef PJournalHandler PLibMCEnvJournalHandler;
 typedef PUserDetailList PLibMCEnvUserDetailList;
 typedef PUserManagementHandler PLibMCEnvUserManagementHandler;
+typedef PMachineConfigurationXSD PLibMCEnvMachineConfigurationXSD;
+typedef PMachineConfigurationXSDIterator PLibMCEnvMachineConfigurationXSDIterator;
 typedef PMachineConfigurationVersion PLibMCEnvMachineConfigurationVersion;
+typedef PMachineConfigurationVersionIterator PLibMCEnvMachineConfigurationVersionIterator;
 typedef PMachineConfigurationType PLibMCEnvMachineConfigurationType;
+typedef PMachineConfigurationTypeIterator PLibMCEnvMachineConfigurationTypeIterator;
 typedef PMachineConfigurationHandler PLibMCEnvMachineConfigurationHandler;
 typedef PStateEnvironment PLibMCEnvStateEnvironment;
 typedef PUIItem PLibMCEnvUIItem;
@@ -711,6 +727,7 @@ public:
 			case LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE: return "UNDEFINEDINTERNALSIGNALPHASE";
 			case LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT: return "INVALIDREACTIONTIMEOUT";
 			case LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT: return "COULDNOTSETREACTIONTIMEOUT";
+			case LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED: return "MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED";
 		}
 		return "UNKNOWN";
 	}
@@ -969,6 +986,7 @@ public:
 			case LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE: return "Undefined internal signal phase.";
 			case LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT: return "Invalid reaction timeout.";
 			case LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT: return "Could not set reaction timeout.";
+			case LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED: return "Schema type already registered, but with a different name.";
 		}
 		return "unknown error";
 	}
@@ -1156,8 +1174,12 @@ private:
 	friend class CJournalHandler;
 	friend class CUserDetailList;
 	friend class CUserManagementHandler;
+	friend class CMachineConfigurationXSD;
+	friend class CMachineConfigurationXSDIterator;
 	friend class CMachineConfigurationVersion;
+	friend class CMachineConfigurationVersionIterator;
 	friend class CMachineConfigurationType;
+	friend class CMachineConfigurationTypeIterator;
 	friend class CMachineConfigurationHandler;
 	friend class CStateEnvironment;
 	friend class CUIItem;
@@ -3147,6 +3169,44 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CMachineConfigurationXSD 
+**************************************************************************************************************************/
+class CMachineConfigurationXSD : public CBase {
+public:
+	
+	/**
+	* CMachineConfigurationXSD::CMachineConfigurationXSD - Constructor for MachineConfigurationXSD class.
+	*/
+	CMachineConfigurationXSD(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetUUID();
+	inline std::string GetTypeUUID();
+	inline LibMCEnv_uint32 GetXSDVersion();
+	inline std::string GetXSDString();
+	inline std::string GetTimestamp();
+};
+	
+/*************************************************************************************************************************
+ Class CMachineConfigurationXSDIterator 
+**************************************************************************************************************************/
+class CMachineConfigurationXSDIterator : public CIterator {
+public:
+	
+	/**
+	* CMachineConfigurationXSDIterator::CMachineConfigurationXSDIterator - Constructor for MachineConfigurationXSDIterator class.
+	*/
+	CMachineConfigurationXSDIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PMachineConfigurationXSD GetCurrent();
+};
+	
+/*************************************************************************************************************************
  Class CMachineConfigurationVersion 
 **************************************************************************************************************************/
 class CMachineConfigurationVersion : public CBase {
@@ -3160,14 +3220,32 @@ public:
 	{
 	}
 	
-	inline std::string GetSchemaType();
-	inline std::string GetTypeName();
-	inline std::string GetTypeUUID();
-	inline LibMCEnv_uint32 GetXSDVersion();
-	inline std::string GetXSDString();
+	inline std::string GetVersionUUID();
+	inline std::string GetXSDUUID();
+	inline LibMCEnv_uint32 GetNumericVersion();
+	inline std::string GetParentUUID();
 	inline std::string GetConfigurationXMLString();
-	inline PXMLDocument GetConfigurationXMLDocument();
-	inline void MakeActive();
+	inline std::string GetUserUUID();
+	inline std::string GetTimestamp();
+	inline PMachineConfigurationVersion CreateNewVersion(const std::string & sXMLString, const std::string & sUserUUID);
+	inline PMachineConfigurationVersion MigrateToNewXSD(classParam<CMachineConfigurationXSD> pNewXSD, const std::string & sXMLString, const std::string & sUserUUID);
+};
+	
+/*************************************************************************************************************************
+ Class CMachineConfigurationVersionIterator 
+**************************************************************************************************************************/
+class CMachineConfigurationVersionIterator : public CIterator {
+public:
+	
+	/**
+	* CMachineConfigurationVersionIterator::CMachineConfigurationVersionIterator - Constructor for MachineConfigurationVersionIterator class.
+	*/
+	CMachineConfigurationVersionIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PMachineConfigurationVersion GetCurrent();
 };
 	
 /*************************************************************************************************************************
@@ -3184,14 +3262,40 @@ public:
 	{
 	}
 	
+	inline std::string GetUUID();
+	inline std::string GetName();
 	inline std::string GetSchemaType();
-	inline std::string GetTypeName();
-	inline std::string GetTypeUUID();
-	inline LibMCEnv_uint32 GetLatestXSDVersion();
-	inline void RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML);
-	inline void RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName);
-	inline PMachineConfigurationVersion GetLatestConfiguration();
-	inline PMachineConfigurationVersion GetActiveConfiguration(const bool bFallBackToDefault);
+	inline std::string GetTimestamp();
+	inline PMachineConfigurationXSD GetLatestXSD();
+	inline PMachineConfigurationXSDIterator ListXSDVersions();
+	inline LibMCEnv_uint32 GetLatestXSDNumericVersion();
+	inline PMachineConfigurationXSD RegisterNewXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion);
+	inline PMachineConfigurationXSD FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDNumericVersion);
+	inline PMachineConfigurationXSD FindXSDByUUID(const std::string & sXSDUUID);
+	inline PMachineConfigurationVersion CreateDefaultConfiguration(const std::string & sXSDUUID, const std::string & sDefaultXML, const std::string & sTimeStampUTC);
+	inline PMachineConfigurationVersionIterator ListAllConfigurationVersions();
+	inline PMachineConfigurationVersionIterator ListConfigurationVersionsForXSD(const std::string & sXSDUUID);
+	inline PMachineConfigurationVersion FindConfigurationVersionByUUID(const std::string & sVersionUUID);
+	inline PMachineConfigurationVersion GetActiveConfigurationVersion();
+	inline PMachineConfigurationVersion GetLatestConfigurationVersion();
+	inline void SetActiveConfigurationVersion(const std::string & sVersionUUID);
+};
+	
+/*************************************************************************************************************************
+ Class CMachineConfigurationTypeIterator 
+**************************************************************************************************************************/
+class CMachineConfigurationTypeIterator : public CIterator {
+public:
+	
+	/**
+	* CMachineConfigurationTypeIterator::CMachineConfigurationTypeIterator - Constructor for MachineConfigurationTypeIterator class.
+	*/
+	CMachineConfigurationTypeIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PMachineConfigurationType GetCurrent();
 };
 	
 /*************************************************************************************************************************
@@ -3210,8 +3314,9 @@ public:
 	
 	inline PMachineConfigurationType RegisterMachineConfigurationType(const std::string & sSchemaType, const std::string & sName);
 	inline bool HasMachineConfigurationType(const std::string & sSchemaType);
-	inline PMachineConfigurationVersion GetLatestConfiguration(const std::string & sSchemaType);
-	inline PMachineConfigurationVersion GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault);
+	inline PMachineConfigurationTypeIterator ListRegisteredTypes();
+	inline PMachineConfigurationType FindConfigurationTypeByUUID(const std::string & sTypeUUID);
+	inline PMachineConfigurationType FindConfigurationTypeBySchema(const std::string & sSchemaType);
 };
 	
 /*************************************************************************************************************************
@@ -3427,6 +3532,7 @@ public:
 	inline void AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue);
 	inline PJSONObject GetExternalEventParameters();
 	inline PJSONObject GetExternalEventResults();
+	inline PMachineConfigurationHandler CreateMachineConfigurationHandler();
 };
 	
 	/**
@@ -4314,26 +4420,45 @@ public:
 		pWrapperTable->m_UserManagementHandler_SetUserDescriptionByUUID = nullptr;
 		pWrapperTable->m_UserManagementHandler_SetUserPasswordByUUID = nullptr;
 		pWrapperTable->m_UserManagementHandler_GetActiveUsers = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetSchemaType = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeName = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDString = nullptr;
+		pWrapperTable->m_MachineConfigurationXSD_GetUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDString = nullptr;
+		pWrapperTable->m_MachineConfigurationXSD_GetTimestamp = nullptr;
+		pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetParentUUID = nullptr;
 		pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLString = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument = nullptr;
-		pWrapperTable->m_MachineConfigurationVersion_MakeActive = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetUserUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_GetTimestamp = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD = nullptr;
+		pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetName = nullptr;
 		pWrapperTable->m_MachineConfigurationType_GetSchemaType = nullptr;
-		pWrapperTable->m_MachineConfigurationType_GetTypeName = nullptr;
-		pWrapperTable->m_MachineConfigurationType_GetTypeUUID = nullptr;
-		pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion = nullptr;
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD = nullptr;
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource = nullptr;
-		pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration = nullptr;
-		pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetTimestamp = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSD = nullptr;
+		pWrapperTable->m_MachineConfigurationType_ListXSDVersions = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationType_RegisterNewXSD = nullptr;
+		pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationType_FindXSDByUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration = nullptr;
+		pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions = nullptr;
+		pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD = nullptr;
+		pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion = nullptr;
+		pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent = nullptr;
 		pWrapperTable->m_MachineConfigurationHandler_RegisterMachineConfigurationType = nullptr;
 		pWrapperTable->m_MachineConfigurationHandler_HasMachineConfigurationType = nullptr;
-		pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration = nullptr;
-		pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration = nullptr;
+		pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes = nullptr;
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID = nullptr;
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema = nullptr;
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
@@ -4501,6 +4626,7 @@ public:
 		pWrapperTable->m_UIEnvironment_AddExternalEventResultValue = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameters = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventResults = nullptr;
+		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
 		pWrapperTable->m_ReleaseInstance = nullptr;
@@ -11793,48 +11919,93 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetSchemaType = (PLibMCEnvMachineConfigurationVersion_GetSchemaTypePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getschematype");
+		pWrapperTable->m_MachineConfigurationXSD_GetUUID = (PLibMCEnvMachineConfigurationXSD_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsd_getuuid");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetSchemaType = (PLibMCEnvMachineConfigurationVersion_GetSchemaTypePtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getschematype");
+		pWrapperTable->m_MachineConfigurationXSD_GetUUID = (PLibMCEnvMachineConfigurationXSD_GetUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsd_getuuid");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetSchemaType == nullptr)
+		if (pWrapperTable->m_MachineConfigurationXSD_GetUUID == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeName = (PLibMCEnvMachineConfigurationVersion_GetTypeNamePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_gettypename");
+		pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID = (PLibMCEnvMachineConfigurationXSD_GetTypeUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsd_gettypeuuid");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeName = (PLibMCEnvMachineConfigurationVersion_GetTypeNamePtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_gettypename");
+		pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID = (PLibMCEnvMachineConfigurationXSD_GetTypeUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsd_gettypeuuid");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetTypeName == nullptr)
+		if (pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID = (PLibMCEnvMachineConfigurationVersion_GetTypeUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_gettypeuuid");
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion = (PLibMCEnvMachineConfigurationXSD_GetXSDVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsd_getxsdversion");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID = (PLibMCEnvMachineConfigurationVersion_GetTypeUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_gettypeuuid");
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion = (PLibMCEnvMachineConfigurationXSD_GetXSDVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsd_getxsdversion");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID == nullptr)
+		if (pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion = (PLibMCEnvMachineConfigurationVersion_GetXSDVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getxsdversion");
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDString = (PLibMCEnvMachineConfigurationXSD_GetXSDStringPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsd_getxsdstring");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion = (PLibMCEnvMachineConfigurationVersion_GetXSDVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getxsdversion");
+		pWrapperTable->m_MachineConfigurationXSD_GetXSDString = (PLibMCEnvMachineConfigurationXSD_GetXSDStringPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsd_getxsdstring");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion == nullptr)
+		if (pWrapperTable->m_MachineConfigurationXSD_GetXSDString == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDString = (PLibMCEnvMachineConfigurationVersion_GetXSDStringPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getxsdstring");
+		pWrapperTable->m_MachineConfigurationXSD_GetTimestamp = (PLibMCEnvMachineConfigurationXSD_GetTimestampPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsd_gettimestamp");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetXSDString = (PLibMCEnvMachineConfigurationVersion_GetXSDStringPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getxsdstring");
+		pWrapperTable->m_MachineConfigurationXSD_GetTimestamp = (PLibMCEnvMachineConfigurationXSD_GetTimestampPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsd_gettimestamp");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetXSDString == nullptr)
+		if (pWrapperTable->m_MachineConfigurationXSD_GetTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent = (PLibMCEnvMachineConfigurationXSDIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationxsditerator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent = (PLibMCEnvMachineConfigurationXSDIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_machineconfigurationxsditerator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = (PLibMCEnvMachineConfigurationVersion_GetVersionUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getversionuuid");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = (PLibMCEnvMachineConfigurationVersion_GetVersionUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getversionuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID = (PLibMCEnvMachineConfigurationVersion_GetXSDUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getxsduuid");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID = (PLibMCEnvMachineConfigurationVersion_GetXSDUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getxsduuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion = (PLibMCEnvMachineConfigurationVersion_GetNumericVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getnumericversion");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion = (PLibMCEnvMachineConfigurationVersion_GetNumericVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getnumericversion");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetParentUUID = (PLibMCEnvMachineConfigurationVersion_GetParentUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getparentuuid");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_GetParentUUID = (PLibMCEnvMachineConfigurationVersion_GetParentUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getparentuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_GetParentUUID == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -11847,21 +12018,66 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument = (PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLDocumentPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getconfigurationxmldocument");
+		pWrapperTable->m_MachineConfigurationVersion_GetUserUUID = (PLibMCEnvMachineConfigurationVersion_GetUserUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_getuseruuid");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument = (PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLDocumentPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getconfigurationxmldocument");
+		pWrapperTable->m_MachineConfigurationVersion_GetUserUUID = (PLibMCEnvMachineConfigurationVersion_GetUserUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_getuseruuid");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument == nullptr)
+		if (pWrapperTable->m_MachineConfigurationVersion_GetUserUUID == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_MakeActive = (PLibMCEnvMachineConfigurationVersion_MakeActivePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_makeactive");
+		pWrapperTable->m_MachineConfigurationVersion_GetTimestamp = (PLibMCEnvMachineConfigurationVersion_GetTimestampPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_gettimestamp");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationVersion_MakeActive = (PLibMCEnvMachineConfigurationVersion_MakeActivePtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_makeactive");
+		pWrapperTable->m_MachineConfigurationVersion_GetTimestamp = (PLibMCEnvMachineConfigurationVersion_GetTimestampPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_gettimestamp");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationVersion_MakeActive == nullptr)
+		if (pWrapperTable->m_MachineConfigurationVersion_GetTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion = (PLibMCEnvMachineConfigurationVersion_CreateNewVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_createnewversion");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion = (PLibMCEnvMachineConfigurationVersion_CreateNewVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_createnewversion");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD = (PLibMCEnvMachineConfigurationVersion_MigrateToNewXSDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversion_migratetonewxsd");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD = (PLibMCEnvMachineConfigurationVersion_MigrateToNewXSDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversion_migratetonewxsd");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent = (PLibMCEnvMachineConfigurationVersionIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationversioniterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent = (PLibMCEnvMachineConfigurationVersionIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_machineconfigurationversioniterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetUUID = (PLibMCEnvMachineConfigurationType_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetUUID = (PLibMCEnvMachineConfigurationType_GetUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_GetUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetName = (PLibMCEnvMachineConfigurationType_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getname");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetName = (PLibMCEnvMachineConfigurationType_GetNamePtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_GetName == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -11874,66 +12090,138 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetTypeName = (PLibMCEnvMachineConfigurationType_GetTypeNamePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_gettypename");
+		pWrapperTable->m_MachineConfigurationType_GetTimestamp = (PLibMCEnvMachineConfigurationType_GetTimestampPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_gettimestamp");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetTypeName = (PLibMCEnvMachineConfigurationType_GetTypeNamePtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_gettypename");
+		pWrapperTable->m_MachineConfigurationType_GetTimestamp = (PLibMCEnvMachineConfigurationType_GetTimestampPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_gettimestamp");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_GetTypeName == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_GetTimestamp == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetTypeUUID = (PLibMCEnvMachineConfigurationType_GetTypeUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_gettypeuuid");
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSD = (PLibMCEnvMachineConfigurationType_GetLatestXSDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsd");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetTypeUUID = (PLibMCEnvMachineConfigurationType_GetTypeUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_gettypeuuid");
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSD = (PLibMCEnvMachineConfigurationType_GetLatestXSDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsd");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_GetTypeUUID == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_GetLatestXSD == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion = (PLibMCEnvMachineConfigurationType_GetLatestXSDVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsdversion");
+		pWrapperTable->m_MachineConfigurationType_ListXSDVersions = (PLibMCEnvMachineConfigurationType_ListXSDVersionsPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_listxsdversions");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion = (PLibMCEnvMachineConfigurationType_GetLatestXSDVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsdversion");
+		pWrapperTable->m_MachineConfigurationType_ListXSDVersions = (PLibMCEnvMachineConfigurationType_ListXSDVersionsPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_listxsdversions");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_ListXSDVersions == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD = (PLibMCEnvMachineConfigurationType_RegisterConfigurationXSDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_registerconfigurationxsd");
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion = (PLibMCEnvMachineConfigurationType_GetLatestXSDNumericVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsdnumericversion");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD = (PLibMCEnvMachineConfigurationType_RegisterConfigurationXSDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_registerconfigurationxsd");
+		pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion = (PLibMCEnvMachineConfigurationType_GetLatestXSDNumericVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getlatestxsdnumericversion");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource = (PLibMCEnvMachineConfigurationType_RegisterConfigurationXSDFromResourcePtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_registerconfigurationxsdfromresource");
+		pWrapperTable->m_MachineConfigurationType_RegisterNewXSD = (PLibMCEnvMachineConfigurationType_RegisterNewXSDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_registernewxsd");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource = (PLibMCEnvMachineConfigurationType_RegisterConfigurationXSDFromResourcePtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_registerconfigurationxsdfromresource");
+		pWrapperTable->m_MachineConfigurationType_RegisterNewXSD = (PLibMCEnvMachineConfigurationType_RegisterNewXSDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_registernewxsd");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_RegisterNewXSD == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration = (PLibMCEnvMachineConfigurationType_GetLatestConfigurationPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getlatestconfiguration");
+		pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion = (PLibMCEnvMachineConfigurationType_FindXSDByNumericVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_findxsdbynumericversion");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration = (PLibMCEnvMachineConfigurationType_GetLatestConfigurationPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getlatestconfiguration");
+		pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion = (PLibMCEnvMachineConfigurationType_FindXSDByNumericVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_findxsdbynumericversion");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration = (PLibMCEnvMachineConfigurationType_GetActiveConfigurationPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getactiveconfiguration");
+		pWrapperTable->m_MachineConfigurationType_FindXSDByUUID = (PLibMCEnvMachineConfigurationType_FindXSDByUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_findxsdbyuuid");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration = (PLibMCEnvMachineConfigurationType_GetActiveConfigurationPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getactiveconfiguration");
+		pWrapperTable->m_MachineConfigurationType_FindXSDByUUID = (PLibMCEnvMachineConfigurationType_FindXSDByUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_findxsdbyuuid");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration == nullptr)
+		if (pWrapperTable->m_MachineConfigurationType_FindXSDByUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration = (PLibMCEnvMachineConfigurationType_CreateDefaultConfigurationPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_createdefaultconfiguration");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration = (PLibMCEnvMachineConfigurationType_CreateDefaultConfigurationPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_createdefaultconfiguration");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions = (PLibMCEnvMachineConfigurationType_ListAllConfigurationVersionsPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_listallconfigurationversions");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions = (PLibMCEnvMachineConfigurationType_ListAllConfigurationVersionsPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_listallconfigurationversions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD = (PLibMCEnvMachineConfigurationType_ListConfigurationVersionsForXSDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_listconfigurationversionsforxsd");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD = (PLibMCEnvMachineConfigurationType_ListConfigurationVersionsForXSDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_listconfigurationversionsforxsd");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID = (PLibMCEnvMachineConfigurationType_FindConfigurationVersionByUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_findconfigurationversionbyuuid");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID = (PLibMCEnvMachineConfigurationType_FindConfigurationVersionByUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_findconfigurationversionbyuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion = (PLibMCEnvMachineConfigurationType_GetActiveConfigurationVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getactiveconfigurationversion");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion = (PLibMCEnvMachineConfigurationType_GetActiveConfigurationVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getactiveconfigurationversion");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion = (PLibMCEnvMachineConfigurationType_GetLatestConfigurationVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_getlatestconfigurationversion");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion = (PLibMCEnvMachineConfigurationType_GetLatestConfigurationVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_getlatestconfigurationversion");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion = (PLibMCEnvMachineConfigurationType_SetActiveConfigurationVersionPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtype_setactiveconfigurationversion");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion = (PLibMCEnvMachineConfigurationType_SetActiveConfigurationVersionPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtype_setactiveconfigurationversion");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent = (PLibMCEnvMachineConfigurationTypeIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationtypeiterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent = (PLibMCEnvMachineConfigurationTypeIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_machineconfigurationtypeiterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -11955,21 +12243,30 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration = (PLibMCEnvMachineConfigurationHandler_GetLatestConfigurationPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationhandler_getlatestconfiguration");
+		pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes = (PLibMCEnvMachineConfigurationHandler_ListRegisteredTypesPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationhandler_listregisteredtypes");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration = (PLibMCEnvMachineConfigurationHandler_GetLatestConfigurationPtr) dlsym(hLibrary, "libmcenv_machineconfigurationhandler_getlatestconfiguration");
+		pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes = (PLibMCEnvMachineConfigurationHandler_ListRegisteredTypesPtr) dlsym(hLibrary, "libmcenv_machineconfigurationhandler_listregisteredtypes");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration == nullptr)
+		if (pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration = (PLibMCEnvMachineConfigurationHandler_GetActiveConfigurationPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationhandler_getactiveconfiguration");
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID = (PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeByUUIDPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationhandler_findconfigurationtypebyuuid");
 		#else // _WIN32
-		pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration = (PLibMCEnvMachineConfigurationHandler_GetActiveConfigurationPtr) dlsym(hLibrary, "libmcenv_machineconfigurationhandler_getactiveconfiguration");
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID = (PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeByUUIDPtr) dlsym(hLibrary, "libmcenv_machineconfigurationhandler_findconfigurationtypebyuuid");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration == nullptr)
+		if (pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema = (PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeBySchemaPtr) GetProcAddress(hLibrary, "libmcenv_machineconfigurationhandler_findconfigurationtypebyschema");
+		#else // _WIN32
+		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema = (PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeBySchemaPtr) dlsym(hLibrary, "libmcenv_machineconfigurationhandler_findconfigurationtypebyschema");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -13473,6 +13770,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_GetExternalEventResults == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = (PLibMCEnvUIEnvironment_CreateMachineConfigurationHandlerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_createmachineconfigurationhandler");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = (PLibMCEnvUIEnvironment_CreateMachineConfigurationHandlerPtr) dlsym(hLibrary, "libmcenv_uienvironment_createmachineconfigurationhandler");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16752,68 +17058,140 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_UserManagementHandler_GetActiveUsers == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getschematype", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetSchemaType));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetSchemaType == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsd_getuuid", (void**)&(pWrapperTable->m_MachineConfigurationXSD_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSD_GetUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_gettypename", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetTypeName));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetTypeName == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsd_gettypeuuid", (void**)&(pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSD_GetTypeUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_gettypeuuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetTypeUUID == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsd_getxsdversion", (void**)&(pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSD_GetXSDVersion == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getxsdversion", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetXSDVersion == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsd_getxsdstring", (void**)&(pWrapperTable->m_MachineConfigurationXSD_GetXSDString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSD_GetXSDString == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getxsdstring", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetXSDString));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetXSDString == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsd_gettimestamp", (void**)&(pWrapperTable->m_MachineConfigurationXSD_GetTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSD_GetTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationxsditerator_getcurrent", (void**)&(pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationXSDIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getversionuuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getxsduuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getnumericversion", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getparentuuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetParentUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetParentUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getconfigurationxmlstring", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLString));
 		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLString == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getconfigurationxmldocument", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetConfigurationXMLDocument == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_getuseruuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetUserUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetUserUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_makeactive", (void**)&(pWrapperTable->m_MachineConfigurationVersion_MakeActive));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_MakeActive == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_gettimestamp", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_createnewversion", (void**)&(pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_CreateNewVersion == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversion_migratetonewxsd", (void**)&(pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_MigrateToNewXSD == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationversioniterator_getcurrent", (void**)&(pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersionIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getuuid", (void**)&(pWrapperTable->m_MachineConfigurationType_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getname", (void**)&(pWrapperTable->m_MachineConfigurationType_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetName == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getschematype", (void**)&(pWrapperTable->m_MachineConfigurationType_GetSchemaType));
 		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetSchemaType == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_gettypename", (void**)&(pWrapperTable->m_MachineConfigurationType_GetTypeName));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetTypeName == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_gettimestamp", (void**)&(pWrapperTable->m_MachineConfigurationType_GetTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetTimestamp == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_gettypeuuid", (void**)&(pWrapperTable->m_MachineConfigurationType_GetTypeUUID));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetTypeUUID == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getlatestxsd", (void**)&(pWrapperTable->m_MachineConfigurationType_GetLatestXSD));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetLatestXSD == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getlatestxsdversion", (void**)&(pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetLatestXSDVersion == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_listxsdversions", (void**)&(pWrapperTable->m_MachineConfigurationType_ListXSDVersions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_ListXSDVersions == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_registerconfigurationxsd", (void**)&(pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSD == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getlatestxsdnumericversion", (void**)&(pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetLatestXSDNumericVersion == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_registerconfigurationxsdfromresource", (void**)&(pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_RegisterConfigurationXSDFromResource == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_registernewxsd", (void**)&(pWrapperTable->m_MachineConfigurationType_RegisterNewXSD));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_RegisterNewXSD == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getlatestconfiguration", (void**)&(pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetLatestConfiguration == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_findxsdbynumericversion", (void**)&(pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_FindXSDByNumericVersion == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getactiveconfiguration", (void**)&(pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetActiveConfiguration == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_findxsdbyuuid", (void**)&(pWrapperTable->m_MachineConfigurationType_FindXSDByUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_FindXSDByUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_createdefaultconfiguration", (void**)&(pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_CreateDefaultConfiguration == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_listallconfigurationversions", (void**)&(pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_ListAllConfigurationVersions == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_listconfigurationversionsforxsd", (void**)&(pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_ListConfigurationVersionsForXSD == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_findconfigurationversionbyuuid", (void**)&(pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_FindConfigurationVersionByUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getactiveconfigurationversion", (void**)&(pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetActiveConfigurationVersion == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_getlatestconfigurationversion", (void**)&(pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_GetLatestConfigurationVersion == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtype_setactiveconfigurationversion", (void**)&(pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationType_SetActiveConfigurationVersion == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationtypeiterator_getcurrent", (void**)&(pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationTypeIterator_GetCurrent == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_registermachineconfigurationtype", (void**)&(pWrapperTable->m_MachineConfigurationHandler_RegisterMachineConfigurationType));
@@ -16824,12 +17202,16 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_HasMachineConfigurationType == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_getlatestconfiguration", (void**)&(pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_GetLatestConfiguration == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_listregisteredtypes", (void**)&(pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_getactiveconfiguration", (void**)&(pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration));
-		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_GetActiveConfiguration == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_findconfigurationtypebyuuid", (void**)&(pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_machineconfigurationhandler_findconfigurationtypebyschema", (void**)&(pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_getmachinestate", (void**)&(pWrapperTable->m_StateEnvironment_GetMachineState));
@@ -17498,6 +17880,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_getexternaleventresults", (void**)&(pWrapperTable->m_UIEnvironment_GetExternalEventResults));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetExternalEventResults == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_createmachineconfigurationhandler", (void**)&(pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_getversion", (void**)&(pWrapperTable->m_GetVersion));
@@ -28480,84 +28866,164 @@ public:
 	}
 	
 	/**
-	 * Method definitions for class CMachineConfigurationVersion
+	 * Method definitions for class CMachineConfigurationXSD
 	 */
 	
 	/**
-	* CMachineConfigurationVersion::GetSchemaType - Returns the schema type.
-	* @return Schema Type String.
+	* CMachineConfigurationXSD::GetUUID - Returns the UUID of the XSD.
+	* @return UUID of the configuration XSD.
 	*/
-	std::string CMachineConfigurationVersion::GetSchemaType()
+	std::string CMachineConfigurationXSD::GetUUID()
 	{
-		LibMCEnv_uint32 bytesNeededSchemaType = 0;
-		LibMCEnv_uint32 bytesWrittenSchemaType = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetSchemaType(m_pHandle, 0, &bytesNeededSchemaType, nullptr));
-		std::vector<char> bufferSchemaType(bytesNeededSchemaType);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetSchemaType(m_pHandle, bytesNeededSchemaType, &bytesWrittenSchemaType, &bufferSchemaType[0]));
+		LibMCEnv_uint32 bytesNeededXSDUUID = 0;
+		LibMCEnv_uint32 bytesWrittenXSDUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetUUID(m_pHandle, 0, &bytesNeededXSDUUID, nullptr));
+		std::vector<char> bufferXSDUUID(bytesNeededXSDUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetUUID(m_pHandle, bytesNeededXSDUUID, &bytesWrittenXSDUUID, &bufferXSDUUID[0]));
 		
-		return std::string(&bufferSchemaType[0]);
+		return std::string(&bufferXSDUUID[0]);
 	}
 	
 	/**
-	* CMachineConfigurationVersion::GetTypeName - Returns the Name the type.
-	* @return Type Name.
+	* CMachineConfigurationXSD::GetTypeUUID - Returns the UUID of the associated configuration type.
+	* @return UUID of the configuration type.
 	*/
-	std::string CMachineConfigurationVersion::GetTypeName()
+	std::string CMachineConfigurationXSD::GetTypeUUID()
 	{
-		LibMCEnv_uint32 bytesNeededName = 0;
-		LibMCEnv_uint32 bytesWrittenName = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTypeName(m_pHandle, 0, &bytesNeededName, nullptr));
-		std::vector<char> bufferName(bytesNeededName);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTypeName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		LibMCEnv_uint32 bytesNeededTypeUUID = 0;
+		LibMCEnv_uint32 bytesWrittenTypeUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetTypeUUID(m_pHandle, 0, &bytesNeededTypeUUID, nullptr));
+		std::vector<char> bufferTypeUUID(bytesNeededTypeUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetTypeUUID(m_pHandle, bytesNeededTypeUUID, &bytesWrittenTypeUUID, &bufferTypeUUID[0]));
 		
-		return std::string(&bufferName[0]);
+		return std::string(&bufferTypeUUID[0]);
 	}
 	
 	/**
-	* CMachineConfigurationVersion::GetTypeUUID - Returns the UUID the type.
-	* @return Type UUID.
+	* CMachineConfigurationXSD::GetXSDVersion - Returns the version number of the XSD.
+	* @return Returns the XSD version.
 	*/
-	std::string CMachineConfigurationVersion::GetTypeUUID()
-	{
-		LibMCEnv_uint32 bytesNeededUUID = 0;
-		LibMCEnv_uint32 bytesWrittenUUID = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTypeUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
-		std::vector<char> bufferUUID(bytesNeededUUID);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTypeUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
-		
-		return std::string(&bufferUUID[0]);
-	}
-	
-	/**
-	* CMachineConfigurationVersion::GetXSDVersion - Returns the XSD Version Number of this configuration.
-	* @return Returns XSD version number.
-	*/
-	LibMCEnv_uint32 CMachineConfigurationVersion::GetXSDVersion()
+	LibMCEnv_uint32 CMachineConfigurationXSD::GetXSDVersion()
 	{
 		LibMCEnv_uint32 resultXSDVersion = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetXSDVersion(m_pHandle, &resultXSDVersion));
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetXSDVersion(m_pHandle, &resultXSDVersion));
 		
 		return resultXSDVersion;
 	}
 	
 	/**
-	* CMachineConfigurationVersion::GetXSDString - Returns the XSD String that this configuration uses.
-	* @return Returns XSD string.
+	* CMachineConfigurationXSD::GetXSDString - Returns the XSD content as string.
+	* @return XSD String.
 	*/
-	std::string CMachineConfigurationVersion::GetXSDString()
+	std::string CMachineConfigurationXSD::GetXSDString()
 	{
 		LibMCEnv_uint32 bytesNeededXSDString = 0;
 		LibMCEnv_uint32 bytesWrittenXSDString = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetXSDString(m_pHandle, 0, &bytesNeededXSDString, nullptr));
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetXSDString(m_pHandle, 0, &bytesNeededXSDString, nullptr));
 		std::vector<char> bufferXSDString(bytesNeededXSDString);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetXSDString(m_pHandle, bytesNeededXSDString, &bytesWrittenXSDString, &bufferXSDString[0]));
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetXSDString(m_pHandle, bytesNeededXSDString, &bytesWrittenXSDString, &bufferXSDString[0]));
 		
 		return std::string(&bufferXSDString[0]);
 	}
 	
 	/**
-	* CMachineConfigurationVersion::GetConfigurationXMLString - Returns the configuration as XML String.
-	* @return Returns XML string.
+	* CMachineConfigurationXSD::GetTimestamp - Returns the creation timestamp of the XSD version.
+	* @return UTC timestamp of XSD creation.
+	*/
+	std::string CMachineConfigurationXSD::GetTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimeStampUTC = 0;
+		LibMCEnv_uint32 bytesWrittenTimeStampUTC = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetTimestamp(m_pHandle, 0, &bytesNeededTimeStampUTC, nullptr));
+		std::vector<char> bufferTimeStampUTC(bytesNeededTimeStampUTC);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSD_GetTimestamp(m_pHandle, bytesNeededTimeStampUTC, &bytesWrittenTimeStampUTC, &bufferTimeStampUTC[0]));
+		
+		return std::string(&bufferTimeStampUTC[0]);
+	}
+	
+	/**
+	 * Method definitions for class CMachineConfigurationXSDIterator
+	 */
+	
+	/**
+	* CMachineConfigurationXSDIterator::GetCurrent - Returns the current MachineConfigurationXSD instance.
+	* @return Currently selected configuration XSD instance.
+	*/
+	PMachineConfigurationXSD CMachineConfigurationXSDIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationXSDIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationXSD>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class CMachineConfigurationVersion
+	 */
+	
+	/**
+	* CMachineConfigurationVersion::GetVersionUUID - Returns the UUID of the configuration version.
+	* @return UUID of the configuration version.
+	*/
+	std::string CMachineConfigurationVersion::GetVersionUUID()
+	{
+		LibMCEnv_uint32 bytesNeededVersionUUID = 0;
+		LibMCEnv_uint32 bytesWrittenVersionUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetVersionUUID(m_pHandle, 0, &bytesNeededVersionUUID, nullptr));
+		std::vector<char> bufferVersionUUID(bytesNeededVersionUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetVersionUUID(m_pHandle, bytesNeededVersionUUID, &bytesWrittenVersionUUID, &bufferVersionUUID[0]));
+		
+		return std::string(&bufferVersionUUID[0]);
+	}
+	
+	/**
+	* CMachineConfigurationVersion::GetXSDUUID - Returns the UUID of the XSD used by this configuration version.
+	* @return UUID of the configuration XSD.
+	*/
+	std::string CMachineConfigurationVersion::GetXSDUUID()
+	{
+		LibMCEnv_uint32 bytesNeededXSDUUID = 0;
+		LibMCEnv_uint32 bytesWrittenXSDUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetXSDUUID(m_pHandle, 0, &bytesNeededXSDUUID, nullptr));
+		std::vector<char> bufferXSDUUID(bytesNeededXSDUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetXSDUUID(m_pHandle, bytesNeededXSDUUID, &bytesWrittenXSDUUID, &bufferXSDUUID[0]));
+		
+		return std::string(&bufferXSDUUID[0]);
+	}
+	
+	/**
+	* CMachineConfigurationVersion::GetNumericVersion - Returns the numeric version of the configuration version.
+	* @return Returns the configuration numeric version.
+	*/
+	LibMCEnv_uint32 CMachineConfigurationVersion::GetNumericVersion()
+	{
+		LibMCEnv_uint32 resultConfigurationNumericVersion = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetNumericVersion(m_pHandle, &resultConfigurationNumericVersion));
+		
+		return resultConfigurationNumericVersion;
+	}
+	
+	/**
+	* CMachineConfigurationVersion::GetParentUUID - Returns the UUID of the parent version.
+	* @return UUID of the configuration version that is the parent of this version. Returns 00000000-0000-0000-0000-000000000000 if this is the default version.
+	*/
+	std::string CMachineConfigurationVersion::GetParentUUID()
+	{
+		LibMCEnv_uint32 bytesNeededParentUUID = 0;
+		LibMCEnv_uint32 bytesWrittenParentUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetParentUUID(m_pHandle, 0, &bytesNeededParentUUID, nullptr));
+		std::vector<char> bufferParentUUID(bytesNeededParentUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetParentUUID(m_pHandle, bytesNeededParentUUID, &bytesWrittenParentUUID, &bufferParentUUID[0]));
+		
+		return std::string(&bufferParentUUID[0]);
+	}
+	
+	/**
+	* CMachineConfigurationVersion::GetConfigurationXMLString - Returns the configuration XML content as string.
+	* @return XML String.
 	*/
 	std::string CMachineConfigurationVersion::GetConfigurationXMLString()
 	{
@@ -28571,26 +29037,88 @@ public:
 	}
 	
 	/**
-	* CMachineConfigurationVersion::GetConfigurationXMLDocument - Returns the configuration as XML Document class.
-	* @return Returns XML document.
+	* CMachineConfigurationVersion::GetUserUUID - Returns the User UUID.
+	* @return UUID of the User.
 	*/
-	PXMLDocument CMachineConfigurationVersion::GetConfigurationXMLDocument()
+	std::string CMachineConfigurationVersion::GetUserUUID()
 	{
-		LibMCEnvHandle hDocumentInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetConfigurationXMLDocument(m_pHandle, &hDocumentInstance));
+		LibMCEnv_uint32 bytesNeededUserUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUserUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetUserUUID(m_pHandle, 0, &bytesNeededUserUUID, nullptr));
+		std::vector<char> bufferUserUUID(bytesNeededUserUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetUserUUID(m_pHandle, bytesNeededUserUUID, &bytesWrittenUserUUID, &bufferUserUUID[0]));
 		
-		if (!hDocumentInstance) {
-			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
-		}
-		return std::make_shared<CXMLDocument>(m_pWrapper, hDocumentInstance);
+		return std::string(&bufferUserUUID[0]);
 	}
 	
 	/**
-	* CMachineConfigurationVersion::MakeActive - Makes the current configuration the active one.
+	* CMachineConfigurationVersion::GetTimestamp - Returns the creation timestamp of the configuration version.
+	* @return UTC timestamp of creation.
 	*/
-	void CMachineConfigurationVersion::MakeActive()
+	std::string CMachineConfigurationVersion::GetTimestamp()
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_MakeActive(m_pHandle));
+		LibMCEnv_uint32 bytesNeededTimeStampUTC = 0;
+		LibMCEnv_uint32 bytesWrittenTimeStampUTC = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTimestamp(m_pHandle, 0, &bytesNeededTimeStampUTC, nullptr));
+		std::vector<char> bufferTimeStampUTC(bytesNeededTimeStampUTC);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_GetTimestamp(m_pHandle, bytesNeededTimeStampUTC, &bytesWrittenTimeStampUTC, &bufferTimeStampUTC[0]));
+		
+		return std::string(&bufferTimeStampUTC[0]);
+	}
+	
+	/**
+	* CMachineConfigurationVersion::CreateNewVersion - Creates a new configuration version from this one with the same XSD.
+	* @param[in] sXMLString - New XML Configuration String. MUST conform to current XSD.
+	* @param[in] sUserUUID - User UUID for logging the user who initiated the change.
+	* @return Returns the newly created MachineConfigurationVersion instance.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationVersion::CreateNewVersion(const std::string & sXMLString, const std::string & sUserUUID)
+	{
+		LibMCEnvHandle hCurrentInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_CreateNewVersion(m_pHandle, sXMLString.c_str(), sUserUUID.c_str(), &hCurrentInstance));
+		
+		if (!hCurrentInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hCurrentInstance);
+	}
+	
+	/**
+	* CMachineConfigurationVersion::MigrateToNewXSD - Creates a new configuration version from this one but with a different XSD.
+	* @param[in] pNewXSD - New XSD to use. MUST be of the same type as the current. MUST have an increased version number.
+	* @param[in] sXMLString - New XML Configuration String. MUST conform to new XSD.
+	* @param[in] sUserUUID - User UUID for logging the user who initiated the change.
+	* @return Returns the newly created MachineConfigurationVersion instance.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationVersion::MigrateToNewXSD(classParam<CMachineConfigurationXSD> pNewXSD, const std::string & sXMLString, const std::string & sUserUUID)
+	{
+		LibMCEnvHandle hNewXSD = pNewXSD.GetHandle();
+		LibMCEnvHandle hCurrentInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersion_MigrateToNewXSD(m_pHandle, hNewXSD, sXMLString.c_str(), sUserUUID.c_str(), &hCurrentInstance));
+		
+		if (!hCurrentInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hCurrentInstance);
+	}
+	
+	/**
+	 * Method definitions for class CMachineConfigurationVersionIterator
+	 */
+	
+	/**
+	* CMachineConfigurationVersionIterator::GetCurrent - Returns the current MachineConfigurationVersion instance.
+	* @return Currently selected configuration version instance.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationVersionIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationVersionIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hInstance);
 	}
 	
 	/**
@@ -28598,8 +29126,38 @@ public:
 	 */
 	
 	/**
-	* CMachineConfigurationType::GetSchemaType - Returns the schema type.
-	* @return Schema Type String.
+	* CMachineConfigurationType::GetUUID - Returns the UUID of the configuration type.
+	* @return UUID of the configuration type.
+	*/
+	std::string CMachineConfigurationType::GetUUID()
+	{
+		LibMCEnv_uint32 bytesNeededTypeUUID = 0;
+		LibMCEnv_uint32 bytesWrittenTypeUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetUUID(m_pHandle, 0, &bytesNeededTypeUUID, nullptr));
+		std::vector<char> bufferTypeUUID(bytesNeededTypeUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetUUID(m_pHandle, bytesNeededTypeUUID, &bytesWrittenTypeUUID, &bufferTypeUUID[0]));
+		
+		return std::string(&bufferTypeUUID[0]);
+	}
+	
+	/**
+	* CMachineConfigurationType::GetName - Returns the name of the configuration type.
+	* @return Name of the configuration type.
+	*/
+	std::string CMachineConfigurationType::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* CMachineConfigurationType::GetSchemaType - Returns the schema type string of the configuration type.
+	* @return Schema type of the configuration type.
 	*/
 	std::string CMachineConfigurationType::GetSchemaType()
 	{
@@ -28613,99 +29171,235 @@ public:
 	}
 	
 	/**
-	* CMachineConfigurationType::GetTypeName - Returns the Name the type.
-	* @return Type Name.
+	* CMachineConfigurationType::GetTimestamp - Returns the creation timestamp of the type.
+	* @return UTC timestamp of Type creation.
 	*/
-	std::string CMachineConfigurationType::GetTypeName()
+	std::string CMachineConfigurationType::GetTimestamp()
 	{
-		LibMCEnv_uint32 bytesNeededName = 0;
-		LibMCEnv_uint32 bytesWrittenName = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTypeName(m_pHandle, 0, &bytesNeededName, nullptr));
-		std::vector<char> bufferName(bytesNeededName);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTypeName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		LibMCEnv_uint32 bytesNeededTimeStampUTC = 0;
+		LibMCEnv_uint32 bytesWrittenTimeStampUTC = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTimestamp(m_pHandle, 0, &bytesNeededTimeStampUTC, nullptr));
+		std::vector<char> bufferTimeStampUTC(bytesNeededTimeStampUTC);
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTimestamp(m_pHandle, bytesNeededTimeStampUTC, &bytesWrittenTimeStampUTC, &bufferTimeStampUTC[0]));
 		
-		return std::string(&bufferName[0]);
+		return std::string(&bufferTimeStampUTC[0]);
 	}
 	
 	/**
-	* CMachineConfigurationType::GetTypeUUID - Returns the UUID the type.
-	* @return Type UUID.
+	* CMachineConfigurationType::GetLatestXSD - Returns the latest XSD registered for this configuration type.
+	* @return Latest XSD of the configuration type.
 	*/
-	std::string CMachineConfigurationType::GetTypeUUID()
+	PMachineConfigurationXSD CMachineConfigurationType::GetLatestXSD()
 	{
-		LibMCEnv_uint32 bytesNeededUUID = 0;
-		LibMCEnv_uint32 bytesWrittenUUID = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTypeUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
-		std::vector<char> bufferUUID(bytesNeededUUID);
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetTypeUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		LibMCEnvHandle hXSDInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetLatestXSD(m_pHandle, &hXSDInstance));
 		
-		return std::string(&bufferUUID[0]);
-	}
-	
-	/**
-	* CMachineConfigurationType::GetLatestXSDVersion - Returns the latest Machine Configuration XSD Version.
-	* @return Returns the latest XSD version, or 0 if no XSD exists.
-	*/
-	LibMCEnv_uint32 CMachineConfigurationType::GetLatestXSDVersion()
-	{
-		LibMCEnv_uint32 resultXSDVersion = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetLatestXSDVersion(m_pHandle, &resultXSDVersion));
-		
-		return resultXSDVersion;
-	}
-	
-	/**
-	* CMachineConfigurationType::RegisterConfigurationXSD - Registers a new configuration XSD.
-	* @param[in] sXSDString - XSD String of the version. MUST be incremental.
-	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-	* @param[in] sDefaultConfigurationXML - Default configuration XML to use for this XSD. MUST conform to XSD in question.
-	*/
-	void CMachineConfigurationType::RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_RegisterConfigurationXSD(m_pHandle, sXSDString.c_str(), nXSDVersion, sDefaultConfigurationXML.c_str()));
-	}
-	
-	/**
-	* CMachineConfigurationType::RegisterConfigurationXSDFromResource - Registers a new configuration XSD from machine resource files.
-	* @param[in] sXSDResourceName - Resource identifier of the XSD file of the version. MUST be incremental.
-	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-	* @param[in] sDefaultConfigurationResourceName - Resource identifier of the configuration XML to use for this XSD. MUST conform to XSD in question.
-	*/
-	void CMachineConfigurationType::RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_RegisterConfigurationXSDFromResource(m_pHandle, sXSDResourceName.c_str(), nXSDVersion, sDefaultConfigurationResourceName.c_str()));
-	}
-	
-	/**
-	* CMachineConfigurationType::GetLatestConfiguration - Returns the latest Machine Configuration of this configuration type. Returns the default XML of the newest XSD if no configuration exists.
-	* @return Configuration Version instance.
-	*/
-	PMachineConfigurationVersion CMachineConfigurationType::GetLatestConfiguration()
-	{
-		LibMCEnvHandle hConfigurationInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetLatestConfiguration(m_pHandle, &hConfigurationInstance));
-		
-		if (!hConfigurationInstance) {
+		if (!hXSDInstance) {
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
-		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hConfigurationInstance);
+		return std::make_shared<CMachineConfigurationXSD>(m_pWrapper, hXSDInstance);
 	}
 	
 	/**
-	* CMachineConfigurationType::GetActiveConfiguration - Returns the active Machine Configuration of this configuration type.
-	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-	* @return Configuration Version instance.
+	* CMachineConfigurationType::ListXSDVersions - Returns all XSDs associated with this configuration type.
+	* @return List of XSDs.
 	*/
-	PMachineConfigurationVersion CMachineConfigurationType::GetActiveConfiguration(const bool bFallBackToDefault)
+	PMachineConfigurationXSDIterator CMachineConfigurationType::ListXSDVersions()
 	{
-		LibMCEnvHandle hConfigurationInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetActiveConfiguration(m_pHandle, bFallBackToDefault, &hConfigurationInstance));
+		LibMCEnvHandle hXSDIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_ListXSDVersions(m_pHandle, &hXSDIterator));
 		
-		if (hConfigurationInstance) {
-			return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hConfigurationInstance);
+		if (!hXSDIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationXSDIterator>(m_pWrapper, hXSDIterator);
+	}
+	
+	/**
+	* CMachineConfigurationType::GetLatestXSDNumericVersion - Returns the version number of the latest XSD for this type.
+	* @return Latest XSD version number, or 0 if none exist.
+	*/
+	LibMCEnv_uint32 CMachineConfigurationType::GetLatestXSDNumericVersion()
+	{
+		LibMCEnv_uint32 resultXSDNumericVersion = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetLatestXSDNumericVersion(m_pHandle, &resultXSDNumericVersion));
+		
+		return resultXSDNumericVersion;
+	}
+	
+	/**
+	* CMachineConfigurationType::RegisterNewXSD - Registers a new XSD Version. Fails if version already exists or is not incrementing.
+	* @param[in] sXSDString - XSD String of the version. MUST be a valid schema of this type.
+	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
+	* @return Returns the new XSD of the configuration type.
+	*/
+	PMachineConfigurationXSD CMachineConfigurationType::RegisterNewXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion)
+	{
+		LibMCEnvHandle hXSDInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_RegisterNewXSD(m_pHandle, sXSDString.c_str(), nXSDVersion, &hXSDInstance));
+		
+		if (!hXSDInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationXSD>(m_pWrapper, hXSDInstance);
+	}
+	
+	/**
+	* CMachineConfigurationType::FindXSDByNumericVersion - Finds a specific XSD of this type by its Numeric Version Number.
+	* @param[in] nXSDNumericVersion - Requested version number.
+	* @return XSD instance if exists.
+	*/
+	PMachineConfigurationXSD CMachineConfigurationType::FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDNumericVersion)
+	{
+		LibMCEnvHandle hXSDInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_FindXSDByNumericVersion(m_pHandle, nXSDNumericVersion, &hXSDInstance));
+		
+		if (!hXSDInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationXSD>(m_pWrapper, hXSDInstance);
+	}
+	
+	/**
+	* CMachineConfigurationType::FindXSDByUUID - Finds a specific XSD of this type by its UUID.
+	* @param[in] sXSDUUID - UUID of the XSD.
+	* @return Matching XSD instance.
+	*/
+	PMachineConfigurationXSD CMachineConfigurationType::FindXSDByUUID(const std::string & sXSDUUID)
+	{
+		LibMCEnvHandle hXSDInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_FindXSDByUUID(m_pHandle, sXSDUUID.c_str(), &hXSDInstance));
+		
+		if (!hXSDInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationXSD>(m_pWrapper, hXSDInstance);
+	}
+	
+	/**
+	* CMachineConfigurationType::CreateDefaultConfiguration - Creates the default configuration for a given XSD version. Fails if a configuration for this XSD already exists.
+	* @param[in] sXSDUUID - UUID of the XSD to base the default configuration on.
+	* @param[in] sDefaultXML - Configuration XML string conforming to the given XSD.
+	* @param[in] sTimeStampUTC - Creation timestamp in UTC.
+	* @return Returns the created default configuration version.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationType::CreateDefaultConfiguration(const std::string & sXSDUUID, const std::string & sDefaultXML, const std::string & sTimeStampUTC)
+	{
+		LibMCEnvHandle hVersionInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_CreateDefaultConfiguration(m_pHandle, sXSDUUID.c_str(), sDefaultXML.c_str(), sTimeStampUTC.c_str(), &hVersionInstance));
+		
+		if (!hVersionInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hVersionInstance);
+	}
+	
+	/**
+	* CMachineConfigurationType::ListAllConfigurationVersions - Lists all configuration versions registered under this type.
+	* @return List of configuration versions.
+	*/
+	PMachineConfigurationVersionIterator CMachineConfigurationType::ListAllConfigurationVersions()
+	{
+		LibMCEnvHandle hVersionIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_ListAllConfigurationVersions(m_pHandle, &hVersionIterator));
+		
+		if (!hVersionIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersionIterator>(m_pWrapper, hVersionIterator);
+	}
+	
+	/**
+	* CMachineConfigurationType::ListConfigurationVersionsForXSD - Lists all configuration versions for specific XSD.
+	* @param[in] sXSDUUID - UUID of the XSD .
+	* @return List of configuration versions.
+	*/
+	PMachineConfigurationVersionIterator CMachineConfigurationType::ListConfigurationVersionsForXSD(const std::string & sXSDUUID)
+	{
+		LibMCEnvHandle hVersionIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_ListConfigurationVersionsForXSD(m_pHandle, sXSDUUID.c_str(), &hVersionIterator));
+		
+		if (!hVersionIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationVersionIterator>(m_pWrapper, hVersionIterator);
+	}
+	
+	/**
+	* CMachineConfigurationType::FindConfigurationVersionByUUID - Finds a specific configuration version by UUID.
+	* @param[in] sVersionUUID - UUID of the configuration version.
+	* @return Matching configuration version if found.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationType::FindConfigurationVersionByUUID(const std::string & sVersionUUID)
+	{
+		LibMCEnvHandle hVersion = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_FindConfigurationVersionByUUID(m_pHandle, sVersionUUID.c_str(), &hVersion));
+		
+		if (hVersion) {
+			return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hVersion);
 		} else {
 			return nullptr;
 		}
+	}
+	
+	/**
+	* CMachineConfigurationType::GetActiveConfigurationVersion - Returns the currently active configuration version for this type.
+	* @return Active version instance or null.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationType::GetActiveConfigurationVersion()
+	{
+		LibMCEnvHandle hVersion = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetActiveConfigurationVersion(m_pHandle, &hVersion));
+		
+		if (hVersion) {
+			return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hVersion);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CMachineConfigurationType::GetLatestConfigurationVersion - Returns the most recently created version for this type.
+	* @return Latest configuration version or null.
+	*/
+	PMachineConfigurationVersion CMachineConfigurationType::GetLatestConfigurationVersion()
+	{
+		LibMCEnvHandle hVersion = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_GetLatestConfigurationVersion(m_pHandle, &hVersion));
+		
+		if (hVersion) {
+			return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hVersion);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CMachineConfigurationType::SetActiveConfigurationVersion - Sets the active configuration version for this type.
+	* @param[in] sVersionUUID - UUID of the version to set as active.
+	*/
+	void CMachineConfigurationType::SetActiveConfigurationVersion(const std::string & sVersionUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationType_SetActiveConfigurationVersion(m_pHandle, sVersionUUID.c_str()));
+	}
+	
+	/**
+	 * Method definitions for class CMachineConfigurationTypeIterator
+	 */
+	
+	/**
+	* CMachineConfigurationTypeIterator::GetCurrent - Returns the current MachineConfigurationType instance.
+	* @return Currently selected configuration type instance.
+	*/
+	PMachineConfigurationType CMachineConfigurationTypeIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationTypeIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationType>(m_pWrapper, hInstance);
 	}
 	
 	/**
@@ -28713,10 +29407,10 @@ public:
 	 */
 	
 	/**
-	* CMachineConfigurationHandler::RegisterMachineConfigurationType - Registers a new machine configuration type, or returns the unique existing one with the same schema type.
-	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
-	* @param[in] sName - Type Name. MUST not be empty. If the configuration type already exists, the name will be checked for identity!
-	* @return Instance of machine configuration type.
+	* CMachineConfigurationHandler::RegisterMachineConfigurationType - Registers a new configuration type or returns existing one if already registered.
+	* @param[in] sSchemaType - Schema type string. MUST not be empty.
+	* @param[in] sName - Display name. MUST not be empty. Must match existing name if type exists.
+	* @return Instance of the configuration type.
 	*/
 	PMachineConfigurationType CMachineConfigurationHandler::RegisterMachineConfigurationType(const std::string & sSchemaType, const std::string & sName)
 	{
@@ -28730,9 +29424,9 @@ public:
 	}
 	
 	/**
-	* CMachineConfigurationHandler::HasMachineConfigurationType - Checks if a certain configuration schema type has been registered.
-	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
-	* @return Returns true, if the system knows about a configuration schema type.
+	* CMachineConfigurationHandler::HasMachineConfigurationType - Checks if a schema type is already registered.
+	* @param[in] sSchemaType - Schema type string.
+	* @return True if known, false otherwise.
 	*/
 	bool CMachineConfigurationHandler::HasMachineConfigurationType(const std::string & sSchemaType)
 	{
@@ -28743,34 +29437,49 @@ public:
 	}
 	
 	/**
-	* CMachineConfigurationHandler::GetLatestConfiguration - Returns the latest Machine Configuration for a specific configuration type. Returns the default XML of the newest XSD if no configuration exists.
-	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
-	* @return Configuration Version instance.
+	* CMachineConfigurationHandler::ListRegisteredTypes - Returns all configuration types registered in the system.
+	* @return Iterator over configuration types.
 	*/
-	PMachineConfigurationVersion CMachineConfigurationHandler::GetLatestConfiguration(const std::string & sSchemaType)
+	PMachineConfigurationTypeIterator CMachineConfigurationHandler::ListRegisteredTypes()
 	{
-		LibMCEnvHandle hConfigurationInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationHandler_GetLatestConfiguration(m_pHandle, sSchemaType.c_str(), &hConfigurationInstance));
+		LibMCEnvHandle hTypeIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationHandler_ListRegisteredTypes(m_pHandle, &hTypeIterator));
 		
-		if (!hConfigurationInstance) {
+		if (!hTypeIterator) {
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
-		return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hConfigurationInstance);
+		return std::make_shared<CMachineConfigurationTypeIterator>(m_pWrapper, hTypeIterator);
 	}
 	
 	/**
-	* CMachineConfigurationHandler::GetActiveConfiguration - Returns the active Machine Configuration for a specific configuration type.
-	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
-	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-	* @return Configuration Version instance.
+	* CMachineConfigurationHandler::FindConfigurationTypeByUUID - Returns configuration type by UUID.
+	* @param[in] sTypeUUID - UUID of the configuration type.
+	* @return Configuration type if found.
 	*/
-	PMachineConfigurationVersion CMachineConfigurationHandler::GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault)
+	PMachineConfigurationType CMachineConfigurationHandler::FindConfigurationTypeByUUID(const std::string & sTypeUUID)
 	{
-		LibMCEnvHandle hConfigurationInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationHandler_GetActiveConfiguration(m_pHandle, sSchemaType.c_str(), bFallBackToDefault, &hConfigurationInstance));
+		LibMCEnvHandle hTypeInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationHandler_FindConfigurationTypeByUUID(m_pHandle, sTypeUUID.c_str(), &hTypeInstance));
 		
-		if (hConfigurationInstance) {
-			return std::make_shared<CMachineConfigurationVersion>(m_pWrapper, hConfigurationInstance);
+		if (hTypeInstance) {
+			return std::make_shared<CMachineConfigurationType>(m_pWrapper, hTypeInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CMachineConfigurationHandler::FindConfigurationTypeBySchema - Returns configuration type by Schema Type.
+	* @param[in] sSchemaType - Schema Type of the configuration type.
+	* @return Configuration type if found.
+	*/
+	PMachineConfigurationType CMachineConfigurationHandler::FindConfigurationTypeBySchema(const std::string & sSchemaType)
+	{
+		LibMCEnvHandle hTypeInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_MachineConfigurationHandler_FindConfigurationTypeBySchema(m_pHandle, sSchemaType.c_str(), &hTypeInstance));
+		
+		if (hTypeInstance) {
+			return std::make_shared<CMachineConfigurationType>(m_pWrapper, hTypeInstance);
 		} else {
 			return nullptr;
 		}
@@ -31170,6 +31879,21 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CJSONObject>(m_pWrapper, hParameterValue);
+	}
+	
+	/**
+	* CUIEnvironment::CreateMachineConfigurationHandler - creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.
+	* @return MachineConfigurationHandler instance.
+	*/
+	PMachineConfigurationHandler CUIEnvironment::CreateMachineConfigurationHandler()
+	{
+		LibMCEnvHandle hMachineConfigurationHandlerInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_CreateMachineConfigurationHandler(m_pHandle, &hMachineConfigurationHandlerInstance));
+		
+		if (!hMachineConfigurationHandlerInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CMachineConfigurationHandler>(m_pWrapper, hMachineConfigurationHandlerInstance);
 	}
 
 } // namespace LibMCEnv
