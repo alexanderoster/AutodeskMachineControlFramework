@@ -27,70 +27,51 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is a stub class definition of CMachineConfigurationXSDIterator
 
 */
 
-
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-
-#include "libmcdata_interfaces.hpp"
-
-// Parent classes
-#include "libmcdata_iterator.hpp"
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4250)
-#endif
+#include "libmcenv_machineconfigurationxsditerator.hpp"
+#include "libmcenv_interfaceexception.hpp"
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
 
 
-namespace LibMCData {
-namespace Impl {
-
+using namespace LibMCEnv::Impl;
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class definition of CMachineConfigurationXSDIterator 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
-private:
+CMachineConfigurationXSDIterator::CMachineConfigurationXSDIterator(LibMCData::PMachineConfigurationXSDIterator pMachineConfigurationXSDIterator)
+    : m_pMachineConfigurationXSDIterator(pMachineConfigurationXSDIterator)
+{
+    if (pMachineConfigurationXSDIterator.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+}
 
-	/**
-	* Put private members here.
-	*/
+CMachineConfigurationXSDIterator::~CMachineConfigurationXSDIterator()
+{
+}
 
-protected:
+bool CMachineConfigurationXSDIterator::MoveNext()
+{
+    return m_pMachineConfigurationXSDIterator->MoveNext();
+}
 
-	/**
-	* Put protected members here.
-	*/
+IMachineConfigurationXSD* CMachineConfigurationXSDIterator::GetCurrent()
+{
+    auto pCurrentConfigurationXSD = m_pMachineConfigurationXSDIterator->GetCurrent();
 
-public:
+    if (pCurrentConfigurationXSD.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCDATA_ERROR_INVALIDITERATOR);
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+    return new CMachineConfigurationXSD(pCurrentConfigurationXSD);
+}
+
+IMachineConfigurationXSDIterator* CMachineConfigurationXSDIterator::Clone()
+{
+    throw ELibMCEnvInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED);
+}
 
 
-	/**
-	* Public member functions to implement.
-	*/
-
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
-
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
-};
-
-} // namespace Impl
-} // namespace LibMCData
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR

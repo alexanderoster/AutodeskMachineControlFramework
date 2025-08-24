@@ -27,41 +27,42 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is the class declaration of CMachineConfigurationTypeIterator
 
 */
 
 
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#ifndef __LIBMCENV_MACHINECONFIGURATIONTYPEITERATOR
+#define __LIBMCENV_MACHINECONFIGURATIONTYPEITERATOR
 
-#include "libmcdata_interfaces.hpp"
+#include "libmcenv_interfaces.hpp"
 
 // Parent classes
-#include "libmcdata_iterator.hpp"
+#include "libmcenv_iterator.hpp"
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4250)
 #endif
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
+#include "libmcenv_machineconfigurationtype.hpp"
 
-
-namespace LibMCData {
+namespace LibMCEnv {
 namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class declaration of CMachineConfigurationTypeIterator 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
+class CMachineConfigurationTypeIterator : public virtual IMachineConfigurationTypeIterator, public virtual CIterator {
 private:
 
 	/**
 	* Put private members here.
 	*/
+
+	LibMCData::PMachineConfigurationTypeIterator m_pMachineConfigurationTypeIterator;
 
 protected:
 
@@ -80,17 +81,22 @@ public:
 	* Public member functions to implement.
 	*/
 
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
+	CMachineConfigurationTypeIterator::CMachineConfigurationTypeIterator(LibMCData::PMachineConfigurationTypeIterator pMachineConfigurationTypeIterator);
 
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
+	virtual ~CMachineConfigurationTypeIterator();
+
+	bool MoveNext() override;
+
+	IMachineConfigurationType* GetCurrent() override;
+
+	IMachineConfigurationTypeIterator* Clone() override;
+
 };
 
 } // namespace Impl
-} // namespace LibMCData
+} // namespace LibMCEnv
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#endif // __LIBMCENV_MACHINECONFIGURATIONTYPEITERATOR

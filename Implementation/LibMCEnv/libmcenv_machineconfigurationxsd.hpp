@@ -27,41 +27,42 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CMachineConfigurationVersionIterator
+Abstract: This is the class declaration of CMachineConfigurationXSD
 
 */
 
 
-#ifndef __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
-#define __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#ifndef __LIBMCENV_MACHINECONFIGURATIONXSD
+#define __LIBMCENV_MACHINECONFIGURATIONXSD
 
-#include "libmcdata_interfaces.hpp"
+#include "libmcenv_interfaces.hpp"
 
 // Parent classes
-#include "libmcdata_iterator.hpp"
+#include "libmcenv_base.hpp"
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4250)
 #endif
 
 // Include custom headers here.
-#include "libmcdata_machineconfigurationversion.hpp"
+#include "libmcdata_dynamic.hpp"
 
-
-namespace LibMCData {
+namespace LibMCEnv {
 namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CMachineConfigurationVersionIterator 
+ Class declaration of CMachineConfigurationXSD 
 **************************************************************************************************************************/
 
-class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
+class CMachineConfigurationXSD : public virtual IMachineConfigurationXSD, public virtual CBase {
 private:
 
 	/**
 	* Put private members here.
 	*/
+
+	LibMCData::PMachineConfigurationXSD m_pMachineConfigurationXSD;
 
 protected:
 
@@ -80,17 +81,25 @@ public:
 	* Public member functions to implement.
 	*/
 
-	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
+	CMachineConfigurationXSD(LibMCData::PMachineConfigurationXSD pMachineConfigurationXSD);
 
-	IMachineConfigurationVersion* GetCurrent() override;
-	
-	IMachineConfigurationVersionIterator* Clone() override;
+	virtual ~CMachineConfigurationXSD();
+
+	std::string GetUUID() override;
+
+	std::string GetTypeUUID() override;
+
+	LibMCEnv_uint32 GetXSDVersion() override;
+
+	std::string GetXSDString() override;
+
+	std::string GetTimestamp() override;
 };
 
 } // namespace Impl
-} // namespace LibMCData
+} // namespace LibMCEnv
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCDATA_MACHINECONFIGURATIONVERSIONITERATOR
+#endif // __LIBMCENV_MACHINECONFIGURATIONXSD

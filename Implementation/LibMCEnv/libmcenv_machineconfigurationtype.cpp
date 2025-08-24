@@ -35,7 +35,10 @@ Abstract: This is a stub class definition of CMachineConfigurationType
 #include "libmcenv_interfaceexception.hpp"
 
 // Include custom headers here.
-
+#include "libmcenv_machineconfigurationxsd.hpp"
+#include "libmcenv_machineconfigurationxsditerator.hpp"
+#include "libmcenv_machineconfigurationversion.hpp"
+#include "libmcenv_machineconfigurationversioniterator.hpp"
 
 using namespace LibMCEnv::Impl;
 
@@ -51,7 +54,16 @@ CMachineConfigurationType::CMachineConfigurationType(LibMCData::PMachineConfigur
 
 CMachineConfigurationType::~CMachineConfigurationType()
 {
+}
 
+std::string CMachineConfigurationType::GetUUID()
+{
+	return m_pMachineConfigurationType->GetUUID();
+}
+
+std::string CMachineConfigurationType::GetName()
+{
+	return m_pMachineConfigurationType->GetName();
 }
 
 std::string CMachineConfigurationType::GetSchemaType()
@@ -59,38 +71,122 @@ std::string CMachineConfigurationType::GetSchemaType()
 	return m_pMachineConfigurationType->GetSchemaType();
 }
 
-std::string CMachineConfigurationType::GetTypeName()
+std::string CMachineConfigurationType::GetTimestamp()
 {
-	return m_pMachineConfigurationType->GetName();
+	return m_pMachineConfigurationType->GetTimestamp();
 }
 
-std::string CMachineConfigurationType::GetTypeUUID()
+IMachineConfigurationXSD* CMachineConfigurationType::GetLatestXSD()
 {
-	return m_pMachineConfigurationType->GetUUID();
+	auto pConfigurationXSD = m_pMachineConfigurationType->GetLatestXSD();
+
+	if (pConfigurationXSD.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationXSD(pConfigurationXSD);
 }
 
-LibMCEnv_uint32 CMachineConfigurationType::GetLatestXSDVersion()
+IMachineConfigurationXSDIterator* CMachineConfigurationType::ListXSDVersions()
 {
-	return m_pMachineConfigurationType->GetLatestXSDVersion();
+	auto pIterator = m_pMachineConfigurationType->ListXSDVersions();
+
+	if (pIterator.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationXSDIterator(pIterator);	
 }
 
-void CMachineConfigurationType::RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML)
+LibMCEnv_uint32 CMachineConfigurationType::GetLatestXSDNumericVersion()
+{
+	return m_pMachineConfigurationType->GetLatestXSDNumericVersion();
+}
+
+IMachineConfigurationXSD* CMachineConfigurationType::RegisterNewXSD(const std::string& sXSDString, const LibMCEnv_uint32 nXSDVersion)
+{
+	auto pConfigurationXSD = m_pMachineConfigurationType->RegisterNewXSD(sXSDString, nXSDVersion);
+
+	if (pConfigurationXSD.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationXSD(pConfigurationXSD);
+}
+
+IMachineConfigurationVersion* CMachineConfigurationType::CreateDefaultConfiguration(const std::string & sXSDUUID, const std::string & sDefaultXML, const std::string & sTimeStampUTC)
+{
+	auto pDefaultConfiguration = m_pMachineConfigurationType->CreateDefaultConfiguration(sXSDUUID, sDefaultXML, sTimeStampUTC);
+
+	if (pDefaultConfiguration.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationVersion(pDefaultConfiguration);
+}
+
+IMachineConfigurationXSD* CMachineConfigurationType::FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDVersion)
+{
+	auto pXSD = m_pMachineConfigurationType->FindXSDByNumericVersion(nXSDVersion);
+
+	if (pXSD.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationXSD(pXSD);	
+}
+
+IMachineConfigurationXSD* CMachineConfigurationType::FindXSDByUUID(const std::string& sXSDUUID)
+{
+	auto pXSD = m_pMachineConfigurationType->FindXSDByUUID(sXSDUUID);
+
+	if (pXSD.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationXSD(pXSD);
+}
+
+IMachineConfigurationVersionIterator* CMachineConfigurationType::ListAllConfigurationVersions()
+{
+	auto pIterator = m_pMachineConfigurationType->ListAllConfigurationVersions();
+
+	if (pIterator.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationVersionIterator(pIterator);
+}
+
+IMachineConfigurationVersionIterator* CMachineConfigurationType::ListConfigurationVersionsForXSD(const std::string& sXSDUUID)
+{
+	auto pIterator = m_pMachineConfigurationType->ListConfigurationVersionsForXSD(sXSDUUID);
+	
+	if (pIterator.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationVersionIterator(pIterator);
+}
+
+IMachineConfigurationVersion* CMachineConfigurationType::FindConfigurationVersionByUUID(const std::string& sVersionUUID)
 {
 	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
 }
 
-void CMachineConfigurationType::RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName)
+IMachineConfigurationVersion* CMachineConfigurationType::GetActiveConfigurationVersion()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	auto pMachineConfigurationVersion = m_pMachineConfigurationType->GetActiveConfigurationVersion();
+
+	if (pMachineConfigurationVersion.get() == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationVersion(pMachineConfigurationVersion);
 }
 
-IMachineConfigurationVersion * CMachineConfigurationType::GetLatestConfiguration()
+IMachineConfigurationVersion* CMachineConfigurationType::GetLatestConfigurationVersion()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	auto pLatestConfiguration = m_pMachineConfigurationType->GetLatestConfigurationVersion();
+
+	if (pLatestConfiguration == nullptr)
+		return nullptr;
+
+	return new CMachineConfigurationVersion(pLatestConfiguration);
 }
 
-IMachineConfigurationVersion * CMachineConfigurationType::GetActiveConfiguration(const bool bFallBackToDefault)
+void CMachineConfigurationType::SetActiveConfigurationVersion(const std::string& sVersionUUID)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	m_pMachineConfigurationType->SetActiveConfigurationVersion(sVersionUUID);
 }
-
