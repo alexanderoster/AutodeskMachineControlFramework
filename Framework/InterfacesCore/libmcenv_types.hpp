@@ -346,6 +346,7 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE 10249 /** Undefined internal signal phase. */
 #define LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT 10250 /** Invalid reaction timeout. */
 #define LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT 10251 /** Could not set reaction timeout. */
+#define LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED 10252 /** Schema type already registered, but with a different name. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -604,6 +605,7 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE: return "Undefined internal signal phase.";
     case LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT: return "Invalid reaction timeout.";
     case LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT: return "Could not set reaction timeout.";
+    case LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED: return "Schema type already registered, but with a different name.";
     default: return "unknown error";
   }
 }
@@ -683,8 +685,12 @@ typedef LibMCEnvHandle LibMCEnv_LogEntryList;
 typedef LibMCEnvHandle LibMCEnv_JournalHandler;
 typedef LibMCEnvHandle LibMCEnv_UserDetailList;
 typedef LibMCEnvHandle LibMCEnv_UserManagementHandler;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationXSD;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationXSDIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationVersion;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationVersionIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationType;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationTypeIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationHandler;
 typedef LibMCEnvHandle LibMCEnv_StateEnvironment;
 typedef LibMCEnvHandle LibMCEnv_UIItem;

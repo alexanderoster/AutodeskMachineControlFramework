@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			</v-row>
 
 			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='combobox')" align="center">
-				<v-col cols="12"><v-select outlined v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" /></v-col>
+				<v-col cols="12"><v-select outlined v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" :items="entity.items" @input="uiComboboxChange(entity)"/></v-col>
 			</v-row>							
 		</template>	
 	</v-container>
@@ -84,6 +84,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					}
 				} else {
 					switchentity.dataObject.isProgrammaticChange = false;
+				}
+			}
+		},
+
+		uiComboboxChange: function (comboboxEntity) {
+
+			console.log ("value has changed!");
+			
+			if (comboboxEntity.dataObject) {
+				if (!comboboxEntity.dataObject.isProgrammaticChange) {
+				if (comboboxEntity.changeevent && comboboxEntity.changeevent !== "") {
+					console.log ("change event!");
+					const formvalues = this.Application.assembleFormValues([comboboxEntity.uuid]);
+					this.Application.triggerUIEvent(
+					comboboxEntity.changeevent,
+					comboboxEntity.uuid,
+					formvalues,
+					() => {
+						comboboxEntity.dataObject.isProgrammaticChange = true;
+						comboboxEntity.dataObject.value = comboboxEntity.dataObject.remotevalue;
+					}
+					);
+				}
+				} else {
+				comboboxEntity.dataObject.isProgrammaticChange = false;
 				}
 			}
 		},

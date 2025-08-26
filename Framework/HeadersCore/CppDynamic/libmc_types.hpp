@@ -687,6 +687,8 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDNEWBUILDSTATUS 671 /** Invalid new build status. */
 #define LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON 672 /** Invalid Default OpenAPI JSON. */
 #define LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON 673 /** Invalid Custom OpenAPI JSON. */
+#define LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING 674 /** Configuration list name missing */
+#define LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING 675 /** Configuration list button name missing */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1286,6 +1288,8 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDNEWBUILDSTATUS: return "Invalid new build status.";
     case LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON: return "Invalid Default OpenAPI JSON.";
     case LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON: return "Invalid Custom OpenAPI JSON.";
+    case LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING: return "Configuration list name missing";
+    case LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING: return "Configuration list button name missing";
     default: return "unknown error";
   }
 }

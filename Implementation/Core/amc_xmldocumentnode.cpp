@@ -66,6 +66,22 @@ void CXMLDocumentNodeInstance::extractFromPugiNode(pugi::xml_document* pXMLDocum
 	if (pXMLNode == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+	std::string sFullName = pXMLNode->name();
+	std::string sNodeName;
+	std::string sNameSpacePrefix;
+	splitNameSpaceName(sFullName, sNodeName, sNameSpacePrefix);
+
+	PXMLDocumentNameSpace pNameSpace;
+	if (sNameSpacePrefix.empty()) {
+		pNameSpace = m_pNameSpace;
+	}
+	else {
+		pNameSpace = m_pDocument->FindNamespaceByPrefix(sNameSpacePrefix, true);
+	}
+
+	m_sNodeName = sNodeName;
+	m_pNameSpace = pNameSpace;
+
 	auto attributes = pXMLNode->attributes();
 	for (auto attribute : attributes) {
 
@@ -461,6 +477,9 @@ void CXMLDocumentNodeInstance::RemoveChildrenWithName(CXMLDocumentNameSpace* pNa
 
 std::string CXMLDocumentNodeInstance::getPrefixedName()
 {
+	if (m_sNodeName.find(':') != std::string::npos)
+		return m_sNodeName;
+
 	std::string sNameSpacePrefix = m_pNameSpace->getPrefix();
 	if (!sNameSpacePrefix.empty())
 		return sNameSpacePrefix + ":" + m_sNodeName;

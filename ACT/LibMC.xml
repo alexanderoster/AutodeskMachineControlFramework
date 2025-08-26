@@ -696,7 +696,8 @@
 		<error name="INVALIDNEWBUILDSTATUS" code="671" description="Invalid new build status." />		
 		<error name="INVALIDDEFAULTOPENAPIJSON" code="672" description="Invalid Default OpenAPI JSON." />		
 		<error name="INVALIDCUSTOMOPENAPIJSON" code="673" description="Invalid Custom OpenAPI JSON." />		
-				
+		<error name="CONFIGURATIONLISTNAMEMISSING" code="674" description="Configuration list name missing" />
+		<error name="CONFIGURATIONLISTBUTTONNAMEMISSING" code="675" description="Configuration list button name missing" />					
 	</errors>
 	
 	

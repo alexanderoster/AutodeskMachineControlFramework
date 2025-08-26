@@ -57,6 +57,8 @@ namespace AMC {
 	class CUIPage : public CUIModule_ContentRegistry {
 	protected:
 		std::string m_sName;
+		std::string m_sUUID;
+		std::string m_sShowEvent;
 
 		std::vector<PUIModule> m_Modules;
 		std::map<std::string, PUIModuleItem> m_ItemMapOfPage;
@@ -68,11 +70,15 @@ namespace AMC {
 
 	public:
 
-		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler);
+		CUIPage(const std::string & sName, const std::string& sShowEvent, CUIModule_UIEventHandler* pUIEventHandler);
 		
 		virtual ~CUIPage();
 
 		std::string getName();
+
+		std::string getUUID();
+
+		std::string getShowEvent();
 
 		void addModule (PUIModule pModule);
 

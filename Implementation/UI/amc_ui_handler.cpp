@@ -262,6 +262,8 @@ void CUIHandler::writeStateToJSON(CJSONWriter& writer, CParameterHandler* pClien
     for (auto iter : m_Pages) {
         CJSONWriterObject page(writer);
         page.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
+        page.addString(AMC_API_KEY_UI_UUID, iter.second->getUUID());
+        page.addString(AMC_API_KEY_UI_PAGESHOWEVENT, iter.second->getShowEvent());
 
         CJSONWriterArray modules(writer);
         iter.second->writeModulesToJSON (writer, modules, pClientVariableHandler);
@@ -305,7 +307,7 @@ void CUIHandler::writeStateToJSON(CJSONWriter& writer, CParameterHandler* pClien
 
 }
 
-PUIPage CUIHandler::addPage_Unsafe(const std::string& sName)
+PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const std::string& sShowEvent)
 {
     if (sName.empty ())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPAGENAME);
@@ -318,7 +320,7 @@ PUIPage CUIHandler::addPage_Unsafe(const std::string& sName)
     if (iCustomPageIterator != m_CustomPages.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEPAGE, sName);
 
-    auto pPage = std::make_shared<CUIPage> (sName, this);
+    auto pPage = std::make_shared<CUIPage> (sName, sShowEvent, this);
     m_Pages.insert (std::make_pair (sName, pPage));
 
     return pPage;
@@ -508,7 +510,12 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGPAGENAME);
         std::string sPageName(pageNameAttrib.as_string());
 
-        auto pPage = addPage_Unsafe(sPageName);
+        std::string sShowEvent;
+        auto pageShowEventAttrib = pageNode.attribute("showevent");
+        if (!pageShowEventAttrib.empty())
+            sShowEvent = pageShowEventAttrib.as_string();
+
+        auto pPage = addPage_Unsafe(sPageName, sShowEvent);
 
         auto pageChildren = pageNode.children();
         for (pugi::xml_node pageChild : pageChildren) {
@@ -673,6 +680,20 @@ PUIModuleItem CUIHandler::findModuleItem(const std::string& sUUID)
     return nullptr;
 }
 
+PUIPage CUIHandler::findPageByUUID(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        if (pPage.second->getUUID() == sUUID)
+            return pPage.second;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        if (pCustomPage.second->getUUID() == sUUID)
+            return pCustomPage.second;
+    }
+
+    return nullptr;
+}
 
 PUIPage CUIHandler::findPageOfModuleItem(const std::string& sUUID)
 {
@@ -782,15 +803,24 @@ CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, co
             }
             else {
 
-                pPage = findPageOfModuleItem(sSenderUUID);
-                if (pPage.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
+				// Try to find the page of the sender
+                pPage = findPageByUUID(sSenderUUID);
+				if (pPage.get() != nullptr) {
+                    // If we have a page, we can use the sender path
+                    sSenderPath = pPage->getName();
+				}
+                else {
+					// Try to find the page of the module item
+                    pPage = findPageOfModuleItem(sSenderUUID);
+                    if (pPage.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
 
-                auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
-                if (pModuleItem.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
+                    auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
+                    if (pModuleItem.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
 
-                sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                    sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                }
 
             }
 

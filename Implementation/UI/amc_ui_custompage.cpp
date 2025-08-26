@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 CUICustomPage::CUICustomPage(const std::string& sName, const std::string& sComponentName, CUIModule_UIEventHandler* pUIEventHandler)
-	: CUIPage (sName, pUIEventHandler), m_sComponentName (sComponentName)
+	: CUIPage (sName, "", pUIEventHandler), m_sComponentName(sComponentName)
 {
 	if (sComponentName.empty ())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCOMPONENTNAME);

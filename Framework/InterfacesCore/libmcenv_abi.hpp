@@ -5797,6 +5797,17 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_findattribute(LibMCEnv
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_getattributevalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
 
 /**
+* Sets string value of an attribute. Fails if attribute does not exist.
+*
+* @param[in] pXMLDocumentNode - XMLDocumentNode instance.
+* @param[in] pNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+* @param[in] pName - Name of the attribute.
+* @param[in] pValue - Attribute value to set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_setattributevalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, const char * pValue);
+
+/**
 * Returns integer value of an attribute. Fails if attribute does not exist or attribute is not an integer .
 *
 * @param[in] pXMLDocumentNode - XMLDocumentNode instance.
@@ -5808,6 +5819,17 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_getattributevalue(LibM
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_getattributeintegervalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_int64 nMinValue, LibMCEnv_int64 nMaxValue, LibMCEnv_int64 * pValue);
+
+/**
+* Sets integer value of an attribute. Fails if attribute does not exist or attribute is not an integer.
+*
+* @param[in] pXMLDocumentNode - XMLDocumentNode instance.
+* @param[in] pNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+* @param[in] pName - Name of the attribute.
+* @param[in] nValue - Attribute value to set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_setattributeintegervalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_int64 nValue);
 
 /**
 * Returns double value of an attribute. Fails if attribute does not exist or attribute is not a double value.
@@ -8668,222 +8690,430 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_usermanagementhandler_setuserpasswordb
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_usermanagementhandler_getactiveusers(LibMCEnv_UserManagementHandler pUserManagementHandler, LibMCEnv_UserDetailList * pListInstance);
 
 /*************************************************************************************************************************
+ Class definition for MachineConfigurationXSD
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID of the XSD.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nXSDUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDUUIDBuffer -  buffer of UUID of the configuration XSD., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsd_getuuid(LibMCEnv_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCEnv_uint32 nXSDUUIDBufferSize, LibMCEnv_uint32* pXSDUUIDNeededChars, char * pXSDUUIDBuffer);
+
+/**
+* Returns the UUID of the associated configuration type.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nTypeUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeUUIDBuffer -  buffer of UUID of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsd_gettypeuuid(LibMCEnv_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCEnv_uint32 nTypeUUIDBufferSize, LibMCEnv_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer);
+
+/**
+* Returns the version number of the XSD.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[out] pXSDVersion - Returns the XSD version.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsd_getxsdversion(LibMCEnv_MachineConfigurationXSD pMachineConfigurationXSD, LibMCEnv_uint32 * pXSDVersion);
+
+/**
+* Returns the XSD content as string.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nXSDStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDStringBuffer -  buffer of XSD String., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsd_getxsdstring(LibMCEnv_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCEnv_uint32 nXSDStringBufferSize, LibMCEnv_uint32* pXSDStringNeededChars, char * pXSDStringBuffer);
+
+/**
+* Returns the creation timestamp of the XSD version.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nTimeStampUTCBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimeStampUTCNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimeStampUTCBuffer -  buffer of UTC timestamp of XSD creation., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsd_gettimestamp(LibMCEnv_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCEnv_uint32 nTimeStampUTCBufferSize, LibMCEnv_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationXSDIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current MachineConfigurationXSD instance.
+*
+* @param[in] pMachineConfigurationXSDIterator - MachineConfigurationXSDIterator instance.
+* @param[out] pInstance - Currently selected configuration XSD instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationxsditerator_getcurrent(LibMCEnv_MachineConfigurationXSDIterator pMachineConfigurationXSDIterator, LibMCEnv_MachineConfigurationXSD * pInstance);
+
+/*************************************************************************************************************************
  Class definition for MachineConfigurationVersion
 **************************************************************************************************************************/
 
 /**
-* Returns the schema type.
+* Returns the UUID of the configuration version.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[in] nSchemaTypeBufferSize - size of the buffer (including trailing 0)
-* @param[out] pSchemaTypeNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pSchemaTypeBuffer -  buffer of Schema Type String., may be NULL
+* @param[in] nVersionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pVersionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pVersionUUIDBuffer -  buffer of UUID of the configuration version., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getschematype(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nSchemaTypeBufferSize, LibMCEnv_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getversionuuid(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nVersionUUIDBufferSize, LibMCEnv_uint32* pVersionUUIDNeededChars, char * pVersionUUIDBuffer);
 
 /**
-* Returns the Name the type.
+* Returns the UUID of the XSD used by this configuration version.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
-* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pNameBuffer -  buffer of Type Name., may be NULL
+* @param[in] nXSDUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDUUIDBuffer -  buffer of UUID of the configuration XSD., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_gettypename(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getxsduuid(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nXSDUUIDBufferSize, LibMCEnv_uint32* pXSDUUIDNeededChars, char * pXSDUUIDBuffer);
 
 /**
-* Returns the UUID the type.
+* Returns the numeric version of the configuration version.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
-* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pUUIDBuffer -  buffer of Type UUID., may be NULL
+* @param[out] pConfigurationNumericVersion - Returns the configuration numeric version.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_gettypeuuid(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getnumericversion(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_uint32 * pConfigurationNumericVersion);
 
 /**
-* Returns the XSD Version Number of this configuration.
+* Returns the UUID of the parent version.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[out] pXSDVersion - Returns XSD version number.
+* @param[in] nParentUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pParentUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pParentUUIDBuffer -  buffer of UUID of the configuration version that is the parent of this version. Returns 00000000-0000-0000-0000-000000000000 if this is the default version., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getxsdversion(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_uint32 * pXSDVersion);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getparentuuid(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nParentUUIDBufferSize, LibMCEnv_uint32* pParentUUIDNeededChars, char * pParentUUIDBuffer);
 
 /**
-* Returns the XSD String that this configuration uses.
-*
-* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[in] nXSDStringBufferSize - size of the buffer (including trailing 0)
-* @param[out] pXSDStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pXSDStringBuffer -  buffer of Returns XSD string., may be NULL
-* @return error code or 0 (success)
-*/
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getxsdstring(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nXSDStringBufferSize, LibMCEnv_uint32* pXSDStringNeededChars, char * pXSDStringBuffer);
-
-/**
-* Returns the configuration as XML String.
+* Returns the configuration XML content as string.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
 * @param[in] nXMLStringBufferSize - size of the buffer (including trailing 0)
 * @param[out] pXMLStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pXMLStringBuffer -  buffer of Returns XML string., may be NULL
+* @param[out] pXMLStringBuffer -  buffer of XML String., may be NULL
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getconfigurationxmlstring(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nXMLStringBufferSize, LibMCEnv_uint32* pXMLStringNeededChars, char * pXMLStringBuffer);
 
 /**
-* Returns the configuration as XML Document class.
+* Returns the User UUID.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
-* @param[out] pDocumentInstance - Returns XML document.
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of UUID of the User., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getconfigurationxmldocument(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_XMLDocument * pDocumentInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getuseruuid(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nUserUUIDBufferSize, LibMCEnv_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
 
 /**
-* Makes the current configuration the active one.
+* Returns the creation timestamp of the configuration version.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nTimeStampUTCBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimeStampUTCNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimeStampUTCBuffer -  buffer of UTC timestamp of creation., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_makeactive(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_gettimestamp(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nTimeStampUTCBufferSize, LibMCEnv_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer);
+
+/**
+* Creates a new configuration version from this one with the same XSD.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] pXMLString - New XML Configuration String. MUST conform to current XSD.
+* @param[in] pUserUUID - User UUID for logging the user who initiated the change.
+* @param[out] pCurrentInstance - Returns the newly created MachineConfigurationVersion instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_createnewversion(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const char * pXMLString, const char * pUserUUID, LibMCEnv_MachineConfigurationVersion * pCurrentInstance);
+
+/**
+* Creates a new configuration version from this one but with a different XSD.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] pNewXSD - New XSD to use. MUST be of the same type as the current. MUST have an increased version number.
+* @param[in] pXMLString - New XML Configuration String. MUST conform to new XSD.
+* @param[in] pUserUUID - User UUID for logging the user who initiated the change.
+* @param[out] pCurrentInstance - Returns the newly created MachineConfigurationVersion instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_migratetonewxsd(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_MachineConfigurationXSD pNewXSD, const char * pXMLString, const char * pUserUUID, LibMCEnv_MachineConfigurationVersion * pCurrentInstance);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationVersionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current MachineConfigurationVersion instance.
+*
+* @param[in] pMachineConfigurationVersionIterator - MachineConfigurationVersionIterator instance.
+* @param[out] pInstance - Currently selected configuration version instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversioniterator_getcurrent(LibMCEnv_MachineConfigurationVersionIterator pMachineConfigurationVersionIterator, LibMCEnv_MachineConfigurationVersion * pInstance);
 
 /*************************************************************************************************************************
  Class definition for MachineConfigurationType
 **************************************************************************************************************************/
 
 /**
-* Returns the schema type.
+* Returns the UUID of the configuration type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nTypeUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeUUIDBuffer -  buffer of UUID of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getuuid(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nTypeUUIDBufferSize, LibMCEnv_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer);
+
+/**
+* Returns the name of the configuration type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getname(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the schema type string of the configuration type.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
 * @param[in] nSchemaTypeBufferSize - size of the buffer (including trailing 0)
 * @param[out] pSchemaTypeNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pSchemaTypeBuffer -  buffer of Schema Type String., may be NULL
+* @param[out] pSchemaTypeBuffer -  buffer of Schema type of the configuration type., may be NULL
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getschematype(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nSchemaTypeBufferSize, LibMCEnv_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer);
 
 /**
-* Returns the Name the type.
+* Returns the creation timestamp of the type.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
-* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pNameBuffer -  buffer of Type Name., may be NULL
+* @param[in] nTimeStampUTCBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimeStampUTCNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimeStampUTCBuffer -  buffer of UTC timestamp of Type creation., may be NULL
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_gettypename(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_gettimestamp(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nTimeStampUTCBufferSize, LibMCEnv_uint32* pTimeStampUTCNeededChars, char * pTimeStampUTCBuffer);
 
 /**
-* Returns the UUID the type.
+* Returns the latest XSD registered for this configuration type.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
-* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pUUIDBuffer -  buffer of Type UUID., may be NULL
+* @param[out] pXSDInstance - Latest XSD of the configuration type.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_gettypeuuid(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestxsd(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
-* Returns the latest Machine Configuration XSD Version.
+* Returns all XSDs associated with this configuration type.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[out] pXSDVersion - Returns the latest XSD version, or 0 if no XSD exists.
+* @param[out] pXSDIterator - List of XSDs.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestxsdversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_uint32 * pXSDVersion);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_listxsdversions(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationXSDIterator * pXSDIterator);
 
 /**
-* Registers a new configuration XSD.
+* Returns the version number of the latest XSD for this type.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[in] pXSDString - XSD String of the version. MUST be incremental.
+* @param[out] pXSDNumericVersion - Latest XSD version number, or 0 if none exist.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestxsdnumericversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_uint32 * pXSDNumericVersion);
+
+/**
+* Registers a new XSD Version. Fails if version already exists or is not incrementing.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDString - XSD String of the version. MUST be a valid schema of this type.
 * @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-* @param[in] pDefaultConfigurationXML - Default configuration XML to use for this XSD. MUST conform to XSD in question.
+* @param[out] pXSDInstance - Returns the new XSD of the configuration type.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_registerconfigurationxsd(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCEnv_uint32 nXSDVersion, const char * pDefaultConfigurationXML);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_registernewxsd(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCEnv_uint32 nXSDVersion, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
-* Registers a new configuration XSD from machine resource files.
+* Finds a specific XSD of this type by its Numeric Version Number.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[in] pXSDResourceName - Resource identifier of the XSD file of the version. MUST be incremental.
-* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
-* @param[in] pDefaultConfigurationResourceName - Resource identifier of the configuration XML to use for this XSD. MUST conform to XSD in question.
+* @param[in] nXSDNumericVersion - Requested version number.
+* @param[out] pXSDInstance - XSD instance if exists.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_registerconfigurationxsdfromresource(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDResourceName, LibMCEnv_uint32 nXSDVersion, const char * pDefaultConfigurationResourceName);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_findxsdbynumericversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_uint32 nXSDNumericVersion, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
-* Returns the latest Machine Configuration of this configuration type. Returns the default XML of the newest XSD if no configuration exists.
+* Finds a specific XSD of this type by its UUID.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[out] pConfigurationInstance - Configuration Version instance.
+* @param[in] pXSDUUID - UUID of the XSD.
+* @param[out] pXSDInstance - Matching XSD instance.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestconfiguration(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersion * pConfigurationInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_findxsdbyuuid(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
-* Returns the active Machine Configuration of this configuration type.
+* Creates the default configuration for a given XSD version. Fails if a configuration for this XSD already exists.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
-* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-* @param[out] pConfigurationInstance - Configuration Version instance.
+* @param[in] pXSDUUID - UUID of the XSD to base the default configuration on.
+* @param[in] pDefaultXML - Configuration XML string conforming to the given XSD.
+* @param[in] pTimeStampUTC - Creation timestamp in UTC.
+* @param[out] pVersionInstance - Returns the created default configuration version.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getactiveconfiguration(LibMCEnv_MachineConfigurationType pMachineConfigurationType, bool bFallBackToDefault, LibMCEnv_MachineConfigurationVersion * pConfigurationInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_createdefaultconfiguration(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, const char * pDefaultXML, const char * pTimeStampUTC, LibMCEnv_MachineConfigurationVersion * pVersionInstance);
+
+/**
+* Lists all configuration versions registered under this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pVersionIterator - List of configuration versions.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_listallconfigurationversions(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersionIterator * pVersionIterator);
+
+/**
+* Lists all configuration versions for specific XSD.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDUUID - UUID of the XSD .
+* @param[out] pVersionIterator - List of configuration versions.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_listconfigurationversionsforxsd(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, LibMCEnv_MachineConfigurationVersionIterator * pVersionIterator);
+
+/**
+* Finds a specific configuration version by UUID.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pVersionUUID - UUID of the configuration version.
+* @param[out] pVersion - Matching configuration version if found.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_findconfigurationversionbyuuid(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCEnv_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the currently active configuration version for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pVersion - Active version instance or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getactiveconfigurationversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the most recently created version for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pVersion - Latest configuration version or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestconfigurationversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersion * pVersion);
+
+/**
+* Sets the active configuration version for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pVersionUUID - UUID of the version to set as active.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_setactiveconfigurationversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationTypeIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current MachineConfigurationType instance.
+*
+* @param[in] pMachineConfigurationTypeIterator - MachineConfigurationTypeIterator instance.
+* @param[out] pInstance - Currently selected configuration type instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtypeiterator_getcurrent(LibMCEnv_MachineConfigurationTypeIterator pMachineConfigurationTypeIterator, LibMCEnv_MachineConfigurationType * pInstance);
 
 /*************************************************************************************************************************
  Class definition for MachineConfigurationHandler
 **************************************************************************************************************************/
 
 /**
-* Registers a new machine configuration type, or returns the unique existing one with the same schema type.
+* Registers a new configuration type or returns existing one if already registered.
 *
 * @param[in] pMachineConfigurationHandler - MachineConfigurationHandler instance.
-* @param[in] pSchemaType - Schema Type String. MUST not be empty.
-* @param[in] pName - Type Name. MUST not be empty. If the configuration type already exists, the name will be checked for identity!
-* @param[out] pTypeInstance - Instance of machine configuration type.
+* @param[in] pSchemaType - Schema type string. MUST not be empty.
+* @param[in] pName - Display name. MUST not be empty. Must match existing name if type exists.
+* @param[out] pTypeInstance - Instance of the configuration type.
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_registermachineconfigurationtype(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, const char * pName, LibMCEnv_MachineConfigurationType * pTypeInstance);
 
 /**
-* Checks if a certain configuration schema type has been registered.
+* Checks if a schema type is already registered.
 *
 * @param[in] pMachineConfigurationHandler - MachineConfigurationHandler instance.
-* @param[in] pSchemaType - Schema Type String. MUST not be empty.
-* @param[out] pHasBeenRegistered - Returns true, if the system knows about a configuration schema type.
+* @param[in] pSchemaType - Schema type string.
+* @param[out] pHasBeenRegistered - True if known, false otherwise.
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_hasmachineconfigurationtype(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, bool * pHasBeenRegistered);
 
 /**
-* Returns the latest Machine Configuration for a specific configuration type. Returns the default XML of the newest XSD if no configuration exists.
+* Returns all configuration types registered in the system.
 *
 * @param[in] pMachineConfigurationHandler - MachineConfigurationHandler instance.
-* @param[in] pSchemaType - Schema Type String. Fails if configuration schema type is not known.
-* @param[out] pConfigurationInstance - Configuration Version instance.
+* @param[out] pTypeIterator - Iterator over configuration types.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_getlatestconfiguration(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, LibMCEnv_MachineConfigurationVersion * pConfigurationInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_listregisteredtypes(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, LibMCEnv_MachineConfigurationTypeIterator * pTypeIterator);
 
 /**
-* Returns the active Machine Configuration for a specific configuration type.
+* Returns configuration type by UUID.
 *
 * @param[in] pMachineConfigurationHandler - MachineConfigurationHandler instance.
-* @param[in] pSchemaType - Schema Type String. Fails if configuration schema type is not known.
-* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
-* @param[out] pConfigurationInstance - Configuration Version instance.
+* @param[in] pTypeUUID - UUID of the configuration type.
+* @param[out] pTypeInstance - Configuration type if found.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_getactiveconfiguration(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, bool bFallBackToDefault, LibMCEnv_MachineConfigurationVersion * pConfigurationInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_findconfigurationtypebyuuid(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pTypeUUID, LibMCEnv_MachineConfigurationType * pTypeInstance);
+
+/**
+* Returns configuration type by Schema Type.
+*
+* @param[in] pMachineConfigurationHandler - MachineConfigurationHandler instance.
+* @param[in] pSchemaType - Schema Type of the configuration type.
+* @param[out] pTypeInstance - Configuration type if found.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationhandler_findconfigurationtypebyschema(LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, LibMCEnv_MachineConfigurationType * pTypeInstance);
 
 /*************************************************************************************************************************
  Class definition for StateEnvironment
@@ -10652,6 +10882,15 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getexternaleventparamete
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getexternaleventresults(LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_JSONObject * pParameterValue);
+
+/**
+* creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[out] pMachineConfigurationHandlerInstance - MachineConfigurationHandler instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_createmachineconfigurationhandler(LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_MachineConfigurationHandler * pMachineConfigurationHandlerInstance);
 
 /*************************************************************************************************************************
  Global functions

@@ -131,7 +131,7 @@ namespace AMC {
 		void addMenuItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string & sDescription, const std::string& sTargetPage, const std::string & sEventName);
 		void addToolbarItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName);
 
-		PUIPage addPage_Unsafe (const std::string& sName);
+		PUIPage addPage_Unsafe (const std::string& sName, const std::string& sShowEvent);
 
 		PUICustomPage addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName);
 
@@ -166,6 +166,8 @@ namespace AMC {
 		virtual void populateClientVariables(CParameterHandler * pClientVariableHandler);
 
 		PUIPage findPage(const std::string& sName);
+		PUIPage findPageByUUID(const std::string& sUUID);
+
 		PUIDialog findDialog(const std::string& sName);
 
 		AMC::PUISystemState getUISystemState();

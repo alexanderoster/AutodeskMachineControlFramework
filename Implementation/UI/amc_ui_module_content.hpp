@@ -71,6 +71,8 @@ namespace AMC {
 
 		uint32_t m_nNamingIDCounter;
 
+		bool m_bVisible;
+
 		std::map<std::string, PUIModule_ContentItem> m_ItemMap;
 		std::vector<PUIModule_ContentItem> m_Items;
 
@@ -94,6 +96,8 @@ namespace AMC {
 		std::string getHeadLine ();
 		std::string getTitle ();
 		std::string getSubtitle ();
+
+		bool isVisible();
 
 		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler) override;
 
