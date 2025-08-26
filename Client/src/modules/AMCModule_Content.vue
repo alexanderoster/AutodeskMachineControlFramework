@@ -55,6 +55,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					<ContentItem_ButtonGroup :key="moduleitem.uuid" v-if="(moduleitem.type=='buttongroup')" :moduleitem="moduleitem" :Application="Application" />
 
 					<ContentItem_Form :key="moduleitem.uuid" v-if="(moduleitem.type=='form')" :moduleitem="moduleitem" :Application="Application" />
+
+					<ContentItem_ConfigurationList :key="moduleitem.uuid" v-if="(moduleitem.type=='configurationlist')" :moduleitem="moduleitem" :Application="Application" />
 						
 				</template>
 			</div>
@@ -74,6 +76,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import ContentItem_ParameterList from '../modules/AMCModule_ContentItem_ParameterList.vue';
 	import ContentItem_ButtonGroup from '../modules/AMCModule_ContentItem_ButtonGroup.vue';
 	import ContentItem_Form from '../modules/AMCModule_ContentItem_Form.vue';
+	import ContentItem_ConfigurationList from '../modules/AMCModule_ContentItem_ConfigurationList.vue';
 
 
 	export default {
@@ -89,7 +92,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			ContentItem_AlertList,
 			ContentItem_ParameterList,
 			ContentItem_ButtonGroup,
-			ContentItem_Form
+			ContentItem_Form,
+			ContentItem_ConfigurationList
 		}		
 		
 	};

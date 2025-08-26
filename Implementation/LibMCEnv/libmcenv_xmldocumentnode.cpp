@@ -116,11 +116,23 @@ std::string CXMLDocumentNode::GetAttributeValue(const std::string& sNameSpace, c
     return pAttribute->GetValue();
 }
 
+void CXMLDocumentNode::SetAttributeValue(const std::string& sNameSpace, const std::string& sName, const std::string& sValue)
+{
+	std::unique_ptr<IXMLDocumentAttribute> pAttribute(FindAttribute(sNameSpace, sName, true));
+	return pAttribute->SetValue(sValue);
+}
+
 LibMCEnv_int64 CXMLDocumentNode::GetAttributeIntegerValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_int64 nMinValue, const LibMCEnv_int64 nMaxValue)
 {
     std::unique_ptr<IXMLDocumentAttribute> pAttribute(FindAttribute(sNameSpace, sName, true));
     return pAttribute->GetIntegerValue(nMinValue, nMaxValue);
 
+}
+
+void CXMLDocumentNode::SetAttributeIntegerValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_int64 nValue)
+{
+    std::unique_ptr<IXMLDocumentAttribute> pAttribute(FindAttribute(sNameSpace, sName, true));
+    return pAttribute->SetIntegerValue(nValue);
 }
 
 LibMCEnv_double CXMLDocumentNode::GetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue)

@@ -189,8 +189,10 @@ PUIPage CUIHandler::findPage(const std::string& sName)
 }
 
 
+        page.addString(AMC_API_KEY_UI_UUID, iter.second->getUUID());
+        page.addString(AMC_API_KEY_UI_PAGESHOWEVENT, iter.second->getShowEvent());
 
-PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
+PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
 {
     if (sName.empty ())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPAGENAME);
@@ -203,7 +205,7 @@ PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const CUIExpression
     if (iCustomPageIterator != m_CustomPages.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEPAGE, sName);
 
-    auto pPage = std::make_shared<CUIPage> (sName, this, icon, caption, description);
+    auto pPage = std::make_shared<CUIPage> (sName, this, icon, caption, description, sShowEvent);
     m_Pages.insert (std::make_pair (sName, pPage));
 
     return pPage;
@@ -392,12 +394,17 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         if (pageNameAttrib.empty())
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGPAGENAME);
         std::string sPageName(pageNameAttrib.as_string());
+        
+        std::string sShowEvent;
+        auto pageShowEventAttrib = pageNode.attribute("showevent");
+        if (!pageShowEventAttrib.empty())
+            sShowEvent = pageShowEventAttrib.as_string();
 
         CUIExpression icon(pageNode, "icon");
         CUIExpression caption(pageNode, "caption");
         CUIExpression description(pageNode, "description");
 
-        auto pPage = addPage_Unsafe(sPageName, icon, caption, description);
+        auto pPage = addPage_Unsafe(sPageName, icon, caption, description, sShowEvent);
 
         auto pageChildren = pageNode.children();
         for (pugi::xml_node pageChild : pageChildren) {
@@ -547,6 +554,20 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
 }
 
+PUIPage CUIHandler::findPageByUUID(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        if (pPage.second->getUUID() == sUUID)
+            return pPage.second;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        if (pCustomPage.second->getUUID() == sUUID)
+            return pCustomPage.second;
+    }
+
+    return nullptr;
+}
 template <class C> std::shared_ptr<C> mapInternalUIEnvInstance(std::shared_ptr<LibMCEnv::Impl::IBase> pImplInstance, LibMCEnv::PWrapper pWrapper)
 {
     if (pWrapper.get() == nullptr)
@@ -608,15 +629,24 @@ CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, co
             }
             else {
 
-                pPage = findPageOfModuleItem(sSenderUUID);
-                if (pPage.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
+				// Try to find the page of the sender
+                pPage = findPageByUUID(sSenderUUID);
+				if (pPage.get() != nullptr) {
+                    // If we have a page, we can use the sender path
+                    sSenderPath = pPage->getName();
+				}
+                else {
+					// Try to find the page of the module item
+                    pPage = findPageOfModuleItem(sSenderUUID);
+                    if (pPage.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
 
-                auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
-                if (pModuleItem.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
+                    auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
+                    if (pModuleItem.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
 
-                sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                    sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                }
 
             }
 

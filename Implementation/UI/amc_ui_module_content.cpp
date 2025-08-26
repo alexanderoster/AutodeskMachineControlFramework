@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_parameterlist.hpp"
 #include "amc_ui_module_contentitem_upload.hpp"
 #include "amc_ui_module_contentitem_form.hpp"
-
+#include "amc_ui_module_contentitem_configurationlist.hpp"
 
 #include "amc_api_constants.hpp"
 #include "amc_resourcepackage.hpp"
@@ -85,6 +85,12 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	if (!subtitleAttrib.empty())
 		m_sSubtitle = subtitleAttrib.as_string();
 
+	auto visibleAttrib = xmlNode.attribute("visible");
+	if (!visibleAttrib.empty())
+		m_bVisible = visibleAttrib.as_bool();
+	else
+		m_bVisible = true;
+
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 		std::string sChildName = childNode.name();
@@ -110,6 +116,8 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 			addItem(CUIModule_ContentUpload::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 		if (sChildName == "parameterlist")
 			addItem(CUIModule_ContentParameterList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
+		if (sChildName == "configurationlist")
+			addItem(CUIModule_ContentConfigurationList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 
 
 
@@ -156,9 +164,17 @@ std::string CUIModule_Content::getSubtitle()
 	return m_sSubtitle;
 }
 
+bool CUIModule_Content::isVisible()
+{
+	return m_bVisible;
+}
+
 void CUIModule_Content::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
+
+	auto pGroup = pParameterHandler->addGroup(m_sModulePath, "content UI element");
+	pGroup->addNewBoolParameter("visible", "visibility of the UI content", m_bVisible);
 
 	for (auto pItem : m_Items)
 		pItem->populateClientVariables(pParameterHandler);
@@ -174,6 +190,7 @@ void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 	moduleObject.addString(AMC_API_KEY_UI_TITLE, m_sTitle);
 	moduleObject.addString(AMC_API_KEY_UI_SUBTITLE, m_sSubtitle);
 	moduleObject.addString(AMC_API_KEY_UI_CAPTION, m_sCaption);
+	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
 
 	CJSONWriterArray itemsNode(writer);
 	for (auto item : m_Items) {

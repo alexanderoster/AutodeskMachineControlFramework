@@ -182,12 +182,14 @@ namespace AMC {
 	
 	class CUIModule_ContentFormCombobox : public CUIModule_ContentFormEntity {
 	protected:
-
+		CUIExpression m_ValueExpression;
+		std::string m_sOnChangeEvent;
+		std::vector<std::pair<std::string, int>> m_Items;
 	public:
 
 		static PUIModule_ContentFormCombobox makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData);
 
-		CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, PStateMachineData pStateMachineData);
+		CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, const std::string& sOnChangeEvent, PStateMachineData pStateMachineData, const std::vector<std::pair<std::string, int>>& items);
 
 		virtual ~CUIModule_ContentFormCombobox();
 

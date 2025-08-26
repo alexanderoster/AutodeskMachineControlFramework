@@ -59,6 +59,7 @@ namespace AMC {
 	protected:
 		std::string m_sName;
 		std::string m_sUUID;
+		std::string m_sShowEvent;
 
 		std::vector<PUIModule> m_Modules;
 		CUIModule_UIEventHandler* m_pUIEventHandler;
@@ -81,11 +82,15 @@ namespace AMC {
 
 	public:
 
-		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description);
+		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description, const std::string& sShowEvent);
 		
 		virtual ~CUIPage();
 
 		std::string getName();
+
+		std::string getUUID();
+
+		std::string getShowEvent();
 
 		void addModule (PUIModule pModule);
 

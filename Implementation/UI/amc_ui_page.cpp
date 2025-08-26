@@ -45,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 
-CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
-	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1), m_Icon(icon), m_Description(description), m_Caption (caption)
+CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
+	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1), m_Icon(icon), m_Description(description), m_Caption (caption), m_sShowEvent(sShowEvent)
 {
 	if (sName.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -65,6 +65,16 @@ CUIPage::~CUIPage()
 std::string CUIPage::getName()
 {
 	return m_sName;
+}
+
+std::string CUIPage::getUUID()
+{
+	return m_sUUID;
+}
+
+std::string CUIPage::getShowEvent()
+{
+	return m_sShowEvent;
 }
 
 void CUIPage::addModule(PUIModule pModule)

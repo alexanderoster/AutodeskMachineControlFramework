@@ -66,22 +66,39 @@ public:
 
 	virtual ~CMachineConfigurationType();
 
+	std::string GetUUID() override;
+
+	std::string GetName() override;
+
 	std::string GetSchemaType() override;
 
-	std::string GetTypeName() override;
+	std::string GetTimestamp() override;
 
-	std::string GetTypeUUID() override;
+	IMachineConfigurationXSD* GetLatestXSD() override;
+		
+	IMachineConfigurationXSDIterator* ListXSDVersions() override;
 
-	LibMCEnv_uint32 GetLatestXSDVersion() override;
+	LibMCEnv_uint32 GetLatestXSDNumericVersion() override;
 
-	void RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML) override;
+	IMachineConfigurationXSD* RegisterNewXSD(const std::string& sXSDString, const LibMCEnv_uint32 nXSDVersion) override;
 
-	void RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName) override;
+	IMachineConfigurationVersion* CreateDefaultConfiguration(const std::string& sXSDUUID, const std::string& sDefaultXML, const std::string& sTimeStampUTC) override;
 
-	IMachineConfigurationVersion * GetLatestConfiguration() override;
+	IMachineConfigurationXSD* FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDVersion) override;
 
-	IMachineConfigurationVersion * GetActiveConfiguration(const bool bFallBackToDefault) override;
+	IMachineConfigurationXSD* FindXSDByUUID(const std::string& sXSDUUID) override;
 
+	IMachineConfigurationVersionIterator* ListAllConfigurationVersions() override;
+		
+	IMachineConfigurationVersionIterator* ListConfigurationVersionsForXSD(const std::string& sXSDUUID) override;
+
+	IMachineConfigurationVersion* FindConfigurationVersionByUUID(const std::string& sVersionUUID) override;
+
+	IMachineConfigurationVersion* GetActiveConfigurationVersion() override;
+
+	IMachineConfigurationVersion* GetLatestConfigurationVersion() override;
+	
+	void SetActiveConfigurationVersion(const std::string& sVersionUUID) override;
 };
 
 } // namespace Impl

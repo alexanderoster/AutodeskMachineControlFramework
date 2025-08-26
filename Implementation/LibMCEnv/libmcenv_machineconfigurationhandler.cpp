@@ -36,7 +36,8 @@ Abstract: This is a stub class definition of CMachineConfigurationHandler
 #include "libmcenv_interfaceexception.hpp"
 
 // Include custom headers here.
-
+#include "libmcenv_machineconfigurationtypeiterator.hpp"
+#include "common_utils.hpp"
 
 using namespace LibMCEnv::Impl;
 
@@ -60,27 +61,61 @@ IMachineConfigurationType * CMachineConfigurationHandler::RegisterMachineConfigu
     auto pConfigurationType = m_pDataModel->FindConfigurationTypeBySchema(sSchemaType);
     if (pConfigurationType.get() != nullptr) {
 		// Check if the name is equal
+		if (pConfigurationType->GetName() == sName) {
+			// Already registered
+			return new CMachineConfigurationType(pConfigurationType);
+		}
+		else {
+			// Schema type already registered, but with a different name
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED, "Schema type = " + sSchemaType + "is already registered, but with a different name = " + pConfigurationType->GetName());
+		}
     }
     else {
 		pConfigurationType = m_pDataModel->CreateConfigurationType(sSchemaType, sName);
     }
 
-    return new CMachineConfigurationType(pConfigurationType);
-		
+    return new CMachineConfigurationType(pConfigurationType);		
 }
 
 bool CMachineConfigurationHandler::HasMachineConfigurationType(const std::string & sSchemaType)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    if (sSchemaType.empty())
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "Schema type is empty.");
+
+    auto pConfigurationType = m_pDataModel->FindConfigurationTypeBySchema(sSchemaType);
+
+    return (pConfigurationType.get() != nullptr);
 }
 
-IMachineConfigurationVersion * CMachineConfigurationHandler::GetLatestConfiguration(const std::string & sSchemaType)
+IMachineConfigurationTypeIterator* CMachineConfigurationHandler::ListRegisteredTypes()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	auto pIterator = m_pDataModel->ListRegisteredConfigurationTypes();
+
+	if (pIterator.get() == nullptr)
+		return nullptr;
+
+    return new CMachineConfigurationTypeIterator(pIterator);
 }
 
-IMachineConfigurationVersion * CMachineConfigurationHandler::GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault)
+IMachineConfigurationType* CMachineConfigurationHandler::FindConfigurationTypeByUUID(const std::string& sTypeUUID)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    if (sTypeUUID.empty())
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "Configuration Type UUID is empty.");
+
+    std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sTypeUUID);
+
+    auto pConfigurationType = m_pDataModel->FindConfigurationTypeByUUID(sNormalizedUUID);
+    if (pConfigurationType.get() == nullptr)
+        return nullptr;
+
+    return new CMachineConfigurationType(pConfigurationType);
 }
 
+IMachineConfigurationType* CMachineConfigurationHandler::FindConfigurationTypeBySchema(const std::string& sSchemaType)
+{
+    auto pConfigurationType = m_pDataModel->FindConfigurationTypeBySchema(sSchemaType);
+    if (pConfigurationType.get() == nullptr)
+        return nullptr;
+
+    return new CMachineConfigurationType(pConfigurationType);
+}

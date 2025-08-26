@@ -745,6 +745,11 @@ export default class AMCApplication extends Common.AMCObject {
         let pageString = String(page);
         this.AppState.activePage = pageString;
 		
+		let pageObject = this.AppContent.PageMap.get(pageString);
+		if(pageObject) {
+			pageObject.setActive();
+		}
+
 		if (this.AppState.appResizeEvent)
 			this.AppState.appResizeEvent ();
 		

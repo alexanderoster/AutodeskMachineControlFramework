@@ -45,6 +45,7 @@ Abstract: This is the class declaration of CMachineConfigurationXSD
 #endif
 
 // Include custom headers here.
+#include "amcdata_sqlhandler.hpp"
 
 
 namespace LibMCData {
@@ -62,35 +63,59 @@ private:
 	* Put private members here.
 	*/
 
+	AMCData::PSQLHandler m_pSQLHandler;
+
+	std::string m_sUUID;
+	std::string m_sTypeUUID;
+	LibMCData_uint32 m_nXSDVersion;
+	std::string m_sXSDString;
+	std::string m_sTimestamp;
+	
 protected:
 
 	/**
 	* Put protected members here.
 	*/
-
+	
 public:
 
 	/**
 	* Put additional public members here. They will not be visible in the external API.
 	*/
 
+	CMachineConfigurationXSD::CMachineConfigurationXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sUUID, const std::string& sTypeUUID, const LibMCData_uint32 nXSDVersion, const std::string& sXSDString, const std::string& sTimestamp);
+
+	virtual ~CMachineConfigurationXSD();
 
 	/**
 	* Public member functions to implement.
 	*/
 
+	static CMachineConfigurationXSD* makeFrom(CMachineConfigurationXSD* pMachineConfigurationVersion);
+
+	static CMachineConfigurationXSD* createNewXSDForType(AMCData::PSQLHandler pSQLHandler, const std::string& sTypeUUID, const std::string& sXSDString, const LibMCData_uint32 nXSDNumericVersion);
+		
+	static CMachineConfigurationXSD* getLatestXSDForType(AMCData::PSQLHandler pSQLHandler, const std::string& sTypeUUID);
+
+	static LibMCData_uint32 getLatestXSDNumericVersionForType(AMCData::PSQLHandler pSQLHandler, const std::string& sTypeUUID);
+
+	static CMachineConfigurationXSD* findXSDByUUID(AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID);
+
+	static CMachineConfigurationXSD* findXSDByNumericVersion(AMCData::PSQLHandler pSQLHandler, LibMCData_uint32 nXSDNumericVersion);
+
+	static IMachineConfigurationXSDIterator* listConfigurationXSDVersions(AMCData::PSQLHandler pSQLHandler, const std::string& sXSDUUID);
+
+	AMCData::PSQLHandler GetSQLHandler();
+
 	std::string GetUUID() override;
 
 	std::string GetTypeUUID() override;
-
-	std::string GetSchemaType() override;
 
 	LibMCData_uint32 GetXSDVersion() override;
 
 	std::string GetXSDString() override;
 
-	IMachineConfigurationVersionIterator * ListVersions() override;
-
+	std::string GetTimestamp() override;
 };
 
 } // namespace Impl
