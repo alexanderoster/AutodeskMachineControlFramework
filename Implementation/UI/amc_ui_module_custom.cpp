@@ -174,6 +174,10 @@ void CUIModule_Custom::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWri
 
 }
 
+void CUIModule_Custom::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_Custom::findLegacyItem(const std::string& sUUID)
 {
 	if (m_pCustomItem->getUUID() == sUUID)
@@ -187,6 +191,10 @@ PUIModuleItem CUIModule_Custom::findLegacyItem(const std::string& sUUID)
 
 }
 
+void CUIModule_Custom::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Custom>(*this)));
+}
 
 void CUIModule_Custom::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {

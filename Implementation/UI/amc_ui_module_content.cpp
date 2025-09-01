@@ -174,7 +174,7 @@ void CUIModule_Content::populateLegacyClientVariables(CParameterHandler* pParame
 	LibMCAssertNotNull(pParameterHandler);
 
 	auto pGroup = pParameterHandler->addGroup(m_sModulePath, "content UI element");
-	pGroup->addNewBoolParameter("visible", "visibility of the UI content", m_bVisible);
+	pGroup->addNewBoolParameter(AMC_API_KEY_UI_VISIBLE, "visibility of the UI content", m_bVisible);
 
 	for (auto pItem : m_Items)
 		pItem->populateClientVariables(pParameterHandler);
@@ -202,6 +202,15 @@ void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 
 }
 
+void CUIModule_Content::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+	moduleObject.addString(AMC_API_KEY_UI_UUID, m_sUUID);
+
+	auto pGroup = pClientVariableHandler->findGroup(m_sModulePath, true);
+	auto bVisible = pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_VISIBLE);
+	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, bVisible);
+}
+
 PUIModuleItem CUIModule_Content::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
@@ -223,6 +232,10 @@ void CUIModule_Content::addItem(PUIModule_ContentItem pItem)
 
 }
 
+void CUIModule_Content::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Content>(*this)));
+}
 
 void CUIModule_Content::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {

@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace AMC {
 
+	amcDeclareDependingClass(CUIModule, PUIModule);
 	amcDeclareDependingClass(CUIModuleItem, PUIModuleItem);
 	amcDeclareDependingClass(CUIClientAction, PUIClientAction);
 	amcDeclareDependingClass(CAPIAuth, PAPIAuth);
@@ -67,6 +68,7 @@ namespace AMC {
 		virtual void registerFormName(const std::string& sFormUUID, const std::string & sFormName) = 0;
 		virtual std::string findFormUUIDByName(const std::string & sFormName) = 0;
 
+		virtual PUIModule findModuleByUUID(const std::string& sItemUUID) = 0;
 		virtual PUIModuleItem findModuleItemByUUID(const std::string& sItemUUID) = 0;
 
 		virtual void ensureUIEventExists(const std::string& sEventName) = 0;

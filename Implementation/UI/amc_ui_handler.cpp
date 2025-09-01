@@ -188,10 +188,6 @@ PUIPage CUIHandler::findPage(const std::string& sName)
     return pResult;
 }
 
-
-        page.addString(AMC_API_KEY_UI_UUID, iter.second->getUUID());
-        page.addString(AMC_API_KEY_UI_PAGESHOWEVENT, iter.second->getShowEvent());
-
 PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
 {
     if (sName.empty ())
@@ -552,6 +548,29 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
     for (auto pDialog : m_Dialogs)
         pDialog.second->configurePostLoading();
 
+}
+
+PUIModule CUIHandler::findModule(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        auto pModuleItem = pPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        auto pModuleItem = pCustomPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pDialog : m_Dialogs) {
+        auto pModuleItem = pDialog.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    return nullptr;
 }
 
 PUIPage CUIHandler::findPageByUUID(const std::string& sUUID)

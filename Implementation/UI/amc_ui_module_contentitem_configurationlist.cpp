@@ -289,8 +289,8 @@ void CUIModule_ContentConfigurationList::writeButtonsToJSON(CJSONWriter& writer,
 
 }
 
-
-void CUIModule_ContentConfigurationList::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
+#if 0 // DEPRECATED
+void CUIModule_ContentConfigurationList::addLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
 {
 
 	std::string sLoadingText = m_LoadingText.evaluateStringValue(m_pStateMachineData);
@@ -309,9 +309,19 @@ void CUIModule_ContentConfigurationList::addDefinitionToJSON(CJSONWriter& writer
 	CJSONWriterArray entriesArray(writer);
 	object.addArray(AMC_API_KEY_UI_ITEMENTRIES, entriesArray);
 }
+#endif 
 
-void CUIModule_ContentConfigurationList::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_ContentConfigurationList::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
+	std::string sLoadingText = m_LoadingText.evaluateStringValue(m_pStateMachineData);
+
+	object.addString(AMC_API_KEY_UI_ITEMTYPE, "configurationlist");
+	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
+	object.addString(AMC_API_KEY_UI_ITEMLOADINGTEXT, sLoadingText);
+	object.addString(AMC_API_KEY_UI_ITEMSELECTEVENT, m_sSelectEvent);
+	object.addString(AMC_API_KEY_UI_ITEMSELECTIONVALUEUUID, m_sSelectedConfigurationFieldUUID);
+	object.addString(AMC_API_KEY_UI_ITEMBUTTONVALUEUUID, m_sSelectedButtonFieldUUID);
+	object.addInteger(AMC_API_KEY_UI_ITEMENTRIESPERPAGE, m_nEntriesPerPage);
 
 	writeHeadersToJSON(writer, object);
 	writeButtonsToJSON(writer, object);

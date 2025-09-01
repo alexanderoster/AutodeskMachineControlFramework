@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='form')">  	
+<div v-if="(moduleitem.type=='form') && visible">  	
 	
 	<v-container dense>				
 		<template v-for="entity in moduleitem.entities">			
@@ -60,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 
 	export default {
-	  props: ["Application", "moduleitem"],
+	  props: ["Application", "moduleitem", "visible"],
 
 	  methods: {	
 		uiToggleSwitch: function (switchentity) {

@@ -157,6 +157,8 @@ namespace AMC {
 
 		PResourcePackage getCoreResourcePackage ();
 
+		PUIModule findModule(const std::string& sUUID);
+
 
 		CUIHandleEventResponse handleEvent(const std::string& sEventName, const std::string& sSenderUUID, const std::string& sEventFormPayloadJSON, const std::string & sEventParameterJSON, PAPIAuth pAPIAuth);
 
@@ -166,7 +168,6 @@ namespace AMC {
 		PUIPage findPageByUUID(const std::string& sUUID);
 
 		PUIDialog findDialog(const std::string& sName);
-		PUIPage findPageByUUID(const std::string& sUUID);
 		PUIDialog findDialogByUUID(const std::string& sUUID);
 
 		AMC::PUISystemState getUISystemState();

@@ -54,7 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 									
 					<ContentItem_ButtonGroup :key="moduleitem.uuid" v-if="(moduleitem.type=='buttongroup')" :moduleitem="moduleitem" :Application="Application" />
 
-					<ContentItem_Form :key="moduleitem.uuid" v-if="(moduleitem.type=='form')" :moduleitem="moduleitem" :Application="Application" />
+					<ContentItem_Form :key="moduleitem.uuid" v-if="(moduleitem.type=='form')" :moduleitem="moduleitem" :Application="Application" :visible="moduleitem.visible"/>
 
 					<ContentItem_ConfigurationList :key="moduleitem.uuid" v-if="(moduleitem.type=='configurationlist')" :moduleitem="moduleitem" :Application="Application" />
 						

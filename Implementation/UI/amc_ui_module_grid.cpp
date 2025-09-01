@@ -405,20 +405,35 @@ void CUIModule_Grid::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWrite
 
 }
 
+void CUIModule_Grid::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_Grid::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
 	if (iIter != m_ItemMap.end())
 		return iIter->second;
 
+	for (auto pSection : m_SectionList) {
+		auto pItem = pSection->getModule()->findLegacyItem(sUUID);
+		if (pItem != nullptr)
+			return pItem;
+	}
+
 	return nullptr;
 }
-
 
 void CUIModule_Grid::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	for (auto pSection : m_SectionList)
 		pSection->getModule()->populateLegacyItemMap(itemMap);
+}
+
+void CUIModule_Grid::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	for (auto pSection : m_SectionList)
+		pSection->getModule()->populateModuleMap(moduleMap);
 }
 
 void CUIModule_Grid::configureLegacyPostLoading()
