@@ -61,6 +61,8 @@ namespace AMC {
 		std::string m_sShowEvent;
 
 		std::vector<PUIModule> m_Modules;
+		std::map<std::string, PUIModule> m_ModuleMapOfPage;
+
 		std::map<std::string, PUIModuleItem> m_ItemMapOfPage;
 
 		std::map<std::string, std::string> m_FormNameMap;
@@ -89,6 +91,7 @@ namespace AMC {
 
 		//virtual void writeModuleItemUpdatesToJSON(CJSONWriter& writer, CJSONWriterArray& itemArray, CParameterHandler* pClientVariableHandler);
 
+		virtual PUIModule findModuleByUUID(const std::string& sUUID) override;
 		virtual PUIModuleItem findModuleItemByUUID(const std::string& sUUID) override;
 		virtual void registerFormName(const std::string& sFormUUID, const std::string& sFormName) override;
 		virtual std::string findFormUUIDByName(const std::string& sFormName) override;

@@ -97,6 +97,17 @@ void CUIModule_Tabs::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObjec
 
 }
 
+void CUIModule_Tabs::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+	CJSONWriterArray tabsNode(writer);
+	for (auto tab : m_Tabs) {
+		CJSONWriterObject tabObject(writer);
+		tab->addContentToJSON(writer, tabObject, pClientVariableHandler, nStateID);
+		tabsNode.addObject(tabObject);
+	}
+	moduleObject.addArray(AMC_API_KEY_UI_TABS, tabsNode);
+}
+
 PUIModuleItem CUIModule_Tabs::findItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
@@ -125,6 +136,16 @@ void CUIModule_Tabs::addTab(PUIModule pTab)
 
 	pTab->populateItemMap(m_ItemMap);
 
+}
+
+void CUIModule_Tabs::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Tabs>(*this)));
+
+	for (auto pTab : m_Tabs) {
+		moduleMap.insert(std::make_pair(pTab->getUUID(), pTab));
+		pTab->populateModuleMap(moduleMap);
+	}
 }
 
 void CUIModule_Tabs::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)

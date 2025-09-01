@@ -102,11 +102,15 @@ namespace AMC {
 
 		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject & moduleObject, CParameterHandler* pClientVariableHandler) = 0;
 
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) = 0;
+
 		virtual PUIModuleItem findItem(const std::string& sUUID) = 0;
 
 		virtual std::string getCaption() = 0;
 
 		virtual std::string getUUID();
+
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) = 0;
 
 		virtual void populateItemMap (std::map<std::string, PUIModuleItem> & itemMap) = 0;
 

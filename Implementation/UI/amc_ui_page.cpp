@@ -85,8 +85,11 @@ void CUIPage::addModule(PUIModule pModule)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDMODULENAME);
 
 	m_Modules.push_back(pModule);
+	m_ModuleMapOfPage.insert(std::make_pair(pModule->getUUID(), pModule));
 
 	pModule->populateItemMap(m_ItemMapOfPage);
+
+	pModule->populateModuleMap(m_ModuleMapOfPage);
 	
 }
 
@@ -139,6 +142,14 @@ void CUIPage::writeModulesToJSON(CJSONWriter& writer, CJSONWriterArray& moduleAr
 
 } */
 
+PUIModule CUIPage::findModuleByUUID(const std::string& sUUID)
+{
+	auto iIter = m_ModuleMapOfPage.find(sUUID);
+	if (iIter != m_ModuleMapOfPage.end())
+		return iIter->second;
+
+	return nullptr;
+}
 
 PUIModuleItem CUIPage::findModuleItemByUUID(const std::string& sUUID)
 {

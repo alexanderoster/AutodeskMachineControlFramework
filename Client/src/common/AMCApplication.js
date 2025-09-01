@@ -477,9 +477,75 @@ export default class AMCApplication extends Common.AMCObject {
 		
 		}
 		
+	}	
+
+	updateModule(module) {
+
+		// Early return if module is invalid
+		if (!module)
+			return;
+
+		// Reset refresh flag before attempting update
+		module.refresh = false;
+
+		if (module.isActive()) {
+
+			// Prepare authorization headers (same policy as for content items)
+			let headers = {};
+			let authToken = this.API.authToken;
+
+			if (authToken != Common.nullToken())
+				headers.Authorization = "Bearer " + authToken;
+
+			// Optional state segment
+			let stateidstring = "";
+			if (module.stateid > 0)
+				stateidstring = "/" + module.stateid;
+
+			// Build request URL for modules
+			let url = this.API.baseURL + "/ui/module/" + Assert.UUIDValue(module.uuid) + stateidstring;
+
+			Axios({
+				method: "GET",
+				"headers": headers,
+				url: url
+			})
+			.then(resultJSON => {
+
+				// Update module from server payload (if present)
+				if (resultJSON.data) {
+					if (resultJSON.data.content) {
+						if (module && typeof module.updateFromJSON === "function") {
+							module.updateFromJSON(resultJSON.data.content);
+						}
+					}
+				}
+
+				// Reset failure counter on success
+				this.unsuccessfulUpdateCounter = 0;
+			})
+			.catch(err => {
+
+				// Increment failure counter and react accordingly
+				this.unsuccessfulUpdateCounter = this.unsuccessfulUpdateCounter + 1;
+				if (this.unsuccessfulUpdateCounter > 5) {
+					this.setStatusToError(err.message);
+				}
+			});
+		}
 	}
-	
-	
+
+	updateModules() {
+
+		let uuid, module;
+		if (this.AppContent.ModuleMap) {
+			for ([uuid, module] of this.AppContent.ModuleMap) {
+				uuid;
+				this.updateModule(module);
+			}
+		}
+	}
+
 	onJobUploadChunkSuccess (application, uploadObject, chunkData, uploadOffset) {
 		
 		Assert.ObjectInstance (application, "amcApplication");

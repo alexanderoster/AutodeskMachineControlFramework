@@ -155,6 +155,8 @@ namespace AMC {
 
 		PResourcePackage getCoreResourcePackage ();
 
+		PUIModule findModule(const std::string& sUUID);
+
 		PUIModuleItem findModuleItem(const std::string & sUUID);
 
 		PUIPage findPageOfModuleItem(const std::string& sUUID);

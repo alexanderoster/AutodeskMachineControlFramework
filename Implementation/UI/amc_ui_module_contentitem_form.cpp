@@ -442,7 +442,10 @@ PUIModule_ContentForm CUIModule_ContentForm::makeFromXML(const pugi::xml_node& x
 {
 	LibMCAssertNotNull(pUIModuleEnvironment);
 
-	auto pForm = std::make_shared <CUIModule_ContentForm>(pUIModuleEnvironment->stateMachineData(), sItemName, sModulePath);
+	auto visibleAttrib = xmlNode.attribute("visible");
+	auto bVisible = visibleAttrib.empty() ? true : visibleAttrib.as_bool();
+
+	auto pForm = std::make_shared <CUIModule_ContentForm>(pUIModuleEnvironment->stateMachineData(), sItemName, sModulePath, bVisible);
 
 	pUIModuleEnvironment->contentRegistry()->registerFormName(pForm->getUUID(), pForm->getName());
 
@@ -475,10 +478,12 @@ PUIModule_ContentForm CUIModule_ContentForm::makeFromXML(const pugi::xml_node& x
 }
 
 
-CUIModule_ContentForm::CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath)
+CUIModule_ContentForm::CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath, bool bVisible)
 	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sName, sModulePath),
 	  m_sName(sName),
-	  m_pStateMachineData(pStateMachineData)
+	  m_pStateMachineData(pStateMachineData),
+	  m_bVisible(bVisible)
+
 {
 	LibMCAssertNotNull(pStateMachineData);
 
@@ -490,11 +495,11 @@ CUIModule_ContentForm::~CUIModule_ContentForm()
 
 }
 
-
 void CUIModule_ContentForm::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "form");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
+	object.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
 
 	CJSONWriterArray entityArray(writer);
 
@@ -512,6 +517,10 @@ void CUIModule_ContentForm::addDefinitionToJSON(CJSONWriter& writer, CJSONWriter
 
 void CUIModule_ContentForm::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
+	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
+	auto bVisible = pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_VISIBLE);
+	object.addBool(AMC_API_KEY_UI_VISIBLE, bVisible);
+
 	CJSONWriterArray entityArray(writer);
 	for (auto pEntity : m_Entities) {
 		CJSONWriterObject entityObject(writer);
@@ -525,15 +534,23 @@ void CUIModule_ContentForm::addContentToJSON(CJSONWriter& writer, CJSONWriterObj
 void CUIModule_ContentForm::populateClientVariables(CParameterHandler* pClientVariableHandler)
 {
 	LibMCAssertNotNull(pClientVariableHandler);
+
+	auto pGroup = pClientVariableHandler->addGroup(getItemPath(), "form UI element");
+	pGroup->addNewBoolParameter(AMC_API_KEY_UI_VISIBLE, "visibility of the UI form", m_bVisible);
+
 	for (auto pEntity : m_Entities) {
 		pEntity->populateClientVariables(pClientVariableHandler);
 	}
-
 }
 
 std::string CUIModule_ContentForm::getName()
 {
 	return m_sName;
+}
+
+bool CUIModule_ContentForm::IsVisible()
+{
+	return m_bVisible;
 }
 
 void CUIModule_ContentForm::addEntity(PUIModule_ContentFormEntity pEntity)

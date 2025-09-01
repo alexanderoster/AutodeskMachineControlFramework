@@ -113,7 +113,14 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 		}			
 				
 	}
-	
+
+	updateFromJSON(updateJSON) {
+
+		Assert.ObjectValue(updateJSON);
+
+		if(updateJSON.visible !== undefined)
+			this.visible = Assert.BoolValue(updateJSON.visible);
+	}
 	
 }
 

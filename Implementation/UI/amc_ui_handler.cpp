@@ -657,6 +657,29 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
 }
 
+PUIModule CUIHandler::findModule(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        auto pModuleItem = pPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        auto pModuleItem = pCustomPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pDialog : m_Dialogs) {
+        auto pModuleItem = pDialog.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    return nullptr;
+}
+
 PUIModuleItem CUIHandler::findModuleItem(const std::string& sUUID)
 {
     for (auto pPage : m_Pages) {

@@ -326,12 +326,21 @@ void CUIModule_LayerView::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriter
 
 }
 
+void CUIModule_LayerView::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_LayerView::findItem(const std::string& sUUID)
 {
 	if (m_PlatformItem->getUUID() == sUUID)
 		return m_PlatformItem;
 
 	return nullptr;
+}
+
+void CUIModule_LayerView::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_LayerView>(*this)));
 }
 
 void CUIModule_LayerView::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
