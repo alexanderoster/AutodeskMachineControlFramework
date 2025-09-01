@@ -179,6 +179,10 @@ void CUIModule_Logs::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObjec
 
 }
 
+void CUIModule_Logs::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_Logs::findItem(const std::string& sUUID)
 {
 	if (sUUID == m_sUUID)
@@ -188,6 +192,11 @@ PUIModuleItem CUIModule_Logs::findItem(const std::string& sUUID)
 		return m_LogsItem;
 
 	return nullptr;
+}
+
+void CUIModule_Logs::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Logs>(*this)));
 }
 
 void CUIModule_Logs::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)

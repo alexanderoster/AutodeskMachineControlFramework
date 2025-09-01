@@ -210,6 +210,10 @@ CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath
 	if (getTypeFromXML(xmlNode) != getStaticType())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDMODULETYPE, "should be " + getStaticType ());
 
+	auto caption = xmlNode.attribute("caption");
+	if (caption != nullptr)
+		m_sCaption = caption.value();
+
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 
@@ -378,11 +382,25 @@ void CUIModule_Grid::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObjec
 
 }
 
+void CUIModule_Grid::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_Grid::findItem(const std::string& sUUID)
 {
-	auto iIter = m_ItemMap.find(sUUID);
-	if (iIter != m_ItemMap.end())
-		return iIter->second;
+	{
+		auto iIter = m_ItemMap.find(sUUID);
+		if (iIter != m_ItemMap.end())
+			return iIter->second;
+	}
+
+	{
+		for (auto pSection : m_SectionList) {
+			auto pItem = pSection->getModule()->findItem(sUUID);
+			if (pItem != nullptr)
+				return pItem;
+		}
+	}
 
 	return nullptr;
 }
@@ -404,7 +422,22 @@ void CUIModule_Grid::addSection(PUIModule pModule, int nColumnStart, int nColumn
 	m_SectionList.push_back(pSection);
 	m_SectionMap.insert(std::make_pair (pSection->getModule ()->getUUID (), pSection));
 
+	
+
+	auto sModuleName = pSection->getModule()->getName();
+	auto sModuleType = pSection->getModule()->getType();
+
+	if (!m_sCaption.empty())
+		m_sCaption = m_sCaption;
+
 	pSection->getModule()->populateItemMap(m_ItemMap);
+
+}
+
+void CUIModule_Grid::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	for (auto pSection : m_SectionList)
+		pSection->getModule()->populateModuleMap(moduleMap);
 }
 
 void CUIModule_Grid::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)

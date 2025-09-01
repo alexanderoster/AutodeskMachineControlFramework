@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_upload.hpp"
 #include "amc_ui_module_contentitem_layerview.hpp"
 #include "amc_ui_module_contentitem_form.hpp"
-
+#include "amc_ui_module_contentitem_configurationlist.hpp"
 
 #include "amc_api_constants.hpp"
 #include "amc_resourcepackage.hpp"
@@ -88,6 +88,12 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	if (!subtitleAttrib.empty())
 		m_sSubtitle = subtitleAttrib.as_string();
 
+	auto visibleAttrib = xmlNode.attribute("visible");
+	if (!visibleAttrib.empty())
+		m_bVisible = visibleAttrib.as_bool();
+	else
+		m_bVisible = true;
+
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 		std::string sChildName = childNode.name();
@@ -115,6 +121,8 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 			addItem(CUIModule_ContentUpload::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 		if (sChildName == "parameterlist")
 			addItem(CUIModule_ContentParameterList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
+		if (sChildName == "configurationlist")
+			addItem(CUIModule_ContentConfigurationList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 
 
 
@@ -161,9 +169,17 @@ std::string CUIModule_Content::getSubtitle()
 	return m_sSubtitle;
 }
 
+bool CUIModule_Content::isVisible()
+{
+	return m_bVisible;
+}
+
 void CUIModule_Content::populateClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
+
+	auto pGroup = pParameterHandler->addGroup(m_sModulePath, "content UI element");
+	pGroup->addNewBoolParameter(AMC_API_KEY_UI_VISIBLE, "visibility of the UI content", m_bVisible);
 
 	for (auto pItem : m_Items)
 		pItem->populateClientVariables(pParameterHandler);
@@ -179,6 +195,7 @@ void CUIModule_Content::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterOb
 	moduleObject.addString(AMC_API_KEY_UI_TITLE, m_sTitle);
 	moduleObject.addString(AMC_API_KEY_UI_SUBTITLE, m_sSubtitle);
 	moduleObject.addString(AMC_API_KEY_UI_CAPTION, m_sCaption);
+	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
 
 	CJSONWriterArray itemsNode(writer);
 	for (auto item : m_Items) {
@@ -188,6 +205,15 @@ void CUIModule_Content::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterOb
 	}
 	moduleObject.addArray(AMC_API_KEY_UI_ITEMS, itemsNode);
 
+}
+
+void CUIModule_Content::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+	moduleObject.addString(AMC_API_KEY_UI_UUID, m_sUUID);
+
+	auto pGroup = pClientVariableHandler->findGroup(m_sModulePath, true);
+	auto bVisible = pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_VISIBLE);
+	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, bVisible);
 }
 
 PUIModuleItem CUIModule_Content::findItem(const std::string& sUUID)
@@ -211,6 +237,10 @@ void CUIModule_Content::addItem(PUIModule_ContentItem pItem)
 
 }
 
+void CUIModule_Content::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Content>(*this)));
+}
 
 void CUIModule_Content::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {

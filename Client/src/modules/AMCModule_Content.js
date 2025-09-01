@@ -43,6 +43,7 @@ import AMCApplicationItem_Content_Image from "./AMCModule_ContentItem_Image.js"
 import AMCApplicationItem_Content_Paragraph from "./AMCModule_ContentItem_Paragraph.js"
 import AMCApplicationItem_Content_ParameterList from "./AMCModule_ContentItem_ParameterList.js"
 import AMCApplicationItem_Content_Upload from "./AMCModule_ContentItem_Upload.js"
+import AMCApplicationItem_Content_ConfigurationList from "./AMCModule_ContentItem_ConfigurationList.js"
 
 
 
@@ -59,7 +60,9 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 		this.headline = Assert.StringValue (moduleJSON.headline);
 		this.title = Assert.StringValue (moduleJSON.title);
 		this.subtitle = Assert.StringValue (moduleJSON.subtitle);
-		
+
+		this.visible = Assert.BoolValue (moduleJSON.visible);
+
 		this.items = [];
 		
 		
@@ -96,6 +99,9 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 			if (itemJSON.type === "form") 
 				item = new AMCApplicationItem_Content_Form (this, itemJSON);
+
+			if (itemJSON.type === "configurationlist") 
+				item = new AMCApplicationItem_Content_ConfigurationList (this, itemJSON);
 			
 			if (item) {
 				this.items.push (item);
@@ -107,7 +113,14 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 		}			
 				
 	}
-	
+
+	updateFromJSON(updateJSON) {
+
+		Assert.ObjectValue(updateJSON);
+
+		if(updateJSON.visible !== undefined)
+			this.visible = Assert.BoolValue(updateJSON.visible);
+	}
 	
 }
 

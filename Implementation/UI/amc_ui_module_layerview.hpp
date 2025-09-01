@@ -82,8 +82,7 @@ namespace AMC {
 		virtual std::string findElementPathByUUID(const std::string& sUUID) override;
 
 		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
-
-
+		
 		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler);
 
 		void handleCustomRequest(PAPIAuth pAuth, const std::string& requestType, const CAPIJSONRequest& requestData, CJSONWriter& response, CUIModule_UIEventHandler* pEventHandler) override;
@@ -118,6 +117,10 @@ namespace AMC {
 		std::string getCaption () override;
 
 		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler) override;
+
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) override;
 
 		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
 

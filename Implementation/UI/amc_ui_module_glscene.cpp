@@ -371,6 +371,10 @@ void CUIModule_GLScene::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterOb
 	m_pSceneItem->addContentToJSON(writer, moduleObject, pClientVariableHandler, 0);
 }
 
+void CUIModule_GLScene::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_GLScene::findItem(const std::string& sUUID)
 {
 	if (m_pSceneItem->getUUID() == sUUID)
@@ -379,6 +383,10 @@ PUIModuleItem CUIModule_GLScene::findItem(const std::string& sUUID)
 	return nullptr;
 }
 
+void CUIModule_GLScene::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_GLScene>(*this)));
+}
 
 void CUIModule_GLScene::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {

@@ -290,6 +290,11 @@ void CDataModel::TriggerLogCallback(const std::string& sLogMessage, const std::s
     m_pLogCallback(sLogMessage.c_str(), sSubSystem.c_str(), eLogLevel, sTimestamp.c_str (), m_pLogUserData);
 }
 
+IMachineConfigurationTypeIterator* CDataModel::ListRegisteredConfigurationTypes()
+{
+    return CMachineConfigurationType::listRegisteredConfigurationTypes(m_pSQLHandler);
+}
+
 IMachineConfigurationType* CDataModel::FindConfigurationTypeBySchema(const std::string& sSchemaType)
 {
     return CMachineConfigurationType::makeBySchema (m_pSQLHandler, sSchemaType);

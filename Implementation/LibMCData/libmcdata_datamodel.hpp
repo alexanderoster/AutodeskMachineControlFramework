@@ -120,6 +120,8 @@ public:
 	
 	void TriggerLogCallback(const std::string& sLogMessage, const std::string& sSubSystem, const LibMCData::eLogLevel eLogLevel, const std::string& sTimestamp) override;
 
+	IMachineConfigurationTypeIterator* ListRegisteredConfigurationTypes() override;
+
 	IMachineConfigurationType* FindConfigurationTypeBySchema(const std::string& sSchemaType) override;
 
 	IMachineConfigurationType* FindConfigurationTypeByUUID(const std::string& sUUID) override;

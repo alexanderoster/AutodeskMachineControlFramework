@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				
 			<template v-for="moduleTab in module.tabs">
 						
-				<v-tab :key="moduleTab.uuid">
+				<v-tab v-if="moduleTab.visible" :key="moduleTab.uuid">
 					{{ moduleTab.caption }}
 				</v-tab>
 							
@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		
 			<template v-for="moduleTab in module.tabs">
 						
-				<v-tab-item :key="moduleTab.uuid" style="overflow:auto; width:100%; height:100%;">
+				<v-tab-item v-if="moduleTab.visible" :key="moduleTab.uuid" style="overflow:auto; width:100%; height:100%;">
 						<Module_Content :key="moduleTab.name" v-if="(moduleTab.type == 'content')" :module="moduleTab" :Application="Application" />					
 						<Module_GLScene :key="moduleTab.name" v-if="(moduleTab.type == 'glscene')" :module="moduleTab" :Application="Application" />							
 						<Module_Graphic :key="moduleTab.name" v-if="(moduleTab.type == 'graphic')" :module="moduleTab" :Application="Application" />							
