@@ -59,8 +59,6 @@ namespace AMC {
 
 		uint32_t m_nNamingIDCounter;
 
-		std::string m_sModulePath;
-
 		double m_dMinX, m_dMinY;
 		double m_dMaxX, m_dMaxY;
 		bool m_bShowGrid;
@@ -87,7 +85,7 @@ namespace AMC {
 
 		std::string getCaption () override;
 
-		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler) override;
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
 
 		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
 

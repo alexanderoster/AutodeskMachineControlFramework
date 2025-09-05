@@ -72,6 +72,7 @@ void* _loadScanLabSMCAddress(void * hLibrary, const char* pSymbolName, bool bMan
 }
 #endif
 
+
 CScanLabSMCSDK_DLLDirectoryCache::CScanLabSMCSDK_DLLDirectoryCache()
 {
 #ifdef _WIN32
@@ -91,6 +92,77 @@ CScanLabSMCSDK_DLLDirectoryCache::~CScanLabSMCSDK_DLLDirectoryCache()
 		SetDllDirectoryW(m_sCachedDLLDirectoryW.c_str());
 	}
 #endif // _WIN32
+}
+
+
+CScanLabSMCSDKJournal::CScanLabSMCSDKJournal(const std::string& sDebugFileName)
+{
+
+	m_CStream.open(sDebugFileName, std::ios::out);
+	if (!m_CStream.is_open())
+		throw std::runtime_error("could not create sdk debug log: " + sDebugFileName);
+}
+
+CScanLabSMCSDKJournal::~CScanLabSMCSDKJournal()
+{
+}
+
+void CScanLabSMCSDKJournal::writeCLine(const std::string& sLine)
+{
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+	m_CStream << sLine << std::endl;
+
+}
+
+
+void CScanLabSMCSDKJournal::logCall(const std::string& sFunctionName, const std::string& sCParameters)
+{
+	writeCLine(sFunctionName + "(" + sCParameters + ");");
+}
+
+std::string CScanLabSMCSDKJournal::getVariableSuffix(const std::string& sVariableBaseName)
+{
+	auto iIter = m_DefinedVariables.find(sVariableBaseName);
+	if (iIter == m_DefinedVariables.end()) {
+		m_DefinedVariables.insert(std::make_pair(sVariableBaseName, 1));
+		return "1";
+	}
+	else {
+		iIter->second++;
+		return std::to_string(iIter->second);
+	}
+}
+
+
+std::string CScanLabSMCSDKJournal::defineDoubleVariable(const std::string& sVariableBaseName)
+{
+	std::string sVariableName = sVariableBaseName + getVariableSuffix(sVariableBaseName);
+
+	writeCLine("double " + sVariableName + ";");
+	return sVariableName;
+}
+
+std::string CScanLabSMCSDKJournal::defineUint32Variable(const std::string& sVariableBaseName)
+{
+	std::string sVariableName = sVariableBaseName + getVariableSuffix(sVariableBaseName);
+
+	writeCLine("uint32_t " + sVariableName + ";");
+	return sVariableName;
+
+}
+
+std::string CScanLabSMCSDKJournal::defineInt32Variable(const std::string& sVariableBaseName)
+{
+	std::string sVariableName = sVariableBaseName + getVariableSuffix(sVariableBaseName);
+
+	writeCLine("int32_t " + sVariableName + ";");
+	return sVariableName;
+
+}
+
+std::string CScanLabSMCSDKJournal::escapeString(const std::string& sString)
+{
+	return "\"" + sString + "\"";
 }
 
 
@@ -135,28 +207,44 @@ CScanLabSMCSDK::CScanLabSMCSDK(const std::string& sDLLNameUTF8, const std::strin
 	}
 #endif // _WIN32
 
-	this->slsc_cfg_get_scanmotioncontrol_version = (PScanLabSMCPtr_slsc_cfg_get_scanmotioncontrol_version)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_get_scanmotioncontrol_version");
-	this->slsc_cfg_initialize_from_file = (PScanLabSMCPtr_slsc_cfg_initialize_from_file)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_initialize_from_file");
-	this->slsc_cfg_delete = (PScanLabSMCPtr_slsc_cfg_delete)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_delete");
-	this->slsc_job_begin = (PScanLabSMCPtr_slsc_job_begin)_loadScanLabSMCAddress(hLibrary, "slsc_job_begin");
-	this->slsc_job_end = (PScanLabSMCPtr_slsc_job_end)_loadScanLabSMCAddress(hLibrary, "slsc_job_end");
-	this->slsc_job_jump = (PScanLabSMCPtr_slsc_job_jump)_loadScanLabSMCAddress(hLibrary, "slsc_job_jump");
-	this->slsc_job_begin_polyline = (PScanLabSMCPtr_slsc_job_begin_polyline)_loadScanLabSMCAddress(hLibrary, "slsc_job_begin_polyline");
-	this->slsc_job_end_polyline = (PScanLabSMCPtr_slsc_slsc_job_end_polyline)_loadScanLabSMCAddress(hLibrary, "slsc_job_end_polyline");
-	this->slsc_job_line = (PScanLabSMCPtr_slsc_job_line)_loadScanLabSMCAddress(hLibrary, "slsc_job_line");
-	this->slsc_ctrl_start_execution = (PScanLabSMCPtr_slsc_ctrl_start_execution)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_start_execution");
-	this->slsc_ctrl_stop = (PScanLabSMCPtr_slsc_ctrl_stop)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_stop");
-	this->slsc_ctrl_stop_controlled = (PScanLabSMCPtr_slsc_ctrl_stop_controlled)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_stop_controlled");
-	this->slsc_ctrl_get_exec_state = (PScanLabSMCPtr_slsc_ctrl_get_exec_state)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_exec_state");
-	this->slsc_job_set_jump_speed = (PScanLabSMCPtr_slsc_job_set_jump_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_jump_speed");
-	this->slsc_job_set_mark_speed = (PScanLabSMCPtr_slsc_job_set_mark_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_mark_speed");
-	this->slsc_job_set_min_mark_speed = (PScanLabSMCPtr_slsc_job_set_min_mark_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_min_mark_speed");
-	this->slsc_job_jump_min_time = (PScanLabSMCPtr_slsc_job_jump_min_time)_loadScanLabSMCAddress(hLibrary, "slsc_job_jump_min_time");
-	this->slsc_job_set_corner_tolerance = (PScanLabSMCPtr_slsc_job_set_corner_tolerance)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_corner_tolerance");
-	this->slsc_ctrl_get_error = (PScanLabSMCPtr_slsc_ctrl_get_error)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_error");
-	this->slsc_ctrl_get_error_count = (PScanLabSMCPtr_slsc_ctrl_get_error_count)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_error_count");
-	this->slsc_ctrl_get_simulation_filename = (PScanLabSMCPtr_slsc_ctrl_get_simulation_filename)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_simulation_filename");
-	this->slsc_ctrl_get_job_characteristic = (PScanLabSMCPtr_slsc_ctrl_get_job_characteristic)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_job_characteristic");
+	this->ptr_slsc_cfg_get_scanmotioncontrol_version = (PScanLabSMCPtr_slsc_cfg_get_scanmotioncontrol_version)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_get_scanmotioncontrol_version");
+	this->ptr_slsc_cfg_initialize_from_file = (PScanLabSMCPtr_slsc_cfg_initialize_from_file)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_initialize_from_file");
+	this->ptr_slsc_cfg_delete = (PScanLabSMCPtr_slsc_cfg_delete)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_delete");
+	this->ptr_slsc_job_begin = (PScanLabSMCPtr_slsc_job_begin)_loadScanLabSMCAddress(hLibrary, "slsc_job_begin");
+	this->ptr_slsc_job_end = (PScanLabSMCPtr_slsc_job_end)_loadScanLabSMCAddress(hLibrary, "slsc_job_end");
+	this->ptr_slsc_job_jump = (PScanLabSMCPtr_slsc_job_jump)_loadScanLabSMCAddress(hLibrary, "slsc_job_jump");
+	this->ptr_slsc_job_begin_polyline = (PScanLabSMCPtr_slsc_job_begin_polyline)_loadScanLabSMCAddress(hLibrary, "slsc_job_begin_polyline");
+	this->ptr_slsc_job_end_polyline = (PScanLabSMCPtr_slsc_slsc_job_end_polyline)_loadScanLabSMCAddress(hLibrary, "slsc_job_end_polyline");
+	this->ptr_slsc_job_line = (PScanLabSMCPtr_slsc_job_line)_loadScanLabSMCAddress(hLibrary, "slsc_job_line");
+
+	this->ptr_slsc_job_para_enable = (PScanLabSMCPtr_slsc_job_para_enable)_loadScanLabSMCAddress(hLibrary, "slsc_job_para_enable");
+	this->ptr_slsc_job_para_disable = (PScanLabSMCPtr_slsc_job_para_disable)_loadScanLabSMCAddress(hLibrary, "slsc_job_para_disable");
+	this->ptr_slsc_job_para_line = (PScanLabSMCPtr_slsc_job_para_line)_loadScanLabSMCAddress(hLibrary, "slsc_job_para_line");
+	this->ptr_slsc_job_multi_para_line = (PScanLabSMCPtr_slsc_job_multi_para_line)_loadScanLabSMCAddress(hLibrary, "slsc_job_multi_para_line");
+
+	this->ptr_slsc_ctrl_start_execution = (PScanLabSMCPtr_slsc_ctrl_start_execution)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_start_execution");
+	this->ptr_slsc_ctrl_stop = (PScanLabSMCPtr_slsc_ctrl_stop)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_stop");
+	this->ptr_slsc_ctrl_stop_controlled = (PScanLabSMCPtr_slsc_ctrl_stop_controlled)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_stop_controlled");
+	this->ptr_slsc_ctrl_get_exec_state = (PScanLabSMCPtr_slsc_ctrl_get_exec_state)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_exec_state");
+	this->ptr_slsc_job_set_jump_speed = (PScanLabSMCPtr_slsc_job_set_jump_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_jump_speed");
+	this->ptr_slsc_job_set_mark_speed = (PScanLabSMCPtr_slsc_job_set_mark_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_mark_speed");
+	this->ptr_slsc_job_set_min_mark_speed = (PScanLabSMCPtr_slsc_job_set_min_mark_speed)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_min_mark_speed");
+	this->ptr_slsc_job_jump_min_time = (PScanLabSMCPtr_slsc_job_jump_min_time)_loadScanLabSMCAddress(hLibrary, "slsc_job_jump_min_time");
+	this->ptr_slsc_job_set_corner_tolerance = (PScanLabSMCPtr_slsc_job_set_corner_tolerance)_loadScanLabSMCAddress(hLibrary, "slsc_job_set_corner_tolerance");
+	this->ptr_slsc_ctrl_get_error = (PScanLabSMCPtr_slsc_ctrl_get_error)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_error");
+	this->ptr_slsc_ctrl_get_error_count = (PScanLabSMCPtr_slsc_ctrl_get_error_count)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_error_count");
+	this->ptr_slsc_ctrl_get_simulation_filename = (PScanLabSMCPtr_slsc_ctrl_get_simulation_filename)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_simulation_filename");
+	this->ptr_slsc_ctrl_get_job_characteristic = (PScanLabSMCPtr_slsc_ctrl_get_job_characteristic)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_get_job_characteristic");
+	this->ptr_slsc_cfg_get_blend_mode = (PScanLabSMCPtr_slsc_cfg_get_blend_mode)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_get_blend_mode");
+	this->ptr_slsc_cfg_set_blend_mode = (PScanLabSMCPtr_slsc_cfg_set_blend_mode)_loadScanLabSMCAddress(hLibrary, "slsc_cfg_set_blend_mode");
+
+	this->ptr_slsc_job_start_record = (PScanLabSMCPtr_slsc_job_start_record)_loadScanLabSMCAddress(hLibrary, "slsc_job_start_record");
+	this->ptr_slsc_job_stop_record = (PScanLabSMCPtr_slsc_job_stop_record)_loadScanLabSMCAddress(hLibrary, "slsc_job_stop_record");
+	this->ptr_slsc_ctrl_log_record = (PScanLabSMCPtr_slsc_ctrl_log_record)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_log_record");
+
+	this->ptr_slsc_ctrl_exec_init_laser_sequence = (PScanLabSMCPtr_slsc_ctrl_exec_init_laser_sequence)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_exec_init_laser_sequence");
+	this->ptr_slsc_ctrl_exec_shutdown_laser_sequence = (PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_exec_shutdown_laser_sequence");
+	this->ptr_slsc_job_write_analog_x = (PScanLabSMCPtr_slsc_job_write_analog_x)_loadScanLabSMCAddress(hLibrary, "slsc_job_write_analog_x");
 
 	m_LibraryHandle = (void*) hLibrary;
 }
@@ -182,7 +270,7 @@ void CScanLabSMCSDK::initDLL()
 {
 	if (!m_bIsInitialized) {
 
-		if (slsc_cfg_initialize_from_file == nullptr)
+		if (ptr_slsc_cfg_initialize_from_file == nullptr)
 			throw std::runtime_error("SMC DLL not loaded");
 
 		m_bIsInitialized = true;
@@ -194,7 +282,7 @@ void CScanLabSMCSDK::checkError(size_t hHandle, uint32_t nSMCError)
 {
 
 	if (nSMCError != 0) {
-		if ((hHandle != 0) && (slsc_ctrl_get_error != nullptr) && (slsc_ctrl_get_error_count != nullptr)) {
+		if ((hHandle != 0) && (ptr_slsc_ctrl_get_error != nullptr) && (ptr_slsc_ctrl_get_error_count != nullptr)) {
 
 			std::lock_guard<std::mutex> lockGuard(m_ListErrorMutex);
 
@@ -243,30 +331,38 @@ void CScanLabSMCSDK::checkError(size_t hHandle, uint32_t nSMCError)
 
 void CScanLabSMCSDK::resetFunctionPtrs()
 {
-	slsc_cfg_get_scanmotioncontrol_version = nullptr;
-	slsc_cfg_initialize_from_file = nullptr;
-	slsc_cfg_delete = nullptr;
-	slsc_job_begin = nullptr;
-	slsc_job_end = nullptr;
-	slsc_job_jump = nullptr;
-	slsc_job_begin_polyline = nullptr;
-	slsc_job_end_polyline = nullptr;
-	slsc_job_line = nullptr;
-	slsc_ctrl_start_execution = nullptr;
-	slsc_ctrl_stop = nullptr;
-	slsc_ctrl_stop_controlled = nullptr;
-	slsc_ctrl_get_exec_state = nullptr;
-	slsc_job_set_jump_speed = nullptr;
-	slsc_job_set_mark_speed = nullptr;
-	slsc_job_set_min_mark_speed = nullptr;
-	slsc_job_jump_min_time = nullptr;
-	slsc_job_set_corner_tolerance = nullptr;
-	slsc_ctrl_get_error = nullptr;
-	slsc_ctrl_get_error_count = nullptr;
-	slsc_ctrl_get_simulation_filename = nullptr;
-	slsc_ctrl_get_job_characteristic = nullptr;
+	ptr_slsc_cfg_get_scanmotioncontrol_version = nullptr;
+	ptr_slsc_cfg_initialize_from_file = nullptr;
+	ptr_slsc_cfg_delete = nullptr;
+	ptr_slsc_job_begin = nullptr;
+	ptr_slsc_job_end = nullptr;
+	ptr_slsc_job_jump = nullptr;
+	ptr_slsc_job_begin_polyline = nullptr;
+	ptr_slsc_job_end_polyline = nullptr;
+	ptr_slsc_job_line = nullptr;
+	ptr_slsc_job_para_enable = nullptr;
+	ptr_slsc_job_para_disable = nullptr;
+	ptr_slsc_job_para_line = nullptr;
+	ptr_slsc_job_multi_para_line = nullptr;
 
-
+	ptr_slsc_ctrl_start_execution = nullptr;
+	ptr_slsc_ctrl_stop = nullptr;
+	ptr_slsc_ctrl_stop_controlled = nullptr;
+	ptr_slsc_ctrl_get_exec_state = nullptr;
+	ptr_slsc_job_set_jump_speed = nullptr;
+	ptr_slsc_job_set_mark_speed = nullptr;
+	ptr_slsc_job_set_min_mark_speed = nullptr;
+	ptr_slsc_job_jump_min_time = nullptr;
+	ptr_slsc_job_set_corner_tolerance = nullptr;
+	ptr_slsc_ctrl_get_error = nullptr;
+	ptr_slsc_ctrl_get_error_count = nullptr;
+	ptr_slsc_ctrl_get_simulation_filename = nullptr;
+	ptr_slsc_ctrl_get_job_characteristic = nullptr;
+	ptr_slsc_cfg_get_blend_mode = nullptr;
+	ptr_slsc_cfg_set_blend_mode = nullptr;
+	ptr_slsc_job_start_record = nullptr;
+	ptr_slsc_job_stop_record = nullptr;
+	ptr_slsc_ctrl_log_record = nullptr;
 }
 
 
@@ -281,5 +377,288 @@ PScanLabSMCSDK_DLLDirectoryCache CScanLabSMCSDK::cacheDllDirectory()
 
 	return pCache;
 
+}
+
+
+slsc_VersionInfo CScanLabSMCSDK::slsc_cfg_get_scanmotioncontrol_version(void)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_cfg_get_scanmotioncontrol_version", "");
+
+	return this->ptr_slsc_cfg_get_scanmotioncontrol_version();
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_cfg_initialize_from_file(slscHandle* pHandle, const char* XmlConfigFileName)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_cfg_initialize_from_file", "&" + std::to_string(intptr_t(pHandle)) + ", " + std::string(XmlConfigFileName));
+
+	return this->ptr_slsc_cfg_initialize_from_file(pHandle, XmlConfigFileName);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_cfg_delete(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_cfg_delete", std::to_string(Handle));
+
+	return this->ptr_slsc_cfg_delete(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_begin(size_t Handle, size_t* JobID)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_begin", std::to_string(Handle) + ", &" + std::to_string(intptr_t(JobID)));
+
+	return this->ptr_slsc_job_begin(Handle, JobID);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_end(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_end", std::to_string(Handle));
+
+
+	return this->ptr_slsc_job_end(Handle);
+}
+slscReturnValue CScanLabSMCSDK::slsc_job_jump(size_t Handle, const double* Target)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_jump", std::to_string(Handle) + ", [" + std::to_string(Target[0]) + ", " + std::to_string(Target[1]) + "]");
+
+	return this->ptr_slsc_job_jump(Handle, Target);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_begin_polyline(size_t Handle, const slsc_PolylineOptions Options)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_begin_polyline", std::to_string(Handle) + ", &" + std::to_string(intptr_t(&Options)));
+
+	return this->ptr_slsc_job_begin_polyline(Handle, Options);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_end_polyline(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_end_polyline", std::to_string(Handle));
+
+	return this->ptr_slsc_job_end_polyline(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_line(size_t Handle, const double* Target)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_line", std::to_string(Handle) + ", [" + std::to_string(Target[0]) + ", " + std::to_string(Target[1]) + "]");
+
+	return this->ptr_slsc_job_line(Handle, Target);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_para_enable(size_t Handle, double* dParaTargetDefault)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_para_enable", std::to_string(Handle) + ", &" + std::to_string(intptr_t(dParaTargetDefault)));
+
+	return this->ptr_slsc_job_para_enable(Handle, dParaTargetDefault);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_para_disable(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_para_disable", std::to_string(Handle));
+
+	return this->ptr_slsc_job_para_disable(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_para_line(size_t Handle, const double* Target, const double* ParaTarget)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_para_line", std::to_string(Handle) + ", [" + std::to_string(Target[0]) + ", " + std::to_string(Target[1]) + "], &" + std::to_string(intptr_t(ParaTarget)));
+
+	return this->ptr_slsc_job_para_line(Handle, Target, ParaTarget);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_multi_para_line(size_t Handle, const double* Target, const slsc_MultiParaTarget* pParaTarget)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_multi_para_line", std::to_string(Handle) + ", [" + std::to_string(Target[0]) + ", " + std::to_string(Target[1]) + "], &" + std::to_string(intptr_t(pParaTarget)));
+
+	return this->ptr_slsc_job_multi_para_line(Handle, Target, pParaTarget);
+}
+
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_start_execution(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_start_execution", std::to_string(Handle));
+
+	return this->ptr_slsc_ctrl_start_execution(Handle);
+
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_stop(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_stop", std::to_string(Handle));
+
+	return this->ptr_slsc_ctrl_stop(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_stop_controlled(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_stop_controlled", std::to_string(Handle));
+
+	return this->ptr_slsc_ctrl_stop_controlled(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_get_exec_state(size_t Handle, slsc_ExecState* execState)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_get_exec_state", std::to_string(Handle) + ", &" + std::to_string(intptr_t(execState)));
+
+	return this->ptr_slsc_ctrl_get_exec_state(Handle, execState);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_get_error(size_t Handle, size_t ErrorNr, uint64_t& nErrorCode, char* pErrorMsg, size_t nBufSize)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_get_error", std::to_string(Handle) + ", " + std::to_string(ErrorNr) + ", &" + std::to_string(intptr_t(&nErrorCode)) + ", &" + std::to_string(intptr_t(pErrorMsg)) + ", " + std::to_string(nBufSize));
+	return this->ptr_slsc_ctrl_get_error(Handle, ErrorNr, nErrorCode, pErrorMsg, nBufSize);
+
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_get_error_count(size_t Handle, size_t& nErrorCount)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_get_error_count", std::to_string(Handle) + ", &" + std::to_string(intptr_t(&nErrorCount)));
+
+	return this->ptr_slsc_ctrl_get_error_count(Handle, nErrorCount);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_set_jump_speed(size_t Handle, double dJumpSpeed)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_set_jump_speed", std::to_string(Handle) + ", " + std::to_string(dJumpSpeed));
+	return this->ptr_slsc_job_set_jump_speed(Handle, dJumpSpeed);
+
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_set_mark_speed(size_t Handle, double dMarkSpeed)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_set_mark_speed", std::to_string(Handle) + ", " + std::to_string(dMarkSpeed));
+
+	return this->ptr_slsc_job_set_mark_speed(Handle, dMarkSpeed);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_set_min_mark_speed(size_t Handle, double dMinimalMarkSpeed)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_set_min_mark_speed", std::to_string(Handle) + ", " + std::to_string(dMinimalMarkSpeed));
+
+	return this->ptr_slsc_job_set_min_mark_speed(Handle, dMinimalMarkSpeed);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_jump_min_time(size_t Handle, const double* Target, double dMinimalJumpTime)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_jump_min_time", std::to_string(Handle) + ", [" + std::to_string(Target[0]) + ", " + std::to_string(Target[1]) + "], " + std::to_string(dMinimalJumpTime));
+	return this->ptr_slsc_job_jump_min_time(Handle, Target, dMinimalJumpTime);
+
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_set_corner_tolerance(size_t Handle, const double* Target, double dCornerTolerance)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_set_corner_tolerance", std::to_string(Handle) + ", &" + std::to_string(intptr_t(Target)) + ", " + std::to_string(dCornerTolerance));
+
+	return this->ptr_slsc_job_set_corner_tolerance(Handle, Target, dCornerTolerance);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_get_simulation_filename(size_t Handle, size_t nJobID, char* pszBuffer, size_t nBufferSize)
+{
+
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_get_simulation_filename", std::to_string(Handle) + ", " + std::to_string(nJobID) + ", &" + std::to_string(intptr_t(pszBuffer)) + ", " + std::to_string(nBufferSize));
+	return this->ptr_slsc_ctrl_get_simulation_filename(Handle, nJobID, pszBuffer, nBufferSize);
+
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_get_job_characteristic(size_t Handle, size_t nJobID, slsc_JobCharacteristic eKey, double* pdValue)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_get_job_characteristic", std::to_string(Handle) + ", " + std::to_string(nJobID) + ", " + std::to_string((uint32_t)eKey) + ", &" + std::to_string(intptr_t(pdValue)));
+
+	return this->ptr_slsc_ctrl_get_job_characteristic(Handle, nJobID, eKey, pdValue);
+}
+
+
+slscReturnValue CScanLabSMCSDK::slsc_cfg_get_blend_mode(size_t Handle, slsc_BlendModes* BlendMode)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_cfg_get_blend_mode", std::to_string(Handle) + ", &" + std::to_string(intptr_t(BlendMode)));
+
+	return this->ptr_slsc_cfg_get_blend_mode(Handle, BlendMode);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_cfg_set_blend_mode(size_t Handle, slsc_BlendModes BlendMode)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_cfg_set_blend_mode", std::to_string(Handle) + ", " + std::to_string((uint32_t)BlendMode));
+
+	return this->ptr_slsc_cfg_set_blend_mode(Handle, BlendMode);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_start_record(size_t Handle, slsc_RecordSet RecordSetA, slsc_RecordSet RecordSetB)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_start_record", std::to_string(Handle) + ", " + std::to_string((uint32_t)RecordSetA) + ", " + std::to_string((uint32_t)RecordSetB));
+
+	return this->ptr_slsc_job_start_record(Handle, RecordSetA, RecordSetB);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_stop_record(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_stop_record", std::to_string(Handle));
+
+	return this->ptr_slsc_job_stop_record(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_log_record(size_t Handle, const char* DatasetPath, slsc_TransformationStep Step)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_log_record", std::to_string(Handle) + ", " + std::string(DatasetPath) + ", " + std::to_string((uint32_t)Step));
+
+	return this->ptr_slsc_ctrl_log_record(Handle, DatasetPath, Step);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_exec_init_laser_sequence(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_exec_init_laser_sequence", std::to_string(Handle));
+
+	return this->ptr_slsc_ctrl_exec_init_laser_sequence(Handle);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_exec_shutdown_laser_sequence(size_t Handle)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_exec_shutdown_laser_sequence", std::to_string(Handle));
+
+	return this->ptr_slsc_ctrl_exec_shutdown_laser_sequence(Handle);
+}
+
+
+slscReturnValue CScanLabSMCSDK::slsc_job_write_analog_x(size_t Handle, slsc_AnalogOutput Channel, double Value, double TimeDelay)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_write_analog_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Value) + ", " + std::to_string(TimeDelay));
+
+	return this->ptr_slsc_job_write_analog_x(Handle, Channel, Value, TimeDelay);
+}
+
+void CScanLabSMCSDK::setJournal(PScanLabSMCSDKJournal pLogJournal)
+{
+	m_pLogJournal = pLogJournal;
 }
 

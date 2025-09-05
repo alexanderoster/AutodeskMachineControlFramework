@@ -192,6 +192,24 @@
 		<error name="RTCCHANNELYNOTRECORDED" code="1140" description="RTC Channel Y not recorded." />
 		<error name="RTCCHANNELZNOTRECORDED" code="1141" description="RTC Channel Z not recorded." />
 		<error name="RTCCHANNELXANDYRECORDCOUNTMISMATCH" code="1142" description="RTC X and Y record count mismatch." />
+		<error name="SEGMENTDELAYEXCEEDSONEHOUR" code="1143" description="Segment delay exceeds one hour." />
+		<error name="CALLNOTSUPPORTED" code="1144" description="Call is not supported in current SCANLAB RTC SDK." />
+		<error name="INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE" code="1145" description="Invalid or no skywriting limit provided in profile." />
+		<error name="SKYWRITINGLIMITPROVIDEDTWICEINPROFILE" code="1146" description="Skywriting limit provided twice in profile." />
+		<error name="INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE" code="1147" description="Invalid or no skywriting timelag provided in profile." />
+		<error name="SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE" code="1148" description="Skywriting timelag provided twice in profile." />
+		<error name="INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE" code="1149" description="Invalid or no skywriting laser on shift provided in profile." />
+		<error name="SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE" code="1150" description="Skywriting laser on shift provided twice in profile." />
+		<error name="INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE" code="1151" description="Invalid or no skywriting nprev provided in profile." />
+		<error name="SKYWRITINGNPREVPROVIDEDTWICEINPROFILE" code="1152" description="Skywriting nprev provided twice in profile." />
+		<error name="INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE" code="1153" description="Invalid or no skywriting npost provided in profile." />
+		<error name="SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE" code="1154" description="Skywriting npost provided twice in profile." />
+		<error name="INVALIDCORRECTIONFACTOR" code="1155" description="Invalid correction factor." />
+		<error name="PULSELENGTHEXCEEDSCONTROLPERIOD" code="1156" description="Pulse Length exceeds control period." />
+		<error name="PULSELENGTHCONTROLNOTSUPPORTEDBYOIE" code="1157" description="Pulse Length control not supported by OIE yet." />
+		<error name="INVALIDLASERPOWERMAPPING" code="1158" description="Invalid laser power mapping." />
+		<error name="COULDNOTCONVERTLASERPOWERTOWATTS" code="1159" description="Could not convert laser power to watts." />
+		<error name="COULDNOTCONVERTLASERPOWERTOPERCENT" code="1160" description="Could not convert laser power to percent." />			
 							
 	</errors>
 
@@ -212,6 +230,7 @@
 	   <option name="Port12BitAnalog1" value="3" />
 	   <option name="Port12BitAnalog2" value="4" />
 	   <option name="Port12BitAnalog1andAnalog2" value="5" />
+	   <option name="LaserPulseModulation" value="6" />
 	</enum>
 
 
@@ -292,6 +311,13 @@
 		<member name="Y" type="single" />
 	</struct>
 
+	<struct name="OIEMeasurementTagData">
+		<member name="PartID" type="uint32" description="ID of the part." />
+		<member name="ProfileID" type="uint32" description="ID of the profile." />
+		<member name="SegmentID" type="uint32" description="ID of the segment." />
+		<member name="VectorID" type="uint32" description="ID of the vector." />
+	</struct>
+
 	<struct name="Hatch2D">
 		<member name="X1" type="single" />
 		<member name="Y1" type="single" />
@@ -299,10 +325,17 @@
 		<member name="Y2" type="single" />
 	</struct>
 
-	<struct name="LaserCalibrationPoint" description="The laser output calibration at a point will be calculated by ((PowerSetPointInPercent + PowerOffsetInPercent) * PowerOutputScaling). The result is clamped to [0, 100]">
+	<struct name="LaserCalibrationPoint" description="The laser output calibration at a percentage point.">
 		<member name="PowerSetPointInPercent" type="double" description="Set point of the power in Percent." />
-		<member name="PowerOffsetInPercent" type="double" description="Additional offset of the Power value. ." />
-		<member name="PowerOutputScaling" type="double" description="Scaling factor of the laser output. MUST be positive." />
+		<member name="PowerOutputInWatts" type="double" description="Output power in Watts." />
+	</struct>
+		
+	<struct name="MicroVector">
+		<member name="X" type="double" description="The X Position in mm." />
+		<member name="Y" type="double" description="The Y Position in mm."  />
+		<member name="LaserOnDelay" type="double" description="The Delay to switch the laser on in Microseconds. A negative value will not change the active delay." />
+		<member name="LaserOffDelay" type="double" description="The Delay to switch the laser off in Microseconds. A negative value will not change the active delay."  />
+		<member name="LaserPowerInPercent" type="double" pass="in" description="The nominal laser power to be used in percent."/>
 	</struct>
 
 	<functiontype name="SpatialPowerModulationCallback" description="A callback function to modulate laser power depending on the position of the laser.">
@@ -416,7 +449,7 @@ Custom implementation
 			<param name="Points" type="structarray" class="Point2D" pass="in" description="Points of polyline to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 		</method>
 		
@@ -424,7 +457,7 @@ Custom implementation
 			<param name="Points" type="structarray" class="Point2D" pass="in" description="Points of polyline to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 			<param name="OIEPIDControlIndex" type="uint32" pass="in" description="OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63." />
 		</method>
@@ -433,7 +466,7 @@ Custom implementation
 			<param name="Hatches" type="structarray" class="Hatch2D" pass="in" description="Hatches to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 		</method>
 		
@@ -483,6 +516,11 @@ Custom implementation
 			<param name="VariableNo" type="uint32" pass="in" description="Number of the variable (0-7)." />
 			<param name="Value" type="uint32" pass="in" description="Value to set." />
 		</method>	
+
+		<method name="AddMicrovectorMovement" description="Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.">
+			<param name="MicrovectorArray" type="structarray" class="MicroVector" pass="in" description="Microvector array to execute." />
+		</method>		
+
 	
 	</class>
 
@@ -490,7 +528,11 @@ Custom implementation
 				
 		<method name="Clear" description="Clears all recording data and channels.">
 		</method>	
-		
+
+		<method name="GetUUID" description="Returns UUID of Recording.">
+			<param name="UUID" type="string" pass="return" description="UUID of Recording." />
+		</method>	
+
 		<method name="AddChannel" description="Adds a new channel to record. Fails if more than 8 channels are recorded. Fails if recording has been already started.">
 			<param name="ChannelName" type="string" pass="in" description="Identifier string. MUST be a non-empty alphanumeric string, with optional scores and underscores. MUST be unique." />
 			<param name="ChannelType" type="enum" class="RTCChannelType" pass="in" description="Channel type enum. MUST NOT be Undefined. Fails if channel type is already recorded. Fails if scan head feedback is not enabled and channel type is ChannelCurrentXRaw, ChannelCurrentYRaw or ChannelCurrentZ." />
@@ -698,6 +740,52 @@ Custom implementation
 
 	</class>
 
+	<class name="OIEMeasurementTagMap" parent="Base" description="Contains the content of an OIE Tag mapping.">
+
+		<method name="GetOIEMaxMeasurementTag" description="Returns the current maximum measurement tag that has been sent to the OIE.">
+			<param name="MeasurementTag" type="uint32" pass="return" description="Measurement Tag that has been sent to the OIE." />
+		</method>		
+
+		<method name="MapOIEMeasurementTag" description="Maps an OIE Measurement tag back to the original scan parameters.">
+			<param name="MeasurementTag" type="uint32" pass="in" description="Measurement Tag that has been sent to the OIE." />
+			<param name="PartID" type="uint32" pass="out" description="ID of the part." />
+			<param name="ProfileID" type="uint32" pass="out" description="ID of the profile." />
+			<param name="SegmentID" type="uint32" pass="out" description="ID of the segment." />
+			<param name="VectorID" type="uint32" pass="out" description="ID of the vector." />
+		</method>
+
+		<method name="MapOIEMeasurementTagData" description="Maps an OIE Measurement tag back to the original scan parameters.">
+			<param name="MeasurementTag" type="uint32" pass="in" description="Measurement Tag that has been sent to the OIE." />
+			<param name="Data" type="struct" class="OIEMeasurementTagData" pass="return" description="Measurement as tag data struct." />
+		</method>
+
+		<method name="MapOIEMeasurementTags" description="Maps an array of OIE Measurement tags back to the original scan parameters.">
+			<param name="MeasurementTag" type="basicarray" class="uint32" pass="in" description="Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!" />
+			<param name="Data" type="structarray" class="OIEMeasurementTagData" pass="out" description="Will be filled with all the tags associated with the input array. The length of the array will match the input array." />
+		</method>
+
+		<method name="MapOIEMeasurementPartIDs" description="Maps an array of OIE Measurement tags back to the original part IDs.">
+			<param name="MeasurementTag" type="basicarray" class="uint32" pass="in" description="Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!" />
+			<param name="Data" type="basicarray" class="uint32" pass="out" description="Will be filled with all the part IDs associated with the input array. The length of the array will match the input array." />
+		</method>
+
+		<method name="MapOIEMeasurementProfileIDs" description="Maps an array of OIE Measurement tags back to the original profile IDs.">
+			<param name="MeasurementTag" type="basicarray" class="uint32" pass="in" description="Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!" />
+			<param name="Data" type="basicarray" class="uint32" pass="out" description="Will be filled with all the profile IDs associated with the input array. The length of the array will match the input array." />
+		</method>
+
+		<method name="MapOIEMeasurementSegmentIDs" description="Maps an array of OIE Measurement tags back to the original segment IDs.">
+			<param name="MeasurementTag" type="basicarray" class="uint32" pass="in" description="Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!" />
+			<param name="Data" type="basicarray" class="uint32" pass="out" description="Will be filled with all the segment IDs associated with the input array. The length of the array will match the input array." />
+		</method>
+
+		<method name="MapOIEMeasurementVectorIDs" description="Maps an array of OIE Measurement tags back to the original vector IDs.">
+			<param name="MeasurementTag" type="basicarray" class="uint32" pass="in" description="Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!" />
+			<param name="Data" type="basicarray" class="uint32" pass="out" description="Will be filled with all the vector  IDs associated with the input array. The length of the array will match the input array." />
+		</method>
+
+	</class>
+
 	<class name="RTCContext" parent="Base" description="Context of the RTC Controller Card">
 
 		<method name="LoadFirmware" description="Loads card firmware from resource files.">
@@ -712,11 +800,16 @@ Custom implementation
 			<param name="Dimension" type="uint32" pass="in" description="Is it a 2D or 3D correction file." />
 		</method>
 
-		<method name="SelectCorrectionTable" description="Selects Correction Table on card.">
+		<method name="SelectCorrectionTable" description="Selects Correction Table on card. Reads the correction factorw out of the Table, if existent.">
 			<param name="TableNumberHeadA" type="uint32" pass="in" description="Table Number for HeadA (1..8) or off (0)." />
 			<param name="TableNumberHeadB" type="uint32" pass="in" description="Table Number for HeadA (1..8) or off (0)." />
 		</method>
 		
+		<method name="SetCorrectionFactors" description="Sets the correction factor manually.">
+			<param name="CorrectionFactorXY" type="double" pass="in" description="Scale correction factor in the XY plane. In bits per mm. MUST BE larger than 0." />
+			<param name="CorrectionFactorZ" type="double" pass="in" description="Scale correction factor in the Z axis. In bits per mm. Should be equal to CorrectionFactorXY for the RTC6 card. MUST BE larger than 0." />
+		</method>
+
 		<method name="ConfigureLists" description="Configures list buffer size.">
 			<param name="SizeListA" type="uint32" pass="in" description="Size of List A" />
 			<param name="SizeListB" type="uint32" pass="in" description="Size of List B" />
@@ -759,6 +852,27 @@ Custom implementation
 			<param name="HalfPeriod" type="double" pass="in" description="Half Output period in microseconds" />
 			<param name="PulseLength" type="double" pass="in" description="Pulse Length in microseconds" />
 		</method>
+		
+		<method name="GetLaserPulsesInBits" description="Sets laser control pulse interval (in 1/64th microseconds)">
+			<param name="HalfPeriod" type="uint32" pass="out" description="Half Output period in 1/64th microseconds" />
+			<param name="PulseLength" type="uint32" pass="out" description="Pulse Length in 1/64th microseconds" />
+		</method>
+		
+		<method name="GetLaserPulsesInMicroSeconds" description="Sets laser control pulse interval (in microseconds)">
+			<param name="HalfPeriod" type="double" pass="out" description="Half Output period in microseconds" />
+			<param name="PulseLength" type="double" pass="out" description="Pulse Length in microseconds" />
+		</method>
+
+		<method name="GetStandbyInBits" description="Sets standby pulse interval (in 1/64th microseconds)">
+			<param name="HalfPeriod" type="uint32" pass="out" description="Half Output period in 1/64th microseconds" />
+			<param name="PulseLength" type="uint32" pass="out" description="Pulse Length in 1/64th microseconds" />
+		</method>
+
+		<method name="GetStandbyInMicroSeconds" description="Sets laser control pulse interval (in microseconds)">
+			<param name="HalfPeriod" type="double" pass="out" description="Half Output period in microseconds" />
+			<param name="PulseLength" type="double" pass="out" description="Pulse Length in microseconds" />
+		</method>
+
 
 		<method name="GetIPAddress" description="Returns the IP Address of the RTC Card. Fails if driver has not been initialized.">		
 			<param name="IPAddress" type="string" pass="return" description="IP Address Value." />
@@ -827,7 +941,13 @@ Custom implementation
 			<param name="Position" type="uint32" pass="in" description="Relative Position in List." />
 		</method>
 		
+		<method name="SetDefocusFactor" description="Sets a factor for the Z defocus commands.">
+			<param name="Value" type="double" pass="in" description="Z Defocus Factor." />
+		</method>
 
+		<method name="GetDefocusFactor" description="Returns the current factor for the Z defocus commands.">
+			<param name="Value" type="double" pass="return" description="Z Defocus Factor." />
+		</method>
 
 		<method name="SetDelays" description="Sets the laser delays">
 			<param name="MarkDelay" type="uint32" pass="in" description="Mark delay in microseconds (MUST be multiple of 10)" />
@@ -849,7 +969,7 @@ Custom implementation
 			<param name="Points" type="structarray" class="Point2D" pass="in" description="Points of polyline to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 		</method>
 		
@@ -857,7 +977,7 @@ Custom implementation
 			<param name="Points" type="structarray" class="Point2D" pass="in" description="Points of polyline to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 			<param name="OIEPIDControlIndex" type="uint32" pass="in" description="OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63." />
 		</method>
@@ -866,7 +986,7 @@ Custom implementation
 			<param name="Hatches" type="structarray" class="Hatch2D" pass="in" description="Hatches to draw." />
 			<param name="MarkSpeed" type="single" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="single" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="single" pass="in" description="Laser power in percent" />
+			<param name="PowerInPercent" type="single" pass="in" description="Laser power in percent" />
 			<param name="ZValue" type="single" pass="in" description="Focus Z Value" />
 		</method>
 		
@@ -916,6 +1036,11 @@ Custom implementation
 			<param name="VariableNo" type="uint32" pass="in" description="Number of the variable (0-7)." />
 			<param name="Value" type="uint32" pass="in" description="Value to set." />
 		</method>	
+		
+		<method name="AddMicrovectorMovement" description="Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.">
+			<param name="MicrovectorArray" type="structarray" class="MicroVector" pass="in" description="Microvector array to execute." />
+		</method>
+				
 		
 		<method name="GetCurrentFreeVariable" description="Returns the currently set free variable.">
 			<param name="VariableNo" type="uint32" pass="in" description="Number of the variable (0-7)." />
@@ -1035,6 +1160,9 @@ Custom implementation
 			<param name="OperationMode" type="enum" class="OIEOperationMode" pass="in" description="OIE Operation Mode" />			
 		</method>
 
+		<method name="DisableOnTheFlyForOIE" description="Disables the on the fly marking after OIE initialization. This is a workaround that will become depreciated in newer versions..">
+		</method>
+
 		<method name="SetLaserPinOut" description="Sets the laser pin outputs to a certain state. Control command, has immediate effect.">
 			<param name="LaserOut1" type="bool" pass="in" description="Value for Laser Out Pin 1" />
 			<param name="LaserOut2" type="bool" pass="in" description="Value for Laser Out Pin 2" />
@@ -1111,17 +1239,21 @@ Custom implementation
 		<method name="ClearOIEMeasurementTags" description="Clears all stored OIE Measurement tags of the context. New Tag Indices will start from 0 again.">
 		</method>
 
+		<method name="RetrieveOIEMeasurementTags" description="Extracts all stored OIE Measurement tags of the context and returns them as separate object. New Tag Indices will start from 0 again.">
+			<param name="MeasurementTags" type="class" class="OIEMeasurementTagMap" pass="return" description="Instance of the OIE Measurement Tag data." />
+		</method>
+
 		<method name="EnableOIEMeasurementTagging" description="Enables OIE Measurement tagging.">
 		</method>
 
 		<method name="DisableOIEMeasurementTagging" description="Disables OIE Measurement tagging.">
 		</method>
 		
-		<method name="GetOIEMaxMeasurementTag" description="Returns the current maximum measurement tag that has been sent to the OIE.">
+		<method name="GetOIEMaxMeasurementTag" description="Returns the current maximum measurement tag that has been sent to the OIE. Will return 0 after RetrieveOIEMeasurementTags has been called.">
 			<param name="MeasurementTag" type="uint32" pass="return" description="Measurement Tag that has been sent to the OIE." />
 		</method>		
 
-		<method name="MapOIEMeasurementTag" description="Maps an OIE Measurement tag back to the original scan parameters.">
+		<method name="MapOIEMeasurementTag" description="DEPRECIATED! Maps an OIE Measurement tag back to the original scan parameters. Use RetrieveOIEMeasurementTags instead.">
 			<param name="MeasurementTag" type="uint32" pass="in" description="Measurement Tag that has been sent to the OIE." />
 			<param name="PartID" type="uint32" pass="out" description="ID of the part." />
 			<param name="ProfileID" type="uint32" pass="out" description="ID of the profile." />
@@ -1203,6 +1335,14 @@ Custom implementation
 			<param name="RecordingInstance" type="class" class="RTCRecording" pass="return" description="Recording instance." />		
 		</method>
 
+		<method name="ClearRecording" description="Clears a recording if it exists in the driver memory. Does nothing if no such recording exists.">
+			<param name="UUID" type="string" pass="in" description="UUID of the recording to clear." />		
+			<param name="RecordingExists" type="bool" pass="return" description="Returns if the recording existed and has been cleared." />		
+		</method>
+
+		<method name="ClearAllRecordings" description="Clears all recordings in the driver memory.">
+		</method>
+
 		<method name="EnableTimelagCompensation" description="Enables timelag compensation.">
 			<param name="TimeLagXYInMicroseconds" type="uint32" pass="in" description="Time lag of XY axes (in microseconds). MUST be a multiple of 10." />
 			<param name="TimeLagZInMicroseconds" type="uint32" pass="in" description="Time lag of Z axis (in microseconds). MUST be a multiple of 10." />
@@ -1232,31 +1372,38 @@ Custom implementation
 			<param name="FailIfError" type="bool" pass="in" description="If true, the call will fail in case of an error." />
 			<param name="ErrorCode" type="uint32" pass="return" description="Bitfield corresponding to the get_marking_info call, as described in the RTC SDK Documentation." />
 		</method>
-
-		<method name="LaserPowerCalibrationIsEnabled" description="Returns if the laser power calibration table is non-empty.">
-			<param name="CalibrationEnabled" type="bool" pass="return" description="Laser Calibration Is Enabled" />			
-		</method>
 		
 		<method name="LaserPowerCalibrationIsLinear" description="Returns if the laser power calibration table has one entry.">
 			<param name="CalibrationIsLinear" type="bool" pass="return" description="Laser Calibration Is Affine Linear" />			
 		</method>
 
-		<method name="ClearLaserPowerCalibration" description="Clears the laser power calibration table.">
-		</method>
-
-		<method name="GetLaserPowerCalibration" description="Returns the laser power calibration table. Fails if laser calibration is not enabled.">
+		<method name="GetLaserPowerCalibration" description="Returns the laser power calibration table. Fails if laser calibration is not enabled.">		
+			<param name="LaserPowerAt0Percent" type="double" pass="out" description="Laser Power at 0 percent" />			
+			<param name="LaserPowerAt100Percent" type="double" pass="out" description="Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent." />			
 			<param name="CalibrationPoints" type="structarray" class="LaserCalibrationPoint" pass="out" description="Laser Calibration Points" />			
 		</method>
 				
 		<method name="SetLinearLaserPowerCalibration" description="Enables the laser power calibration with an affine linear tranformation.">
-			<param name="PowerOffsetInPercent" type="double" pass="in" description="Additional offset of the Power value." />
-			<param name="PowerOutputScaling" type="double" pass="in" description="Scaling factor of the laser output." />			
+			<param name="LaserPowerAt0Percent" type="double" pass="in" description="Laser Power at 0 percent" />			
+			<param name="LaserPowerAt100Percent" type="double" pass="in" description="Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent." />			
 		</method>
 		
 		<method name="SetPiecewiseLinearLaserPowerCalibration" description="Enables the laser power calibration with multiple calibration point values. Table MUST NOT have negative power entries. Laser Power Output will be linear scaled with the given values within their respective intervals. Any laser power outside of the minimum or maximum Power values will be scaled according to the respective minimum or maximum scaling value.">
-			<param name="CalibrationPoints" type="structarray" class="LaserCalibrationPoint" pass="in" description="Laser Calibration Points. Array will be sorted by Laser Power Keys. Array MUST NOT be empty. Array MUST NOT have duplicate entries (to an accuracy of 0.01 Percent)." />
+			<param name="LaserPowerAt0Percent" type="double" pass="in" description="Laser Power at 0 percent" />			
+			<param name="LaserPowerAt100Percent" type="double" pass="in" description="Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent." />			
+			<param name="CalibrationPoints" type="structarray" class="LaserCalibrationPoint" pass="in" description="Laser Calibration Points that match percentage to power. The percentage values MUST be in sequentially increasing in the array (to an accuracy of 0.001 Percent). The power values MUST be sequentially increasing in the array (to an accuracy of 0.001 Watts).. Array MUST NOT be empty." />
 		</method>
-				
+
+		<method name="MapPowerPercentageToWatts" description="Maps a laser power percentage value to the laser power in watts.">
+			<param name="LaserPowerInPercent" type="double" pass="in" description="Laser Power in Percent" />
+			<param name="LaserPowerInWatts" type="double" pass="return" description="Laser Power in Watts" />
+		</method>
+
+		<method name="MapPowerWattsToPercent" description="Maps a laser power value to the laser power in percent.">
+			<param name="LaserPowerInWatts" type="double" pass="in" description="Laser Power in Watts" />
+			<param name="LaserPowerInPercent" type="double" pass="return" description="Laser Power in Percent" />
+		</method>
+
 		<method name="EnableSpatialLaserPowerModulation" description="Enables a spatial laser power modulation via callback.">
 			<param name="ModulationCallback" type="functiontype" class="SpatialPowerModulationCallback" pass="in" description="Callback to call for modulating the laser power."/>			
 			<param name="UserData" type="pointer" pass="in" description="Userdata that is passed to the callback function"/>
@@ -1315,6 +1462,7 @@ Custom implementation
 			<param name="EndScale" type="uint32" pass="in" description="Line end sharpness scale in Percent.. 100 percent means straight line ends. Values above 100 will be clipped to 100." />
 			<param name="AccelerationScale" type="uint32" pass="in" description="Fraction of active laser time (not path lenght) during acceleration in Percent.. 100 percent means sharp corners. Values above 100 will be clipped to 100." />
 		</method>
+		
 		
 	</class>
 
@@ -1413,7 +1561,7 @@ Custom implementation
 		<method name="IsInitialized" description="Returns if the driver is initalized.">		
 			<param name="IsInitialized" type="bool" pass="return" description="Flag if driver is initialized." />
 		</method>		
-
+		
 		<method name="Initialise" description="Manually initializes the RTC6 Scanner Driver.">
 			<param name="IP" type="string" pass="in" description="IP Network Address. Empty string for local card." />
 			<param name="Netmask" type="string" pass="in" description="IP Netmask Address. Empty string for local card." />
@@ -1421,8 +1569,22 @@ Custom implementation
 			<param name="SerialNumber" type="uint32" pass="in" description="Desired Serial Number of card." />
 		</method>
 
-		<method name="InitialiseFromConfiguration" description="Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.">
+		<method name="InitialiseFromConfiguration" description="Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserTimingDefaults.">
 			<param name="PresetName" type="string" pass="in" description="Name of the configuration preset." />
+		</method>
+
+		<method name="SetLaserSignalTimingDefaults" description="Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.">
+			<param name="LaserPulseHalfPeriod" type="double" pass="in" description="Half Output period for laser pulses in microseconds. Default is 5." />
+			<param name="LaserPulseLength" type="double" pass="in" description="Pulse Length in microseconds for full laser power. Default is 5." />
+			<param name="StandbyPulseHalfPeriod" type="double" pass="in" description="Half Output period for standby pulses in microseconds. Default is 1." />
+			<param name="StandbyPulseLength" type="double" pass="in" description="Standby Pulse Length in microseconds. Default is 1." />
+		</method>
+
+		<method name="GetLaserSignalTimingDefaults" description="Returns the laser timing defaults for CO2 lasers.">
+			<param name="LaserPulseHalfPeriod" type="double" pass="out" description="Half Output period for laser pulses in microseconds. Default is 5." />
+			<param name="LaserPulseLength" type="double" pass="out" description="Pulse Length in microseconds for full laser power. Default is 5." />
+			<param name="StandbyPulseHalfPeriod" type="double" pass="out" description="Half Output period for standby pulses in microseconds. Default is 1." />
+			<param name="StandbyPulseLength" type="double" pass="out" description="Standby Pulse Length in microseconds. Default is 1." />
 		</method>
 
 		<method name="SetCommunicationTimeouts" description="Set RTC Ethernet communication timeouts. The given values will be defaults for all subsequent connections.">
@@ -1471,7 +1633,7 @@ Custom implementation
 			<param name="TableNumberHeadB" type="uint32" pass="in" description="Table number of Head B." />
 		</method>		
 
-		<method name="ConfigureLaserMode" description="Configures the laser mode. MUST be called before any exposure.">
+		<method name="ConfigureLaserMode" description="Configures the laser mode. MUST be called before any exposure. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.">
 			<param name="LaserMode" type="enum" class="LaserMode" pass="in" description="Laser Mode Enum" />
 			<param name="LaserPort" type="enum" class="LaserPort" pass="in" description="Laser Port Enum" />
 			<param name="MaxLaserPower" type="double" pass="in" description="Maximum laser power." />
@@ -1569,9 +1731,25 @@ Custom implementation
 			<param name="LaserIndex" type="uint32" pass="in" description="Associated Laser Index from the toolpath data. 1-based, MUST NOT be 0. Each Scanner MUST own a unique laser index." />
 		</method>
 
-		<method name="InitialiseScannerFromConfiguration" description="Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.">
+		<method name="InitialiseScannerFromConfiguration" description="Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserSignalTimingDefaults.">
 			<param name="ScannerIndex" type="uint32" pass="in" description="Index of the scanner (0-based). MUST be smaller than ScannerCount" />
 			<param name="PresetName" type="string" pass="in" description="Name of the configuration preset." />
+		</method>
+
+		<method name="SetLaserSignalTimingDefaults" description="Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.">
+			<param name="ScannerIndex" type="uint32" pass="in" description="Index of the scanner (0-based). MUST be smaller than ScannerCount" />
+			<param name="LaserPulseHalfPeriod" type="double" pass="in" description="Half Output period for laser pulses in microseconds. Default is 5." />
+			<param name="LaserPulseLength" type="double" pass="in" description="Pulse Length in microseconds for full laser power. Default is 5." />
+			<param name="StandbyPulseHalfPeriod" type="double" pass="in" description="Half Output period for standby pulses in microseconds. Default is 1." />
+			<param name="StandbyPulseLength" type="double" pass="in" description="Standby Pulse Length in microseconds. Default is 1." />
+		</method>
+
+		<method name="GetLaserSignalTimingDefaults" description="Returns the laser timing defaults for CO2 lasers.">
+			<param name="ScannerIndex" type="uint32" pass="in" description="Index of the scanner (0-based). MUST be smaller than ScannerCount" />
+			<param name="LaserPulseHalfPeriod" type="double" pass="out" description="Half Output period for laser pulses in microseconds. Default is 5." />
+			<param name="LaserPulseLength" type="double" pass="out" description="Pulse Length in microseconds for full laser power. Default is 5." />
+			<param name="StandbyPulseHalfPeriod" type="double" pass="out" description="Half Output period for standby pulses in microseconds. Default is 1." />
+			<param name="StandbyPulseLength" type="double" pass="out" description="Standby Pulse Length in microseconds. Default is 1." />
 		</method>
 
 		<method name="GetIPAddress" description="Returns the IP Address of the RTC Card. Fails if driver has not been initialized.">		
@@ -1626,7 +1804,7 @@ Custom implementation
 			<param name="TableNumberHeadB" type="uint32" pass="in" description="Table number of Head B." />
 		</method>		
 
-		<method name="ConfigureLaserMode" description="Configures the laser mode.">
+		<method name="ConfigureLaserMode" description="Configures the laser mode. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.">
 			<param name="ScannerIndex" type="uint32" pass="in" description="Index of the scanner (0-based). MUST be smaller than ScannerCount" />
 			<param name="LaserMode" type="enum" class="LaserMode" pass="in" description="Laser Mode Enum" />
 			<param name="LaserPort" type="enum" class="LaserPort" pass="in" description="Laser Port Enum" />

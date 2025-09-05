@@ -60,13 +60,14 @@ private:
 	std::string m_sSimulationSubDirectory;
 
 	std::string m_sIPAddress;
-	std::string m_sNetmask;
 
 	uint32_t m_nSerialNumber;
 
+	bool m_bSendToHardware;
+
 public:
 
-	CSMCContextInstance(const std::string & sContextName, ISMCConfiguration* pSMCConfiguration, PScanLabSMCSDK pSDK, LibMCEnv::PDriverEnvironment pDriverEnvironment);
+	CSMCContextInstance(const std::string & sContextName, ISMCConfiguration* pSMCConfiguration, PScanLabSMCSDK pSDK, LibMCEnv::PDriverEnvironment pDriverEnvironment, const std::string & sRTCDLLDirectory);
 
 	virtual ~CSMCContextInstance();
 
@@ -78,15 +79,13 @@ public:
 
 	std::string GetIPAddress();
 
-	std::string GetNetmask();
-
 	LibMCDriver_ScanLabSMC_uint32 GetSerialNumber();
 
 	LibMCDriver_ScanLabSMC_uint32 GetLaserIndex();
 
 	std::string GetSimulationSubDirectory();
 
-	PSMCJobInstance BeginJob(const double dStartPositionX, const double dStartPositionY, const LibMCDriver_ScanLabSMC::eBlendMode eBlendMode);
+	PSMCJobInstance BeginJob(const double dStartPositionX, const double dStartPositionY, const double dMaxPowerInWatts);
 
 	PSMCJobInstance GetUnfinishedJob();
 

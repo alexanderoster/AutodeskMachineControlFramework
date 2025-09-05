@@ -534,10 +534,10 @@ namespace LibMCDriver_ScanLab {
 			uint32_t n_set_scanahead_params (uint32_t nCardNo, uint32_t nMode, uint32_t nHeadNo, uint32_t nTableNo, uint32_t nPreviewTime, uint32_t nVMax, double dAmax);
 			void n_set_scanahead_speed_control (uint32_t nCardNo, uint32_t nMode);
 
-			/*void n_micro_vector_abs_3d (uint32_t nCardNo, int32_t nX, int32_t nY, int32_t nZ, int32_t nLasOn, int32_t nLasOff);
+			void n_micro_vector_abs_3d (uint32_t nCardNo, int32_t nX, int32_t nY, int32_t nZ, int32_t nLasOn, int32_t nLasOff);
 			void n_micro_vector_rel_3d (uint32_t nCardNo, int32_t ndX, int32_t ndY, int32_t ndZ, int32_t nLasOn, int32_t nLasOff);
 			void n_micro_vector_abs (uint32_t nCardNo, int32_t nX, int32_t nY, int32_t nLasOn, int32_t nLasOff);
-			void n_micro_vector_rel (uint32_t nCardNo, int32_t ndX, int32_t ndY, int32_t nLasOn, int32_t nLasOff); */
+			void n_micro_vector_rel (uint32_t nCardNo, int32_t ndX, int32_t ndY, int32_t nLasOn, int32_t nLasOff); 
 
 			uint32_t n_get_error (uint32_t nCardNo);
 			void n_reset_error (uint32_t nCardNo, uint32_t nCode);

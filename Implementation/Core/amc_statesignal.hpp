@@ -32,56 +32,136 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __AMC_STATESIGNAL
 #define __AMC_STATESIGNAL
 
-#ifndef _STATESIGNAL_HEADERPROTECTION
-#error Never include amc_statesignal.hpp from outside of amc_statesignal.cpp and amc_statesignalhandler.cpp
-#endif
-
 #include "amc_statesignalparameter.hpp"
+#include "amc_statesignaltypes.hpp"
 #include "amc_parametergroup.hpp"
 
 #include <memory>
 #include <string>
 #include <map>
+#include <unordered_map>
+#include <deque>
+#include <set>
+#include <vector>
 #include <list>
+
+#include <queue>
+#include <thread>
 
 namespace AMC {
 
-	class CStateSignal;
-	typedef std::shared_ptr<CStateSignal> PStateSignal;
+	class CStateSignalSlot;
+	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
+
+	class CStateSignalMessage;
+	typedef std::shared_ptr<CStateSignalMessage> PStateSignalMessage;
+
+	class CStateSignalMessage
+	{
+		private:
+
+			std::string m_sUUID;
+
+			AMC::eAMCSignalPhase m_MessagePhase;
+
+			uint32_t m_nReactionTimeoutInMS;
+
+			std::string m_sResultDataJSON;
+
+			std::string m_sParameterDataJSON;
+
+			std::string m_sErrorMessage;
+
+		public:
+
+			CStateSignalMessage(const std::string & sUUID, uint32_t nReactionTimeoutInMS, AMC::eAMCSignalPhase initialPhase);
+
+			virtual ~CStateSignalMessage();
+
+			std::string getUUID() const;
+
+			void setPhase (AMC::eAMCSignalPhase messagePhase);
+
+			AMC::eAMCSignalPhase getPhase() const;
+
+			uint32_t getReactionTimeoutInMS() const;
+
+			std::string getResultDataJSON() const;
+
+			std::string getParameterDataJSON() const;
+
+			std::string getErrorMessage() const;
+
+			void setErrorMessage(const std::string & sErrorMessage);
+
+			void setResultDataJSON(const std::string& sResultDataJSON);
+
+			void setParameterDataJSON(const std::string& sParameterDataJSON);
+
+	};
 
 
-	class CStateSignal {
+	class CStateSignalSlot {
 	private:
 		std::string m_sInstanceName;
 		std::string m_sName;
-		bool m_bIsTriggered;
-		std::string m_sCurrentParameterData;
-		std::string m_sCurrentSignalUUID;
 
 		std::list <CStateSignalParameter> m_ParameterDefinitions;
 		std::list <CStateSignalParameter> m_ResultDefinitions;
-		std::map <std::string, std::string> m_ResultMap;
+
+		uint32_t m_nSignalDefaultReactionTimeOutInMS;
+		uint32_t m_nSignalQueueSize;
+
+		std::map<std::string, PStateSignalMessage> m_MessageMap;
+
+		std::list<PStateSignalMessage> m_Queue;
+		std::unordered_map<std::string, std::list<PStateSignalMessage>::iterator> m_QueueMap;
+
+		std::set<std::string> m_InProcess;
+		std::set<std::string> m_Handled;
+		std::set<std::string> m_Failed;
+		std::set<std::string> m_TimedOut;
+		std::set<std::string> m_Cleared;
+		std::deque<std::string> m_Archived;
+
+		std::mutex m_Mutex;
+
+		CStateSignalMessage* getMessageByUUIDNoMutex (const std::string& sSignalUUID);
+		bool queueIsFullNoMutex();
 
 
 	public:
 
-		CStateSignal(const std::string & sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results);
-		virtual ~CStateSignal();
+		CStateSignalSlot(const std::string & sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize);
+		virtual ~CStateSignalSlot();
 
 		// NOT ThreadSafe. Do not call directly!
 		// Mutexes need to be added outside of the signal
-		std::string getNameInternal();
-		std::string getInstanceNameInternal();
-		std::string getParameterDataInternal();
-		bool triggerSignalInternal(const std::string& sParameterData, std::string& sNewSignalUUID);
-		bool checkSignalInternal(std::string& sCurrentSignalUUID);
-		bool canTriggerInternal();
-		void clearSignalInternal();
+		std::string getNameInternal() const;
+		std::string getInstanceNameInternal() const;
 
-		void markSignalAsHandledInternal(const std::string& sResultData);
-		bool signalHasBeenHandledInternal(const std::string& sSignalUUID, bool clearAllResults, std::string& sResultData);
+		bool queueIsFull();
+		size_t clearQueueInternal(std::vector<std::string>& clearedUUIDs);
+		bool eraseMessage(const std::string& sUUID);
 
-		std::string getCurrentUUID();
+		bool addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS);
+		bool changeSignalPhaseToHandledInternal(const std::string& sSignalUUID, const std::string& sResultData);
+		bool changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage);
+		bool changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID);
+		AMC::eAMCSignalPhase getSignalPhaseInternal(const std::string& sSignalUUID);
+
+		uint32_t getAvailableSignalQueueEntriesInternal ();
+
+		uint32_t getTotalSignalQueueSizeInternal();
+
+		uint32_t getDefaultReactionTimeoutInternal();
+
+		uint32_t getReactionTimeoutInternal(const std::string& sSignalUUID);
+
+		std::string peekMessageFromQueueInternal();
+		
+		std::string getResultDataJSONInternal(const std::string& sSignalUUID);
+		std::string getParameterDataJSONInternal(const std::string& sSignalUUID);
 
 		void populateParameterGroup(CParameterGroup* pParameterGroup);
 		void populateResultGroup(CParameterGroup* pResultGroup);

@@ -154,11 +154,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					this.LayerViewerInstance.setColorMode ("velocity");
 				} 
 				else if (this.LayerViewerInstance.layerPointsMode == "velocity") {
-					this.LayerViewerInstance.setColorMode ("uniform");			
+					this.LayerViewerInstance.setColorMode ("laseron");
+				} 
+				else if (this.LayerViewerInstance.layerPointsMode == "laseron") {
+					this.LayerViewerInstance.setColorMode ("uniform");
 				} else {				
 					this.LayerViewerInstance.setColorMode ("time");
-				}
-				
+				}				
 			},			 
  
             onToggleToolpathClick: function () {
@@ -233,6 +235,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				if (this.LayerViewerInstance.layerPointsMode == "velocity") {
 					return "Color: Velocity";
 				} 
+
+				if (this.LayerViewerInstance.layerPointsMode == "laseron") {
+					return "Color: LaserOn";
+				} 
 				
 				return "Color: Uniform";
 			},
@@ -297,6 +303,86 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					}
 				}
 			},
+
+			queryPoints: function (scatterplotuuid)
+			{
+				this.LayerViewerInstance.clearPoints ();
+			
+				return this.Application.axiosGetArrayBufferRequest("/ui/pointcloud/" + scatterplotuuid)
+				.then(responseData => {
+					let pointcoordinates = new Float32Array(responseData.data);
+					
+					if (this.LayerViewerInstance) {
+						this.LayerViewerInstance.loadPoints (pointcoordinates);
+					}
+				})
+				.catch(err => {
+					if (err.response) {
+						console.log (err.response);
+					} else {
+						console.log ("fatal error while retrieving point cloud ");
+					}
+					if (this.LayerViewerInstance) {
+						this.LayerViewerInstance.RenderScene (true);
+					}
+				});				
+			},
+
+			queryPointsChannelData: function (scatterplotuuid, pointsChannelName)
+			{		
+				this.LayerViewerInstance.clearPointsChannelData (pointsChannelName);
+			
+				return this.Application.axiosGetArrayBufferRequest("/ui/pointchanneldata/" + scatterplotuuid + "/" + pointsChannelName)
+				.then(responseData => {
+
+					const contentType = responseData.headers['content-type'];
+					
+					if (contentType && contentType.includes("application/json")) {
+
+						try {
+							const jsonText = new TextDecoder().decode(responseData.data);
+
+							const parsed = JSON.parse(jsonText);
+
+							if (parsed && typeof parsed === 'object') {
+								
+								for (const [key, value] of Object.entries(parsed)) {
+									
+									if (Array.isArray(value)) {
+										const floatArray = new Float32Array(value);
+										console.log(`Key "${key}" contains Float32Array with length: ${floatArray.length}`);
+										if (key.toLowerCase() === 'laseron') {
+											if (this.LayerViewerInstance) {
+												this.LayerViewerInstance.loadPointsChannelData ("laser", key.toLowerCase(), floatArray);
+											} else {
+												console.log(`${key}: ${floatArray.length}`);
+											}
+										}
+									} else {
+										console.warn(`Key "${key}" is not an array and will be ignored.`);
+									}
+								}
+							} else {
+								console.warn("Parsed JSON is not an object.");
+							}
+						} catch (e) {
+							console.error("Error while parsing JSON response:", e);
+						}
+					} else {
+						console.error("Error while parsing response: not a JSON");
+					}
+				})
+				.catch(err => {
+					if (err.response) {
+						console.log (err.response);
+					} else {
+						console.log ("fatal error while retrieving point cloud ");
+					}
+					if (this.LayerViewerInstance) {
+						this.LayerViewerInstance.RenderScene (true);
+					}
+				});				
+			},
 			
 			onLayerChanged: function (sender) {
 
@@ -333,43 +419,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 								//
 							});
 
-
 							if (platform.scatterplotuuid != "00000000-0000-0000-0000-000000000000") {
 							
-									this.loadingScatterplot = true;
-									this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
-								
-									this.Application.axiosGetArrayBufferRequest("/ui/pointcloud/" + platform.scatterplotuuid)
-									.then(responseData => {
-										let pointcoordinates = new Float32Array(responseData.data);
-										
-										if (this.LayerViewerInstance) {
-											this.LayerViewerInstance.loadPoints (pointcoordinates);
-										}
-									
-										this.loadingScatterplot = false;
-										
-									})
-									.catch(err => {
-										if (err.response) {
-											console.log (err.response);
-										} else {
-											console.log ("fatal error while retrieving point cloud ");
-										}
-										if (this.LayerViewerInstance) {
-											this.LayerViewerInstance.RenderScene (true);
-										}
-										
-										this.loadingScatterplot = false;
-									});
+								this.loadingScatterplot = true;
+								this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
+
+								Promise.all([
+									this.queryPoints(platform.scatterplotuuid),
+									this.queryPointsChannelData(platform.scatterplotuuid, "laser")
+								]).then(() => {  
+									if (this.LayerViewerInstance && this.LayerViewerInstance.updateLayerPoints) {
+										this.LayerViewerInstance.updateColors ();			
+										this.LayerViewerInstance.updateLayerPoints();
+									}
+								});
+
+								this.loadingScatterplot = false;							
+
 							} else {
 							
 									this.loadingScatterplot = false;
 									this.LayerViewerInstance.glInstance.removeElement("layerdata_points");
-								
-							
-							}
-						
+									
+									this.LayerViewerInstance.clearPoints ();
+									this.LayerViewerInstance.clearPointsChannelData ("laser")
+
+							}						
 						}
 					}
 				}

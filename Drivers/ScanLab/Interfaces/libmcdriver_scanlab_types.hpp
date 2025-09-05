@@ -245,6 +245,24 @@ typedef void * LibMCDriver_ScanLab_pvoid;
 #define LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELYNOTRECORDED 1140 /** RTC Channel Y not recorded. */
 #define LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELZNOTRECORDED 1141 /** RTC Channel Z not recorded. */
 #define LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELXANDYRECORDCOUNTMISMATCH 1142 /** RTC X and Y record count mismatch. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR 1143 /** Segment delay exceeds one hour. */
+#define LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED 1144 /** Call is not supported in current SCANLAB RTC SDK. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE 1145 /** Invalid or no skywriting limit provided in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLIMITPROVIDEDTWICEINPROFILE 1146 /** Skywriting limit provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE 1147 /** Invalid or no skywriting timelag provided in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE 1148 /** Skywriting timelag provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE 1149 /** Invalid or no skywriting laser on shift provided in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE 1150 /** Skywriting laser on shift provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE 1151 /** Invalid or no skywriting nprev provided in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPREVPROVIDEDTWICEINPROFILE 1152 /** Skywriting nprev provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE 1153 /** Invalid or no skywriting npost provided in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE 1154 /** Skywriting npost provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR 1155 /** Invalid correction factor. */
+#define LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD 1156 /** Pulse Length exceeds control period. */
+#define LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHCONTROLNOTSUPPORTEDBYOIE 1157 /** Pulse Length control not supported by OIE yet. */
+#define LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING 1158 /** Invalid laser power mapping. */
+#define LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS 1159 /** Could not convert laser power to watts. */
+#define LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT 1160 /** Could not convert laser power to percent. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLab
@@ -402,6 +420,24 @@ inline const char * LIBMCDRIVER_SCANLAB_GETERRORSTRING (LibMCDriver_ScanLabResul
     case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELYNOTRECORDED: return "RTC Channel Y not recorded.";
     case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELZNOTRECORDED: return "RTC Channel Z not recorded.";
     case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELXANDYRECORDCOUNTMISMATCH: return "RTC X and Y record count mismatch.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR: return "Segment delay exceeds one hour.";
+    case LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED: return "Call is not supported in current SCANLAB RTC SDK.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE: return "Invalid or no skywriting limit provided in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLIMITPROVIDEDTWICEINPROFILE: return "Skywriting limit provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE: return "Invalid or no skywriting timelag provided in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE: return "Skywriting timelag provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE: return "Invalid or no skywriting laser on shift provided in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE: return "Skywriting laser on shift provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE: return "Invalid or no skywriting nprev provided in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPREVPROVIDEDTWICEINPROFILE: return "Skywriting nprev provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE: return "Invalid or no skywriting npost provided in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE: return "Skywriting npost provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR: return "Invalid correction factor.";
+    case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD: return "Pulse Length exceeds control period.";
+    case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHCONTROLNOTSUPPORTEDBYOIE: return "Pulse Length control not supported by OIE yet.";
+    case LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING: return "Invalid laser power mapping.";
+    case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS: return "Could not convert laser power to watts.";
+    case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT: return "Could not convert laser power to percent.";
     default: return "unknown error";
   }
 }
@@ -417,6 +453,7 @@ typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_RTCJob;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_RTCRecording;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_GPIOSequence;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_NLightAFXProfileSelector;
+typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_OIEMeasurementTagMap;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_RTCContext;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_RTCSelector;
 typedef LibMCDriver_ScanLabHandle LibMCDriver_ScanLab_Driver_ScanLab;
@@ -444,7 +481,8 @@ namespace LibMCDriver_ScanLab {
     Port16bitDigital = 2,
     Port12BitAnalog1 = 3,
     Port12BitAnalog2 = 4,
-    Port12BitAnalog1andAnalog2 = 5
+    Port12BitAnalog1andAnalog2 = 5,
+    LaserPulseModulation = 6
   };
   
   enum class eOIEOperationMode : LibMCDriver_ScanLab_int32 {
@@ -533,6 +571,13 @@ namespace LibMCDriver_ScanLab {
       LibMCDriver_ScanLab_single m_Y;
   } sPoint2D;
   
+  typedef struct sOIEMeasurementTagData {
+      LibMCDriver_ScanLab_uint32 m_PartID;
+      LibMCDriver_ScanLab_uint32 m_ProfileID;
+      LibMCDriver_ScanLab_uint32 m_SegmentID;
+      LibMCDriver_ScanLab_uint32 m_VectorID;
+  } sOIEMeasurementTagData;
+  
   typedef struct sHatch2D {
       LibMCDriver_ScanLab_single m_X1;
       LibMCDriver_ScanLab_single m_Y1;
@@ -542,9 +587,16 @@ namespace LibMCDriver_ScanLab {
   
   typedef struct sLaserCalibrationPoint {
       LibMCDriver_ScanLab_double m_PowerSetPointInPercent;
-      LibMCDriver_ScanLab_double m_PowerOffsetInPercent;
-      LibMCDriver_ScanLab_double m_PowerOutputScaling;
+      LibMCDriver_ScanLab_double m_PowerOutputInWatts;
   } sLaserCalibrationPoint;
+  
+  typedef struct sMicroVector {
+      LibMCDriver_ScanLab_double m_X;
+      LibMCDriver_ScanLab_double m_Y;
+      LibMCDriver_ScanLab_double m_LaserOnDelay;
+      LibMCDriver_ScanLab_double m_LaserOffDelay;
+      LibMCDriver_ScanLab_double m_LaserPowerInPercent;
+  } sMicroVector;
   
   #pragma pack ()
   
@@ -576,8 +628,10 @@ typedef LibMCDriver_ScanLab::eRTCChannelType eLibMCDriver_ScanLabRTCChannelType;
 typedef LibMCDriver_ScanLab::eRTCRecordingFrequency eLibMCDriver_ScanLabRTCRecordingFrequency;
 typedef LibMCDriver_ScanLab::eOIERecordingMode eLibMCDriver_ScanLabOIERecordingMode;
 typedef LibMCDriver_ScanLab::sPoint2D sLibMCDriver_ScanLabPoint2D;
+typedef LibMCDriver_ScanLab::sOIEMeasurementTagData sLibMCDriver_ScanLabOIEMeasurementTagData;
 typedef LibMCDriver_ScanLab::sHatch2D sLibMCDriver_ScanLabHatch2D;
 typedef LibMCDriver_ScanLab::sLaserCalibrationPoint sLibMCDriver_ScanLabLaserCalibrationPoint;
+typedef LibMCDriver_ScanLab::sMicroVector sLibMCDriver_ScanLabMicroVector;
 typedef LibMCDriver_ScanLab::SpatialPowerModulationCallback LibMCDriver_ScanLabSpatialPowerModulationCallback;
 
 #endif // __LIBMCDRIVER_SCANLAB_TYPES_HEADER_CPP

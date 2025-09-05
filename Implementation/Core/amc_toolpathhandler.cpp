@@ -113,7 +113,7 @@ namespace AMC {
 	{
 		if (m_pLib3MFWrapper.get() == nullptr) {
 			if (m_sLib3MFPath.empty())
-				throw ELibMCInterfaceException(LIBMC_ERROR_NO3MFLIBRARY);
+				throw ELibMCInterfaceException(LIBMC_ERROR_NO3MFLIBRARY); 
 			m_pLib3MFWrapper = Lib3MF::CWrapper::loadLibrary(m_sLib3MFPath);
 		}
 

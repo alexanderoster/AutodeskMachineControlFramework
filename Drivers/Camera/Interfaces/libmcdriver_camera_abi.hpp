@@ -191,43 +191,104 @@ LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodev
 *
 * @param[in] pVideoDevice - VideoDevice instance.
 * @param[in] nIndex - Index to return. 0-based.
-* @param[out] pWidth - Width in pixels.
-* @param[out] pHeight - Height in pixels.
+* @param[out] pResolutionX - Width in pixels.
+* @param[out] pResolutionY - Height in pixels.
 * @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
+* @param[out] pSourceFormat - Video Source format.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getsupportedresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 * pWidth, LibMCDriver_Camera_uint32 * pHeight, LibMCDriver_Camera_uint32 * pFramerate);
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getsupportedresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 * pResolutionX, LibMCDriver_Camera_uint32 * pResolutionY, LibMCDriver_Camera_uint32 * pFramerate, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
 
 /**
 * Returns a the current resolution and Framerate of the video stream.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
-* @param[out] pWidth - Width in pixels.
-* @param[out] pHeight - Height in pixels.
+* @param[out] pResolutionX - Width in pixels.
+* @param[out] pResolutionY - Height in pixels.
+* @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
+* @param[out] pSourceFormat - Video Source format.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionX, LibMCDriver_Camera_uint32 * pResolutionY, LibMCDriver_Camera_uint32 * pFramerate, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
+
+/**
+* Returns the current X resolution of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pResolutionX - Width in pixels.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentresolutionx(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionX);
+
+/**
+* Returns the current resolution of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pResolutionY - Height in pixels.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentresolutiony(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionY);
+
+/**
+* Returns a the current Framerate of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
 * @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pWidth, LibMCDriver_Camera_uint32 * pHeight, LibMCDriver_Camera_uint32 * pFramerate);
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentframerate(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pFramerate);
+
+/**
+* Returns the current source format of the video streams.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pSourceFormat - Source format.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getcurrentsourceformat(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
+
+/**
+* Returns a description for a source format enum.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[in] eSourceFormat - Source format.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Source format Description., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_getsourceformatdescription(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera::eVideoSourceFormat eSourceFormat, const LibMCDriver_Camera_uint32 nDescriptionBufferSize, LibMCDriver_Camera_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
 
 /**
 * Sets the resolution of the video stream. Fails if framerate is not supported.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
-* @param[in] nWidth - Width in pixels.
-* @param[in] nHeight - Height in pixels.
+* @param[in] nResolutionX - Width in pixels.
+* @param[in] nResolutionY - Height in pixels.
 * @param[in] nFramerate - Framerate in FPS to set. Currently only integer framerates are supported.
+* @param[in] eSourceFormat - Video Source format.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_setresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nWidth, LibMCDriver_Camera_uint32 nHeight, LibMCDriver_Camera_uint32 nFramerate);
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_setresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nResolutionX, LibMCDriver_Camera_uint32 nResolutionY, LibMCDriver_Camera_uint32 nFramerate, LibMCDriver_Camera::eVideoSourceFormat eSourceFormat);
+
+/**
+* Sets the resolution of the video stream to a supported resolution by index.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[in] nIndex - Index to the supported resolution list. 0-based. Fails if equal or larger than SupportedResolutionCount.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_settosupportedresolution(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex);
 
 /**
 * Captures a still image from the video stream.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
 * @param[in] pImageData - Capture image object.
+* @param[out] pImageCaptured - If true, an image has been captured. If false then no image was captured.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_capturerawimage(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCEnv_ImageData pImageData);
+LIBMCDRIVER_CAMERA_DECLSPEC LibMCDriver_CameraResult libmcdriver_camera_videodevice_capturerawimage(LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCEnv_ImageData pImageData, bool * pImageCaptured);
 
 /**
 * Starts automatic capturing of the video into a video stream. If a stream capture is active, it will stop the current capture process.

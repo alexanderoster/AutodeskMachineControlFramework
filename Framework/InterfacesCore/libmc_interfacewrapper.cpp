@@ -215,6 +215,32 @@ LibMCResult libmc_streamconnection_getidledelay(LibMC_StreamConnection pStreamCo
 	}
 }
 
+LibMCResult libmc_streamconnection_getstreamtype(LibMC_StreamConnection pStreamConnection, eLibMCStreamConnectionType * pStreamType)
+{
+	IBase* pIBaseClass = (IBase *)pStreamConnection;
+
+	try {
+		if (pStreamType == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		IStreamConnection* pIStreamConnection = dynamic_cast<IStreamConnection*>(pIBaseClass);
+		if (!pIStreamConnection)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		*pStreamType = pIStreamConnection->GetStreamType();
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for APIRequestHandler
@@ -370,6 +396,36 @@ LibMCResult libmc_apirequesthandler_setformstringfield(LibMC_APIRequestHandler p
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
 		
 		pIAPIRequestHandler->SetFormStringField(sName, sString);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCResult libmc_apirequesthandler_setrequestparameter(LibMC_APIRequestHandler pAPIRequestHandler, const char * pName, const char * pValue)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if (pName == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		if (pValue == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		std::string sName(pName);
+		std::string sValue(pValue);
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIAPIRequestHandler->SetRequestParameter(sName, sValue);
 
 		return LIBMC_SUCCESS;
 	}
@@ -788,6 +844,33 @@ LibMCResult libmc_mccontext_loadclientpackage(LibMC_MCContext pMCContext, const 
 	}
 }
 
+LibMCResult libmc_mccontext_loadapidocumentation(LibMC_MCContext pMCContext, const char * pResourcePath)
+{
+	IBase* pIBaseClass = (IBase *)pMCContext;
+
+	try {
+		if (pResourcePath == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		std::string sResourcePath(pResourcePath);
+		IMCContext* pIMCContext = dynamic_cast<IMCContext*>(pIBaseClass);
+		if (!pIMCContext)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIMCContext->LoadAPIDocumentation(sResourcePath);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCResult libmc_mccontext_log(LibMC_MCContext pMCContext, const char * pMessage, eLibMCLogSubSystem eSubsystem, eLibMCLogLevel eLogLevel)
 {
 	IBase* pIBaseClass = (IBase *)pMCContext;
@@ -906,6 +989,8 @@ LibMCResult LibMC::Impl::LibMC_GetProcAddress (const char * pProcName, void ** p
 		*ppProcAddress = (void*) &libmc_streamconnection_getnewcontent;
 	if (sProcName == "libmc_streamconnection_getidledelay") 
 		*ppProcAddress = (void*) &libmc_streamconnection_getidledelay;
+	if (sProcName == "libmc_streamconnection_getstreamtype") 
+		*ppProcAddress = (void*) &libmc_streamconnection_getstreamtype;
 	if (sProcName == "libmc_apirequesthandler_expectsrawbody") 
 		*ppProcAddress = (void*) &libmc_apirequesthandler_expectsrawbody;
 	if (sProcName == "libmc_apirequesthandler_expectsformdata") 
@@ -916,6 +1001,8 @@ LibMCResult LibMC::Impl::LibMC_GetProcAddress (const char * pProcName, void ** p
 		*ppProcAddress = (void*) &libmc_apirequesthandler_setformdatafield;
 	if (sProcName == "libmc_apirequesthandler_setformstringfield") 
 		*ppProcAddress = (void*) &libmc_apirequesthandler_setformstringfield;
+	if (sProcName == "libmc_apirequesthandler_setrequestparameter") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_setrequestparameter;
 	if (sProcName == "libmc_apirequesthandler_handle") 
 		*ppProcAddress = (void*) &libmc_apirequesthandler_handle;
 	if (sProcName == "libmc_apirequesthandler_getresultdata") 
@@ -942,6 +1029,8 @@ LibMCResult LibMC::Impl::LibMC_GetProcAddress (const char * pProcName, void ** p
 		*ppProcAddress = (void*) &libmc_mccontext_instancestatehasfailed;
 	if (sProcName == "libmc_mccontext_loadclientpackage") 
 		*ppProcAddress = (void*) &libmc_mccontext_loadclientpackage;
+	if (sProcName == "libmc_mccontext_loadapidocumentation") 
+		*ppProcAddress = (void*) &libmc_mccontext_loadapidocumentation;
 	if (sProcName == "libmc_mccontext_log") 
 		*ppProcAddress = (void*) &libmc_mccontext_log;
 	if (sProcName == "libmc_mccontext_createapirequesthandler") 

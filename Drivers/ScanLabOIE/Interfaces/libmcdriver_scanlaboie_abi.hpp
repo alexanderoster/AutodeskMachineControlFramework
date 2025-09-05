@@ -727,6 +727,24 @@ LIBMCDRIVER_SCANLABOIE_DECLSPEC LibMCDriver_ScanLabOIEResult libmcdriver_scanlab
 LIBMCDRIVER_SCANLABOIE_DECLSPEC LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_appisrunning(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, bool * pValue);
 
 /**
+* Sets the recording frequency for the OIE. Fails if App is already running. Fails if Version is not OIEVersion3.
+*
+* @param[in] pOIEDevice - OIEDevice instance.
+* @param[in] eFrequency - Frequency of data acquisition.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABOIE_DECLSPEC LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_setrecordingfrequency(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, LibMCDriver_ScanLabOIE::eOIERecordingFrequency eFrequency);
+
+/**
+* Returns the recording frequency for the OIE. Default is 100kHz. Returns invalid for all versions smaller than OIEVersion3.
+*
+* @param[in] pOIEDevice - OIEDevice instance.
+* @param[out] pFrequency - Frequency of data acquisition.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABOIE_DECLSPEC LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_getrecordingfrequency(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, LibMCDriver_ScanLabOIE::eOIERecordingFrequency * pFrequency);
+
+/**
 * Returns if the app that is currently running on the device. Fails if no app is running on the device.
 *
 * @param[in] pOIEDevice - OIEDevice instance.

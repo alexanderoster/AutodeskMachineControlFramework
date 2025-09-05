@@ -396,7 +396,7 @@ public:
 		}
 		
 		pUIEnvironment->SetUIProperty("importbuildjob.preview", "builduuid", sBuildUUID);
-		pUIEnvironment->SetUIPropertyAsInteger("importbuildjob.preview", "currentlayer", 200);
+		pUIEnvironment->SetUIPropertyAsInteger("importbuildjob.preview", "currentlayer", 1);
 
 		pUIEnvironment->ActivatePage("importbuildjob");
 	}
@@ -431,7 +431,7 @@ public:
 		pUIEnvironment->SetUIPropertyAsInteger("buildstatus.preview", "currentlayer", 2);*/
 
 		pUIEnvironment->SetUIProperty("importbuildjob.preview", "builduuid", sBuildUUID);
-		pUIEnvironment->SetUIPropertyAsInteger("importbuildjob.preview", "currentlayer", 200);
+		pUIEnvironment->SetUIPropertyAsInteger("importbuildjob.preview", "currentlayer", 1);
 
 		pUIEnvironment->ActivatePage("importbuildjob");
 

@@ -47,6 +47,8 @@ namespace AMC {
 	amcDeclareDependingClass(CAPISession, PAPISession);
 	amcDeclareDependingClass(CAPISessionHandler, PAPISessionHandler);
 	amcDeclareDependingClass(CParameterHandler, PParameterHandler);
+	amcDeclareDependingClass(CUIFrontendDefinition, PUIFrontendDefinition);
+	
 
 	class CAPISessionHandler {
 	private:
@@ -64,9 +66,9 @@ namespace AMC {
 
 		PAPIAuth createAuthentication(const std::string& sAuthorizationJSON, AMCCommon::PChrono pGlobalChrono);
 
-		PAPIAuth createNewAuthenticationSession(AMCCommon::PChrono pGlobalChrono);
+		PAPIAuth createNewAuthenticationSession(PUIFrontendDefinition pFrontendDefinition);
 
-		PAPIAuth createEmptyAuthenticationSession(AMCCommon::PChrono pGlobalChrono);
+		PAPIAuth createEmptyAuthenticationSession();
 
 		void authorizeSession (const std::string & sSessionUUID, const std::string & sSaltedPassword, const std::string & sClientKey);
 

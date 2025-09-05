@@ -59,6 +59,7 @@ class CStreamConnection : public virtual IStreamConnection, public virtual CBase
 private:
 
     std::string m_sStreamUUID;
+    uint32_t m_nDummy;
 
 public:
 
@@ -69,6 +70,8 @@ public:
 	IStreamData * GetNewContent() override;
 
 	uint32_t GetIdleDelay() override;
+
+    LibMC::eStreamConnectionType GetStreamType() override;
 
 };
 

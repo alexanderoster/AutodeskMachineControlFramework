@@ -61,9 +61,9 @@ namespace AMC {
 	class CUIModule_Custom : public CUIModule {
 	protected:		
 
-		std::string m_sModulePath;
-
 		PUIModuleCustomItem_Properties m_pCustomItem;
+
+		std::string m_sParentPath;
 
 		std::map<std::string, PUIModuleCustomItem_Event> m_EventItemNameMap;
 		std::map<std::string, PUIModuleCustomItem_Event> m_EventItemUUIDMap;
@@ -80,7 +80,7 @@ namespace AMC {
 
 		std::string getCaption () override;
 
-		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler) override;
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
 
 		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
 

@@ -32,12 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include "libmcdriver_camera_dynamic.hpp"
 
 /*************************************************************************************************************************
   Driver import definition
 **************************************************************************************************************************/
-__NODRIVERIMPORT
+LIBMC_IMPORTDRIVERCLASSES(Camera, Camera)
 
+__BEGINDRIVERIMPORT
+__IMPORTDRIVER(Camera, "camera");
+__ENDDRIVERIMPORT
 
 /*************************************************************************************************************************
   State definitions
@@ -47,6 +51,61 @@ __BEGINSTATEDEFINITIONS
 __DECLARESTATE(init)
 {
 	pStateEnvironment->LogMessage("Initializing...");
+
+	auto pCameraDriver = __acquireDriver(Camera);
+
+	auto pDeviceList = pCameraDriver->EnumerateDevices();
+	auto nCount = pDeviceList->GetCount();
+
+	for (uint32_t nIndex = 0; nIndex < nCount; nIndex++) {
+		auto pDeviceInfo = pDeviceList->GetDeviceInfo(nIndex);
+		std::string sName = pDeviceInfo->GetFriendlyName();
+		std::string sOSName = pDeviceInfo->GetOperatingSystemName();
+		pStateEnvironment->LogMessage("- " + sName + " / " + sOSName);
+	}
+
+	auto pDeviceInfo = pDeviceList->GetDeviceInfo(0);
+	auto pVideoDevice = pCameraDriver->OpenVideoDevice("camera", pDeviceInfo);
+
+	auto nResolutionCount = pVideoDevice->GetSupportedResolutionCount();
+	for (uint32_t nResolutionIndex = 0; nResolutionIndex < nResolutionCount; nResolutionIndex++) {
+		uint32_t nWidth = 0;
+		uint32_t nHeight = 0;
+		uint32_t nFramerate = 0;
+		LibMCDriver_Camera::eVideoSourceFormat sourceFormat;
+
+		pVideoDevice->GetSupportedResolution(nResolutionIndex, nWidth, nHeight, nFramerate, sourceFormat);
+		std::string sSourceFormat = pVideoDevice->GetSourceFormatDescription(sourceFormat);
+
+		pStateEnvironment->LogMessage (" - supported Camera resolution: " + std::to_string (nWidth) + "x" + std::to_string (nHeight) + "x" + std::to_string (nFramerate) + " (" + sSourceFormat + ")");
+	}
+
+	pVideoDevice->SetToSupportedResolution(0) ;
+
+	auto pImage = pStateEnvironment->CreateEmptyImage (pVideoDevice->GetCurrentResolutionX(), pVideoDevice->GetCurrentResolutionY(), 100.0, 100.0, LibMCEnv::eImagePixelFormat::RGB24bit);
+	if (pVideoDevice->CaptureRawImage(pImage)) {
+		pStateEnvironment->LogMessage ("image captured!");
+	}
+	else {
+		pStateEnvironment->LogMessage("image not captured!");
+	}
+
+	if (pVideoDevice->CaptureRawImage(pImage)) {
+		pStateEnvironment->LogMessage("image captured!");
+	}
+	else {
+		pStateEnvironment->LogMessage("image not captured!");
+	}
+
+	std::vector<uint8_t> dataStream;
+	auto pJPEGImage = pImage->CreateJPEGImage(nullptr);
+	pJPEGImage->GetJPEGDataStream(dataStream);
+
+	auto pJPEGStream = pStateEnvironment->CreateTemporaryStream("test.jpg", "image/jpeg");
+	pJPEGStream->WriteData(dataStream);
+	pJPEGStream->Finish();
+		
+
 
 	pStateEnvironment->SetIntegerParameter("jobinfo", "layercount", 0);
 	pStateEnvironment->SetIntegerParameter("jobinfo", "currentlayer", 0);

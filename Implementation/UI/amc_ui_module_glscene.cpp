@@ -191,7 +191,7 @@ std::string CUIModule_GLSceneItem::findElementPathByUUID(const std::string& sUUI
 	return "";
 }
 
-void CUIModule_GLSceneItem::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_GLSceneItem::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
 
@@ -214,7 +214,7 @@ void CUIModule_GLSceneItem::populateClientVariables(CParameterHandler* pClientVa
 
 
 CUIModule_GLScene::CUIModule_GLScene(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode))
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -224,7 +224,6 @@ CUIModule_GLScene::CUIModule_GLScene(pugi::xml_node& xmlNode, const std::string&
 	if (sPath.empty())
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULEPATH, m_sName);
 
-	m_sModulePath = sPath + "." + m_sName;
 
 	auto pResourcePackage = pUIModuleEnvironment->resourcePackage();
 	auto pMeshHandler = pUIModuleEnvironment->meshHandler();
@@ -307,7 +306,7 @@ CUIModule_GLScene::CUIModule_GLScene(pugi::xml_node& xmlNode, const std::string&
 	}
 
 
-	m_pSceneItem = std::make_shared<CUIModule_GLSceneItem>(m_sModulePath, m_sUUID, pUIModuleEnvironment, this);
+	m_pSceneItem = std::make_shared<CUIModule_GLSceneItem>(getModulePath (), m_sUUID, pUIModuleEnvironment, this);
 
 }
 
@@ -361,14 +360,14 @@ void CUIModule_GLScene::writeSceneToJSON(CJSONWriter& writer, CJSONWriterObject&
 }
 
 
-void CUIModule_GLScene::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_GLScene::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULEUUID, getUUID());
 	moduleObject.addString(AMC_API_KEY_UI_MODULETYPE, getType());
 	moduleObject.addString(AMC_API_KEY_UI_CAPTION, m_sCaption);
 
-	m_pSceneItem->addContentToJSON(writer, moduleObject, pClientVariableHandler, 0);
+	m_pSceneItem->addLegacyContentToJSON(writer, moduleObject, pLegacyClientVariableHandler, 0);
 }
 
 PUIModuleItem CUIModule_GLScene::findItem(const std::string& sUUID)

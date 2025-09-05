@@ -135,6 +135,12 @@ void CAPIRequestHandler::Handle(const LibMC_uint64 nRawBodyBufferSize, const Lib
     nHTTPCode = m_pResponse->getHTTPCode();
 }
 
+void CAPIRequestHandler::SetRequestParameter(const std::string& sName, const std::string& sValue)
+{
+    m_FormFields.addRequestParameter(sName, sValue);
+}
+
+
 void CAPIRequestHandler::GetResultData(LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8 * pDataBuffer)
 {
 

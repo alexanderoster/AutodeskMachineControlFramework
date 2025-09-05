@@ -46,11 +46,13 @@ using namespace AMC;
 
 
 CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler)
-	:  m_sName(sName), m_pUIEventHandler (pUIEventHandler)
+	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1)
 {
 	if (sName.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 	LibMCAssertNotNull(pUIEventHandler);
+
+	m_sUUID = AMCCommon::CUtils::createUUID();
 
 
 }
@@ -100,34 +102,25 @@ PUIModule CUIPage::getModule(const uint32_t nIndex)
 	return m_Modules.at (nIndex);
 }
 
-void CUIPage::writeModulesToJSON(CJSONWriter& writer, CJSONWriterArray& moduleArray, CParameterHandler* pClientVariableHandler)
+void CUIPage::ensureUIEventExists(const std::string& sEventName)
+{
+	m_pUIEventHandler->ensureUIEventExists(sEventName);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Legacy UI System
+/////////////////////////////////////////////////////////////////////////////////////
+
+void CUIPage::writeLegacyModulesToJSON(CJSONWriter& writer, CJSONWriterArray& moduleArray, CParameterHandler* pLegacyClientVariableHandler)
 {
 	for (auto module : m_Modules) {
 		CJSONWriterObject moduleObject(writer);		
-		module->writeDefinitionToJSON(writer, moduleObject, pClientVariableHandler);
+		module->writeLegacyDefinitionToJSON(writer, moduleObject, pLegacyClientVariableHandler);
 
 		moduleArray.addObject(moduleObject);
 	}
 }
-
-/*void CUIPage::writeModuleItemUpdatesToJSON(CJSONWriter& writer, CJSONWriterArray& itemArray, CParameterHandler* pClientVariableHandler)
-{
-	for (auto module : m_Modules) {
-		std::map <std::string, PUIModuleItem> itemMap;
-		module->populateItemMap(itemMap);
-
-		for (auto item : itemMap) {
-			CJSONWriterObject itemObject(writer);
-			item.second->addContentToJSON(writer, itemObject, pClientVariableHandler);
-
-			if (!itemObject.isEmpty()) {
-				itemObject.addString(AMC_API_KEY_UI_ITEMUUID, item.second->getUUID());
-				itemArray.addObject(itemObject);
-			}
-		}
-	}
-
-} */
 
 
 PUIModuleItem CUIPage::findModuleItemByUUID(const std::string& sUUID)
@@ -161,11 +154,6 @@ std::string CUIPage::findFormUUIDByName(const std::string& sFormName)
 	return "";
 }
 
-void CUIPage::ensureUIEventExists(const std::string& sEventName)
-{
-	m_pUIEventHandler->ensureUIEventExists(sEventName);
-}
-
 void CUIPage::populateClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
@@ -175,5 +163,42 @@ void CUIPage::populateClientVariables(CParameterHandler* pParameterHandler)
 	for (auto pModule : m_Modules) {
 		pModule->populateClientVariables(pParameterHandler);
 	}
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+
+void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState)
+{
+	pageObject.addString("name", m_sName);
+	pageObject.addString("uuid", AMCCommon::CUtils::normalizeUUIDString(m_sUUID));
+
+	if (!m_sCaption.empty())
+		pageObject.addString("caption", m_sCaption);
+	if (!m_sDescription.empty())
+		pageObject.addString("description", m_sDescription);
+	if (!m_sIcon.empty())
+		pageObject.addString("icon", m_sIcon);
+
+	if (m_nGridColumns > 1)
+		pageObject.addInteger("gridcolumns", m_nGridColumns);
+	if (m_nGridRows > 1)
+		pageObject.addInteger("gridrows", m_nGridRows);
+
+	CJSONWriterArray moduleArray(writer);
+
+	for (auto pModule : m_Modules) {
+		CJSONWriterObject moduleObject(writer);
+
+		pModule->frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState);
+
+		moduleArray.addObject(moduleObject);
+	}
+
+
+	pageObject.addArray("modules", moduleArray);
+
 }
 

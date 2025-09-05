@@ -62,6 +62,7 @@ class IRTCJob;
 class IRTCRecording;
 class IGPIOSequence;
 class INLightAFXProfileSelector;
+class IOIEMeasurementTagMap;
 class IRTCContext;
 class IRTCSelector;
 class IDriver_ScanLab;
@@ -530,10 +531,10 @@ public:
 	* @param[in] pPointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	virtual void DrawPolyline(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue) = 0;
+	virtual void DrawPolyline(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue) = 0;
 
 	/**
 	* IRTCJob::DrawPolylineOIE - Writes a polyline into the open list with OIE Enabled.
@@ -541,11 +542,11 @@ public:
 	* @param[in] pPointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	* @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 	*/
-	virtual void DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex) = 0;
+	virtual void DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex) = 0;
 
 	/**
 	* IRTCJob::DrawHatches - Writes a list of hatches into the open list
@@ -553,10 +554,10 @@ public:
 	* @param[in] pHatchesBuffer - Hatches to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	virtual void DrawHatches(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue) = 0;
+	virtual void DrawHatches(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue) = 0;
 
 	/**
 	* IRTCJob::AddSetPower - adds a power change to the open list. MUST NOT be used for PID control.
@@ -625,6 +626,13 @@ public:
 	*/
 	virtual void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue) = 0;
 
+	/**
+	* IRTCJob::AddMicrovectorMovement - Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+	* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+	* @param[in] pMicrovectorArrayBuffer - Microvector array to execute.
+	*/
+	virtual void AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer) = 0;
+
 };
 
 typedef IBaseSharedPtr<IRTCJob> PIRTCJob;
@@ -640,6 +648,12 @@ public:
 	* IRTCRecording::Clear - Clears all recording data and channels.
 	*/
 	virtual void Clear() = 0;
+
+	/**
+	* IRTCRecording::GetUUID - Returns UUID of Recording.
+	* @return UUID of Recording.
+	*/
+	virtual std::string GetUUID() = 0;
 
 	/**
 	* IRTCRecording::AddChannel - Adds a new channel to record. Fails if more than 8 channels are recorded. Fails if recording has been already started.
@@ -945,6 +959,90 @@ typedef IBaseSharedPtr<INLightAFXProfileSelector> PINLightAFXProfileSelector;
 
 
 /*************************************************************************************************************************
+ Class interface for OIEMeasurementTagMap 
+**************************************************************************************************************************/
+
+class IOIEMeasurementTagMap : public virtual IBase {
+public:
+	/**
+	* IOIEMeasurementTagMap::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE.
+	* @return Measurement Tag that has been sent to the OIE.
+	*/
+	virtual LibMCDriver_ScanLab_uint32 GetOIEMaxMeasurementTag() = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementTag - Maps an OIE Measurement tag back to the original scan parameters.
+	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+	* @param[out] nPartID - ID of the part.
+	* @param[out] nProfileID - ID of the profile.
+	* @param[out] nSegmentID - ID of the segment.
+	* @param[out] nVectorID - ID of the vector.
+	*/
+	virtual void MapOIEMeasurementTag(const LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab_uint32 & nPartID, LibMCDriver_ScanLab_uint32 & nProfileID, LibMCDriver_ScanLab_uint32 & nSegmentID, LibMCDriver_ScanLab_uint32 & nVectorID) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementTagData - Maps an OIE Measurement tag back to the original scan parameters.
+	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+	* @return Measurement as tag data struct.
+	*/
+	virtual LibMCDriver_ScanLab::sOIEMeasurementTagData MapOIEMeasurementTagData(const LibMCDriver_ScanLab_uint32 nMeasurementTag) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementTags - Maps an array of OIE Measurement tags back to the original scan parameters.
+	* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+	* @param[in] pMeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - OIEMeasurementTagData buffer of Will be filled with all the tags associated with the input array. The length of the array will match the input array.
+	*/
+	virtual void MapOIEMeasurementTags(const LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab::sOIEMeasurementTagData * pDataBuffer) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementPartIDs - Maps an array of OIE Measurement tags back to the original part IDs.
+	* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+	* @param[in] pMeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - uint32 buffer of Will be filled with all the part IDs associated with the input array. The length of the array will match the input array.
+	*/
+	virtual void MapOIEMeasurementPartIDs(const LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementProfileIDs - Maps an array of OIE Measurement tags back to the original profile IDs.
+	* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+	* @param[in] pMeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - uint32 buffer of Will be filled with all the profile IDs associated with the input array. The length of the array will match the input array.
+	*/
+	virtual void MapOIEMeasurementProfileIDs(const LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementSegmentIDs - Maps an array of OIE Measurement tags back to the original segment IDs.
+	* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+	* @param[in] pMeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - uint32 buffer of Will be filled with all the segment IDs associated with the input array. The length of the array will match the input array.
+	*/
+	virtual void MapOIEMeasurementSegmentIDs(const LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer) = 0;
+
+	/**
+	* IOIEMeasurementTagMap::MapOIEMeasurementVectorIDs - Maps an array of OIE Measurement tags back to the original vector IDs.
+	* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+	* @param[in] pMeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - uint32 buffer of Will be filled with all the vector  IDs associated with the input array. The length of the array will match the input array.
+	*/
+	virtual void MapOIEMeasurementVectorIDs(const LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOIEMeasurementTagMap> PIOIEMeasurementTagMap;
+
+
+/*************************************************************************************************************************
  Class interface for RTCContext 
 **************************************************************************************************************************/
 
@@ -971,11 +1069,18 @@ public:
 	virtual void LoadCorrectionFile(const LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, const LibMCDriver_ScanLab_uint32 nTableNumber, const LibMCDriver_ScanLab_uint32 nDimension) = 0;
 
 	/**
-	* IRTCContext::SelectCorrectionTable - Selects Correction Table on card.
+	* IRTCContext::SelectCorrectionTable - Selects Correction Table on card. Reads the correction factorw out of the Table, if existent.
 	* @param[in] nTableNumberHeadA - Table Number for HeadA (1..8) or off (0).
 	* @param[in] nTableNumberHeadB - Table Number for HeadA (1..8) or off (0).
 	*/
 	virtual void SelectCorrectionTable(const LibMCDriver_ScanLab_uint32 nTableNumberHeadA, const LibMCDriver_ScanLab_uint32 nTableNumberHeadB) = 0;
+
+	/**
+	* IRTCContext::SetCorrectionFactors - Sets the correction factor manually.
+	* @param[in] dCorrectionFactorXY - Scale correction factor in the XY plane. In bits per mm. MUST BE larger than 0.
+	* @param[in] dCorrectionFactorZ - Scale correction factor in the Z axis. In bits per mm. Should be equal to CorrectionFactorXY for the RTC6 card. MUST BE larger than 0.
+	*/
+	virtual void SetCorrectionFactors(const LibMCDriver_ScanLab_double dCorrectionFactorXY, const LibMCDriver_ScanLab_double dCorrectionFactorZ) = 0;
 
 	/**
 	* IRTCContext::ConfigureLists - Configures list buffer size.
@@ -1035,6 +1140,34 @@ public:
 	* @param[in] dPulseLength - Pulse Length in microseconds
 	*/
 	virtual void SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength) = 0;
+
+	/**
+	* IRTCContext::GetLaserPulsesInBits - Sets laser control pulse interval (in 1/64th microseconds)
+	* @param[out] nHalfPeriod - Half Output period in 1/64th microseconds
+	* @param[out] nPulseLength - Pulse Length in 1/64th microseconds
+	*/
+	virtual void GetLaserPulsesInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength) = 0;
+
+	/**
+	* IRTCContext::GetLaserPulsesInMicroSeconds - Sets laser control pulse interval (in microseconds)
+	* @param[out] dHalfPeriod - Half Output period in microseconds
+	* @param[out] dPulseLength - Pulse Length in microseconds
+	*/
+	virtual void GetLaserPulsesInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength) = 0;
+
+	/**
+	* IRTCContext::GetStandbyInBits - Sets standby pulse interval (in 1/64th microseconds)
+	* @param[out] nHalfPeriod - Half Output period in 1/64th microseconds
+	* @param[out] nPulseLength - Pulse Length in 1/64th microseconds
+	*/
+	virtual void GetStandbyInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength) = 0;
+
+	/**
+	* IRTCContext::GetStandbyInMicroSeconds - Sets laser control pulse interval (in microseconds)
+	* @param[out] dHalfPeriod - Half Output period in microseconds
+	* @param[out] dPulseLength - Pulse Length in microseconds
+	*/
+	virtual void GetStandbyInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength) = 0;
 
 	/**
 	* IRTCContext::GetIPAddress - Returns the IP Address of the RTC Card. Fails if driver has not been initialized.
@@ -1134,6 +1267,18 @@ public:
 	virtual void SetAutoChangePos(const LibMCDriver_ScanLab_uint32 nPosition) = 0;
 
 	/**
+	* IRTCContext::SetDefocusFactor - Sets a factor for the Z defocus commands.
+	* @param[in] dValue - Z Defocus Factor.
+	*/
+	virtual void SetDefocusFactor(const LibMCDriver_ScanLab_double dValue) = 0;
+
+	/**
+	* IRTCContext::GetDefocusFactor - Returns the current factor for the Z defocus commands.
+	* @return Z Defocus Factor.
+	*/
+	virtual LibMCDriver_ScanLab_double GetDefocusFactor() = 0;
+
+	/**
 	* IRTCContext::SetDelays - Sets the laser delays
 	* @param[in] nMarkDelay - Mark delay in microseconds (MUST be multiple of 10)
 	* @param[in] nJumpDelay - Jump delay in microseconds (MUST be multiple of 10)
@@ -1161,10 +1306,10 @@ public:
 	* @param[in] pPointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	virtual void DrawPolyline(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue) = 0;
+	virtual void DrawPolyline(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue) = 0;
 
 	/**
 	* IRTCContext::DrawPolylineOIE - Writes a polyline into the open list with OIE Enabled.
@@ -1172,11 +1317,11 @@ public:
 	* @param[in] pPointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	* @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 	*/
-	virtual void DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex) = 0;
+	virtual void DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex) = 0;
 
 	/**
 	* IRTCContext::DrawHatches - Writes a list of hatches into the open list
@@ -1184,10 +1329,10 @@ public:
 	* @param[in] pHatchesBuffer - Hatches to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	virtual void DrawHatches(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue) = 0;
+	virtual void DrawHatches(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue) = 0;
 
 	/**
 	* IRTCContext::AddSetPower - adds a power change to the open list. MUST NOT be used for PID control.
@@ -1255,6 +1400,13 @@ public:
 	* @param[in] nValue - Value to set.
 	*/
 	virtual void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue) = 0;
+
+	/**
+	* IRTCContext::AddMicrovectorMovement - Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+	* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+	* @param[in] pMicrovectorArrayBuffer - Microvector array to execute.
+	*/
+	virtual void AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer) = 0;
 
 	/**
 	* IRTCContext::GetCurrentFreeVariable - Returns the currently set free variable.
@@ -1419,6 +1571,11 @@ public:
 	virtual void InitializeForOIE(const LibMCDriver_ScanLab_uint64 nSignalChannelsBufferSize, const LibMCDriver_ScanLab_uint32 * pSignalChannelsBuffer, const LibMCDriver_ScanLab::eOIEOperationMode eOperationMode) = 0;
 
 	/**
+	* IRTCContext::DisableOnTheFlyForOIE - Disables the on the fly marking after OIE initialization. This is a workaround that will become depreciated in newer versions..
+	*/
+	virtual void DisableOnTheFlyForOIE() = 0;
+
+	/**
 	* IRTCContext::SetLaserPinOut - Sets the laser pin outputs to a certain state. Control command, has immediate effect.
 	* @param[in] bLaserOut1 - Value for Laser Out Pin 1
 	* @param[in] bLaserOut2 - Value for Laser Out Pin 2
@@ -1533,6 +1690,12 @@ public:
 	virtual void ClearOIEMeasurementTags() = 0;
 
 	/**
+	* IRTCContext::RetrieveOIEMeasurementTags - Extracts all stored OIE Measurement tags of the context and returns them as separate object. New Tag Indices will start from 0 again.
+	* @return Instance of the OIE Measurement Tag data.
+	*/
+	virtual IOIEMeasurementTagMap * RetrieveOIEMeasurementTags() = 0;
+
+	/**
 	* IRTCContext::EnableOIEMeasurementTagging - Enables OIE Measurement tagging.
 	*/
 	virtual void EnableOIEMeasurementTagging() = 0;
@@ -1543,13 +1706,13 @@ public:
 	virtual void DisableOIEMeasurementTagging() = 0;
 
 	/**
-	* IRTCContext::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE.
+	* IRTCContext::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE. Will return 0 after RetrieveOIEMeasurementTags has been called.
 	* @return Measurement Tag that has been sent to the OIE.
 	*/
 	virtual LibMCDriver_ScanLab_uint32 GetOIEMaxMeasurementTag() = 0;
 
 	/**
-	* IRTCContext::MapOIEMeasurementTag - Maps an OIE Measurement tag back to the original scan parameters.
+	* IRTCContext::MapOIEMeasurementTag - DEPRECIATED! Maps an OIE Measurement tag back to the original scan parameters. Use RetrieveOIEMeasurementTags instead.
 	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
 	* @param[out] nPartID - ID of the part.
 	* @param[out] nProfileID - ID of the profile.
@@ -1659,6 +1822,18 @@ public:
 	virtual IRTCRecording * FindRecording(const std::string & sUUID) = 0;
 
 	/**
+	* IRTCContext::ClearRecording - Clears a recording if it exists in the driver memory. Does nothing if no such recording exists.
+	* @param[in] sUUID - UUID of the recording to clear.
+	* @return Returns if the recording existed and has been cleared.
+	*/
+	virtual bool ClearRecording(const std::string & sUUID) = 0;
+
+	/**
+	* IRTCContext::ClearAllRecordings - Clears all recordings in the driver memory.
+	*/
+	virtual void ClearAllRecordings() = 0;
+
+	/**
 	* IRTCContext::EnableTimelagCompensation - Enables timelag compensation.
 	* @param[in] nTimeLagXYInMicroseconds - Time lag of XY axes (in microseconds). MUST be a multiple of 10.
 	* @param[in] nTimeLagZInMicroseconds - Time lag of Z axis (in microseconds). MUST be a multiple of 10.
@@ -1703,43 +1878,50 @@ public:
 	virtual LibMCDriver_ScanLab_uint32 CheckOnTheFlyError(const bool bFailIfError) = 0;
 
 	/**
-	* IRTCContext::LaserPowerCalibrationIsEnabled - Returns if the laser power calibration table is non-empty.
-	* @return Laser Calibration Is Enabled
-	*/
-	virtual bool LaserPowerCalibrationIsEnabled() = 0;
-
-	/**
 	* IRTCContext::LaserPowerCalibrationIsLinear - Returns if the laser power calibration table has one entry.
 	* @return Laser Calibration Is Affine Linear
 	*/
 	virtual bool LaserPowerCalibrationIsLinear() = 0;
 
 	/**
-	* IRTCContext::ClearLaserPowerCalibration - Clears the laser power calibration table.
-	*/
-	virtual void ClearLaserPowerCalibration() = 0;
-
-	/**
 	* IRTCContext::GetLaserPowerCalibration - Returns the laser power calibration table. Fails if laser calibration is not enabled.
+	* @param[out] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[out] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 	* @param[in] nCalibrationPointsBufferSize - Number of elements in buffer
 	* @param[out] pCalibrationPointsNeededCount - will be filled with the count of the written structs, or needed buffer size.
 	* @param[out] pCalibrationPointsBuffer - LaserCalibrationPoint buffer of Laser Calibration Points
 	*/
-	virtual void GetLaserPowerCalibration(LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer) = 0;
+	virtual void GetLaserPowerCalibration(LibMCDriver_ScanLab_double & dLaserPowerAt0Percent, LibMCDriver_ScanLab_double & dLaserPowerAt100Percent, LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer) = 0;
 
 	/**
 	* IRTCContext::SetLinearLaserPowerCalibration - Enables the laser power calibration with an affine linear tranformation.
-	* @param[in] dPowerOffsetInPercent - Additional offset of the Power value.
-	* @param[in] dPowerOutputScaling - Scaling factor of the laser output.
+	* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 	*/
-	virtual void SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dPowerOffsetInPercent, const LibMCDriver_ScanLab_double dPowerOutputScaling) = 0;
+	virtual void SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent) = 0;
 
 	/**
 	* IRTCContext::SetPiecewiseLinearLaserPowerCalibration - Enables the laser power calibration with multiple calibration point values. Table MUST NOT have negative power entries. Laser Power Output will be linear scaled with the given values within their respective intervals. Any laser power outside of the minimum or maximum Power values will be scaled according to the respective minimum or maximum scaling value.
+	* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 	* @param[in] nCalibrationPointsBufferSize - Number of elements in buffer
-	* @param[in] pCalibrationPointsBuffer - Laser Calibration Points. Array will be sorted by Laser Power Keys. Array MUST NOT be empty. Array MUST NOT have duplicate entries (to an accuracy of 0.01 Percent).
+	* @param[in] pCalibrationPointsBuffer - Laser Calibration Points that match percentage to power. The percentage values MUST be in sequentially increasing in the array (to an accuracy of 0.001 Percent). The power values MUST be sequentially increasing in the array (to an accuracy of 0.001 Watts).. Array MUST NOT be empty.
 	*/
-	virtual void SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer) = 0;
+	virtual void SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent, const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer) = 0;
+
+	/**
+	* IRTCContext::MapPowerPercentageToWatts - Maps a laser power percentage value to the laser power in watts.
+	* @param[in] dLaserPowerInPercent - Laser Power in Percent
+	* @return Laser Power in Watts
+	*/
+	virtual LibMCDriver_ScanLab_double MapPowerPercentageToWatts(const LibMCDriver_ScanLab_double dLaserPowerInPercent) = 0;
+
+	/**
+	* IRTCContext::MapPowerWattsToPercent - Maps a laser power value to the laser power in percent.
+	* @param[in] dLaserPowerInWatts - Laser Power in Watts
+	* @return Laser Power in Percent
+	*/
+	virtual LibMCDriver_ScanLab_double MapPowerWattsToPercent(const LibMCDriver_ScanLab_double dLaserPowerInWatts) = 0;
 
 	/**
 	* IRTCContext::EnableSpatialLaserPowerModulation - Enables a spatial laser power modulation via callback.
@@ -1989,10 +2171,28 @@ public:
 	virtual void Initialise(const std::string & sIP, const std::string & sNetmask, const LibMCDriver_ScanLab_uint32 nTimeout, const LibMCDriver_ScanLab_uint32 nSerialNumber) = 0;
 
 	/**
-	* IDriver_ScanLab_RTC6::InitialiseFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+	* IDriver_ScanLab_RTC6::InitialiseFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserTimingDefaults.
 	* @param[in] sPresetName - Name of the configuration preset.
 	*/
 	virtual void InitialiseFromConfiguration(const std::string & sPresetName) = 0;
+
+	/**
+	* IDriver_ScanLab_RTC6::SetLaserSignalTimingDefaults - Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+	* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	virtual void SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength) = 0;
+
+	/**
+	* IDriver_ScanLab_RTC6::GetLaserSignalTimingDefaults - Returns the laser timing defaults for CO2 lasers.
+	* @param[out] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[out] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[out] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[out] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	virtual void GetLaserSignalTimingDefaults(LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength) = 0;
 
 	/**
 	* IDriver_ScanLab_RTC6::SetCommunicationTimeouts - Set RTC Ethernet communication timeouts. The given values will be defaults for all subsequent connections.
@@ -2063,7 +2263,7 @@ public:
 	virtual void SetCorrectionFile(const LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, const LibMCDriver_ScanLab_uint32 nTableNumber, const LibMCDriver_ScanLab_uint32 nDimension, const LibMCDriver_ScanLab_uint32 nTableNumberHeadA, const LibMCDriver_ScanLab_uint32 nTableNumberHeadB) = 0;
 
 	/**
-	* IDriver_ScanLab_RTC6::ConfigureLaserMode - Configures the laser mode. MUST be called before any exposure.
+	* IDriver_ScanLab_RTC6::ConfigureLaserMode - Configures the laser mode. MUST be called before any exposure. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 	* @param[in] eLaserMode - Laser Mode Enum
 	* @param[in] eLaserPort - Laser Port Enum
 	* @param[in] dMaxLaserPower - Maximum laser power.
@@ -2199,11 +2399,31 @@ public:
 	virtual void InitialiseScanner(const LibMCDriver_ScanLab_uint32 nScannerIndex, const std::string & sIP, const std::string & sNetmask, const LibMCDriver_ScanLab_uint32 nTimeout, const LibMCDriver_ScanLab_uint32 nSerialNumber, const LibMCDriver_ScanLab_uint32 nLaserIndex) = 0;
 
 	/**
-	* IDriver_ScanLab_RTC6xN::InitialiseScannerFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+	* IDriver_ScanLab_RTC6xN::InitialiseScannerFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserSignalTimingDefaults.
 	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
 	* @param[in] sPresetName - Name of the configuration preset.
 	*/
 	virtual void InitialiseScannerFromConfiguration(const LibMCDriver_ScanLab_uint32 nScannerIndex, const std::string & sPresetName) = 0;
+
+	/**
+	* IDriver_ScanLab_RTC6xN::SetLaserSignalTimingDefaults - Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+	* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	virtual void SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength) = 0;
+
+	/**
+	* IDriver_ScanLab_RTC6xN::GetLaserSignalTimingDefaults - Returns the laser timing defaults for CO2 lasers.
+	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+	* @param[out] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[out] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[out] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[out] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	virtual void GetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength) = 0;
 
 	/**
 	* IDriver_ScanLab_RTC6xN::GetIPAddress - Returns the IP Address of the RTC Card. Fails if driver has not been initialized.
@@ -2280,7 +2500,7 @@ public:
 	virtual void SetCorrectionFile(const LibMCDriver_ScanLab_uint32 nScannerIndex, const LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, const LibMCDriver_ScanLab_uint32 nTableNumber, const LibMCDriver_ScanLab_uint32 nDimension, const LibMCDriver_ScanLab_uint32 nTableNumberHeadA, const LibMCDriver_ScanLab_uint32 nTableNumberHeadB) = 0;
 
 	/**
-	* IDriver_ScanLab_RTC6xN::ConfigureLaserMode - Configures the laser mode.
+	* IDriver_ScanLab_RTC6xN::ConfigureLaserMode - Configures the laser mode. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
 	* @param[in] eLaserMode - Laser Mode Enum
 	* @param[in] eLaserPort - Laser Port Enum

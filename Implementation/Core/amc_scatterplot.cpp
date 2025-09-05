@@ -71,6 +71,11 @@ namespace AMC {
 		return m_PointEntries;
 	}
 
+	ChannelEntries& CScatterplot::getChannelEntries()
+	{
+		return m_ChannelEntries;
+	}
+
 	void CScatterplot::getBoundaries(double& dMinX, double& dMinY, double& dMaxX, double& dMaxY)
 	{
 		dMinX = m_dMinX;

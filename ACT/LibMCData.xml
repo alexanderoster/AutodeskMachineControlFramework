@@ -435,6 +435,10 @@
 		<error name="JOURNALVARIABLEALIASALREADYEXISTS" code="435" description="Journal variable alias already exists." />
 		<error name="INVALIDALIASINDEX" code="436" description="Invalid alias index" />
 		<error name="SOURCEOFJOURNALALIASNOTFOUND" code="437" description="Source of Journal Alias not found" />
+		<error name="COULDNOTFINDMACHINECONFIGURATIONTYPE" code="438" description="Could not find machine configuration type." />
+		<error name="INVALIDSTORAGESTREAMSIZE" code="439" description="Storage stream size for build is zero." />
+		<error name="COULDNOTUPDATEBUILDNAME" code="440" description="Could not update build name" />
+						
 
 	</errors>
 	
@@ -880,6 +884,10 @@
 		<method name="GetSHA2" description="returns the sha256 checksum of a storage stream.">
 			<param name="SHA2" type="string" pass="return" description="SHA1 String" />	
 		</method>
+		
+		<method name="EnsureSHA256IsValid" description="checks if the SHA256 is matching the computed SHA256 on disk. Will fail if there is a mismatch. Attention: Computation will take some time.">
+		</method>
+
 
 		<method name="GetSize" description="returns the size of a storage stream.">
 			<param name="Size" type="uint64" pass="return" description="Size" />	
@@ -1292,6 +1300,10 @@
 			<param name="Status" type="enum" class="BuildJobStatus" pass="return" description="Status of build job." />	
 		</method>
 
+		<method name="GetStatusString" description="returns the status of a build job as string.">
+			<param name="StatusString" type="string" pass="return" description="Status of build job as string." />	
+		</method>
+
 		<method name="GetLayerCount" description="returns the layer count of a build job.">
 			<param name="LayerCount" type="uint32" pass="return" description="Layer Count of build job" />	
 		</method>
@@ -1332,6 +1344,10 @@
 			<param name="StreamUUID" type="string" pass="return" description="Stream UUID." />
 		</method>	
 		
+		<method name="GetStorageStreamSize" description="returns the size of the storage stream in bytes.">
+			<param name="StreamSize" type="uint64" pass="return" description="Stream Size." />
+		</method>	
+
 		<method name="StartValidating" description="Starts validation of a build job.">
 		</method>
 
@@ -1339,10 +1355,14 @@
 			<param name="LayerCount" type="uint32" pass="in" description="Layer count" />
 		</method>
 
-		<method name="ArchiveJob" description="Archives a Job. Job MUST not be opened in the system. Job MUST be of state validated.">
+		<method name="ArchiveJob" description="Archives a Job. Job MUST be of state validated.">
 		</method>
 
 		<method name="UnArchiveJob" description="Unarchives a Job. Job MUST be of state archived.">
+		</method>
+
+		<method name="ChangeName" description="Changes the name of a job.">
+			<param name="Name" type="string" pass="in" description="New name of the job. MUST not be empty. MUST have less than 1024 characters." />
 		</method>
 
 		<method name="DeleteJob" description="Deletes a Job permanently including all referencing data objects. Job MUST be of state archived to succeed.">
@@ -1495,7 +1515,6 @@
 		</method>
 			
 	</class>
-
 
 
     <!-- The UserList class is not thread safe and MUST ONLY be used in a single thread context... -->
@@ -1741,6 +1760,156 @@
 
 	</class>
 
+	<!-- The MachineConfigurationVersion class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="MachineConfigurationVersion" parent="Base" description="Machine configuration XSD instance.">
+
+		<method name="GetVersionUUID" description="Returns the UUID.">
+			<param name="VersionUUID" type="string" pass="return" description="UUID of the configuration version." />	
+		</method>
+		
+		<method name="GetXSDUUID" description="Returns the UUID.">
+			<param name="XSDUUID" type="string" pass="return" description="UUID of the configuration XSD." />	
+		</method>
+
+		<method name="GetTypeUUID" description="Returns the UUID of the corresponding Configuration type.">
+			<param name="TypeUUID" type="string" pass="return" description="UUID of the configuration type." />	
+		</method>
+		
+		<method name="GetParentUUID" description="Returns the UUID of the parent Configuration Version.">
+			<param name="ParentUUID" type="string" pass="return" description="UUID of the configuration version that is the parent of this version. Returns 00000000-0000-0000-0000-000000000000, if Version is the default configuration." />	
+		</method>
+
+		<method name="GetSchemaType" description="Returns the Schema type of the configuration.">
+			<param name="SchemaType" type="string" pass="return" description="Schema type of the configuration type." />	
+		</method>
+
+		<method name="GetXSDVersion" description="Returns the version number of the XSD in use..">
+			<param name="XSDVersion" type="uint32" pass="return" description="Returns the XSD version." />	
+		</method>
+
+		<method name="GetXSDString" description="Returns the XSD in use as string..">
+			<param name="XSDString" type="string" pass="return" description="XSD String." />	
+		</method>
+
+		<method name="GetConfigurationXMLString" description="Returns the configuration XML as String.">
+			<param name="XMLString" type="string" pass="return" description="XML String." />	
+		</method>
+		
+		<method name="CreateNewVersion" description="Creates a new configuration version from this version with the same XSD.">
+			<param name="XMLString" type="string" pass="in" description="New XML Configuration String. MUST conform to current XSD." />	
+			<param name="UserUUID" type="string" pass="in" description="User UUID for logging the user who initiated the change." />	
+			<param name="TimeStampUTC" type="string" pass="in" description="Current time in UTC." />	
+			<param name="CurrentInstance" type="class" class="MachineConfigurationVersion" pass="return" description="returns the MachineConfigurationVersion instance."/>
+		</method>
+
+		<method name="MigrateToNewXSD" description="Creates a new configuration version from this version with another XSD.">
+			<param name="NewXSD" type="class" class="MachineConfigurationXSD" pass="in" description="New XSD to use. MUST be of the same type as the current. MUST have an increased version number."/>
+			<param name="XMLString" type="string" pass="in" description="New XML Configuration String. MUST conform to new XSD." />	
+			<param name="UserUUID" type="string" pass="in" description="User UUID for logging the user who initiated the change." />	
+			<param name="TimeStampUTC" type="string" pass="in" description="Current time in UTC." />	
+			<param name="CurrentInstance" type="class" class="MachineConfigurationVersion" pass="return" description="returns the MachineConfigurationVersion instance."/>
+		</method>
+
+	</class>
+
+
+    <!-- The AlertIterator class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="MachineConfigurationVersionIterator" parent="Iterator">
+		<method name="GetCurrentVersion" description="Returns the version the iterator points at.">
+			<param name="CurrentInstance" type="handle" class="MachineConfigurationVersion" pass="return" description="returns the MachineConfigurationVersion instance."/>
+		</method>
+	</class>
+
+	<!-- The MachineConfigurationType class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="MachineConfigurationXSD" parent="Base" description="Machine configuration XSD instance.">
+
+		<method name="GetUUID" description="Returns the UUID.">
+			<param name="XSDUUID" type="string" pass="return" description="UUID of the configuration XSD." />	
+		</method>
+
+		<method name="GetTypeUUID" description="Returns the UUID of the corresponding Configuration type.">
+			<param name="TypeUUID" type="string" pass="return" description="UUID of the configuration type." />	
+		</method>
+		
+		<method name="GetSchemaType" description="Returns the Schema type of the configuration.">
+			<param name="SchemaType" type="string" pass="return" description="Schema type of the configuration type." />	
+		</method>
+
+		<method name="GetXSDVersion" description="Returns the version number of the XSD..">
+			<param name="XSDVersion" type="uint32" pass="return" description="Returns the XSD version." />	
+		</method>
+
+		<method name="GetXSDString" description="Returns the XSD as string..">
+			<param name="XSDString" type="string" pass="return" description="XSD String." />	
+		</method>
+		
+		<method name="ListVersions" description="Lists all known Configuration version of the current XSD.">
+			<param name="VersionIterator" type="class" class="MachineConfigurationVersionIterator" pass="return" description="Returns a list of versions." />	
+		</method>		
+		
+	</class>
+
+	<!-- The MachineConfigurationType class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="MachineConfigurationType" parent="Base" description="Machine configuration type instance.">
+	
+		<method name="GetUUID" description="Returns the UUID.">
+			<param name="TypeUUID" type="string" pass="return" description="UUID of the configuration type." />	
+		</method>
+
+		<method name="GetName" description="Returns the Name.">
+			<param name="Name" type="string" pass="return" description="Name of the configuration type." />	
+		</method>
+
+		<method name="GetSchemaType" description="Returns the Schema type of the configuration.">
+			<param name="SchemaType" type="string" pass="return" description="Schema type of the configuration type." />	
+		</method>
+		
+		<method name="GetLatestXSD" description="Returns the latest Machine Configuration XSD.">
+			<param name="XSDInstance" type="class" class="MachineConfigurationXSD" pass="return" description="Returns the latest XSD of the configuration type." />	
+		</method>
+		
+		<method name="GetLatestXSDVersion" description="Returns the latest Machine Configuration XSD Version.">
+			<param name="XSDVersion" type="uint32" pass="return" description="Returns the latest XSD version, or 0 if no XSD exists." />	
+		</method>
+
+		<method name="FindXSDByUUID" description="Finds Machine Configuration XSD by UUID.">
+			<param name="XSDUUID" type="string" pass="in" description="UUID of the configuration XSD." />	
+			<param name="XSDInstance" type="class" class="MachineConfigurationXSD" pass="return" description="Returns the latest XSD of the configuration type." />	
+		</method>
+
+		<method name="CreateNewXSD" description="Creates a new XSD Version. Fails if version already exists or is not incrementing.">
+			<param name="XSDString" type="string" pass="in" description="XSD String of the version. MUST be incremental." />	
+			<param name="XSDVersion" type="uint32" pass="in" description="New Version to add. MUST be larger than GetLatestXSDVersion." />	
+			<param name="DefaultConfigurationXML" type="string" pass="in" description="Default configuration XML to use for this XSD. MUST conform to XSD in question." />	
+			<param name="XSDInstance" type="class" class="MachineConfigurationXSD" pass="return" description="Returns the new XSD of the configuration type." />
+		</method>
+		
+		<method name="GetXSDVersion" description="Returns an Configuration XSD Version.">
+			<param name="XSDVersion" type="uint32" pass="in" description="Version to retrieve." />	
+			<param name="XSDInstance" type="class" class="MachineConfigurationXSD" pass="return" description="Returns the XSD of the configuration type with the appropriate version number or null if it does not exist." />	
+		</method>
+
+		<method name="ListVersions" description="Lists all known Configuration version of the current type.">
+			<param name="VersionIterator" type="class" class="MachineConfigurationVersionIterator" pass="return" description="Returns a list of versions." />	
+		</method>		
+
+		<method name="FindVersionByUUID" description="Finds a Configuration version by UUID.">
+			<param name="VersionUUID" type="string" pass="in" description="UUID of the configuration version." />	
+			<param name="Version" type="optionalclass" class="MachineConfigurationVersion" pass="return" description="Returns the specific version or null if version does not exist or is of a different type." />	
+		</method>		
+
+		<method name="GetActiveVersion" description="Returns the active Configuration version.">
+			<param name="VersionUUID" type="string" pass="in" description="UUID of the configuration version." />	
+			<param name="Version" type="optionalclass" class="MachineConfigurationVersion" pass="return" description="Returns the specific version or null if no active version exists for this type." />	
+		</method>		
+
+		<method name="GetLatestVersion" description="Returns the latest Configuration version by Timestamp.">
+			<param name="Version" type="optionalclass" class="MachineConfigurationVersion" pass="return" description="Returns the specific version or null if no version exists for this type." />	
+		</method>		
+
+	</class>
+
+
     <!-- The InstallationInformation class is not thread safe and MUST ONLY be used in a single thread context... -->
 	<class name="InstallationInformation" parent="Base" description="Installation information instance. Gives a snapshot of the installation information at creation of the instance. Does not update in the unlikely event of them changing.">
 	
@@ -1832,6 +2001,22 @@
 		
 		<method name="HasLogCallback" description="Returns if a log callback has been set.">
 			<param name="HasCallback" type="bool" pass="return" description="Flag if log callback has been set." />	
+		</method>
+		
+		<method name="FindConfigurationTypeBySchema" description="Retrieves a configuration type by schema.">
+			<param name="SchemaType" type="string" pass="in" description="Configuration Schema Type String" />	
+			<param name="IteratorInstance" type="optionalclass" class="MachineConfigurationType" pass="return" description="Returns the Configuration Type instance, if it exists, NULL otherwise." />
+		</method>
+	
+		<method name="FindConfigurationTypeByUUID" description="Retrieves a configuration type by uuid.">
+			<param name="UUID" type="string" pass="in" description="UUID String. Fails if not a proper UUID formatted string." />	
+			<param name="IteratorInstance" type="optionalclass" class="MachineConfigurationType" pass="return" description="Returns the Configuration Type instance, if it exists, NULL otherwise." />
+		</method>
+
+		<method name="CreateConfigurationType" description="Create a new configuration type for a schema. Fails if schema already exists..">
+			<param name="SchemaType" type="string" pass="in" description="Configuration Schema Type String" />	
+			<param name="Name" type="string" pass="in" description="Name of the type." />	
+			<param name="IteratorInstance" type="class" class="MachineConfigurationType" pass="return" description="Returns the Configuration Type instance." />
 		</method>
 		
 		<method name="TriggerLogCallback" description="Triggers the log callback. Fails if no log callback has been set.">

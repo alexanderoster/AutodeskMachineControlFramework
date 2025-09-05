@@ -84,9 +84,8 @@ private:
 
 	std::vector<AMC::PUIClientAction> m_ClientActions;
 
-	std::map<std::string, std::string> m_ExternalEventParameters;
-
-	std::map<std::string, std::string> m_ExternalEventReturnValues;
+	std::shared_ptr<rapidjson::Document> m_ExternalEventParameters;
+	std::shared_ptr<rapidjson::Document> m_ExternalEventReturnValues;
 
 protected:
 
@@ -171,7 +170,9 @@ public:
 
 	std::vector<AMC::PUIClientAction>& getClientActions();
 
-	std::map<std::string, std::string>& getExternalEventReturnValues();
+	void setExternalEventParameters(const std::string & sParametersJSON);
+
+	std::string getExternalEventReturnValues();
 
 	ITestEnvironment* GetTestEnvironment() override;
 
@@ -180,6 +181,12 @@ public:
 	IXMLDocument* ParseXMLString(const std::string& sXMLString) override;
 
 	IXMLDocument* ParseXMLData(const LibMCEnv_uint64 nXMLDataBufferSize, const LibMCEnv_uint8* pXMLDataBuffer) override;
+
+	IJSONObject* CreateJSONObject() override;
+
+	IJSONObject* ParseJSONString(const std::string& sJSONString) override;
+
+	IJSONObject* ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8* pJSONDataBuffer) override;
 
 	IDataTable* CreateDataTable() override;
 
@@ -254,8 +261,6 @@ public:
 	std::string LoadResourceString(const std::string& sResourceName) override;
 
 	void Sleep(const LibMCEnv_uint32 nDelay) override;
-
-	void addExternalEventParameter (const std::string & sKey, const std::string & sValue);
 
 	bool HasExternalEventParameter(const std::string& sParameterName) override;
 

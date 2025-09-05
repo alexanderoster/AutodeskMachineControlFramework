@@ -59,7 +59,9 @@ class CVideoDevice_Win32 : public virtual IVideoDevice, public virtual CDeviceBa
 private:
 
 	PVideoDeviceInstance_Win32 m_pDeviceInstance;
-	
+
+
+
 public:
 
 	CVideoDevice_Win32(PVideoDeviceInstance_Win32 pDeviceInstance);
@@ -76,13 +78,25 @@ public:
 
 	LibMCDriver_Camera_uint32 GetSupportedResolutionCount() override;
 
-	void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32& nWidth, LibMCDriver_Camera_uint32& nHeight, LibMCDriver_Camera_uint32& nFramerate) override;
+	void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32& nWidth, LibMCDriver_Camera_uint32& nHeight, LibMCDriver_Camera_uint32& nFramerate, LibMCDriver_Camera::eVideoSourceFormat& eSourceFormat) override;
 
-	void GetCurrentResolution(LibMCDriver_Camera_uint32& nWidth, LibMCDriver_Camera_uint32& nHeight, LibMCDriver_Camera_uint32& nFramerate) override;
+	void GetCurrentResolution(LibMCDriver_Camera_uint32& nResolutionX, LibMCDriver_Camera_uint32& nResolutionY, LibMCDriver_Camera_uint32& nFramerate, LibMCDriver_Camera::eVideoSourceFormat& eSourceFormat) override;
 
-	void SetResolution(const LibMCDriver_Camera_uint32 nWidth, const LibMCDriver_Camera_uint32 nHeight, const LibMCDriver_Camera_uint32 nFramerate) override;
+	LibMCDriver_Camera_uint32 GetCurrentResolutionX() override;
 
-	void CaptureRawImage(LibMCEnv::PImageData pImageData) override;
+	LibMCDriver_Camera_uint32 GetCurrentResolutionY() override;
+
+	LibMCDriver_Camera_uint32 GetCurrentFramerate() override;
+
+	LibMCDriver_Camera::eVideoSourceFormat GetCurrentSourceFormat() override;
+
+	std::string GetSourceFormatDescription(const LibMCDriver_Camera::eVideoSourceFormat eSourceFormat) override;
+
+	void SetResolution(const LibMCDriver_Camera_uint32 nWidth, const LibMCDriver_Camera_uint32 nHeight, const LibMCDriver_Camera_uint32 nFramerate, LibMCDriver_Camera::eVideoSourceFormat eSourceFormat) override;
+
+	void SetToSupportedResolution(const LibMCDriver_Camera_uint32 nIndex) override;
+
+	bool CaptureRawImage(LibMCEnv::PImageData pImageData) override;
 
 	void StartStreamCapture(LibMCEnv::PVideoStream pStreamInstance) override;
 

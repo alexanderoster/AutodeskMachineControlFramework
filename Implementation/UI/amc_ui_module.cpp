@@ -38,12 +38,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUIModuleEnvironment::CUIModuleEnvironment(PUISystemState pUISystemState, CUIModule_ContentRegistry* pContentRegistry, PResourcePackage pResourcePackage)
-	: m_pUISystemState (pUISystemState), m_pContentRegistry (pContentRegistry), m_pResourcePackage (pResourcePackage)
+CUIModuleEnvironment::CUIModuleEnvironment(PUISystemState pUISystemState, CUIModule_ContentRegistry* pContentRegistry, PResourcePackage pResourcePackage, CUIFrontendDefinition* pFrontendDefinition)
+	: m_pUISystemState (pUISystemState), m_pContentRegistry (pContentRegistry), m_pResourcePackage (pResourcePackage), m_pFrontendDefinition (pFrontendDefinition)
 {
 	LibMCAssertNotNull(pUISystemState);
 	LibMCAssertNotNull(pContentRegistry);
 	LibMCAssertNotNull(pResourcePackage);
+	LibMCAssertNotNull(pFrontendDefinition);
 }
 
 CUIModuleEnvironment::~CUIModuleEnvironment()
@@ -83,6 +84,11 @@ AMCCommon::PChrono CUIModuleEnvironment::getGlobalChrono()
 	return m_pUISystemState->getGlobalChronoInstance();
 }
 
+CUIFrontendDefinition* CUIModuleEnvironment::getFrontendDefinition()
+{
+	return m_pFrontendDefinition;
+}
+
 
 PMeshHandler CUIModuleEnvironment::meshHandler()
 {
@@ -100,9 +106,19 @@ PDataSeriesHandler CUIModuleEnvironment::dataSeriesHandler()
 }
 
 
-CUIModule::CUIModule(const std::string& sName)
+CUIModule::CUIModule(const std::string& sName, const std::string& sParentPath, CUIFrontendDefinition* pFrontendDefinition)
 	: m_sName (sName), m_sUUID (AMCCommon::CUtils::createUUID ())
 {
+	LibMCAssertNotNull(pFrontendDefinition);
+
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULENAME, sName);
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString(sParentPath))
+		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULEPATH, sParentPath);
+
+	m_sModulePath = sParentPath + "." + sName;
+
+	m_pModuleStore = pFrontendDefinition->registerModuleStore(m_sUUID, m_sModulePath);
 
 }
 
@@ -132,4 +148,43 @@ std::string CUIModule::getNameFromXML(pugi::xml_node& xmlNode)
 std::string CUIModule::getTypeFromXML(pugi::xml_node& xmlNode)
 {
 	return xmlNode.name();
+}
+
+bool CUIModule::isVersion2FrontendModule()
+{
+	return false;
+}
+
+void CUIModule::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState)
+{
+}
+
+std::string CUIModule::getModulePath()
+{
+	return m_sModulePath;
+}
+
+PUIFrontendDefinitionAttribute CUIModule::registerUUIDAttribute(const std::string& sAttributeName, const CUIExpression& expression)
+{
+	return m_pModuleStore->registerValue(sAttributeName, eUIFrontendDefinitionAttributeType::atUUID, expression);
+}
+
+PUIFrontendDefinitionAttribute CUIModule::registerIntegerAttribute(const std::string& sAttributeName, const CUIExpression& expression)
+{
+	return m_pModuleStore->registerValue(sAttributeName, eUIFrontendDefinitionAttributeType::atInteger, expression);
+}
+
+PUIFrontendDefinitionAttribute CUIModule::registerNumberAttribute(const std::string& sAttributeName, const CUIExpression& expression)
+{
+	return m_pModuleStore->registerValue(sAttributeName, eUIFrontendDefinitionAttributeType::atNumber, expression);
+}
+
+PUIFrontendDefinitionAttribute CUIModule::registerStringAttribute(const std::string& sAttributeName, const CUIExpression& expression)
+{
+	return m_pModuleStore->registerValue(sAttributeName, eUIFrontendDefinitionAttributeType::atString, expression);
+}
+
+PUIFrontendDefinitionAttribute CUIModule::registerBoolAttribute(const std::string& sAttributeName, const CUIExpression& expression)
+{
+	return m_pModuleStore->registerValue(sAttributeName, eUIFrontendDefinitionAttributeType::atBoolean, expression);
 }

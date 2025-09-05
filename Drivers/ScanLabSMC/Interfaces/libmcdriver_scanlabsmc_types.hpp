@@ -148,6 +148,20 @@ typedef void * LibMCDriver_ScanLabSMC_pvoid;
 #define LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTGETJOBCHARACTERISTIC 1040 /** Could not get job characteristic. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_JOBDURATIONHASNOTBEENPARSED 1041 /** Job duration has not been parsed. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSTOPJOBEXECUTION 1042 /** Could not stop job execution. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSETBLENDMODE 1043 /** Could not set blend mode. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDBLENDMODE 1044 /** Invalid blend mode. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDWARNINGLEVEL 1045 /** Invalid warning level. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_LINEARPOWERVALUESAREINCOMPLETE 1046 /** Linear power values are incomplete. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_NONLINEARPOWERVALUESAREINCOMPLETE 1047 /** Nonlinear power values are incomplete. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING 1048 /** Interpolation data is not increasing. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME 1049 /** Empty RTC Service DLL Resource Name. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND 1050 /** RTC Service Resource not found. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA 1051 /** Empty RTC Service DLL Resource Data. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED 1052 /** Simulation data loading is not supported for this version. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTREADSIMULATIONFILE 1053 /** Could not read simulation file. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERUNKNOWNFIELDPARSERTYPE 1054 /** Unknown Field Parser Type. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERINTERPOLATEINDEXOUTOFRANGE 1055 /** Index out of range in Interpolate. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE 1056 /** Invalid max power value. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLabSMC
@@ -208,6 +222,20 @@ inline const char * LIBMCDRIVER_SCANLABSMC_GETERRORSTRING (LibMCDriver_ScanLabSM
     case LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTGETJOBCHARACTERISTIC: return "Could not get job characteristic.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_JOBDURATIONHASNOTBEENPARSED: return "Job duration has not been parsed.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSTOPJOBEXECUTION: return "Could not stop job execution.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSETBLENDMODE: return "Could not set blend mode.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDBLENDMODE: return "Invalid blend mode.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDWARNINGLEVEL: return "Invalid warning level.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_LINEARPOWERVALUESAREINCOMPLETE: return "Linear power values are incomplete.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_NONLINEARPOWERVALUESAREINCOMPLETE: return "Nonlinear power values are incomplete.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING: return "Interpolation data is not increasing.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME: return "Empty RTC Service DLL Resource Name.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND: return "RTC Service Resource not found.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA: return "Empty RTC Service DLL Resource Data.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONDATALOADINGISNOTSUPPORTED: return "Simulation data loading is not supported for this version.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTREADSIMULATIONFILE: return "Could not read simulation file.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERUNKNOWNFIELDPARSERTYPE: return "Unknown Field Parser Type.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_CSVPARSERINTERPOLATEINDEXOUTOFRANGE: return "Index out of range in Interpolate.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE: return "Invalid max power value.";
     default: return "unknown error";
   }
 }
@@ -231,8 +259,8 @@ namespace LibMCDriver_ScanLabSMC {
   
   enum class eBlendMode : LibMCDriver_ScanLabSMC_int32 {
     Deactivated = 0,
-    MaxAccuracy = 1,
-    Fast = 2
+    SwiftBlending = 1,
+    MaxAccuracy = 2
   };
   
   enum class eDynamicViolationReaction : LibMCDriver_ScanLabSMC_int32 {
@@ -252,7 +280,9 @@ namespace LibMCDriver_ScanLabSMC {
   enum class eSMCConfigVersion : LibMCDriver_ScanLabSMC_int32 {
     Unknown = 0,
     Version_0_8 = 8,
-    Version_0_9 = 9
+    Version_0_9 = 9,
+    Version_1_0 = 10,
+    Version_1_1 = 11
   };
   
   enum class eJobCharacteristic : LibMCDriver_ScanLabSMC_int32 {

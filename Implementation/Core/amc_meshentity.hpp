@@ -93,7 +93,7 @@ namespace AMC {
 
 		void loadFrom3MF(Lib3MF::CLib3MFMeshObject * pMeshObject);
 
-		void loadFrom3MFResource(Lib3MF::CWrapper * p3MFWrapper, AMC::CResourcePackage* pResourcePackage, const std::string sResourceName);
+		void loadTriangleSetFrom3MF(Lib3MF::CLib3MFMeshObject* pMeshObject, const std::string & sTriangleSetName);
 
 		size_t getNodeCount();
 		size_t getEdgeCount();

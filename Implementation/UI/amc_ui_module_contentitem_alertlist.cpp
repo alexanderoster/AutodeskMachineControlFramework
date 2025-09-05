@@ -96,7 +96,7 @@ CUIModule_ContentAlertList::~CUIModule_ContentAlertList()
 
 }
 
-void CUIModule_ContentAlertList::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
+void CUIModule_ContentAlertList::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pLegacyClientVariableHandler, uint32_t nStateID)
 {
 
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "alertlist");
@@ -140,10 +140,6 @@ void CUIModule_ContentAlertList::addDefinitionToJSON(CJSONWriter& writer, CJSONW
 
 	CJSONWriterArray entriesArray(writer);
 	object.addArray(AMC_API_KEY_UI_ITEMENTRIES, entriesArray);
-}
-
-void CUIModule_ContentAlertList::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
-{
 
 	CJSONWriterArray entryArray(writer);
 

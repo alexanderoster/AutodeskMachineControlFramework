@@ -82,17 +82,12 @@ CUIModule_ContentImage::~CUIModule_ContentImage()
 }
 
 
-void CUIModule_ContentImage::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
+
+void CUIModule_ContentImage::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "image");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
 
-	addContentToJSON (writer, object, pClientVariableHandler, 0);
-
-}
-
-void CUIModule_ContentImage::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
-{
 	std::string sResourceUUID = AMCCommon::CUtils::createEmptyUUID();
 
 	auto pClientVariableGroup = pClientVariableHandler->findGroup(getItemPath(), true);

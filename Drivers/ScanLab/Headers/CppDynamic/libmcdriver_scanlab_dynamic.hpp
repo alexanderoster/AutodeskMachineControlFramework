@@ -67,6 +67,7 @@ class CRTCJob;
 class CRTCRecording;
 class CGPIOSequence;
 class CNLightAFXProfileSelector;
+class COIEMeasurementTagMap;
 class CRTCContext;
 class CRTCSelector;
 class CDriver_ScanLab;
@@ -84,6 +85,7 @@ typedef CRTCJob CLibMCDriver_ScanLabRTCJob;
 typedef CRTCRecording CLibMCDriver_ScanLabRTCRecording;
 typedef CGPIOSequence CLibMCDriver_ScanLabGPIOSequence;
 typedef CNLightAFXProfileSelector CLibMCDriver_ScanLabNLightAFXProfileSelector;
+typedef COIEMeasurementTagMap CLibMCDriver_ScanLabOIEMeasurementTagMap;
 typedef CRTCContext CLibMCDriver_ScanLabRTCContext;
 typedef CRTCSelector CLibMCDriver_ScanLabRTCSelector;
 typedef CDriver_ScanLab CLibMCDriver_ScanLabDriver_ScanLab;
@@ -101,6 +103,7 @@ typedef std::shared_ptr<CRTCJob> PRTCJob;
 typedef std::shared_ptr<CRTCRecording> PRTCRecording;
 typedef std::shared_ptr<CGPIOSequence> PGPIOSequence;
 typedef std::shared_ptr<CNLightAFXProfileSelector> PNLightAFXProfileSelector;
+typedef std::shared_ptr<COIEMeasurementTagMap> POIEMeasurementTagMap;
 typedef std::shared_ptr<CRTCContext> PRTCContext;
 typedef std::shared_ptr<CRTCSelector> PRTCSelector;
 typedef std::shared_ptr<CDriver_ScanLab> PDriver_ScanLab;
@@ -118,6 +121,7 @@ typedef PRTCJob PLibMCDriver_ScanLabRTCJob;
 typedef PRTCRecording PLibMCDriver_ScanLabRTCRecording;
 typedef PGPIOSequence PLibMCDriver_ScanLabGPIOSequence;
 typedef PNLightAFXProfileSelector PLibMCDriver_ScanLabNLightAFXProfileSelector;
+typedef POIEMeasurementTagMap PLibMCDriver_ScanLabOIEMeasurementTagMap;
 typedef PRTCContext PLibMCDriver_ScanLabRTCContext;
 typedef PRTCSelector PLibMCDriver_ScanLabRTCSelector;
 typedef PDriver_ScanLab PLibMCDriver_ScanLabDriver_ScanLab;
@@ -351,6 +355,24 @@ public:
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELYNOTRECORDED: return "RTCCHANNELYNOTRECORDED";
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELZNOTRECORDED: return "RTCCHANNELZNOTRECORDED";
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELXANDYRECORDCOUNTMISMATCH: return "RTCCHANNELXANDYRECORDCOUNTMISMATCH";
+			case LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR: return "SEGMENTDELAYEXCEEDSONEHOUR";
+			case LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED: return "CALLNOTSUPPORTED";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE: return "INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLIMITPROVIDEDTWICEINPROFILE: return "SKYWRITINGLIMITPROVIDEDTWICEINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE: return "INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE: return "SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE: return "INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE: return "SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE: return "INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPREVPROVIDEDTWICEINPROFILE: return "SKYWRITINGNPREVPROVIDEDTWICEINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE: return "INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE: return "SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR: return "INVALIDCORRECTIONFACTOR";
+			case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD: return "PULSELENGTHEXCEEDSCONTROLPERIOD";
+			case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHCONTROLNOTSUPPORTEDBYOIE: return "PULSELENGTHCONTROLNOTSUPPORTEDBYOIE";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING: return "INVALIDLASERPOWERMAPPING";
+			case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS: return "COULDNOTCONVERTLASERPOWERTOWATTS";
+			case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT: return "COULDNOTCONVERTLASERPOWERTOPERCENT";
 		}
 		return "UNKNOWN";
 	}
@@ -508,6 +530,24 @@ public:
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELYNOTRECORDED: return "RTC Channel Y not recorded.";
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELZNOTRECORDED: return "RTC Channel Z not recorded.";
 			case LIBMCDRIVER_SCANLAB_ERROR_RTCCHANNELXANDYRECORDCOUNTMISMATCH: return "RTC X and Y record count mismatch.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR: return "Segment delay exceeds one hour.";
+			case LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED: return "Call is not supported in current SCANLAB RTC SDK.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE: return "Invalid or no skywriting limit provided in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLIMITPROVIDEDTWICEINPROFILE: return "Skywriting limit provided twice in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE: return "Invalid or no skywriting timelag provided in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE: return "Skywriting timelag provided twice in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE: return "Invalid or no skywriting laser on shift provided in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE: return "Skywriting laser on shift provided twice in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE: return "Invalid or no skywriting nprev provided in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPREVPROVIDEDTWICEINPROFILE: return "Skywriting nprev provided twice in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE: return "Invalid or no skywriting npost provided in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE: return "Skywriting npost provided twice in profile.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR: return "Invalid correction factor.";
+			case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD: return "Pulse Length exceeds control period.";
+			case LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHCONTROLNOTSUPPORTEDBYOIE: return "Pulse Length control not supported by OIE yet.";
+			case LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING: return "Invalid laser power mapping.";
+			case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS: return "Could not convert laser power to watts.";
+			case LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT: return "Could not convert laser power to percent.";
 		}
 		return "unknown error";
 	}
@@ -636,6 +676,7 @@ private:
 	friend class CRTCRecording;
 	friend class CGPIOSequence;
 	friend class CNLightAFXProfileSelector;
+	friend class COIEMeasurementTagMap;
 	friend class CRTCContext;
 	friend class CRTCSelector;
 	friend class CDriver_ScanLab;
@@ -761,9 +802,9 @@ public:
 	{
 	}
 	
-	inline void DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue);
-	inline void DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
-	inline void DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue);
+	inline void DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue);
+	inline void DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
+	inline void DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue);
 	inline void AddSetPower(const LibMCDriver_ScanLab_single fPowerInPercent);
 	inline void AddSetAnalogOut(const eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue);
 	inline void AddSetDigitalOut(const eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue);
@@ -774,6 +815,7 @@ public:
 	inline void AddMarkMovement(const LibMCDriver_ScanLab_double dTargetX, const LibMCDriver_ScanLab_double dTargetY);
 	inline void AddTimedMarkMovement(const LibMCDriver_ScanLab_double dTargetX, const LibMCDriver_ScanLab_double dTargetY, const LibMCDriver_ScanLab_double dDurationInMicroseconds);
 	inline void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue);
+	inline void AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer);
 };
 	
 /*************************************************************************************************************************
@@ -791,6 +833,7 @@ public:
 	}
 	
 	inline void Clear();
+	inline std::string GetUUID();
 	inline void AddChannel(const std::string & sChannelName, const eRTCChannelType eChannelType);
 	inline void RemoveChannel(const std::string & sChannelName);
 	inline bool HasChannel(const std::string & sChannelName);
@@ -866,6 +909,30 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class COIEMeasurementTagMap 
+**************************************************************************************************************************/
+class COIEMeasurementTagMap : public CBase {
+public:
+	
+	/**
+	* COIEMeasurementTagMap::COIEMeasurementTagMap - Constructor for OIEMeasurementTagMap class.
+	*/
+	COIEMeasurementTagMap(CWrapper* pWrapper, LibMCDriver_ScanLabHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline LibMCDriver_ScanLab_uint32 GetOIEMaxMeasurementTag();
+	inline void MapOIEMeasurementTag(const LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab_uint32 & nPartID, LibMCDriver_ScanLab_uint32 & nProfileID, LibMCDriver_ScanLab_uint32 & nSegmentID, LibMCDriver_ScanLab_uint32 & nVectorID);
+	inline sOIEMeasurementTagData MapOIEMeasurementTagData(const LibMCDriver_ScanLab_uint32 nMeasurementTag);
+	inline void MapOIEMeasurementTags(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<sOIEMeasurementTagData> & DataBuffer);
+	inline void MapOIEMeasurementPartIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer);
+	inline void MapOIEMeasurementProfileIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer);
+	inline void MapOIEMeasurementSegmentIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer);
+	inline void MapOIEMeasurementVectorIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer);
+};
+	
+/*************************************************************************************************************************
  Class CRTCContext 
 **************************************************************************************************************************/
 class CRTCContext : public CBase {
@@ -882,6 +949,7 @@ public:
 	inline void LoadFirmware(const CInputVector<LibMCDriver_ScanLab_uint8> & FirmwareDataBuffer, const CInputVector<LibMCDriver_ScanLab_uint8> & FPGADataBuffer, const CInputVector<LibMCDriver_ScanLab_uint8> & AuxiliaryDataBuffer);
 	inline void LoadCorrectionFile(const CInputVector<LibMCDriver_ScanLab_uint8> & CorrectionFileBuffer, const LibMCDriver_ScanLab_uint32 nTableNumber, const LibMCDriver_ScanLab_uint32 nDimension);
 	inline void SelectCorrectionTable(const LibMCDriver_ScanLab_uint32 nTableNumberHeadA, const LibMCDriver_ScanLab_uint32 nTableNumberHeadB);
+	inline void SetCorrectionFactors(const LibMCDriver_ScanLab_double dCorrectionFactorXY, const LibMCDriver_ScanLab_double dCorrectionFactorZ);
 	inline void ConfigureLists(const LibMCDriver_ScanLab_uint32 nSizeListA, const LibMCDriver_ScanLab_uint32 nSizeListB);
 	inline void SetLaserMode(const eLaserMode eLaserMode, const eLaserPort eLaserPort);
 	inline void DisableAutoLaserControl();
@@ -890,6 +958,10 @@ public:
 	inline void SetLaserPulsesInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength);
 	inline void SetStandbyInBits(const LibMCDriver_ScanLab_uint32 nHalfPeriod, const LibMCDriver_ScanLab_uint32 nPulseLength);
 	inline void SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength);
+	inline void GetLaserPulsesInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength);
+	inline void GetLaserPulsesInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength);
+	inline void GetStandbyInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength);
+	inline void GetStandbyInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength);
 	inline std::string GetIPAddress();
 	inline std::string GetNetmask();
 	inline LibMCDriver_ScanLab_uint32 GetSerialNumber();
@@ -905,12 +977,14 @@ public:
 	inline void SetEndOfList();
 	inline void ExecuteList(const LibMCDriver_ScanLab_uint32 nListIndex, const LibMCDriver_ScanLab_uint32 nPosition);
 	inline void SetAutoChangePos(const LibMCDriver_ScanLab_uint32 nPosition);
+	inline void SetDefocusFactor(const LibMCDriver_ScanLab_double dValue);
+	inline LibMCDriver_ScanLab_double GetDefocusFactor();
 	inline void SetDelays(const LibMCDriver_ScanLab_uint32 nMarkDelay, const LibMCDriver_ScanLab_uint32 nJumpDelay, const LibMCDriver_ScanLab_uint32 nPolygonDelay);
 	inline void SetLaserDelaysInMicroseconds(const LibMCDriver_ScanLab_double dLaserOnDelay, const LibMCDriver_ScanLab_double dLaserOffDelay);
 	inline void SetLaserDelaysInBits(const LibMCDriver_ScanLab_int32 nLaserOnDelay, const LibMCDriver_ScanLab_int32 nLaserOffDelay);
-	inline void DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue);
-	inline void DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
-	inline void DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue);
+	inline void DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue);
+	inline void DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
+	inline void DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue);
 	inline void AddSetPower(const LibMCDriver_ScanLab_single fPowerInPercent);
 	inline void AddSetAnalogOut(const eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue);
 	inline void AddSetDigitalOut(const eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue);
@@ -921,6 +995,7 @@ public:
 	inline void AddMarkMovement(const LibMCDriver_ScanLab_double dTargetX, const LibMCDriver_ScanLab_double dTargetY);
 	inline void AddTimedMarkMovement(const LibMCDriver_ScanLab_double dTargetX, const LibMCDriver_ScanLab_double dTargetY, const LibMCDriver_ScanLab_double dDurationInMicroseconds);
 	inline void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue);
+	inline void AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer);
 	inline LibMCDriver_ScanLab_uint32 GetCurrentFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo);
 	inline LibMCDriver_ScanLab_uint32 GetTimeStamp();
 	inline LibMCDriver_ScanLab_int32 GetRTCChannel(const eRTCChannelType eChannelType);
@@ -942,6 +1017,7 @@ public:
 	inline void SetCommunicationTimeouts(const LibMCDriver_ScanLab_double dInitialTimeout, const LibMCDriver_ScanLab_double dMaxTimeout, const LibMCDriver_ScanLab_double dMultiplier);
 	inline void GetCommunicationTimeouts(LibMCDriver_ScanLab_double & dInitialTimeout, LibMCDriver_ScanLab_double & dMaxTimeout, LibMCDriver_ScanLab_double & dMultiplier);
 	inline void InitializeForOIE(const CInputVector<LibMCDriver_ScanLab_uint32> & SignalChannelsBuffer, const eOIEOperationMode eOperationMode);
+	inline void DisableOnTheFlyForOIE();
 	inline void SetLaserPinOut(const bool bLaserOut1, const bool bLaserOut2);
 	inline void GetLaserPinIn(bool & bLaserOut1, bool & bLaserOut2);
 	inline void AddLaserPinOutToList(const bool bLaserOut1, const bool bLaserOut2);
@@ -961,6 +1037,7 @@ public:
 	inline void EnableOIEPIDControl();
 	inline void DisableOIEPIDControl();
 	inline void ClearOIEMeasurementTags();
+	inline POIEMeasurementTagMap RetrieveOIEMeasurementTags();
 	inline void EnableOIEMeasurementTagging();
 	inline void DisableOIEMeasurementTagging();
 	inline LibMCDriver_ScanLab_uint32 GetOIEMaxMeasurementTag();
@@ -978,6 +1055,8 @@ public:
 	inline PRTCRecording PrepareRecording(const bool bKeepInMemory, const bool bEnableScanheadFeedback, const bool bEnableBacktransformation);
 	inline bool HasRecording(const std::string & sUUID);
 	inline PRTCRecording FindRecording(const std::string & sUUID);
+	inline bool ClearRecording(const std::string & sUUID);
+	inline void ClearAllRecordings();
 	inline void EnableTimelagCompensation(const LibMCDriver_ScanLab_uint32 nTimeLagXYInMicroseconds, const LibMCDriver_ScanLab_uint32 nTimeLagZInMicroseconds);
 	inline void DisableTimelagCompensation();
 	inline void EnableMarkOnTheFly2D(const LibMCDriver_ScanLab_double dScaleXInMMperEncoderStep, const LibMCDriver_ScanLab_double dScaleYInMMperEncoderStep);
@@ -985,12 +1064,12 @@ public:
 	inline bool MarkOnTheFly2DIsEnabled();
 	inline void Get2DMarkOnTheFlyPosition(LibMCDriver_ScanLab_int32 & nPositionX, LibMCDriver_ScanLab_int32 & nPositionY);
 	inline LibMCDriver_ScanLab_uint32 CheckOnTheFlyError(const bool bFailIfError);
-	inline bool LaserPowerCalibrationIsEnabled();
 	inline bool LaserPowerCalibrationIsLinear();
-	inline void ClearLaserPowerCalibration();
-	inline void GetLaserPowerCalibration(std::vector<sLaserCalibrationPoint> & CalibrationPointsBuffer);
-	inline void SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dPowerOffsetInPercent, const LibMCDriver_ScanLab_double dPowerOutputScaling);
-	inline void SetPiecewiseLinearLaserPowerCalibration(const CInputVector<sLaserCalibrationPoint> & CalibrationPointsBuffer);
+	inline void GetLaserPowerCalibration(LibMCDriver_ScanLab_double & dLaserPowerAt0Percent, LibMCDriver_ScanLab_double & dLaserPowerAt100Percent, std::vector<sLaserCalibrationPoint> & CalibrationPointsBuffer);
+	inline void SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent);
+	inline void SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent, const CInputVector<sLaserCalibrationPoint> & CalibrationPointsBuffer);
+	inline LibMCDriver_ScanLab_double MapPowerPercentageToWatts(const LibMCDriver_ScanLab_double dLaserPowerInPercent);
+	inline LibMCDriver_ScanLab_double MapPowerWattsToPercent(const LibMCDriver_ScanLab_double dLaserPowerInWatts);
 	inline void EnableSpatialLaserPowerModulation(const SpatialPowerModulationCallback pModulationCallback, const LibMCDriver_ScanLab_pvoid pUserData);
 	inline void DisablePowerModulation();
 	inline void EnableLineSubdivision(const LibMCDriver_ScanLab_double dLengthThreshold);
@@ -1072,6 +1151,8 @@ public:
 	inline bool IsInitialized();
 	inline void Initialise(const std::string & sIP, const std::string & sNetmask, const LibMCDriver_ScanLab_uint32 nTimeout, const LibMCDriver_ScanLab_uint32 nSerialNumber);
 	inline void InitialiseFromConfiguration(const std::string & sPresetName);
+	inline void SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength);
+	inline void GetLaserSignalTimingDefaults(LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength);
 	inline void SetCommunicationTimeouts(const LibMCDriver_ScanLab_double dInitialTimeout, const LibMCDriver_ScanLab_double dMaxTimeout, const LibMCDriver_ScanLab_double dMultiplier);
 	inline std::string GetIPAddress();
 	inline std::string GetNetmask();
@@ -1115,6 +1196,8 @@ public:
 	inline LibMCDriver_ScanLab_uint32 GetScannerCount();
 	inline void InitialiseScanner(const LibMCDriver_ScanLab_uint32 nScannerIndex, const std::string & sIP, const std::string & sNetmask, const LibMCDriver_ScanLab_uint32 nTimeout, const LibMCDriver_ScanLab_uint32 nSerialNumber, const LibMCDriver_ScanLab_uint32 nLaserIndex);
 	inline void InitialiseScannerFromConfiguration(const LibMCDriver_ScanLab_uint32 nScannerIndex, const std::string & sPresetName);
+	inline void SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength);
+	inline void GetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength);
 	inline std::string GetIPAddress(const LibMCDriver_ScanLab_uint32 nScannerIndex);
 	inline std::string GetNetmask(const LibMCDriver_ScanLab_uint32 nScannerIndex);
 	inline LibMCDriver_ScanLab_uint32 GetSerialNumber(const LibMCDriver_ScanLab_uint32 nScannerIndex);
@@ -1288,7 +1371,9 @@ public:
 		pWrapperTable->m_RTCJob_AddMarkMovement = nullptr;
 		pWrapperTable->m_RTCJob_AddTimedMarkMovement = nullptr;
 		pWrapperTable->m_RTCJob_AddFreeVariable = nullptr;
+		pWrapperTable->m_RTCJob_AddMicrovectorMovement = nullptr;
 		pWrapperTable->m_RTCRecording_Clear = nullptr;
+		pWrapperTable->m_RTCRecording_GetUUID = nullptr;
 		pWrapperTable->m_RTCRecording_AddChannel = nullptr;
 		pWrapperTable->m_RTCRecording_RemoveChannel = nullptr;
 		pWrapperTable->m_RTCRecording_HasChannel = nullptr;
@@ -1329,9 +1414,18 @@ public:
 		pWrapperTable->m_NLightAFXProfileSelector_EnableAutomaticSelection = nullptr;
 		pWrapperTable->m_NLightAFXProfileSelector_DisableAutomaticSelection = nullptr;
 		pWrapperTable->m_NLightAFXProfileSelector_AddCustomSelection = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs = nullptr;
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs = nullptr;
 		pWrapperTable->m_RTCContext_LoadFirmware = nullptr;
 		pWrapperTable->m_RTCContext_LoadCorrectionFile = nullptr;
 		pWrapperTable->m_RTCContext_SelectCorrectionTable = nullptr;
+		pWrapperTable->m_RTCContext_SetCorrectionFactors = nullptr;
 		pWrapperTable->m_RTCContext_ConfigureLists = nullptr;
 		pWrapperTable->m_RTCContext_SetLaserMode = nullptr;
 		pWrapperTable->m_RTCContext_DisableAutoLaserControl = nullptr;
@@ -1340,6 +1434,10 @@ public:
 		pWrapperTable->m_RTCContext_SetLaserPulsesInMicroSeconds = nullptr;
 		pWrapperTable->m_RTCContext_SetStandbyInBits = nullptr;
 		pWrapperTable->m_RTCContext_SetStandbyInMicroSeconds = nullptr;
+		pWrapperTable->m_RTCContext_GetLaserPulsesInBits = nullptr;
+		pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds = nullptr;
+		pWrapperTable->m_RTCContext_GetStandbyInBits = nullptr;
+		pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds = nullptr;
 		pWrapperTable->m_RTCContext_GetIPAddress = nullptr;
 		pWrapperTable->m_RTCContext_GetNetmask = nullptr;
 		pWrapperTable->m_RTCContext_GetSerialNumber = nullptr;
@@ -1355,6 +1453,8 @@ public:
 		pWrapperTable->m_RTCContext_SetEndOfList = nullptr;
 		pWrapperTable->m_RTCContext_ExecuteList = nullptr;
 		pWrapperTable->m_RTCContext_SetAutoChangePos = nullptr;
+		pWrapperTable->m_RTCContext_SetDefocusFactor = nullptr;
+		pWrapperTable->m_RTCContext_GetDefocusFactor = nullptr;
 		pWrapperTable->m_RTCContext_SetDelays = nullptr;
 		pWrapperTable->m_RTCContext_SetLaserDelaysInMicroseconds = nullptr;
 		pWrapperTable->m_RTCContext_SetLaserDelaysInBits = nullptr;
@@ -1371,6 +1471,7 @@ public:
 		pWrapperTable->m_RTCContext_AddMarkMovement = nullptr;
 		pWrapperTable->m_RTCContext_AddTimedMarkMovement = nullptr;
 		pWrapperTable->m_RTCContext_AddFreeVariable = nullptr;
+		pWrapperTable->m_RTCContext_AddMicrovectorMovement = nullptr;
 		pWrapperTable->m_RTCContext_GetCurrentFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_GetTimeStamp = nullptr;
 		pWrapperTable->m_RTCContext_GetRTCChannel = nullptr;
@@ -1392,6 +1493,7 @@ public:
 		pWrapperTable->m_RTCContext_SetCommunicationTimeouts = nullptr;
 		pWrapperTable->m_RTCContext_GetCommunicationTimeouts = nullptr;
 		pWrapperTable->m_RTCContext_InitializeForOIE = nullptr;
+		pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE = nullptr;
 		pWrapperTable->m_RTCContext_SetLaserPinOut = nullptr;
 		pWrapperTable->m_RTCContext_GetLaserPinIn = nullptr;
 		pWrapperTable->m_RTCContext_AddLaserPinOutToList = nullptr;
@@ -1411,6 +1513,7 @@ public:
 		pWrapperTable->m_RTCContext_EnableOIEPIDControl = nullptr;
 		pWrapperTable->m_RTCContext_DisableOIEPIDControl = nullptr;
 		pWrapperTable->m_RTCContext_ClearOIEMeasurementTags = nullptr;
+		pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags = nullptr;
 		pWrapperTable->m_RTCContext_EnableOIEMeasurementTagging = nullptr;
 		pWrapperTable->m_RTCContext_DisableOIEMeasurementTagging = nullptr;
 		pWrapperTable->m_RTCContext_GetOIEMaxMeasurementTag = nullptr;
@@ -1428,6 +1531,8 @@ public:
 		pWrapperTable->m_RTCContext_PrepareRecording = nullptr;
 		pWrapperTable->m_RTCContext_HasRecording = nullptr;
 		pWrapperTable->m_RTCContext_FindRecording = nullptr;
+		pWrapperTable->m_RTCContext_ClearRecording = nullptr;
+		pWrapperTable->m_RTCContext_ClearAllRecordings = nullptr;
 		pWrapperTable->m_RTCContext_EnableTimelagCompensation = nullptr;
 		pWrapperTable->m_RTCContext_DisableTimelagCompensation = nullptr;
 		pWrapperTable->m_RTCContext_EnableMarkOnTheFly2D = nullptr;
@@ -1435,12 +1540,12 @@ public:
 		pWrapperTable->m_RTCContext_MarkOnTheFly2DIsEnabled = nullptr;
 		pWrapperTable->m_RTCContext_Get2DMarkOnTheFlyPosition = nullptr;
 		pWrapperTable->m_RTCContext_CheckOnTheFlyError = nullptr;
-		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled = nullptr;
 		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear = nullptr;
-		pWrapperTable->m_RTCContext_ClearLaserPowerCalibration = nullptr;
 		pWrapperTable->m_RTCContext_GetLaserPowerCalibration = nullptr;
 		pWrapperTable->m_RTCContext_SetLinearLaserPowerCalibration = nullptr;
 		pWrapperTable->m_RTCContext_SetPiecewiseLinearLaserPowerCalibration = nullptr;
+		pWrapperTable->m_RTCContext_MapPowerPercentageToWatts = nullptr;
+		pWrapperTable->m_RTCContext_MapPowerWattsToPercent = nullptr;
 		pWrapperTable->m_RTCContext_EnableSpatialLaserPowerModulation = nullptr;
 		pWrapperTable->m_RTCContext_DisablePowerModulation = nullptr;
 		pWrapperTable->m_RTCContext_EnableLineSubdivision = nullptr;
@@ -1474,6 +1579,8 @@ public:
 		pWrapperTable->m_Driver_ScanLab_RTC6_IsInitialized = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6_Initialise = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6_InitialiseFromConfiguration = nullptr;
+		pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults = nullptr;
+		pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6_SetCommunicationTimeouts = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6_GetIPAddress = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6_GetNetmask = nullptr;
@@ -1501,6 +1608,8 @@ public:
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetScannerCount = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_InitialiseScanner = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_InitialiseScannerFromConfiguration = nullptr;
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults = nullptr;
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetIPAddress = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetNetmask = nullptr;
 		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetSerialNumber = nullptr;
@@ -1824,12 +1933,30 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_RTCJob_AddMicrovectorMovement = (PLibMCDriver_ScanLabRTCJob_AddMicrovectorMovementPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcjob_addmicrovectormovement");
+		#else // _WIN32
+		pWrapperTable->m_RTCJob_AddMicrovectorMovement = (PLibMCDriver_ScanLabRTCJob_AddMicrovectorMovementPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcjob_addmicrovectormovement");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCJob_AddMicrovectorMovement == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RTCRecording_Clear = (PLibMCDriver_ScanLabRTCRecording_ClearPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcrecording_clear");
 		#else // _WIN32
 		pWrapperTable->m_RTCRecording_Clear = (PLibMCDriver_ScanLabRTCRecording_ClearPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcrecording_clear");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCRecording_Clear == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCRecording_GetUUID = (PLibMCDriver_ScanLabRTCRecording_GetUUIDPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcrecording_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_RTCRecording_GetUUID = (PLibMCDriver_ScanLabRTCRecording_GetUUIDPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcrecording_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCRecording_GetUUID == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2193,6 +2320,78 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag = (PLibMCDriver_ScanLabOIEMeasurementTagMap_GetOIEMaxMeasurementTagPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_getoiemaxmeasurementtag");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag = (PLibMCDriver_ScanLabOIEMeasurementTagMap_GetOIEMaxMeasurementTagPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_getoiemaxmeasurementtag");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtag");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtag");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagDataPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtagdata");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagDataPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtagdata");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtags");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementTagsPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtags");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementPartIDsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementpartids");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementPartIDsPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementpartids");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementProfileIDsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementprofileids");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementProfileIDsPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementprofileids");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementSegmentIDsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementsegmentids");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementSegmentIDsPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementsegmentids");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementVectorIDsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementvectorids");
+		#else // _WIN32
+		pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs = (PLibMCDriver_ScanLabOIEMeasurementTagMap_MapOIEMeasurementVectorIDsPtr) dlsym(hLibrary, "libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementvectorids");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RTCContext_LoadFirmware = (PLibMCDriver_ScanLabRTCContext_LoadFirmwarePtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_loadfirmware");
 		#else // _WIN32
 		pWrapperTable->m_RTCContext_LoadFirmware = (PLibMCDriver_ScanLabRTCContext_LoadFirmwarePtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_loadfirmware");
@@ -2217,6 +2416,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_SelectCorrectionTable == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_SetCorrectionFactors = (PLibMCDriver_ScanLabRTCContext_SetCorrectionFactorsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_setcorrectionfactors");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_SetCorrectionFactors = (PLibMCDriver_ScanLabRTCContext_SetCorrectionFactorsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_setcorrectionfactors");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_SetCorrectionFactors == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2289,6 +2497,42 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_SetStandbyInMicroSeconds == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetLaserPulsesInBits = (PLibMCDriver_ScanLabRTCContext_GetLaserPulsesInBitsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getlaserpulsesinbits");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetLaserPulsesInBits = (PLibMCDriver_ScanLabRTCContext_GetLaserPulsesInBitsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getlaserpulsesinbits");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetLaserPulsesInBits == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds = (PLibMCDriver_ScanLabRTCContext_GetLaserPulsesInMicroSecondsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getlaserpulsesinmicroseconds");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds = (PLibMCDriver_ScanLabRTCContext_GetLaserPulsesInMicroSecondsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getlaserpulsesinmicroseconds");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetStandbyInBits = (PLibMCDriver_ScanLabRTCContext_GetStandbyInBitsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getstandbyinbits");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetStandbyInBits = (PLibMCDriver_ScanLabRTCContext_GetStandbyInBitsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getstandbyinbits");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetStandbyInBits == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds = (PLibMCDriver_ScanLabRTCContext_GetStandbyInMicroSecondsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getstandbyinmicroseconds");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds = (PLibMCDriver_ScanLabRTCContext_GetStandbyInMicroSecondsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getstandbyinmicroseconds");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2424,6 +2668,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_SetAutoChangePos == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_SetDefocusFactor = (PLibMCDriver_ScanLabRTCContext_SetDefocusFactorPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_setdefocusfactor");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_SetDefocusFactor = (PLibMCDriver_ScanLabRTCContext_SetDefocusFactorPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_setdefocusfactor");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_SetDefocusFactor == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetDefocusFactor = (PLibMCDriver_ScanLabRTCContext_GetDefocusFactorPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getdefocusfactor");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetDefocusFactor = (PLibMCDriver_ScanLabRTCContext_GetDefocusFactorPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getdefocusfactor");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetDefocusFactor == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2568,6 +2830,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_AddFreeVariable == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_AddMicrovectorMovement = (PLibMCDriver_ScanLabRTCContext_AddMicrovectorMovementPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_addmicrovectormovement");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_AddMicrovectorMovement = (PLibMCDriver_ScanLabRTCContext_AddMicrovectorMovementPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_addmicrovectormovement");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_AddMicrovectorMovement == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2760,6 +3031,15 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE = (PLibMCDriver_ScanLabRTCContext_DisableOnTheFlyForOIEPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_disableontheflyforoie");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE = (PLibMCDriver_ScanLabRTCContext_DisableOnTheFlyForOIEPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_disableontheflyforoie");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RTCContext_SetLaserPinOut = (PLibMCDriver_ScanLabRTCContext_SetLaserPinOutPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_setlaserpinout");
 		#else // _WIN32
 		pWrapperTable->m_RTCContext_SetLaserPinOut = (PLibMCDriver_ScanLabRTCContext_SetLaserPinOutPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_setlaserpinout");
@@ -2931,6 +3211,15 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags = (PLibMCDriver_ScanLabRTCContext_RetrieveOIEMeasurementTagsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_retrieveoiemeasurementtags");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags = (PLibMCDriver_ScanLabRTCContext_RetrieveOIEMeasurementTagsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_retrieveoiemeasurementtags");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RTCContext_EnableOIEMeasurementTagging = (PLibMCDriver_ScanLabRTCContext_EnableOIEMeasurementTaggingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_enableoiemeasurementtagging");
 		#else // _WIN32
 		pWrapperTable->m_RTCContext_EnableOIEMeasurementTagging = (PLibMCDriver_ScanLabRTCContext_EnableOIEMeasurementTaggingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_enableoiemeasurementtagging");
@@ -3084,6 +3373,24 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_ClearRecording = (PLibMCDriver_ScanLabRTCContext_ClearRecordingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_clearrecording");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_ClearRecording = (PLibMCDriver_ScanLabRTCContext_ClearRecordingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_clearrecording");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_ClearRecording == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_ClearAllRecordings = (PLibMCDriver_ScanLabRTCContext_ClearAllRecordingsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_clearallrecordings");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_ClearAllRecordings = (PLibMCDriver_ScanLabRTCContext_ClearAllRecordingsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_clearallrecordings");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_ClearAllRecordings == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RTCContext_EnableTimelagCompensation = (PLibMCDriver_ScanLabRTCContext_EnableTimelagCompensationPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_enabletimelagcompensation");
 		#else // _WIN32
 		pWrapperTable->m_RTCContext_EnableTimelagCompensation = (PLibMCDriver_ScanLabRTCContext_EnableTimelagCompensationPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_enabletimelagcompensation");
@@ -3147,30 +3454,12 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled = (PLibMCDriver_ScanLabRTCContext_LaserPowerCalibrationIsEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_laserpowercalibrationisenabled");
-		#else // _WIN32
-		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled = (PLibMCDriver_ScanLabRTCContext_LaserPowerCalibrationIsEnabledPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_laserpowercalibrationisenabled");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled == nullptr)
-			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
 		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear = (PLibMCDriver_ScanLabRTCContext_LaserPowerCalibrationIsLinearPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_laserpowercalibrationislinear");
 		#else // _WIN32
 		pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear = (PLibMCDriver_ScanLabRTCContext_LaserPowerCalibrationIsLinearPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_laserpowercalibrationislinear");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear == nullptr)
-			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_RTCContext_ClearLaserPowerCalibration = (PLibMCDriver_ScanLabRTCContext_ClearLaserPowerCalibrationPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_clearlaserpowercalibration");
-		#else // _WIN32
-		pWrapperTable->m_RTCContext_ClearLaserPowerCalibration = (PLibMCDriver_ScanLabRTCContext_ClearLaserPowerCalibrationPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_clearlaserpowercalibration");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_RTCContext_ClearLaserPowerCalibration == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -3198,6 +3487,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_SetPiecewiseLinearLaserPowerCalibration == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_MapPowerPercentageToWatts = (PLibMCDriver_ScanLabRTCContext_MapPowerPercentageToWattsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_mappowerpercentagetowatts");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_MapPowerPercentageToWatts = (PLibMCDriver_ScanLabRTCContext_MapPowerPercentageToWattsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_mappowerpercentagetowatts");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_MapPowerPercentageToWatts == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_MapPowerWattsToPercent = (PLibMCDriver_ScanLabRTCContext_MapPowerWattsToPercentPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_mappowerwattstopercent");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_MapPowerWattsToPercent = (PLibMCDriver_ScanLabRTCContext_MapPowerWattsToPercentPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_mappowerwattstopercent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_MapPowerWattsToPercent == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -3498,6 +3805,24 @@ public:
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_SetLaserSignalTimingDefaultsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_setlasersignaltimingdefaults");
+		#else // _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_SetLaserSignalTimingDefaultsPtr) dlsym(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_setlasersignaltimingdefaults");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_GetLaserSignalTimingDefaultsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_getlasersignaltimingdefaults");
+		#else // _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_GetLaserSignalTimingDefaultsPtr) dlsym(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_getlasersignaltimingdefaults");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Driver_ScanLab_RTC6_SetCommunicationTimeouts = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_SetCommunicationTimeoutsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_setcommunicationtimeouts");
 		#else // _WIN32
 		pWrapperTable->m_Driver_ScanLab_RTC6_SetCommunicationTimeouts = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6_SetCommunicationTimeoutsPtr) dlsym(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6_setcommunicationtimeouts");
@@ -3738,6 +4063,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Driver_ScanLab_RTC6xN_InitialiseScannerFromConfiguration == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6xN_SetLaserSignalTimingDefaultsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6xn_setlasersignaltimingdefaults");
+		#else // _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6xN_SetLaserSignalTimingDefaultsPtr) dlsym(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6xn_setlasersignaltimingdefaults");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6xN_GetLaserSignalTimingDefaultsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6xn_getlasersignaltimingdefaults");
+		#else // _WIN32
+		pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults = (PLibMCDriver_ScanLabDriver_ScanLab_RTC6xN_GetLaserSignalTimingDefaultsPtr) dlsym(hLibrary, "libmcdriver_scanlab_driver_scanlab_rtc6xn_getlasersignaltimingdefaults");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4125,8 +4468,16 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCJob_AddFreeVariable == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcjob_addmicrovectormovement", (void**)&(pWrapperTable->m_RTCJob_AddMicrovectorMovement));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCJob_AddMicrovectorMovement == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_clear", (void**)&(pWrapperTable->m_RTCRecording_Clear));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_Clear == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_getuuid", (void**)&(pWrapperTable->m_RTCRecording_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_GetUUID == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_addchannel", (void**)&(pWrapperTable->m_RTCRecording_AddChannel));
@@ -4289,6 +4640,38 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_NLightAFXProfileSelector_AddCustomSelection == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_getoiemaxmeasurementtag", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtag", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTag == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtagdata", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTagData == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtags", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementTags == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementpartids", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementprofileids", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementsegmentids", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementvectorids", (void**)&(pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_loadfirmware", (void**)&(pWrapperTable->m_RTCContext_LoadFirmware));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_LoadFirmware == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -4299,6 +4682,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_selectcorrectiontable", (void**)&(pWrapperTable->m_RTCContext_SelectCorrectionTable));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SelectCorrectionTable == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setcorrectionfactors", (void**)&(pWrapperTable->m_RTCContext_SetCorrectionFactors));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetCorrectionFactors == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_configurelists", (void**)&(pWrapperTable->m_RTCContext_ConfigureLists));
@@ -4331,6 +4718,22 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setstandbyinmicroseconds", (void**)&(pWrapperTable->m_RTCContext_SetStandbyInMicroSeconds));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetStandbyInMicroSeconds == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getlaserpulsesinbits", (void**)&(pWrapperTable->m_RTCContext_GetLaserPulsesInBits));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetLaserPulsesInBits == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getlaserpulsesinmicroseconds", (void**)&(pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetLaserPulsesInMicroSeconds == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getstandbyinbits", (void**)&(pWrapperTable->m_RTCContext_GetStandbyInBits));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetStandbyInBits == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getstandbyinmicroseconds", (void**)&(pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetStandbyInMicroSeconds == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getipaddress", (void**)&(pWrapperTable->m_RTCContext_GetIPAddress));
@@ -4391,6 +4794,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setautochangepos", (void**)&(pWrapperTable->m_RTCContext_SetAutoChangePos));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetAutoChangePos == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setdefocusfactor", (void**)&(pWrapperTable->m_RTCContext_SetDefocusFactor));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetDefocusFactor == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getdefocusfactor", (void**)&(pWrapperTable->m_RTCContext_GetDefocusFactor));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetDefocusFactor == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setdelays", (void**)&(pWrapperTable->m_RTCContext_SetDelays));
@@ -4455,6 +4866,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_addfreevariable", (void**)&(pWrapperTable->m_RTCContext_AddFreeVariable));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_AddFreeVariable == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_addmicrovectormovement", (void**)&(pWrapperTable->m_RTCContext_AddMicrovectorMovement));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_AddMicrovectorMovement == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getcurrentfreevariable", (void**)&(pWrapperTable->m_RTCContext_GetCurrentFreeVariable));
@@ -4541,6 +4956,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_InitializeForOIE == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_disableontheflyforoie", (void**)&(pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_DisableOnTheFlyForOIE == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setlaserpinout", (void**)&(pWrapperTable->m_RTCContext_SetLaserPinOut));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetLaserPinOut == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -4617,6 +5036,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_ClearOIEMeasurementTags == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_retrieveoiemeasurementtags", (void**)&(pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_RetrieveOIEMeasurementTags == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_enableoiemeasurementtagging", (void**)&(pWrapperTable->m_RTCContext_EnableOIEMeasurementTagging));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_EnableOIEMeasurementTagging == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -4685,6 +5108,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_FindRecording == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_clearrecording", (void**)&(pWrapperTable->m_RTCContext_ClearRecording));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_ClearRecording == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_clearallrecordings", (void**)&(pWrapperTable->m_RTCContext_ClearAllRecordings));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_ClearAllRecordings == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_enabletimelagcompensation", (void**)&(pWrapperTable->m_RTCContext_EnableTimelagCompensation));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_EnableTimelagCompensation == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -4713,16 +5144,8 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_CheckOnTheFlyError == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_laserpowercalibrationisenabled", (void**)&(pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled));
-		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_LaserPowerCalibrationIsEnabled == nullptr) )
-			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_laserpowercalibrationislinear", (void**)&(pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_LaserPowerCalibrationIsLinear == nullptr) )
-			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_clearlaserpowercalibration", (void**)&(pWrapperTable->m_RTCContext_ClearLaserPowerCalibration));
-		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_ClearLaserPowerCalibration == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getlaserpowercalibration", (void**)&(pWrapperTable->m_RTCContext_GetLaserPowerCalibration));
@@ -4735,6 +5158,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setpiecewiselinearlaserpowercalibration", (void**)&(pWrapperTable->m_RTCContext_SetPiecewiseLinearLaserPowerCalibration));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetPiecewiseLinearLaserPowerCalibration == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_mappowerpercentagetowatts", (void**)&(pWrapperTable->m_RTCContext_MapPowerPercentageToWatts));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_MapPowerPercentageToWatts == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_mappowerwattstopercent", (void**)&(pWrapperTable->m_RTCContext_MapPowerWattsToPercent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_MapPowerWattsToPercent == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_enablespatiallaserpowermodulation", (void**)&(pWrapperTable->m_RTCContext_EnableSpatialLaserPowerModulation));
@@ -4869,6 +5300,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6_InitialiseFromConfiguration == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6_setlasersignaltimingdefaults", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6_getlasersignaltimingdefaults", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6_setcommunicationtimeouts", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6_SetCommunicationTimeouts));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6_SetCommunicationTimeouts == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -4975,6 +5414,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6xn_initialisescannerfromconfiguration", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6xN_InitialiseScannerFromConfiguration));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6xN_InitialiseScannerFromConfiguration == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6xn_setlasersignaltimingdefaults", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6xn_getlasersignaltimingdefaults", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_driver_scanlab_rtc6xn_getipaddress", (void**)&(pWrapperTable->m_Driver_ScanLab_RTC6xN_GetIPAddress));
@@ -5288,12 +5735,12 @@ public:
 	* @param[in] PointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	void CRTCJob::DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue)
+	void CRTCJob::DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawPolyline(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawPolyline(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue));
 	}
 	
 	/**
@@ -5301,13 +5748,13 @@ public:
 	* @param[in] PointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	* @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 	*/
-	void CRTCJob::DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex)
+	void CRTCJob::DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawPolylineOIE(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue, nOIEPIDControlIndex));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawPolylineOIE(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue, nOIEPIDControlIndex));
 	}
 	
 	/**
@@ -5315,12 +5762,12 @@ public:
 	* @param[in] HatchesBuffer - Hatches to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	void CRTCJob::DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue)
+	void CRTCJob::DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawHatches(m_pHandle, (LibMCDriver_ScanLab_uint64)HatchesBuffer.size(), HatchesBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_DrawHatches(m_pHandle, (LibMCDriver_ScanLab_uint64)HatchesBuffer.size(), HatchesBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue));
 	}
 	
 	/**
@@ -5421,6 +5868,15 @@ public:
 	}
 	
 	/**
+	* CRTCJob::AddMicrovectorMovement - Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+	* @param[in] MicrovectorArrayBuffer - Microvector array to execute.
+	*/
+	void CRTCJob::AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCJob_AddMicrovectorMovement(m_pHandle, (LibMCDriver_ScanLab_uint64)MicrovectorArrayBuffer.size(), MicrovectorArrayBuffer.data()));
+	}
+	
+	/**
 	 * Method definitions for class CRTCRecording
 	 */
 	
@@ -5430,6 +5886,21 @@ public:
 	void CRTCRecording::Clear()
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_Clear(m_pHandle));
+	}
+	
+	/**
+	* CRTCRecording::GetUUID - Returns UUID of Recording.
+	* @return UUID of Recording.
+	*/
+	std::string CRTCRecording::GetUUID()
+	{
+		LibMCDriver_ScanLab_uint32 bytesNeededUUID = 0;
+		LibMCDriver_ScanLab_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_GetUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_GetUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
 	}
 	
 	/**
@@ -5874,6 +6345,118 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class COIEMeasurementTagMap
+	 */
+	
+	/**
+	* COIEMeasurementTagMap::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE.
+	* @return Measurement Tag that has been sent to the OIE.
+	*/
+	LibMCDriver_ScanLab_uint32 COIEMeasurementTagMap::GetOIEMaxMeasurementTag()
+	{
+		LibMCDriver_ScanLab_uint32 resultMeasurementTag = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_GetOIEMaxMeasurementTag(m_pHandle, &resultMeasurementTag));
+		
+		return resultMeasurementTag;
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementTag - Maps an OIE Measurement tag back to the original scan parameters.
+	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+	* @param[out] nPartID - ID of the part.
+	* @param[out] nProfileID - ID of the profile.
+	* @param[out] nSegmentID - ID of the segment.
+	* @param[out] nVectorID - ID of the vector.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementTag(const LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab_uint32 & nPartID, LibMCDriver_ScanLab_uint32 & nProfileID, LibMCDriver_ScanLab_uint32 & nSegmentID, LibMCDriver_ScanLab_uint32 & nVectorID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementTag(m_pHandle, nMeasurementTag, &nPartID, &nProfileID, &nSegmentID, &nVectorID));
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementTagData - Maps an OIE Measurement tag back to the original scan parameters.
+	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+	* @return Measurement as tag data struct.
+	*/
+	sOIEMeasurementTagData COIEMeasurementTagMap::MapOIEMeasurementTagData(const LibMCDriver_ScanLab_uint32 nMeasurementTag)
+	{
+		sOIEMeasurementTagData resultData;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementTagData(m_pHandle, nMeasurementTag, &resultData));
+		
+		return resultData;
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementTags - Maps an array of OIE Measurement tags back to the original scan parameters.
+	* @param[in] MeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[out] DataBuffer - Will be filled with all the tags associated with the input array. The length of the array will match the input array.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementTags(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<sOIEMeasurementTagData> & DataBuffer)
+	{
+		LibMCDriver_ScanLab_uint64 elementsNeededData = 0;
+		LibMCDriver_ScanLab_uint64 elementsWrittenData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementTags(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), 0, &elementsNeededData, nullptr));
+		DataBuffer.resize((size_t) elementsNeededData);
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementTags(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), elementsNeededData, &elementsWrittenData, DataBuffer.data()));
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementPartIDs - Maps an array of OIE Measurement tags back to the original part IDs.
+	* @param[in] MeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[out] DataBuffer - Will be filled with all the part IDs associated with the input array. The length of the array will match the input array.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementPartIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer)
+	{
+		LibMCDriver_ScanLab_uint64 elementsNeededData = 0;
+		LibMCDriver_ScanLab_uint64 elementsWrittenData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), 0, &elementsNeededData, nullptr));
+		DataBuffer.resize((size_t) elementsNeededData);
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementPartIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), elementsNeededData, &elementsWrittenData, DataBuffer.data()));
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementProfileIDs - Maps an array of OIE Measurement tags back to the original profile IDs.
+	* @param[in] MeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[out] DataBuffer - Will be filled with all the profile IDs associated with the input array. The length of the array will match the input array.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementProfileIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer)
+	{
+		LibMCDriver_ScanLab_uint64 elementsNeededData = 0;
+		LibMCDriver_ScanLab_uint64 elementsWrittenData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), 0, &elementsNeededData, nullptr));
+		DataBuffer.resize((size_t) elementsNeededData);
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementProfileIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), elementsNeededData, &elementsWrittenData, DataBuffer.data()));
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementSegmentIDs - Maps an array of OIE Measurement tags back to the original segment IDs.
+	* @param[in] MeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[out] DataBuffer - Will be filled with all the segment IDs associated with the input array. The length of the array will match the input array.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementSegmentIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer)
+	{
+		LibMCDriver_ScanLab_uint64 elementsNeededData = 0;
+		LibMCDriver_ScanLab_uint64 elementsWrittenData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), 0, &elementsNeededData, nullptr));
+		DataBuffer.resize((size_t) elementsNeededData);
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementSegmentIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), elementsNeededData, &elementsWrittenData, DataBuffer.data()));
+	}
+	
+	/**
+	* COIEMeasurementTagMap::MapOIEMeasurementVectorIDs - Maps an array of OIE Measurement tags back to the original vector IDs.
+	* @param[in] MeasurementTagBuffer - Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+	* @param[out] DataBuffer - Will be filled with all the vector  IDs associated with the input array. The length of the array will match the input array.
+	*/
+	void COIEMeasurementTagMap::MapOIEMeasurementVectorIDs(const CInputVector<LibMCDriver_ScanLab_uint32> & MeasurementTagBuffer, std::vector<LibMCDriver_ScanLab_uint32> & DataBuffer)
+	{
+		LibMCDriver_ScanLab_uint64 elementsNeededData = 0;
+		LibMCDriver_ScanLab_uint64 elementsWrittenData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), 0, &elementsNeededData, nullptr));
+		DataBuffer.resize((size_t) elementsNeededData);
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEMeasurementTagMap_MapOIEMeasurementVectorIDs(m_pHandle, (LibMCDriver_ScanLab_uint64)MeasurementTagBuffer.size(), MeasurementTagBuffer.data(), elementsNeededData, &elementsWrittenData, DataBuffer.data()));
+	}
+	
+	/**
 	 * Method definitions for class CRTCContext
 	 */
 	
@@ -5900,13 +6483,23 @@ public:
 	}
 	
 	/**
-	* CRTCContext::SelectCorrectionTable - Selects Correction Table on card.
+	* CRTCContext::SelectCorrectionTable - Selects Correction Table on card. Reads the correction factorw out of the Table, if existent.
 	* @param[in] nTableNumberHeadA - Table Number for HeadA (1..8) or off (0).
 	* @param[in] nTableNumberHeadB - Table Number for HeadA (1..8) or off (0).
 	*/
 	void CRTCContext::SelectCorrectionTable(const LibMCDriver_ScanLab_uint32 nTableNumberHeadA, const LibMCDriver_ScanLab_uint32 nTableNumberHeadB)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SelectCorrectionTable(m_pHandle, nTableNumberHeadA, nTableNumberHeadB));
+	}
+	
+	/**
+	* CRTCContext::SetCorrectionFactors - Sets the correction factor manually.
+	* @param[in] dCorrectionFactorXY - Scale correction factor in the XY plane. In bits per mm. MUST BE larger than 0.
+	* @param[in] dCorrectionFactorZ - Scale correction factor in the Z axis. In bits per mm. Should be equal to CorrectionFactorXY for the RTC6 card. MUST BE larger than 0.
+	*/
+	void CRTCContext::SetCorrectionFactors(const LibMCDriver_ScanLab_double dCorrectionFactorXY, const LibMCDriver_ScanLab_double dCorrectionFactorZ)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetCorrectionFactors(m_pHandle, dCorrectionFactorXY, dCorrectionFactorZ));
 	}
 	
 	/**
@@ -5990,6 +6583,46 @@ public:
 	void CRTCContext::SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetStandbyInMicroSeconds(m_pHandle, dHalfPeriod, dPulseLength));
+	}
+	
+	/**
+	* CRTCContext::GetLaserPulsesInBits - Sets laser control pulse interval (in 1/64th microseconds)
+	* @param[out] nHalfPeriod - Half Output period in 1/64th microseconds
+	* @param[out] nPulseLength - Pulse Length in 1/64th microseconds
+	*/
+	void CRTCContext::GetLaserPulsesInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPulsesInBits(m_pHandle, &nHalfPeriod, &nPulseLength));
+	}
+	
+	/**
+	* CRTCContext::GetLaserPulsesInMicroSeconds - Sets laser control pulse interval (in microseconds)
+	* @param[out] dHalfPeriod - Half Output period in microseconds
+	* @param[out] dPulseLength - Pulse Length in microseconds
+	*/
+	void CRTCContext::GetLaserPulsesInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPulsesInMicroSeconds(m_pHandle, &dHalfPeriod, &dPulseLength));
+	}
+	
+	/**
+	* CRTCContext::GetStandbyInBits - Sets standby pulse interval (in 1/64th microseconds)
+	* @param[out] nHalfPeriod - Half Output period in 1/64th microseconds
+	* @param[out] nPulseLength - Pulse Length in 1/64th microseconds
+	*/
+	void CRTCContext::GetStandbyInBits(LibMCDriver_ScanLab_uint32 & nHalfPeriod, LibMCDriver_ScanLab_uint32 & nPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetStandbyInBits(m_pHandle, &nHalfPeriod, &nPulseLength));
+	}
+	
+	/**
+	* CRTCContext::GetStandbyInMicroSeconds - Sets laser control pulse interval (in microseconds)
+	* @param[out] dHalfPeriod - Half Output period in microseconds
+	* @param[out] dPulseLength - Pulse Length in microseconds
+	*/
+	void CRTCContext::GetStandbyInMicroSeconds(LibMCDriver_ScanLab_double & dHalfPeriod, LibMCDriver_ScanLab_double & dPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetStandbyInMicroSeconds(m_pHandle, &dHalfPeriod, &dPulseLength));
 	}
 	
 	/**
@@ -6156,6 +6789,27 @@ public:
 	}
 	
 	/**
+	* CRTCContext::SetDefocusFactor - Sets a factor for the Z defocus commands.
+	* @param[in] dValue - Z Defocus Factor.
+	*/
+	void CRTCContext::SetDefocusFactor(const LibMCDriver_ScanLab_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetDefocusFactor(m_pHandle, dValue));
+	}
+	
+	/**
+	* CRTCContext::GetDefocusFactor - Returns the current factor for the Z defocus commands.
+	* @return Z Defocus Factor.
+	*/
+	LibMCDriver_ScanLab_double CRTCContext::GetDefocusFactor()
+	{
+		LibMCDriver_ScanLab_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetDefocusFactor(m_pHandle, &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
 	* CRTCContext::SetDelays - Sets the laser delays
 	* @param[in] nMarkDelay - Mark delay in microseconds (MUST be multiple of 10)
 	* @param[in] nJumpDelay - Jump delay in microseconds (MUST be multiple of 10)
@@ -6191,12 +6845,12 @@ public:
 	* @param[in] PointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	void CRTCContext::DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue)
+	void CRTCContext::DrawPolyline(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawPolyline(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawPolyline(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue));
 	}
 	
 	/**
@@ -6204,13 +6858,13 @@ public:
 	* @param[in] PointsBuffer - Points of polyline to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	* @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 	*/
-	void CRTCContext::DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex)
+	void CRTCContext::DrawPolylineOIE(const CInputVector<sPoint2D> & PointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawPolylineOIE(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue, nOIEPIDControlIndex));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawPolylineOIE(m_pHandle, (LibMCDriver_ScanLab_uint64)PointsBuffer.size(), PointsBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue, nOIEPIDControlIndex));
 	}
 	
 	/**
@@ -6218,12 +6872,12 @@ public:
 	* @param[in] HatchesBuffer - Hatches to draw.
 	* @param[in] fMarkSpeed - Mark speed in mm/s
 	* @param[in] fJumpSpeed - Jump speed in mm/s
-	* @param[in] fPower - Laser power in percent
+	* @param[in] fPowerInPercent - Laser power in percent
 	* @param[in] fZValue - Focus Z Value
 	*/
-	void CRTCContext::DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue)
+	void CRTCContext::DrawHatches(const CInputVector<sHatch2D> & HatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPowerInPercent, const LibMCDriver_ScanLab_single fZValue)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawHatches(m_pHandle, (LibMCDriver_ScanLab_uint64)HatchesBuffer.size(), HatchesBuffer.data(), fMarkSpeed, fJumpSpeed, fPower, fZValue));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DrawHatches(m_pHandle, (LibMCDriver_ScanLab_uint64)HatchesBuffer.size(), HatchesBuffer.data(), fMarkSpeed, fJumpSpeed, fPowerInPercent, fZValue));
 	}
 	
 	/**
@@ -6321,6 +6975,15 @@ public:
 	void CRTCContext::AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_AddFreeVariable(m_pHandle, nVariableNo, nValue));
+	}
+	
+	/**
+	* CRTCContext::AddMicrovectorMovement - Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+	* @param[in] MicrovectorArrayBuffer - Microvector array to execute.
+	*/
+	void CRTCContext::AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_AddMicrovectorMovement(m_pHandle, (LibMCDriver_ScanLab_uint64)MicrovectorArrayBuffer.size(), MicrovectorArrayBuffer.data()));
 	}
 	
 	/**
@@ -6566,6 +7229,14 @@ public:
 	}
 	
 	/**
+	* CRTCContext::DisableOnTheFlyForOIE - Disables the on the fly marking after OIE initialization. This is a workaround that will become depreciated in newer versions..
+	*/
+	void CRTCContext::DisableOnTheFlyForOIE()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_DisableOnTheFlyForOIE(m_pHandle));
+	}
+	
+	/**
 	* CRTCContext::SetLaserPinOut - Sets the laser pin outputs to a certain state. Control command, has immediate effect.
 	* @param[in] bLaserOut1 - Value for Laser Out Pin 1
 	* @param[in] bLaserOut2 - Value for Laser Out Pin 2
@@ -6756,6 +7427,21 @@ public:
 	}
 	
 	/**
+	* CRTCContext::RetrieveOIEMeasurementTags - Extracts all stored OIE Measurement tags of the context and returns them as separate object. New Tag Indices will start from 0 again.
+	* @return Instance of the OIE Measurement Tag data.
+	*/
+	POIEMeasurementTagMap CRTCContext::RetrieveOIEMeasurementTags()
+	{
+		LibMCDriver_ScanLabHandle hMeasurementTags = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_RetrieveOIEMeasurementTags(m_pHandle, &hMeasurementTags));
+		
+		if (!hMeasurementTags) {
+			CheckError(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COIEMeasurementTagMap>(m_pWrapper, hMeasurementTags);
+	}
+	
+	/**
 	* CRTCContext::EnableOIEMeasurementTagging - Enables OIE Measurement tagging.
 	*/
 	void CRTCContext::EnableOIEMeasurementTagging()
@@ -6772,7 +7458,7 @@ public:
 	}
 	
 	/**
-	* CRTCContext::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE.
+	* CRTCContext::GetOIEMaxMeasurementTag - Returns the current maximum measurement tag that has been sent to the OIE. Will return 0 after RetrieveOIEMeasurementTags has been called.
 	* @return Measurement Tag that has been sent to the OIE.
 	*/
 	LibMCDriver_ScanLab_uint32 CRTCContext::GetOIEMaxMeasurementTag()
@@ -6784,7 +7470,7 @@ public:
 	}
 	
 	/**
-	* CRTCContext::MapOIEMeasurementTag - Maps an OIE Measurement tag back to the original scan parameters.
+	* CRTCContext::MapOIEMeasurementTag - DEPRECIATED! Maps an OIE Measurement tag back to the original scan parameters. Use RetrieveOIEMeasurementTags instead.
 	* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
 	* @param[out] nPartID - ID of the part.
 	* @param[out] nProfileID - ID of the profile.
@@ -6954,6 +7640,27 @@ public:
 	}
 	
 	/**
+	* CRTCContext::ClearRecording - Clears a recording if it exists in the driver memory. Does nothing if no such recording exists.
+	* @param[in] sUUID - UUID of the recording to clear.
+	* @return Returns if the recording existed and has been cleared.
+	*/
+	bool CRTCContext::ClearRecording(const std::string & sUUID)
+	{
+		bool resultRecordingExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_ClearRecording(m_pHandle, sUUID.c_str(), &resultRecordingExists));
+		
+		return resultRecordingExists;
+	}
+	
+	/**
+	* CRTCContext::ClearAllRecordings - Clears all recordings in the driver memory.
+	*/
+	void CRTCContext::ClearAllRecordings()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_ClearAllRecordings(m_pHandle));
+	}
+	
+	/**
 	* CRTCContext::EnableTimelagCompensation - Enables timelag compensation.
 	* @param[in] nTimeLagXYInMicroseconds - Time lag of XY axes (in microseconds). MUST be a multiple of 10.
 	* @param[in] nTimeLagZInMicroseconds - Time lag of Z axis (in microseconds). MUST be a multiple of 10.
@@ -7025,18 +7732,6 @@ public:
 	}
 	
 	/**
-	* CRTCContext::LaserPowerCalibrationIsEnabled - Returns if the laser power calibration table is non-empty.
-	* @return Laser Calibration Is Enabled
-	*/
-	bool CRTCContext::LaserPowerCalibrationIsEnabled()
-	{
-		bool resultCalibrationEnabled = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_LaserPowerCalibrationIsEnabled(m_pHandle, &resultCalibrationEnabled));
-		
-		return resultCalibrationEnabled;
-	}
-	
-	/**
 	* CRTCContext::LaserPowerCalibrationIsLinear - Returns if the laser power calibration table has one entry.
 	* @return Laser Calibration Is Affine Linear
 	*/
@@ -7049,43 +7744,65 @@ public:
 	}
 	
 	/**
-	* CRTCContext::ClearLaserPowerCalibration - Clears the laser power calibration table.
-	*/
-	void CRTCContext::ClearLaserPowerCalibration()
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_ClearLaserPowerCalibration(m_pHandle));
-	}
-	
-	/**
 	* CRTCContext::GetLaserPowerCalibration - Returns the laser power calibration table. Fails if laser calibration is not enabled.
+	* @param[out] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[out] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 	* @param[out] CalibrationPointsBuffer - Laser Calibration Points
 	*/
-	void CRTCContext::GetLaserPowerCalibration(std::vector<sLaserCalibrationPoint> & CalibrationPointsBuffer)
+	void CRTCContext::GetLaserPowerCalibration(LibMCDriver_ScanLab_double & dLaserPowerAt0Percent, LibMCDriver_ScanLab_double & dLaserPowerAt100Percent, std::vector<sLaserCalibrationPoint> & CalibrationPointsBuffer)
 	{
 		LibMCDriver_ScanLab_uint64 elementsNeededCalibrationPoints = 0;
 		LibMCDriver_ScanLab_uint64 elementsWrittenCalibrationPoints = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPowerCalibration(m_pHandle, 0, &elementsNeededCalibrationPoints, nullptr));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPowerCalibration(m_pHandle, &dLaserPowerAt0Percent, &dLaserPowerAt100Percent, 0, &elementsNeededCalibrationPoints, nullptr));
 		CalibrationPointsBuffer.resize((size_t) elementsNeededCalibrationPoints);
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPowerCalibration(m_pHandle, elementsNeededCalibrationPoints, &elementsWrittenCalibrationPoints, CalibrationPointsBuffer.data()));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetLaserPowerCalibration(m_pHandle, &dLaserPowerAt0Percent, &dLaserPowerAt100Percent, elementsNeededCalibrationPoints, &elementsWrittenCalibrationPoints, CalibrationPointsBuffer.data()));
 	}
 	
 	/**
 	* CRTCContext::SetLinearLaserPowerCalibration - Enables the laser power calibration with an affine linear tranformation.
-	* @param[in] dPowerOffsetInPercent - Additional offset of the Power value.
-	* @param[in] dPowerOutputScaling - Scaling factor of the laser output.
+	* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 	*/
-	void CRTCContext::SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dPowerOffsetInPercent, const LibMCDriver_ScanLab_double dPowerOutputScaling)
+	void CRTCContext::SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetLinearLaserPowerCalibration(m_pHandle, dPowerOffsetInPercent, dPowerOutputScaling));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetLinearLaserPowerCalibration(m_pHandle, dLaserPowerAt0Percent, dLaserPowerAt100Percent));
 	}
 	
 	/**
 	* CRTCContext::SetPiecewiseLinearLaserPowerCalibration - Enables the laser power calibration with multiple calibration point values. Table MUST NOT have negative power entries. Laser Power Output will be linear scaled with the given values within their respective intervals. Any laser power outside of the minimum or maximum Power values will be scaled according to the respective minimum or maximum scaling value.
-	* @param[in] CalibrationPointsBuffer - Laser Calibration Points. Array will be sorted by Laser Power Keys. Array MUST NOT be empty. Array MUST NOT have duplicate entries (to an accuracy of 0.01 Percent).
+	* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+	* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
+	* @param[in] CalibrationPointsBuffer - Laser Calibration Points that match percentage to power. The percentage values MUST be in sequentially increasing in the array (to an accuracy of 0.001 Percent). The power values MUST be sequentially increasing in the array (to an accuracy of 0.001 Watts).. Array MUST NOT be empty.
 	*/
-	void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const CInputVector<sLaserCalibrationPoint> & CalibrationPointsBuffer)
+	void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent, const CInputVector<sLaserCalibrationPoint> & CalibrationPointsBuffer)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetPiecewiseLinearLaserPowerCalibration(m_pHandle, (LibMCDriver_ScanLab_uint64)CalibrationPointsBuffer.size(), CalibrationPointsBuffer.data()));
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetPiecewiseLinearLaserPowerCalibration(m_pHandle, dLaserPowerAt0Percent, dLaserPowerAt100Percent, (LibMCDriver_ScanLab_uint64)CalibrationPointsBuffer.size(), CalibrationPointsBuffer.data()));
+	}
+	
+	/**
+	* CRTCContext::MapPowerPercentageToWatts - Maps a laser power percentage value to the laser power in watts.
+	* @param[in] dLaserPowerInPercent - Laser Power in Percent
+	* @return Laser Power in Watts
+	*/
+	LibMCDriver_ScanLab_double CRTCContext::MapPowerPercentageToWatts(const LibMCDriver_ScanLab_double dLaserPowerInPercent)
+	{
+		LibMCDriver_ScanLab_double resultLaserPowerInWatts = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_MapPowerPercentageToWatts(m_pHandle, dLaserPowerInPercent, &resultLaserPowerInWatts));
+		
+		return resultLaserPowerInWatts;
+	}
+	
+	/**
+	* CRTCContext::MapPowerWattsToPercent - Maps a laser power value to the laser power in percent.
+	* @param[in] dLaserPowerInWatts - Laser Power in Watts
+	* @return Laser Power in Percent
+	*/
+	LibMCDriver_ScanLab_double CRTCContext::MapPowerWattsToPercent(const LibMCDriver_ScanLab_double dLaserPowerInWatts)
+	{
+		LibMCDriver_ScanLab_double resultLaserPowerInPercent = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_MapPowerWattsToPercent(m_pHandle, dLaserPowerInWatts, &resultLaserPowerInPercent));
+		
+		return resultLaserPowerInPercent;
 	}
 	
 	/**
@@ -7467,12 +8184,36 @@ public:
 	}
 	
 	/**
-	* CDriver_ScanLab_RTC6::InitialiseFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+	* CDriver_ScanLab_RTC6::InitialiseFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserTimingDefaults.
 	* @param[in] sPresetName - Name of the configuration preset.
 	*/
 	void CDriver_ScanLab_RTC6::InitialiseFromConfiguration(const std::string & sPresetName)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6_InitialiseFromConfiguration(m_pHandle, sPresetName.c_str()));
+	}
+	
+	/**
+	* CDriver_ScanLab_RTC6::SetLaserSignalTimingDefaults - Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+	* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	void CDriver_ScanLab_RTC6::SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6_SetLaserSignalTimingDefaults(m_pHandle, dLaserPulseHalfPeriod, dLaserPulseLength, dStandbyPulseHalfPeriod, dStandbyPulseLength));
+	}
+	
+	/**
+	* CDriver_ScanLab_RTC6::GetLaserSignalTimingDefaults - Returns the laser timing defaults for CO2 lasers.
+	* @param[out] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[out] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[out] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[out] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	void CDriver_ScanLab_RTC6::GetLaserSignalTimingDefaults(LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6_GetLaserSignalTimingDefaults(m_pHandle, &dLaserPulseHalfPeriod, &dLaserPulseLength, &dStandbyPulseHalfPeriod, &dStandbyPulseLength));
 	}
 	
 	/**
@@ -7594,7 +8335,7 @@ public:
 	}
 	
 	/**
-	* CDriver_ScanLab_RTC6::ConfigureLaserMode - Configures the laser mode. MUST be called before any exposure.
+	* CDriver_ScanLab_RTC6::ConfigureLaserMode - Configures the laser mode. MUST be called before any exposure. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 	* @param[in] eLaserMode - Laser Mode Enum
 	* @param[in] eLaserPort - Laser Port Enum
 	* @param[in] dMaxLaserPower - Maximum laser power.
@@ -7789,13 +8530,39 @@ public:
 	}
 	
 	/**
-	* CDriver_ScanLab_RTC6xN::InitialiseScannerFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+	* CDriver_ScanLab_RTC6xN::InitialiseScannerFromConfiguration - Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserSignalTimingDefaults.
 	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
 	* @param[in] sPresetName - Name of the configuration preset.
 	*/
 	void CDriver_ScanLab_RTC6xN::InitialiseScannerFromConfiguration(const LibMCDriver_ScanLab_uint32 nScannerIndex, const std::string & sPresetName)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6xN_InitialiseScannerFromConfiguration(m_pHandle, nScannerIndex, sPresetName.c_str()));
+	}
+	
+	/**
+	* CDriver_ScanLab_RTC6xN::SetLaserSignalTimingDefaults - Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+	* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	void CDriver_ScanLab_RTC6xN::SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6xN_SetLaserSignalTimingDefaults(m_pHandle, nScannerIndex, dLaserPulseHalfPeriod, dLaserPulseLength, dStandbyPulseHalfPeriod, dStandbyPulseLength));
+	}
+	
+	/**
+	* CDriver_ScanLab_RTC6xN::GetLaserSignalTimingDefaults - Returns the laser timing defaults for CO2 lasers.
+	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+	* @param[out] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+	* @param[out] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+	* @param[out] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+	* @param[out] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+	*/
+	void CDriver_ScanLab_RTC6xN::GetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_double & dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double & dLaserPulseLength, LibMCDriver_ScanLab_double & dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double & dStandbyPulseLength)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_ScanLab_RTC6xN_GetLaserSignalTimingDefaults(m_pHandle, nScannerIndex, &dLaserPulseHalfPeriod, &dLaserPulseLength, &dStandbyPulseHalfPeriod, &dStandbyPulseLength));
 	}
 	
 	/**
@@ -7926,7 +8693,7 @@ public:
 	}
 	
 	/**
-	* CDriver_ScanLab_RTC6xN::ConfigureLaserMode - Configures the laser mode.
+	* CDriver_ScanLab_RTC6xN::ConfigureLaserMode - Configures the laser mode. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 	* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
 	* @param[in] eLaserMode - Laser Mode Enum
 	* @param[in] eLaserPort - Laser Port Enum

@@ -123,6 +123,110 @@ namespace AMC {
 
 	}
 
+
+	void CMeshEntity::loadTriangleSetFrom3MF(Lib3MF::CLib3MFMeshObject* pMeshObject, const std::string& sTriangleSetName)
+	{
+		if (pMeshObject == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		std::vector<uint32_t> triangleSetIndices;
+
+		auto pTriangleSet = pMeshObject->FindTriangleSet(sTriangleSetName);
+		pTriangleSet->GetTriangleList(triangleSetIndices);
+
+		std::vector<Lib3MF::sPosition> vertices;
+		pMeshObject->GetVertices(vertices);
+
+		std::vector<Lib3MF::sTriangle> triangles;
+		pMeshObject->GetTriangleIndices(triangles);
+
+		size_t nVertexCount = vertices.size();
+		size_t nTriangleCount = triangleSetIndices.size();
+
+		if (nVertexCount > MESHENTITY_MAXVERTEXCOUNT)
+			throw ELibMCCustomException(LIBMC_ERROR_MESHHASTOOMANYVERTICES, std::to_string(nVertexCount));
+		if (nTriangleCount > MESHENTITY_MAXTRIANGLECOUNT)
+			throw ELibMCCustomException(LIBMC_ERROR_MESHHASTOOMANYTRIANGLES, std::to_string(nTriangleCount));
+
+		m_Nodes.resize(nVertexCount);
+		m_Faces.resize(nTriangleCount);
+
+		std::map<std::pair<uint32_t, uint32_t>, sMeshEntityEdge> edgeMap;
+
+		for (size_t nVertexIndex = 0; nVertexIndex < nVertexCount; nVertexIndex++) {
+			auto& source = vertices.at(nVertexIndex);
+			auto& target = m_Nodes.at(nVertexIndex);
+			target.m_nNodeID = (uint32_t)nVertexIndex + 1;
+
+			for (uint32_t nCoordIndex = 0; nCoordIndex < 3; nCoordIndex++)
+				target.m_fCoordinates[nCoordIndex] = source.m_Coordinates[nCoordIndex];
+		}
+
+		for (size_t nTriangleIndex = 0; nTriangleIndex < nTriangleCount; nTriangleIndex++) {
+			auto& source = triangles.at(triangleSetIndices.at (nTriangleIndex));
+			auto& target = m_Faces.at(nTriangleIndex);
+			target.m_nFaceID = (uint32_t)nTriangleIndex + 1;
+
+			for (uint32_t nNodeIndex = 0; nNodeIndex < 3; nNodeIndex++) {
+				target.m_nNodeIDs[nNodeIndex] = source.m_Indices[nNodeIndex] + 1;
+			}
+
+			for (uint32_t nEdgeIndex = 0; nEdgeIndex < 3; nEdgeIndex++) {
+				uint32_t nNode1 = source.m_Indices[nEdgeIndex] + 1;
+				uint32_t nNode2 = source.m_Indices[(nEdgeIndex + 1) % 3] + 1;
+
+				if (nNode1 != nNode2) {
+
+					std::pair<uint32_t, uint32_t> key;
+
+					if (nNode1 < nNode2) {
+						key = std::make_pair(nNode1, nNode2);
+					}
+					else {
+						key = std::make_pair(nNode2, nNode1);
+					}
+
+					auto iIter = edgeMap.find(key);
+					if (iIter == edgeMap.end()) {
+						sMeshEntityEdge newEdge;
+						newEdge.m_nFlags = 0;
+						newEdge.m_nEdgeID = 0;
+						newEdge.m_nNodeIDs[0] = key.first;
+						newEdge.m_nNodeIDs[1] = key.second;
+						newEdge.m_nFaceIDs[0] = target.m_nFaceID;
+						newEdge.m_nFaceIDs[1] = 0;
+						newEdge.m_nValence = 1;
+
+						edgeMap.insert(std::make_pair(key, newEdge));
+					}
+					else {
+						iIter->second.m_nFaceIDs[1] = target.m_nFaceID;
+						iIter->second.m_nValence++;
+					}
+				}
+
+			}
+
+		}
+
+		m_Edges.reserve(edgeMap.size());
+		uint32_t nID = 1;
+		for (auto& edgeIter : edgeMap) {
+			auto newEdge = edgeIter.second;
+			newEdge.m_nEdgeID = nID;
+			nID++;
+
+			if ((newEdge.m_nFaceIDs[0] != 0) && (newEdge.m_nFaceIDs[1] != 0)) {
+				newEdge.m_nAngleInDegrees = (uint32_t)round(calcFaceAngleInDegree(newEdge.m_nFaceIDs[0], newEdge.m_nFaceIDs[1]));
+			}
+
+
+			m_Edges.push_back(newEdge);
+		}
+	}
+
+	
+
 	void CMeshEntity::loadFrom3MF(Lib3MF::CLib3MFMeshObject* pMeshObject)
 	{
 		if (pMeshObject == nullptr)

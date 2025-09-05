@@ -50,7 +50,7 @@ using namespace AMC;
 
 
 CUIModule_Custom::CUIModule_Custom(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode))
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -58,9 +58,9 @@ CUIModule_Custom::CUIModule_Custom(pugi::xml_node& xmlNode, const std::string& s
 	if (sPath.empty())
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULEPATH, m_sName);
 
-	m_sModulePath = sPath;
+	m_sParentPath = sPath;
 
-	m_pCustomItem = std::make_shared<CUIModuleCustomItem_Properties>(m_sUUID, m_sModulePath, pUIModuleEnvironment);
+	m_pCustomItem = std::make_shared<CUIModuleCustomItem_Properties>(m_sUUID, m_sParentPath, pUIModuleEnvironment);
 
 	pugi::xml_node propertiesNode = xmlNode.child("properties");
 	if (!propertiesNode.empty()) {
@@ -101,7 +101,7 @@ CUIModule_Custom::CUIModule_Custom(pugi::xml_node& xmlNode, const std::string& s
 			if (iIter != m_EventItemNameMap.end ())
 				throw ELibMCCustomException(LIBMC_ERROR_DUPLICATECUSTOMPAGEVENTNAME, m_sName + "/" + sName);
 
-			auto pEventItem = std::make_shared<CUIModuleCustomItem_Event>(sName, m_sModulePath, pUIModuleEnvironment);
+			auto pEventItem = std::make_shared<CUIModuleCustomItem_Event>(sName, m_sParentPath, pUIModuleEnvironment);
 
 			m_EventItemNameMap.insert(std::make_pair (pEventItem->getEventName (), pEventItem));
 			m_EventItemUUIDMap.insert(std::make_pair(pEventItem->getUUID(), pEventItem));
@@ -143,7 +143,7 @@ std::string CUIModule_Custom::getCaption()
 }
 
 
-void CUIModule_Custom::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_Custom::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULEUUID, getUUID());
@@ -154,7 +154,7 @@ void CUIModule_Custom::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObj
 		CJSONWriterObject itemObject(writer);
 		itemObject.addString(AMC_API_KEY_UI_ITEMTYPE, "properties");
 		itemObject.addString(AMC_API_KEY_UI_ITEMUUID, m_pCustomItem->getUUID());
-		m_pCustomItem->addContentToJSON(writer, itemObject, pClientVariableHandler, 0);
+		m_pCustomItem->addLegacyContentToJSON(writer, itemObject, pLegacyClientVariableHandler, 0);
 		itemsNode.addObject(itemObject);
 	}
 
@@ -165,7 +165,7 @@ void CUIModule_Custom::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObj
 		itemObject.addString(AMC_API_KEY_UI_ITEMTYPE, "event");
 		itemObject.addString(AMC_API_KEY_UI_ITEMUUID, eventItem->getUUID());
 		itemObject.addString(AMC_API_KEY_UI_ITEMNAME, eventItem->getEventName ());
-		eventItem->addContentToJSON(writer, itemObject, pClientVariableHandler, 0);
+		eventItem->addLegacyContentToJSON(writer, itemObject, pLegacyClientVariableHandler, 0);
 		itemsNode.addObject(itemObject);
 
 	}

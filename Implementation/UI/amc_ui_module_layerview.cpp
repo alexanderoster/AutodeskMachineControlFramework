@@ -76,7 +76,7 @@ std::string CUIModule_LayerViewPlatformItem::findElementPathByUUID(const std::st
 
 
 
-void CUIModule_LayerViewPlatformItem::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	auto pGroup = pClientVariableHandler->findGroup(getItemPath (), true);
 
@@ -145,8 +145,8 @@ void CUIModule_LayerViewPlatformItem::addContentToJSON(CJSONWriter& writer, CJSO
 				nLayerCount = pToolpathEntity->getLayerCount();
 			}
 		}
-
 	}
+
 	object.addInteger(AMC_API_KEY_UI_LAYERCOUNT, nLayerCount);
 
 	object.addInteger(AMC_API_KEY_UI_LABELVISIBLE, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_LABELVISIBLE));
@@ -168,9 +168,9 @@ void CUIModule_LayerViewPlatformItem::handleCustomRequest(PAPIAuth pAuth, const 
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 	
 
-	auto pClientVariableHandler = pAuth->getClientVariableHandler();
+	auto pClientVariableHandler = pAuth->getLegacyParameterHandler(true);
 
-	if (requestType == "changelayer") {
+	if ((requestType == "changelayer") && (pClientVariableHandler != nullptr)) {
 		uint64_t nLayer = requestData.getUint64(AMC_API_KEY_UI_TARGETLAYER, 0, UINT32_MAX, LIBMC_ERROR_MISSINGCUSTOMREQUESTLAYER);
 		auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
 		pGroup->setIntParameterValueByName(AMC_API_KEY_UI_CURRENTLAYER, nLayer);		
@@ -230,7 +230,7 @@ void CUIModule_LayerViewPlatformItem::populateClientVariables(CParameterHandler*
 
 
 CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode))
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -253,36 +253,69 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	CUIExpression baseImage(platformNode, "baseimage");
 	CUIExpression layerIndex(platformNode, "layerindex", false);
 
+	CUIExpression buildUUID;
+	CUIExpression executionUUID;
+	CUIExpression scatterplotUUID;
+	CUIExpression currentLayer;
+
+	CUIExpression labelVisible;
+	CUIExpression labelCaption;
+	CUIExpression labelIcon;
+
+	CUIExpression sliderChangeEvent;
+	CUIExpression sliderFixed;
 
 	m_PlatformItem = std::make_shared<CUIModule_LayerViewPlatformItem>(m_sModulePath, sizeX, sizeY, originX, originY, layerIndex, baseImage, pUIModuleEnvironment);
 
 	auto labelNode = xmlNode.child("label");
 	if (!labelNode.empty()) {
-		CUIExpression labelVisible(labelNode, "visible");
-		CUIExpression labelCaption(labelNode, "caption");
-		CUIExpression labelIcon(labelNode, "icon");
+		labelVisible = CUIExpression(labelNode, "visible");
+		labelCaption = CUIExpression(labelNode, "caption");
+		labelIcon = CUIExpression(labelNode, "icon");
 
 		m_PlatformItem->setLabelExpressions(labelVisible, labelCaption, labelIcon);
 
 	}
+	
 
 	auto referencesNode = xmlNode.child("references");
 	if (!referencesNode.empty()) {
-		CUIExpression buildUUID(platformNode, "builduuid", false);
-		CUIExpression executionUUID(platformNode, "executionuuid", false);
-		CUIExpression scatterplotUUID(platformNode, "scatterplotuuid", false);
+		buildUUID = CUIExpression (platformNode, "builduuid", false);
+		executionUUID = CUIExpression (platformNode, "executionuuid", false);
+		scatterplotUUID = CUIExpression (platformNode, "scatterplotuuid", false);
+
 		m_PlatformItem->setBuildReference(buildUUID, executionUUID, scatterplotUUID);
+
+
+
 	}
 
 	auto sliderNode = xmlNode.child("slider");
 	if (!sliderNode.empty()) {
-		CUIExpression sliderChangeEvent(sliderNode, "changeevent");
-		CUIExpression sliderFixed(sliderNode, "fixed");
+		sliderChangeEvent = CUIExpression(sliderNode, "changeevent");
+		sliderFixed = CUIExpression(sliderNode, "fixed");
 
 		m_PlatformItem->setSliderExpressions(sliderChangeEvent, sliderFixed);
 
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// New UI Frontend System
+	/////////////////////////////////////////////////////////////////////////////////////
+	registerUUIDAttribute(AMC_API_KEY_UI_BUILDUUID, buildUUID);
+	registerUUIDAttribute(AMC_API_KEY_UI_EXECUTIONUUID, executionUUID);
+	registerUUIDAttribute(AMC_API_KEY_UI_SCATTERPLOTUUID, scatterplotUUID);
+	registerIntegerAttribute(AMC_API_KEY_UI_CURRENTLAYER, currentLayer);
+	registerNumberAttribute(AMC_API_KEY_UI_SIZEX, sizeX);
+	registerNumberAttribute(AMC_API_KEY_UI_SIZEY, sizeY);
+	registerNumberAttribute(AMC_API_KEY_UI_ORIGINX, originX);
+	registerNumberAttribute(AMC_API_KEY_UI_ORIGINY, originY);
+	registerStringAttribute(AMC_API_KEY_UI_BASEIMAGERESOURCE, baseImage);
+	registerBoolAttribute(AMC_API_KEY_UI_LABELVISIBLE, labelVisible);
+	registerStringAttribute(AMC_API_KEY_UI_LABELCAPTION, labelCaption);
+	registerStringAttribute(AMC_API_KEY_UI_LABELICON, labelIcon);
+	registerStringAttribute(AMC_API_KEY_UI_SLIDERCHANGEEVENT, sliderChangeEvent);
+	registerBoolAttribute(AMC_API_KEY_UI_SLIDERFIXED, sliderFixed);
 }
 
 
@@ -308,7 +341,7 @@ std::string CUIModule_LayerView::getCaption()
 }
 
 
-void CUIModule_LayerView::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_LayerView::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULEUUID, getUUID());
@@ -319,7 +352,7 @@ void CUIModule_LayerView::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriter
 	CJSONWriterObject itemObject(writer);
 	itemObject.addString(AMC_API_KEY_UI_ITEMTYPE, "platform");
 	itemObject.addString(AMC_API_KEY_UI_ITEMUUID, m_PlatformItem->getUUID ());
-	m_PlatformItem->addContentToJSON(writer, itemObject, pClientVariableHandler, 0);
+	m_PlatformItem->addLegacyContentToJSON(writer, itemObject, pLegacyClientVariableHandler, 0);
 	itemsNode.addObject(itemObject);
 
 	moduleObject.addArray(AMC_API_KEY_UI_ITEMS, itemsNode);

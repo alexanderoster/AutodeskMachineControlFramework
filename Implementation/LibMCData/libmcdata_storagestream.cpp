@@ -238,3 +238,9 @@ AMCCommon::CImportStream* CStorageStream::getImportStream()
 {
 	return m_pImportStream.get();
 }
+
+
+void CStorageStream::EnsureSHA256IsValid()
+{
+	throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED, "SHA256 validation is not implemented in this version of the library.");
+}

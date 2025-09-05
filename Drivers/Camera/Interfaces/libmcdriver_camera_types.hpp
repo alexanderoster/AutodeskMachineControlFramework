@@ -144,6 +144,14 @@ typedef void * LibMCDriver_Camera_pvoid;
 #define LIBMCDRIVER_CAMERA_ERROR_COULDNOTLOCKMEDIABUFFER 1037 /** Could not lock media buffer */
 #define LIBMCDRIVER_CAMERA_ERROR_RAWBUFFERRETURNEDNULL 1038 /** Raw buffer returned null */
 #define LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH 1039 /** YUY2 sample buffer size mismatch */
+#define LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET 1040 /** Camera resolution not set */
+#define LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIASUBTYPE 1041 /** Could not get media subtype */
+#define LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE 1042 /** Invalid media subtype */
+#define LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR 1043 /** Platform error */
+#define LIBMCDRIVER_CAMERA_ERROR_INVALIDVIDEOSOURCEFORMAT 1044 /** Invalid video source format */
+#define LIBMCDRIVER_CAMERA_ERROR_SOURCEFORMATNOTSUPPORTED 1045 /** Source format not supported */
+#define LIBMCDRIVER_CAMERA_ERROR_NV12SAMPLEBUFFERSIZEMISMATCH 1046 /** NV12 Sample Buffer size mismatch */
+#define LIBMCDRIVER_CAMERA_ERROR_CAMERAENCODINGNEEDSEVENIMAGEEXTENTS 1047 /** Camera encoding needs even image extents */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_Camera
@@ -200,6 +208,14 @@ inline const char * LIBMCDRIVER_CAMERA_GETERRORSTRING (LibMCDriver_CameraResult 
     case LIBMCDRIVER_CAMERA_ERROR_COULDNOTLOCKMEDIABUFFER: return "Could not lock media buffer";
     case LIBMCDRIVER_CAMERA_ERROR_RAWBUFFERRETURNEDNULL: return "Raw buffer returned null";
     case LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH: return "YUY2 sample buffer size mismatch";
+    case LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET: return "Camera resolution not set";
+    case LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIASUBTYPE: return "Could not get media subtype";
+    case LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE: return "Invalid media subtype";
+    case LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR: return "Platform error";
+    case LIBMCDRIVER_CAMERA_ERROR_INVALIDVIDEOSOURCEFORMAT: return "Invalid video source format";
+    case LIBMCDRIVER_CAMERA_ERROR_SOURCEFORMATNOTSUPPORTED: return "Source format not supported";
+    case LIBMCDRIVER_CAMERA_ERROR_NV12SAMPLEBUFFERSIZEMISMATCH: return "NV12 Sample Buffer size mismatch";
+    case LIBMCDRIVER_CAMERA_ERROR_CAMERAENCODINGNEEDSEVENIMAGEEXTENTS: return "Camera encoding needs even image extents";
     default: return "unknown error";
   }
 }
@@ -219,8 +235,43 @@ typedef LibMCDriver_CameraHandle LibMCDriver_Camera_Driver_Camera_Windows;
 
 namespace LibMCDriver_Camera {
 
+  /*************************************************************************************************************************
+   Declaration of enums
+  **************************************************************************************************************************/
+  
+  /**
+  * enum class eVideoSourceFormat - Format of the video source stream
+  */
+  enum class eVideoSourceFormat : LibMCDriver_Camera_int32 {
+    Invalid = 0,
+    RGB32 = 1,
+    ARGB32 = 2,
+    RGB24 = 3,
+    RGB555 = 4,
+    RGB565 = 5,
+    Grayscale8 = 6,
+    Grayscale16 = 7,
+    Depth16 = 8,
+    AYUV = 9,
+    I420 = 10,
+    IYUV = 11,
+    NV11 = 12,
+    NV12 = 13,
+    NV21 = 14,
+    UYVY = 15,
+    Y41P = 16,
+    Y41T = 17,
+    Y42T = 18,
+    YUY2 = 19,
+    YVU9 = 20,
+    YV12 = 21,
+    YVYU = 22,
+    MJPG = 23
+  };
+  
 } // namespace LibMCDriver_Camera;
 
 // define legacy C-names for enums, structs and function types
+typedef LibMCDriver_Camera::eVideoSourceFormat eLibMCDriver_CameraVideoSourceFormat;
 
 #endif // __LIBMCDRIVER_CAMERA_TYPES_HEADER_CPP

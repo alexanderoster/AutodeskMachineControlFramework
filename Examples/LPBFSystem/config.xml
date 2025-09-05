@@ -80,7 +80,7 @@
   <driver name="scanlabsmc_0_8" library="driver_scanlabsmc" type="scanlab-smc-0.8" />
   <driver name="scanlabsmc_0_9" library="driver_scanlabsmc" type="scanlab-smc-0.9" />
 
-	
+  <driver name="camera" library="driver_camera" type="windowsmf"/>
 
   <statemachine name="main" description="Main System" initstate="init" failedstate="fatalerror" library="plugin_main">
 

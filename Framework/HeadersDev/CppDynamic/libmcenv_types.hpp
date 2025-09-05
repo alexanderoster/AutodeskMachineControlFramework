@@ -307,6 +307,45 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_NOYAXISCOLUMNGIVEN 10210 /** No Y Axis Column given */
 #define LIBMCENV_ERROR_INVALIDSCATTERPLOTPOINTINDEX 10211 /** Invalid scatter plot index. */
 #define LIBMCENV_ERROR_SCATTERPLOTNOTFOUND 10212 /** Scatter plot not found */
+#define LIBMCENV_ERROR_COULDNOTPARSEJSONSTRING 10213 /** Could not parse JSON string */
+#define LIBMCENV_ERROR_COULDNOTPARSEJSONDATA 10214 /** Could not parse JSON data */
+#define LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX 10215 /** Invalid JSON Member Index */
+#define LIBMCENV_ERROR_JSONMEMBERNOTFOUND 10216 /** JSON Member not found */
+#define LIBMCENV_ERROR_JSONMEMBERISNOTINTEGER 10217 /** JSON Member is not integer */
+#define LIBMCENV_ERROR_JSONMEMBERISNOTDOUBLE 10218 /** JSON Member is not double */
+#define LIBMCENV_ERROR_JSONMEMBERISNOTBOOL 10219 /** JSON Member is not bool */
+#define LIBMCENV_ERROR_JSONMEMBERISNOTOBJECT 10220 /** JSON Member is not object */
+#define LIBMCENV_ERROR_JSONMEMBERISNOTARRAY 10221 /** JSON Member is not array */
+#define LIBMCENV_ERROR_REFERENCEDJSONVALUEISNOTOBJECT 10222 /** Referenced JSON value is not object */
+#define LIBMCENV_ERROR_JSONMEMBERHASINVALIDTYPE 10223 /** JSON Member has invalid type */
+#define LIBMCENV_ERROR_REFERENCEDJSONVALUEISNOTARRAY 10224 /** Referenced JSON value is not array */
+#define LIBMCENV_ERROR_COULDNOTPARSEEVENTPARAMETERJSON 10225 /** Could not parse event parameter JSON */
+#define LIBMCENV_ERROR_DUPLICATEEXTERNALEVENTRETURNKEY 10226 /** Duplicate external event return key */
+#define LIBMCENV_ERROR_EXTERNALEVENTPARAMETERISNOTSTRING 10227 /** External event parameter is not of type string. */
+#define LIBMCENV_ERROR_JSONSTRINGISNOTOFTYPEOBJECT 10228 /** JSON String is not of type object. */
+#define LIBMCENV_ERROR_JSONDATAISNOTOFTYPEOBJECT 10229 /** JSON Data is not of type object. */
+#define LIBMCENV_ERROR_INVALIDJPEGSTREAMSIZE 10230 /** Invalid JPEG Stream size. */
+#define LIBMCENV_ERROR_INVALIDJPEGCOLORCHANNELS 10231 /** Invalid JPEG Color channels. */
+#define LIBMCENV_ERROR_COULDNOTLOADJPEGIMAGE 10232 /** Could not load JPEG Image. */
+#define LIBMCENV_ERROR_SEGMENTISNOTOFTYPEPOLYLINEORLOOP 10233 /** Segment is not of type polyline or loop. */
+#define LIBMCENV_ERROR_COULDNOTEVALUATEHATCHPROFILES 10234 /** Could not evaluate hatch profiles. */
+#define LIBMCENV_ERROR_SUBINTERPOLATIONDATAONNOMODIFICATION 10235 /** Subinterpolation data on no modification. */
+#define LIBMCENV_ERROR_SUBINTERPOLATIONDATAONCONSTANTMODIFICATION 10236 /** Subinterpolation data on constant modification. */
+#define LIBMCENV_ERROR_SUBINTERPOLATIONDATAONLINEARMODIFICATION 10237 /** Subinterpolation data on linear modification. */
+#define LIBMCENV_ERROR_INVALIDHATCHSUBINTERPOLATIONDATA 10238 /** Invalid hatch subinterpolation data. */
+#define LIBMCENV_ERROR_HATCHSUBINTERPOLATIONDATAOVERFLOW 10239 /** Hatch subinterpolation data overflow. */
+#define LIBMCENV_ERROR_WORKINGFILEDOESNOTEXIST 10240 /** Working file does not exist. */
+#define LIBMCENV_ERROR_ATTEMPTEDTOACCESSEMPTYBOUNDINGBOX 10241 /** Attempted to access empty bounding box. */
+#define LIBMCENV_ERROR_MINIMUMEXTENTSARENOTPOSITIVE 10242 /** Minimum extents are not positive. */
+#define LIBMCENV_ERROR_CANNOTWRITETOFINISHEDWORKINGFILE 10243 /** Can not write to finished working file. */
+#define LIBMCENV_ERROR_INVALIDWRITEBUFFERSIZE 10244 /** Invalid write buffer size. */
+#define LIBMCENV_ERROR_INVALIDWRITEBUFFFERPOSITION 10245 /** Invalid write buffer position. */
+#define LIBMCENV_ERROR_TRIANGLESETNOTFOUND 10246 /** Triangle set not found. */
+#define LIBMCENV_ERROR_WORKINGFILECEASEDTOEXIST 10247 /** Working file ceased to exist. */
+#define LIBMCENV_ERROR_WORKINGDIRECTORYCEASEDTOEXIST 10248 /** Working directory ceased to exist. */
+#define LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE 10249 /** Undefined internal signal phase. */
+#define LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT 10250 /** Invalid reaction timeout. */
+#define LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT 10251 /** Could not set reaction timeout. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -526,6 +565,45 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_NOYAXISCOLUMNGIVEN: return "No Y Axis Column given";
     case LIBMCENV_ERROR_INVALIDSCATTERPLOTPOINTINDEX: return "Invalid scatter plot index.";
     case LIBMCENV_ERROR_SCATTERPLOTNOTFOUND: return "Scatter plot not found";
+    case LIBMCENV_ERROR_COULDNOTPARSEJSONSTRING: return "Could not parse JSON string";
+    case LIBMCENV_ERROR_COULDNOTPARSEJSONDATA: return "Could not parse JSON data";
+    case LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX: return "Invalid JSON Member Index";
+    case LIBMCENV_ERROR_JSONMEMBERNOTFOUND: return "JSON Member not found";
+    case LIBMCENV_ERROR_JSONMEMBERISNOTINTEGER: return "JSON Member is not integer";
+    case LIBMCENV_ERROR_JSONMEMBERISNOTDOUBLE: return "JSON Member is not double";
+    case LIBMCENV_ERROR_JSONMEMBERISNOTBOOL: return "JSON Member is not bool";
+    case LIBMCENV_ERROR_JSONMEMBERISNOTOBJECT: return "JSON Member is not object";
+    case LIBMCENV_ERROR_JSONMEMBERISNOTARRAY: return "JSON Member is not array";
+    case LIBMCENV_ERROR_REFERENCEDJSONVALUEISNOTOBJECT: return "Referenced JSON value is not object";
+    case LIBMCENV_ERROR_JSONMEMBERHASINVALIDTYPE: return "JSON Member has invalid type";
+    case LIBMCENV_ERROR_REFERENCEDJSONVALUEISNOTARRAY: return "Referenced JSON value is not array";
+    case LIBMCENV_ERROR_COULDNOTPARSEEVENTPARAMETERJSON: return "Could not parse event parameter JSON";
+    case LIBMCENV_ERROR_DUPLICATEEXTERNALEVENTRETURNKEY: return "Duplicate external event return key";
+    case LIBMCENV_ERROR_EXTERNALEVENTPARAMETERISNOTSTRING: return "External event parameter is not of type string.";
+    case LIBMCENV_ERROR_JSONSTRINGISNOTOFTYPEOBJECT: return "JSON String is not of type object.";
+    case LIBMCENV_ERROR_JSONDATAISNOTOFTYPEOBJECT: return "JSON Data is not of type object.";
+    case LIBMCENV_ERROR_INVALIDJPEGSTREAMSIZE: return "Invalid JPEG Stream size.";
+    case LIBMCENV_ERROR_INVALIDJPEGCOLORCHANNELS: return "Invalid JPEG Color channels.";
+    case LIBMCENV_ERROR_COULDNOTLOADJPEGIMAGE: return "Could not load JPEG Image.";
+    case LIBMCENV_ERROR_SEGMENTISNOTOFTYPEPOLYLINEORLOOP: return "Segment is not of type polyline or loop.";
+    case LIBMCENV_ERROR_COULDNOTEVALUATEHATCHPROFILES: return "Could not evaluate hatch profiles.";
+    case LIBMCENV_ERROR_SUBINTERPOLATIONDATAONNOMODIFICATION: return "Subinterpolation data on no modification.";
+    case LIBMCENV_ERROR_SUBINTERPOLATIONDATAONCONSTANTMODIFICATION: return "Subinterpolation data on constant modification.";
+    case LIBMCENV_ERROR_SUBINTERPOLATIONDATAONLINEARMODIFICATION: return "Subinterpolation data on linear modification.";
+    case LIBMCENV_ERROR_INVALIDHATCHSUBINTERPOLATIONDATA: return "Invalid hatch subinterpolation data.";
+    case LIBMCENV_ERROR_HATCHSUBINTERPOLATIONDATAOVERFLOW: return "Hatch subinterpolation data overflow.";
+    case LIBMCENV_ERROR_WORKINGFILEDOESNOTEXIST: return "Working file does not exist.";
+    case LIBMCENV_ERROR_ATTEMPTEDTOACCESSEMPTYBOUNDINGBOX: return "Attempted to access empty bounding box.";
+    case LIBMCENV_ERROR_MINIMUMEXTENTSARENOTPOSITIVE: return "Minimum extents are not positive.";
+    case LIBMCENV_ERROR_CANNOTWRITETOFINISHEDWORKINGFILE: return "Can not write to finished working file.";
+    case LIBMCENV_ERROR_INVALIDWRITEBUFFERSIZE: return "Invalid write buffer size.";
+    case LIBMCENV_ERROR_INVALIDWRITEBUFFFERPOSITION: return "Invalid write buffer position.";
+    case LIBMCENV_ERROR_TRIANGLESETNOTFOUND: return "Triangle set not found.";
+    case LIBMCENV_ERROR_WORKINGFILECEASEDTOEXIST: return "Working file ceased to exist.";
+    case LIBMCENV_ERROR_WORKINGDIRECTORYCEASEDTOEXIST: return "Working directory ceased to exist.";
+    case LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE: return "Undefined internal signal phase.";
+    case LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT: return "Invalid reaction timeout.";
+    case LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT: return "Could not set reaction timeout.";
     default: return "unknown error";
   }
 }
@@ -550,6 +628,10 @@ typedef LibMCEnvHandle LibMCEnv_DiscreteFieldData2DStoreOptions;
 typedef LibMCEnvHandle LibMCEnv_DiscreteFieldData2D;
 typedef LibMCEnvHandle LibMCEnv_DataTableWriteOptions;
 typedef LibMCEnvHandle LibMCEnv_DataTableCSVWriteOptions;
+typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataColumn;
+typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataColumnIterator;
+typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataChannel;
+typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataChannelIterator;
 typedef LibMCEnvHandle LibMCEnv_DataTableScatterPlotOptions;
 typedef LibMCEnvHandle LibMCEnv_DataTable;
 typedef LibMCEnvHandle LibMCEnv_DataSeries;
@@ -557,6 +639,7 @@ typedef LibMCEnvHandle LibMCEnv_DateTimeDifference;
 typedef LibMCEnvHandle LibMCEnv_DateTime;
 typedef LibMCEnvHandle LibMCEnv_MeshObject;
 typedef LibMCEnvHandle LibMCEnv_PersistentMeshObject;
+typedef LibMCEnvHandle LibMCEnv_BoundingBox3D;
 typedef LibMCEnvHandle LibMCEnv_ModelDataMeshInstance;
 typedef LibMCEnvHandle LibMCEnv_ModelDataComponentInstance;
 typedef LibMCEnvHandle LibMCEnv_MeshSceneItem;
@@ -568,9 +651,10 @@ typedef LibMCEnvHandle LibMCEnv_ToolpathAccessor;
 typedef LibMCEnvHandle LibMCEnv_BuildExecution;
 typedef LibMCEnvHandle LibMCEnv_BuildExecutionIterator;
 typedef LibMCEnvHandle LibMCEnv_Build;
-typedef LibMCEnvHandle LibMCEnv_WorkingFileExecution;
+typedef LibMCEnvHandle LibMCEnv_WorkingFileProcess;
 typedef LibMCEnvHandle LibMCEnv_WorkingFile;
 typedef LibMCEnvHandle LibMCEnv_WorkingFileIterator;
+typedef LibMCEnvHandle LibMCEnv_WorkingFileWriter;
 typedef LibMCEnvHandle LibMCEnv_WorkingDirectory;
 typedef LibMCEnvHandle LibMCEnv_XMLDocumentAttribute;
 typedef LibMCEnvHandle LibMCEnv_JSONObject;
@@ -599,6 +683,9 @@ typedef LibMCEnvHandle LibMCEnv_LogEntryList;
 typedef LibMCEnvHandle LibMCEnv_JournalHandler;
 typedef LibMCEnvHandle LibMCEnv_UserDetailList;
 typedef LibMCEnvHandle LibMCEnv_UserManagementHandler;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationVersion;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationType;
+typedef LibMCEnvHandle LibMCEnv_MachineConfigurationHandler;
 typedef LibMCEnvHandle LibMCEnv_StateEnvironment;
 typedef LibMCEnvHandle LibMCEnv_UIItem;
 typedef LibMCEnvHandle LibMCEnv_UIEnvironment;
@@ -629,11 +716,12 @@ namespace LibMCEnv {
   
   enum class eJSONObjectType : LibMCEnv_int32 {
     Unknown = 0,
-    String = 1,
-    Integer = 2,
-    Double = 3,
-    Object = 4,
-    Array = 5
+    StringType = 1,
+    IntegerType = 2,
+    DoubleType = 3,
+    ObjectType = 4,
+    ArrayType = 5,
+    BoolType = 6
   };
   
   enum class eImagePixelFormat : LibMCEnv_int32 {
@@ -666,7 +754,6 @@ namespace LibMCEnv {
   enum class eToolpathSegmentType : LibMCEnv_int32 {
     Unknown = 0,
     Hatch = 1,
-    Loop = 2,
     Polyline = 3
   };
   
@@ -690,10 +777,19 @@ namespace LibMCEnv {
     LaserOffDelay = 10,
     JumpDelay = 11,
     MarkDelay = 12,
-    LaserFocus = 13
+    LaserFocus = 13,
+    PreSegmentDelay = 14,
+    PostSegmentDelay = 15
   };
   
-  enum class eToolpathProfileOverrideFactor : LibMCEnv_int32 {
+  enum class eToolpathProfileModificationType : LibMCEnv_int32 {
+    NoModification = 0,
+    ConstantModification = 1,
+    LinearModification = 2,
+    NonlinearModification = 3
+  };
+  
+  enum class eToolpathProfileModificationFactor : LibMCEnv_int32 {
     Unknown = 0,
     FactorF = 1,
     FactorG = 2,
@@ -706,6 +802,15 @@ namespace LibMCEnv {
     DialogOKCancel = 2,
     DialogYesNo = 3,
     DialogYesNoCancel = 4
+  };
+  
+  enum class eWorkingFileProcessStatus : LibMCEnv_int32 {
+    Unknown = 0,
+    ProcessNotStarted = 1,
+    ProcessStarted = 2,
+    ProcessFinished = 3,
+    ProcessTerminated = 4,
+    ProcessTimedOut = 5
   };
   
   enum class eBuildExecutionStatus : LibMCEnv_int32 {
@@ -722,6 +827,19 @@ namespace LibMCEnv {
     Uint32Column = 3,
     Int64Column = 4,
     Uint64Column = 5
+  };
+  
+  enum class eSignalPhase : LibMCEnv_int32 {
+    Invalid = 0, /** Invalid phase. Should not happen. */
+    InPreparation = 10, /** Signal has not been triggered yet. Parameters can change. */
+    InQueue = 20, /** Signal has been triggered but is not being processed. Parameters can not change anymore. */
+    InProcess = 30, /** Signal is being processed. Results can change. */
+    Handled = 40, /** Signal is has been handled to its specification. */
+    Failed = 50, /** Signal is has not been handled to its specification. An error message is available. */
+    TimedOut = 60, /** The signal timed out before being processed. */
+    Cleared = 70, /** The signal queue has been cleared and the signal will not be processed anymore. */
+    Retracted = 80, /** The sender has retracted the signal before it was processed. */
+    Archived = 90 /** The signal has been archived. */
   };
   
   /*************************************************************************************************************************
@@ -755,6 +873,10 @@ namespace LibMCEnv {
       LibMCEnv_double m_Coordinates[2];
   } sFloatPosition2D;
   
+  typedef struct sFloatPosition3D {
+      LibMCEnv_double m_Coordinates[3];
+  } sFloatPosition3D;
+  
   typedef struct sFieldData2DPoint {
       LibMCEnv_double m_Coordinates[2];
       LibMCEnv_double m_Value;
@@ -772,10 +894,10 @@ namespace LibMCEnv {
       LibMCEnv_double m_Y2;
   } sFloatHatch2D;
   
-  typedef struct sHatch2DOverrides {
-      LibMCEnv_double m_Point1Override;
-      LibMCEnv_double m_Point2Override;
-  } sHatch2DOverrides;
+  typedef struct sHatch2DSubInterpolationData {
+      LibMCEnv_double m_Parameter;
+      LibMCEnv_double m_Value;
+  } sHatch2DSubInterpolationData;
   
   typedef struct sModelDataTransform {
       LibMCEnv_double m_Matrix[3][3];
@@ -807,19 +929,23 @@ typedef LibMCEnv::eFieldSamplingMode eLibMCEnvFieldSamplingMode;
 typedef LibMCEnv::eToolpathSegmentType eLibMCEnvToolpathSegmentType;
 typedef LibMCEnv::eToolpathAttributeType eLibMCEnvToolpathAttributeType;
 typedef LibMCEnv::eToolpathProfileValueType eLibMCEnvToolpathProfileValueType;
-typedef LibMCEnv::eToolpathProfileOverrideFactor eLibMCEnvToolpathProfileOverrideFactor;
+typedef LibMCEnv::eToolpathProfileModificationType eLibMCEnvToolpathProfileModificationType;
+typedef LibMCEnv::eToolpathProfileModificationFactor eLibMCEnvToolpathProfileModificationFactor;
 typedef LibMCEnv::eMessageDialogType eLibMCEnvMessageDialogType;
+typedef LibMCEnv::eWorkingFileProcessStatus eLibMCEnvWorkingFileProcessStatus;
 typedef LibMCEnv::eBuildExecutionStatus eLibMCEnvBuildExecutionStatus;
 typedef LibMCEnv::eDataTableColumnType eLibMCEnvDataTableColumnType;
+typedef LibMCEnv::eSignalPhase eLibMCEnvSignalPhase;
 typedef LibMCEnv::sPosition2D sLibMCEnvPosition2D;
 typedef LibMCEnv::sHatch2D sLibMCEnvHatch2D;
 typedef LibMCEnv::sMeshVertex3D sLibMCEnvMeshVertex3D;
 typedef LibMCEnv::sMeshTriangle3D sLibMCEnvMeshTriangle3D;
 typedef LibMCEnv::sFloatPosition2D sLibMCEnvFloatPosition2D;
+typedef LibMCEnv::sFloatPosition3D sLibMCEnvFloatPosition3D;
 typedef LibMCEnv::sFieldData2DPoint sLibMCEnvFieldData2DPoint;
 typedef LibMCEnv::sFieldData3DPoint sLibMCEnvFieldData3DPoint;
 typedef LibMCEnv::sFloatHatch2D sLibMCEnvFloatHatch2D;
-typedef LibMCEnv::sHatch2DOverrides sLibMCEnvHatch2DOverrides;
+typedef LibMCEnv::sHatch2DSubInterpolationData sLibMCEnvHatch2DSubInterpolationData;
 typedef LibMCEnv::sModelDataTransform sLibMCEnvModelDataTransform;
 typedef LibMCEnv::sColorRGB sLibMCEnvColorRGB;
 typedef LibMCEnv::sTimeStreamEntry sLibMCEnvTimeStreamEntry;

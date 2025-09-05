@@ -76,6 +76,8 @@ protected:
 
     std::map<std::string, PRaylaseCardImpl> m_CardInstances;
 
+    bool checkExposureCancelCallback();
+
 
 public:
     CDriver_Raylase(const std::string & sName, LibMCEnv::PDriverEnvironment pDriverEnvironment);
@@ -109,6 +111,8 @@ public:
     void SetToSimulationMode() override;
 
     bool IsSimulationMode() override;
+
+    void DrawLayerMultiLaserWithCallback(const std::string& sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData) override;
 
     void DrawLayerMultiLaser(const std::string& sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase_uint32 nScanningTimeoutInMS);
 

@@ -45,11 +45,14 @@ namespace AMC {
 	class CAPIAuth;
 	typedef std::shared_ptr<CAPIAuth> PAPIAuth;
 
+	class CUserInformation;
+	typedef std::shared_ptr<CUserInformation> PUserInformation;
+
 	class CParameterHandler;
 	typedef std::shared_ptr<CParameterHandler> PParameterHandler;
 
-	class CUserInformation;
-	typedef std::shared_ptr<CUserInformation> PUserInformation;
+	class CUIFrontendState;
+	typedef std::shared_ptr<CUIFrontendState> PUIFrontendState;
 
 	class CAPIAuth {
 	private:
@@ -59,7 +62,7 @@ namespace AMC {
 		bool m_bIsAuthorized;
 
 		PUserInformation m_pUserInformation;
-		PParameterHandler m_pClientVariableHandler;
+		PUIFrontendState m_pUIFrontendState;
 
 		std::map<std::string, std::pair<std::string, std::string>> m_DownloadTickets;
 
@@ -68,7 +71,7 @@ namespace AMC {
 
 	public:
 
-		CAPIAuth(const std::string& sSessionUUID, const std::string& sSessionKey, PUserInformation pUserInformation, bool bIsAuthorized, PParameterHandler pClientVariableHandler, AMCCommon::PChrono pGlobalChrono);
+		CAPIAuth(const std::string& sSessionUUID, const std::string& sSessionKey, PUserInformation pUserInformation, bool bIsAuthorized, PUIFrontendState pFrontendState);
 
 		virtual ~CAPIAuth();
 		
@@ -86,7 +89,9 @@ namespace AMC {
 
 		bool contextUUIDIsAuthorized(std::string & sContextUUID);
 
-		PParameterHandler getClientVariableHandler ();
+		PUIFrontendState getFrontendState();
+
+		CParameterHandler* getLegacyParameterHandler(bool bAllowNull);
 
 		std::string createStreamDownloadTicket(const std::string & sStreamUUID, const std::string & sDownloadFileName);
 								

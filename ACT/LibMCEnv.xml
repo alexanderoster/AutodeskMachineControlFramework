@@ -250,7 +250,51 @@
 		<error name="NOYAXISCOLUMNGIVEN" code="10210" description="No Y Axis Column given" />		
 		<error name="INVALIDSCATTERPLOTPOINTINDEX" code="10211" description="Invalid scatter plot index." />		
 		<error name="SCATTERPLOTNOTFOUND" code="10212" description="Scatter plot not found" />		
+		<error name="COULDNOTPARSEJSONSTRING" code="10213" description="Could not parse JSON string" />		
+		<error name="COULDNOTPARSEJSONDATA" code="10214" description="Could not parse JSON data" />		
+		<error name="INVALIDJSONMEMBERINDEX" code="10215" description="Invalid JSON Member Index" />		
+		<error name="JSONMEMBERNOTFOUND" code="10216" description="JSON Member not found" />		
+		<error name="JSONMEMBERISNOTINTEGER" code="10217" description="JSON Member is not integer" />		
+		<error name="JSONMEMBERISNOTDOUBLE" code="10218" description="JSON Member is not double" />		
+		<error name="JSONMEMBERISNOTBOOL" code="10219" description="JSON Member is not bool" />		
+		<error name="JSONMEMBERISNOTOBJECT" code="10220" description="JSON Member is not object" />		
+		<error name="JSONMEMBERISNOTARRAY" code="10221" description="JSON Member is not array" />		
+		<error name="REFERENCEDJSONVALUEISNOTOBJECT" code="10222" description="Referenced JSON value is not object" />		
+		<error name="JSONMEMBERHASINVALIDTYPE" code="10223" description="JSON Member has invalid type" />		
+		<error name="REFERENCEDJSONVALUEISNOTARRAY" code="10224" description="Referenced JSON value is not array" />		
+		<error name="COULDNOTPARSEEVENTPARAMETERJSON" code="10225" description="Could not parse event parameter JSON" />		
+		<error name="DUPLICATEEXTERNALEVENTRETURNKEY" code="10226" description="Duplicate external event return key" />		
+		<error name="EXTERNALEVENTPARAMETERISNOTSTRING" code="10227" description="External event parameter is not of type string." />		
+		<error name="JSONSTRINGISNOTOFTYPEOBJECT" code="10228" description="JSON String is not of type object." />		
+		<error name="JSONDATAISNOTOFTYPEOBJECT" code="10229" description="JSON Data is not of type object." />		
+		<error name="INVALIDJPEGSTREAMSIZE" code="10230" description="Invalid JPEG Stream size." />		
+		<error name="INVALIDJPEGCOLORCHANNELS" code="10231" description="Invalid JPEG Color channels." />		
+		<error name="COULDNOTLOADJPEGIMAGE" code="10232" description="Could not load JPEG Image." />		
+		<error name="SEGMENTISNOTOFTYPEPOLYLINEORLOOP" code="10233" description="Segment is not of type polyline or loop." />		
+		<error name="COULDNOTEVALUATEHATCHPROFILES" code="10234" description="Could not evaluate hatch profiles." />		
+		<error name="SUBINTERPOLATIONDATAONNOMODIFICATION" code="10235" description="Subinterpolation data on no modification." />
+		<error name="SUBINTERPOLATIONDATAONCONSTANTMODIFICATION" code="10236" description="Subinterpolation data on constant modification." />		
+		<error name="SUBINTERPOLATIONDATAONLINEARMODIFICATION" code="10237" description="Subinterpolation data on linear modification." />		
+		<error name="INVALIDHATCHSUBINTERPOLATIONDATA" code="10238" description="Invalid hatch subinterpolation data." />
+		<error name="HATCHSUBINTERPOLATIONDATAOVERFLOW" code="10239" description="Hatch subinterpolation data overflow." />
+		<error name="WORKINGFILEDOESNOTEXIST" code="10240" description="Working file does not exist." />
+		<error name="ATTEMPTEDTOACCESSEMPTYBOUNDINGBOX" code="10241" description="Attempted to access empty bounding box." />
+		<error name="MINIMUMEXTENTSARENOTPOSITIVE" code="10242" description="Minimum extents are not positive." />
+		<error name="CANNOTWRITETOFINISHEDWORKINGFILE" code="10243" description="Can not write to finished working file." />
+		<error name="INVALIDWRITEBUFFERSIZE" code="10244" description="Invalid write buffer size." />		
+		<error name="INVALIDWRITEBUFFFERPOSITION" code="10245" description="Invalid write buffer position." />
+		<error name="TRIANGLESETNOTFOUND" code="10246" description="Triangle set not found." />	
+		<error name="WORKINGFILECEASEDTOEXIST" code="10247" description="Working file ceased to exist." />	
+		<error name="WORKINGDIRECTORYCEASEDTOEXIST" code="10248" description="Working directory ceased to exist." />	
+		<error name="UNDEFINEDINTERNALSIGNALPHASE" code="10249" description="Undefined internal signal phase." />	
+		<error name="INVALIDREACTIONTIMEOUT" code="10250" description="Invalid reaction timeout." />	
+		<error name="COULDNOTSETREACTIONTIMEOUT" code="10251" description="Could not set reaction timeout." />	
 		
+		
+		
+		
+		
+					
 	</errors>
 
 	<enum name="AlertLevel">
@@ -274,11 +318,12 @@
 	
 	<enum name="JSONObjectType">
 		<option name="Unknown" value="0"/>
-		<option name="String" value="1"/>
-		<option name="Integer" value="2"/>
-		<option name="Double" value="3"/>
-		<option name="Object" value="4"/>
-		<option name="Array" value="5"/>
+		<option name="StringType" value="1"/>
+		<option name="IntegerType" value="2"/>
+		<option name="DoubleType" value="3"/>
+		<option name="ObjectType" value="4"/>
+		<option name="ArrayType" value="5"/>
+		<option name="BoolType" value="6"/>
 	</enum>	
 	
 		
@@ -313,7 +358,6 @@
 	<enum name="ToolpathSegmentType">
 		<option name="Unknown" value="0" />
 		<option name="Hatch" value="1" />
-		<option name="Loop" value="2" />
 		<option name="Polyline" value="3" />
 	</enum>
 	
@@ -338,9 +382,18 @@
 		<option name="JumpDelay" value="11" />
 		<option name="MarkDelay" value="12" />
 		<option name="LaserFocus" value="13" />
+		<option name="PreSegmentDelay" value="14" />
+		<option name="PostSegmentDelay" value="15" />
 	</enum>
 	
-	<enum name="ToolpathProfileOverrideFactor">
+	<enum name="ToolpathProfileModificationType">
+		<option name="NoModification" value="0" />
+		<option name="ConstantModification" value="1" />
+		<option name="LinearModification" value="2" />
+		<option name="NonlinearModification" value="3" />
+	</enum>
+
+	<enum name="ToolpathProfileModificationFactor">
 		<option name="Unknown" value="0" />
 		<option name="FactorF" value="1" />
 		<option name="FactorG" value="2" />
@@ -355,6 +408,17 @@
 		<option name="DialogYesNo" value="3" />
 		<option name="DialogYesNoCancel" value="4" />
 	</enum>
+
+	<enum name="WorkingFileProcessStatus">
+		<option name="Unknown" value="0" />
+		<option name="ProcessNotStarted" value="1" />
+		<option name="ProcessStarted" value="2" />
+		<option name="ProcessFinished" value="3" />
+		<option name="ProcessTerminated" value="4" />
+		<option name="ProcessTimedOut" value="5" />
+	</enum>
+	
+	
 	
 	<enum name="BuildExecutionStatus">
 		<option name="Unknown" value="0" />
@@ -384,6 +448,7 @@
 		<member name="X2" type="int32" />
 		<member name="Y2" type="int32" />
 	</struct>
+	
 
 	<struct name="MeshVertex3D">
 		<member name="VertexID" type="uint32" />
@@ -397,6 +462,10 @@
 
 	<struct name="FloatPosition2D">
 		<member name="Coordinates" type="double" rows="2"/>
+	</struct>
+
+	<struct name="FloatPosition3D">
+		<member name="Coordinates" type="double" rows="3"/>
 	</struct>
 
 	<struct name="FieldData2DPoint">
@@ -415,12 +484,12 @@
 		<member name="X2" type="double" />
 		<member name="Y2" type="double" />
 	</struct>
-
-	<struct name="Hatch2DOverrides">
-		<member name="Point1Override" type="double" />
-		<member name="Point2Override" type="double" />
-	</struct>	
 	
+	<struct name="Hatch2DSubInterpolationData">
+		<member name="Parameter" type="double" description="Parameter value of the hatch. (0.0 - 1.0)" />
+		<member name="Value" type="double" description="Value at the parameter."  />
+	</struct>	
+
 	<struct name="ModelDataTransform">
 		<member name="Matrix" type="double" rows="3" columns="3"/>
 		<member name="Translation" type="double" rows="3"/>
@@ -436,6 +505,19 @@
 		<member name="TimestampInMicroSeconds" type="uint64" />
 		<member name="Value" type="double" />
 	</struct>
+
+	<enum name="SignalPhase">
+		<option name="Invalid" value="0" description="Invalid phase. Should not happen." />
+		<option name="InPreparation" value="10" description="Signal has not been triggered yet. Parameters can change." />
+		<option name="InQueue" value="20" description="Signal has been triggered but is not being processed. Parameters can not change anymore." />
+		<option name="InProcess" value="30" description="Signal is being processed. Results can change." />
+		<option name="Handled" value="40" description="Signal is has been handled to its specification." />
+		<option name="Failed" value="50" description="Signal is has not been handled to its specification. An error message is available." />
+		<option name="TimedOut" value="60" description="The signal timed out before being processed." />
+		<option name="Cleared" value="70" description="The signal queue has been cleared and the signal will not be processed anymore." />
+		<option name="Retracted" value="80" description="The sender has retracted the signal before it was processed." />
+		<option name="Archived" value="90" description="The signal has been archived." />
+	</enum>	
 
 	
 	<class name="Base">
@@ -751,8 +833,72 @@
 	
 	<class name="VideoStream" parent="Base" description="Video stream class.">
 	
+		<method name="GetUUID" description="Global UUID of the video stream.">
+			<param name="UUID" type="string" pass="return" description="Video stream UUID." />
+		</method>
 		
+		<method name="GetWidth" description="Returns the width of the video stream in pixels.">
+			<param name="Width" type="uint32" pass="return" description="Width of the video stream in pixels." />
+		</method>
+
+		<method name="GetHeight" description="Returns the height of the video stream in pixels.">
+			<param name="Height" type="uint32" pass="return" description="Height of the video stream in pixels." />
+		</method>
+
+		<method name="GetExtents" description="Returns the width and height of the video stream in pixels.">
+			<param name="Width" type="uint32" pass="out" description="Width of the video stream in pixels." />
+			<param name="Height" type="uint32" pass="out" description="Height of the video stream in pixels." />
+		</method>
+
+		<method name="GetFrameCount" description="Returns the number of source frames in the stream.">
+			<param name="FrameCount" type="uint32" pass="return" description="Number of frames that have been pushed to the stream." />
+		</method>
+
+		<method name="GetDroppedFrameCount" description="Returns the number of source frames in the stream that have not been processed..">
+			<param name="DroppedFrameCount" type="uint32" pass="return" description="Number of frames that have been dropped from the stream." />
+		</method>
+
+		<method name="GetDesiredFrameDuration" description="Returns the desired frame duration of the stream.">
+			<param name="FrameDurationInMicroseconds" type="uint32" pass="return" description="Duration of a frame. MUST be between 10000 and 60000000." />
+		</method>
+
+		<method name="GetDesiredFramerate" description="Returns the desired framerate of the stream.">
+			<param name="Framerate" type="double" pass="return" description="Desired Framerate in Frames per second. This is 1000000 divided by DesiredFrameDuration. MUST be between 1 frame per minute and 100 Frames per second." />
+		</method>
+
+		<method name="GetPauseTolerance" description="Returns the how long the stream will be active without new source frames being available.">
+			<param name="PauseToleranceInMicroseconds" type="uint32" pass="return" description="Defines how many microseconds can pass until the stream becomes inactive. Duration MUST exceed the duration of a frame." />
+		</method>
+		
+		<method name="GetFrameCacheDuration" description="Returns how long frames will be cached in the stream. This adds a delay to the stream.">
+			<param name="FrameCacheDurationInMicroseconds" type="uint32" pass="return" description="How long frames will be cached in the stream. Value MUST not be smaller than DesiredFrameDuration or exceed 100 times DesiredFrameDuration." />
+		</method>
 	
+		<method name="IsActive" description="Returns if the video stream is active. A video stream is active, if the last source frame was available within ">
+			<param name="Active" type="bool" pass="return" description="Returns true if the video stream is active." />
+		</method>
+
+		<method name="GetStreamStartTime" description="Returns the DateTime when the stream has started.">
+			<param name="StartTime" type="class" class="DateTime" pass="return" description="DateTime when the stream has started." />
+		</method>
+
+		<method name="GetLastSourceTime" description="Returns the timestamp of the last new video frame.">
+			<param name="TimestampInMicroseconds" type="uint64" pass="return" description="Time in Microseconds since Start Time" />
+		</method>
+
+		<method name="GetLastSourceFrame" description="Returns the image of the last video frame.">
+			<param name="SourceFrameImage" type="class" class="ImageData" pass="return" description="Returns an image containing the last source frame. Image format will be RGB24." />
+		</method>	
+
+		<method name="PushFrame" description="Pushes a frame to the stream irrespective of timing.">
+			<param name="SourceFrameImage" type="class" class="ImageData" pass="in" description="Fails if Image extents do not match or the video format is not RGB24." />
+		</method>	
+
+		<method name="PushFrameWithTime" description="Pushes a frame to the stream with a given timing. Frame will be dropped, if the given timestamp is in the past or beyond the current time plus the Frame Cache Duration.">
+			<param name="FrameTimeInMicroseconds" type="uint64" pass="return" description="Time in Microseconds since Start Time." />
+			<param name="SourceFrameImage" type="class" class="ImageData" pass="in" description="Fails if Image extents do not match or the video format is not RGB24." />
+		</method>	
+
 	</class>
 	
 
@@ -938,7 +1084,42 @@
 		</method>
 
 	</class>
-	
+
+	<class name="ScatterPlotDataColumn" parent="Base">
+		<method name="GetColumnIdentifier" description="Returns the Column Identifier.">
+			<param name="ColumnIdentifier" type="string" pass="return" description="Identifier of the column to use. Must be alphanumeric and not empty." />
+		</method>
+		<method name="GetScaleFactor" description="Returns Scale Factor to use.">
+			<param name="ScaleFactor" type="double" pass="return" description="Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor." />
+		</method>
+		<method name="GetOffsetFactor" description="Returns Offset Factor to use.">
+			<param name="OffsetFactor" type="double" pass="return" description="Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor." />
+		</method>
+	</class>
+
+    <class name="ScatterPlotDataColumnIterator" parent="Iterator">
+		<method name="GetCurrentScatterPlotDataColumn" description="Returns the Current Channel Column the iterator points at.">
+			<param name="ScatterPlotDataColumnInstance" type="handle" class="ScatterPlotDataColumn" pass="return" description="returns the DataChannel instance."/>
+		</method>
+	</class>
+
+	<class name="ScatterPlotDataChannel" parent="Base">
+		<method name="GetChannelIdentifier" description="Returns the Scatter Plot Data Channel Identifier.">
+			<param name="ChannelIdentifier" type="string" pass="return" description="Identifier of the channel. Must be alphanumeric and not empty." />
+		</method>
+		<method name="AddScatterPlotDataColumn" description="Adds a new Columns to the Data Channel.">
+			<param name="ColumnInstance" type="class" class="ScatterPlotDataColumn" pass="in" description="Column Instance" />
+		</method>
+		<method name="ListScatterPlotDataColumns" description="Lists all Columns of the Data Channel.">
+			<param name="IteratorInstance" type="class" class="ScatterPlotDataColumnIterator" pass="return" description="Iterator instance." />
+		</method>
+	</class>
+
+	<class name="ScatterPlotDataChannelIterator" parent="Iterator">
+		<method name="GetCurrentScatterPlotDataChannel" description="Returns the Current Scatter Plot Data Channel the iterator points at.">
+			<param name="ScatterPlotDataChannelInstance" type="handle" class="ScatterPlotDataChannel" pass="return" description="returns the ScatterPlotDataChannel instance."/>
+		</method>
+	</class>
 
 	<class name="DataTableScatterPlotOptions" parent="Base" description="Configurates the creation of scatter plots from the data table.">
 
@@ -986,9 +1167,11 @@
 			<param name="Color" type="uint32" pass="in" description="Base color to use." />
 		</method>
 
+		<method name="ListDataChannels" description="Lists all DataChannels of the ScatterPlot.">
+			<param name="IteratorInstance" type="class" class="ScatterPlotDataChannelIterator" pass="return" description="Iterator instance." />
+		</method>	
 	</class>
-	
-	
+
 	
 	<class name="DataTable" parent="Base" description="A in memory data table, streamable for example into a CSV file.">
 	
@@ -1477,6 +1660,72 @@
 		</method>
 
 	</class>
+	
+	
+	<class name="BoundingBox3D" parent="Base" description="Bounding Box Instance.">
+
+		<method name="IsEmpty" description="Returns if the bounding box is empty.">
+			<param name="Empty" type="bool" pass="return" description="Returns true if the Bounding box is empty." />
+		</method>
+		
+		<method name="Clear" description="Makes the bounding box empty.">
+		</method>
+
+		<method name="SetExtent" description="Set Minimum and Maximum position. If coordinates are not ordered, they will be ordered.">
+			<param name="MinimumPoint" type="struct" class="FloatPosition3D" pass="in" description="Minimum Position." />
+			<param name="MaximumPoint" type="struct" class="FloatPosition3D" pass="in" description="Maximum Position." />
+		</method>
+		
+		<method name="GetExtents" description="Returns the extents of the team. Fails if Bounding box is empty.">
+			<param name="X" type="double" pass="out" description="X Coordinate in mm" />
+			<param name="Y" type="double" pass="out" description="Y Coordinate in mm" />
+			<param name="Z" type="double" pass="out" description="Z Coordinate in mm" />
+		</method>
+		
+		<method name="AddPoint" description="Adds a new point to the boundary box.">
+			<param name="Point" type="struct" class="FloatPosition3D" pass="in" description="Position." />
+		</method>
+
+		<method name="AddPointCoordinates" description="Adds a new point to the boundary box.">
+			<param name="X" type="double" pass="in" description="X Coordinate in mm" />
+			<param name="Y" type="double" pass="in" description="Y Coordinate in mm" />
+			<param name="Z" type="double" pass="in" description="Z Coordinate in mm" />
+		</method>
+
+		<method name="HasMinimumExtents" description="Returns, if the extents are of a minimum value in each axis. Returns false, if Bounding Box is empty.">
+			<param name="MinimumExtents" type="double" pass="in" description="Minimum Extents value. MUST be larger than 0." />
+			<param name="Value" type="bool" pass="return" description="True, if the bounding box is of the minimum extents." />
+		</method>
+
+		<method name="GetMinimum" description="Returns the minimum point. Fails if Bounding box is empty.">
+			<param name="MinimumPoint" type="struct" class="FloatPosition3D" pass="return" description="Minimum Position." />
+		</method>
+		
+		<method name="GetMaximum" description="Returns the maximum point. Fails if Bounding box is empty.">
+			<param name="MaximumPoint" type="struct" class="FloatPosition3D" pass="return" description="Maximum Position." />
+		</method>
+
+		<method name="GetMinimumCoordinates" description="Returns the minimum point coordinates. Fails if Bounding box is empty.">
+			<param name="X" type="double" pass="out" description="X Coordinate in mm" />
+			<param name="Y" type="double" pass="out" description="Y Coordinate in mm" />
+			<param name="Z" type="double" pass="out" description="Z Coordinate in mm" />
+		</method>
+
+		<method name="GetMaximumCoordinates" description="Returns the maximum point coordinates. Fails if Bounding box is empty.">
+			<param name="X" type="double" pass="out" description="X Coordinate in mm" />
+			<param name="Y" type="double" pass="out" description="Y Coordinate in mm" />
+			<param name="Z" type="double" pass="out" description="Z Coordinate in mm" />
+		</method>
+
+		<method name="Duplicate" description="Returns a duplicate of the bounding box.">
+			<param name="DuplicateInstance" type="class" class="BoundingBox3D" pass="return" description="Returns a duplicate instance." />
+		</method>
+
+		<method name="Merge" description="Merges another Bounding box. Will copy the other instance if current instance is empty. Will do nothing if other instance is empty.">
+			<param name="AnotherInstance" type="class" class="BoundingBox3D" pass="in" description="Instance to merge into the Bounding box." />
+		</method>
+
+	</class>
 
 
 	<class name="ModelDataMeshInstance" parent="Base" description="An instance of a 3D Model Data.">
@@ -1501,9 +1750,23 @@
 			<param name="MeshObjectCopy" type="class" class="MeshObject" pass="return" description="Returns the mesh object instance." />		
 		</method>
 
+		<method name="CreateTriangleSetOfMesh" description="Loads a triangle set copy of the mesh geometry into memory. Might be inefficient to use for many identical copies of the mesh in the scene.">
+			<param name="TriangleSetName" type="string" pass="in" description="Triangle Set Name. Fails if triangle set does not exist in mesh." />		
+			<param name="MeshObjectCopy" type="class" class="MeshObject" pass="return" description="Returns the mesh object instance." />		
+		</method>
+
+		<method name="HasTriangleSet" description="Returns if the mesh has a triangle set of a specific name.">
+			<param name="TriangleSetName" type="string" pass="in" description="Triangle Set Name. Fails if triangle set does not exist in mesh." />		
+			<param name="TriangleSetExists" type="bool" pass="return" description="Returns true, if the triangle set name exists, false otherwise." />		
+		</method>
+
 		<method name="CreatePersistentMesh" description="Creates a persistent mesh of the geometry. Will not create a duplicate if the instance was already persisted before. The release of the memory should be handled with great care! ">
 			<param name="BoundToLoginSession" type="bool" pass="in" description="If true, the mesh will be freed once the client login session expires." />
 			<param name="PersistentMesh" type="class" class="PersistentMeshObject" pass="return" description="Returns a persistent instance to the same mesh data." />
+		</method>
+		
+		<method name="CalculateBoundingBox" description="Calculates the bounding box of the model.">
+			<param name="BoundingBoxInstance" type="class" class="BoundingBox3D" pass="return" description="Bounding Box Instance." />
 		</method>
 
 	</class>
@@ -1552,6 +1815,10 @@
 		<method name="GetSubComponent" description="Returns a subcomponent of the component.">
 			<param name="Index" type="uint32" pass="in" description="Index of Subcomponent. MUST be between 0 and SubComponentCount - 1." />
 			<param name="SubComponentInstance" type="class" class="ModelDataComponentInstance" pass="return" description="SubComponent. MUST be between 0 and ModelCount - 1." />
+		</method>
+
+		<method name="CalculateBoundingBox" description="Calculates the bounding box of the model.">
+			<param name="BoundingBoxInstance" type="class" class="BoundingBox3D" pass="return" description="Bounding Box Instance." />
 		</method>
 
 	</class>
@@ -1690,7 +1957,7 @@
 		<method name="GetRootComponent" description="Returns the Root Component of the part.">
 			<param name="RootComponent" type="class" class="ModelDataComponentInstance" pass="return" description="Returns root component instance." />
 		</method>
-	
+
 	</class>
 
 
@@ -1713,11 +1980,6 @@
 		<method name="GetSegmentType" description="Retrieves the segment type.">
 			<param name="Index" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
 			<param name="Type" type="enum" class="ToolpathSegmentType" pass="return" description="Segment Type" />
-		</method>
-
-		<method name="SegmentIsLoop" description="Returns if segment is a loop.">
-			<param name="Index" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
-			<param name="IsLoop" type="bool" pass="return" description="Flag if segment is a loop." />
 		</method>
 
 		<method name="SegmentIsPolyline" description="Returns if segment is a polyline.">
@@ -1767,9 +2029,9 @@
 			<param name="AttributeType" type="enum" class="ToolpathAttributeType" pass="out" description="Type of the attribute." />
 		</method>
 
-		<method name="GetSegmentPointCount" description="Retrieves the number of points in the segment. For type hatch, the points are taken pairwise.">
+		<method name="GetSegmentPolylinePointCount" description="Retrieves the number of points in the segment. Fails if segment is not of type polyline.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
-			<param name="HatchCount" type="uint32" pass="return" description="Hatch count of segment." />
+			<param name="PointCount" type="uint32" pass="return" description="Point count of the polyline." />
 		</method>
 		
 		<method name="GetSegmentHatchCount" description="Retrieves the number of hatches in the segment (i.e. PointCount / 2). Returns 0 if segment is not of type hatch.">
@@ -1787,6 +2049,14 @@
 			<param name="Namespace" type="string" pass="in" description="Namespace to query for." />
 			<param name="ValueName" type="string" pass="in" description="Value Name to query for." />
 			<param name="HasValue" type="bool" pass="return" description="Returns true if value exist." />
+		</method>
+
+
+		<method name="GetSegmentProfileModificationType" description="Retrieves the type of variation that a profile has through its modifiers and modification factors.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="Namespace" type="string" pass="in" description="Namespace to query for." />
+			<param name="ValueName" type="string" pass="in" description="Value Name to query for." />
+			<param name="ModificationType" type="enum" class="ToolpathProfileModificationType" pass="return" description="Returns the profile modification type." />
 		</method>
 
 		<method name="GetSegmentProfileValue" description="Retrieves an assigned profile custom value. Fails if value does not exist.">
@@ -1863,6 +2133,12 @@
 			<param name="DefaultValue" type="double" pass="in" description="Default value if value does not exist." />
 			<param name="Value" type="double" pass="return" description="Double Value" />
 		</method>
+
+		<method name="GetSegmentProfileTypedModificationType" description="Retrieves the modification type of assigned profile value of a standard type. Fails if value does not exist or is not a double value.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom." />
+			<param name="ModificationType" type="enum" class="ToolpathProfileModificationType" pass="return" description="Returns the profile modification type." />
+		</method>
 		
 		<method name="GetSegmentPartUUID" description="Retrieves the assigned segment part uuid.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
@@ -1874,19 +2150,19 @@
 			<param name="LocalPartID" type="uint32" pass="return" description="Local Part ID of the segment" />
 		</method>
 	
-		<method name="GetSegmentPointData" description="Retrieves the assigned segment point list. For type hatch, the points are taken pairwise.">
+		<method name="GetSegmentPolylineData" description="Retrieves the assigned segment point list. Fails, if type is not polyline.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
 			<param name="PointData" type="structarray" class="Position2D" pass="out" description="The point data array. Positions are absolute in units." />
+		</method>
+
+		<method name="GetSegmentPolylineDataInMM" description="Retrieves the assigned segment point list. Fails, if type is not polyline.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="PointData" type="structarray" class="FloatPosition2D" pass="out" description="The point data array. Positions are absolute in mm." />
 		</method>
 		
 		<method name="GetSegmentHatchData" description="Retrieves the assigned segment hatch list. Fails if segment type is not hatch.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
 			<param name="HatchData" type="structarray" class="Hatch2D" pass="out" description="The hatch data array. Positions are absolute in units." />
-		</method>
-
-		<method name="GetSegmentPointDataInMM" description="Retrieves the assigned segment point list. For type hatch, the points are taken pairwise.">
-			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
-			<param name="PointData" type="structarray" class="FloatPosition2D" pass="out" description="The point data array. Positions are absolute in mm." />
 		</method>
 		
 		<method name="GetSegmentHatchDataInMM" description="Retrieves the assigned segment hatch list. Fails if segment type is not hatch.">
@@ -1894,23 +2170,20 @@
 			<param name="HatchData" type="structarray" class="FloatHatch2D" pass="out" description="The hatch data array. Positions are absolute in mm." />
 		</method>
 
-		<method name="SegmentHasOverrideFactors" description="Returns if a segment has override factors attached to its points.">
-			<param name="SegmentIndex" type="uint32" pass="in" description="Segment Index. Must be between 0 and Count - 1." />
-			<param name="OverrideFactor" type="enum" class="ToolpathProfileOverrideFactor" pass="in" description="Which override factor to return (F, G or H)." />
-			<param name="HasOverrideFactors" type="bool" pass="return" description="Returns true if the Segment given has an override factor of a certain type." />
+		<method name="EvaluateTypedHatchProfileModifier" description="Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom. Fails if value type does not exist." />
+			<param name="EvaluationData1" type="basicarray" class="double" pass="out" description="Evaluated data on the first point on each hatch. Will return HatchCount elements." />
+			<param name="EvaluationData2" type="basicarray" class="double" pass="out" description="Evaluated data on the second point on each hatch. Will return HatchCount elements." />
 		</method>
-		
-		<method name="GetSegmentPointOverrides" description="Retrieves factor overrides for a specific segment. For type hatch, the points are taken pairwise.">
-			<param name="SegmentIndex" type="uint32" pass="in" description="Segment Index. Must be between 0 and Count - 1." />
-			<param name="OverrideFactor" type="enum" class="ToolpathProfileOverrideFactor" pass="in" description="Which override factor to return (F, G or H)." />
-			<param name="OverrideData" type="basicarray" class="double" pass="out" description="The override factor array. Will return as many override factors as points in the segment." />
+
+		<method name="EvaluateTypedHatchProfileInterpolation" description="Evaluates the subinterpolation values of with its modifier factors. Fails if segment type is not hatch.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom. Fails if value type does not exist." />
+			<param name="CountArray" type="basicarray" class="uint32" pass="out" description="Number of subinterpolation values per hatch. Will contain HatchCount elements." />
+			<param name="EvaluationData" type="structarray" class="Hatch2DSubInterpolationData" pass="out" description="Evaluated data on evaluation points for the full segment, in hatch order. Will contain the sum of CountArray elements." />
 		</method>
-		
-		<method name="GetSegmentHatchOverrides" description="Retrieves factor overrides for a specific segment. Fails if segment type is not hatch.">
-			<param name="SegmentIndex" type="uint32" pass="in" description="Segment Index. Must be between 0 and Count - 1." />
-			<param name="OverrideFactor" type="enum" class="ToolpathProfileOverrideFactor" pass="in" description="Which override factor to return (F, G or H)." />
-			<param name="OverrideData" type="structarray" class="Hatch2DOverrides" pass="out" description="The override factor array. Will return as many override factors as hatches in the segment. Each element contains one factor for the first point or the second point." />
-		</method>
+
 
 		<method name="GetZValue" description="Retrieves the layers Z Value in units.">
 			<param name="ZValue" type="int32" pass="return" description="Z Value of the layer in units." />
@@ -2006,6 +2279,7 @@
 			<param name="Part" type="class" class="ToolpathPart" pass="return" description="Part Instance" />
 		</method>
 
+
 		<method name="FindPartByUUID" description="Finds the part information of a toolpath.">
 			<param name="PartUUID" type="string" pass="in" description="UUID of part." />
 			<param name="Part" type="optionalclass" class="ToolpathPart" pass="return" description="Part Instance. Returns null if part does not exist." />
@@ -2058,16 +2332,38 @@
 
 
 		<method name="HasBinaryMetaData" description="Checks if a binary metadata exists in the build file with a certain path.">
-			<param name="Identifier" type="string" pass="in" description="Identifier of the binary metadata" />
+			<param name="PackagePath" type="string" pass="in" description="Path of the binary metadata in the 3MF Package" />
 			<param name="HasMetaData" type="bool" pass="return" description="Returns if the metadata exists." />
 		</method>
 
 		<method name="GetBinaryMetaData" description="Returns a binary metadata of the build file. Fails if binary metadata does not exist.">
-			<param name="Identifier" type="string" pass="in" description="Identifier of the binary metadata" />
+			<param name="PackagePath" type="string" pass="in" description="Path of the binary metadata in the 3MF Package" />
 			<param name="MetaData" type="basicarray" class="uint8" pass="out" description="Returns the content of the binary binary data." />
 		</method>
 		
+		<method name="GetBinaryMetaDataAsString" description="Returns a binary metadata of the build file as string. Fails if binary metadata does not exist.">
+			<param name="PackagePath" type="string" pass="in" description="Path of the binary metadata in the 3MF Package" />
+			<param name="MetaData" type="string" pass="return" description="Returns the content of the binary binary data." />
+		</method>
+
+		<method name="HasBinaryMetaDataSchema" description="Checks if a binary metadata exists in the build file with a certain relationship schema. Fails if schema does not exist or is not unique.">
+			<param name="RelationshipSchema" type="string" pass="in" description="Relationship schema of the root part in the 3MF Package" />
+			<param name="HasMetaData" type="bool" pass="return" description="Returns if the metadata exists." />
+		</method>
+
+		<method name="GetBinaryMetaDataBySchema" description="Returns a binary metadata of the build file. Fails if binary metadata does not exist or is not unique.">
+			<param name="RelationshipSchema" type="string" pass="in" description="Relationship schema of the root part in the 3MF Package" />
+			<param name="MetaData" type="basicarray" class="uint8" pass="out" description="Returns the content of the binary binary data." />
+		</method>
+		
+		<method name="GetBinaryMetaDataAsStringBySchema" description="Returns a binary metadata of the build file as string. Fails if binary metadata does not exist or is not unique.">
+			<param name="RelationshipSchema" type="string" pass="in" description="Relationship schema of the root part in the 3MF Package" />
+			<param name="MetaData" type="string" pass="return" description="Returns the content of the binary binary data." />
+		</method>
+
 	</class>
+
+
 
 
 	<class name="BuildExecution" parent="Base" description="A build execution is a physical run of a build.">
@@ -2299,6 +2595,9 @@
 			<param name="SHA256" type="string" pass="return" description="SHA256 of the build stream." />
 		</method>
 
+		<method name="EnsureStorageSHA256IsValid" description="Ensures that the build stream has not been modified on disk.">
+		</method>
+
 		<method name="GetLayerCount" description="Returns cached layer count of the toolpath.">
 			<param name="LayerCount" type="uint32" pass="return" description="Returns layer count." />
 		</method>
@@ -2472,15 +2771,62 @@
 	</class>
 	
 	
-	<class name="WorkingFileExecution" parent="Base" description="Working File Execution Object">
+	<class name="WorkingFileProcess" parent="Base" description="Working FileProcess Object">
 
-		<method name="GetStatus" description = "Returns the execution status">
+		<method name="GetStatus" description = "Returns the process status">
+			<param name="Status" type="enum" class="WorkingFileProcessStatus" pass="return" description="Status of Process." />
 		</method>
 
-		<method name="ReturnStdOut" description = "Returns the output of the executable as string buffer">
-			<param name="StringBuffer" type="string" pass="return" description="stdout buffer" />
+		<method name="GetRunTime" description = "Returns the Run Time of the process. Will return 0 if Status is ProcessInitializing. Fails if Status is Unknown.">
+			<param name="Runtime" type="class" class="DateTimeDifference" pass="return" description="Duration." />
 		</method>
 
+		<method name="GetRunTimeInMilliseconds" description = "Returns the Run Time of the process in Milliseconds. Will return 0 if Status is ProcessInitializing. Fails if Status is Unknown.">
+			<param name="RuntimeInMS" type="uint64" pass="return" description="Duration in Milliseconds." />
+		</method>
+
+		<method name="SetWorkingDirectory" description="Sets the working directory. Default is the directory of the executable. Fails if Status is not ProcessInitializing.">
+			<param name="Directory" type="class" class="WorkingDirectory" pass="in" description="Wo." />
+		</method>
+
+		<method name="AddEnvironmentVariable" description="Adds an environment variable. Fails if Status is not ProcessInitializing.">
+			<param name="VariableName" type="string" pass="in" description="Environment Variable name. Alphanumeric string with _ and - allowed. Fails if Variable already exists." />
+			<param name="Value" type="string" pass="in" description="Value for variables." />
+		</method>
+
+		<method name="EnvironmentVariableExists" description="Checks if an environment variable exists.">
+			<param name="VariableName" type="string" pass="in" description="Environment Variable name. Alphanumeric string with _ and - allowed." />
+			<param name="VariableExists" type="bool" pass="return" description="Returns true if the variable exists, false otherwise." />
+		</method>
+		
+		<method name="RemoveEnvironmentVariable" description="Removes an environment variable. Does nothing if variable does not exist. Fails if Status is not ProcessInitializing.">
+			<param name="VariableName" type="string" pass="in" description="Environment Variable name. Alphanumeric string with _ and - allowed." />
+		</method>
+
+		<method name="GetEnvironmentVariableCount" description="Returns the number of environment variables.">
+			<param name="VariableCount" type="uint32" pass="return" description="Number of environment variables." />
+		</method>
+
+		<method name="GetEnvironmentVariableByIndex" description="Returns the details of a environment variables.">
+			<param name="VariableIndex" type="uint32" pass="in" description="Index of environment variables. 0-based." />
+			<param name="VariableName" type="string" pass="out" description="Environment Variable name. Alphanumeric string with _ and -." />
+			<param name="Value" type="string" pass="out" description="Value of variable." />
+		</method>
+
+		<method name="ClearEnvironmentVariables" description="Clears all environment variables.">
+		</method>
+
+		<method name="SetVerboseLogging" description="Enables or disables the the verbose logging mode.">
+			<param name="VerboseLogging" type="bool" pass="in" description="If true, all stdout messages of the process will be shown in the generic system log." />
+		</method>
+
+		<method name="StartProcess" description="Starts the process, if Status is ProcessInitializing. Does nothing otherwise.">
+			<param name="ArgumentString" type="string" pass="in" description="Argumnet to pass on the process. May be empty." />
+			<param name="TimeOut" type="uint32" pass="in" description="Process Timeout in Milliseconds. 0 means no timeout." />
+		</method>
+
+		<method name="TerminateProcess" description="Terminates a process, if the process is running.">
+		</method>
 
 	</class>
 
@@ -2495,12 +2841,16 @@
 			<param name="FileSize" type="uint64" pass="return" description="file size" />
 		</method>
 
+		<method name="ReadContent" description = "Returns the content of the working file.">
+			<param name="FileContent" type="basicarray" class="uint8" pass="out" description="Array the content will be read into." />
+		</method>
+
 		<method name="CalculateSHA2" description = "Calculates the SHA256 checksum of the file.">
 			<param name="SHA2" type="string" pass="return" description="sha256 checksum" />
 		</method>
 
-		<method name="ExecuteFile" description = "Executes the temporary file, if it is an executable.">
-			<param name="Execution" type="class" class="WorkingFileExecution" pass="return" description="execution object" />
+		<method name="ExecuteFile" description = "Creates a file process object.">
+			<param name="Execution" type="class" class="WorkingFileProcess" pass="return" description="process object" />
 		</method>
 
 		<method name="IsManaged" description = "Returns if the file is managed.">
@@ -2525,6 +2875,54 @@
 			<param name="WorkingFile" type="handle" class="WorkingFile" pass="return" description="returns the WorkingFile instance."/>
 		</method>
 	</class>
+	
+	<class name="WorkingFileWriter" parent="Base" description="Working File Access Object">
+
+		<method name="GetSize" description = "Returns the current size of file.">
+			<param name="FileSize" type="uint64" pass="return" description="file size" />
+		</method>
+
+		<method name="GetAbsoluteFileName" description = "Retrieves absolute file name of the working file on disk">
+			<param name="AbsoluteFileName" type="string" pass="return" description="global path of the file" />
+		</method>
+	
+		<method name="GetFileName" description = "Retrieves relative file name of the working file in the directory (without path)">
+			<param name="LocalFileName" type="string" pass="return" description="local name of the file" />
+		</method>
+
+		<method name="FlushBuffer" description = "Writes all unwritten data to disk.">
+		</method>
+
+		<method name="Finish" description = "Finishes the writing and returns the corresponding working file.">
+			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="returns the WorkingFile instance."/>
+		</method>
+
+		<method name="WriteData" description = "Writes an array to the file.">
+			<param name="Buffer" type="basicarray" class="uint8" pass="in" description="Buffer that will be written." />
+		</method>
+
+		<method name="WriteString" description = "Writes a string to the file.">
+			<param name="Value" type="string" pass="in" description="String that will be written." />
+		</method>
+
+		<method name="WriteLine" description = "Writes a string to the file with line ending.">
+			<param name="Value" type="string" pass="in" description="String that will be written." />
+			<param name="UnixLineEnding" type="bool" pass="in" description="If true, the line will end with a LF (10), if false, the line will end with a windows line ending CRLF (13 10)." />
+		</method>
+
+		<method name="WriteFixedFloat" description = "Writes a double to the file with fixed number of digits.">
+			<param name="Value" type="double" pass="in" description="Double that will be written." />
+			<param name="Digits" type="uint32" pass="in" description="Number of Digits to export to.. (in mm)" />
+		</method>
+
+		<method name="WriteFixedFloatLine" description = "Writes a double to the file with fixed number of digits and a new line after.">
+			<param name="Value" type="double" pass="in" description="Double that will be written." />
+			<param name="Digits" type="uint32" pass="in" description="Number of Digits to export to.. (in mm)" />
+			<param name="UnixLineEnding" type="bool" pass="in" description="If true, the line will end with a LF (10), if false, the line will end with a windows line ending CRLF (13 10)." />
+		</method>
+
+	</class>
+	
 
 
 	<class name="WorkingDirectory" parent="Base" description="Working Directory Access Object">
@@ -2532,6 +2930,12 @@
 		<method name="IsActive" description = "Working directory is active.">
 			<param name="IsActive" type="bool" pass="return" description="returns true if files can be read and written to the directory." />
 		</method>
+
+		<method name="CreateSubDirectory" description = "Creates a managed subdirectory in the directory.">
+			<param name="DirectoryName" type="string" pass="in" description="Directory name to create. Can not include any path delimiters or .." />
+			<param name="SubDirectory" type="class" class="WorkingDirectory" pass="return" description="Working directory instance." />
+		</method>
+
 
 		<method name="GetAbsoluteFilePath" description = "Retrieves absolute file path.">
 			<param name="FilePath" type="string" pass="return" description="global path of the directory, including path delimiter." />
@@ -2555,6 +2959,12 @@
 			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
 		</method>
 
+		<method name="StoreMachineResourceData" description = "Stores machine resource data in a temporary file.">
+			<param name="FileName" type="string" pass="in" description="filename to store to. Can not include any path delimiters or .." />
+			<param name="Identifier" type="string" pass="in" description="identifier of the binary data in the machine resource package." />
+			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
+		</method>
+
 		<method name="StoreCustomDataInTempFile" description = "Stores a data buffer in a temporary file with a generated name.">
 			<param name="Extension" type="string" pass="in" description="extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters." />
 			<param name="DataBuffer" type="basicarray" class="uint8" pass="in" description="file data to store to." />
@@ -2573,6 +2983,12 @@
 			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
 		</method>
 
+		<method name="StoreMachineResourceDataInTempFile" description = "Stores machine resource data in a temporary file.">
+			<param name="Extension" type="string" pass="in" description="extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters." />
+			<param name="Identifier" type="string" pass="in" description="identifier of the binary data in the machine resource package." />
+			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
+		</method>
+
 		<method name="CleanUp" description = "Deletes all managed files in the directory and the directory. No storing is possible after a cleanup.">
 			<param name="Success" type="bool" pass="return" description="returns if deletion was successful." />
 		</method>
@@ -2582,6 +2998,11 @@
 			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
 		</method>
 
+		<method name="AddManagedTempFile" description = "Adds a managed temporary file in the directory (i.e. this file will be deleted at CleanUp). Subdirectories are not allowed.">
+			<param name="Extension" type="string" pass="in" description="extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters." />
+			<param name="WorkingFile" type="class" class="WorkingFile" pass="return" description="working file instance." />
+		</method>
+		
 		<method name="HasUnmanagedFiles" description = "Returns if the working directory has unmanaged files. A clean implementation will never deal with unmanaged files.">
 			<param name="HasUnmanagedFiles" type="bool" pass="return" description="returns if there are unmanaged files." />
 		</method>
@@ -2596,6 +3017,18 @@
 
 		<method name="RetrieveAllFiles" description = "Returns a list of all files in the directory." >
 			<param name="IteratorInstance" type="class" class="WorkingFileIterator" pass="return" description="working file iterator instance." />
+		</method>
+
+		<method name="AddBufferedWriter" description = "Adds a buffered writer to the directory.">
+			<param name="FileName" type="string" pass="in" description="Filename to manage. The file will be created." />
+			<param name="BufferSizeInkB" type="uint32" pass="in" description="Memory buffer size in Bytes. MUST be larger than 0 and smaller than 1048576." />
+			<param name="WriterInstance" type="class" class="WorkingFileWriter" pass="return" description="Working file writer instance." />
+		</method>
+
+		<method name="AddBufferedWriterTempFile" description = "Adds a buffered writer to the directory with a temporary file name.">
+			<param name="Extension" type="string" pass="in" description="extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters." />
+			<param name="BufferSizeInkB" type="uint32" pass="in" description="Memory buffer size in Bytes. MUST be larger than 0 and smaller than 1048576." />
+			<param name="WriterInstance" type="class" class="WorkingFileWriter" pass="return" description="Working file writer instance." />
 		</method>
 
 	</class>
@@ -2696,7 +3129,7 @@
 
 		<method name="GetMemberName" description="Returns the name of a member by index.">
 			<param name="Index" type="uint64" pass="in" description="Index of the member, 0-based. Fails if larger or equal than MemberCount" />
-			<param name="Name" type="string" pass="in" description="Name of the member." />
+			<param name="Name" type="string" pass="return" description="Name of the member." />
 		</method>
 
 		<method name="GetMemberType" description="Returns the member type. Returns unknown, if the member does not exist.">
@@ -2704,7 +3137,12 @@
 			<param name="MemberType" type="enum" class="JSONObjectType" pass="return" description="The type of the member.." />
 		</method>
 
-		<method name="GetValue" description="Returns a member as string value. Fails if member is of type Array or Object. Returns true or false in terms of Boolean value.">
+		<method name="GetValue" description="Returns a member as string value. Fails if member is of type Array or Object. ">
+			<param name="Name" type="string" pass="in" description="Name of the member." />
+			<param name="Value" type="string" pass="return" description="Member value." />
+		</method>
+
+		<method name="GetUUIDValue" description="Returns a member as string value. Fails if member is of type Array or Object. Fails if the value is not a proper UUID valu">
 			<param name="Name" type="string" pass="in" description="Name of the member." />
 			<param name="Value" type="string" pass="return" description="Member value." />
 		</method>
@@ -2745,17 +3183,17 @@
 
 		<method name="AddIntegerValue" description="Adds a member as integer value. Fails if member already exists.">
 			<param name="Name" type="string" pass="in" description="Name of the member." />
-			<param name="Value" type="int64" pass="return" description="Member value." />
+			<param name="Value" type="int64" pass="in" description="Member value." />
 		</method>
 
 		<method name="AddDoubleValue" description="Adds a member as double value. Fails if member already exists.">
 			<param name="Name" type="string" pass="in" description="Name of the member." />
-			<param name="Value" type="double" pass="return" description="Member value." />
+			<param name="Value" type="double" pass="in" description="Member value." />
 		</method>
 
 		<method name="AddBoolValue" description="Adds a member as bool value. Fails if member already exists.">
 			<param name="Name" type="string" pass="in" description="Name of the member." />
-			<param name="Value" type="bool" pass="return" description="Member value." />
+			<param name="Value" type="bool" pass="in" description="Member value." />
 		</method>
 	
 		<method name="AddObjectValue" description="Returns a member as object value. Returns empty object. Fails if member already exists.">
@@ -2766,6 +3204,10 @@
 		<method name="AddArrayValue" description="Returns a member as object value. Returns empty array. Fails if member already exists.">
 			<param name="Name" type="string" pass="in" description="Name of the member." />
 			<param name="Value" type="class" class="JSONArray" pass="return" description="Member value." />
+		</method>
+
+		<method name="SerializeToString" description="Serialises the Object to a String.">
+			<param name="StringValue" type="string" pass="return" description="Serialised string value." />
 		</method>
 
 	</class>
@@ -2785,6 +3227,11 @@
 		<method name="GetValue" description="Returns a element as string value. Fails if element is of type Array or Object. Returns true or false in terms of Boolean value.">
 			<param name="Index" type="uint64" pass="in" description="Index of the element, 0-based. Fails if larger or equal than ElementCount" />
 			<param name="Value" type="string" pass="return" description="Element value." />
+		</method>
+
+		<method name="GetUUIDValue" description="Returns a element as string value. Fails if member is of type Array or Object. Fails if the value is not a proper UUID valu">
+			<param name="Index" type="uint64" pass="in" description="Index of the element, 0-based. Fails if larger or equal than ElementCount" />
+			<param name="Value" type="string" pass="return" description="Member value." />
 		</method>
 
 		<method name="GetIntegerValue" description="Returns a element as integer value. Fails if element is of type Array or Object, or a non-double string.">
@@ -2821,15 +3268,15 @@
 		</method>
 
 		<method name="AddIntegerValue" description="Adds a member as integer value.">
-			<param name="Value" type="int64" pass="return" description="Member value." />
+			<param name="Value" type="int64" pass="in" description="Member value." />
 		</method>
 
 		<method name="AddDoubleValue" description="Adds a member as double value.">
-			<param name="Value" type="double" pass="return" description="Member value." />
+			<param name="Value" type="double" pass="in" description="Member value." />
 		</method>
 
 		<method name="AddBoolValue" description="Adds a member as bool value.">
-			<param name="Value" type="bool" pass="return" description="Member value." />
+			<param name="Value" type="bool" pass="in" description="Member value." />
 		</method>
 	
 		<method name="AddObjectValue" description="Returns a member as object value. Returns empty object.">
@@ -2838,6 +3285,10 @@
 
 		<method name="AddArrayValue" description="Returns a member as object value. Returns empty array.">
 			<param name="Value" type="class" class="JSONArray" pass="return" description="Member value." />
+		</method>
+
+		<method name="SerializeToString" description="Serialises the Array to a String.">
+			<param name="StringValue" type="string" pass="return" description="Serialised string value." />
 		</method>
 
 	</class>
@@ -3434,6 +3885,20 @@
 			<param name="XMLDocument" type="class" class="XMLDocument" pass="return" description="XML Document Instance." />
 		</method>
 
+		<method name="CreateJSONObject" description = "creates an empty JSON object.">
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONString" description = "parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONString" type="string" pass="in" description="XML String." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONData" description = "parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONData" type="basicarray" class="uint8" pass="in" description="JSON Binary data." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
 		<method name="CreateDataTable" description = "creates an empty data table.">
 			<param name="DataTableInstance" type="class" class="DataTable" pass="return" description="Data Table Instance." />
 		</method>
@@ -3641,18 +4106,55 @@
 
 	<class name="SignalTrigger" parent="Base" description="Class for signal triggering">
 
-		<method name="CanTrigger" description="Returns, if signal channel is available.">
+		<method name="GetSignalUUID" description="Returns the signal uuid.">
+			<param name="SignalUUID" type="string" pass="return" description="Signal Identifier" />
+		</method>
+
+		<method name="CanTrigger" description="Returns, if a spot is available in the signal queue.">
 			<param name="ChannelIsAvailable" type="bool" pass="return" description="Returns true, if signal channel is available." />
 		</method>
-
-		<method name="Trigger" description="Triggers a signal, if signal channel is available.">
+		
+		<method name="GetAvailableSignalQueueSlots" description="Returns the number of slots available in the signal queue.">
+			<param name="NumberOfQueueSlots" type="uint32" pass="return" description="Number of Queue Slots available." />
 		</method>
 
-		<method name="WaitForHandling" description="Waits until the signal is reset.">
-			<param name="TimeOut" type="uint32" pass="in" description="Timeout in Milliseconds. 0 for Immediate return." />			
-			<param name="Success" type="bool" pass="return" description="Flag if signal handling has been handled." />
+		<method name="GetTotalSignalQueueSlots" description="Returns the total number of slots of the signal queue.">
+			<param name="NumberOfQueueSlots" type="uint32" pass="return" description="Total number of Queue Slots. If not specified in the config, default is 1." />
 		</method>
 		
+		<method name="GetSignalPhase" description="Returns the phase of the signal.">
+			<param name="Phase" type="enum" class="SignalPhase" pass="return" description="Returns the phase of the signal." />
+		</method>
+		
+		<method name="SetReactionTimeOut" description="Sets the signal reaction timeout to a specific value. Fails if Phase is not InPreparation. Default value is either set in the config file or 1 hour (3600000ms)">
+			<param name="ReactionTimeOutInMs" type="uint32" pass="in" description="Sets the Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms." />
+		</method>
+
+		<method name="GetReactionTimeOut" description="Gets the signal reaction timeout. Default value is either set in the config file or 1 hour (3600000ms)">
+			<param name="ReactionTimeOutInMs" type="uint32" pass="return" description="Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms." />
+		</method>
+
+		<method name="Trigger" description="Triggers a signal, if signal queue spot is available. Fails if Phase is not InPreparation. Fails if signal queue is full.">
+		</method>
+
+		<method name="TryTrigger" description="Tries to triggers the signal, if signal queue spot is available. Returns false, if Phase is not InPreparation. Returns false, if signal queue is full.">
+			<param name="Success" type="bool" pass="return" description="Returns true, if signal has been successfully put in the signal queue." />
+		</method>
+
+		<method name="TryTriggerWithTimeout" description="Tries to triggers the signal, if signal queue spot is available. Returns false, if Phase is not InPreparation. Returns false, if signal queue is full.">
+			<param name="ReactionTimeOutInMs" type="uint32" pass="in" description="Sets the Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms." />
+			<param name="Success" type="bool" pass="return" description="Returns true, if signal has been successfully put in the signal queue." />
+		</method>
+
+		<method name="WaitForHandling" description="Waits until the signal has been handled, meaning has reached the Phase Handled, Failed, TimedOut, Cleared or Retracted.">
+			<param name="WaitTime" type="uint32" pass="in" description="Time to wait in Milliseconds. 0 for Immediate return." />			
+			<param name="SignalHasBeenHandled" type="bool" pass="return" description="Flag if signal handling has been handled." />
+		</method>
+		
+		<method name="HasBeenHandled" description="Checks if the signal has been handled, meaning has reached the Phase Handled, Failed, TimedOut, Cleared or Retracted. Equivalent to WaitForHandling (0).">
+			<param name="SignalHasBeenHandled" type="bool" pass="return" description="Flag if signal handling has been handled." />
+		</method>
+
 		<method name="GetName" description="Returns the signal name.">
 			<param name="SignalName" type="string" pass="return" description="Name Of Signal" />
 		</method>
@@ -3717,18 +4219,25 @@
 
 	<class name="SignalHandler" parent="Base" description="Class for signal handling">
 
-		<method name="SignalHandled" description="Marks signal as handled and resets signal channel.">
+		<method name="GetSignalPhase" description="Returns the phase of the signal.">
+			<param name="Phase" type="enum" class="SignalPhase" pass="return" description="Returns the phase of the signal. Never will return InPreparation or Invalid." />
+		</method>
+
+		<method name="SignalHandled" description="Marks signal as Handled.. Fails if SignalPhase is not in InQueue or InProcess. if InQueue, the signal is automatically removed from its queue.">
 		</method>
 		
+		<method name="SignalInProcess" description="Marks signal as InProcess and it removes it from its Queue. Fails if SignalPhase is not InQueue.">
+		</method>
+
+		<method name="SignalFailed" description="Marks signal as Failed. Fails if SignalPhase is not in InQueue or InProcess.">
+			<param name="ErrorMessage" type="string" pass="in" description="Error Message describing the reason for the failure." />
+		</method>
+
 		<method name="GetName" description="Returns the signal name.">
 			<param name="SignalName" type="string" pass="return" description="Name Of Signal" />
 		</method>
-
-		<method name="GetSignalID" description="Returns the signal id. Depreciated.">
-			<param name="SignalID" type="string" pass="return" description="Signal Identifier" />
-		</method>
 		
-		<method name="GetSignalUUID" description="Returns the signal uuid. Identical to GetSignalID.">
+		<method name="GetSignalUUID" description="Returns the signal uuid.">
 			<param name="SignalUUID" type="string" pass="return" description="Signal Identifier" />
 		</method>
 
@@ -3745,7 +4254,6 @@
 			<param name="Name" type="string" pass="in" description="Name" />
 			<param name="Value" type="string" pass="return" description="Value" />
 		</method>
-
 
 		<method name="GetDouble" description="gets a double">
 			<param name="Name" type="string" pass="in" description="Name" />
@@ -4246,6 +4754,110 @@
 
 	</class>	
 
+
+	<class name="MachineConfigurationVersion" parent="Base" description="Type class of machine configuration data!">
+
+		<method name="GetSchemaType" description="Returns the schema type.">
+			<param name="SchemaType" type="string" pass="return" description="Schema Type String." />					
+		</method>
+
+		<method name="GetTypeName" description="Returns the Name the type.">
+			<param name="Name" type="string" pass="return" description="Type Name." />	
+		</method>
+
+		<method name="GetTypeUUID" description="Returns the UUID the type.">
+			<param name="UUID" type="string" pass="return" description="Type UUID." />	
+		</method>
+		
+		<method name="GetXSDVersion" description="Returns the XSD Version Number of this configuration.">
+			<param name="XSDVersion" type="uint32" pass="return" description="Returns XSD version number." />	
+		</method>				
+		
+		<method name="GetXSDString" description="Returns the XSD String that this configuration uses.">
+			<param name="XSDString" type="string" pass="return" description="Returns XSD string." />	
+		</method>					
+
+		<method name="GetConfigurationXMLString" description="Returns the configuration as XML String.">
+			<param name="XMLString" type="string" pass="return" description="Returns XML string." />	
+		</method>					
+
+		<method name="GetConfigurationXMLDocument" description="Returns the configuration as XML Document class.">
+			<param name="DocumentInstance" type="class" class="XMLDocument" pass="return" description="Returns XML document." />	
+		</method>					
+
+		<method name="MakeActive" description="Makes the current configuration the active one.">
+		</method>					
+
+	</class>
+
+	<class name="MachineConfigurationType" parent="Base" description="Type class of machine configuration data!">
+
+		<method name="GetSchemaType" description="Returns the schema type.">
+			<param name="SchemaType" type="string" pass="return" description="Schema Type String." />					
+		</method>
+
+		<method name="GetTypeName" description="Returns the Name the type.">
+			<param name="Name" type="string" pass="return" description="Type Name." />	
+		</method>
+
+		<method name="GetTypeUUID" description="Returns the UUID the type.">
+			<param name="UUID" type="string" pass="return" description="Type UUID." />	
+		</method>
+		
+		<method name="GetLatestXSDVersion" description="Returns the latest Machine Configuration XSD Version.">
+			<param name="XSDVersion" type="uint32" pass="return" description="Returns the latest XSD version, or 0 if no XSD exists." />	
+		</method>		
+		
+		<method name="RegisterConfigurationXSD" description="Registers a new configuration XSD.">
+			<param name="XSDString" type="string" pass="in" description="XSD String of the version. MUST be incremental." />	
+			<param name="XSDVersion" type="uint32" pass="in" description="New Version to add. MUST be larger than GetLatestXSDVersion." />	
+			<param name="DefaultConfigurationXML" type="string" pass="in" description="Default configuration XML to use for this XSD. MUST conform to XSD in question." />	
+		</method>
+		
+		<method name="RegisterConfigurationXSDFromResource" description="Registers a new configuration XSD from machine resource files.">
+			<param name="XSDResourceName" type="string" pass="in" description="Resource identifier of the XSD file of the version. MUST be incremental." />	
+			<param name="XSDVersion" type="uint32" pass="in" description="New Version to add. MUST be larger than GetLatestXSDVersion." />	
+			<param name="DefaultConfigurationResourceName" type="string" pass="in" description="Resource identifier of the configuration XML to use for this XSD. MUST conform to XSD in question." />	
+		</method>
+	
+		<method name="GetLatestConfiguration" description="Returns the latest Machine Configuration of this configuration type. Returns the default XML of the newest XSD if no configuration exists.">
+			<param name="ConfigurationInstance" type="class" class="MachineConfigurationVersion" pass="return" description="Configuration Version instance." />	
+		</method>		
+	
+		<method name="GetActiveConfiguration" description="Returns the active Machine Configuration of this configuration type.">
+			<param name="FallBackToDefault" type="bool" pass="in" description="If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned." />	
+			<param name="ConfigurationInstance" type="optionalclass" class="MachineConfigurationVersion" pass="return" description="Configuration Version instance." />	
+		</method>		
+	
+	</class>
+
+	<class name="MachineConfigurationHandler" parent="Base" description="Handler class for managing machine configuration data!">
+
+		<method name="RegisterMachineConfigurationType" description="Registers a new machine configuration type, or returns the unique existing one with the same schema type.">
+			<param name="SchemaType" type="string" pass="in" description="Schema Type String. MUST not be empty." />		
+			<param name="Name" type="string" pass="in" description="Type Name. MUST not be empty. If the configuration type already exists, the name will be checked for identity!" />		
+			<param name="TypeInstance" type="class" class="MachineConfigurationType" pass="return" description="Instance of machine configuration type." />		
+		</method>
+
+		<method name="HasMachineConfigurationType" description="Checks if a certain configuration schema type has been registered.">
+			<param name="SchemaType" type="string" pass="in" description="Schema Type String. MUST not be empty." />		
+			<param name="HasBeenRegistered" type="bool" pass="return" description="Returns true, if the system knows about a configuration schema type." />		
+		</method>
+
+		<method name="GetLatestConfiguration" description="Returns the latest Machine Configuration for a specific configuration type. Returns the default XML of the newest XSD if no configuration exists.">
+			<param name="SchemaType" type="string" pass="in" description="Schema Type String. Fails if configuration schema type is not known." />		
+			<param name="ConfigurationInstance" type="class" class="MachineConfigurationVersion" pass="return" description="Configuration Version instance." />	
+		</method>		
+	
+		<method name="GetActiveConfiguration" description="Returns the active Machine Configuration for a specific configuration type.">
+			<param name="SchemaType" type="string" pass="in" description="Schema Type String. Fails if configuration schema type is not known." />		
+			<param name="FallBackToDefault" type="bool" pass="in" description="If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned." />	
+			<param name="ConfigurationInstance" type="optionalclass" class="MachineConfigurationVersion" pass="return" description="Configuration Version instance." />	
+		</method>	
+
+	</class>
+
+
 	<class name="StateEnvironment" parent="Base" description="Environment of the state">
 
 		<method name="GetMachineState" description="Retrieves the machine state">
@@ -4270,12 +4882,16 @@
 			<param name="Success" type="bool" pass="return" description="Signal has been triggered" />
 		</method>		
 
-		<method name="GetUnhandledSignal" description="Retrieves an unhandled signal By signal type name.">
+		<method name="GetUnhandledSignal" description="Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.">
 			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
 			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="return" description="Signal object. If no signal has been found the signal handler object will be null." />
 		</method>		
 		
-		<method name="ClearAllUnhandledSignals" description="Clears all unhandled signals and marks them invalid.">
+		<method name="ClearUnhandledSignalsOfType" description="Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.">
+			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be cleared." />
+		</method>		
+
+		<method name="ClearAllUnhandledSignals" description="Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.">
 		</method>		
 
 		<method name="GetUnhandledSignalByUUID" description="retrieves an unhandled signal from the current state machine by UUID.">
@@ -4448,6 +5064,10 @@
 			<param name="ImageLoaderInstance" type="class" class="ImageLoader" pass="return" description="Image loader instance." />
 		</method>		
 
+		<method name="CreateMachineConfigurationHandler" description="creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.">			
+			<param name="MachineConfigurationHandlerInstance" type="class" class="MachineConfigurationHandler" pass="return" description="MachineConfigurationHandler instance." />
+		</method>		
+
 		<method name="CreateDiscreteField2D" description="Creates an empty discrete field.">
 			<param name="PixelCountX" type="uint32" pass="in" description="Pixel count in X. MUST be positive." />
 			<param name="PixelCountY" type="uint32" pass="in" description="Pixel count in Y. MUST be positive." />
@@ -4538,6 +5158,21 @@
 			<param name="XMLData" type="basicarray" class="uint8" pass="in" description="XML Binary data." />
 			<param name="XMLDocument" type="class" class="XMLDocument" pass="return" description="XML Document Instance." />
 		</method>
+		
+		<method name="CreateJSONObject" description = "creates an empty JSON object.">
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONString" description = "parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONString" type="string" pass="in" description="XML String." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONData" description = "parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONData" type="basicarray" class="uint8" pass="in" description="JSON Binary data." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+		
 		
 		<method name="CreateDataTable" description = "creates an empty data table.">
 			<param name="DataTableInstance" type="class" class="DataTable" pass="return" description="Data Table Instance." />
@@ -4892,6 +5527,20 @@
 			<param name="XMLDocument" type="class" class="XMLDocument" pass="return" description="XML Document Instance." />
 		</method>
 
+		<method name="CreateJSONObject" description = "creates an empty JSON object.">
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONString" description = "parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONString" type="string" pass="in" description="XML String." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
+		<method name="ParseJSONData" description = "parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.">
+			<param name="JSONData" type="basicarray" class="uint8" pass="in" description="JSON Binary data." />
+			<param name="JSONObject" type="class" class="JSONObject" pass="return" description="JSON Object Instance." />
+		</method>
+
 		<method name="CreateDataTable" description = "creates an empty data table.">
 			<param name="DataTableInstance" type="class" class="DataTable" pass="return" description="Data Table Instance." />
 		</method>
@@ -5091,7 +5740,7 @@
 			<param name="ParameterValue" type="class" class="JSONObject" pass="return" description="Parameter value." />
 		</method>
 
-		<method name="GetExternalEventResults" description="Returns the external event results. This JSON Object will be passed on to an ext">
+		<method name="GetExternalEventResults" description="Returns the external event results. This JSON Object will be passed on to the external API as result.">
 			<param name="ParameterValue" type="class" class="JSONObject" pass="return" description="Parameter value." />
 		</method>
 

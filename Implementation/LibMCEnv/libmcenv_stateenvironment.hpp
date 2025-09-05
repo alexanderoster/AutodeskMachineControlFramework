@@ -87,6 +87,8 @@ public:
 
 	ISignalHandler* GetUnhandledSignalByUUID(const std::string& sUUID, const bool bMustExist) override;
 
+	void ClearUnhandledSignalsOfType(const std::string& sSignalTypeName) override;
+
 	void ClearAllUnhandledSignals() override;
 
 	bool HasBuildJob(const std::string& sBuildUUID) override;
@@ -176,8 +178,16 @@ public:
 	IXMLDocument* ParseXMLString(const std::string& sXMLString) override;
 
 	IXMLDocument* ParseXMLData(const LibMCEnv_uint64 nXMLDataBufferSize, const LibMCEnv_uint8* pXMLDataBuffer) override;
+
+	IJSONObject* CreateJSONObject() override;
+
+	IJSONObject* ParseJSONString(const std::string& sJSONString) override;
+
+	IJSONObject* ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8* pJSONDataBuffer) override;
 	
 	IDataTable* CreateDataTable() override;
+
+	IMachineConfigurationHandler* CreateMachineConfigurationHandler() override;
 
 	IDiscreteFieldData2D* CreateDiscreteField2D(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue) override;	
 

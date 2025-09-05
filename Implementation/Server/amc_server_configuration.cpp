@@ -225,6 +225,11 @@ std::string CServerConfiguration::getPackageCoreClient()
 	return m_sPackageCoreClient;
 }
 
+std::string CServerConfiguration::getPackageAPIDocs()
+{
+	return m_sPackageAPIDocs;
+}
+
 std::string CServerConfiguration::getPackageConfig()
 {
 	return m_sPackageConfig;
@@ -303,9 +308,13 @@ void CServerConfiguration::loadPackageXML(const std::string sPackageFileName)
 	if (sCoreClient.empty())
 		throw LibMC::ELibMCException(LIBMC_ERROR_MISSINGCORECLIENT, "Missing core client");
 
+	std::string sAPIDocs = buildNode.attribute("apidocs").as_string();
+
 	m_sPackageName = sName;
 	m_sPackageConfig = AMCCommon::CUtils::getFullPathName(sConfigurationName, true);
 	m_sPackageCoreClient = AMCCommon::CUtils::getFullPathName(sCoreClient, true);
+	if (!sAPIDocs.empty ())
+		m_sPackageAPIDocs = AMCCommon::CUtils::getFullPathName(sAPIDocs, true);
 
 	auto libraries = buildNode.children("library");
 	for (auto libraryNode : libraries) {

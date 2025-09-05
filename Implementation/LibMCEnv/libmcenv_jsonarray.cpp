@@ -33,9 +33,11 @@ Abstract: This is a stub class definition of CJSONArray
 
 #include "libmcenv_jsonarray.hpp"
 #include "libmcenv_interfaceexception.hpp"
+#include "libmcenv_jsonobject.hpp"
 
-// Include custom headers here.
+#include "common_utils.hpp"
 
+#include "RapidJSON/writer.h"
 
 using namespace LibMCEnv::Impl;
 
@@ -43,78 +45,243 @@ using namespace LibMCEnv::Impl;
  Class definition of CJSONArray 
 **************************************************************************************************************************/
 
+CJSONArray::CJSONArray(std::shared_ptr<rapidjson::Document> pDocument, rapidjson::Value* pReferencedArray)
+	: m_pInstance(nullptr)
+{
+	if (pDocument.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+	if (pReferencedArray == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+	if (!pReferencedArray->IsArray())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_REFERENCEDJSONVALUEISNOTARRAY);
+
+	m_pDocument = pDocument;
+	m_pInstance = pReferencedArray;
+}
+
+CJSONArray::~CJSONArray()
+{
+
+}
+
+
 LibMCEnv_uint64 CJSONArray::GetElementCount()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	return m_pInstance->MemberCount();
 }
 
 LibMCEnv::eJSONObjectType CJSONArray::GetElementType(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string (nIndex));
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType)nIndex];
+
+	rapidjson::Type memberType = member.GetType();
+	switch (memberType) {
+	case rapidjson::Type::kStringType:
+		return LibMCEnv::eJSONObjectType::StringType;
+	case rapidjson::Type::kNumberType:
+		return LibMCEnv::eJSONObjectType::DoubleType;
+	case rapidjson::Type::kTrueType:
+	case rapidjson::Type::kFalseType:
+		return LibMCEnv::eJSONObjectType::BoolType;
+	case rapidjson::Type::kObjectType:
+		return LibMCEnv::eJSONObjectType::ObjectType;
+	case rapidjson::Type::kArrayType:
+		return LibMCEnv::eJSONObjectType::ArrayType;
+	default:
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERHASINVALIDTYPE, "JSON member has invalid type: #" + std::to_string (nIndex));
+	}
 }
 
 std::string CJSONArray::GetValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType)nIndex];
+	return member.GetString();
 }
+
+std::string CJSONArray::GetUUIDValue(const LibMCEnv_uint64 nIndex)
+{
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType)nIndex];
+	std::string sUUIDValue(member.GetString());
+
+	return AMCCommon::CUtils::normalizeUUIDString(sUUIDValue);
+
+}
+
 
 LibMCEnv_int64 CJSONArray::GetIntegerValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX);
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType)nIndex];
+	if (member.IsInt64()) {
+		return member.GetInt64();
+	}
+
+	if (member.IsString()) {
+		return AMCCommon::CUtils::stringToInteger(member.GetString());
+	}
+
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERISNOTINTEGER, "JSON member is not integer: #" + std::to_string(nIndex));
+
 }
 
 LibMCEnv_double CJSONArray::GetDoubleValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType) nIndex];
+	if (member.IsDouble()) {
+		return member.GetDouble();
+	}
+
+	if (member.IsInt64() || member.IsInt()) {
+		return (double)member.GetInt64();
+	}
+
+	if (member.IsString()) {
+		return AMCCommon::CUtils::stringToDouble(member.GetString());
+	}
+	
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERISNOTDOUBLE, "JSON member is not double: #" + std::to_string(nIndex));
+
 }
 
 bool CJSONArray::GetBoolValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto& member = (*m_pInstance)[(rapidjson::SizeType)nIndex];
+	if (!member.IsBool())
+		return member.GetBool();
+
+	if (member.IsInt64() || member.IsInt()) {
+		return (member.GetInt64() != 0);
+	}
+
+	if (member.IsString()) {
+		return AMCCommon::CUtils::stringToBool(member.GetString());
+	}
+	
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERISNOTBOOL, "JSON member is not bool: #" + std::to_string(nIndex));
+
 }
 
 IJSONObject * CJSONArray::GetObjectValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto pMember = &(*m_pInstance)[(rapidjson::SizeType)nIndex];
+	if (!pMember->IsObject())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERISNOTOBJECT, "JSON member is not object: #" + std::to_string(nIndex));
+
+	return new CJSONObject(m_pDocument, pMember);
+
+
 }
 
 IJSONArray * CJSONArray::GetArrayValue(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX);
+
+	auto pMember = &(*m_pInstance)[(rapidjson::SizeType)nIndex];
+	if (!pMember->IsArray())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JSONMEMBERISNOTARRAY, "JSON member is not array: #" + std::to_string(nIndex));
+
+	return new CJSONArray(m_pDocument, pMember);
+
 }
 
 void CJSONArray::RemoveElement(const LibMCEnv_uint64 nIndex)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	if (nIndex >= m_pInstance->MemberCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJSONMEMBERINDEX, "invalid JSON member index: #" + std::to_string(nIndex));
+
+	auto iter = m_pInstance->MemberBegin() + nIndex;
+
+	m_pInstance->RemoveMember(iter);
+
 }
 
 void CJSONArray::AddValue(const std::string & sValue)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetString(sValue.c_str(), m_pDocument->GetAllocator());
+
+	m_pInstance->PushBack (jsonValue, m_pDocument->GetAllocator());
 }
 
-LibMCEnv_int64 CJSONArray::AddIntegerValue()
+void CJSONArray::AddIntegerValue(const LibMCEnv_int64 nValue)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetInt64(nValue);
+
+	m_pInstance->PushBack(jsonValue, m_pDocument->GetAllocator());
 }
 
-LibMCEnv_double CJSONArray::AddDoubleValue()
+void CJSONArray::AddDoubleValue(const LibMCEnv_double dValue)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetDouble(dValue);
+
+	m_pInstance->PushBack(jsonValue, m_pDocument->GetAllocator());
 }
 
-bool CJSONArray::AddBoolValue()
+void CJSONArray::AddBoolValue(const bool bValue)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetBool(bValue);
+
+	m_pInstance->PushBack(jsonValue, m_pDocument->GetAllocator());
+
 }
 
 IJSONObject * CJSONArray::AddObjectValue()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetObject();
+
+	auto pMember = &m_pInstance->PushBack(jsonValue, m_pDocument->GetAllocator());
+
+	return new CJSONObject(m_pDocument, pMember);
 }
 
 IJSONArray * CJSONArray::AddArrayValue()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+	rapidjson::Value jsonValue;
+
+	jsonValue.SetArray();
+
+	auto pMember = &m_pInstance->PushBack(jsonValue, m_pDocument->GetAllocator());
+
+	return new CJSONArray(m_pDocument, pMember);
 }
 
+std::string CJSONArray::SerializeToString()
+{
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	m_pInstance->Accept(writer);
+
+	return buffer.GetString();
+
+}

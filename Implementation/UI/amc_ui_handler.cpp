@@ -73,8 +73,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUIHandleEventResponse::CUIHandleEventResponse(uint32_t nErrorCode, const std::string& sErrorMessage, const std::vector<PUIClientAction>& clientActions, const std::map<std::string, std::string>& returnValues)
-    : m_nErrorCode(nErrorCode), m_clientActions (clientActions), m_sErrorMessage (sErrorMessage), m_returnValues (returnValues)
+CUIHandleEventResponse::CUIHandleEventResponse(uint32_t nErrorCode, const std::string& sErrorMessage, const std::vector<PUIClientAction>& clientActions, const std::string& sReturnValueJSON)
+    : m_nErrorCode(nErrorCode), m_clientActions (clientActions), m_sErrorMessage (sErrorMessage), m_ReturnValueJSON (sReturnValueJSON)
 {
 
 }
@@ -94,9 +94,9 @@ std::vector<PUIClientAction>& CUIHandleEventResponse::getClientActions()
     return m_clientActions;
 }
 
-std::map<std::string, std::string>& CUIHandleEventResponse::getReturnValues()
+std::string CUIHandleEventResponse::getReturnValueJSON()
 {
-    return m_returnValues;
+    return m_ReturnValueJSON;
 }
 
 bool CUIHandleEventResponse::externalValueNameIsReserved(const std::string& sName)
@@ -114,10 +114,13 @@ CUIHandler::CUIHandler(LibMCEnv::PWrapper pEnvironmentWrapper, PUISystemState pU
     m_pUISystemState (pUISystemState),
     m_pEnvironmentWrapper (pEnvironmentWrapper)
 {
+
     if (pEnvironmentWrapper.get() == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
     if (pUISystemState.get() == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+    m_pFrontendDefinition = std::make_shared<CUIFrontendDefinition>(m_pUISystemState->getGlobalChronoInstance ());
 }
 
 CUIHandler::~CUIHandler()
@@ -186,124 +189,6 @@ PUIPage CUIHandler::findPage(const std::string& sName)
 }
 
 
-void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer, CParameterHandler* pClientVariableHandler)
-{
-    auto pStateMachineData = m_pUISystemState->getStateMachineData();
-
-    writer.addString(AMC_API_KEY_UI_APPNAME, m_sAppName);
-    writer.addString(AMC_API_KEY_UI_COPYRIGHT, m_sCopyrightString);
-    writer.addString(AMC_API_KEY_UI_MAINPAGE, m_sMainPageName);
-
-    writer.addString(AMC_API_KEY_UI_LOGOUUID, m_sLogoUUID);
-    writer.addDouble(AMC_API_KEY_UI_LOGOASPECTRATIO, m_dLogoAspectRatio);
-
-    if (!m_ToolbarLogoResourceName.empty()) {
-        auto pToolbarLogoResource = m_pCoreResourcePackage->findEntryByName(m_ToolbarLogoResourceName, true);
-        writer.addString(AMC_API_KEY_UI_TOOLBARLOGOUUID, pToolbarLogoResource->getUUID());
-    }
-
-    if (!m_LoginBackgroundUUID.isEmpty(pStateMachineData)) {
-        auto pResourceEntry = m_pCoreResourcePackage->findEntryByName(m_LoginBackgroundUUID.evaluateStringValue (pStateMachineData), true);
-        writer.addString(AMC_API_KEY_UI_LOGINBACKGROUNDUUID, pResourceEntry->getUUID ());
-    }
-    writer.addString(AMC_API_KEY_UI_LOGINWELCOMEMESSAGE, m_LoginWelcomeMessage.evaluateStringValue(pStateMachineData));
-
-    CJSONWriterObject colorsObject(writer);
-    for (auto color : m_Colors) {
-
-        std::stringstream sColorStream;
-        uint32_t nRed = color.second & 0xff;
-        uint32_t nGreen = (color.second >> 8) & 0xff;
-        uint32_t nBlue = (color.second >> 16) & 0xff;
-
-        sColorStream << "#" << std::setfill('0') << std::setw(2) << std::hex << nRed << std::setfill('0') << std::setw(2) << std::hex << nGreen << std::setfill('0') << std::setw(2) << std::hex << nBlue;
-
-        colorsObject.addString(color.first, sColorStream.str());
-    }
-
-    writer.addObject(AMC_API_KEY_UI_COLORS, colorsObject);
-
-}
-
-void CUIHandler::writeStateToJSON(CJSONWriter& writer, CParameterHandler* pClientVariableHandler)
-{
-	CJSONWriterArray menuItems(writer);
-
-	for (auto iter : m_MenuItems) {
-		CJSONWriterObject menuItem(writer);
-		menuItem.addString(AMC_API_KEY_UI_ID, iter->getID ());
-        menuItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
-        menuItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon ());
-		menuItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption ());
-        menuItem.addString(AMC_API_KEY_UI_DESCRIPTION, iter->getDescription());
-        menuItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
-        menuItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
-        menuItems.addObject(menuItem);
-	}
-
-	writer.addArray(AMC_API_KEY_UI_MENUITEMS, menuItems);
-
-	CJSONWriterArray toolbarItems(writer);
-
-	for (auto iter : m_ToolbarItems) {
-		CJSONWriterObject toolbarItem(writer);
-		toolbarItem.addString(AMC_API_KEY_UI_ID, iter->getID());
-        toolbarItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
-        toolbarItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon());
-		toolbarItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
-        toolbarItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
-        toolbarItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
-        toolbarItems.addObject(toolbarItem);
-	}
-	writer.addArray(AMC_API_KEY_UI_TOOLBARITEMS, toolbarItems);
-
-
-    CJSONWriterArray pages(writer);
-    for (auto iter : m_Pages) {
-        CJSONWriterObject page(writer);
-        page.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
-
-        CJSONWriterArray modules(writer);
-        iter.second->writeModulesToJSON (writer, modules, pClientVariableHandler);
-
-        page.addArray(AMC_API_KEY_UI_MODULES, modules);
-
-        pages.addObject(page);
-    }
-    writer.addArray(AMC_API_KEY_UI_PAGES, pages);
-
-    CJSONWriterArray custompages(writer);
-    for (auto iter : m_CustomPages) {
-        CJSONWriterObject custompage(writer);
-        custompage.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
-        custompage.addString(AMC_API_KEY_UI_COMPONENTNAME, iter.second->getComponentName());
-
-        CJSONWriterArray modules(writer);
-        iter.second->writeModulesToJSON(writer, modules, pClientVariableHandler);
-
-        custompage.addArray(AMC_API_KEY_UI_MODULES, modules);
-
-        custompages.addObject(custompage);
-    }
-    writer.addArray(AMC_API_KEY_UI_CUSTOMPAGES, custompages);
-
-
-    CJSONWriterArray dialogs(writer);
-    for (auto iter : m_Dialogs) {
-        CJSONWriterObject dialog(writer);
-        dialog.addString(AMC_API_KEY_UI_DIALOGNAME, iter.second->getName());
-        dialog.addString(AMC_API_KEY_UI_DIALOGTITLE, iter.second->getTitle());
-
-        CJSONWriterArray modules(writer);
-        iter.second->writeModulesToJSON(writer, modules, pClientVariableHandler);
-
-        dialog.addArray(AMC_API_KEY_UI_MODULES, modules);
-
-        dialogs.addObject(dialog);
-    }
-    writer.addArray(AMC_API_KEY_UI_DIALOGS, dialogs);
-
-}
 
 PUIPage CUIHandler::addPage_Unsafe(const std::string& sName)
 {
@@ -513,7 +398,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         auto pageChildren = pageNode.children();
         for (pugi::xml_node pageChild : pageChildren) {
             
-            auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage);
+            auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
             auto pModule = CUIModuleFactory::createModule(pageChild, sPageName, pModuleEnvironment);
             pPage->addModule(pModule);
 
@@ -538,7 +423,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
         auto pPage = addCustomPage_Unsafe(sPageName, sComponentName);
 
-        auto pCustomModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage);
+        auto pCustomModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
         auto pCustomModule = std::make_shared<CUIModule_Custom>(custompageNode, sPageName, pCustomModuleEnvironment);
         pPage->addModule(pCustomModule);
 
@@ -548,7 +433,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             auto modulesChildren = modulesNode.children();
             for (pugi::xml_node moduleChild : modulesChildren) {
 
-                auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage);
+                auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
                 auto pModule = CUIModuleFactory::createModule(moduleChild, sPageName, pModuleEnvironment);
                 pPage->addModule(pModule);
 
@@ -575,7 +460,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         auto dialogChildren = dialogNode.children();
         for (pugi::xml_node dialogChild : dialogChildren) {
 
-            auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pDialog.get(), m_pCoreResourcePackage);
+            auto pModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pDialog.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
             auto pModule = CUIModuleFactory::createModule(dialogChild, sDialogName, pModuleEnvironment);
             pDialog->addModule(pModule);
 
@@ -650,6 +535,226 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
 }
 
+template <class C> std::shared_ptr<C> mapInternalUIEnvInstance(std::shared_ptr<LibMCEnv::Impl::IBase> pImplInstance, LibMCEnv::PWrapper pWrapper)
+{
+    if (pWrapper.get() == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+    auto pExternalInstance = std::make_shared <C>(pWrapper.get(), (LibMCEnv::Impl::IBase*)(pImplInstance.get()));
+    pImplInstance->IncRefCount();
+    return pExternalInstance;
+}
+
+
+void CUIHandler::ensureUIEventExists(const std::string& sEventName)
+{
+    std::string sSenderUUID = AMCCommon::CUtils::createUUID();
+    std::string sDummySessionUUID = AMCCommon::CUtils::createUUID();
+    std::string sDummySessionKey = AMCCommon::CUtils::calculateRandomSHA256String(1);
+
+    auto pGlobalChrono = m_pUISystemState->getGlobalChronoInstance();
+	//auto pDummyFrontendState = std::make_shared<CUIFrontendState>(pGlobalChrono);
+    auto pDummyAPIAuth = std::make_shared<CAPIAuth>(sDummySessionUUID, sDummySessionKey, CUserInformation::makeEmpty(), false, nullptr);
+
+    LibMCEnv::Impl::PUIEnvironment pInternalUIEnvironment = std::make_shared<LibMCEnv::Impl::CUIEnvironment>(this, sSenderUUID, "", pDummyAPIAuth, m_pUISystemState->getTestOutputPath());
+    auto pExternalEnvironment = mapInternalUIEnvInstance<LibMCEnv::CUIEnvironment>(pInternalUIEnvironment, m_pEnvironmentWrapper);
+
+    // Create event to see if it exists.
+    try {
+        auto pEvent = m_pUIEventHandler->CreateEvent(sEventName, pExternalEnvironment);
+        pEvent = nullptr;
+    }
+    catch (LibMCUI::ELibMCUIException& E) {
+        throw ELibMCCustomException(LIBMC_ERROR_EVENTNOTFOUND, sEventName + "/" + E.what());
+    }
+    catch (...) {
+        throw;
+    }
+
+}
+
+
+CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, const std::string& sSenderUUID, const std::string& sEventFormPayloadJSON, const std::string& sEventParameterJSON, PAPIAuth pAPIAuth)
+{
+    auto pLogger = m_pUISystemState->getLogger();
+
+    uint32_t nErrorCode = 0;
+    std::string sErrorMessage;
+
+    std::vector<PUIClientAction> clientActions;
+    std::string returnValueJSON;
+
+    try {
+
+        std::string sSenderPath;
+        AMC::PUIPage pPage;
+        if (!sSenderUUID.empty()) {
+
+            auto iToolbarIter = m_ToolbarItemUUIDMap.find(sSenderUUID);
+            if (iToolbarIter != m_ToolbarItemUUIDMap.end()) {
+                sSenderPath = "toolbar." + iToolbarIter->second->getID();
+            }
+            else {
+
+                pPage = findPageOfModuleItem(sSenderUUID);
+                if (pPage.get() == nullptr)
+                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
+
+                auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
+                if (pModuleItem.get() == nullptr)
+                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
+
+                sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+
+            }
+
+        }
+
+        LibMCEnv::Impl::PUIEnvironment pInternalUIEnvironment = std::make_shared<LibMCEnv::Impl::CUIEnvironment>(this, sSenderUUID, sSenderPath, pAPIAuth, m_pUISystemState->getTestOutputPath());
+        auto pExternalEnvironment = mapInternalUIEnvInstance<LibMCEnv::CUIEnvironment>(pInternalUIEnvironment, m_pEnvironmentWrapper);
+
+        auto pEvent = m_pUIEventHandler->CreateEvent(sEventName, pExternalEnvironment);
+        pInternalUIEnvironment->setExternalEventParameters(sEventParameterJSON);
+
+        /*if (!sEventParameterJSON.empty()) {
+            rapidjson::Document document;
+            document.Parse(sEventParameterJSON.c_str());
+            if (!document.IsObject())
+                throw ELibMCCustomException(LIBMC_ERROR_COULDNOTPARSEEVENTPARAMETERS, sEventName);
+
+            for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
+                itr != document.MemberEnd(); ++itr)
+            {
+                if (!itr->name.IsString())
+                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
+
+                std::string sPayloadName = itr->name.GetString();
+                if (!sPayloadName.empty()) {
+
+                    if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString (sPayloadName))
+                        throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERNAME, sPayloadName);
+
+                    if (itr->value.IsString()) {
+                        std::string sPayloadValue = itr->value.GetString();
+                        pInternalUIEnvironment->addExternalEventParameter (sPayloadName, sPayloadValue);
+                    }
+
+                    if (itr->value.IsBool()) {
+                        std::string sPayloadValue = itr->value.GetBool() ? "1" : "0";
+                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
+                    }
+
+                    if (itr->value.IsInt()) {
+                        std::string sPayloadValue = std::to_string (itr->value.GetInt64());
+                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
+                    }
+
+                    if (itr->value.IsDouble()) {
+                        std::string sPayloadValue = std::to_string(itr->value.GetDouble());
+                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
+                    }
+                }
+
+            }
+
+        } */
+
+        auto pClientVariableHandler = pAPIAuth->getLegacyParameterHandler(true);
+        if ((pClientVariableHandler != nullptr) && (!sEventFormPayloadJSON.empty())) {
+
+            rapidjson::Document document;
+            document.Parse(sEventFormPayloadJSON.c_str());
+            if (!document.IsObject())
+                throw ELibMCCustomException(LIBMC_ERROR_COULDNOTPARSEEVENTPARAMETERS, sEventName);
+
+
+            for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
+                itr != document.MemberEnd(); ++itr)
+            {
+                if (!itr->name.IsString())
+                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
+                std::string sEntityUUID = itr->name.GetString();
+                std::string sPayloadValue;
+
+                if (itr->value.IsString()) {
+                    sPayloadValue = itr->value.GetString();
+                }
+                else if (itr->value.IsInt64()) {
+                    sPayloadValue = std::to_string(itr->value.GetInt64());
+                }
+                else if (itr->value.IsBool()) {
+                    sPayloadValue = std::to_string(itr->value.GetBool());
+                }
+                else if (itr->value.IsDouble()) {
+                    sPayloadValue = std::to_string(itr->value.GetDouble());
+                }
+                else
+                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
+
+
+                if (pPage.get() != nullptr) {
+                    auto pModuleItem = pPage->findModuleItemByUUID(sEntityUUID);
+                    if (pModuleItem.get() != nullptr) {
+                        pModuleItem->setEventPayloadValue(sEventName, sEntityUUID, sPayloadValue, pClientVariableHandler);
+                    }
+                }
+
+
+            }
+
+        }
+
+        pEvent->Handle(pExternalEnvironment);
+
+        clientActions = pInternalUIEnvironment->getClientActions();
+
+        returnValueJSON = pInternalUIEnvironment->getExternalEventReturnValues();
+
+    }
+    catch (LibMCUI::ELibMCUIException& UIException) {
+        nErrorCode = UIException.getErrorCode();
+        sErrorMessage = UIException.what();
+    }
+    catch (ELibMCInterfaceException& Exception) {
+        nErrorCode = Exception.getErrorCode();
+        sErrorMessage = Exception.what();
+    }
+    catch (std::exception& StdException) {
+        nErrorCode = LIBMC_ERROR_COULDNOTHANDLEEVENT;
+        sErrorMessage = StdException.what();
+    }
+
+
+    if (nErrorCode) {
+        pLogger->logMessage(sErrorMessage, "ui", AMC::eLogLevel::Message);
+
+    }
+
+    return CUIHandleEventResponse(nErrorCode, sErrorMessage, clientActions, returnValueJSON);
+
+
+}
+
+AMC::PUISystemState CUIHandler::getUISystemState()
+{
+    return m_pUISystemState;
+}
+
+PResourcePackage CUIHandler::getCoreResourcePackage()
+{
+    if (m_pCoreResourcePackage.get() == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_NOCORERESOURCEPACKAGE);
+
+    return m_pCoreResourcePackage;
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Legacy UI System
+/////////////////////////////////////////////////////////////////////////////////////
+
 PUIModuleItem CUIHandler::findModuleItem(const std::string& sUUID)
 {
     for (auto pPage : m_Pages) {
@@ -697,51 +802,7 @@ PUIPage CUIHandler::findPageOfModuleItem(const std::string& sUUID)
     return nullptr;
 }
 
-PResourcePackage CUIHandler::getCoreResourcePackage()
-{
-    if (m_pCoreResourcePackage.get() == nullptr)
-        throw ELibMCInterfaceException(LIBMC_ERROR_NOCORERESOURCEPACKAGE);
 
-    return m_pCoreResourcePackage;
-
-}
-
-template <class C> std::shared_ptr<C> mapInternalUIEnvInstance(std::shared_ptr<LibMCEnv::Impl::IBase> pImplInstance, LibMCEnv::PWrapper pWrapper)
-{
-    if (pWrapper.get() == nullptr)
-        throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
-
-    auto pExternalInstance = std::make_shared <C>(pWrapper.get(), (LibMCEnv::Impl::IBase*) (pImplInstance.get()));
-    pImplInstance->IncRefCount();
-    return pExternalInstance;
-}
-
-
-void CUIHandler::ensureUIEventExists(const std::string& sEventName)
-{
-    std::string sSenderUUID = AMCCommon::CUtils::createUUID();
-    std::string sDummySessionUUID = AMCCommon::CUtils::createUUID();
-    std::string sDummySessionKey = AMCCommon::CUtils::calculateRandomSHA256String(1);
-
-    auto pDummyClientVariableHandler = std::make_shared<CParameterHandler>("", m_pUISystemState->getGlobalChronoInstance ());
-    auto pDummyAPIAuth = std::make_shared<CAPIAuth>(sDummySessionUUID, sDummySessionKey, CUserInformation::makeEmpty (), false, pDummyClientVariableHandler, m_pUISystemState->getGlobalChronoInstance ());
-
-    LibMCEnv::Impl::PUIEnvironment pInternalUIEnvironment = std::make_shared<LibMCEnv::Impl::CUIEnvironment>(this, sSenderUUID, "", pDummyAPIAuth, m_pUISystemState->getTestOutputPath ());
-    auto pExternalEnvironment = mapInternalUIEnvInstance<LibMCEnv::CUIEnvironment>(pInternalUIEnvironment, m_pEnvironmentWrapper);
-
-    // Create event to see if it exists.
-    try {
-        auto pEvent = m_pUIEventHandler->CreateEvent(sEventName, pExternalEnvironment);
-        pEvent = nullptr;
-    }
-    catch (LibMCUI::ELibMCUIException& E) {
-        throw ELibMCCustomException(LIBMC_ERROR_EVENTNOTFOUND, sEventName + "/" + E.what ());
-    }
-    catch (...) {
-        throw;
-    }
-
-}
 
 void CUIHandler::populateClientVariables(CParameterHandler* pClientVariableHandler)
 {
@@ -760,169 +821,146 @@ void CUIHandler::populateClientVariables(CParameterHandler* pClientVariableHandl
 }
 
 
-CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, const std::string& sSenderUUID, const std::string& sEventFormPayloadJSON, const std::string& sEventParameterJSON, PAPIAuth pAPIAuth)
+
+void CUIHandler::writeLegacyConfigurationToJSON(CJSONWriter& writer)
 {
-    auto pLogger = m_pUISystemState->getLogger();
+    auto pStateMachineData = m_pUISystemState->getStateMachineData();
 
-    uint32_t nErrorCode = 0;
-    std::string sErrorMessage;
+    writer.addString(AMC_API_KEY_UI_APPNAME, m_sAppName);
+    writer.addString(AMC_API_KEY_UI_COPYRIGHT, m_sCopyrightString);
+    writer.addString(AMC_API_KEY_UI_MAINPAGE, m_sMainPageName);
 
-    std::vector<PUIClientAction> clientActions;
-    std::map<std::string, std::string> returnValues;
+    writer.addString(AMC_API_KEY_UI_LOGOUUID, m_sLogoUUID);
+    writer.addDouble(AMC_API_KEY_UI_LOGOASPECTRATIO, m_dLogoAspectRatio);
 
-    try {
-
-        std::string sSenderPath;
-        AMC::PUIPage pPage;
-        if (!sSenderUUID.empty()) {
-
-            auto iToolbarIter = m_ToolbarItemUUIDMap.find(sSenderUUID);
-            if (iToolbarIter != m_ToolbarItemUUIDMap.end()) {
-                sSenderPath = "toolbar." + iToolbarIter->second->getID();
-            }
-            else {
-
-                pPage = findPageOfModuleItem(sSenderUUID);
-                if (pPage.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
-
-                auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
-                if (pModuleItem.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
-
-                sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
-
-            }
-
-        }
-
-        LibMCEnv::Impl::PUIEnvironment pInternalUIEnvironment = std::make_shared<LibMCEnv::Impl::CUIEnvironment>(this, sSenderUUID, sSenderPath, pAPIAuth, m_pUISystemState->getTestOutputPath ());
-        auto pExternalEnvironment = mapInternalUIEnvInstance<LibMCEnv::CUIEnvironment>(pInternalUIEnvironment, m_pEnvironmentWrapper);
-
-        auto pEvent = m_pUIEventHandler->CreateEvent(sEventName, pExternalEnvironment);
-
-        if (!sEventParameterJSON.empty ()) {
-            rapidjson::Document document;
-            document.Parse(sEventParameterJSON.c_str());
-            if (!document.IsObject())
-                throw ELibMCCustomException(LIBMC_ERROR_COULDNOTPARSEEVENTPARAMETERS, sEventName);
-
-            for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
-                itr != document.MemberEnd(); ++itr)
-            {
-                if (!itr->name.IsString())
-                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
-
-                std::string sPayloadName = itr->name.GetString();
-                if (!sPayloadName.empty()) {
-
-                    if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString (sPayloadName))
-                        throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERNAME, sPayloadName);
-
-                    if (itr->value.IsString()) {
-                        std::string sPayloadValue = itr->value.GetString();
-                        pInternalUIEnvironment->addExternalEventParameter (sPayloadName, sPayloadValue);
-                    }
-
-                    if (itr->value.IsBool()) {
-                        std::string sPayloadValue = itr->value.GetBool() ? "1" : "0";
-                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
-                    }
-
-                    if (itr->value.IsInt()) {
-                        std::string sPayloadValue = std::to_string (itr->value.GetInt64());
-                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
-                    }
-
-                    if (itr->value.IsDouble()) {
-                        std::string sPayloadValue = std::to_string(itr->value.GetDouble());
-                        pInternalUIEnvironment->addExternalEventParameter(sPayloadName, sPayloadValue);
-                    }
-                }
-
-            }
-
-        }
-
-        auto pClientVariableHandler = pAPIAuth->getClientVariableHandler();
-        if ((pClientVariableHandler.get() != nullptr) && (!sEventFormPayloadJSON.empty())) {
-
-            rapidjson::Document document;
-            document.Parse(sEventFormPayloadJSON.c_str());
-            if (!document.IsObject())
-                throw ELibMCCustomException(LIBMC_ERROR_COULDNOTPARSEEVENTPARAMETERS, sEventName);
-
-
-            for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
-                itr != document.MemberEnd(); ++itr)
-            {
-                if (!itr->name.IsString())
-                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
-                std::string sEntityUUID = itr->name.GetString();
-                std::string sPayloadValue;
-
-                if (itr->value.IsString()) {
-                    sPayloadValue = itr->value.GetString();
-                }
-                else if (itr->value.IsInt64()) {
-                    sPayloadValue = std::to_string(itr->value.GetInt64());
-                }
-                else if (itr->value.IsBool()) {
-                    sPayloadValue = std::to_string(itr->value.GetBool());
-                }
-                else if (itr->value.IsDouble()) {
-                    sPayloadValue = std::to_string(itr->value.GetDouble());
-                }
-                else
-                    throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTPARAMETERS, sEventName);
-
-
-                if (pPage.get() != nullptr) {
-                    auto pModuleItem = pPage->findModuleItemByUUID(sEntityUUID);
-                    if (pModuleItem.get() != nullptr) {
-                        pModuleItem->setEventPayloadValue(sEventName, sEntityUUID, sPayloadValue, pClientVariableHandler.get());
-                    }
-                }
-
-
-            }
-
-        }
-
-        pEvent->Handle(pExternalEnvironment);
-
-        clientActions = pInternalUIEnvironment->getClientActions();
-
-        returnValues = pInternalUIEnvironment->getExternalEventReturnValues();
-
-    } 
-    catch (LibMCUI::ELibMCUIException & UIException) {
-        nErrorCode = UIException.getErrorCode();
-        sErrorMessage = UIException.what();
-    }
-    catch (ELibMCInterfaceException & Exception) {
-        nErrorCode = Exception.getErrorCode();
-        sErrorMessage = Exception.what();
-    }
-    catch (std::exception & StdException) {
-        nErrorCode = LIBMC_ERROR_COULDNOTHANDLEEVENT;
-        sErrorMessage = StdException.what();
-    }
- 
-
-    if (nErrorCode) {
-        pLogger->logMessage(sErrorMessage, "ui", AMC::eLogLevel::Message);
-
+    if (!m_ToolbarLogoResourceName.empty()) {
+        auto pToolbarLogoResource = m_pCoreResourcePackage->findEntryByName(m_ToolbarLogoResourceName, true);
+        writer.addString(AMC_API_KEY_UI_TOOLBARLOGOUUID, pToolbarLogoResource->getUUID());
     }
 
-    return CUIHandleEventResponse (nErrorCode, sErrorMessage, clientActions, returnValues);
-       
+    if (!m_LoginBackgroundUUID.isEmpty(pStateMachineData)) {
+        auto pResourceEntry = m_pCoreResourcePackage->findEntryByName(m_LoginBackgroundUUID.evaluateStringValue(pStateMachineData), true);
+        writer.addString(AMC_API_KEY_UI_LOGINBACKGROUNDUUID, pResourceEntry->getUUID());
+    }
+    writer.addString(AMC_API_KEY_UI_LOGINWELCOMEMESSAGE, m_LoginWelcomeMessage.evaluateStringValue(pStateMachineData));
+
+    CJSONWriterObject colorsObject(writer);
+    for (auto color : m_Colors) {
+
+        std::stringstream sColorStream;
+        uint32_t nRed = color.second & 0xff;
+        uint32_t nGreen = (color.second >> 8) & 0xff;
+        uint32_t nBlue = (color.second >> 16) & 0xff;
+
+        sColorStream << "#" << std::setfill('0') << std::setw(2) << std::hex << nRed << std::setfill('0') << std::setw(2) << std::hex << nGreen << std::setfill('0') << std::setw(2) << std::hex << nBlue;
+
+        colorsObject.addString(color.first, sColorStream.str());
+    }
+
+    writer.addObject(AMC_API_KEY_UI_COLORS, colorsObject);
 
 }
 
-AMC::PUISystemState CUIHandler::getUISystemState()
+void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* pLegacyClientVariableHandler)
 {
-    return m_pUISystemState;
+    CJSONWriterArray menuItems(writer);
+
+    for (auto iter : m_MenuItems) {
+        CJSONWriterObject menuItem(writer);
+        menuItem.addString(AMC_API_KEY_UI_ID, iter->getID());
+        menuItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
+        menuItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon());
+        menuItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
+        menuItem.addString(AMC_API_KEY_UI_DESCRIPTION, iter->getDescription());
+        menuItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
+        menuItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        menuItems.addObject(menuItem);
+    }
+
+    writer.addArray(AMC_API_KEY_UI_MENUITEMS, menuItems);
+
+    CJSONWriterArray toolbarItems(writer);
+
+    for (auto iter : m_ToolbarItems) {
+        CJSONWriterObject toolbarItem(writer);
+        toolbarItem.addString(AMC_API_KEY_UI_ID, iter->getID());
+        toolbarItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
+        toolbarItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon());
+        toolbarItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
+        toolbarItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
+        toolbarItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        toolbarItems.addObject(toolbarItem);
+    }
+    writer.addArray(AMC_API_KEY_UI_TOOLBARITEMS, toolbarItems);
+
+
+    CJSONWriterArray pages(writer);
+    for (auto iter : m_Pages) {
+        CJSONWriterObject page(writer);
+        page.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
+
+        CJSONWriterArray modules(writer);
+        iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);
+
+        page.addArray(AMC_API_KEY_UI_MODULES, modules);
+
+        pages.addObject(page);
+    }
+    writer.addArray(AMC_API_KEY_UI_PAGES, pages);
+
+    CJSONWriterArray custompages(writer);
+    for (auto iter : m_CustomPages) {
+        CJSONWriterObject custompage(writer);
+        custompage.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
+        custompage.addString(AMC_API_KEY_UI_COMPONENTNAME, iter.second->getComponentName());
+
+        CJSONWriterArray modules(writer);
+        iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);
+
+        custompage.addArray(AMC_API_KEY_UI_MODULES, modules);
+
+        custompages.addObject(custompage);
+    }
+    writer.addArray(AMC_API_KEY_UI_CUSTOMPAGES, custompages);
+
+
+    CJSONWriterArray dialogs(writer);
+    for (auto iter : m_Dialogs) {
+        CJSONWriterObject dialog(writer);
+        dialog.addString(AMC_API_KEY_UI_DIALOGNAME, iter.second->getName());
+        dialog.addString(AMC_API_KEY_UI_DIALOGTITLE, iter.second->getTitle());
+
+        CJSONWriterArray modules(writer);
+        iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);
+
+        dialog.addArray(AMC_API_KEY_UI_MODULES, modules);
+
+        dialogs.addObject(dialog);
+    }
+    writer.addArray(AMC_API_KEY_UI_DIALOGS, dialogs);
+
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState* pFrontendState)
+{
+    CJSONWriterArray pages(writer);
+    for (auto iter : m_Pages) {
+        CJSONWriterObject pageObject(writer);
+
+        iter.second->frontendWritePageStatusToJSON(writer, pageObject, pFrontendState);
+
+        pages.addObject(pageObject);
+    }
+    writer.addArray(AMC_API_KEY_UI_PAGES, pages);
+
+}
+
+PUIFrontendDefinition CUIHandler::getFrontendDefinition()
+{
+    return m_pFrontendDefinition;
+}
 

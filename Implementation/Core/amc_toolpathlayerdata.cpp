@@ -39,8 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace AMC {
 
 
-	CToolpathCustomSegmentAttribute::CToolpathCustomSegmentAttribute(const std::string& sNameSpace, const std::string& sAttributeName, LibMCEnv::eToolpathAttributeType attributeType)
-		: m_sNameSpace (sNameSpace), m_sAttributeName (sAttributeName), m_AttributeType (attributeType), m_nAttributeID (0)
+	CToolpathCustomSegmentAttribute::CToolpathCustomSegmentAttribute(uint32_t nInternalAttributeID, const std::string& sNameSpace, const std::string& sAttributeName, LibMCEnv::eToolpathAttributeType attributeType)
+		: m_sNameSpace (sNameSpace), m_sAttributeName (sAttributeName), m_AttributeType (attributeType), m_n3MFAttributeID (0), m_nInternalAttributeID (nInternalAttributeID)
 	{
 
 	}
@@ -50,14 +50,19 @@ namespace AMC {
 
 	}
 
-	uint32_t CToolpathCustomSegmentAttribute::getAttributeID()
+	uint32_t CToolpathCustomSegmentAttribute::getInternalAttributeID()
 	{
-		return m_nAttributeID;
+		return m_nInternalAttributeID;
 	}
 
-	void CToolpathCustomSegmentAttribute::setAttributeID(uint32_t nAttributeID)
+	uint32_t CToolpathCustomSegmentAttribute::get3MFAttributeID()
 	{
-		m_nAttributeID = nAttributeID;
+		return m_n3MFAttributeID;
+	}
+
+	void CToolpathCustomSegmentAttribute::set3MFAttributeID(uint32_t nAttributeID)
+	{
+		m_n3MFAttributeID = nAttributeID;
 	}
 
 	LibMCEnv::eToolpathAttributeType CToolpathCustomSegmentAttribute::getAttributeType()
@@ -74,6 +79,39 @@ namespace AMC {
 	{
 		return m_sAttributeName;
 	}
+
+
+	CToolpathLayerProfileModifier::CToolpathLayerProfileModifier(LibMCEnv::eToolpathProfileModificationType modificationType, LibMCEnv::eToolpathProfileModificationFactor modificationFactor, double dMinValue, double dMaxValue)
+		: m_ModificationType (modificationType), m_ModificationFactor (modificationFactor), m_dMinValue (dMinValue), m_dMaxValue (dMaxValue)
+	{
+
+	}
+
+	CToolpathLayerProfileModifier::~CToolpathLayerProfileModifier()
+	{
+
+	}
+
+	LibMCEnv::eToolpathProfileModificationType CToolpathLayerProfileModifier::getModificationType()
+	{
+		return m_ModificationType;
+	}
+
+	LibMCEnv::eToolpathProfileModificationFactor CToolpathLayerProfileModifier::getModificationFactor()
+	{
+		return m_ModificationFactor;
+	}
+
+	double CToolpathLayerProfileModifier::getMinValue()
+	{
+		return m_dMinValue;
+	}
+
+	double CToolpathLayerProfileModifier::getMaxValue()
+	{
+		return m_dMaxValue;
+	}
+
 
 	CToolpathLayerProfile::CToolpathLayerProfile(const uint32_t nProfileIndex, const std::string& sUUID, const std::string& sName)
 		: m_sUUID (sUUID), m_sName (sName), m_nProfileIndex (nProfileIndex)
@@ -100,6 +138,11 @@ namespace AMC {
 	void CToolpathLayerProfile::addValue(const std::string& sNameSpace, const std::string& sValueName, const std::string& sValue)
 	{
 		m_ProfileValues.insert(std::make_pair(std::make_pair(sNameSpace, sValueName), sValue));
+	}
+
+	void CToolpathLayerProfile::addModifier(const std::string& sNameSpace, const std::string& sValueName, LibMCEnv::eToolpathProfileModificationType modificationType, LibMCEnv::eToolpathProfileModificationFactor modificationFactor, double dMinValue, double dMaxValue)
+	{
+		m_ProfileModifiers.insert(std::make_pair (std::make_pair(sNameSpace, sValueName), CToolpathLayerProfileModifier (modificationType, modificationFactor, dMinValue, dMaxValue)));
 	}
 
 	bool CToolpathLayerProfile::hasValue(const std::string& sNameSpace, const std::string& sValueName)
@@ -152,6 +195,33 @@ namespace AMC {
 		return m_nProfileIndex;
 	}
 
+	LibMCEnv::eToolpathProfileModificationType CToolpathLayerProfile::getModificationType(const std::string& sNameSpace, const std::string& sValueName)
+	{
+		auto iIter = m_ProfileModifiers.find(std::make_pair(sNameSpace, sValueName));
+		if (iIter == m_ProfileModifiers.end ())
+			return LibMCEnv::eToolpathProfileModificationType::NoModification;
+
+		return iIter->second.getModificationType();
+	}
+
+	void CToolpathLayerProfile::getModificationInformation(const std::string& sNameSpace, const std::string& sValueName, LibMCEnv::eToolpathProfileModificationFactor& modificationFactor, double& dMinValue, double& dMaxValue)
+	{
+		auto iIter = m_ProfileModifiers.find(std::make_pair(sNameSpace, sValueName));
+		if (iIter == m_ProfileModifiers.end()) {
+			modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::Unknown;
+			dMinValue = 0.0;
+			dMaxValue = 0.0;
+
+		}
+		else {
+			modificationFactor = iIter->second.getModificationFactor();
+			dMinValue = iIter->second.getMinValue();
+			dMaxValue = iIter->second.getMaxValue();
+
+		}			
+
+	}
+
 
 
 	CToolpathLayerData::CToolpathLayerData(Lib3MF::PToolpath pToolpath, Lib3MF::PToolpathLayerReader p3MFLayer, double dUnits, int32_t nZValue, const std::string& sDebugName, std::vector<PToolpathCustomSegmentAttribute> customSegmentAttributes)
@@ -167,14 +237,15 @@ namespace AMC {
 		for (auto& attribute : m_CustomSegmentAttributes) {
 			std::string sNameSpace = attribute->getNameSpace();
 			std::string sAttributeName = attribute->getAttributeName();
-			attribute->setAttributeID (p3MFLayer->FindSegmentAttributeIDByName (sNameSpace, sAttributeName));
+			attribute->set3MFAttributeID (p3MFLayer->FindSegmentAttributeIDByName (sNameSpace, sAttributeName));
 			m_CustomSegmentAttributeMap.insert (std::make_pair (std::make_pair (sNameSpace, sAttributeName), attribute));
 		}
 
+		m_Segments.reserve(nSegmentCount);
+
 		m_SegmentAttributeData.resize((size_t)nSegmentCount * m_CustomSegmentAttributes.size());
 
-		// Read segment information
-		m_Segments.resize(nSegmentCount);
+		// Read segment information		
 		for (uint32_t nSegmentIndex = 0; nSegmentIndex < nSegmentCount; nSegmentIndex++) {
 			Lib3MF::eToolpathSegmentType eType = Lib3MF::eToolpathSegmentType::Unknown;
 			uint32_t nPointCount = 0;
@@ -184,139 +255,362 @@ namespace AMC {
 			uint32_t nLocalPartID = p3MFLayer->GetSegmentPartID(nSegmentIndex);
 			uint32_t nLaserIndex = 0;
 
-			auto pSegment = &m_Segments[nSegmentIndex];
-			pSegment->m_PointCount = nPointCount;
-			pSegment->m_PointStartIndex = nTotalPointCount;
-			pSegment->m_Type = (LibMCEnv::eToolpathSegmentType) eType;
-			pSegment->m_ProfileUUID = registerUUID (sProfileUUID);
-			pSegment->m_PartUUID = registerUUID (sBuildItemUUID);
-			pSegment->m_LocalPartID = nLocalPartID;
-			pSegment->m_LaserIndex = 0;
-			pSegment->m_HasOverrideFactors = 0;
-			if (m_CustomSegmentAttributes.size() > 0) {
-				pSegment->m_AttributeData = &m_SegmentAttributeData.at((size_t)nSegmentIndex * m_CustomSegmentAttributes.size());
-				int64_t* pAttributeData = pSegment->m_AttributeData;
-				for (auto& attribute : m_CustomSegmentAttributes) {
-					switch (attribute->getAttributeType()) {
+			sToolpathLayerSegment segment;
+
+			switch (eType) {
+				case Lib3MF::eToolpathSegmentType::Polyline:
+					segment.m_Type = LibMCEnv::eToolpathSegmentType::Polyline;
+					segment.m_PointCount = nPointCount;
+					segment.m_PointStartIndex = nTotalPointCount;				
+					nTotalPointCount += nPointCount;
+					break;
+
+				case Lib3MF::eToolpathSegmentType::Loop:
+					segment.m_Type = LibMCEnv::eToolpathSegmentType::Polyline;
+					segment.m_PointCount = nPointCount + 1;
+					segment.m_PointStartIndex = nTotalPointCount;
+					nTotalPointCount += (nPointCount + 1);
+					break;
+
+				case Lib3MF::eToolpathSegmentType::Hatch:
+					segment.m_Type = LibMCEnv::eToolpathSegmentType::Hatch;
+					segment.m_PointCount = nPointCount;
+					segment.m_PointStartIndex = nTotalPointCount;
+					nTotalPointCount += nPointCount;
+					break;
+
+				default:
+					segment.m_Type = LibMCEnv::eToolpathSegmentType::Unknown;
+			}
+
+			if (segment.m_Type != LibMCEnv::eToolpathSegmentType::Unknown) {
+
+				segment.m_3MFSegmentIndex = nSegmentIndex;
+				segment.m_ProfileUUID = registerUUID(sProfileUUID);
+				segment.m_PartUUID = registerUUID(sBuildItemUUID);
+				segment.m_LocalPartID = nLocalPartID;
+				segment.m_LaserIndex = 0;
+				segment.m_TotalSubinterpolationCount = 0;
+				segment.m_HasOverrideFactors = 0;
+				if (m_CustomSegmentAttributes.size() > 0) {
+					segment.m_AttributeData = &m_SegmentAttributeData.at((size_t)nSegmentIndex * m_CustomSegmentAttributes.size());
+					int64_t* pAttributeData = segment.m_AttributeData;
+
+					for (auto& attribute : m_CustomSegmentAttributes) {
+						switch (attribute->getAttributeType()) {
 						case LibMCEnv::eToolpathAttributeType::Integer:
-							*pAttributeData = p3MFLayer->GetSegmentIntegerAttributeByID(nSegmentIndex, attribute->getAttributeID());
+							*pAttributeData = p3MFLayer->GetSegmentIntegerAttributeByID(nSegmentIndex, attribute->get3MFAttributeID());
 							break;
 						case LibMCEnv::eToolpathAttributeType::Double:
-							*((double*)pAttributeData) = p3MFLayer->GetSegmentDoubleAttributeByID(nSegmentIndex, attribute->getAttributeID());
+							*((double*)pAttributeData) = p3MFLayer->GetSegmentDoubleAttributeByID(nSegmentIndex, attribute->get3MFAttributeID());
 							break;
 						default:
 							throw ELibMCCustomException(LIBMC_ERROR_INVALIDTOOLPATHATTRIBUTETYPE, m_sDebugName);
+						}
+						pAttributeData++;
 					}
-					pAttributeData++;
+
+				}
+				else {
+					segment.m_AttributeData = nullptr;
 				}
 
-			}
-			else {
-				pSegment->m_AttributeData = nullptr;
+				m_Segments.push_back(segment);
+
+				storeProfileData(pToolpath, sProfileUUID);
 			}
 
-			storeProfileData (pToolpath, sProfileUUID);
-
-			nTotalPointCount += nPointCount;
 		}
 
 		// Read point information
 		m_Points.resize(nTotalPointCount);
 		m_OverrideFactors.resize(nTotalPointCount);
-		for (uint32_t nSegmentIndex = 0; nSegmentIndex < nSegmentCount; nSegmentIndex++) {
-			auto pSegment = &m_Segments[nSegmentIndex];
+		for (auto & segment : m_Segments) {
 
-			std::vector<Lib3MF::sDiscretePosition2D> PointData;
-			p3MFLayer->GetSegmentPointDataDiscrete(nSegmentIndex, PointData);
+			Lib3MF::eToolpathSegmentType eType = Lib3MF::eToolpathSegmentType::Unknown;
+			uint32_t nPointCount = 0;
+			p3MFLayer->GetSegmentInfo(segment.m_3MFSegmentIndex, eType, nPointCount);
 
-			if ((uint32_t)PointData.size() != pSegment->m_PointCount)
-				throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
+			switch (eType) {
+				case Lib3MF::eToolpathSegmentType::Polyline: 
+				{
+					std::vector<Lib3MF::sDiscretePosition2D> PointData;
+					p3MFLayer->GetSegmentPointDataDiscrete(segment.m_3MFSegmentIndex, PointData);
 
-			if (pSegment->m_PointCount > 0) {
+					if ((uint32_t)PointData.size() != segment.m_PointCount)
+						throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
 
-				if ((size_t) pSegment->m_PointStartIndex + pSegment->m_PointCount > m_Points.size())
-					throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
+					if (segment.m_PointCount > 0) {
 
-				auto pSrcPoint = &PointData[0];
-				auto pDstPoint = &m_Points[pSegment->m_PointStartIndex];
+						if ((size_t)segment.m_PointStartIndex + segment.m_PointCount > m_Points.size())
+							throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
 
-				for (uint32_t nPointIndex = 0; nPointIndex < pSegment->m_PointCount; nPointIndex++) {
-					
-					pDstPoint->m_Coordinates[0] = pSrcPoint->m_Coordinates[0];
-					pDstPoint->m_Coordinates[1] = pSrcPoint->m_Coordinates[1];
-					pSrcPoint++;
-					pDstPoint++;
-					
+						auto pSrcPoint = &PointData[0];
+						auto pDstPoint = &m_Points[segment.m_PointStartIndex];
+
+						for (uint32_t nPointIndex = 0; nPointIndex < segment.m_PointCount; nPointIndex++) {
+
+							pDstPoint->m_Coordinates[0] = pSrcPoint->m_Coordinates[0];
+							pDstPoint->m_Coordinates[1] = pSrcPoint->m_Coordinates[1];
+							pSrcPoint++;
+							pDstPoint++;
+
+						}
+					}
+
+					break;
 				}
 
-				for (uint32_t nFactorIndex = 0; nFactorIndex < 3; nFactorIndex++) {
+				case Lib3MF::eToolpathSegmentType::Loop: {
 
-					Lib3MF::eToolpathProfileOverrideFactor factorType = Lib3MF::eToolpathProfileOverrideFactor::Unknown;
-					uint32_t factorFlag = 0;
-					switch (nFactorIndex) {
-						case 0: factorType = Lib3MF::eToolpathProfileOverrideFactor::FactorF;
-							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_F;
-							break;
-						case 1: factorType = Lib3MF::eToolpathProfileOverrideFactor::FactorG;
-							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_G;
-							break;
-						case 2: factorType = Lib3MF::eToolpathProfileOverrideFactor::FactorH;
-							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_H;
-							break;
-					}
+					std::vector<Lib3MF::sDiscretePosition2D> PointData;
+					p3MFLayer->GetSegmentPointDataDiscrete(segment.m_3MFSegmentIndex, PointData);
 
-					if (p3MFLayer->SegmentHasOverrideFactors(nSegmentIndex, factorType)) {
+					if ((uint32_t)(PointData.size() + 1) != segment.m_PointCount)
+						throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
 
-						if (pSegment->m_Type == LibMCEnv::eToolpathSegmentType::Hatch) {
-							pSegment->m_HasOverrideFactors |= factorFlag;
+					if (segment.m_PointCount > 0) {
 
-							std::vector<Lib3MF::sHatch2DOverrides> hatchOverrides;
-							p3MFLayer->GetSegmentHatchOverrideFactors(nSegmentIndex, factorType, hatchOverrides);
+						if ((size_t)segment.m_PointStartIndex + segment.m_PointCount > m_Points.size())
+							throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
 
-							if ((uint32_t)(hatchOverrides.size() * 2) != pSegment->m_PointCount)
-								throw ELibMCCustomException(LIBMC_ERROR_INVALIDHATCHOVERRIDECOUNT, m_sDebugName);
+						auto pSrcPoint = &PointData[0];
+						auto pDstPoint = &m_Points[segment.m_PointStartIndex];
 
-							auto pSrcOverride = &hatchOverrides[0];
-							auto pDstOverride = &m_OverrideFactors.at(pSegment->m_PointStartIndex);
+						uint32_t nLoopPointCount = (uint32_t)PointData.size();
 
-							for (uint32_t nHatchIndex = 0; nHatchIndex < hatchOverrides.size(); nHatchIndex++) {
-								pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point1Override;
-								pDstOverride++;
-								pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point2Override;
-								pDstOverride++;
-								pSrcOverride++;
+						for (uint32_t nPointIndex = 0; nPointIndex < nLoopPointCount; nPointIndex++) {
 
-							}
-						}
-
-						if ((pSegment->m_Type == LibMCEnv::eToolpathSegmentType::Loop) || (pSegment->m_Type == LibMCEnv::eToolpathSegmentType::Polyline)) {
-							pSegment->m_HasOverrideFactors |= factorFlag;
-
-							std::vector<double> pointOverrides;
-							p3MFLayer->GetSegmentPointOverrideFactors(nSegmentIndex, factorType, pointOverrides);
-
-							if ((uint32_t)pointOverrides.size() != pSegment->m_PointCount)
-								throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTOVERRIDECOUNT, m_sDebugName);
-
-							auto pSrcOverride = &pointOverrides[0];
-							auto pDstOverride = &m_OverrideFactors.at(pSegment->m_PointStartIndex);
-
-							for (uint32_t nPointIndex = 0; nPointIndex < pSegment->m_PointCount; nPointIndex++) {
-								pDstOverride->m_dFactors[nFactorIndex] = *pSrcOverride;
-								pSrcOverride++;
-								pDstOverride++;
-
-							}
+							pDstPoint->m_Coordinates[0] = pSrcPoint->m_Coordinates[0];
+							pDstPoint->m_Coordinates[1] = pSrcPoint->m_Coordinates[1];
+							pSrcPoint++;
+							pDstPoint++;
 
 						}
 
+						// Close loop
+						pSrcPoint = &PointData[0];
+						pDstPoint->m_Coordinates[0] = pSrcPoint->m_Coordinates[0];
+						pDstPoint->m_Coordinates[1] = pSrcPoint->m_Coordinates[1];
 					}
+
+					break;
+				}
+
+				case Lib3MF::eToolpathSegmentType::Hatch: {
+
+					std::vector<Lib3MF::sDiscreteHatch2D> HatchData;
+					p3MFLayer->GetSegmentHatchDataDiscrete(segment.m_3MFSegmentIndex, HatchData);
+
+					if ((uint32_t)(HatchData.size() * 2) != segment.m_PointCount)
+						throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
+
+					if (segment.m_PointCount > 0) {
+
+						if ((size_t)segment.m_PointStartIndex + segment.m_PointCount > m_Points.size())
+							throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTCOUNT, m_sDebugName);
+
+						auto pSrcHatch = &HatchData[0];
+						auto pDstPoint = &m_Points[segment.m_PointStartIndex];
+
+						uint32_t nHatchCount = (uint32_t)HatchData.size();
+
+						for (uint32_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
+
+							pDstPoint->m_Coordinates[0] = pSrcHatch->m_Point1Coordinates[0];
+							pDstPoint->m_Coordinates[1] = pSrcHatch->m_Point1Coordinates[1];
+							pDstPoint++;
+
+							pDstPoint->m_Coordinates[0] = pSrcHatch->m_Point2Coordinates[0];
+							pDstPoint->m_Coordinates[1] = pSrcHatch->m_Point2Coordinates[1];
+							pDstPoint++;
+
+							pSrcHatch++;
+
+						}
+
+				
+						for (uint32_t nFactorIndex = 0; nFactorIndex < 3; nFactorIndex++) {
+
+							Lib3MF::eToolpathProfileModificationFactor factorType = Lib3MF::eToolpathProfileModificationFactor::Unknown;
+							uint32_t factorFlag = 0;
+							switch (nFactorIndex) {
+							case 0: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorF;
+								factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_F;
+								break;
+							case 1: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorG;
+								factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_G;
+								break;
+							case 2: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorH;
+								factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_H;
+								break;
+							}
+
+							if (p3MFLayer->SegmentHasModificationFactors(segment.m_3MFSegmentIndex, factorType)) {
+
+								segment.m_HasOverrideFactors |= factorFlag;
+
+								std::vector<uint32_t> nonLinearCounts;
+								std::vector<Lib3MF::sHatchModificationInterpolationData> nonLinearValues;
+
+								std::vector<Lib3MF::sHatch2DFactors> hatchFactors;
+								p3MFLayer->GetLinearSegmentHatchModificationFactors(segment.m_3MFSegmentIndex, factorType, hatchFactors);
+								p3MFLayer->GetSegmentAllNonlinearHatchesModificationInterpolation(segment.m_3MFSegmentIndex, factorType, nonLinearCounts, nonLinearValues);
+
+								if ((uint32_t)(hatchFactors.size() * 2) != segment.m_PointCount)
+									throw ELibMCCustomException(LIBMC_ERROR_INVALIDHATCHOVERRIDECOUNT, m_sDebugName);
+
+								size_t nInterpolationDataStartIndex = m_InterpolationData.size();
+								if (nonLinearValues.size() > 0) {
+									for (auto & interpolationData : nonLinearValues)
+										m_InterpolationData.push_back(interpolationData);
+								}
+
+								if (hatchFactors.size() > 0) {
+
+									auto pSrcOverride = &hatchFactors[0];
+									auto pDstOverride = &m_OverrideFactors.at(segment.m_PointStartIndex);
+
+									uint32_t nTotalSubInterpolationCount = 0;
+
+									for (uint32_t nHatchIndex = 0; nHatchIndex < hatchFactors.size(); nHatchIndex++) {
+										uint32_t nSubInterpolationCount = 0;
+										Lib3MF::sHatchModificationInterpolationData* pSubInterpolationData = nullptr;
+										if (nonLinearCounts.size() > 0) {
+											nSubInterpolationCount = nonLinearCounts.at(nHatchIndex);
+											pSubInterpolationData = &m_InterpolationData.at(nInterpolationDataStartIndex + nTotalSubInterpolationCount);
+										}
+
+										pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point1Factor;
+										pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
+										pDstOverride->m_pSubInterpolationData = pSubInterpolationData;
+										pDstOverride++;
+										pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point2Factor;
+										pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
+										pDstOverride->m_pSubInterpolationData = pSubInterpolationData;
+										pDstOverride++;
+										pSrcOverride++;
+
+										nTotalSubInterpolationCount += nSubInterpolationCount;
+
+									}
+
+									if (nTotalSubInterpolationCount != nonLinearValues.size())
+										throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+
+									segment.m_TotalSubinterpolationCount = nTotalSubInterpolationCount;
+								}
+								
+							}
+						}
+
+
+					}
+
+					break;
+				}
 
 				}
 
 			}
 
-		}
+
+
+				/*for (uint32_t nFactorIndex = 0; nFactorIndex < 3; nFactorIndex++) {
+
+					Lib3MF::eToolpathProfileModificationFactor factorType = Lib3MF::eToolpathProfileModificationFactor::Unknown;
+					uint32_t factorFlag = 0;
+					switch (nFactorIndex) {
+						case 0: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorF;
+							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_F;
+							break;
+						case 1: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorG;
+							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_G;
+							break;
+						case 2: factorType = Lib3MF::eToolpathProfileModificationFactor::FactorH;
+							factorFlag = TOOLPATHSEGMENTOVERRIDEFACTOR_H;
+							break;
+					}
+
+					if (p3MFLayer->SegmentHasModificationFactors(nSegmentIndex, factorType)) {
+
+						if (pSegment->m_Type == LibMCEnv::eToolpathSegmentType::Hatch) {
+							pSegment->m_HasOverrideFactors |= factorFlag;
+
+							std::vector<uint32_t> nonLinearCounts;
+							std::vector<Lib3MF::sHatchModificationInterpolationData> nonLinearValues;
+
+							std::vector<Lib3MF::sHatch2DFactors> hatchFactors;
+							p3MFLayer->GetLinearSegmentHatchModificationFactors(nSegmentIndex, factorType, hatchFactors);
+							p3MFLayer->GetSegmentAllNonlinearHatchesModificationInterpolation(nSegmentIndex, factorType, nonLinearCounts, nonLinearValues);
+
+							if ((uint32_t)(hatchFactors.size() * 2) != pSegment->m_PointCount)
+								throw ELibMCCustomException(LIBMC_ERROR_INVALIDHATCHOVERRIDECOUNT, m_sDebugName);
+
+							if (hatchFactors.size() > 0) {
+
+								auto pSrcOverride = &hatchFactors[0];
+								auto pDstOverride = &m_OverrideFactors.at(pSegment->m_PointStartIndex);
+
+								uint32_t nTotalSubInterpolationCount = 0;
+
+								for (uint32_t nHatchIndex = 0; nHatchIndex < hatchFactors.size(); nHatchIndex++) {
+									uint32_t nSubInterpolationCount = 0;
+									if (nonLinearCounts.size () > 0)
+										nSubInterpolationCount = nonLinearCounts.at(nHatchIndex);
+
+									pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point1Factor;
+									pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
+									pDstOverride++;
+									pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point2Factor;
+									pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
+									pDstOverride++;
+									pSrcOverride++;
+
+									nTotalSubInterpolationCount += nSubInterpolationCount;
+
+								}
+
+								if (nTotalSubInterpolationCount != nonLinearValues.size ())
+									throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+
+							}
+						}
+
+						if (pSegment->m_Type == LibMCEnv::eToolpathSegmentType::Polyline) {
+							pSegment->m_HasOverrideFactors |= factorFlag;
+
+							std::vector<double> pointFactors;
+							p3MFLayer->GetSegmentPointModificationFactors(nSegmentIndex, factorType, pointFactors);
+
+							if ((uint32_t)pointFactors.size() != pSegment->m_PointCount)
+								throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTOVERRIDECOUNT, m_sDebugName);
+
+							if (pointFactors.size() > 0) {
+
+								auto pSrcOverride = &pointFactors[0];
+								auto pDstOverride = &m_OverrideFactors.at(pSegment->m_PointStartIndex);
+
+								for (uint32_t nPointIndex = 0; nPointIndex < pSegment->m_PointCount; nPointIndex++) {
+									uint32_t nSubInterpolationCount = 0;
+
+									pDstOverride->m_dFactors[nFactorIndex] = *pSrcOverride;
+									pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
+									pSrcOverride++;
+									pDstOverride++;
+
+								}
+							}
+
+						}
+
+					} 
+
+				}  
+
+			}
+
+		} */
 
 		uint32_t nCustomDataCount = p3MFLayer->GetCustomDataCount();
 		for (uint32_t nCustomDataIndex = 0; nCustomDataIndex < nCustomDataCount; nCustomDataIndex++) {
@@ -361,6 +655,16 @@ namespace AMC {
 
 		return m_Segments[nSegmentIndex].m_Type;
 	}
+
+	uint32_t CToolpathLayerData::getSegmentTotalSubinterpolationCount(const uint32_t nSegmentIndex)
+	{
+		if (nSegmentIndex >= m_Segments.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
+
+		return m_Segments[nSegmentIndex].m_TotalSubinterpolationCount;
+
+	}
+
 
 	void CToolpathLayerData::storePointsToBufferInUnits(const uint32_t nSegmentIndex, LibMCEnv::sPosition2D* pPositionData)
 	{
@@ -529,7 +833,7 @@ namespace AMC {
 	{
 		auto iIter = m_CustomSegmentAttributeMap.find(std::make_pair(sNameSpace, sAttributeName));
 		if (iIter != m_CustomSegmentAttributeMap.end()) {
-			nAttributeID = iIter->second->getAttributeID ();
+			nAttributeID = iIter->second->getInternalAttributeID ();
 			attributeType = iIter->second->getAttributeType();
 			return true;
 		}
@@ -591,7 +895,7 @@ namespace AMC {
 
 			auto p3MFProfile = pToolpath->GetProfileByUUID(sProfileUUID);
 			std::string sProfileName = p3MFProfile->GetName();			
-			PToolpathLayerProfile pLayerProfile = std::make_shared<CToolpathLayerProfile> (m_ProfileMap.size (), sProfileUUID, sProfileName);
+			PToolpathLayerProfile pLayerProfile = std::make_shared<CToolpathLayerProfile> ((uint32_t)m_ProfileMap.size (), sProfileUUID, sProfileName);
 
 			uint32_t nParameterCount = p3MFProfile->GetParameterCount();
 			for (uint32_t nParameterIndex = 0; nParameterIndex < nParameterCount; nParameterIndex++) {
@@ -600,6 +904,56 @@ namespace AMC {
 				std::string sParameterValue = p3MFProfile->GetParameterValue(sParameterNamespace, sParameterName);
 
 				pLayerProfile->addValue(sParameterNamespace, sParameterName, sParameterValue);
+			}
+
+			uint32_t nModifierCount = p3MFProfile->GetModifierCount();
+			for (uint32_t nModifierIndex = 0; nModifierIndex < nModifierCount; nModifierIndex++) {
+				double dMinValue = 0.0;
+				double dMaxValue = 0.0;
+				std::string sNameSpace;
+				std::string sValue;
+				Lib3MF::eToolpathProfileModificationType modificationType3MF = Lib3MF::eToolpathProfileModificationType::NoModification;
+				Lib3MF::eToolpathProfileModificationFactor modificationFactor3MF = Lib3MF::eToolpathProfileModificationFactor::Unknown;
+
+				p3MFProfile->GetModifierInformationByIndex(nModifierIndex, sNameSpace, sValue, modificationType3MF, modificationFactor3MF, dMinValue, dMaxValue);
+
+				LibMCEnv::eToolpathProfileModificationType modificationType = LibMCEnv::eToolpathProfileModificationType::NoModification;
+				LibMCEnv::eToolpathProfileModificationFactor modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::Unknown;
+				switch (modificationType3MF) {
+					case Lib3MF::eToolpathProfileModificationType::NoModification:
+						modificationType = LibMCEnv::eToolpathProfileModificationType::NoModification;
+						break;
+					case Lib3MF::eToolpathProfileModificationType::ConstantModification:
+						modificationType = LibMCEnv::eToolpathProfileModificationType::ConstantModification;
+						break;
+					case Lib3MF::eToolpathProfileModificationType::LinearModification:
+						modificationType = LibMCEnv::eToolpathProfileModificationType::LinearModification;
+						break;
+					case Lib3MF::eToolpathProfileModificationType::NonlinearModification:
+						modificationType = LibMCEnv::eToolpathProfileModificationType::NonlinearModification;
+						break;
+					default:
+						throw ELibMCCustomException(LIBMC_ERROR_INVALIDTOOLPATHMODIFIERTYPE, m_sDebugName);
+
+				}
+
+				switch (modificationFactor3MF) {
+				case Lib3MF::eToolpathProfileModificationFactor::FactorF:
+					modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::FactorF;
+					break;
+				case Lib3MF::eToolpathProfileModificationFactor::FactorG:
+					modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::FactorG;
+					break;
+				case Lib3MF::eToolpathProfileModificationFactor::FactorH:
+					modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::FactorH;
+					break;
+				default:
+					throw ELibMCCustomException(LIBMC_ERROR_INVALIDTOOLPATHMODIFIERFACTOR, m_sDebugName);
+
+				}
+
+
+				pLayerProfile->addModifier(sNameSpace, sValue, modificationType, modificationFactor, dMinValue, dMaxValue);
 			}
 
 
@@ -684,18 +1038,18 @@ namespace AMC {
 
 	}
 
-	bool CToolpathLayerData::segmentHasOverrideFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor)
+	bool CToolpathLayerData::segmentHasOverrideFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor)
 	{
 		if (nSegmentIndex >= m_Segments.size())
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
 
 		auto pSegment = &m_Segments[nSegmentIndex];
 		switch (eOverrideFactor) {
-		case LibMCEnv::eToolpathProfileOverrideFactor::FactorF:
+		case LibMCEnv::eToolpathProfileModificationFactor::FactorF:
 			return (pSegment->m_HasOverrideFactors | TOOLPATHSEGMENTOVERRIDEFACTOR_F) != 0;
-		case LibMCEnv::eToolpathProfileOverrideFactor::FactorG:
+		case LibMCEnv::eToolpathProfileModificationFactor::FactorG:
 			return (pSegment->m_HasOverrideFactors | TOOLPATHSEGMENTOVERRIDEFACTOR_G) != 0;
-		case LibMCEnv::eToolpathProfileOverrideFactor::FactorH:
+		case LibMCEnv::eToolpathProfileModificationFactor::FactorH:
 			return (pSegment->m_HasOverrideFactors | TOOLPATHSEGMENTOVERRIDEFACTOR_H) != 0;
 
 		default:
@@ -703,7 +1057,65 @@ namespace AMC {
 		}
 	}
 
-	void CToolpathLayerData::storePointOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor, double* pOverrideData)
+	void CToolpathLayerData::getHatchSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nHatchIndex, uint32_t& nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData*& pSubInterpolationData)
+	{
+		if (nSegmentIndex >= m_Segments.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
+
+		auto pSegment = &m_Segments[nSegmentIndex];
+		uint32_t nPointCount = pSegment->m_PointCount;
+		uint32_t nStartIndex = pSegment->m_PointStartIndex;
+		if (pSegment->m_PointCount > 0) {
+			uint32_t nPointIndex = nStartIndex + nHatchIndex * 2;
+			pSubInterpolationData = m_OverrideFactors.at(nPointIndex).m_pSubInterpolationData;
+			nSubInterpolationCount = m_OverrideFactors.at(nPointIndex).m_nSubInterpolationCount;
+		}
+		else {
+			pSubInterpolationData = nullptr;
+			nSubInterpolationCount = 0;
+		}
+
+	}
+
+
+	void CToolpathLayerData::getHatchModificationFactors(uint32_t nSegmentIndex, uint32_t nHatchIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double& dFactor1, double& dFactor2)
+	{
+		if (nSegmentIndex >= m_Segments.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
+
+		auto pSegment = &m_Segments[nSegmentIndex];
+		uint32_t nPointCount = pSegment->m_PointCount;
+		uint32_t nStartIndex = pSegment->m_PointStartIndex;
+		if (pSegment->m_PointCount > 0) {
+			uint32_t nPointIndex = nStartIndex + nHatchIndex * 2;
+
+			switch (eModificationFactor) {
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorF: {
+				dFactor1 = m_OverrideFactors.at(nPointIndex).m_dFactors[0];
+				dFactor2 = m_OverrideFactors.at(nPointIndex + 1).m_dFactors[0];
+				break;
+			}
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorG: {
+				dFactor1 = m_OverrideFactors.at(nPointIndex).m_dFactors[1];
+				dFactor2 = m_OverrideFactors.at(nPointIndex + 1).m_dFactors[1];
+				break;
+			}
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorH: {
+				dFactor1 = m_OverrideFactors.at(nPointIndex).m_dFactors[2];
+				dFactor2 = m_OverrideFactors.at(nPointIndex + 1).m_dFactors[2];
+				break;
+			}
+			default:
+				throw ELibMCCustomException(LIBMC_ERROR_INVALIDOVERRIDEFACTORINDEX, std::to_string((int)eModificationFactor));
+
+			}
+
+		}
+
+	}
+
+
+/*	void CToolpathLayerData::storePointOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor, double* pOverrideData)
 	{
 		if (nSegmentIndex >= m_Segments.size())
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
@@ -715,15 +1127,15 @@ namespace AMC {
 
 			uint32_t nFactorIndex = 0;
 			switch (eOverrideFactor) {
-				case LibMCEnv::eToolpathProfileOverrideFactor::FactorF: {
+				case LibMCEnv::eToolpathProfileModificationFactor::FactorF: {
 					nFactorIndex = 0;
 					break;
 				}
-				case LibMCEnv::eToolpathProfileOverrideFactor::FactorG: {
+				case LibMCEnv::eToolpathProfileModificationFactor::FactorG: {
 					nFactorIndex = 1;
 					break;
 				}
-				case LibMCEnv::eToolpathProfileOverrideFactor::FactorH: {
+				case LibMCEnv::eToolpathProfileModificationFactor::FactorH: {
 					nFactorIndex = 2;
 					break;
 				}
@@ -742,7 +1154,7 @@ namespace AMC {
 	}
 
 
-	void CToolpathLayerData::storeHatchOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor, LibMCEnv::sHatch2DOverrides* pOverrideData)
+	void CToolpathLayerData::storeHatchOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor, LibMCEnv::sHatch2DModificationFactors* pOverrideData)
 	{
 		if (nSegmentIndex >= m_Segments.size())
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
@@ -755,15 +1167,15 @@ namespace AMC {
 
 			uint32_t nFactorIndex = 0;
 			switch (eOverrideFactor) {
-			case LibMCEnv::eToolpathProfileOverrideFactor::FactorF: {
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorF: {
 				nFactorIndex = 0;
 				break;
 			}
-			case LibMCEnv::eToolpathProfileOverrideFactor::FactorG: {
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorG: {
 				nFactorIndex = 1;
 				break;
 			}
-			case LibMCEnv::eToolpathProfileOverrideFactor::FactorH: {
+			case LibMCEnv::eToolpathProfileModificationFactor::FactorH: {
 				nFactorIndex = 2;
 				break;
 			}
@@ -776,14 +1188,15 @@ namespace AMC {
 			for (uint32_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
 				auto& overrideFactor1 = m_OverrideFactors.at(nStartIndex + nHatchIndex * 2);
 				auto& overrideFactor2 = m_OverrideFactors.at(nStartIndex + nHatchIndex * 2 + 1);
-				pTarget->m_Point1Override = overrideFactor1.m_dFactors[nFactorIndex];
-				pTarget->m_Point2Override = overrideFactor2.m_dFactors[nFactorIndex];
+				pTarget->m_Point1Factor = overrideFactor1.m_dFactors[nFactorIndex];
+				pTarget->m_Point2Factor = overrideFactor2.m_dFactors[nFactorIndex];
+				pTarget->m_NumberOfNonLinearInterpolationBases = overrideFactor1.m_nSubInterpolationCount;
 				pTarget++;
 			}
 
 		}
 
-	}
+	} */
 
 
 	void CToolpathLayerData::calculateExtents(int32_t & nMinX, int32_t & nMinY, int32_t & nMaxX, int32_t & nMaxY)
@@ -796,7 +1209,6 @@ namespace AMC {
 
 		for (auto& segment : m_Segments) {
 			switch (segment.m_Type) {
-			case LibMCEnv::eToolpathSegmentType::Loop:
 			case LibMCEnv::eToolpathSegmentType::Polyline:
 			case LibMCEnv::eToolpathSegmentType::Hatch:
 
@@ -861,6 +1273,10 @@ namespace AMC {
 			return "laserondelay";
 		case LibMCEnv::eToolpathProfileValueType::LaserOffDelay:
 			return "laseroffdelay";
+		case LibMCEnv::eToolpathProfileValueType::PreSegmentDelay:
+			return "predelay";
+		case LibMCEnv::eToolpathProfileValueType::PostSegmentDelay:
+			return "postdelay";
 		default:
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDPROFILEVALUETYPE, std::to_string ((int)eValueType));
 		}

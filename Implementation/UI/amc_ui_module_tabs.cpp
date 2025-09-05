@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 CUIModule_Tabs::CUIModule_Tabs(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode))
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -80,7 +80,7 @@ std::string CUIModule_Tabs::getCaption()
 }
 
 
-void CUIModule_Tabs::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_Tabs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULEUUID, getUUID());
@@ -90,7 +90,7 @@ void CUIModule_Tabs::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObjec
 	CJSONWriterArray tabsNode(writer);
 	for (auto tab : m_Tabs) {
 		CJSONWriterObject tabObject(writer);
-		tab->writeDefinitionToJSON (writer, tabObject, pClientVariableHandler);
+		tab->writeLegacyDefinitionToJSON(writer, tabObject, pLegacyClientVariableHandler);
 		tabsNode.addObject(tabObject);
 	}
 	moduleObject.addArray(AMC_API_KEY_UI_TABS, tabsNode);

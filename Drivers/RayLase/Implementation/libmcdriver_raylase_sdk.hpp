@@ -218,17 +218,17 @@ namespace LibMCDriver_Raylase {
 		typedef int64_t rlListHandle;
 
 		typedef rlHandle(RAYLASE_CALLINGCONVENTION* PrlConnect) (const char * pszAddress, int32_t nPort);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlIsConnected) (rlHandle handle, bool * pbIsConnected);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlIsConnected) (rlHandle handle, uint32_t* pbIsConnected);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlDisconnect) (rlHandle handle);
 		
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSystemResetToDefaults) (rlHandle handle);
 
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserLaserOn) (rlHandle handle);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserLaserOff) (rlHandle handle);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserIsPilotEnabled) (rlHandle handle, bool & enabled);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserEnablePilot) (rlHandle handle, bool enable);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserIsLaserArmed) (rlHandle handle, bool & armed);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserArmLaser) (rlHandle handle, bool arm);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserIsPilotEnabled) (rlHandle handle, uint32_t & enabled);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserEnablePilot) (rlHandle handle, uint32_t enable);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserIsLaserArmed) (rlHandle handle, uint32_t& armed);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserArmLaser) (rlHandle handle, uint32_t arm);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlLaserReadLaserStatus) (rlHandle handle, uint32_t & laserStatus);
 
 		typedef rlListHandle(RAYLASE_CALLINGCONVENTION* PrlListAllocate) (rlHandle handle);
@@ -246,15 +246,20 @@ namespace LibMCDriver_Raylase {
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendLaserOffDelay) (rlListHandle handle, double laserOffDelay);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendJumpAbs2D) (rlListHandle handle, double x, double y);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendMarkAbs2D) (rlListHandle handle, double x, double y);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendJumpAbs3D) (rlListHandle handle, double x, double y, double z);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendMarkAbs3D) (rlListHandle handle, double x, double y, double z);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendGpioValue) (rlListHandle handle, eRLIOPort port, eRLPinAction action, uint32_t nValue);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAppendSleep) (rlListHandle handle, double dDelay);
+		
 
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListSet) (rlHandle handle, int32_t listID, rlListHandle listHandle, bool append, int32_t executionLimit);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListExecute) (rlHandle handle, int32_t listID);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListWaitForListIdle) (rlHandle handle, int32_t timeOutInMilliseconds, bool & successful, int32_t & listID);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListWaitForListDone) (rlHandle handle, int32_t timeOutInMilliseconds, bool& successful, int32_t& listID);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListWaitForListIdle) (rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t & listID);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListWaitForListDone) (rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t& listID);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListDelete) (rlHandle handle, int32_t listID, bool bFromDisk);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListResetExecution) (rlHandle handle);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListAbortExecution) (rlHandle handle);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListIsExecutionInProgress) (rlHandle handle, bool * pbInProgress);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlListIsExecutionInProgress) (rlHandle handle, uint32_t * pbInProgress);
 
 		typedef void(RAYLASE_CALLINGCONVENTION* PrlGetLastError) (char * pBuffer, int32_t nBufferSize);
 		typedef int32_t(RAYLASE_CALLINGCONVENTION* PrlGetLastErrorLen) ();
@@ -422,8 +427,8 @@ namespace LibMCDriver_Raylase {
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiGetConfig) (rlHandle handle, rlSpiConfig* pConfig);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiSetConfig) (rlHandle handle, rlSpiConfig* pConfig);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiTransmit) (rlHandle handle, int32_t nModule, uint32_t * pTransmitMessage, uint32_t nTransmitMessageLen, uint32_t bAsync);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiTransceive) (rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, int32_t nTimeoutInMS, uint32_t * pBuffer, uint32_t nBufferSize, uint32_t nReceiveLength);
-		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiReceive) (rlHandle handle, int32_t nModule,uint32_t nReadCount, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t nReceiveLength);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiTransceive) (rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, int32_t nTimeoutInMS, uint32_t * pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength);
+		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiReceive) (rlHandle handle, int32_t nModule,uint32_t nReadCount, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength);
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlSfioSpiWaitForActiveTransfersDone) (rlHandle handle, int32_t nModule);
 
 		typedef rlResult(RAYLASE_CALLINGCONVENTION* PrlPowerCorrectionCreate) (rlHandle handle, rlOpticalParameters * parameters);
@@ -511,6 +516,8 @@ namespace LibMCDriver_Raylase {
 			PrlListAppendLaserOffDelay ptrListAppendLaserOffDelay = nullptr;
 			PrlListAppendJumpAbs2D ptrListAppendJumpAbs2D = nullptr;
 			PrlListAppendMarkAbs2D ptrListAppendMarkAbs2D = nullptr;
+			PrlListAppendJumpAbs3D ptrListAppendJumpAbs3D = nullptr;
+			PrlListAppendMarkAbs3D ptrListAppendMarkAbs3D = nullptr;
 			PrlListSet ptrListSet = nullptr;
 			PrlListExecute ptrListExecute = nullptr;
 			PrlListWaitForListIdle ptrListWaitForListIdle = nullptr;
@@ -519,6 +526,8 @@ namespace LibMCDriver_Raylase {
 			PrlListResetExecution ptrListResetExecution = nullptr;
 			PrlListAbortExecution ptrListAbortExecution = nullptr;
 			PrlListIsExecutionInProgress ptrListIsExecutionInProgress = nullptr;
+			PrlListAppendGpioValue ptrListAppendGpioValue = nullptr;
+			PrlListAppendSleep ptrListAppendSleep = nullptr;
 
 			PrlGetLastError ptrGetLastError = nullptr;
 			PrlGetLastErrorLen ptrGetLastErrorLen = nullptr;
@@ -744,14 +753,14 @@ namespace LibMCDriver_Raylase {
 			void checkError(int32_t statusCode, const std::string & sDebugMessage = "");
 
 			rlHandle rlConnect (const char* pszAddress, int32_t nPort);
-			rlResult rlIsConnected (rlHandle handle, bool* pbIsConnected);
+			rlResult rlIsConnected (rlHandle handle, uint32_t* pbIsConnected);
 			rlResult rlDisconnect (rlHandle handle);
 			rlResult rlSystemResetToDefaults (rlHandle handle);
 			rlResult rlLaserLaserOn (rlHandle handle);
 			rlResult rlLaserLaserOff (rlHandle handle);
-			rlResult rlLaserIsPilotEnabled (rlHandle handle, bool& enabled);
+			rlResult rlLaserIsPilotEnabled (rlHandle handle, uint32_t& enabled);
 			rlResult rlLaserEnablePilot (rlHandle handle, bool enable);
-			rlResult rlLaserIsLaserArmed (rlHandle handle, bool& armed);
+			rlResult rlLaserIsLaserArmed (rlHandle handle, uint32_t& armed);
 			rlResult rlLaserArmLaser (rlHandle handle, bool arm);
 			rlResult rlLaserReadLaserStatus (rlHandle handle, uint32_t & laserStatusField);
 
@@ -771,16 +780,20 @@ namespace LibMCDriver_Raylase {
 			rlResult rlListAppendLaserOffDelay (rlListHandle handle, double laserOffDelay);
 			rlResult rlListAppendJumpAbs2D (rlListHandle handle, double x, double y);
 			rlResult rlListAppendMarkAbs2D (rlListHandle handle, double x, double y);
+			rlResult rlListAppendJumpAbs3D(rlListHandle handle, double x, double y, double z);
+			rlResult rlListAppendMarkAbs3D(rlListHandle handle, double x, double y, double z);
+			rlResult rlListAppendGpioValue (rlListHandle, eRLIOPort port, eRLPinAction action, uint32_t nValue);
+			rlResult rlListAppendSleep (rlListHandle handle, double dDelay);
 
 			rlResult rlListSet (rlHandle handle, int32_t listID, rlListHandle listHandle, bool append, int32_t executionLimit);
 			rlResult rlListExecute (rlHandle handle, int32_t listID);
-			rlResult rlListWaitForListIdle (rlHandle handle, int32_t timeOutInMilliseconds, bool& successful, int32_t& listID);
-			rlResult rlListWaitForListDone (rlHandle handle, int32_t timeOutInMilliseconds, bool& successful, int32_t& listID);
+			rlResult rlListWaitForListIdle (rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t& listID);
+			rlResult rlListWaitForListDone (rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t& listID);
 			rlResult rlListDelete (rlHandle handle, int32_t listID, bool bFromDisk);
 
 			rlResult rlListResetExecution(rlHandle handle);
 			rlResult rlListAbortExecution(rlHandle handle);
-			rlResult rlListIsExecutionInProgress(rlHandle handle, bool & bInProgress);
+			rlResult rlListIsExecutionInProgress(rlHandle handle, uint32_t & bInProgress);
 
 			rlResult rlEnableCommandLogging (rlHandle handle, const char* pszPath, int32_t truncateArguments);
 			rlResult rlDisableCommandLogging (rlHandle handle);
@@ -792,7 +805,6 @@ namespace LibMCDriver_Raylase {
 			rlResult rlConfigurationAbortUpdate (rlHandle handle);
 			rlResult rlConfigurationIsUpdateActive (rlHandle handle, uint32_t* pbIsActive);
 
-			uint32_t rlGpioConfigMemorySize ();
 			rlResult rlGpioInitConfig (rlGpioConfig* pConfig);
 			rlResult rlGpioLoadConfig (rlHandle handle);
 			rlResult rlGpioStoreConfig (rlHandle handle);
@@ -816,7 +828,6 @@ namespace LibMCDriver_Raylase {
 			rlResult rlGpioGetOutput (rlHandle handle, eRLIOPort port, uint32_t& nValue);
 			rlResult rlGpioWrite (rlHandle handle, eRLIOPort port, eRLPinAction action, uint32_t nValue);
 
-			uint32_t rlSystemConfigMemorySize ();
 			rlResult rlSystemInitConfig (rlSystemConfig* pConfig);
 			rlResult rlSystemLoadConfig (rlHandle handle);
 			rlResult rlSystemStoreConfig (rlHandle handle);
@@ -947,8 +958,8 @@ namespace LibMCDriver_Raylase {
 			rlResult rlSfioSpiGetConfig (rlHandle handle, rlSpiConfig* pConfig);
 			rlResult rlSfioSpiSetConfig (rlHandle handle, rlSpiConfig* pConfig);
 			rlResult rlSfioSpiTransmit (rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, uint32_t bAsync);
-			rlResult rlSfioSpiTransceive (rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t nReceiveLength);
-			rlResult rlSfioSpiReceive (rlHandle handle, int32_t nModule, uint32_t nReadCount, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t nReceiveLength);
+			rlResult rlSfioSpiTransceive (rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength);
+			rlResult rlSfioSpiReceive (rlHandle handle, int32_t nModule, uint32_t nReadCount, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength);
 			rlResult rlSfioSpiWaitForActiveTransfersDone (rlHandle handle, int32_t nModule);
 
 			rlResult rlPowerCorrectionCreate (rlHandle handle, rlOpticalParameters* parameters);

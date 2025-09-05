@@ -48,6 +48,9 @@ Abstract: This is the class declaration of CWorkingDirectory
 // Include custom headers here.
 #include "amc_resourcepackage.hpp"
 #include "amc_logger.hpp"
+#include "amc_processdirectory.hpp"
+#include "Common/common_chrono.hpp"
+
 
 namespace LibMCEnv {
 namespace Impl {
@@ -62,9 +65,11 @@ private:
 
 protected:
 
-    AMC::PResourcePackage m_pResourcePackage;
+    AMC::PResourcePackage m_pDriverResourcePackage;
+    AMC::PResourcePackage m_pMachineResourcePackage;
 
-    PWorkingFileMonitor m_pWorkingFileMonitor;
+    AMC::WProcessDirectory m_pProcessDirectory;
+    AMC::PProcessDirectoryStructure m_pProcessDirectoryStructure;
 
     std::string m_sTempFileNamePrefix;
 
@@ -72,17 +77,23 @@ protected:
 
 public:
 
-    CWorkingDirectory(const std::string & sBasePath, AMC::PResourcePackage pResourcePackage);
+    CWorkingDirectory(AMC::PProcessDirectoryStructure pProcessDirectoryStructure, AMC::WProcessDirectory pProcessDirectory, AMC::PResourcePackage pDriverResourcePackage, AMC::PResourcePackage pMachineResourcePackage, AMCCommon::PChrono pGlobalChrono, AMC::PLogger pLogger);
 
     ~CWorkingDirectory();
 
     bool IsActive() override;
+
+    IWorkingDirectory* CreateSubDirectory(const std::string& sDirectoryName) override;
+
+    AMC::WProcessDirectory getProcessDirectory();
 
 	std::string GetAbsoluteFilePath() override;
 
 	IWorkingFile * StoreCustomData(const std::string & sFileName, const LibMCEnv_uint64 nDataBufferBufferSize, const LibMCEnv_uint8 * pDataBufferBuffer) override;
 
 	IWorkingFile * StoreDriverData(const std::string & sFileName, const std::string & sIdentifier) override;
+
+    IWorkingFile* StoreMachineResourceData(const std::string& sFileName, const std::string& sIdentifier) override;
 
     IWorkingFile* StoreCustomString(const std::string& sFileName, const std::string& sDataString) override;
 
@@ -92,10 +103,13 @@ public:
 
 	IWorkingFile* StoreDriverDataInTempFile(const std::string& sExtension, const std::string& sIdentifier) override;
 
+    IWorkingFile* StoreMachineResourceDataInTempFile(const std::string& sExtension, const std::string& sIdentifier) override;
 
 	bool CleanUp() override;
 
 	IWorkingFile* AddManagedFile(const std::string& sFileName) override;
+
+    IWorkingFile* AddManagedTempFile(const std::string& sExtension) override;
 
 	bool HasUnmanagedFiles() override;
 
@@ -104,6 +118,11 @@ public:
 	IWorkingFileIterator* RetrieveManagedFiles() override;
 
 	IWorkingFileIterator* RetrieveAllFiles() override;
+
+    IWorkingFileWriter* AddBufferedWriter(const std::string& sFileName, const LibMCEnv_uint32 nBufferSizeInkB) override;
+
+    IWorkingFileWriter* AddBufferedWriterTempFile(const std::string& sExtension, const LibMCEnv_uint32 nBufferSizeInkB) override;
+
 
 };
 

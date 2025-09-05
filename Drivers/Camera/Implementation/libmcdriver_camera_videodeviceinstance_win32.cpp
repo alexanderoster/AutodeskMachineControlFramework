@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Abstract: This is a stub class definition of CVideoDevice
 
 */
+#define NOMINMAX
 
 #include "libmcdriver_camera_videodeviceinstance_win32.hpp"
 #include "libmcdriver_camera_interfaceexception.hpp"
@@ -55,7 +56,11 @@ extern std::string wstring_to_utf8(const std::wstring& wstr);
 **************************************************************************************************************************/
 
 CVideoDeviceInstance_Win32::CVideoDeviceInstance_Win32(const std::string& sIdentifier, const std::string& sOSName, const std::string& sFriendlyName)
-    : m_sIdentifier (sIdentifier), m_nCurrentResolutionX (0), m_nCurrentResolutionY (0), m_nCurrentFrameRate (0)
+    : m_sIdentifier (sIdentifier), 
+    m_nCurrentResolutionX (0),
+    m_nCurrentResolutionY (0), 
+    m_nCurrentFrameRate (0),
+    m_SourceFormat (eVideoSourceFormat::Invalid)
 {
 
 #ifdef _WIN32
@@ -175,24 +180,47 @@ CVideoDeviceInstance_Win32::CVideoDeviceInstance_Win32(const std::string& sIdent
 
 }
 
+#ifdef _WIN32
+
+std::string GUIDToString(const GUID& guid) {
+    wchar_t guidString[39] = { 0 };  // GUID string format is 38 characters long plus null terminator
+    StringFromGUID2(guid, guidString, 39);
+    guidString[38] = 0;
+    std::wstring sResultStringW (guidString);
+    std::string sResultString(sResultStringW.begin(), sResultStringW.end());
+
+    return sResultString;
+}
+#endif
+
 void CVideoDeviceInstance_Win32::refreshSupportedResolutions()
 {
 #ifdef _WIN32
+
+    HRESULT hResult;
+
     if (m_pSourceReader.Get () == nullptr)
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_NOMEDIASOURCEREADERAVAILABLE);
+
 
     ComPtr<IMFMediaType> pNativeType = nullptr;
     DWORD nIndex = 0;
 
     m_SupportedResolutions.clear();
 
-    HRESULT hResult;
-
     while (m_pSourceReader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, nIndex, &pNativeType) == S_OK) {
         UINT32 nWidth = 0, nHeight = 0;
         hResult = MFGetAttributeSize(pNativeType.Get(), MF_MT_FRAME_SIZE, &nWidth, &nHeight);
         if (hResult != S_OK)
             throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIATYPESIZE);
+
+        GUID subtype;
+        hResult = pNativeType->GetGUID(MF_MT_SUBTYPE, &subtype);
+        if (hResult != S_OK) 
+            throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIASUBTYPE);
+
+        // Enums are from MFVideoFormat_RGB24, etc..
+        std::string sTypeUUID = GUIDToString(subtype);
 
         UINT32 numerator = 0, denominator = 0;
         MFGetAttributeRatio(pNativeType.Get (), MF_MT_FRAME_RATE, &numerator, &denominator);
@@ -202,17 +230,21 @@ void CVideoDeviceInstance_Win32::refreshSupportedResolutions()
         if ((denominator == 0) || (numerator == 0))
             throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIATYPEFRAMERATE);
 
-        if ((numerator % denominator) == 0) { 
-            // We only support integer framerates for now!
-            uint32_t nFramerate = numerator / denominator;
+        bool bUUIDIsSupported = convertUUIDToAnyVideoSourceFormat (sTypeUUID) != LibMCDriver_Camera::eVideoSourceFormat::Invalid;
 
-            if ((nWidth >= CAMERARESOLUTION_MIN) && (nWidth <= CAMERARESOLUTION_MAX) &&
-                (nHeight >= CAMERARESOLUTION_MIN) && (nHeight <= CAMERARESOLUTION_MAX) &&
-                (nFramerate >= CAMERAFRAMERATE_MIN) && (nFramerate <= CAMERAFRAMERATE_MAX)) {
+        if (bUUIDIsSupported) {
+            if ((numerator % denominator) == 0) {
+                // We only support integer framerates for now!
+                uint32_t nFramerate = numerator / denominator;
 
-                m_SupportedResolutions.push_back(std::make_shared<CVideoResolution> (nWidth, nHeight, nFramerate));
+                if ((nWidth >= CAMERARESOLUTION_MIN) && (nWidth <= CAMERARESOLUTION_MAX) &&
+                    (nHeight >= CAMERARESOLUTION_MIN) && (nHeight <= CAMERARESOLUTION_MAX) &&
+                    (nFramerate >= CAMERAFRAMERATE_MIN) && (nFramerate <= CAMERAFRAMERATE_MAX)) {
+
+                    m_SupportedResolutions.push_back(std::make_shared<CVideoResolution>(nWidth, nHeight, nFramerate, sTypeUUID));
+                }
+
             }
-                
         }
 
         nIndex++;
@@ -254,7 +286,117 @@ uint32_t CVideoDeviceInstance_Win32::getSupportedResolutionCount()
     return (uint32_t)m_SupportedResolutions.size();
 }
 
-void CVideoDeviceInstance_Win32::getSupportedResolution(uint32_t nIndex, uint32_t& nWidth, uint32_t& nHeight, uint32_t& nFramerate)
+LibMCDriver_Camera::eVideoSourceFormat CVideoDeviceInstance_Win32::convertUUIDToValidVideoSourceFormat(const std::string& sUUID)
+{
+    auto sourceFormat = convertUUIDToAnyVideoSourceFormat(sUUID);
+    if (sourceFormat == LibMCDriver_Camera::eVideoSourceFormat::Invalid)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE, "Invalid media video source type: " + sUUID);
+
+    return sourceFormat;
+}
+
+LibMCDriver_Camera::eVideoSourceFormat CVideoDeviceInstance_Win32::convertUUIDToAnyVideoSourceFormat(const std::string& sUUID)
+{
+#ifdef _WIN32
+
+    GUID typeUUID;
+    std::wstring sTypeUUIDW(sUUID.begin(), sUUID.end());
+    HRESULT hResult = CLSIDFromString(sTypeUUIDW.c_str(), &typeUUID);
+    if (hResult != S_OK)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE, "Invalid media video source type: " + sUUID);
+
+    if (IsEqualGUID(typeUUID, MFVideoFormat_RGB32))
+        return LibMCDriver_Camera::eVideoSourceFormat::RGB32;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_ARGB32))
+        return LibMCDriver_Camera::eVideoSourceFormat::ARGB32;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_RGB24))
+        return LibMCDriver_Camera::eVideoSourceFormat::RGB24;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_RGB555))
+        return LibMCDriver_Camera::eVideoSourceFormat::RGB555;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_RGB565))
+        return LibMCDriver_Camera::eVideoSourceFormat::RGB565;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_L8))
+        return LibMCDriver_Camera::eVideoSourceFormat::Grayscale8;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_L16))
+        return LibMCDriver_Camera::eVideoSourceFormat::Grayscale16;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_D16))
+        return LibMCDriver_Camera::eVideoSourceFormat::Depth16;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_AYUV))
+        return LibMCDriver_Camera::eVideoSourceFormat::AYUV;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_I420))
+        return LibMCDriver_Camera::eVideoSourceFormat::I420;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_IYUV))
+        return LibMCDriver_Camera::eVideoSourceFormat::IYUV;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_NV11))
+        return LibMCDriver_Camera::eVideoSourceFormat::NV11;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_NV12))
+        return LibMCDriver_Camera::eVideoSourceFormat::NV12;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_UYVY))
+        return LibMCDriver_Camera::eVideoSourceFormat::UYVY;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_Y41P))
+        return LibMCDriver_Camera::eVideoSourceFormat::Y41P;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_Y41T))
+        return LibMCDriver_Camera::eVideoSourceFormat::Y41T;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_Y42T))
+        return LibMCDriver_Camera::eVideoSourceFormat::Y42T;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_YUY2))
+        return LibMCDriver_Camera::eVideoSourceFormat::YUY2;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_YVU9))
+        return LibMCDriver_Camera::eVideoSourceFormat::YVU9;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_YV12))
+        return LibMCDriver_Camera::eVideoSourceFormat::YV12;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_YVYU))
+        return LibMCDriver_Camera::eVideoSourceFormat::YVYU;
+    if (IsEqualGUID(typeUUID, MFVideoFormat_MJPG))
+        return LibMCDriver_Camera::eVideoSourceFormat::MJPG;
+
+    return LibMCDriver_Camera::eVideoSourceFormat::Invalid;
+
+#else 
+    throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR);
+#endif //_WIN32
+}
+
+std::string CVideoDeviceInstance_Win32::convertVideoSourceFormatToUUID(LibMCDriver_Camera::eVideoSourceFormat sourceFormat)
+{
+#ifdef _WIN32
+
+    switch (sourceFormat) {
+        case LibMCDriver_Camera::eVideoSourceFormat::RGB32: return GUIDToString(MFVideoFormat_RGB32);
+        case LibMCDriver_Camera::eVideoSourceFormat::ARGB32: return GUIDToString(MFVideoFormat_ARGB32);
+        case LibMCDriver_Camera::eVideoSourceFormat::RGB24: return GUIDToString(MFVideoFormat_RGB24);
+        case LibMCDriver_Camera::eVideoSourceFormat::RGB555: return GUIDToString(MFVideoFormat_RGB555);
+        case LibMCDriver_Camera::eVideoSourceFormat::RGB565: return GUIDToString(MFVideoFormat_RGB565);
+        case LibMCDriver_Camera::eVideoSourceFormat::Grayscale8: return GUIDToString(MFVideoFormat_L8);
+        case LibMCDriver_Camera::eVideoSourceFormat::Grayscale16: return GUIDToString(MFVideoFormat_L16);
+        case LibMCDriver_Camera::eVideoSourceFormat::Depth16: return GUIDToString(MFVideoFormat_D16);
+        case LibMCDriver_Camera::eVideoSourceFormat::AYUV: return GUIDToString(MFVideoFormat_AYUV);
+        case LibMCDriver_Camera::eVideoSourceFormat::I420: return GUIDToString(MFVideoFormat_I420);
+        case LibMCDriver_Camera::eVideoSourceFormat::IYUV: return GUIDToString(MFVideoFormat_IYUV);
+        case LibMCDriver_Camera::eVideoSourceFormat::NV11: return GUIDToString(MFVideoFormat_NV11);
+        case LibMCDriver_Camera::eVideoSourceFormat::NV12: return GUIDToString(MFVideoFormat_NV12);
+        case LibMCDriver_Camera::eVideoSourceFormat::UYVY: return GUIDToString(MFVideoFormat_UYVY);
+        case LibMCDriver_Camera::eVideoSourceFormat::Y41P: return GUIDToString(MFVideoFormat_Y41P);
+        case LibMCDriver_Camera::eVideoSourceFormat::Y41T: return GUIDToString(MFVideoFormat_Y41T);
+        case LibMCDriver_Camera::eVideoSourceFormat::Y42T: return GUIDToString(MFVideoFormat_Y42T);
+        case LibMCDriver_Camera::eVideoSourceFormat::YUY2: return GUIDToString(MFVideoFormat_YUY2);
+        case LibMCDriver_Camera::eVideoSourceFormat::YVU9: return GUIDToString(MFVideoFormat_YVU9);
+        case LibMCDriver_Camera::eVideoSourceFormat::YV12: return GUIDToString(MFVideoFormat_YV12);
+        case LibMCDriver_Camera::eVideoSourceFormat::YVYU: return GUIDToString(MFVideoFormat_YVYU);
+        case LibMCDriver_Camera::eVideoSourceFormat::MJPG: return GUIDToString(MFVideoFormat_MJPG);
+
+        default:
+            throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDVIDEOSOURCEFORMAT);
+    }
+
+
+#else 
+    throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR);
+#endif //_WIN32
+}
+
+
+void CVideoDeviceInstance_Win32::getSupportedResolution(uint32_t nIndex, uint32_t& nWidth, uint32_t& nHeight, uint32_t& nFramerate, LibMCDriver_Camera::eVideoSourceFormat& sourceFormat)
 {
     if (nIndex >= m_SupportedResolutions.size ())
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDRESOLUTIONINDEX, "Invalid resolution index: " + std::to_string(nIndex));
@@ -263,21 +405,24 @@ void CVideoDeviceInstance_Win32::getSupportedResolution(uint32_t nIndex, uint32_
     nWidth = resolution->getWidth();
     nHeight = resolution->getHeight();
     nFramerate = resolution->getFramerate();
+    sourceFormat = convertUUIDToAnyVideoSourceFormat (resolution->getTypeUUID ());
 
 }
 
-void CVideoDeviceInstance_Win32::getCurrentResolution(uint32_t& nWidth, uint32_t& nHeight, uint32_t& nFramerate)
+
+void CVideoDeviceInstance_Win32::getCurrentResolution(uint32_t& nWidth, uint32_t& nHeight, uint32_t& nFramerate, LibMCDriver_Camera::eVideoSourceFormat& sourceFormat)
 {
-    nWidth = 0;
-    nHeight = 0;
-    nFramerate = 0;
-}
-std::wstring GUIDToString(const GUID& guid) {
-    wchar_t guidString[39] = { 0 };  // GUID string format is 38 characters long plus null terminator
-    StringFromGUID2(guid, guidString, 39);
-    return std::wstring(guidString);
+    if ((m_nCurrentResolutionX == 0) || (m_nCurrentResolutionY == 0) || (m_nCurrentFrameRate == 0))
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET);
+
+    nWidth = m_nCurrentResolutionX;
+    nHeight = m_nCurrentResolutionY;
+    nFramerate = m_nCurrentFrameRate;
+    sourceFormat = m_SourceFormat;
 }
 
+#ifdef _WIN32
+/*
 ComPtr<IMFTransform> CVideoDeviceInstance_Win32::createMJPEGEncoder(IMFMediaType* pInputMediaType)
 {
     if (pInputMediaType == nullptr)
@@ -335,7 +480,7 @@ ComPtr<IMFTransform> CVideoDeviceInstance_Win32::createMJPEGEncoder(IMFMediaType
                     std::cout << "Output Format: YUY2" << std::endl;
                 }
                 else {
-                    std::wcout << L"Output Format: Other" << GUIDToString (subtype) << std::endl;
+                    std::cout << "Output Format: Other" << GUIDToString (subtype) << std::endl;
                 }
             }
 
@@ -345,9 +490,11 @@ ComPtr<IMFTransform> CVideoDeviceInstance_Win32::createMJPEGEncoder(IMFMediaType
 
     return pResultTransform;
 }
+*/
+#endif //_WIN32
 
 
-void CVideoDeviceInstance_Win32::setResolution(uint32_t nWidth, uint32_t nHeight, uint32_t nFramerate)
+void CVideoDeviceInstance_Win32::setResolution(uint32_t nWidth, uint32_t nHeight, uint32_t nFramerate, LibMCDriver_Camera::eVideoSourceFormat& sourceFormat)
 {
 #ifdef _WIN32
 
@@ -356,6 +503,13 @@ void CVideoDeviceInstance_Win32::setResolution(uint32_t nWidth, uint32_t nHeight
     ComPtr<IMFMediaType> pType;
 
     HRESULT hResult;
+
+    GUID typeUUID;
+    std::string sTypeUUID = convertVideoSourceFormatToUUID(sourceFormat);
+    std::wstring sTypeUUIDW(sTypeUUID.begin(), sTypeUUID.end());
+    hResult = CLSIDFromString(sTypeUUIDW.c_str (), &typeUUID);
+    if (hResult != S_OK)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE, "Invalid media subtype: " + sTypeUUID);
 
     // Create a new media type for video
     hResult = MFCreateMediaType(&pType);
@@ -368,7 +522,7 @@ void CVideoDeviceInstance_Win32::setResolution(uint32_t nWidth, uint32_t nHeight
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_COULDNOTSETMEDIATYPETOVIDEO, "Could not set media type to video: " + std::to_string(hResult));
 
     // Set the video format to MJPEG or another format (e.g., YUY2, RGB32)
-    hResult = pType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
+    hResult = pType->SetGUID(MF_MT_SUBTYPE, typeUUID);
     if (hResult != S_OK)
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_COULDNOTSETMEDIATYPEFORMAT, "Could not set media type format: " + std::to_string(hResult));
 
@@ -396,7 +550,10 @@ void CVideoDeviceInstance_Win32::setResolution(uint32_t nWidth, uint32_t nHeight
     m_nCurrentResolutionX = nWidth;
     m_nCurrentResolutionY = nHeight;
     m_nCurrentFrameRate = nFramerate;
+    m_SourceFormat = sourceFormat;
 
+#else 
+    throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR);
 #endif //_WIN32
 }
 
@@ -418,6 +575,23 @@ void CVideoDeviceInstance_Win32::getStreamCaptureStatistics(LibMCDriver_Camera_d
 }
 
 
+inline void convertYUVToRGB24 (uint8_t Y, uint8_t U, uint8_t V, uint8_t & R, uint8_t & G, uint8_t &B)
+{
+    // YUV to RGB conversion formulas
+    int32_t C = (int32_t)Y - 16;
+    int32_t D = (int32_t)U - 128;
+    int32_t E = (int32_t)V - 128;
+
+    int32_t iR = (298 * C + 409 * E + 128) >> 8;
+    int32_t iG = (298 * C - 100 * D - 208 * E + 128) >> 8;
+    int32_t iB = (298 * C + 516 * D + 128) >> 8;
+
+    // Clamp RGB values to [0, 255]
+    R = (uint8_t) std::min(255, std::max(0, iR));
+    G = (uint8_t) std::min(255, std::max(0, iG));
+    B = (uint8_t) std::min(255, std::max(0, iB));
+}
+
 void ConvertYUY2ToRGB24 (uint8_t* yuy2Data, uint8_t* rgbData, uint32_t nWidth, uint32_t nHeight)
 {
     if (yuy2Data == nullptr)
@@ -434,39 +608,112 @@ void ConvertYUY2ToRGB24 (uint8_t* yuy2Data, uint8_t* rgbData, uint32_t nWidth, u
     uint64_t pixelCount = nWidth * nHeight * 2;
     for (uint64_t i = 0; i < pixelCount; i += 4) {
         // Read the YUY2 data (2 pixels per 4 bytes)
-        BYTE Y1 = yuy2Data[i];
-        BYTE U = yuy2Data[i + 1];
-        BYTE Y2 = yuy2Data[i + 2];
-        BYTE V = yuy2Data[i + 3];
+        uint8_t Y1 = yuy2Data[i];
+        uint8_t U = yuy2Data[i + 1];
+        uint8_t Y2 = yuy2Data[i + 2];
+        uint8_t V = yuy2Data[i + 3];
 
         // Convert YUV to RGB for two pixels
         for (int j = 0; j < 2; j++) {
-            BYTE Y = (j == 0) ? Y1 : Y2;
+            uint8_t Y = (j == 0) ? Y1 : Y2;
 
-            // YUV to RGB conversion formulas
-            int C = Y - 16;
-            int D = U - 128;
-            int E = V - 128;
+            convertYUVToRGB24(Y, U, V, rgbData[pixelIndex], rgbData[pixelIndex + 1], rgbData[pixelIndex + 2]);
+            pixelIndex += 3;
 
-            int R = (298 * C + 409 * E + 128) >> 8;
-            int G = (298 * C - 100 * D - 208 * E + 128) >> 8;
-            int B = (298 * C + 516 * D + 128) >> 8;
-
-            // Clamp RGB values to [0, 255]
-            R = min(255, max(0, R));
-            G = min(255, max(0, G));
-            B = min(255, max(0, B));
-
-            // Write the RGB values (RGB24 format)
-            rgbData[pixelIndex++] = (BYTE)R;
-            rgbData[pixelIndex++] = (BYTE)G;
-            rgbData[pixelIndex++] = (BYTE)B;
         }
     }
 }
 
-void CVideoDeviceInstance_Win32::captureRawImage(LibMCEnv::PImageData pImageData)
+
+void ConvertNV12ToRGB24(uint8_t* nv12Data, uint8_t* rgbData, uint32_t nWidth, uint32_t nHeight) 
 {
+    if (nv12Data == nullptr)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDPARAM);
+    if (rgbData == nullptr)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDPARAM);
+    if (nWidth == 0)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDPARAM);
+    if (nHeight == 0)
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDPARAM);
+
+    uint32_t frameSize = nWidth * nHeight;
+    uint8_t* yPlane = nv12Data;
+    uint8_t* uvPlane = nv12Data + frameSize;
+
+    uint32_t pixelIndex = 0;
+    for (uint32_t y = 0; y < nHeight; ++y) {
+        for (uint32_t x = 0; x < nWidth; ++x) {
+            // Get Y component
+            uint8_t Y = yPlane[y * nWidth + x];
+
+            // Get UV components (subsampled, 2x2 blocks)
+            uint32_t uvIndex = (y / 2) * nWidth + (x & ~1);
+            uint8_t U = uvPlane[uvIndex];
+            uint8_t V = uvPlane[uvIndex + 1];
+
+            convertYUVToRGB24(Y, U, V, rgbData[pixelIndex], rgbData[pixelIndex + 1], rgbData[pixelIndex + 2]);
+            pixelIndex += 3;
+
+        }
+    }
+}
+
+std::string CVideoDeviceInstance_Win32::getSourceFormatDescription(const LibMCDriver_Camera::eVideoSourceFormat eSourceFormat)
+{
+    switch (eSourceFormat) {
+    case eVideoSourceFormat::RGB32:
+        return "RGB32";
+    case eVideoSourceFormat::ARGB32:
+        return "ARGB32";
+    case eVideoSourceFormat::RGB24:
+        return "RGB24";
+    case eVideoSourceFormat::RGB555:
+        return "RGB555";
+    case eVideoSourceFormat::RGB565:
+        return "RGB565";
+    case eVideoSourceFormat::Grayscale8:
+        return "Grayscale8";
+    case eVideoSourceFormat::Grayscale16:
+        return "Grayscale16";
+    case eVideoSourceFormat::Depth16:
+        return "Depth16";
+    case eVideoSourceFormat::AYUV:
+        return "AYUV";
+    case eVideoSourceFormat::I420:
+        return "I420";
+    case eVideoSourceFormat::IYUV:
+        return "IYUV";
+    case eVideoSourceFormat::NV11:
+        return "NV11";
+    case eVideoSourceFormat::NV12:
+        return "NV12";
+    case eVideoSourceFormat::NV21:
+        return "NV21";
+    case eVideoSourceFormat::UYVY:
+        return "UYVY";
+    case eVideoSourceFormat::Y41P:
+        return "Y41P";
+    case eVideoSourceFormat::Y41T:
+        return "Y41T";
+    case eVideoSourceFormat::Y42T:
+        return "Y42T";
+    case eVideoSourceFormat::YUY2:
+        return "YUY2";
+    case eVideoSourceFormat::YVU9:
+        return "YVU9";
+    case eVideoSourceFormat::YV12:
+        return "YV12";
+    case eVideoSourceFormat::YVYU:
+        return "YVYU";
+
+    default: return "Invalid";
+    }
+}
+
+bool CVideoDeviceInstance_Win32::captureRawImage(LibMCEnv::PImageData pImageData)
+{
+
+#ifdef _WIN32
     std::vector<uint8_t> rgbBuffer;
 
     if (pImageData.get() == nullptr)
@@ -474,6 +721,9 @@ void CVideoDeviceInstance_Win32::captureRawImage(LibMCEnv::PImageData pImageData
 
     if (m_pSourceReader.Get () == nullptr)
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_CAMERAREADERNOTINITIALIZED);
+
+    if ((m_nCurrentResolutionX == 0) || (m_nCurrentResolutionY == 0) || (m_nCurrentFrameRate == 0))
+        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET);
 
     ComPtr<IMFSample> pSample = nullptr;
     DWORD streamIndex = 0;
@@ -505,12 +755,42 @@ void CVideoDeviceInstance_Win32::captureRawImage(LibMCEnv::PImageData pImageData
             if (rawData == nullptr)
                 throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_RAWBUFFERRETURNEDNULL);
 
-            if (currentLength != (m_nCurrentResolutionX * m_nCurrentResolutionY * 2)) 
-                throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH);
+            rgbBuffer.resize(m_nCurrentResolutionX * m_nCurrentResolutionY * 3);
 
-            rgbBuffer.resize (m_nCurrentResolutionX * m_nCurrentResolutionY * 3);
+            try {
 
-            ConvertYUY2ToRGB24 (rawData, rgbBuffer.data(), m_nCurrentResolutionX, m_nCurrentResolutionY);
+                switch (m_SourceFormat) {
+                    case eLibMCDriver_CameraVideoSourceFormat::YUY2: {
+                        if (currentLength != (m_nCurrentResolutionX * m_nCurrentResolutionY * 2))
+                            throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH);
+
+                        ConvertYUY2ToRGB24(rawData, rgbBuffer.data(), m_nCurrentResolutionX, m_nCurrentResolutionY);
+                        break;
+                    }
+
+                    case eLibMCDriver_CameraVideoSourceFormat::NV12: {
+                        if (currentLength != (m_nCurrentResolutionX * m_nCurrentResolutionY * 3 / 2))
+                            throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_NV12SAMPLEBUFFERSIZEMISMATCH);
+
+                        if (((m_nCurrentResolutionX % 2) != 0) || ((m_nCurrentResolutionY % 2) != 0))
+                            throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_CAMERAENCODINGNEEDSEVENIMAGEEXTENTS);
+
+                        ConvertNV12ToRGB24(rawData, rgbBuffer.data(), m_nCurrentResolutionX, m_nCurrentResolutionY);
+
+                        break;
+                    }
+                                                                   
+
+                    default:                                                                    
+                        throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_SOURCEFORMATNOTSUPPORTED, "Source format not supported: " + getSourceFormatDescription (m_SourceFormat));
+                }
+
+
+            }
+            catch (...) {
+                pMediaBuffer->Unlock();
+                throw;
+            }
 
             pMediaBuffer->Unlock();
 
@@ -519,7 +799,23 @@ void CVideoDeviceInstance_Win32::captureRawImage(LibMCEnv::PImageData pImageData
 
             pImageData->SetPixels(0, 0, m_nCurrentResolutionX, m_nCurrentResolutionY, LibMCEnv::eImagePixelFormat::RGB24bit, rgbBuffer);
 
+            return true;
+        }
+        else {
+
+            pImageData->Clear(0);
+
+            return false;
         }
     }
+    else {
+        pImageData->Clear(0);
+
+        return false;
+    }
+
+#else 
+throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR);
+#endif //_WIN32
 
 }

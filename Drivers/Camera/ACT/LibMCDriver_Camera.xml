@@ -89,8 +89,49 @@
 		<error name="COULDNOTLOCKMEDIABUFFER" code="1037" description="Could not lock media buffer" />		
 		<error name="RAWBUFFERRETURNEDNULL" code="1038" description="Raw buffer returned null" />		
 		<error name="YUY2SAMPLEBUFFERSIZEMISMATCH" code="1039" description="YUY2 sample buffer size mismatch" />		
+		<error name="CAMERARESOLUTIONNOTSET" code="1040" description="Camera resolution not set" />		
+		<error name="COULDNOTGETMEDIASUBTYPE" code="1041" description="Could not get media subtype" />		
+		<error name="INVALIDMEDIASUBTYPE" code="1042" description="Invalid media subtype" />		
+		<error name="PLATFORMERROR" code="1043" description="Platform error" />		
+		<error name="INVALIDVIDEOSOURCEFORMAT" code="1044" description="Invalid video source format" />		
+		<error name="SOURCEFORMATNOTSUPPORTED" code="1045" description="Source format not supported" />		
+		<error name="NV12SAMPLEBUFFERSIZEMISMATCH" code="1046" description="NV12 Sample Buffer size mismatch" />		
+		<error name="CAMERAENCODINGNEEDSEVENIMAGEEXTENTS" code="1047" description="Camera encoding needs even image extents" />		
+		
+		
+		
 				
 	</errors>
+
+
+	<enum name="VideoSourceFormat" description="Format of the video source stream">
+		<option name="Invalid" value="0" />
+		<option name="RGB32" value="1"/>
+		<option name="ARGB32" value="2"/>
+		<option name="RGB24" value="3"/>
+		<option name="RGB555" value="4"/>
+		<option name="RGB565" value="5"/>
+		<option name="Grayscale8" value="6"/>
+		<option name="Grayscale16" value="7"/>
+		<option name="Depth16" value="8"/>
+		<option name="AYUV" value="9"/>
+		<option name="I420" value="10"/>
+		<option name="IYUV" value="11"/>
+		<option name="NV11" value="12"/>
+		<option name="NV12" value="13"/>
+		<option name="NV21" value="14"/>
+		<option name="UYVY" value="15"/>
+		<option name="Y41P" value="16"/>
+		<option name="Y41T" value="17"/>
+		<option name="Y42T" value="18"/>
+		<option name="YUY2" value="19"/>
+		<option name="YVU9" value="20"/>
+		<option name="YV12" value="21"/>
+		<option name="YVYU" value="22"/>
+		<option name="MJPG" value="23"/>
+		
+
+	</enum>	
 
 	
 <!--
@@ -177,25 +218,56 @@ Custom implementation
 
 		<method name="GetSupportedResolution" description = "Returns a resolution from the supported resolution list.">
 			<param name="Index" type="uint32" pass="in" description="Index to return. 0-based." />
-			<param name="Width" type="uint32" pass="out" description="Width in pixels." />
-			<param name="Height" type="uint32" pass="out" description="Height in pixels." />
+			<param name="ResolutionX" type="uint32" pass="out" description="Width in pixels." />
+			<param name="ResolutionY" type="uint32" pass="out" description="Height in pixels." />
 			<param name="Framerate" type="uint32" pass="out" description="Framerate in FPS. Currently only integer framerates are supported." />
+			<param name="SourceFormat" type="enum" class="VideoSourceFormat" pass="out" description="Video Source format." />
 		</method>
 
 		<method name="GetCurrentResolution" description = "Returns a the current resolution and Framerate of the video stream.">
-			<param name="Width" type="uint32" pass="out" description="Width in pixels." />
-			<param name="Height" type="uint32" pass="out" description="Height in pixels." />
+			<param name="ResolutionX" type="uint32" pass="out" description="Width in pixels." />
+			<param name="ResolutionY" type="uint32" pass="out" description="Height in pixels." />
 			<param name="Framerate" type="uint32" pass="out" description="Framerate in FPS. Currently only integer framerates are supported." />
+			<param name="SourceFormat" type="enum" class="VideoSourceFormat" pass="out" description="Video Source format." />
 		</method>
-				
+		
+		
+		<method name="GetCurrentResolutionX" description = "Returns the current X resolution of the video stream.">
+			<param name="ResolutionX" type="uint32" pass="return" description="Width in pixels." />
+		</method>
+
+		<method name="GetCurrentResolutionY" description = "Returns the current resolution of the video stream.">
+			<param name="ResolutionY" type="uint32" pass="return" description="Height in pixels." />
+		</method>
+
+		<method name="GetCurrentFramerate" description = "Returns a the current Framerate of the video stream.">
+			<param name="Framerate" type="uint32" pass="return" description="Framerate in FPS. Currently only integer framerates are supported." />
+		</method>
+		
+		<method name="GetCurrentSourceFormat" description = "Returns the current source format of the video streams.">
+			<param name="SourceFormat" type="enum" class="VideoSourceFormat" pass="return" description="Source format." />
+		</method>
+
+		<method name="GetSourceFormatDescription" description = "Returns a description for a source format enum.">
+			<param name="SourceFormat" type="enum" class="VideoSourceFormat" pass="in" description="Source format." />
+			<param name="Description" type="string" pass="return" description="Source format Description." />
+		</method>
+		
 		<method name="SetResolution" description = "Sets the resolution of the video stream. Fails if framerate is not supported.">
-			<param name="Width" type="uint32" pass="in" description="Width in pixels." />
-			<param name="Height" type="uint32" pass="in" description="Height in pixels." />
+			<param name="ResolutionX" type="uint32" pass="in" description="Width in pixels." />
+			<param name="ResolutionY" type="uint32" pass="in" description="Height in pixels." />
 			<param name="Framerate" type="uint32" pass="in" description="Framerate in FPS to set. Currently only integer framerates are supported." />
+			<param name="SourceFormat" type="enum" class="VideoSourceFormat" pass="in" description="Video Source format." />
 		</method>
+
+		<method name="SetToSupportedResolution" description = "Sets the resolution of the video stream to a supported resolution by index.">
+			<param name="Index" type="uint32" pass="in" description="Index to the supported resolution list. 0-based. Fails if equal or larger than SupportedResolutionCount." />
+		</method>
+
 		
 		<method name="CaptureRawImage" description = "Captures a still image from the video stream.">
 			<param name="ImageData" type="class" class="LibMCEnv:ImageData" pass="in" description="Capture image object." />
+			<param name="ImageCaptured" type="bool" pass="return" description="If true, an image has been captured. If false then no image was captured." />
 		</method>
 	
 		<method name="StartStreamCapture" description = "Starts automatic capturing of the video into a video stream. If a stream capture is active, it will stop the current capture process.">

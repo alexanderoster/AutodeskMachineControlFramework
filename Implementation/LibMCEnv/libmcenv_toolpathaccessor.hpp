@@ -108,6 +108,14 @@ public:
 
 	void GetBinaryMetaData(const std::string& sPath, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8* pMetaDataBuffer) override;
 
+	std::string GetBinaryMetaDataAsString(const std::string& sPackagePath) override;
+
+	bool HasBinaryMetaDataSchema(const std::string& sRelationshipSchema) override;
+
+	void GetBinaryMetaDataBySchema(const std::string& sRelationshipSchema, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8* pMetaDataBuffer) override;
+
+	std::string GetBinaryMetaDataAsStringBySchema(const std::string& sRelationshipSchema) override;
+
 };
 
 } // namespace Impl

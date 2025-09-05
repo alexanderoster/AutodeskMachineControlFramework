@@ -462,6 +462,9 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_JOURNALVARIABLEALIASALREADYEXISTS 435 /** Journal variable alias already exists. */
 #define LIBMCDATA_ERROR_INVALIDALIASINDEX 436 /** Invalid alias index */
 #define LIBMCDATA_ERROR_SOURCEOFJOURNALALIASNOTFOUND 437 /** Source of Journal Alias not found */
+#define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONTYPE 438 /** Could not find machine configuration type. */
+#define LIBMCDATA_ERROR_INVALIDSTORAGESTREAMSIZE 439 /** Storage stream size for build is zero. */
+#define LIBMCDATA_ERROR_COULDNOTUPDATEBUILDNAME 440 /** Could not update build name */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -836,6 +839,9 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_JOURNALVARIABLEALIASALREADYEXISTS: return "Journal variable alias already exists.";
     case LIBMCDATA_ERROR_INVALIDALIASINDEX: return "Invalid alias index";
     case LIBMCDATA_ERROR_SOURCEOFJOURNALALIASNOTFOUND: return "Source of Journal Alias not found";
+    case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONTYPE: return "Could not find machine configuration type.";
+    case LIBMCDATA_ERROR_INVALIDSTORAGESTREAMSIZE: return "Storage stream size for build is zero.";
+    case LIBMCDATA_ERROR_COULDNOTUPDATEBUILDNAME: return "Could not update build name";
     default: return "unknown error";
   }
 }
@@ -870,6 +876,10 @@ typedef LibMCDataHandle LibMCData_BuildJobHandler;
 typedef LibMCDataHandle LibMCData_UserList;
 typedef LibMCDataHandle LibMCData_LoginHandler;
 typedef LibMCDataHandle LibMCData_PersistencyHandler;
+typedef LibMCDataHandle LibMCData_MachineConfigurationVersion;
+typedef LibMCDataHandle LibMCData_MachineConfigurationVersionIterator;
+typedef LibMCDataHandle LibMCData_MachineConfigurationXSD;
+typedef LibMCDataHandle LibMCData_MachineConfigurationType;
 typedef LibMCDataHandle LibMCData_InstallationInformation;
 typedef LibMCDataHandle LibMCData_DataModel;
 

@@ -193,7 +193,8 @@ private:
     std::string m_sJournalBasePath;
 
     std::string m_sStartTime;
-    uint32_t m_nLifeTimeInMicroseconds;
+    uint64_t m_nGlobalStartTimeStamp;
+    uint64_t m_nGlobalEndTimeStamp;
 
     int32_t m_nSchemaVersion;
 

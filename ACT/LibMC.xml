@@ -658,10 +658,50 @@
 		<error name="INVALIDCONTENTSTATEID" code="632" description="Invalid content state ID" />		
 		<error name="INVALIDWIDGETREQUEST" code="633" description="Invalid widget request" />		
 		<error name="SOURCEVARIABLENOTFOUND" code="634" description="Source variable not found" />
-		
-
-		
-					
+		<error name="INVALIDEVENTRETURNVALUES" code="635" description="Invalid event return values" />
+		<error name="INVALIDMODIFIERINTERPOLATIONCOUNT" code="636" description="Invalid modifier interpolation count" />
+		<error name="INVALIDTOOLPATHMODIFIERTYPE" code="637" description="Invalid toolpath modifier type." />		
+		<error name="INVALIDTOOLPATHMODIFIERFACTOR" code="638" description="Invalid toolpath modifier factor." />				
+		<error name="BINARYMETADATARELATIONSHIPNOTFOUND" code="639" description="Binary metadata relationship not found." />				
+		<error name="ENVIRONMENTVARIABLECHANGEAFTERSTART" code="640" description="Environment variable change after start." />	
+		<error name="INVALIDENVIRONMENTVARIABLENAME" code="641" description="Invalid environment variable name." />	
+		<error name="ENVIRONMENTVARIABLEALREADYEXISTS" code="642" description="Environment variable already exists." />	
+		<error name="REACHEDENVIRONMENTVARIABLELIMIT" code="643" description="Reached Environment variable limit." />	
+		<error name="ENVIRONMENTVARIABLENOTFOUND" code="644" description="Environment Variable not found." />	
+		<error name="INVALIDENVIRONMENTVARIABLEINDEX" code="645" description="Invalid environment variable index." />	
+		<error name="COULDNOTREADPROCESSPIPE" code="646" description="Could not read process pipe." />	
+		<error name="PROCESSEXECUTABLENOTFOUND" code="647" description="Process executable not found." />	
+		<error name="COULDNOTCREATEPROCESSPIPE" code="648" description="Could not create process pipe." />	
+		<error name="CREATEPROCESSFAILED" code="649" description="Create process failed." />	
+		<error name="PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST" code="650" description="Process executable directory does not exist." />	
+		<error name="PROCESSCONTROLTIMEISINVALID" code="651" description="Process control time is invalid." />	
+		<error name="PROCESSWORKINGDIRECTORYDOESNOTEXIST" code="652" description="Process working directory does not exist." />	
+		<error name="PROCESSHASALREADYBEENSTARTED" code="653" description="Process has already been started." />	
+		<error name="PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM" code="654" description="Process handling not implemented on Platform." />	
+		<error name="INVALIDWRITEBUFFFERPOSITION" code="655" description="Invalid write buffer position." />	
+		<error name="INVALIDWRITEBUFFERSIZE" code="656" description="Invalid write buffer size." />	
+		<error name="CANNOTWRITETOFINISHEDFILE" code="658" description="Cannot write to finished file." />	
+		<error name="WORKINGDIRECTORYHASBEENCLEANED" code="659" description="Working Directory has been cleaned." />	
+		<error name="INVALIDCHARACTERINFILENAME" code="660" description="Invalid character in filename." />	
+		<error name="WORKINGDIRECTORYCEASEDTOEXIST" code="661" description="Working directory ceased to exist." />	
+		<error name="DIRECTORYALREADYEXISTS" code="662" description="Directory already exists." />	
+		<error name="WORKINGDIRECTORYNOTFOUND" code="663" description="Working Directory not found." />		
+		<error name="INVALIDSIGNALREACTIONTIMEOUT" code="664" description="Invalid Signal Reaction Timeout." />		
+		<error name="INVALIDSIGNALQUEUESIZE" code="665" description="Invalid Signal queue size." />		
+		<error name="SIGNALALREADYTRIGGERED" code="666" description="Signal has already been triggered." />		
+		<error name="INVALIDQUERYPARAMETER" code="667" description="Invalid query parameter." />		
+		<error name="DUPLICATEQUERYPARAMETER" code="668" description="Duplicate query parameter." />		
+		<error name="QUERYPARAMETERNOTFOUND" code="669" description="Query parameter not found." />		
+		<error name="INVALIDBUILDJOBSTATUSQUERY" code="670" description="Invalid build job status query." />		
+		<error name="INVALIDNEWBUILDSTATUS" code="671" description="Invalid new build status." />		
+		<error name="INVALIDDEFAULTOPENAPIJSON" code="672" description="Invalid Default OpenAPI JSON." />		
+		<error name="INVALIDCUSTOMOPENAPIJSON" code="673" description="Invalid Custom OpenAPI JSON." />				
+		<error name="USEDMODULEISLEGACY" code="674" description="Used module is legacy." />				
+		<error name="TRIEDTOACCESSNULLCLIENTPARAMETERS" code="675" description="Tried to access null client parameters." />				
+		<error name="INVALIDFRONTENDMODULEPATH" code="676" description="Invalid frontend module path." />				
+		<error name="INVALIDFRONTENDATTRIBUTENAME" code="677" description="Invalid frontend attribute name." />
+		<error name="DUPLICATEFRONTENDATTRIBUTENAME" code="678" description="Duplicate frontend attribute name." />
+						
 	</errors>
 	
 	
@@ -682,6 +722,10 @@
 		<option name="Testing" value="3"/>
 	</enum>	
 
+	<enum name="StreamConnectionType">
+		<option name="JSONEventStream" value="1"/>
+		<option name="JPEGImageStream" value="2"/>
+	</enum>	
 		
 	<class name="Base">
 	
@@ -710,6 +754,10 @@
 
 		<method name="GetIdleDelay" description="Returns the number of milliseconds, that the caller should wait before checking for another content.">
 			<param name="IdleDelay" type="uint32" pass="return" description="Idle Delay." />	
+		</method>
+
+		<method name="GetStreamType" description="Returns the stream type.">
+			<param name="StreamType" type="enum" class="StreamConnectionType" pass="return" description="Content type of the stream." />	
 		</method>
 
 	</class>
@@ -744,6 +792,12 @@
 			<param name="Name" type="string" pass="in" description="Name of the form data field." />	
 			<param name="String" type="string" pass="in" description="DataString that was sent." />
 		</method>
+		
+		<method name="SetRequestParameter" description="Sets a request parameter.">
+			<param name="Name" type="string" pass="in" description="Name of the parameter." />	
+			<param name="Value" type="string" pass="in" description="Value of the parameter." />
+		</method>
+		
 
 		<method name="Handle" description="handles the request.">
 			<param name="RawBody" type="basicarray" class="uint8" pass="in" description="Raw Body that was sent. Only necessary, if ExpectsRawBody returns true." />
@@ -808,6 +862,10 @@
 			<param name="ResourcePath" type="string" pass="in" description="Path to the resource package." />
 		</method>
 		
+		<method name="LoadAPIDocumentation" description="load a package to serve the API documentation website.">
+			<param name="ResourcePath" type="string" pass="in" description="Path to the resource package." />
+		</method>
+
 
 		<method name="Log" description="log message with a certain log level.">
 			<param name="Message" type="string" pass="in" description="log message" />

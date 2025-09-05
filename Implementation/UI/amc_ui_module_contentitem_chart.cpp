@@ -74,12 +74,8 @@ void CUIModule_ContentChart::populateClientVariables(CParameterHandler* pClientV
 	pGroup->addNewStringParameter("dataseries", "data series UUID", AMCCommon::CUtils::createEmptyUUID());
 }
 
-void CUIModule_ContentChart::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
-{
-	addContentToJSON(writer, object, pClientVariableHandler, 0);
-}
 
-void CUIModule_ContentChart::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_ContentChart::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
 	std::string sDataSeriesUUID = pGroup->getParameterValueByName("dataseries");

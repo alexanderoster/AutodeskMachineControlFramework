@@ -113,7 +113,11 @@ COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pIns
 	  m_nRTCSignalCount (0),
 	  m_nSensorSignalCount (0),
 	  m_nAdditionalSignalCount (0),
-	n_LastReceivedMeasurementTag (0)
+	  n_LastReceivedMeasurementTag (0),
+	  m_nPacketReceiveCounter (0),
+	  m_nPacketReceiveSkipCounter (1),
+	  m_DeviceDriverType(eOIEDeviceDriverType::Unknown),
+	  m_RecordingFrequency(LibMCDriver_ScanLabOIE::eOIERecordingFrequency::Record100kHz)
 
 {
 	if ((pOIESDK.get() == nullptr) || (pInstance == nullptr) || (pWorkingDirectory.get () == nullptr) || (pDeviceConfiguration == nullptr))
@@ -131,7 +135,7 @@ COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pIns
 	m_nSensorSignalCount = pDeviceConfiguration->GetSensorSignalCount();
 	m_nAdditionalSignalCount = pDeviceConfiguration->GetAdditionalSignalCount();
 
-	auto deviceDriverType = m_pOIESDK->getDeviceDriverType();
+	m_DeviceDriverType = m_pOIESDK->getDeviceDriverType();
 
 	if (m_pConfigurationFile == nullptr)
 		throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTCREATEDEVICECONFIGURATION);
@@ -142,12 +146,12 @@ COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pIns
 
 	switch (nExecutionMode) {
 		case 0: // Compatibility Mode
-			if ((deviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion2) && (deviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3Compatibility))
+			if ((m_DeviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion2) && (m_DeviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3Compatibility))
 				throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_OIEDRIVERTYPEISNOTINCOMPATIBILITYMODE);
 			break;
 
 		case 1: // 100kHz Mode
-			if (deviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3)
+			if (m_DeviceDriverType != LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3)
 				throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_OIEDRIVERTYPEISNOTIN100KHZMODE);
 			break;
 
@@ -156,7 +160,7 @@ COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pIns
 
 	}
 
-	switch (deviceDriverType) {
+	switch (m_DeviceDriverType) {
 	case LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion2:
 		m_pDevice = m_pOIESDK->oie_add_device_VERSION2(m_pInstance);
 		break;
@@ -560,6 +564,69 @@ void COIEDeviceInstance::GetRunningApp(std::string& sName, LibMCDriver_ScanLabOI
 
 }
 
+void COIEDeviceInstance::SetRecordingFrequency(const LibMCDriver_ScanLabOIE::eOIERecordingFrequency eFrequency)
+{
+	if (m_DeviceDriverType == LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3) {
+
+		if (AppIsRunning ()) 
+			throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED);
+
+
+		switch (m_RecordingFrequency) {
+			case eOIERecordingFrequency::Record100kHz: 
+				m_nPacketReceiveSkipCounter = 1;
+				break;
+			case eOIERecordingFrequency::Record50kHz:
+				m_nPacketReceiveSkipCounter = 2;
+				break;
+			case eOIERecordingFrequency::Record25kHz:
+				m_nPacketReceiveSkipCounter = 4;
+				break;
+			case eOIERecordingFrequency::Record20kHz:
+				m_nPacketReceiveSkipCounter = 5;
+				break;
+			case eOIERecordingFrequency::Record10kHz:
+				m_nPacketReceiveSkipCounter = 10;
+				break;
+			case eOIERecordingFrequency::Record5kHz:
+				m_nPacketReceiveSkipCounter = 20;
+				break;
+			case eOIERecordingFrequency::Record4kHz:
+				m_nPacketReceiveSkipCounter = 25;
+				break;
+			case eOIERecordingFrequency::Record2kHz:
+				m_nPacketReceiveSkipCounter = 50;
+				break;
+			case eOIERecordingFrequency::Record1kHz:
+				m_nPacketReceiveSkipCounter = 100;
+				break;
+
+			default:
+				throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDRECORDINGFREQUENCY);
+		}
+
+		m_RecordingFrequency = eFrequency;
+
+	}
+	else {
+		throw ELibMCDriver_ScanLabOIEInterfaceException (LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED);
+	}
+
+	
+}
+
+LibMCDriver_ScanLabOIE::eOIERecordingFrequency COIEDeviceInstance::GetRecordingFrequency()
+{
+	if (m_DeviceDriverType == LibMCDriver_ScanLabOIE::eOIEDeviceDriverType::OIEVersion3) {
+
+		return m_RecordingFrequency;
+
+	}
+
+	return LibMCDriver_ScanLabOIE::eOIERecordingFrequency::InvalidFrequency;
+}
+
+
 void COIEDeviceInstance::InstallApp(const LibMCDriver_ScanLabOIE_uint64 nAppPackageBufferSize, const LibMCDriver_ScanLabOIE_uint8* pAppPackageBuffer)
 {
 	if ((nAppPackageBufferSize == 0) || (pAppPackageBuffer == nullptr))
@@ -646,81 +713,94 @@ void COIEDeviceInstance::UninstallAppByMinorVersion(const std::string& sName, co
 
 void COIEDeviceInstance::onPacketEvent(oie_device device, const oie_pkt* pkt)
 {
+	bool bSkipPacket = (m_nPacketReceiveCounter % m_nPacketReceiveSkipCounter) != 0;
+	m_nPacketReceiveCounter++;
+
 	try {
-		if ((device == m_pDevice) && (pkt != nullptr)) {
+		if (!bSkipPacket) {
 
-			std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
+			if ((device == m_pDevice) && (pkt != nullptr)) {
 
-			if (m_pCurrentDataRecording.get() != nullptr) {
+				std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
+
+				if (m_pCurrentDataRecording.get() != nullptr) {
 
 
-				double dX = 0.0;
-				double dY = 0.0;
+					double dX = 0.0;
+					double dY = 0.0;
 
-				if (m_bHasCorrectionData) {
-					m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_xy(pkt, &dX, &dY));
-				}				
+					if (m_bHasCorrectionData) {
+						m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_xy(pkt, &dX, &dY));
+					}
 
-				//std::cout << "Packet: " << " X: " << dX << " Y: " << dY << std::endl;
+					//std::cout << "Packet: " << " X: " << dX << " Y: " << dY << std::endl;
 
-				// First uint32 of packet is packet number
-				uint32_t* pPacketNumber = (uint32_t*)pkt;
-				// Second uint32 of packet is measurement tag...
-				uint32_t* pMeasurementTag = (pPacketNumber + 1); 
+					// First uint32 of packet is packet number
+					uint32_t* pPacketNumber = (uint32_t*)pkt;
+					// Second uint32 of packet is measurement tag...
+					uint32_t* pMeasurementTag = (pPacketNumber + 1);
 
-				m_pCurrentDataRecording->startRecord(*pPacketNumber, *pMeasurementTag, dX, dY);
-				n_LastReceivedMeasurementTag = *pMeasurementTag;
+					/*if (*pPacketNumber > 4193900) {
+						std::cout << "Measurement tag" << *pMeasurementTag << " at packet ID " << *pPacketNumber << std::endl;
+					}*/
 
-				// Record sensor values first.
-				uint32_t sensorSignalCount = m_pOIESDK->oie_pkt_get_sensor_signal_count(pkt);
-				//std::cout << "Sensor signal count" << sensorSignalCount << std::endl;
+					m_pCurrentDataRecording->startRecord(*pPacketNumber, *pMeasurementTag, dX, dY);
+					/*if (n_LastReceivedMeasurementTag != *pMeasurementTag) {
+						std::cout << "New Measurement tag" << *pMeasurementTag << " at packet ID " << *pPacketNumber << std::endl;
+					}*/
+					n_LastReceivedMeasurementTag = *pMeasurementTag;
 
-				for (uint32_t sensorSignalIndex = 0; sensorSignalIndex < sensorSignalCount; sensorSignalIndex++)
-				{
-					int32_t nValue = 0;
-					m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_sensor_signal(pkt, sensorSignalIndex, &nValue));
-					m_pCurrentDataRecording->recordValue(nValue);
+					// Record sensor values first.
+					uint32_t sensorSignalCount = m_pOIESDK->oie_pkt_get_sensor_signal_count(pkt);
+					//std::cout << "Sensor signal count" << sensorSignalCount << std::endl;
+
+					for (uint32_t sensorSignalIndex = 0; sensorSignalIndex < sensorSignalCount; sensorSignalIndex++)
+					{
+						int32_t nValue = 0;
+						m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_sensor_signal(pkt, sensorSignalIndex, &nValue));
+						m_pCurrentDataRecording->recordValue(nValue);
+					}
+
+					// record RTC values second
+					uint32_t rtcSignalCount = m_pOIESDK->oie_pkt_get_rtc_signal_count(pkt);
+					//std::cout << "RTC signal count" << rtcSignalCount << std::endl;
+					for (uint32_t rtcSignalIndex = 0; rtcSignalIndex < rtcSignalCount; rtcSignalIndex++)
+					{
+						int32_t nValue = 0;
+						m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_rtc_signal(pkt, rtcSignalIndex, &nValue));
+
+						m_pCurrentDataRecording->recordValue(nValue);
+					}
+
+					// Record additional values last
+					uint32_t additionalSignalCount = m_pOIESDK->oie_pkt_get_app_data_count(pkt);
+					//std::cout << "Additional signal count" << additionalSignalCount << " (packetNr " << *pPacketNumber << ")" << std::endl;
+
+					for (uint32_t additionalSignalIndex = 0; additionalSignalIndex < additionalSignalCount; additionalSignalIndex++)
+					{
+						int32_t nValue = 0;
+						m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_app_data(pkt, additionalSignalIndex, &nValue));
+						//std::cout << "   - index #" << additionalSignalIndex << ": " << nValue << std::endl;
+
+						m_pCurrentDataRecording->recordValue(nValue);
+					}
+
+
+					m_pCurrentDataRecording->finishRecord();
+
 				}
-
-				// record RTC values second
-				uint32_t rtcSignalCount = m_pOIESDK->oie_pkt_get_rtc_signal_count(pkt);
-				//std::cout << "RTC signal count" << rtcSignalCount << std::endl;
-				for (uint32_t rtcSignalIndex = 0; rtcSignalIndex < rtcSignalCount; rtcSignalIndex++)
-				{
-					int32_t nValue = 0;
-					m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_rtc_signal(pkt, rtcSignalIndex, &nValue));
-
-					m_pCurrentDataRecording->recordValue(nValue);
-				}
-
-				// Record additional values last
-				uint32_t additionalSignalCount = m_pOIESDK->oie_pkt_get_app_data_count(pkt);
-				//std::cout << "Additional signal count" << additionalSignalCount << " (packetNr " << *pPacketNumber << ")" << std::endl;
-
-				for (uint32_t additionalSignalIndex = 0; additionalSignalIndex < additionalSignalCount; additionalSignalIndex++)
-				{
-					int32_t nValue = 0;
-					m_pOIESDK->checkError(m_pOIESDK->oie_pkt_get_app_data(pkt, additionalSignalIndex, &nValue));
-					//std::cout << "   - index #" << additionalSignalIndex << ": " << nValue << std::endl;
-
-					m_pCurrentDataRecording->recordValue(nValue);
-				}
-
-
-				m_pCurrentDataRecording->finishRecord();
-
 			}
-		}
-		else {
-			//std::cout << "Packet event: with null" << std::endl;
-		}
+			else {
+				//std::cout << "Packet event: with null" << std::endl;
+			}
 
+		}
+		/*catch (std::exception & E)
+		{
+			std::cout << "error getting data:" << E.what () << std::endl;
+
+		} */
 	}
-	/*catch (std::exception & E)
-	{
-		std::cout << "error getting data:" << E.what () << std::endl;
-
-	} */
 	catch (...) {
 		//std::cout << "error getting data" << std::endl;
 	}
@@ -946,6 +1026,17 @@ bool COIEDevice::AppIsRunning()
 {
 	return lockInstance()->AppIsRunning();
 }
+
+void COIEDevice::SetRecordingFrequency(const LibMCDriver_ScanLabOIE::eOIERecordingFrequency eFrequency)
+{
+	lockInstance()->SetRecordingFrequency(eFrequency);
+}
+
+LibMCDriver_ScanLabOIE::eOIERecordingFrequency COIEDevice::GetRecordingFrequency()
+{
+	return lockInstance()->GetRecordingFrequency();
+}
+
 
 void COIEDevice::GetRunningApp(std::string & sName, LibMCDriver_ScanLabOIE_uint32 & nMajor, LibMCDriver_ScanLabOIE_uint32 & nMinor, LibMCDriver_ScanLabOIE_uint32 & nPatch)
 {

@@ -44,7 +44,8 @@ Abstract: This is the class declaration of CJSONObject
 #pragma warning(disable : 4250)
 #endif
 
-// Include custom headers here.
+#include "RapidJSON/rapidjson.h"
+#include "RapidJSON/document.h"
 
 
 namespace LibMCEnv {
@@ -57,37 +58,32 @@ namespace Impl {
 
 class CJSONObject : public virtual IJSONObject, public virtual CBase {
 private:
-
-	/**
-	* Put private members here.
-	*/
-
-protected:
-
-	/**
-	* Put protected members here.
-	*/
+	std::shared_ptr<rapidjson::Document> m_pDocument;
+	rapidjson::GenericValue<rapidjson::UTF8<>>* m_pInstance;
 
 public:
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+	CJSONObject();
 
+	CJSONObject(std::shared_ptr<rapidjson::Document> pDocument, rapidjson::Value * pReferencedObject);
 
-	/**
-	* Public member functions to implement.
-	*/
+	CJSONObject(const std::string & sJSONString);
+
+	CJSONObject(const uint8_t * pData, uint64_t nDataSize);
+
+	virtual ~CJSONObject();
 
 	bool HasMember(const std::string & sName) override;
 
 	LibMCEnv_uint64 GetMemberCount() override;
 
-	void GetMemberName(const LibMCEnv_uint64 nIndex, const std::string & sName) override;
+	std::string GetMemberName(const LibMCEnv_uint64 nIndex) override;
 
 	LibMCEnv::eJSONObjectType GetMemberType(const std::string & sName) override;
 
 	std::string GetValue(const std::string & sName) override;
+
+	std::string GetUUIDValue(const std::string& sName) override;
 
 	LibMCEnv_int64 GetIntegerValue(const std::string & sName) override;
 
@@ -103,16 +99,17 @@ public:
 
 	void AddValue(const std::string & sName, const std::string & sValue) override;
 
-	LibMCEnv_int64 AddIntegerValue(const std::string & sName) override;
+	void AddIntegerValue(const std::string& sName, const LibMCEnv_int64 nValue) override;
 
-	LibMCEnv_double AddDoubleValue(const std::string & sName) override;
+	void AddDoubleValue(const std::string& sName, const LibMCEnv_double dValue) override;
 
-	bool AddBoolValue(const std::string & sName) override;
+	void AddBoolValue(const std::string& sName, const bool bValue) override;
 
 	IJSONObject * AddObjectValue(const std::string & sName) override;
 
 	IJSONArray * AddArrayValue(const std::string & sName) override;
 
+	std::string SerializeToString() override;
 };
 
 } // namespace Impl

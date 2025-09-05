@@ -43,3 +43,12 @@
 [submodule "submodules/libjpeg-turbo"]
 	path = submodules/libjpeg-turbo
 	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
+[submodule "submodules/TinyJPEG"]
+	path = submodules/TinyJPEG
+	url = https://github.com/serge-rgb/TinyJPEG.git
+[submodule "submodules/stb"]
+	path = submodules/stb
+	url = https://github.com/nothings/stb.git
+[submodule "submodules/swagger-ui"]
+	path = submodules/swagger-ui
+	url = https://github.com/swagger-api/swagger-ui.git

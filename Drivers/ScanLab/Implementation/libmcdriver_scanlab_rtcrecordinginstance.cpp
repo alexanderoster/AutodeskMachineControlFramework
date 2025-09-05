@@ -143,6 +143,34 @@ std::string CRTCRecordingChannel::getName()
 	return m_sChannelName;
 }
 
+int32_t* CRTCRecordingChannel::reserveDataBuffer(uint32_t nCount, uint32_t& nEntriesToRead)
+{
+
+	nEntriesToRead = 0;
+
+	if (nCount == 0)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGUNDERFLOW, "data recording interval underflow");
+	if ((size_t)nCount > m_nChunkSize) {
+		nCount = (uint32_t)m_nChunkSize;
+	}
+
+	if (m_pCurrentChunk.get() != nullptr) {
+		if (m_pCurrentChunk->isFull())
+			m_pCurrentChunk = nullptr;
+	}
+
+	if (m_pCurrentChunk.get() == nullptr) {
+		m_pCurrentChunk = std::make_shared<CRTCRecordingChunk>(m_nEntryCount, m_nChunkSize);
+		m_Chunks.push_back(m_pCurrentChunk);
+	}
+
+	auto pBuffer = m_pCurrentChunk->reserveDataBuffer(nCount, nEntriesToRead);
+	m_nEntryCount += nEntriesToRead;
+
+	return pBuffer;
+
+}
+
 uint32_t CRTCRecordingChannel::getRTCChannelID()
 {
 	return m_nRTCChannelID;
@@ -453,6 +481,8 @@ std::string CRTCRecordingInstance::getUUID()
 
 void CRTCRecordingInstance::clear()
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	m_ChannelMap.clear();
 	for (auto& channel : m_Channels)
 		channel = nullptr;
@@ -461,6 +491,8 @@ void CRTCRecordingInstance::clear()
 
 PRTCRecordingChannel CRTCRecordingInstance::addChannel(const std::string& sChannelName, const LibMCDriver_ScanLab::eRTCChannelType eChannelType)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 
 	std::string sNormalizedChannelName = normalizeChannelName(sChannelName);
 
@@ -504,6 +536,8 @@ PRTCRecordingChannel CRTCRecordingInstance::addChannel(const std::string& sChann
 
 CRTCRecordingChannel* CRTCRecordingInstance::findChannel(const std::string& sChannelName, bool bMustExist)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	std::string sNormalizedChannelName = normalizeChannelName(sChannelName);
 	auto iIter = m_ChannelMap.find(sNormalizedChannelName);
 	if (iIter != m_ChannelMap.end())
@@ -518,35 +552,11 @@ CRTCRecordingChannel* CRTCRecordingInstance::findChannel(const std::string& sCha
 
 
 
-int32_t * CRTCRecordingChannel::reserveDataBuffer(uint32_t nCount, uint32_t& nEntriesToRead)
-{
-	nEntriesToRead = 0;
-
-	if (nCount == 0)
-		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGUNDERFLOW, "data recording interval underflow");
-	if (nCount > m_nChunkSize) {
-		nCount = m_nChunkSize;		
-	}
-
-	if (m_pCurrentChunk.get() != nullptr) {
-		if (m_pCurrentChunk->isFull())
-			m_pCurrentChunk = nullptr;
-	}
-
-	if (m_pCurrentChunk.get() == nullptr) {
-		m_pCurrentChunk = std::make_shared<CRTCRecordingChunk> (m_nEntryCount, m_nChunkSize);
-		m_Chunks.push_back(m_pCurrentChunk);
-	}
-
-	auto pBuffer =  m_pCurrentChunk->reserveDataBuffer(nCount, nEntriesToRead);
-	m_nEntryCount += nEntriesToRead;
-
-	return pBuffer;
-
-}
 
 void CRTCRecordingInstance::removeChannel(const std::string& sChannelName)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	std::string sNormalizedChannelName = normalizeChannelName(sChannelName);
 
 	auto iIter = m_ChannelMap.find(sNormalizedChannelName);
@@ -603,6 +613,7 @@ void CRTCRecordingInstance::getAllRecordEntries(const std::string& sChannelName,
 
 void CRTCRecordingInstance::enableRecording(uint32_t nPeriod)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
 	std::array<uint32_t, RTC_CHANNELCOUNT> rtcChannels;
 	for (uint32_t nIndex = 0; nIndex < RTC_CHANNELCOUNT; nIndex++) {
@@ -633,6 +644,9 @@ void CRTCRecordingInstance::disableRecording()
 
 void CRTCRecordingInstance::readRecordedDataBlockFromRTC(uint32_t DataStart, uint32_t DataEnd)
 {
+
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (DataEnd < DataStart)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDDATARECORDINGINTERVAL, "invalid data recording interval: " + std::to_string (DataStart) + " - " + std::to_string (DataEnd));
 
@@ -782,6 +796,8 @@ void CRTCRecordingInstance::addScaledRecordsToDataTable(const std::string& sChan
 
 void CRTCRecordingInstance::addBacktransformedXYPositionsToDataTable(LibMCEnv::PDataTable pDataTable, const std::string& sColumnIdentifierX, const std::string& sColumnDescriptionX, const std::string& sColumnIdentifierY, const std::string& sColumnDescriptionY)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (!m_bEnableBacktransformation)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_BACKTRANSFORMATIONISNOTENABLED);
 	if (m_HeadTransform.size () == 0)
@@ -848,6 +864,8 @@ void CRTCRecordingInstance::addBacktransformedXYPositionsToDataTable(LibMCEnv::P
 
 void CRTCRecordingInstance::backtransformRawXYCoordinates(const int32_t nRawCoordinateX, const int32_t nRawCoordinateY, double& dBacktransformedX, double& dBacktransformedY)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (!m_bEnableBacktransformation)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_BACKTRANSFORMATIONISNOTENABLED);
 	if (m_HeadTransform.size() == 0)
@@ -865,6 +883,8 @@ void CRTCRecordingInstance::backtransformRawXYCoordinates(const int32_t nRawCoor
 
 void CRTCRecordingInstance::addBacktransformedZPositionToDataTable(LibMCEnv::PDataTable pDataTable, const std::string& sColumnIdentifierZ, const std::string& sColumnDescriptionZ)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (!m_bEnableBacktransformation)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_BACKTRANSFORMATIONISNOTENABLED);
 	if (m_HeadTransform.size() == 0)
@@ -915,6 +935,8 @@ void CRTCRecordingInstance::addBacktransformedZPositionToDataTable(LibMCEnv::PDa
 
 double CRTCRecordingInstance::backtransformRawZCoordinate(const int32_t nRawCoordinateZ)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (!m_bEnableBacktransformation)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_BACKTRANSFORMATIONISNOTENABLED);
 	if (m_HeadTransform.size() == 0)
@@ -931,6 +953,8 @@ double CRTCRecordingInstance::backtransformRawZCoordinate(const int32_t nRawCoor
 
 void CRTCRecordingInstance::addTargetPositionsToDataTable(LibMCEnv::PDataTable pDataTable, const std::string& sColumnIdentifierX, const std::string& sColumnDescriptionX, const std::string& sColumnIdentifierY, const std::string& sColumnDescriptionY)
 {
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
 	if (pDataTable.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 

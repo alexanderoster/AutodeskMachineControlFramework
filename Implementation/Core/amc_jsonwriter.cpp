@@ -102,6 +102,10 @@ void CJSONWriterObject::addArray(const std::string& sName, CJSONWriterArray& arr
 	m_Value.AddMember(strName, array.m_Value, m_allocator);
 }
 
+void CJSONWriterObject::copyFromObject(const rapidjson::Value& objectValue)
+{
+	m_Value.CopyFrom(objectValue, m_allocator);
+}
 
 
 
@@ -221,4 +225,10 @@ void CJSONWriter::addArray(const std::string& sName, CJSONWriterArray& array)
 	m_document.AddMember(strName, array.m_Value, m_allocator);
 
 }
+
+void CJSONWriter::copyFromDocument(const rapidjson::Document& document)
+{
+	m_document.CopyFrom(document, m_document.GetAllocator());
+}
+
 

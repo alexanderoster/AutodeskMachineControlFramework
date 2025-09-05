@@ -139,6 +139,17 @@ typedef void * LibMCDriver_Raylase_pvoid;
 #define LIBMCDRIVER_RAYLASE_ERROR_INVALIDFIELDDATASIZE 1032 /** Invalid field data size */
 #define LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTLASERMODE 1033 /** Invalid nLight Laser Mode */
 #define LIBMCDRIVER_RAYLASE_ERROR_INVALIDVARIABLEINDEX 1034 /** Invalid Variable Index */
+#define LIBMCDRIVER_RAYLASE_ERROR_SCANNINGCANCELED 1035 /** Scanning canceled */
+#define LIBMCDRIVER_RAYLASE_ERROR_UNKNOWNENUMVALUE 1036 /** Unknown enum value */
+#define LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTAFXMODE 1038 /** Invalid nLight afx mode */
+#define LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGESIGNALDELAY 1039 /** Invalid nLight mode change signal delay */
+#define LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGEAPPLYDELAY 1040 /** Invalid nLight mode change apply delay */
+#define LIBMCDRIVER_RAYLASE_ERROR_NLIGHTFIRMWAREISNOTREADY 1041 /** nLight Firmware is not ready */
+#define LIBMCDRIVER_RAYLASE_ERROR_NLIGHTEXTERNALCONTROLNOTREADY 1042 /** nLight External control is not ready */
+#define LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERNOTREADYAFTERSYSTEMON 1043 /** nLight Laser is not ready after SYSTEMON */
+#define LIBMCDRIVER_RAYLASE_ERROR_COULDNOTRECEIVESPIPACKET 1044 /** Could not receive SPI Packet */
+#define LIBMCDRIVER_RAYLASE_ERROR_INVALIDLASERMODE 1045 /** Invalid laser mode */
+#define LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERMODEHASNOPOWEROVERRIDE 1046 /** nLight laser mode has no power override */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_Raylase
@@ -190,6 +201,17 @@ inline const char * LIBMCDRIVER_RAYLASE_GETERRORSTRING (LibMCDriver_RaylaseResul
     case LIBMCDRIVER_RAYLASE_ERROR_INVALIDFIELDDATASIZE: return "Invalid field data size";
     case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTLASERMODE: return "Invalid nLight Laser Mode";
     case LIBMCDRIVER_RAYLASE_ERROR_INVALIDVARIABLEINDEX: return "Invalid Variable Index";
+    case LIBMCDRIVER_RAYLASE_ERROR_SCANNINGCANCELED: return "Scanning canceled";
+    case LIBMCDRIVER_RAYLASE_ERROR_UNKNOWNENUMVALUE: return "Unknown enum value";
+    case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTAFXMODE: return "Invalid nLight afx mode";
+    case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGESIGNALDELAY: return "Invalid nLight mode change signal delay";
+    case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGEAPPLYDELAY: return "Invalid nLight mode change apply delay";
+    case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTFIRMWAREISNOTREADY: return "nLight Firmware is not ready";
+    case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTEXTERNALCONTROLNOTREADY: return "nLight External control is not ready";
+    case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERNOTREADYAFTERSYSTEMON: return "nLight Laser is not ready after SYSTEMON";
+    case LIBMCDRIVER_RAYLASE_ERROR_COULDNOTRECEIVESPIPACKET: return "Could not receive SPI Packet";
+    case LIBMCDRIVER_RAYLASE_ERROR_INVALIDLASERMODE: return "Invalid laser mode";
+    case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERMODEHASNOPOWEROVERRIDE: return "nLight laser mode has no power override";
     default: return "unknown error";
   }
 }
@@ -207,6 +229,16 @@ typedef LibMCDriver_RaylaseHandle LibMCDriver_Raylase_Driver_Raylase;
 
 namespace LibMCDriver_Raylase {
 
+  /*************************************************************************************************************************
+   Declaration of enums
+  **************************************************************************************************************************/
+  
+  enum class ePartSuppressionMode : LibMCDriver_Raylase_int32 {
+    DontSuppress = 0, /** Part is exposed with full power. */
+    SkipPart = 1, /** Part is skipped and not exposed at all. */
+    NoPower = 2 /** Part is exposed with a power of 0 Watts. */
+  };
+  
   /*************************************************************************************************************************
    Declaration of structs
   **************************************************************************************************************************/
@@ -227,10 +259,25 @@ namespace LibMCDriver_Raylase {
   
   #pragma pack ()
   
+  /*************************************************************************************************************************
+   Declaration of function pointers 
+  **************************************************************************************************************************/
+  
+  /**
+  * ExposureCancellationCallback - A callback function to provide exposure cancellation functionality.
+  *
+  * @param[in] nScanningTimeInMilliseconds - Current scanning time in milliseconds
+  * @param[in] pUserData - Userdata that is passed to the callback function
+  * @param[out] pAbort - Returns whether the exposure should be aborted
+  */
+  typedef void(*ExposureCancellationCallback)(LibMCDriver_Raylase_uint64, LibMCDriver_Raylase_pvoid, bool *);
+  
 } // namespace LibMCDriver_Raylase;
 
 // define legacy C-names for enums, structs and function types
+typedef LibMCDriver_Raylase::ePartSuppressionMode eLibMCDriver_RaylasePartSuppressionMode;
 typedef LibMCDriver_Raylase::sPoint2D sLibMCDriver_RaylasePoint2D;
 typedef LibMCDriver_Raylase::sHatch2D sLibMCDriver_RaylaseHatch2D;
+typedef LibMCDriver_Raylase::ExposureCancellationCallback LibMCDriver_RaylaseExposureCancellationCallback;
 
 #endif // __LIBMCDRIVER_RAYLASE_TYPES_HEADER_CPP

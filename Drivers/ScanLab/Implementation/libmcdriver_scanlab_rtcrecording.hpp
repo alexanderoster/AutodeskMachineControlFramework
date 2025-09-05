@@ -69,6 +69,8 @@ public:
 
 	void Clear() override;
 
+	std::string GetUUID() override;
+
 	void AddChannel(const std::string & sChannelName, const LibMCDriver_ScanLab::eRTCChannelType eChannelType) override;
 
 	void RemoveChannel(const std::string & sChannelName) override;

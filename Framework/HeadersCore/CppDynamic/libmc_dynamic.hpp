@@ -727,6 +727,49 @@ public:
 			case LIBMC_ERROR_INVALIDCONTENTSTATEID: return "INVALIDCONTENTSTATEID";
 			case LIBMC_ERROR_INVALIDWIDGETREQUEST: return "INVALIDWIDGETREQUEST";
 			case LIBMC_ERROR_SOURCEVARIABLENOTFOUND: return "SOURCEVARIABLENOTFOUND";
+			case LIBMC_ERROR_INVALIDEVENTRETURNVALUES: return "INVALIDEVENTRETURNVALUES";
+			case LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT: return "INVALIDMODIFIERINTERPOLATIONCOUNT";
+			case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERTYPE: return "INVALIDTOOLPATHMODIFIERTYPE";
+			case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERFACTOR: return "INVALIDTOOLPATHMODIFIERFACTOR";
+			case LIBMC_ERROR_BINARYMETADATARELATIONSHIPNOTFOUND: return "BINARYMETADATARELATIONSHIPNOTFOUND";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLECHANGEAFTERSTART: return "ENVIRONMENTVARIABLECHANGEAFTERSTART";
+			case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLENAME: return "INVALIDENVIRONMENTVARIABLENAME";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLEALREADYEXISTS: return "ENVIRONMENTVARIABLEALREADYEXISTS";
+			case LIBMC_ERROR_REACHEDENVIRONMENTVARIABLELIMIT: return "REACHEDENVIRONMENTVARIABLELIMIT";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLENOTFOUND: return "ENVIRONMENTVARIABLENOTFOUND";
+			case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLEINDEX: return "INVALIDENVIRONMENTVARIABLEINDEX";
+			case LIBMC_ERROR_COULDNOTREADPROCESSPIPE: return "COULDNOTREADPROCESSPIPE";
+			case LIBMC_ERROR_PROCESSEXECUTABLENOTFOUND: return "PROCESSEXECUTABLENOTFOUND";
+			case LIBMC_ERROR_COULDNOTCREATEPROCESSPIPE: return "COULDNOTCREATEPROCESSPIPE";
+			case LIBMC_ERROR_CREATEPROCESSFAILED: return "CREATEPROCESSFAILED";
+			case LIBMC_ERROR_PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST: return "PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST";
+			case LIBMC_ERROR_PROCESSCONTROLTIMEISINVALID: return "PROCESSCONTROLTIMEISINVALID";
+			case LIBMC_ERROR_PROCESSWORKINGDIRECTORYDOESNOTEXIST: return "PROCESSWORKINGDIRECTORYDOESNOTEXIST";
+			case LIBMC_ERROR_PROCESSHASALREADYBEENSTARTED: return "PROCESSHASALREADYBEENSTARTED";
+			case LIBMC_ERROR_PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM: return "PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM";
+			case LIBMC_ERROR_INVALIDWRITEBUFFFERPOSITION: return "INVALIDWRITEBUFFFERPOSITION";
+			case LIBMC_ERROR_INVALIDWRITEBUFFERSIZE: return "INVALIDWRITEBUFFERSIZE";
+			case LIBMC_ERROR_CANNOTWRITETOFINISHEDFILE: return "CANNOTWRITETOFINISHEDFILE";
+			case LIBMC_ERROR_WORKINGDIRECTORYHASBEENCLEANED: return "WORKINGDIRECTORYHASBEENCLEANED";
+			case LIBMC_ERROR_INVALIDCHARACTERINFILENAME: return "INVALIDCHARACTERINFILENAME";
+			case LIBMC_ERROR_WORKINGDIRECTORYCEASEDTOEXIST: return "WORKINGDIRECTORYCEASEDTOEXIST";
+			case LIBMC_ERROR_DIRECTORYALREADYEXISTS: return "DIRECTORYALREADYEXISTS";
+			case LIBMC_ERROR_WORKINGDIRECTORYNOTFOUND: return "WORKINGDIRECTORYNOTFOUND";
+			case LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT: return "INVALIDSIGNALREACTIONTIMEOUT";
+			case LIBMC_ERROR_INVALIDSIGNALQUEUESIZE: return "INVALIDSIGNALQUEUESIZE";
+			case LIBMC_ERROR_SIGNALALREADYTRIGGERED: return "SIGNALALREADYTRIGGERED";
+			case LIBMC_ERROR_INVALIDQUERYPARAMETER: return "INVALIDQUERYPARAMETER";
+			case LIBMC_ERROR_DUPLICATEQUERYPARAMETER: return "DUPLICATEQUERYPARAMETER";
+			case LIBMC_ERROR_QUERYPARAMETERNOTFOUND: return "QUERYPARAMETERNOTFOUND";
+			case LIBMC_ERROR_INVALIDBUILDJOBSTATUSQUERY: return "INVALIDBUILDJOBSTATUSQUERY";
+			case LIBMC_ERROR_INVALIDNEWBUILDSTATUS: return "INVALIDNEWBUILDSTATUS";
+			case LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON: return "INVALIDDEFAULTOPENAPIJSON";
+			case LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON: return "INVALIDCUSTOMOPENAPIJSON";
+			case LIBMC_ERROR_USEDMODULEISLEGACY: return "USEDMODULEISLEGACY";
+			case LIBMC_ERROR_TRIEDTOACCESSNULLCLIENTPARAMETERS: return "TRIEDTOACCESSNULLCLIENTPARAMETERS";
+			case LIBMC_ERROR_INVALIDFRONTENDMODULEPATH: return "INVALIDFRONTENDMODULEPATH";
+			case LIBMC_ERROR_INVALIDFRONTENDATTRIBUTENAME: return "INVALIDFRONTENDATTRIBUTENAME";
+			case LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME: return "DUPLICATEFRONTENDATTRIBUTENAME";
 		}
 		return "UNKNOWN";
 	}
@@ -1288,6 +1331,49 @@ public:
 			case LIBMC_ERROR_INVALIDCONTENTSTATEID: return "Invalid content state ID";
 			case LIBMC_ERROR_INVALIDWIDGETREQUEST: return "Invalid widget request";
 			case LIBMC_ERROR_SOURCEVARIABLENOTFOUND: return "Source variable not found";
+			case LIBMC_ERROR_INVALIDEVENTRETURNVALUES: return "Invalid event return values";
+			case LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT: return "Invalid modifier interpolation count";
+			case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERTYPE: return "Invalid toolpath modifier type.";
+			case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERFACTOR: return "Invalid toolpath modifier factor.";
+			case LIBMC_ERROR_BINARYMETADATARELATIONSHIPNOTFOUND: return "Binary metadata relationship not found.";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLECHANGEAFTERSTART: return "Environment variable change after start.";
+			case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLENAME: return "Invalid environment variable name.";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLEALREADYEXISTS: return "Environment variable already exists.";
+			case LIBMC_ERROR_REACHEDENVIRONMENTVARIABLELIMIT: return "Reached Environment variable limit.";
+			case LIBMC_ERROR_ENVIRONMENTVARIABLENOTFOUND: return "Environment Variable not found.";
+			case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLEINDEX: return "Invalid environment variable index.";
+			case LIBMC_ERROR_COULDNOTREADPROCESSPIPE: return "Could not read process pipe.";
+			case LIBMC_ERROR_PROCESSEXECUTABLENOTFOUND: return "Process executable not found.";
+			case LIBMC_ERROR_COULDNOTCREATEPROCESSPIPE: return "Could not create process pipe.";
+			case LIBMC_ERROR_CREATEPROCESSFAILED: return "Create process failed.";
+			case LIBMC_ERROR_PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST: return "Process executable directory does not exist.";
+			case LIBMC_ERROR_PROCESSCONTROLTIMEISINVALID: return "Process control time is invalid.";
+			case LIBMC_ERROR_PROCESSWORKINGDIRECTORYDOESNOTEXIST: return "Process working directory does not exist.";
+			case LIBMC_ERROR_PROCESSHASALREADYBEENSTARTED: return "Process has already been started.";
+			case LIBMC_ERROR_PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM: return "Process handling not implemented on Platform.";
+			case LIBMC_ERROR_INVALIDWRITEBUFFFERPOSITION: return "Invalid write buffer position.";
+			case LIBMC_ERROR_INVALIDWRITEBUFFERSIZE: return "Invalid write buffer size.";
+			case LIBMC_ERROR_CANNOTWRITETOFINISHEDFILE: return "Cannot write to finished file.";
+			case LIBMC_ERROR_WORKINGDIRECTORYHASBEENCLEANED: return "Working Directory has been cleaned.";
+			case LIBMC_ERROR_INVALIDCHARACTERINFILENAME: return "Invalid character in filename.";
+			case LIBMC_ERROR_WORKINGDIRECTORYCEASEDTOEXIST: return "Working directory ceased to exist.";
+			case LIBMC_ERROR_DIRECTORYALREADYEXISTS: return "Directory already exists.";
+			case LIBMC_ERROR_WORKINGDIRECTORYNOTFOUND: return "Working Directory not found.";
+			case LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT: return "Invalid Signal Reaction Timeout.";
+			case LIBMC_ERROR_INVALIDSIGNALQUEUESIZE: return "Invalid Signal queue size.";
+			case LIBMC_ERROR_SIGNALALREADYTRIGGERED: return "Signal has already been triggered.";
+			case LIBMC_ERROR_INVALIDQUERYPARAMETER: return "Invalid query parameter.";
+			case LIBMC_ERROR_DUPLICATEQUERYPARAMETER: return "Duplicate query parameter.";
+			case LIBMC_ERROR_QUERYPARAMETERNOTFOUND: return "Query parameter not found.";
+			case LIBMC_ERROR_INVALIDBUILDJOBSTATUSQUERY: return "Invalid build job status query.";
+			case LIBMC_ERROR_INVALIDNEWBUILDSTATUS: return "Invalid new build status.";
+			case LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON: return "Invalid Default OpenAPI JSON.";
+			case LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON: return "Invalid Custom OpenAPI JSON.";
+			case LIBMC_ERROR_USEDMODULEISLEGACY: return "Used module is legacy.";
+			case LIBMC_ERROR_TRIEDTOACCESSNULLCLIENTPARAMETERS: return "Tried to access null client parameters.";
+			case LIBMC_ERROR_INVALIDFRONTENDMODULEPATH: return "Invalid frontend module path.";
+			case LIBMC_ERROR_INVALIDFRONTENDATTRIBUTENAME: return "Invalid frontend attribute name.";
+			case LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME: return "Duplicate frontend attribute name.";
 		}
 		return "unknown error";
 	}
@@ -1507,6 +1593,7 @@ public:
 	
 	inline PStreamData GetNewContent();
 	inline LibMC_uint32 GetIdleDelay();
+	inline eStreamConnectionType GetStreamType();
 };
 	
 /*************************************************************************************************************************
@@ -1528,6 +1615,7 @@ public:
 	inline void GetFormDataDetails(const LibMC_uint32 nFieldIndex, std::string & sName, bool & bIsFile, bool & bMandatory);
 	inline void SetFormDataField(const std::string & sName, const CInputVector<LibMC_uint8> & DataFieldBuffer);
 	inline void SetFormStringField(const std::string & sName, const std::string & sString);
+	inline void SetRequestParameter(const std::string & sName, const std::string & sValue);
 	inline void Handle(const CInputVector<LibMC_uint8> & RawBodyBuffer, std::string & sContentType, LibMC_uint32 & nHTTPCode);
 	inline void GetResultData(std::vector<LibMC_uint8> & DataBuffer);
 	inline std::string GetContentDispositionName();
@@ -1557,6 +1645,7 @@ public:
 	inline bool InstanceStateIsSuccessful(const std::string & sInstanceName);
 	inline bool InstanceStateHasFailed(const std::string & sInstanceName);
 	inline void LoadClientPackage(const std::string & sResourcePath);
+	inline void LoadAPIDocumentation(const std::string & sResourcePath);
 	inline void Log(const std::string & sMessage, const eLogSubSystem eSubsystem, const eLogLevel eLogLevel);
 	inline PAPIRequestHandler CreateAPIRequestHandler(const std::string & sURI, const std::string & sRequestMethod, const std::string & sAuthorization);
 	inline PStreamConnection CreateStreamConnection(const std::string & sStreamUUID);
@@ -1673,11 +1762,13 @@ public:
 		pWrapperTable->m_StreamData_GetMIMEType = nullptr;
 		pWrapperTable->m_StreamConnection_GetNewContent = nullptr;
 		pWrapperTable->m_StreamConnection_GetIdleDelay = nullptr;
+		pWrapperTable->m_StreamConnection_GetStreamType = nullptr;
 		pWrapperTable->m_APIRequestHandler_ExpectsRawBody = nullptr;
 		pWrapperTable->m_APIRequestHandler_ExpectsFormData = nullptr;
 		pWrapperTable->m_APIRequestHandler_GetFormDataDetails = nullptr;
 		pWrapperTable->m_APIRequestHandler_SetFormDataField = nullptr;
 		pWrapperTable->m_APIRequestHandler_SetFormStringField = nullptr;
+		pWrapperTable->m_APIRequestHandler_SetRequestParameter = nullptr;
 		pWrapperTable->m_APIRequestHandler_Handle = nullptr;
 		pWrapperTable->m_APIRequestHandler_GetResultData = nullptr;
 		pWrapperTable->m_APIRequestHandler_GetContentDispositionName = nullptr;
@@ -1691,6 +1782,7 @@ public:
 		pWrapperTable->m_MCContext_InstanceStateIsSuccessful = nullptr;
 		pWrapperTable->m_MCContext_InstanceStateHasFailed = nullptr;
 		pWrapperTable->m_MCContext_LoadClientPackage = nullptr;
+		pWrapperTable->m_MCContext_LoadAPIDocumentation = nullptr;
 		pWrapperTable->m_MCContext_Log = nullptr;
 		pWrapperTable->m_MCContext_CreateAPIRequestHandler = nullptr;
 		pWrapperTable->m_MCContext_CreateStreamConnection = nullptr;
@@ -1787,6 +1879,15 @@ public:
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StreamConnection_GetStreamType = (PLibMCStreamConnection_GetStreamTypePtr) GetProcAddress(hLibrary, "libmc_streamconnection_getstreamtype");
+		#else // _WIN32
+		pWrapperTable->m_StreamConnection_GetStreamType = (PLibMCStreamConnection_GetStreamTypePtr) dlsym(hLibrary, "libmc_streamconnection_getstreamtype");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StreamConnection_GetStreamType == nullptr)
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_APIRequestHandler_ExpectsRawBody = (PLibMCAPIRequestHandler_ExpectsRawBodyPtr) GetProcAddress(hLibrary, "libmc_apirequesthandler_expectsrawbody");
 		#else // _WIN32
 		pWrapperTable->m_APIRequestHandler_ExpectsRawBody = (PLibMCAPIRequestHandler_ExpectsRawBodyPtr) dlsym(hLibrary, "libmc_apirequesthandler_expectsrawbody");
@@ -1829,6 +1930,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_APIRequestHandler_SetFormStringField == nullptr)
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_APIRequestHandler_SetRequestParameter = (PLibMCAPIRequestHandler_SetRequestParameterPtr) GetProcAddress(hLibrary, "libmc_apirequesthandler_setrequestparameter");
+		#else // _WIN32
+		pWrapperTable->m_APIRequestHandler_SetRequestParameter = (PLibMCAPIRequestHandler_SetRequestParameterPtr) dlsym(hLibrary, "libmc_apirequesthandler_setrequestparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_APIRequestHandler_SetRequestParameter == nullptr)
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1949,6 +2059,15 @@ public:
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_MCContext_LoadAPIDocumentation = (PLibMCMCContext_LoadAPIDocumentationPtr) GetProcAddress(hLibrary, "libmc_mccontext_loadapidocumentation");
+		#else // _WIN32
+		pWrapperTable->m_MCContext_LoadAPIDocumentation = (PLibMCMCContext_LoadAPIDocumentationPtr) dlsym(hLibrary, "libmc_mccontext_loadapidocumentation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MCContext_LoadAPIDocumentation == nullptr)
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_MCContext_Log = (PLibMCMCContext_LogPtr) GetProcAddress(hLibrary, "libmc_mccontext_log");
 		#else // _WIN32
 		pWrapperTable->m_MCContext_Log = (PLibMCMCContext_LogPtr) dlsym(hLibrary, "libmc_mccontext_log");
@@ -2061,6 +2180,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StreamConnection_GetIdleDelay == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmc_streamconnection_getstreamtype", (void**)&(pWrapperTable->m_StreamConnection_GetStreamType));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StreamConnection_GetStreamType == nullptr) )
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmc_apirequesthandler_expectsrawbody", (void**)&(pWrapperTable->m_APIRequestHandler_ExpectsRawBody));
 		if ( (eLookupError != 0) || (pWrapperTable->m_APIRequestHandler_ExpectsRawBody == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -2079,6 +2202,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmc_apirequesthandler_setformstringfield", (void**)&(pWrapperTable->m_APIRequestHandler_SetFormStringField));
 		if ( (eLookupError != 0) || (pWrapperTable->m_APIRequestHandler_SetFormStringField == nullptr) )
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmc_apirequesthandler_setrequestparameter", (void**)&(pWrapperTable->m_APIRequestHandler_SetRequestParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_APIRequestHandler_SetRequestParameter == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmc_apirequesthandler_handle", (void**)&(pWrapperTable->m_APIRequestHandler_Handle));
@@ -2131,6 +2258,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmc_mccontext_loadclientpackage", (void**)&(pWrapperTable->m_MCContext_LoadClientPackage));
 		if ( (eLookupError != 0) || (pWrapperTable->m_MCContext_LoadClientPackage == nullptr) )
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmc_mccontext_loadapidocumentation", (void**)&(pWrapperTable->m_MCContext_LoadAPIDocumentation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MCContext_LoadAPIDocumentation == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmc_mccontext_log", (void**)&(pWrapperTable->m_MCContext_Log));
@@ -2243,6 +2374,18 @@ public:
 	}
 	
 	/**
+	* CStreamConnection::GetStreamType - Returns the stream type.
+	* @return Content type of the stream.
+	*/
+	eStreamConnectionType CStreamConnection::GetStreamType()
+	{
+		eStreamConnectionType resultStreamType = (eStreamConnectionType) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StreamConnection_GetStreamType(m_pHandle, &resultStreamType));
+		
+		return resultStreamType;
+	}
+	
+	/**
 	 * Method definitions for class CAPIRequestHandler
 	 */
 	
@@ -2306,6 +2449,16 @@ public:
 	void CAPIRequestHandler::SetFormStringField(const std::string & sName, const std::string & sString)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_APIRequestHandler_SetFormStringField(m_pHandle, sName.c_str(), sString.c_str()));
+	}
+	
+	/**
+	* CAPIRequestHandler::SetRequestParameter - Sets a request parameter.
+	* @param[in] sName - Name of the parameter.
+	* @param[in] sValue - Value of the parameter.
+	*/
+	void CAPIRequestHandler::SetRequestParameter(const std::string & sName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_APIRequestHandler_SetRequestParameter(m_pHandle, sName.c_str(), sValue.c_str()));
 	}
 	
 	/**
@@ -2452,6 +2605,15 @@ public:
 	void CMCContext::LoadClientPackage(const std::string & sResourcePath)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_MCContext_LoadClientPackage(m_pHandle, sResourcePath.c_str()));
+	}
+	
+	/**
+	* CMCContext::LoadAPIDocumentation - load a package to serve the API documentation website.
+	* @param[in] sResourcePath - Path to the resource package.
+	*/
+	void CMCContext::LoadAPIDocumentation(const std::string & sResourcePath)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_MCContext_LoadAPIDocumentation(m_pHandle, sResourcePath.c_str()));
 	}
 	
 	/**

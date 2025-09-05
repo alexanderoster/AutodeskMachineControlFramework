@@ -41,6 +41,7 @@ Abstract: This is the class declaration of CRTCRecording
 #include "libmcdriver_scanlab_sdk.hpp"
 #include <map>
 #include <array>
+#include <mutex>
 
 
 #define RTC_CHANNELCOUNT 8
@@ -151,6 +152,8 @@ private:
 
 	bool m_bEnableScanheadFeedback;
 	bool m_bEnableBacktransformation;
+
+	std::mutex m_Mutex;
 
 	std::vector<uint8_t> m_HeadTransform;
 

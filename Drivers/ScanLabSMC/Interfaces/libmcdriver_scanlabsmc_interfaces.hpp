@@ -364,11 +364,11 @@ public:
 	* @param[in] dMarkSpeed - Mark speed in mm/s
 	* @param[in] dMinimalMarkSpeed - Minimal allowed mark speed in mm/s
 	* @param[in] dJumpSpeed - Jump speed in mm/s
-	* @param[in] dPower - Laser power in percent
+	* @param[in] dPowerInWatts - Laser power in Watts
 	* @param[in] dCornerTolerance - Allowed position deviation on corners (in mm.)
 	* @param[in] dZValue - Focus Z Value
 	*/
-	virtual void DrawPolyline(const LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPower, const LibMCDriver_ScanLabSMC_double dCornerTolerance, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
+	virtual void DrawPolyline(const LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPowerInWatts, const LibMCDriver_ScanLabSMC_double dCornerTolerance, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
 
 	/**
 	* ISMCJob::DrawLoop - Writes a loop into the open list
@@ -377,11 +377,11 @@ public:
 	* @param[in] dMarkSpeed - Mark speed in mm/s
 	* @param[in] dMinimalMarkSpeed - Minimal allowed mark speed in mm/s
 	* @param[in] dJumpSpeed - Jump speed in mm/s
-	* @param[in] dPower - Laser power in percent
+	* @param[in] dPowerInWatts - Laser power in Watts
 	* @param[in] dCornerTolerance - Allowed position deviation on corners (in mm.)
 	* @param[in] dZValue - Focus Z Value
 	*/
-	virtual void DrawLoop(const LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPower, const LibMCDriver_ScanLabSMC_double dCornerTolerance, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
+	virtual void DrawLoop(const LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPowerInWatts, const LibMCDriver_ScanLabSMC_double dCornerTolerance, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
 
 	/**
 	* ISMCJob::DrawHatches - Writes a list of hatches into the open list
@@ -389,10 +389,10 @@ public:
 	* @param[in] pHatchesBuffer - Hatches to draw.
 	* @param[in] dMarkSpeed - Mark speed in mm/s
 	* @param[in] dJumpSpeed - Jump speed in mm/s
-	* @param[in] dPower - Laser power in percent
+	* @param[in] dPowerInWatts - Laser power in Watts
 	* @param[in] dZValue - Focus Z Value
 	*/
-	virtual void DrawHatches(const LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPower, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
+	virtual void DrawHatches(const LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D * pHatchesBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPowerInWatts, const LibMCDriver_ScanLabSMC_double dZValue) = 0;
 
 	/**
 	* ISMCJob::AddLayerToList - Adds a layer instance to the current open list.
@@ -448,6 +448,16 @@ public:
 	*/
 	virtual LibMCDriver_ScanLabSMC_double GetJobDuration() = 0;
 
+	/**
+	* ISMCJob::ExecuteLaserInitSequence - Starts the laser initialization sequence.
+	*/
+	virtual void ExecuteLaserInitSequence() = 0;
+
+	/**
+	* ISMCJob::ExecuteLaserShutdownSequence - Starts the laser shutdown sequence.
+	*/
+	virtual void ExecuteLaserShutdownSequence() = 0;
+
 };
 
 typedef IBaseSharedPtr<ISMCJob> PISMCJob;
@@ -482,6 +492,30 @@ public:
 	* @return Current Value.
 	*/
 	virtual LibMCDriver_ScanLabSMC::eWarnLevel GetWarnLevel() = 0;
+
+	/**
+	* ISMCConfiguration::SetBlendMode - Sets the blend mode.
+	* @param[in] eBlendMode - Blend Mode that the job shall be drawn in.
+	*/
+	virtual void SetBlendMode(const LibMCDriver_ScanLabSMC::eBlendMode eBlendMode) = 0;
+
+	/**
+	* ISMCConfiguration::GetBlendMode - Returns the blend mode.
+	* @return Blend Mode that the job shall be drawn in.
+	*/
+	virtual LibMCDriver_ScanLabSMC::eBlendMode GetBlendMode() = 0;
+
+	/**
+	* ISMCConfiguration::SetSendToHardware - Sets if the computation shall be sent to the hardware.
+	* @param[in] bSendToHardware - Flag, if the computation shall be sent to the hardware.
+	*/
+	virtual void SetSendToHardware(const bool bSendToHardware) = 0;
+
+	/**
+	* ISMCConfiguration::GetSendToHardware - Returns if the computation shall be sent to the hardware.
+	* @return Flag, if the computation shall be sent to the hardware.
+	*/
+	virtual bool GetSendToHardware() = 0;
 
 	/**
 	* ISMCConfiguration::SetSerialNumber - Sets the RTC Serial number. MUST be larger than 0.
@@ -603,12 +637,6 @@ public:
 	virtual std::string GetIPAddress() = 0;
 
 	/**
-	* ISMCContext::GetNetmask - Returns the Netmask of the RTC Card. Fails if driver has not been initialized.
-	* @return Netmask Value.
-	*/
-	virtual std::string GetNetmask() = 0;
-
-	/**
 	* ISMCContext::GetSerialNumber - Returns serial number of card
 	* @return Returns serial number of board.
 	*/
@@ -668,10 +696,10 @@ public:
 	* ISMCContext::BeginJob - Starts a new job definition. Fails if another job is not finalized yet.
 	* @param[in] dStartPositionX - Start position in X.
 	* @param[in] dStartPositionY - Start position in Y.
-	* @param[in] eBlendMode - Blend Mode that the job shall be drawn in.
+	* @param[in] dMaxPowerInWatts - Maximum laser power in Watts.
 	* @return SMC Job Instance.
 	*/
-	virtual ISMCJob * BeginJob(const LibMCDriver_ScanLabSMC_double dStartPositionX, const LibMCDriver_ScanLabSMC_double dStartPositionY, const LibMCDriver_ScanLabSMC::eBlendMode eBlendMode) = 0;
+	virtual ISMCJob * BeginJob(const LibMCDriver_ScanLabSMC_double dStartPositionX, const LibMCDriver_ScanLabSMC_double dStartPositionY, const LibMCDriver_ScanLabSMC_double dMaxPowerInWatts) = 0;
 
 	/**
 	* ISMCContext::GetUnfinishedJob - Returns the job that is not finalized yet. Returns null if no job is active.
@@ -683,8 +711,9 @@ public:
 	* ISMCContext::DrawLayer - Draws a layer of a build stream. Blocks until the layer is drawn.
 	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
 	* @param[in] nLayerIndex - Layer index of the build file.
+	* @param[in] dMaxPowerInWatts - Maximum laser power in Watts.
 	*/
-	virtual void DrawLayer(const std::string & sStreamUUID, const LibMCDriver_ScanLabSMC_uint32 nLayerIndex) = 0;
+	virtual void DrawLayer(const std::string & sStreamUUID, const LibMCDriver_ScanLabSMC_uint32 nLayerIndex, const LibMCDriver_ScanLabSMC_double dMaxPowerInWatts) = 0;
 
 };
 
@@ -705,6 +734,12 @@ public:
 	virtual void SetDLLResources(const std::string & sSMCDLLResourceName, const std::string & sRTCDLLResourceName) = 0;
 
 	/**
+	* IDriver_ScanLabSMC::SetRTCServiceDLLResourceName - Sets the default resource name of the RTC Service DLL. Overrides custom resource data if set before.
+	* @param[in] sRTCServiceDLLResourceName - Resource name of RTC Service DLL
+	*/
+	virtual void SetRTCServiceDLLResourceName(const std::string & sRTCServiceDLLResourceName) = 0;
+
+	/**
 	* IDriver_ScanLabSMC::SetXercesDLLResource - Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.
 	* @param[in] sXercesDLLResourceName - Resource name of the Xerces dependency DLL
 	*/
@@ -718,6 +753,13 @@ public:
 	* @param[in] pRTCDLLResourceDataBuffer - Resource data of RTC DLL
 	*/
 	virtual void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer) = 0;
+
+	/**
+	* IDriver_ScanLabSMC::SetRTCServiceDLLResourceData - Sets custom binaries for the needed RTC Service DLLs. Overrides custom resource data if set before.
+	* @param[in] nRTCServiceDLLResourceDataBufferSize - Number of elements in buffer
+	* @param[in] pRTCServiceDLLResourceDataBuffer - Resource data of RTC Service DLL
+	*/
+	virtual void SetRTCServiceDLLResourceData(const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer) = 0;
 
 	/**
 	* IDriver_ScanLabSMC::SetCustomXercesDLLData - Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.

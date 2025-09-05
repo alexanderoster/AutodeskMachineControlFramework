@@ -86,6 +86,10 @@ public:
 
 	void InitialiseFromConfiguration(const std::string& sPresetName) override;
 
+	void SetLaserSignalTimingDefaults(const LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, const LibMCDriver_ScanLab_double dLaserPulseLength, const LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, const LibMCDriver_ScanLab_double dStandbyPulseLength) override;
+
+	void GetLaserSignalTimingDefaults(LibMCDriver_ScanLab_double& dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double& dLaserPulseLength, LibMCDriver_ScanLab_double& dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double& dStandbyPulseLength) override;
+
 	std::string GetIPAddress() override;
 
 	std::string GetNetmask() override;

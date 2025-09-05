@@ -41,12 +41,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace LibMCEnv::Impl;
 
 CSignalTrigger::CSignalTrigger(AMC::PStateSignalHandler pSignalHandler, std::string sInstanceName, std::string sSignalName, AMCCommon::PChrono pGlobalChrono)
-	: m_pSignalHandler (pSignalHandler), m_sInstanceName (sInstanceName), m_sSignalName (sSignalName), m_pGlobalChrono (pGlobalChrono)
+	: m_pSignalHandler (pSignalHandler), 
+	m_sInstanceName (sInstanceName), 
+	m_sSignalName (sSignalName), 
+	m_pGlobalChrono (pGlobalChrono)
+	
 {
 	if (pSignalHandler.get() == nullptr)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
 	if (pGlobalChrono.get() == nullptr)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+	m_sSignalUUID = AMCCommon::CUtils::createUUID();
+	m_bIsPreparing = true;
+	
+	m_nReactionTimeOutInMs = m_pSignalHandler->getDefaultReactionTimeout (m_sInstanceName, m_sSignalName);
 
 	m_pParameterGroup = std::make_shared<AMC::CParameterGroup>(pGlobalChrono);
 	m_pResultGroup = std::make_shared<AMC::CParameterGroup>(pGlobalChrono);
@@ -60,18 +69,113 @@ CSignalTrigger::~CSignalTrigger()
 {
 }
 
+std::string CSignalTrigger::GetSignalUUID()
+{
+	return m_sSignalUUID;
+}
+
 bool CSignalTrigger::CanTrigger()
 {
+	if (!m_bIsPreparing)
+		return false;
+
 	return m_pSignalHandler->canTrigger(m_sInstanceName, m_sSignalName);
 }
 
+
+LibMCEnv_uint32 CSignalTrigger::GetAvailableSignalQueueSlots()
+{
+	return m_pSignalHandler->getAvailableSignalQueueEntryCount(m_sInstanceName, m_sSignalName);
+}
+
+LibMCEnv_uint32 CSignalTrigger::GetTotalSignalQueueSlots()
+{
+	return m_pSignalHandler->getTotalSignalQueueSize(m_sInstanceName, m_sSignalName);
+}
+
+LibMCEnv::eSignalPhase CSignalTrigger::GetSignalPhase()
+{
+	if (m_bIsPreparing)
+		return LibMCEnv::eSignalPhase::InPreparation;
+
+	AMC::eAMCSignalPhase signalPhase = m_pSignalHandler->getSignalPhase(m_sSignalUUID);
+
+	switch (signalPhase) {
+	case AMC::eAMCSignalPhase::Invalid:
+		return LibMCEnv::eSignalPhase::Invalid;
+	case AMC::eAMCSignalPhase::InPreparation:
+		return LibMCEnv::eSignalPhase::InPreparation;
+	case AMC::eAMCSignalPhase::InQueue:
+		return LibMCEnv::eSignalPhase::InQueue;
+	case AMC::eAMCSignalPhase::InProcess:
+		return LibMCEnv::eSignalPhase::InProcess;
+	case AMC::eAMCSignalPhase::Handled:
+		return LibMCEnv::eSignalPhase::Handled;
+	case AMC::eAMCSignalPhase::Failed:
+		return LibMCEnv::eSignalPhase::Failed;
+	case AMC::eAMCSignalPhase::TimedOut:
+		return LibMCEnv::eSignalPhase::TimedOut;
+	case AMC::eAMCSignalPhase::Cleared:
+		return LibMCEnv::eSignalPhase::Cleared;
+	case AMC::eAMCSignalPhase::Retracted:
+		return LibMCEnv::eSignalPhase::Retracted;
+
+	default:
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE);
+	}
+}
+
+void CSignalTrigger::SetReactionTimeOut(const LibMCEnv_uint32 nReactionTimeOutInMs)
+{
+	if (nReactionTimeOutInMs < AMC_SIGNAL_MINREACTIONTIMEINMS || nReactionTimeOutInMs > AMC_SIGNAL_MAXREACTIONTIMEINMS)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT, std::to_string (nReactionTimeOutInMs));
+
+	if (m_bIsPreparing) {
+		m_nReactionTimeOutInMs = nReactionTimeOutInMs;
+	} else {
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT);
+	}
+}
+
+LibMCEnv_uint32 CSignalTrigger::GetReactionTimeOut()
+{
+	if (m_bIsPreparing) {
+		return m_nReactionTimeOutInMs;
+	} else {
+		return m_pSignalHandler->getReactionTimeout(m_sSignalUUID);
+	}
+}
+
+
 void CSignalTrigger::Trigger()
 {
-	if (m_sTriggeredUUID.length () > 0)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_SIGNALHASTRIGGEREDTWICE);
-
-	if (!m_pSignalHandler->triggerSignal(m_sInstanceName, m_sSignalName, m_pParameterGroup->serializeToJSON(), m_sTriggeredUUID))
+	if (!TryTrigger ())
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTTRIGGERSIGNAL);
+
+}
+
+bool CSignalTrigger::TryTrigger()
+{
+	bool bSuccess = m_pSignalHandler->addNewInQueueSignal(m_sInstanceName, m_sSignalName, m_sSignalUUID, m_pParameterGroup->serializeToJSON(), m_nReactionTimeOutInMs);
+	if (bSuccess ) {
+		m_bIsPreparing = false;
+		return true;
+
+	} else {
+		return false;
+
+	}
+}
+
+bool CSignalTrigger::TryTriggerWithTimeout(const LibMCEnv_uint32 nReactionTimeOutInMs)
+{
+	SetReactionTimeOut(nReactionTimeOutInMs);
+	return TryTrigger();
+}
+
+bool CSignalTrigger::HasBeenHandled()
+{
+	return WaitForHandling(0);
 }
 
 bool CSignalTrigger::WaitForHandling(const LibMCEnv_uint32 nTimeOutInMilliseconds)
@@ -81,29 +185,30 @@ bool CSignalTrigger::WaitForHandling(const LibMCEnv_uint32 nTimeOutInMillisecond
 
 	uint64_t nTimeOutTimeStamp = chrono.getUTCTimeStampInMicrosecondsSince1970() + (nTimeOutInMilliseconds * 1000ULL);
 
-	if (m_sTriggeredUUID.length() == 0)
+	if (m_bIsPreparing)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_SIGNALHASNOTBEENTRIGGERED);
 
 	bool bIsTimeOut = false;
 	while (!bIsTimeOut) {	
 
-		std::string sResultData;
-		if (m_pSignalHandler->signalHasBeenHandled (m_sTriggeredUUID, true, sResultData)) {
-			m_pResultGroup->deserializeJSON(sResultData, m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970 ());
+		auto signalPhase = m_pSignalHandler->getSignalPhase(m_sSignalUUID);
+		bool bHasBeenHandled = (signalPhase == AMC::eAMCSignalPhase::Handled) || (signalPhase == AMC::eAMCSignalPhase::Failed) || (signalPhase == AMC::eAMCSignalPhase::Cleared) || (signalPhase == AMC::eAMCSignalPhase::Retracted) || (signalPhase == AMC::eAMCSignalPhase::TimedOut);
+		
+		if (bHasBeenHandled) {
+			std::string sResultDataJSON = m_pSignalHandler->getResultDataJSON (m_sSignalUUID);
+			if (!sResultDataJSON.empty()) {
+				m_pResultGroup->deserializeJSON(sResultDataJSON, m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970());
+			}
 			
 			return true;
-		}
+		} 
 
 		bIsTimeOut = chrono.getUTCTimeStampInMicrosecondsSince1970() > nTimeOutTimeStamp;
 
-		if (!bIsTimeOut) {
-			// TODO
-			//if (CheckForTermination())
-				//throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TERMINATED);
-			
-			chrono.sleepMilliseconds(DEFAULT_WAITFOR_SLEEP_MS);
+		if (!bIsTimeOut) {			
+			chrono.sleepMilliseconds(AMC_SIGNAL_DEFAULT_WAITFOR_SLEEP_MS);
 		}
-	}
+	} 
 
 	return false;
 }

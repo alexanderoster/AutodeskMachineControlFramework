@@ -49,6 +49,8 @@ void writeUsage()
 	std::cout << "   --config <configfile>: Path to ACMF Configuration XML to use. (mandatory)" << std::endl;
 	std::cout << "   --devpackage <githash>: Short git hash of developer package to use. (mandatory)" << std::endl;
 	std::cout << "   --output: Output package xml file to write. (default: GITHASH_package.xml)" << std::endl;
+	std::cout << "   --serveroutput: Server Output xml file to write. (default: amc_server.xml)" << std::endl;
+	std::cout << "   --tempdir: Temporary directory to write into server path. (default: no custom temp dir)" << std::endl;
 }
 
 
@@ -81,6 +83,7 @@ int main(int argc, char* argv[])
 		std::string sDevPackagePrefix = "";
 		std::string sConfigFileName = "";
 		std::string sOutputFileName = "";
+		std::string sCustomTempDir = "";
 		std::string sServerOutputFileName = "amc_server.xml";
 		for (size_t argIdx = 0; argIdx < argumentList.size(); argIdx++) {
 
@@ -113,6 +116,15 @@ int main(int argc, char* argv[])
 				sOutputFileName = argumentList[argIdx];
 				bHandled = true;
 			} 
+
+			if (sArgument == "--tempdir") {
+				argIdx++;
+				if (argIdx >= argumentList.size())
+					throw std::runtime_error("missing tempdir path in argument");
+
+				sCustomTempDir = argumentList[argIdx];
+				bHandled = true;
+			}
 
 			if (sArgument == "--serveroutput") {
 				argIdx++;
@@ -241,6 +253,7 @@ int main(int argc, char* argv[])
 		std::string sPackageName = "Build " + sDevPackagePrefix;
 		std::string sConfigName = sDevPackagePrefix + "_config.xml";
 		std::string sClientName = sDevPackagePrefix + "_core.client";
+		std::string sAPIDocsName = sDevPackagePrefix + "_core.apidocs";
 		std::string sCoreName = sDevPackagePrefix + "_core_libmc." + sExtension;
 		std::string sCoreResourcesName = sDevPackagePrefix + "_core.data";
 		std::string sCoreDataName = sDevPackagePrefix + "_core_libmcdata." + sExtension;
@@ -250,7 +263,7 @@ int main(int argc, char* argv[])
 
 		packageXMLStream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 		packageXMLStream << "<amcpackage xmlns=\"http://schemas.autodesk.com/amcpackage/2020/06\">\n";
-		packageXMLStream << "  <build name=\"" << sPackageName << "\" configuration=\"" << sConfigName << "\" coreclient=\"" << sClientName << "\">\n";
+		packageXMLStream << "  <build name=\"" << sPackageName << "\" configuration=\"" << sConfigName << "\" coreclient=\"" << sClientName << "\" apidocs=\"" << sAPIDocsName << "\">\n";
 
 		packageXMLStream << "    <library name=\"core\" import=\"" << sCoreName << "\" resources=\"" << sCoreResourcesName << "\" />\n";
 		packageXMLStream << "    <library name=\"datamodel\" import=\"" << sCoreDataName << "\" />\n";
@@ -277,11 +290,15 @@ int main(int argc, char* argv[])
 		std::cout << std::endl;
 		
 		std::string sPackageSHA = AMCCommon::CUtils::calculateSHA256FromString(packageXMLString);
+
+		std::string sTempFolderXMLAttribute;
+		if (!sCustomTempDir.empty())
+			sTempFolderXMLAttribute = "tempfolder=\"" + sCustomTempDir + "\" ";
 		
 		std::stringstream serverXMLStream;
 		serverXMLStream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 		serverXMLStream << "<amc xmlns=\"http://schemas.autodesk.com/amc/2020/06\">\n";
-		serverXMLStream << "  <server hostname=\"0.0.0.0\" port=\"8869\" />\n";
+		serverXMLStream << "  <server hostname=\"0.0.0.0\" port=\"8869\" " << sTempFolderXMLAttribute << "/>\n";
 		serverXMLStream << "  <data directory=\"data/\" database=\"sqlite\" sqlitedb=\"storage.db\" />\n";
 		serverXMLStream << "  <defaultpackage name=\""<< sDevPackagePrefix << "_package.xml\" githash=\"" << sDevPackagePrefix <<"\" sha256=\"" << sPackageSHA << "\" />\n";
 		serverXMLStream << "</amc>\n";

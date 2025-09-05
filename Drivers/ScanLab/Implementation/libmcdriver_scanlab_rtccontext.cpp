@@ -28,16 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#define NOMINMAX
+
 #include "libmcdriver_scanlab_rtccontext.hpp"
 #include "libmcdriver_scanlab_interfaceexception.hpp"
 #include "libmcdriver_scanlab_uartconnection.hpp"
 #include "libmcdriver_scanlab_rtcrecording.hpp"
 #include "libmcdriver_scanlab_gpiosequence.hpp"
 #include "libmcdriver_scanlab_gpiosequenceinstance.hpp"
+#include "libmcdriver_scanlab_oiemeasurementtagmap.hpp"
 
 // Include custom headers here.
 #include <math.h>
-#include <iostream>
 #include <thread>
 #include <fstream>
 #include <algorithm>
@@ -53,12 +55,14 @@ using namespace LibMCDriver_ScanLab::Impl;
 
 #define RTCCONTEXT_LASERPOWERCALIBRATIONUNITS 0.005
 
-
 #define RTCCONTEXT_MIN_LINESUBDIVISIONTHRESHOLD 0.001
 #define RTCCONTEXT_MAX_LINESUBDIVISIONTHRESHOLD 1000000.0
 
+#define RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ 3600UL * 100000UL
+
 CRTCContextOwnerData::CRTCContextOwnerData()
-	: m_nAttributeFilterValue (0), m_OIERecordingMode (LibMCDriver_ScanLab::eOIERecordingMode::OIERecordingDisabled), m_dMaxLaserPowerInWatts (100.0)
+	: m_nAttributeFilterValue (0), m_OIERecordingMode (LibMCDriver_ScanLab::eOIERecordingMode::OIERecordingDisabled), m_d100PercentLaserPowerInWatts (100.0), m_d0PercentLaserPowerInWatts (0.0),
+	m_dEpsilon (1.0e-6)
 {
 
 }
@@ -82,16 +86,223 @@ void CRTCContextOwnerData::setAttributeFilters(const std::string& sAttributeFilt
 	m_nAttributeFilterValue = nAttributeFilterValue;
 }
 
-void CRTCContextOwnerData::setMaxLaserPower(double dMaxLaserPowerInWatts)
+void CRTCContextOwnerData::setMaxLaserPowerNoPowerCorrection(double d100PercentLaserPowerInWatts)
 {
-	m_dMaxLaserPowerInWatts = dMaxLaserPowerInWatts;
+	setMaxLaserPowerLinearPowerCorrection(0.0, d100PercentLaserPowerInWatts);
 }
 
-double CRTCContextOwnerData::getMaxLaserPower()
+void CRTCContextOwnerData::setMaxLaserPowerLinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts)
 {
-	return m_dMaxLaserPowerInWatts;
+	std::map<double, double> emptyLaserPowerMapping;
+	setMaxLaserPowerNonlinearPowerCorrection(d0PercentLaserPowerInWatts, d100PercentLaserPowerInWatts, emptyLaserPowerMapping);
 }
 
+void CRTCContextOwnerData::setMaxLaserPowerNonlinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts, std::map<double, double> laserPowerMapping)
+{
+	if ((d0PercentLaserPowerInWatts < 0.0) || (d0PercentLaserPowerInWatts > RTC6_MAX_MAXLASERPOWER))
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid 0 percent laser power: " + std::to_string (d0PercentLaserPowerInWatts));
+	if ((d100PercentLaserPowerInWatts < RTC6_MIN_MAXLASERPOWER) || (d100PercentLaserPowerInWatts > RTC6_MAX_MAXLASERPOWER))
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid 100 percent laser power: " + std::to_string(d100PercentLaserPowerInWatts));
+
+	if (d100PercentLaserPowerInWatts - d0PercentLaserPowerInWatts < RTC6_MIN_DELTALASERPOWER)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid laser power span: " + std::to_string(d0PercentLaserPowerInWatts) + " - " + std::to_string(d100PercentLaserPowerInWatts));
+
+	m_d0PercentLaserPowerInWatts = d0PercentLaserPowerInWatts;
+	m_d100PercentLaserPowerInWatts = d100PercentLaserPowerInWatts;
+
+	buildAndValidateMappings(laserPowerMapping);
+}
+
+double CRTCContextOwnerData::get0PercentLaserPowerInWatts()
+{
+	return m_d0PercentLaserPowerInWatts;
+}
+
+double CRTCContextOwnerData::get100PercentLaserPowerInWatts()
+{
+	return m_d100PercentLaserPowerInWatts;
+}
+
+bool CRTCContextOwnerData::getLaserPowerCalibrationIsLinear()
+{
+	return m_percentToWatts.size() > 2;
+}
+
+
+bool CRTCContextOwnerData::mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts, double& dPercent)
+{
+	
+	if (m_wattsToPercent.size() <= 2) {
+		
+
+		// No mapping available, just return linear mapping
+		if (dLaserPowerInWatts < m_d0PercentLaserPowerInWatts) {
+			dPercent = 0.0;
+			return false;
+		}
+
+		if (dLaserPowerInWatts > m_d100PercentLaserPowerInWatts) {
+			dPercent = 100.0;
+			return false;
+		}
+		
+		dPercent = (dLaserPowerInWatts - m_d0PercentLaserPowerInWatts) / (m_d100PercentLaserPowerInWatts - m_d0PercentLaserPowerInWatts) * 100.0;
+		return true;
+		
+	}
+
+	return interpolate(m_wattsToPercent, dLaserPowerInWatts, dPercent);
+}
+
+std::vector<CRTCContextOwnerData::sPowerMappingKnot>& CRTCContextOwnerData::getPercentToWattTable()
+{
+	return m_percentToWatts;
+}
+
+
+bool CRTCContextOwnerData::mapLaserPowerFromPercentToWatts(double dLaserPowerInPercent, double& dWatts)
+{
+	if (m_percentToWatts.size() <= 2) {
+		// No mapping available, just return linear mapping
+		if (dLaserPowerInPercent < 0.0) {
+			dWatts = m_d0PercentLaserPowerInWatts;
+			return false;
+		}
+		if (dLaserPowerInPercent > 100.0) {
+			dWatts = m_d100PercentLaserPowerInWatts;
+			return false;
+		}
+
+		dWatts = m_d0PercentLaserPowerInWatts + (dLaserPowerInPercent / 100.0) * (m_d100PercentLaserPowerInWatts - m_d0PercentLaserPowerInWatts);
+		return true;
+	}
+
+	return interpolate(m_percentToWatts, dLaserPowerInPercent, dWatts);
+}
+
+
+bool CRTCContextOwnerData::interpolate(const std::vector<sPowerMappingKnot>& pts, double x, double& y)
+{
+	if (pts.size() < 2) {
+		y = 0.0;
+		return false;
+	}
+
+	// Below domain -> clamp
+	if (x < pts.front().x) {
+		y = pts.front().y;
+		return false;
+	}
+	// Above domain -> clamp
+	if (x > pts.back().x) {
+		y = pts.back().y;
+		return false;
+	}
+
+	// Find first knot with x_k >= x.
+	auto it = std::lower_bound(pts.begin(), pts.end(), x,
+		[](const sPowerMappingKnot& k, double xv) { return k.x < xv; });
+
+	// Exact hit?
+	if (nearlyEqual(it->x, x, m_dEpsilon)) {
+		y = it->y;
+		return true;
+	}
+
+	const sPowerMappingKnot& hi = *it;
+	const sPowerMappingKnot& lo = *(it - 1);
+
+	const double dx = hi.x - lo.x;
+	if (dx <= 0.0) { // Should never happen due to validation
+		y = lo.y;
+		return true;
+	}
+
+	const double t = (x - lo.x) / dx;
+	y = lo.y + t * (hi.y - lo.y);
+	return true;
+}
+
+bool CRTCContextOwnerData::nearlyEqual(double a, double b, double eps) {
+	return std::abs(a - b) <= eps * std::max({ 1.0, std::abs(a), std::abs(b) });
+}
+
+void CRTCContextOwnerData::buildAndValidateMappings(const std::map<double, double>& userMap)
+{
+	const double w0 = m_d0PercentLaserPowerInWatts;
+	const double w1 = m_d100PercentLaserPowerInWatts;
+
+	// 1) Build Watts->Percent knots, always including endpoints.
+	std::vector<sPowerMappingKnot> w2p;
+	w2p.reserve(userMap.size() + 2);
+	w2p.push_back({ w0, 0.0 });
+	for (const auto& kv : userMap) {
+		const double p = kv.first;
+		const double w = kv.second;
+		
+		if (w < w0 - m_dEpsilon || w > w1 + m_dEpsilon)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
+				"mapping watt value out of bounds: " + std::to_string(w));
+
+		if (p < -m_dEpsilon || p > 100.0 + m_dEpsilon)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
+				"mapping percent value out of range: " + std::to_string(p));
+
+		// Snap tiny out-of-range due to rounding.
+		double pClamped = std::min(100.0, std::max(0.0, p));
+		double wClamped = std::min(w1, std::max(w0, w));
+		w2p.push_back({ wClamped, pClamped });
+	}
+	w2p.push_back({ w1, 100.0 });
+
+	// 2) Sort by watts and remove (near) duplicates in x.
+	std::sort(w2p.begin(), w2p.end(), [](const sPowerMappingKnot& a, const sPowerMappingKnot& b) { return a.x < b.x; });
+	w2p.erase(std::unique(w2p.begin(), w2p.end(),
+		[&](const sPowerMappingKnot& a, const sPowerMappingKnot& b) { return nearlyEqual(a.x, b.x, m_dEpsilon) && nearlyEqual(a.y, b.y, m_dEpsilon); }),
+		w2p.end());
+
+	// 3) Validate strict monotonicity of percent with watts.
+	for (size_t i = 1; i < w2p.size(); ++i) {
+		if (!(w2p[i - 1].x < w2p[i].x - m_dEpsilon)) {
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
+				"duplicate or non-increasing watt knot at " + std::to_string(w2p[i].x));
+		}
+		// "steadily increasing" -> require strictly increasing percent (better inverse).
+		if (!(w2p[i - 1].y < w2p[i].y - m_dEpsilon)) {
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
+				"percent must be strictly increasing with watts near W=" + std::to_string(w2p[i].x));
+		}
+	}
+
+	// 4) Ensure endpoints are exactly (w0,0) and (w1,100) (snap if within epsilon).
+	if (!nearlyEqual(w2p.front().x, w0, m_dEpsilon) || !nearlyEqual(w2p.front().y, 0.0, m_dEpsilon)) {
+		w2p.front().x = w0;  w2p.front().y = 0.0;
+	}
+	if (!nearlyEqual(w2p.back().x, w1, m_dEpsilon) || !nearlyEqual(w2p.back().y, 100.0, m_dEpsilon)) {
+		w2p.back().x = w1;  w2p.back().y = 100.0;
+	}
+
+	// Store the forward table.
+	m_wattsToPercent = std::move(w2p);
+
+	// 5) Build the inverse table (Percent -> Watts). Because y is strictly increasing, order is preserved.
+	m_percentToWatts.clear();
+	m_percentToWatts.reserve(m_wattsToPercent.size());
+	for (const auto& k : m_wattsToPercent)
+		m_percentToWatts.push_back({ k.y, k.x });
+
+	// Sort by percent for safety (should already be sorted).
+	std::sort(m_percentToWatts.begin(), m_percentToWatts.end(),
+		[](const sPowerMappingKnot& a, const sPowerMappingKnot& b) { return a.x < b.x; });
+
+	// (Optional) sanity: check inverse domain exactly [0,100].
+	if (!nearlyEqual(m_percentToWatts.front().x, 0.0, m_dEpsilon) ||
+		!nearlyEqual(m_percentToWatts.back().x, 100.0, m_dEpsilon))
+	{
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
+			"inverse mapping percent domain inconsistent");
+	}
+}
 void CRTCContextOwnerData::setOIERecordingMode(LibMCDriver_ScanLab::eOIERecordingMode oieRecordingMode)
 {
 	m_OIERecordingMode = oieRecordingMode;
@@ -125,6 +336,7 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
 	m_CardNo (nCardNo), 
 	m_dCorrectionFactor(10000.0), 
 	m_dZCorrectionFactor(10000.0),
+	m_dDefocusFactor (1.0),
 	m_nLaserIndex (0),
 	m_LaserPort(eLaserPort::Port12BitAnalog1), 
 	m_pDriverEnvironment (pDriverEnvironment),
@@ -144,12 +356,16 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
 	m_dScaleXInBitsPerEncoderStep (1.0),
 	m_dScaleYInBitsPerEncoderStep (1.0),
 	m_bEnableOIEPIDControl (false),
-	m_dLaserPowerCalibrationUnits (RTCCONTEXT_LASERPOWERCALIBRATIONUNITS),
 	m_pModulationCallback (nullptr),
 	m_pModulationCallbackUserData (nullptr),
 	m_bEnableLineSubdivision (false),
 	m_bMeasurementTagging (false),
-	m_dLineSubdivisionThreshold (RTCCONTEXT_MAX_LINESUBDIVISIONTHRESHOLD)
+	m_dLineSubdivisionThreshold (RTCCONTEXT_MAX_LINESUBDIVISIONTHRESHOLD),
+	m_dLaserPulseHalfPeriodInMS(RTC_TIMINGDEFAULT_LASERPULSEHALFPERIOD),
+    m_dLaserPulseLengthInMS(RTC_TIMINGDEFAULT_LASERPULSELENGTH),
+    m_dStandbyPulseHalfPeriodInMS(RTC_TIMINGDEFAULT_STANDBYPULSEHALFPERIOD),
+    m_dStandbyPulseLengthInMS(RTC_TIMINGDEFAULT_STANDBYPULSELENGTH)
+
 
 {
 	if (pOwnerData.get() == nullptr)
@@ -165,10 +381,11 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
 
 	m_pScanLabSDK->n_reset_error(m_CardNo, 0xffffffff);
 
-	m_CurrentMeasurementTagInfo.m_nCurrentPartID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentProfileID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentSegmentID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentVectorID = 0;
+	m_pMeasurementTagMap = std::make_shared<CRTCMeasurementTagMapInstance>();
+	m_CurrentMeasurementTagInfo.m_PartID = 0;
+	m_CurrentMeasurementTagInfo.m_ProfileID = 0;
+	m_CurrentMeasurementTagInfo.m_SegmentID = 0;
+	m_CurrentMeasurementTagInfo.m_VectorID = 0;
 
 }
 
@@ -305,6 +522,19 @@ void CRTCContext::SelectCorrectionTable(const LibMCDriver_ScanLab_uint32 nTableN
 
 }
 
+void CRTCContext::SetCorrectionFactors(const LibMCDriver_ScanLab_double dCorrectionFactorXY, const LibMCDriver_ScanLab_double dCorrectionFactorZ)
+{
+	if (dCorrectionFactorXY > 0.0)
+		m_dCorrectionFactor = dCorrectionFactorXY;
+	else
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR);
+
+	if (dCorrectionFactorZ > 0.0)
+		m_dZCorrectionFactor = dCorrectionFactorZ;
+	else
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCORRECTIONFACTOR);
+}
+
 void CRTCContext::ConfigureLists(const LibMCDriver_ScanLab_uint32 nSizeListA, const LibMCDriver_ScanLab_uint32 nSizeListB)
 {
 	m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
@@ -360,6 +590,9 @@ void CRTCContext::SetLaserPulsesInBits(const LibMCDriver_ScanLab_uint32 nHalfPer
 {
 	m_pScanLabSDK->n_set_laser_pulses_ctrl(m_CardNo, nHalfPeriod, nPulseLength);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
+
+	m_dLaserPulseHalfPeriodInMS = nHalfPeriod / 64.0;
+	m_dLaserPulseLengthInMS = nPulseLength / 64.0;
 }
 
 void CRTCContext::SetLaserPulsesInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength)
@@ -379,8 +612,14 @@ void CRTCContext::SetLaserPulsesInMicroSeconds(const LibMCDriver_ScanLab_double 
 
 void CRTCContext::SetStandbyInBits(const LibMCDriver_ScanLab_uint32 nHalfPeriod, const LibMCDriver_ScanLab_uint32 nPulseLength)
 {
+	if (nPulseLength > 2 * nHalfPeriod)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD);
+
 	m_pScanLabSDK->n_set_standby(m_CardNo, nHalfPeriod, nPulseLength);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
+
+	m_dStandbyPulseHalfPeriodInMS = nHalfPeriod / 64.0;
+	m_dStandbyPulseLengthInMS = nPulseLength / 64.0;
 }
 
 void CRTCContext::SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength)
@@ -388,15 +627,48 @@ void CRTCContext::SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHal
 	double HalfPeriodBits = round(dHalfPeriod * 64.0);
 	double PulseLengthBits = round(dPulseLength * 64.0);
 
-	if ((HalfPeriodBits < 1) || (HalfPeriodBits >= (double)(1UL << 31)))
+	if ((HalfPeriodBits < 0) || (HalfPeriodBits >= (double)(1UL << 31)))
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
-	if ((PulseLengthBits < 1) || (PulseLengthBits >= (double)(1UL << 31)))
+	if ((PulseLengthBits < 0) || (PulseLengthBits >= (double)(1UL << 31)))
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 	if (PulseLengthBits > 2 * HalfPeriodBits)
-		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHEXCEEDSCONTROLPERIOD);
 
 	SetStandbyInBits((uint32_t)HalfPeriodBits, (uint32_t)PulseLengthBits);
 }
+
+void CRTCContext::GetLaserPulsesInBits(LibMCDriver_ScanLab_uint32& nHalfPeriod, LibMCDriver_ScanLab_uint32& nPulseLength)
+{
+	nHalfPeriod = (uint32_t)round(m_dLaserPulseHalfPeriodInMS * 64.0);
+	nPulseLength = (uint32_t)round(m_dLaserPulseLengthInMS * 64.0);
+}
+
+void CRTCContext::GetLaserPulsesInMicroSeconds(LibMCDriver_ScanLab_double& dHalfPeriod, LibMCDriver_ScanLab_double& dPulseLength)
+{
+	dHalfPeriod = m_dLaserPulseHalfPeriodInMS;
+	dPulseLength = m_dLaserPulseLengthInMS;
+}
+
+void CRTCContext::GetStandbyInBits(LibMCDriver_ScanLab_uint32& nHalfPeriod, LibMCDriver_ScanLab_uint32& nPulseLength)
+{
+	nHalfPeriod = (uint32_t)round(m_dStandbyPulseHalfPeriodInMS * 64.0);
+	nPulseLength = (uint32_t)round(m_dStandbyPulseLengthInMS * 64.0);
+
+}
+
+void CRTCContext::GetStandbyInMicroSeconds(LibMCDriver_ScanLab_double& dHalfPeriod, LibMCDriver_ScanLab_double& dPulseLength)
+{
+	dHalfPeriod = m_dStandbyPulseHalfPeriodInMS;
+	dPulseLength = m_dStandbyPulseLengthInMS;
+}
+
+void CRTCContext::writeLaserTimingsToCard()
+{
+	SetLaserPulsesInMicroSeconds(m_dLaserPulseHalfPeriodInMS, m_dLaserPulseLengthInMS);
+	SetStandbyInMicroSeconds(m_dStandbyPulseHalfPeriodInMS, m_dStandbyPulseLengthInMS);
+}
+
+
 
 LibMCDriver_ScanLab_uint32 CRTCContext::GetSerialNumber()
 {
@@ -414,10 +686,10 @@ void CRTCContext::SetStartList(const LibMCDriver_ScanLab_uint32 nListIndex, cons
 	m_pScanLabSDK->n_set_start_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 
-	m_CurrentMeasurementTagInfo.m_nCurrentPartID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentProfileID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentSegmentID = 0;
-	m_CurrentMeasurementTagInfo.m_nCurrentVectorID = 0;
+	m_CurrentMeasurementTagInfo.m_PartID = 0;
+	m_CurrentMeasurementTagInfo.m_ProfileID = 0;
+	m_CurrentMeasurementTagInfo.m_SegmentID = 0;
+	m_CurrentMeasurementTagInfo.m_VectorID = 0;
 }
 
 void CRTCContext::SetEndOfList()
@@ -437,6 +709,17 @@ void CRTCContext::SetAutoChangePos(const LibMCDriver_ScanLab_uint32 nPosition)
 	m_pScanLabSDK->n_auto_change_pos(m_CardNo, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 }
+
+void CRTCContext::SetDefocusFactor(const LibMCDriver_ScanLab_double dValue)
+{
+	m_dDefocusFactor = dValue;
+}
+
+LibMCDriver_ScanLab_double CRTCContext::GetDefocusFactor()
+{
+	return m_dDefocusFactor;
+}
+
 
 void CRTCContext::SetDelays(const LibMCDriver_ScanLab_uint32 nMarkDelay, const LibMCDriver_ScanLab_uint32 nJumpDelay, const LibMCDriver_ScanLab_uint32 nPolygonDelay)
 {
@@ -512,67 +795,6 @@ void CRTCContext::writeMarkSpeed(float markSpeedinMMPerSecond)
 void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag)
 {
 
-	double dAdjustedPowerInPercent = dPowerInPercent;
-	if (m_LaserPowerCalibrationList.size() == 1) {
-		auto& calibration = m_LaserPowerCalibrationList.at (0);
-		dAdjustedPowerInPercent = adjustLaserPowerCalibration(dPowerInPercent, calibration.m_PowerOffsetInPercent, calibration.m_PowerOutputScaling);
-	}
-
-	if (m_LaserPowerCalibrationList.size() >= 2) {
-		size_t nMinIndex = 0;
-		size_t nMaxIndex = m_LaserPowerCalibrationList.size() - 1;
-		auto& minCalibration = m_LaserPowerCalibrationList.at(nMinIndex);
-		auto& maxCalibration = m_LaserPowerCalibrationList.at(nMaxIndex);
-
-		if (dPowerInPercent < minCalibration.m_PowerOffsetInPercent) {
-			dAdjustedPowerInPercent = adjustLaserPowerCalibration(dPowerInPercent, minCalibration.m_PowerOffsetInPercent, minCalibration.m_PowerOutputScaling);
-		} 
-		else if (dPowerInPercent > maxCalibration.m_PowerOffsetInPercent) {
-			dAdjustedPowerInPercent = adjustLaserPowerCalibration(dPowerInPercent, maxCalibration.m_PowerOffsetInPercent, maxCalibration.m_PowerOutputScaling);
-		}
-		else {
-			// Binary search of calibration values
-			while ((nMinIndex + 1) < nMaxIndex) {
-				size_t nMidIndex = (nMinIndex + nMaxIndex) / 2;
-				auto& calibration = m_LaserPowerCalibrationList.at(nMidIndex);
-
-				if (dPowerInPercent < calibration.m_PowerOffsetInPercent) {
-					nMaxIndex = nMidIndex;
-					maxCalibration = calibration;
-				}
-				else {
-					nMinIndex = nMidIndex;
-					minCalibration = calibration;
-				}
-			}
-
-			if ((nMinIndex + 1) != nMaxIndex)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_POWERCALIBRATIONLOOKUPFAILED);
-			
-			double dAdjustedMinPowerInPercent = adjustLaserPowerCalibration(dPowerInPercent, minCalibration.m_PowerOffsetInPercent, minCalibration.m_PowerOutputScaling);
-			double dAdjustedMaxPowerInPercent = adjustLaserPowerCalibration(dPowerInPercent, maxCalibration.m_PowerOffsetInPercent, maxCalibration.m_PowerOutputScaling);
-			double dDelta = (maxCalibration.m_PowerSetPointInPercent - minCalibration.m_PowerSetPointInPercent);
-			// dDelta should be larger than any arbitrary fraction of units.
-			if (dDelta < m_dLaserPowerCalibrationUnits * 0.1)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_POWERCALIBRATIONLOOKUPFAILED);
-
-			double dFactor = (dPowerInPercent - minCalibration.m_PowerSetPointInPercent) / dDelta;
-			if (dFactor < 0.0)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_POWERCALIBRATIONLOOKUPFAILED);
-			if (dFactor > 1.0)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_POWERCALIBRATIONLOOKUPFAILED);
-
-			// Linear interpolation between factors
-			dAdjustedPowerInPercent = (1.0 - dFactor) * dAdjustedMinPowerInPercent + dFactor * dAdjustedMaxPowerInPercent;
-
-		}
-
-
-
-		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_NOTIMPLEMENTED, "multiple power calibration values not implemented");
-	}
-
-
 	double dClippedPowerFactor = dPowerInPercent / 100.0f;
 	if (dClippedPowerFactor > 1.0f)
 		dClippedPowerFactor = 1.0f;
@@ -607,13 +829,9 @@ void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag)
 			break;
 		case eLaserPort::Port12BitAnalog1andAnalog2:
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_MULTIPLELASERPORTSNOTCOMPATIBLEWITHPID);
+		case eLaserPort::LaserPulseModulation:
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_PULSELENGTHCONTROLNOTSUPPORTEDBYOIE);
 		}
-
-		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
-
-		m_pScanLabSDK->n_set_fly_2d(m_CardNo, 1.0, 1.0);
-		m_pScanLabSDK->n_long_delay(m_CardNo, 10);
-		m_pScanLabSDK->n_fly_return(m_CardNo, 0, 0);
 
 		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
 
@@ -648,6 +866,17 @@ void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag)
 			m_pScanLabSDK->n_set_laser_power(m_CardNo, 0, digitalPowerValue);
 			m_pScanLabSDK->n_set_laser_power(m_CardNo, 1, digitalPowerValue);
 			break;
+		case eLaserPort::LaserPulseModulation: 
+			{
+				uint32_t nHalfPeriodInBits = (uint32_t)round(m_dLaserPulseHalfPeriodInMS * 64.0);
+				uint32_t nFullPeriodInBits = nHalfPeriodInBits * 2;
+				uint32_t nPulseLength = (uint32_t)round((double)nFullPeriodInBits * dClippedPowerFactor);
+
+				//std::cout << "laser pulse modulation: half period " << nHalfPeriodInBits << " bits, pulse length " << nPulseLength << " bits, factor " << dClippedPowerFactor << std::endl;
+
+				m_pScanLabSDK->n_set_laser_pulses(m_CardNo, nHalfPeriodInBits, nPulseLength);
+				break;
+			}
 		}
 
 		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
@@ -778,7 +1007,7 @@ void CRTCContext::DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBuffer
 	writeSpeeds(fMarkSpeed, fJumpSpeed, fPower, bOIEControlFlag);
 
 	// Z Plane
-	double defocusZ = round(fZValue * m_dZCorrectionFactor);
+	double defocusZ = round(fZValue * m_dZCorrectionFactor * m_dDefocusFactor);
 	int intDefocusZ = (int)defocusZ;
 	m_pScanLabSDK->n_set_defocus_list (m_CardNo, intDefocusZ);
 
@@ -813,7 +1042,7 @@ void CRTCContext::DrawHatchesOIE(const LibMCDriver_ScanLab_uint64 nHatchesBuffer
 	writeSpeeds(fMarkSpeed, fJumpSpeed, fPower, bOIEControlFlag);
 
 	// Z Plane
-	double defocusZ = round(fZValue * m_dZCorrectionFactor);
+	double defocusZ = round(fZValue * m_dZCorrectionFactor * m_dDefocusFactor);
 	int intDefocusZ = (int)defocusZ;
 	m_pScanLabSDK->n_set_defocus_list(m_CardNo, intDefocusZ);
 
@@ -861,6 +1090,42 @@ void CRTCContext::AddMarkMovement(const LibMCDriver_ScanLab_double dTargetX, con
 	m_nCurrentScanPositionY = intY;
 }
 
+
+void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector* pMicrovectorArrayBuffer)
+{
+	if (nMicrovectorArrayBufferSize > 0) {
+		if (pMicrovectorArrayBuffer == nullptr) 
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
+		auto pMicroVector = pMicrovectorArrayBuffer;
+
+		for (uint64_t nIndex = 0; nIndex < nMicrovectorArrayBufferSize; nIndex++) {			
+
+			double dX = round((pMicroVector->m_X - m_dLaserOriginX) * m_dCorrectionFactor);
+			double dY = round((pMicroVector->m_Y - m_dLaserOriginY) * m_dCorrectionFactor);
+
+			int32_t intX = (int32_t)dX;
+			int32_t intY = (int32_t)dY;
+
+			int32_t intDelayLaserOn = -1;
+			int32_t intDelayLaserOff = -1;
+
+			m_pScanLabSDK->n_micro_vector_abs(m_CardNo, intX, intY, intDelayLaserOn, intDelayLaserOff);
+
+			m_nCurrentScanPositionX = intX;
+			m_nCurrentScanPositionY = intY;
+
+			pMicroVector++;
+
+		}
+
+		m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
+	}
+}
+
+
 void CRTCContext::AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue)
 {
 	if (nVariableNo > 7)
@@ -879,87 +1144,97 @@ void CRTCContext::StopExecution()
 
 }
 
-bool CRTCContext::LaserPowerCalibrationIsEnabled()
-{
-	return m_LaserPowerCalibrationList.size() > 0;
-}
-
 bool CRTCContext::LaserPowerCalibrationIsLinear()
 {
-	return m_LaserPowerCalibrationList.size() == 1;
+	return m_pOwnerData->getLaserPowerCalibrationIsLinear();
 }
 
-void CRTCContext::ClearLaserPowerCalibration()
+
+
+void CRTCContext::GetLaserPowerCalibration(LibMCDriver_ScanLab_double& dLaserPowerAt0Percent, LibMCDriver_ScanLab_double& dLaserPowerAt100Percent, LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer)
 {
-	m_LaserPowerCalibrationList.clear();
-}
+	dLaserPowerAt0Percent = m_pOwnerData->get0PercentLaserPowerInWatts();
+	dLaserPowerAt100Percent = m_pOwnerData->get100PercentLaserPowerInWatts();
 
-void CRTCContext::GetLaserPowerCalibration(LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer)
-{
-	if (pCalibrationPointsNeededCount != nullptr)
-		*pCalibrationPointsNeededCount = m_LaserPowerCalibrationList.size();
+	auto percentToWattTable = m_pOwnerData->getPercentToWattTable();
 
-	if (pCalibrationPointsBuffer != nullptr) {
-		if (nCalibrationPointsBufferSize < m_LaserPowerCalibrationList.size())
-			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_BUFFERTOOSMALL);
+	if (percentToWattTable.size() < 2) {
+		if (pCalibrationPointsNeededCount != nullptr)
+			*pCalibrationPointsNeededCount = 0;
 
-		auto pTarget = pCalibrationPointsBuffer;
-		for (auto iIter = m_LaserPowerCalibrationList.begin(); iIter != m_LaserPowerCalibrationList.end(); iIter++) {
-			*pTarget = *iIter;
-			pTarget++;
-		}
 	}
+	else {
+		if (pCalibrationPointsNeededCount != nullptr)
+			*pCalibrationPointsNeededCount = percentToWattTable.size() - 2;
+
+		if (pCalibrationPointsBuffer != nullptr) {
+			if (nCalibrationPointsBufferSize < percentToWattTable.size() - 2)
+				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_BUFFERTOOSMALL);
+
+			auto pTarget = pCalibrationPointsBuffer;
+			for (size_t nIndex = 1; nIndex < percentToWattTable.size() - 1; nIndex++) {
+				auto iIter = percentToWattTable.at (nIndex);
+				pTarget->m_PowerSetPointInPercent = iIter.x;
+				pTarget->m_PowerOutputInWatts = iIter.y;
+				pTarget++;
+			}
+		}
+
+	}
+		
+
+
 }
 
-void CRTCContext::SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dPowerOffsetInPercent, const LibMCDriver_ScanLab_double dPowerOutputScaling) 
+void CRTCContext::SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent)
 {
-	if (dPowerOutputScaling < 0.0)
-		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOWERCALIBRATIONOUTPUTSCALING);
-
-	m_LaserPowerCalibrationList.clear();
-	sLaserCalibrationPoint calibration;
-	calibration.m_PowerSetPointInPercent = 0.0;
-	calibration.m_PowerOffsetInPercent = dPowerOffsetInPercent;
-	calibration.m_PowerOutputScaling = dPowerOutputScaling;
-	m_LaserPowerCalibrationList.push_back(calibration);
-
+	m_pOwnerData->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
 }
 
-bool calibrationPointCompare (LibMCDriver_ScanLab::sLaserCalibrationPoint point1, LibMCDriver_ScanLab::sLaserCalibrationPoint point2) {
-	return (point1.m_PowerSetPointInPercent < point2.m_PowerSetPointInPercent); 
-}
-
-void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer)
+void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent, const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer) 
 {
-	m_LaserPowerCalibrationList.clear();
+
 	if (nCalibrationPointsBufferSize > 0) {
 		if (pCalibrationPointsBuffer == nullptr)
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 
-		for (size_t nIndex = 0; nIndex < nCalibrationPointsBufferSize; nIndex++) {
-			auto point = pCalibrationPointsBuffer[nIndex];
-			if (point.m_PowerSetPointInPercent < 0.0)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOWERCALIBRATIONSETPOINT);
-			if (point.m_PowerOutputScaling < 0.0)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOWERCALIBRATIONOUTPUTSCALING);
+		std::map<double, double> nonLinearPoints;
 
-			m_LaserPowerCalibrationList.push_back(point);
+		for (uint64_t nIndex = 0; nIndex < nCalibrationPointsBufferSize; nIndex++) {
+			auto pPoint = &pCalibrationPointsBuffer[nIndex];
+
+			nonLinearPoints.insert (std::make_pair (pPoint->m_PowerSetPointInPercent, pPoint->m_PowerOutputInWatts));
 		}
 
-		std::sort(m_LaserPowerCalibrationList.begin(), m_LaserPowerCalibrationList.end(), calibrationPointCompare);
-
-		// Make sure List is strictly ascending in Power!
-		int64_t nOldDiscretePower = -1;
-		for (auto & point : m_LaserPowerCalibrationList) {
-			int64_t nDiscreteLaserPower = (int64_t) round (point.m_PowerSetPointInPercent / m_dLaserPowerCalibrationUnits);
-			if (nDiscreteLaserPower <= nOldDiscretePower)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DUPLICATELASERPOWERCALIBRATIONSETPOINT);
-			nOldDiscretePower = nDiscreteLaserPower;
-		}
+		m_pOwnerData->setMaxLaserPowerNonlinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent, nonLinearPoints);
 
 	}
+	else {
+		m_pOwnerData->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
+	}
+}
+
+LibMCDriver_ScanLab_double CRTCContext::MapPowerPercentageToWatts(const LibMCDriver_ScanLab_double dLaserPowerInPercent)
+{
+	double dLaserPowerInWatts = 0.0;
+	bool bSuccess = m_pOwnerData->mapLaserPowerFromPercentToWatts(dLaserPowerInPercent, dLaserPowerInWatts);
+	if (!bSuccess)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS, "could not convert laser power to watts: " + std::to_string (dLaserPowerInPercent) + "%");
+
+	return dLaserPowerInWatts;
+}
+
+LibMCDriver_ScanLab_double CRTCContext::MapPowerWattsToPercent(const LibMCDriver_ScanLab_double dLaserPowerInWatts)
+{
+	double dLaserPowerInPercent = 0.0;
+	bool bSuccess = m_pOwnerData->mapLaserPowerFromWattsToPercent(dLaserPowerInWatts, dLaserPowerInPercent);
+	if (!bSuccess)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT, "could not convert laser power to watts: " + std::to_string(dLaserPowerInWatts) + "W");
+
+	return dLaserPowerInPercent;
 
 }
+
 
 void CRTCContext::EnableSpatialLaserPowerModulation(const LibMCDriver_ScanLab::SpatialPowerModulationCallback pModulationCallback, const LibMCDriver_ScanLab_pvoid pUserData)
 {
@@ -997,7 +1272,7 @@ void CRTCContext::DisableLineSubdivision()
 
 double CRTCContext::adjustLaserPowerCalibration(double dLaserPowerInPercent, double dPowerOffsetInPercent, double dPowerOutputScaling)
 {
-	return ((dLaserPowerInPercent + dPowerOffsetInPercent) * dPowerOutputScaling);
+	return (dLaserPowerInPercent * dPowerOutputScaling + dPowerOffsetInPercent);
 }
 
 
@@ -1315,6 +1590,17 @@ void CRTCContext::InitializeForOIE(const LibMCDriver_ScanLab_uint64 nSignalChann
 	m_pScanLabSDK->n_set_multi_mcbsp_in(m_CardNo, 0, 0, 0);
 
 
+	// Check Error
+	m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
+}
+
+
+void CRTCContext::DisableOnTheFlyForOIE()
+{
+	// Check Error
+	m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
 	// Workaround: Ensure that MCBSP Mark On The Fly is disabled!
 	SetStartList(1, 0);
 	m_pScanLabSDK->n_set_fly_2d(m_CardNo, 1.0, 1.0);
@@ -1337,6 +1623,7 @@ void CRTCContext::InitializeForOIE(const LibMCDriver_ScanLab_uint64 nSignalChann
 
 	if (Busy)
 		throw std::runtime_error("could not properly intialise MCBSP connection to OIE");
+
 
 	// Check Error
 	m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
@@ -1372,12 +1659,11 @@ void CRTCContext::sendFreeVariable0(uint32_t nValue)
 void CRTCContext::sendOIEMeasurementTag(uint32_t nCurrentVectorID)
 {
 	if (m_bMeasurementTagging) {
-		m_CurrentMeasurementTagInfo.m_nCurrentVectorID = nCurrentVectorID;
-		m_MeasurementTags.push_back(m_CurrentMeasurementTagInfo);
 
-		uint32_t nMeasurementTag = (uint32_t)m_MeasurementTags.size() & ((1UL << 22) - 1);
+		m_CurrentMeasurementTagInfo.m_VectorID = nCurrentVectorID;
+		uint32_t nMeasurementTag = m_pMeasurementTagMap->addTag(m_CurrentMeasurementTagInfo);
 
-		m_pScanLabSDK->n_set_free_variable_list(m_CardNo, 1, nMeasurementTag);
+		m_pScanLabSDK->n_set_free_variable_list(m_CardNo, 1, (uint32_t) (nMeasurementTag & ((1UL << 22) - 1)));
 		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
 
 	}
@@ -1463,7 +1749,9 @@ void CRTCContext::callSetTriggerOIE(uint32_t nPeriod)
 				channelArray.at(nIndex) = 0;
 		}
 
-		m_pScanLabSDK->n_set_trigger8(m_CardNo, nPeriod, channelArray[0], channelArray[1], channelArray[2], channelArray[3], channelArray[4], channelArray[5], channelArray[6], channelArray[7]);
+		uint32_t nBufferRoundtripBit = 1UL << 31;
+
+		m_pScanLabSDK->n_set_trigger8(m_CardNo, nPeriod | nBufferRoundtripBit, channelArray[0], channelArray[1], channelArray[2], channelArray[3], channelArray[4], channelArray[5], channelArray[6], channelArray[7]);
 		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
 	}
 	else {
@@ -1632,12 +1920,12 @@ void CRTCContext::SetOIEPIDMode(const LibMCDriver_ScanLab_uint32 nOIEPIDIndex)
 
 void CRTCContext::ClearOIEMeasurementTags()
 {
-	m_MeasurementTags.clear();
+	m_pMeasurementTagMap = std::make_shared<CRTCMeasurementTagMapInstance>();
 }
 
 LibMCDriver_ScanLab_uint32 CRTCContext::GetOIEMaxMeasurementTag()
 {
-	return (uint32_t)m_MeasurementTags.size();
+	return m_pMeasurementTagMap->getSize ();
 }
 
 
@@ -1653,15 +1941,26 @@ void CRTCContext::DisableOIEMeasurementTagging()
 
 void CRTCContext::MapOIEMeasurementTag(const LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab_uint32& nPartID, LibMCDriver_ScanLab_uint32& nProfileID, LibMCDriver_ScanLab_uint32& nSegmentID, LibMCDriver_ScanLab_uint32& nVectorID)
 {
-	if ((nMeasurementTag >= 1) && (nMeasurementTag <= m_MeasurementTags.size())) {
-		auto & record = m_MeasurementTags.at (nMeasurementTag - 1);
-		nPartID = record.m_nCurrentPartID;
-		nSegmentID = record.m_nCurrentSegmentID;
-		nProfileID = record.m_nCurrentProfileID;
-		nVectorID = record.m_nCurrentVectorID;
+	sOIEMeasurementTagData tagData;
+	if (m_pMeasurementTagMap->findTag (nMeasurementTag, tagData)) {
+		nPartID = tagData.m_PartID;
+		nSegmentID = tagData.m_SegmentID;
+		nProfileID = tagData.m_ProfileID;
+		nVectorID = tagData.m_VectorID;
 
 	} else
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDOIEMEASUREMENTTAG, "Invalid OIE Measurement Tag" + std::to_string (nMeasurementTag));
+}
+
+
+
+IOIEMeasurementTagMap* CRTCContext::RetrieveOIEMeasurementTags()
+{
+	auto pCurrentInstance = m_pMeasurementTagMap;
+
+	m_pMeasurementTagMap = std::make_shared<CRTCMeasurementTagMapInstance>();
+
+	return new COIEMeasurementTagMap(pCurrentInstance);
 }
 
 
@@ -1792,6 +2091,8 @@ IRTCRecording* CRTCContext::PrepareRecording(const bool bKeepInMemory, const boo
 	std::string sUUID = pCryptoContext->CreateUUID();
 	auto pInstance = std::make_shared<CRTCRecordingInstance>(sUUID, m_pScanLabSDK, m_CardNo, m_dCorrectionFactor, m_dZCorrectionFactor, RTC_CHUNKSIZE_DEFAULT, bEnableScanheadFeedback, bEnableBacktransformation);
 
+	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
+
 	if (bKeepInMemory)
 		m_Recordings.insert(std::make_pair (pInstance->getUUID(), pInstance));
 
@@ -1800,6 +2101,8 @@ IRTCRecording* CRTCContext::PrepareRecording(const bool bKeepInMemory, const boo
 
 bool CRTCContext::HasRecording(const std::string& sUUID)
 {
+	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
+
 	auto iIter = m_Recordings.find(sUUID);
 	return (iIter != m_Recordings.end());
 }
@@ -1808,6 +2111,8 @@ IRTCRecording* CRTCContext::FindRecording(const std::string& sUUID)
 {
 	auto pCryptoContext = m_pDriverEnvironment->CreateCryptoContext();
 	std::string sNormalizedUUID = pCryptoContext->NormalizeUUIDString(sUUID);
+
+	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
 
 	auto iIter = m_Recordings.find(sNormalizedUUID);
 	if (iIter != m_Recordings.end())
@@ -1820,6 +2125,36 @@ IRTCRecording* CRTCContext::FindRecording(const std::string& sUUID)
 	}
 
 }
+
+bool CRTCContext::ClearRecording(const std::string& sUUID)
+{
+	auto pCryptoContext = m_pDriverEnvironment->CreateCryptoContext();
+	std::string sNormalizedUUID = pCryptoContext->NormalizeUUIDString(sUUID);
+
+	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
+
+	auto iIter = m_Recordings.find(sNormalizedUUID);
+	if (iIter != m_Recordings.end())
+	{
+		iIter->second->clear();
+		m_Recordings.erase(iIter);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void CRTCContext::ClearAllRecordings()
+{
+	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
+	for (auto iIter : m_Recordings)
+		iIter.second->clear();
+
+	m_Recordings.clear();
+}
+
 
 /*void CRTCContext::PrepareRecording()
 {
@@ -2229,9 +2564,8 @@ void CRTCContext::AddLayerToList(LibMCEnv::PToolpathLayer pLayer, bool bFailIfNo
 	}
 
 	LibMCDriver_ScanLab::eOIERecordingMode oieRecordingMode = m_pOwnerData->getOIERecordingMode ();
-	double dMaxLaserPowerInWatts = m_pOwnerData->getMaxLaserPower();
 
-	addLayerToListEx(pLayer, oieRecordingMode, nAttributeFilterID, nAttributeFilterValue, (float)dMaxLaserPowerInWatts, bFailIfNonAssignedDataExists);
+	addLayerToListEx(pLayer, oieRecordingMode, nAttributeFilterID, nAttributeFilterValue, bFailIfNonAssignedDataExists);
 }
 
 void CRTCContext::addGPIOSequenceToList(const std::string& sSequenceName)
@@ -2248,7 +2582,142 @@ void CRTCContext::addGPIOSequenceToList(const std::string& sSequenceName)
 
 }
 
-void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordingMode oieRecordingMode, uint32_t nAttributeFilterID, int64_t nAttributeFilterValue, float fMaxLaserPowerInWatts, bool bFailIfNonAssignedDataExists)
+
+double readSkywritingLimitInCosine(LibMCEnv::CToolpathLayer * pLayer, uint32_t nSegmentIndex)
+{
+	double dSkywritingLimit_Cosine = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "limit", -100.0);
+	double dSkywritingLimit_Degree = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "limit_degree", -100.0);
+
+	bool bCosineIsInRange = (dSkywritingLimit_Cosine >= -1.0) && (dSkywritingLimit_Cosine <= 1.0);
+	bool bDegreeIsInRange = (dSkywritingLimit_Degree >= 0.0) && (dSkywritingLimit_Degree <= 180.0);
+
+	if (!bCosineIsInRange && !bDegreeIsInRange)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLIMITPROVIDEDINPROFILE);
+	
+	if (bCosineIsInRange) {
+		// Cosine is given
+		return dSkywritingLimit_Cosine;
+
+	}
+	else if (bDegreeIsInRange) {
+		// Degree is given
+		return cos (dSkywritingLimit_Degree / 180.0 * 3.14159265358979);
+	}
+	else {
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLIMITPROVIDEDTWICEINPROFILE);
+	}
+
+}
+
+double readSkywritingTimeLagInMicroseconds(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex)
+{
+	double dSkywritingTimelag = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "timelag", -100.0);
+	double dSkywritingTimelag_us = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "timelag_us", -100.0);
+
+	bool bTimelagIsInRange = (dSkywritingTimelag >= 0.0) && (dSkywritingTimelag <= 1000000.0);
+	bool bTimelagUsIsInRange = (dSkywritingTimelag_us >= 0.0) && (dSkywritingTimelag_us <= 1000000.0);
+
+	if (!bTimelagIsInRange && !bTimelagUsIsInRange)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGTIMELAGPROVIDEDINPROFILE);
+
+	if (bTimelagIsInRange) {
+		// Cosine is given
+		return dSkywritingTimelag;
+
+	}
+	else if (bTimelagUsIsInRange) {
+		// Degree is given
+		return dSkywritingTimelag_us;
+	}
+	else {
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGTIMELAGPROVIDEDTWICEINPROFILE);
+	}
+}
+
+int64_t readSkywritingLaserOnShiftIn64thus(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex)
+{
+	int64_t nLaserOnShiftIn64thus = pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "laseronshift", -10000000);
+	double nLaserOnShiftInus = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "laseronshift_us", -10000000.0);
+
+	bool bLaserOnShiftIsInRange = (nLaserOnShiftIn64thus > -1000000) && (nLaserOnShiftIn64thus < 1000000);
+	bool bLaserOnShiftUsIsInRange = (nLaserOnShiftInus > -1000000.0) && (nLaserOnShiftInus < 1000000.0);
+
+	if (!bLaserOnShiftIsInRange && !bLaserOnShiftUsIsInRange)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGLASERONSHIFTPROVIDEDINPROFILE);
+
+	if (bLaserOnShiftIsInRange) {
+		return nLaserOnShiftIn64thus;
+	}
+	else if (bLaserOnShiftUsIsInRange) {
+		// Microseconds is given
+		return (int64_t) round(nLaserOnShiftInus * 64.0);
+	}
+	else {
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGLASERONSHIFTPROVIDEDTWICEINPROFILE);
+	}
+}
+
+
+int64_t readSkywritingRunInPhaseInBits(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex)
+{
+	// We think 1 Million should be enough, even if RTC Documentation says it can go up to 2^32
+	int64_t nMaxNPrev = 1000000;
+
+	// See RTC Documentation set_sky_writing_para for details about the interpretation of the delays
+	double dFactor = 10.0;
+
+	int64_t nPrevInBits = pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "nprev", -10000000);
+	double nPrevInMicroseconds = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "nprev_us", -10000000);
+
+	bool bPrevInBitsIsInRange = (nPrevInBits >= 0) && (nPrevInBits < nMaxNPrev);
+	bool bPrevInMicrosecondsIsInRange = (nPrevInMicroseconds >= 0.0) && (nPrevInMicroseconds < (nMaxNPrev * dFactor));
+
+	if (!bPrevInBitsIsInRange && !bPrevInMicrosecondsIsInRange)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPREVPROVIDEDINPROFILE);
+
+	if (bPrevInBitsIsInRange) {
+		return nPrevInBits;
+	}
+	else if (bPrevInMicrosecondsIsInRange) {
+		// Microseconds is given
+		return (int64_t)round(nPrevInMicroseconds / dFactor);
+	}
+	else {
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPREVPROVIDEDTWICEINPROFILE);
+	}
+}
+
+
+int64_t readSkywritingRunOutPhaseInBits(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex)
+{
+	// We think 1 Million should be enough, even if RTC Documentation says it can go up to 2^32
+	int64_t nMaxNPost = 1000000;
+
+	// See RTC Documentation set_sky_writing_para for details about the interpretation of the delays
+	double dFactor = 10.0;
+
+	int64_t nPostInBits = pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "npost", -10000000);
+	double nPostInMicroseconds = pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "npost_us", -10000000);
+
+	bool bPostInBitsIsInRange = (nPostInBits >= 0) && (nPostInBits < nMaxNPost);
+	bool bPostInMicrosecondsIsInRange = (nPostInMicroseconds >= 0.0) && (nPostInMicroseconds < (nMaxNPost * dFactor));
+
+	if (!bPostInBitsIsInRange && !bPostInMicrosecondsIsInRange)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDORNOSKYWRITINGNPOSTPROVIDEDINPROFILE);
+
+	if (bPostInBitsIsInRange) {
+		return nPostInBits;
+	}
+	else if (bPostInMicrosecondsIsInRange) {
+		// Microseconds is given
+		return (int64_t)round(nPostInMicroseconds / dFactor);
+	}
+	else {
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SKYWRITINGNPOSTPROVIDEDTWICEINPROFILE);
+	}
+}
+
+void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordingMode oieRecordingMode, uint32_t nAttributeFilterID, int64_t nAttributeFilterValue, bool bFailIfNonAssignedDataExists)
 {
 	if (pLayer.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
@@ -2277,12 +2746,26 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 		SetOIEPIDMode(0);
 	}
 
+
+	int32_t nCustomPreDelaySegmentAttributeID = -1;
+	int32_t nCustomPostDelaySegmentAttributeID = -1;
+	if (pLayer->HasCustomSegmentAttribute("http://schemas.scanlab.com/delay/2023/01", "predelay")) {
+		nCustomPreDelaySegmentAttributeID = (int32_t) pLayer->FindCustomSegmentAttributeID("http://schemas.scanlab.com/delay/2023/01", "predelay");
+	}
+	if (pLayer->HasCustomSegmentAttribute("http://schemas.scanlab.com/delay/2023/01", "postdelay")) {
+		nCustomPostDelaySegmentAttributeID = (int32_t)pLayer->FindCustomSegmentAttributeID("http://schemas.scanlab.com/delay/2023/01", "postdelay");
+	}
+
+	//std::cout << "Custom predelay segment attribute " << nCustomPreDelaySegmentAttributeID << std::endl;
+	//std::cout << "Custom postdelay segment attribute " << nCustomPostDelaySegmentAttributeID << std::endl;
+
+
 	uint32_t nSegmentCount = pLayer->GetSegmentCount();
 	for (uint32_t nSegmentIndex = 0; nSegmentIndex < nSegmentCount; nSegmentIndex++) {
 
-		m_CurrentMeasurementTagInfo.m_nCurrentSegmentID = (uint32_t) (nSegmentIndex + 1);
-		m_CurrentMeasurementTagInfo.m_nCurrentProfileID = (uint32_t) pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/oie/2023/08", "measurementid", 0);
-		m_CurrentMeasurementTagInfo.m_nCurrentPartID = (uint32_t)pLayer->GetSegmentLocalPartID(nSegmentIndex);
+		m_CurrentMeasurementTagInfo.m_SegmentID = (uint32_t) (nSegmentIndex + 1);
+		m_CurrentMeasurementTagInfo.m_ProfileID = (uint32_t) pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/oie/2023/08", "measurementid", 0);
+		m_CurrentMeasurementTagInfo.m_PartID = (uint32_t)pLayer->GetSegmentLocalPartID(nSegmentIndex);
 
 		LibMCEnv::eToolpathSegmentType eSegmentType;
 		uint32_t nPointCount;
@@ -2320,8 +2803,15 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 			float fJumpSpeedInMMPerSecond = (float)pLayer->GetSegmentProfileTypedValue(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::JumpSpeed);
 			float fMarkSpeedInMMPerSecond = (float)pLayer->GetSegmentProfileTypedValue(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::Speed);
 			float fPowerInWatts = (float)pLayer->GetSegmentProfileTypedValue(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower);
-			float fPowerInPercent = (fPowerInWatts * 100.f) / fMaxLaserPowerInWatts;
+			
+			double dPowerInPercent = 0.0;
+			if (!m_pOwnerData->mapLaserPowerFromWattsToPercent((double)fPowerInWatts, dPowerInPercent)) {
+				// TODO: Throw exception?
+			}
+				
 			float fLaserFocus = (float)pLayer->GetSegmentProfileTypedValue(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserFocus);
+			double dPreSegmentDelay = (float)pLayer->GetSegmentProfileTypedValueDef(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::PreSegmentDelay, 0.0);
+			double dPostSegmentDelay = (float)pLayer->GetSegmentProfileTypedValueDef(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::PostSegmentDelay, 0.0);
 
 			uint32_t nOIEPIDControlIndex = 0;
 			if (m_bEnableOIEPIDControl) {
@@ -2347,14 +2837,20 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 				int64_t nSkywritingMode = pLayer->GetSegmentProfileIntegerValueDef(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "mode", 0);
 
 				if (nSkywritingMode != 0) {
-					double dSkywritingTimeLag = pLayer->GetSegmentProfileDoubleValue(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "timelag");
-					int64_t nSkywritingLaserOnShift = pLayer->GetSegmentProfileIntegerValue(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "laseronshift");
-					int64_t nSkywritingPrev = pLayer->GetSegmentProfileIntegerValue(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "nprev");
-					int64_t nSkywritingPost = pLayer->GetSegmentProfileIntegerValue(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "npost");
+
+					double dSkywritingTimeLag = readSkywritingTimeLagInMicroseconds(pLayer.get(), nSegmentIndex);
+
+
+					int64_t nSkywritingLaserOnShift = readSkywritingLaserOnShiftIn64thus(pLayer.get(), nSegmentIndex);
+					int64_t nSkywritingPrev = readSkywritingRunInPhaseInBits (pLayer.get(), nSegmentIndex);
+					int64_t nSkywritingPost = readSkywritingRunOutPhaseInBits (pLayer.get(), nSegmentIndex);
 
 					double dSkywritingLimit = 0.0;
 					if ((nSkywritingMode == 3) || (nSkywritingMode == 4)) {
-						dSkywritingLimit = pLayer->GetSegmentProfileDoubleValue(nSegmentIndex, "http://schemas.scanlab.com/skywriting/2023/01", "limit");
+
+						dSkywritingLimit = readSkywritingLimitInCosine(pLayer.get(), nSegmentIndex);
+
+
 					}
 
 
@@ -2377,16 +2873,37 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 
 				}
 
-				std::vector<LibMCEnv::sPosition2D> Points;
-				pLayer->GetSegmentPointData(nSegmentIndex, Points);
+				{
+					// Handle pre Segment Delays
 
-				if (nPointCount != Points.size())
-					throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT);
+					// First take the pre segment delay from the profile
+					uint32_t nPreSegmentDelayInTicks = (uint32_t)round(dPreSegmentDelay * 0.1);
+
+					// Check for a Presegment delay override for each segment in the Scanlab Namespace
+					if (nCustomPreDelaySegmentAttributeID >= 0) {
+						int64_t nScanlabPreSegmentDelayInMicroseconds = pLayer->GetSegmentIntegerAttribute(nSegmentIndex, (uint32_t)nCustomPreDelaySegmentAttributeID);
+						if (nScanlabPreSegmentDelayInMicroseconds >= 0)
+							nPreSegmentDelayInTicks = (uint32_t)(nScanlabPreSegmentDelayInMicroseconds / 10);
+					}
+
+					if (nPreSegmentDelayInTicks > 0) {
+						if (nPreSegmentDelayInTicks > RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ)
+							throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR);
+
+						// Set delay in 10 Microsecond steps, dPreSegmentDelay is in Microseconds
+						m_pScanLabSDK->n_long_delay(m_CardNo, nPreSegmentDelayInTicks);
+					}
+				}
 
 				switch (eSegmentType) {
-				case LibMCEnv::eToolpathSegmentType::Loop:
 				case LibMCEnv::eToolpathSegmentType::Polyline:
 				{
+
+					std::vector<LibMCEnv::sPosition2D> Points;
+					pLayer->GetSegmentPolylineData(nSegmentIndex, Points);
+
+					if (nPointCount != Points.size())
+						throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT);
 
 					std::vector<sPoint2D> ContourPoints;
 					ContourPoints.resize(nPointCount);
@@ -2397,7 +2914,7 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 						pContourPoint->m_Y = (float)(Points[nPointIndex].m_Coordinates[1] * dUnits);
 					}
 
-					DrawPolylineOIE(nPointCount, ContourPoints.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, fPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
+					DrawPolylineOIE(nPointCount, ContourPoints.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float) dPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
 
 					break;
 				}
@@ -2408,23 +2925,53 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 						throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT);
 
 					uint64_t nHatchCount = nPointCount / 2;
-					std::vector<sHatch2D> Hatches;
-					Hatches.resize(nHatchCount);
+
+					std::vector<LibMCEnv::sHatch2D> HatchData;
+					pLayer->GetSegmentHatchData(nSegmentIndex, HatchData);
+
+					std::vector<sHatch2D> RTCHatches;
+					RTCHatches.resize(nHatchCount);
 
 					for (uint64_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
-						auto pHatch = &Hatches.at(nHatchIndex);
-						pHatch->m_X1 = (float)(Points[nHatchIndex * 2].m_Coordinates[0] * dUnits);
-						pHatch->m_Y1 = (float)(Points[nHatchIndex * 2].m_Coordinates[1] * dUnits);
-						pHatch->m_X2 = (float)(Points[nHatchIndex * 2 + 1].m_Coordinates[0] * dUnits);
-						pHatch->m_Y2 = (float)(Points[nHatchIndex * 2 + 1].m_Coordinates[1] * dUnits);
+						auto& srcHatch = HatchData.at(nHatchIndex);
+						auto & targetHatch = RTCHatches.at(nHatchIndex);
+						targetHatch.m_X1 = (float)(srcHatch.m_X1 * dUnits);
+						targetHatch.m_Y1 = (float)(srcHatch.m_Y1 * dUnits);
+						targetHatch.m_X2 = (float)(srcHatch.m_X2 * dUnits);
+						targetHatch.m_Y2 = (float)(srcHatch.m_Y2 * dUnits);
 					}
 
-					DrawHatchesOIE(Hatches.size(), Hatches.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, fPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
+					DrawHatchesOIE(RTCHatches.size(), RTCHatches.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float)dPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
 
 					break;
 				}
 
 				}
+
+				{
+					// Handle PostSegmentDelay
+
+					// First take the pre segment delay from the profile
+					uint32_t nPostSegmentDelayInTicks = (uint32_t)round(dPostSegmentDelay * 0.1);
+
+					// Check for a Postsegment delay override for each segment in the Scanlab Namespace
+					if (nCustomPostDelaySegmentAttributeID >= 0) {
+						int64_t nScanlabPostSegmentDelayInMicroseconds = pLayer->GetSegmentIntegerAttribute(nSegmentIndex, (uint32_t)nCustomPostDelaySegmentAttributeID);
+						if (nScanlabPostSegmentDelayInMicroseconds >= 0)
+							nPostSegmentDelayInTicks = (uint32_t)(nScanlabPostSegmentDelayInMicroseconds / 10);
+					}
+
+					//std::cout << "Post Segment Delay: " << nPostSegmentDelayInTicks << std::endl;
+
+					if (nPostSegmentDelayInTicks > 0) {
+						if (nPostSegmentDelayInTicks > RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ)
+							throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_SEGMENTDELAYEXCEEDSONEHOUR);
+
+						// Set delay in 10 Microsecond steps, dPostSegmentDelay is in Microseconds
+						m_pScanLabSDK->n_long_delay(m_CardNo, nPostSegmentDelayInTicks);
+					}
+				}
+
 			}
 
 		}

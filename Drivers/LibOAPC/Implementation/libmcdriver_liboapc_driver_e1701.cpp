@@ -192,17 +192,17 @@ void CDriver_E1701::DrawLayer(const std::string & sStreamUUID, const LibMCDriver
 
         if (nPointCount >= 2) {
 
-            std::vector<LibMCEnv::sPosition2D> Points;
-            pLayer->GetSegmentPointData(nSegmentIndex, Points);
-
-            if (nPointCount != Points.size ())
-                throw ELibMCDriver_LibOAPCInterfaceException(LIBMCDRIVER_LIBOAPC_ERROR_INVALIDPOINTCOUNT);
 
             switch (eSegmentType) {
-            case LibMCEnv::eToolpathSegmentType::Loop:
             case LibMCEnv::eToolpathSegmentType::Polyline:
                 {
-        
+                    std::vector<LibMCEnv::sPosition2D> Points;
+                    pLayer->GetSegmentPolylineData(nSegmentIndex, Points);
+
+                    if (nPointCount != Points.size())
+                        throw ELibMCDriver_LibOAPCInterfaceException(LIBMCDRIVER_LIBOAPC_ERROR_INVALIDPOINTCOUNT);
+
+
                     internalJumpTo(Points[0].m_Coordinates[0] * dUnits, Points[0].m_Coordinates[1] * dUnits, dJumpSpeedInMMPerSecond);
                     for (uint32_t nPointIndex = 1; nPointIndex < nPointCount; nPointIndex++) {
                         internalMarkTo(Points[nPointIndex].m_Coordinates[0] * dUnits, Points[nPointIndex].m_Coordinates[1] * dUnits, dMarkSpeedInMMPerSecond);
@@ -217,9 +217,17 @@ void CDriver_E1701::DrawLayer(const std::string & sStreamUUID, const LibMCDriver
 
                 uint64_t nHatchCount = nPointCount / 2;
 
+                std::vector<LibMCEnv::sHatch2D> HatchData;
+                pLayer->GetSegmentHatchData(nSegmentIndex, HatchData);
+
+                if (nHatchCount != HatchData.size())
+                    throw ELibMCDriver_LibOAPCInterfaceException(LIBMCDRIVER_LIBOAPC_ERROR_INVALIDPOINTCOUNT);
+
+                
                 for (uint64_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
-                    internalJumpTo(Points[nHatchIndex * 2].m_Coordinates[0] * dUnits, Points[nHatchIndex * 2].m_Coordinates[1] * dUnits, dJumpSpeedInMMPerSecond);
-                    internalMarkTo(Points[nHatchIndex * 2 + 1].m_Coordinates[0] * dUnits, Points[nHatchIndex * 2 + 1].m_Coordinates[1] * dUnits, dMarkSpeedInMMPerSecond);
+                    auto& hatch = HatchData.at(nHatchIndex);
+                    internalJumpTo(hatch.m_X1 * dUnits, hatch.m_Y1 * dUnits, dJumpSpeedInMMPerSecond);
+                    internalMarkTo(hatch.m_X2 * dUnits, hatch.m_Y2 * dUnits, dMarkSpeedInMMPerSecond);
                 }
                 break;
             }

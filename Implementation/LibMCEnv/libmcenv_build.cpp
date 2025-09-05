@@ -110,6 +110,15 @@ std::string CBuild::GetStorageSHA256()
 
 }
 
+void CBuild::EnsureStorageSHA256IsValid()
+{
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+	pBuildJob->GetStorageStream()->EnsureSHA256IsValid();
+
+}
+
+
 
 LibMCEnv_double CBuild::GetBuildHeightInMM()
 {
@@ -171,6 +180,9 @@ void CBuild::LoadToolpath()
 	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
 
 	auto sStreamUUID = pBuildJob->GetStorageStreamUUID();
+	
+	// TODO: make proper relationship reading...
+	m_pToolpathHandler->registerAttachmentRelationsToRead ("https://schemas.autodesk.com/amc/openfoamrelationship-1.0");
 	m_pToolpathHandler->loadToolpathEntity(sStreamUUID);
 }
 

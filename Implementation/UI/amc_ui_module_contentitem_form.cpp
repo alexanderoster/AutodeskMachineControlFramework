@@ -95,23 +95,11 @@ void CUIModule_ContentFormEntity::setReadOnlyExpression(CUIExpression Expression
 }
 
 
-void CUIModule_ContentFormEntity::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
-{
-	object.addString(AMC_API_KEY_UI_FORMUUID, getUUID());
-	object.addString(AMC_API_KEY_UI_FORMTYPE, getTypeString());
-
-	auto pGroup = getClientVariableGroup(pClientVariableHandler);
-	object.addString(AMC_API_KEY_UI_FORMCAPTION, pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMCAPTION));
-	object.addBool(AMC_API_KEY_UI_FORMDISABLED, pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_FORMDISABLED));
-	object.addBool(AMC_API_KEY_UI_FORMREADONLY, pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_FORMREADONLY));
-
-	this->writeVariablesToJSON(writer, object, pClientVariableHandler);
-}
-
 
 void CUIModule_ContentFormEntity::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
 {
 	object.addString(AMC_API_KEY_UI_FORMUUID, getUUID());
+	object.addString(AMC_API_KEY_UI_FORMTYPE, getTypeString());
 
 	auto pGroup = getClientVariableGroup(pClientVariableHandler);
 
@@ -464,27 +452,12 @@ CUIModule_ContentForm::~CUIModule_ContentForm()
 }
 
 
-void CUIModule_ContentForm::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
+
+void CUIModule_ContentForm::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "form");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
 
-	CJSONWriterArray entityArray(writer);
-
-	for (auto pEntity : m_Entities) {
-		CJSONWriterObject entityObject(writer);
-		pEntity->addDefinitionToJSON(writer, entityObject, pClientVariableHandler);
-		entityArray.addObject(entityObject);
-	}
-
-
-	object.addArray(AMC_API_KEY_UI_FORMENTITIES, entityArray); 
-
-}
-
-
-void CUIModule_ContentForm::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
-{
 	CJSONWriterArray entityArray(writer);
 	for (auto pEntity : m_Entities) {
 		CJSONWriterObject entityObject(writer);

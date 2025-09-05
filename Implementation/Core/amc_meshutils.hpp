@@ -42,6 +42,7 @@ namespace AMC {
 	public:
 
 		static LibMCEnv::sModelDataTransform map3MFTransform(const Lib3MF::sTransform transform3MF);
+		static Lib3MF::sTransform mapTo3MFTransform(const LibMCEnv::sModelDataTransform transform);
 
 		static LibMCEnv::sModelDataTransform createIdentityTransform();
 

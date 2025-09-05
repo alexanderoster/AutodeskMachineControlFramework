@@ -37,11 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <list>
 #include <mutex>
+#include <unordered_map>
 
 #include "amc_statesignalparameter.hpp"
+#include "amc_statesignaltypes.hpp"
 #include "amc_parametergroup.hpp"
 
-#define DEFAULT_WAITFOR_SLEEP_MS 1
 
 namespace AMC {
 
@@ -49,30 +50,29 @@ namespace AMC {
 	typedef std::shared_ptr<CStateSignalHandler> PStateSignalHandler;
 
 	// Do not include StateSignal.hpp anywhere for threadsafety!
-	class CStateSignal;
-	typedef std::shared_ptr<CStateSignal> PStateSignal;
+	class CStateSignalSlot;
+	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
 	class CStateSignalHandler {
 	private:
 		
-		std::map<std::pair <std::string, std::string>, PStateSignal> m_SignalMap;
-		std::map<std::string, PStateSignal> m_SignalUUIDLookupMap;
-		std::mutex m_Mutex;
+		std::map<std::pair <std::string, std::string>, PStateSignalSlot> m_SignalMap;
+		std::unordered_map<std::string, PStateSignalSlot> m_SignalUUIDLookupMap;
+		std::mutex m_SignalMapMutex;
+		std::mutex m_SignalUUIDMapMutex;
 
 	public:
 
 		CStateSignalHandler();
 		virtual ~CStateSignalHandler();
 
-		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::list<CStateSignalParameter> & Parameters, const std::list<CStateSignalParameter> & Results);
-
-		bool triggerSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sParameterData, std::string& sNewSignalUUID);
-
-		bool checkSignal(const std::string& sInstanceName, const std::string& sSignalName, std::string& sCurrentSignalUUID);
-
-		bool checkSignalUUID(const std::string& sInstanceName, std::string sCurrentSignalUUID);
+		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::list<CStateSignalParameter> & Parameters, const std::list<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize);
 
 		void clearUnhandledSignals(const std::string& sInstanceName);
+
+		void clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName);
+
+		bool finalizeSignal(const std::string& sUUID);
 
 		bool canTrigger(const std::string& sInstanceName, const std::string& sSignalName);
 
@@ -80,12 +80,32 @@ namespace AMC {
 
 		bool findSignalPropertiesByUUID(const std::string& sSignalUUID, std::string & sInstanceName, std::string& sSignalName, std::string& sParameterData);
 
-		void markSignalAsHandled(const std::string& sSignalUUID, const std::string& sResultData);
+		AMC::eAMCSignalPhase getSignalPhase (const std::string& sSignalUUID);
 
-		bool signalHasBeenHandled(const std::string& sSignalUUID, const bool clearAllResults, std::string& sResultData);
+		std::string peekSignalMessageFromQueue (const std::string& sInstanceName, const std::string& sSignalName);
+
+		bool addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS);
+
+		void changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData);
+
+		void changeSignalPhaseToInProcess(const std::string& sSignalUUID);
+		
+		void changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string & sErrorMessage);
+
+		uint32_t getAvailableSignalQueueEntryCount(const std::string& sInstanceName, const std::string& sSignalName);
+
+		uint32_t getTotalSignalQueueSize(const std::string& sInstanceName, const std::string& sSignalName);
+
+		uint32_t getDefaultReactionTimeout(const std::string& sInstanceName, const std::string& sSignalName);
+
+		uint32_t getReactionTimeout(const std::string& sSignalUUID);
+
+		std::string getResultDataJSON(const std::string& sSignalUUID);
 
 		void populateParameterGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup * pParameterGroup);
+
 		void populateResultGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup* pResultGroup);
+
 
 	};
 

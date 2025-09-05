@@ -1378,10 +1378,13 @@ void CScanLabSDK::n_set_scanahead_speed_control(uint32_t nCardNo, uint32_t nMode
 }
 
 
-/*void CScanLabSDK::n_micro_vector_abs_3d(uint32_t nCardNo, int32_t nX, int32_t nY, int32_t nZ, int32_t nLasOn, int32_t nLasOff)
+void CScanLabSDK::n_micro_vector_abs_3d(uint32_t nCardNo, int32_t nX, int32_t nY, int32_t nZ, int32_t nLasOn, int32_t nLasOff)
 {
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_micro_vector_abs_3d", std::to_string(nCardNo) + ", " + std::to_string(nX) + ", " + std::to_string(nY) + ", " + std::to_string(nZ) + ", " + std::to_string(nLasOn) + ", " + std::to_string(nLasOff));
+
+	if (ptr_n_micro_vector_abs_3d == nullptr)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED, "n_micro_vector_abs_3d not supported in this version of the library");
 
 	ptr_n_micro_vector_abs_3d(nCardNo, nX, nY, nZ, nLasOn, nLasOff);
 }
@@ -1391,6 +1394,9 @@ void CScanLabSDK::n_micro_vector_rel_3d(uint32_t nCardNo, int32_t ndX, int32_t n
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_micro_vector_rel_3d", std::to_string(nCardNo) + ", " + std::to_string(ndX) + ", " + std::to_string(ndY) + ", " + std::to_string(ndZ) + ", " + std::to_string(nLasOn) + ", " + std::to_string(nLasOff));
 
+	if (ptr_n_micro_vector_rel_3d == nullptr)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED, "n_micro_vector_rel_3d not supported in this version of the library");
+
 	ptr_n_micro_vector_rel_3d(nCardNo, ndX, ndY, ndZ, nLasOn, nLasOff);
 }
 
@@ -1398,6 +1404,9 @@ void CScanLabSDK::n_micro_vector_abs(uint32_t nCardNo, int32_t nX, int32_t nY, i
 {
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_micro_vector_abs", std::to_string(nCardNo) + ", " + std::to_string(nX) + ", " + std::to_string(nY) + ", " + std::to_string(nLasOn) + ", " + std::to_string(nLasOff));
+
+	if (ptr_n_micro_vector_abs == nullptr)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED, "n_micro_vector_abs not supported in this version of the library");
 
 	ptr_n_micro_vector_abs(nCardNo, nX, nY, nLasOn, nLasOff);
 }
@@ -1407,8 +1416,11 @@ void CScanLabSDK::n_micro_vector_rel(uint32_t nCardNo, int32_t ndX, int32_t ndY,
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_micro_vector_rel", std::to_string(nCardNo) + ", " + std::to_string(ndX) + ", " + std::to_string(ndY) + ", " + std::to_string(nLasOn) + ", " + std::to_string(nLasOff));
 
+	if (ptr_n_micro_vector_rel == nullptr)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_CALLNOTSUPPORTED, "n_micro_vector_rel not supported in this version of the library");
+
 	ptr_n_micro_vector_rel(nCardNo, ndX, ndY, nLasOn, nLasOff);
-} */
+} 
 
 
 uint32_t CScanLabSDK::n_get_error(uint32_t nCardNo)

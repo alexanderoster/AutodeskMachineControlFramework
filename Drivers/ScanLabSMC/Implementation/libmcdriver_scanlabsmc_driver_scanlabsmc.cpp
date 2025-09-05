@@ -43,6 +43,7 @@ Abstract: This is a stub class definition of CDriver_ScanLabSMC
 
 #define SCANLABSMC_DEFAULT_SMCDLLRESOURCENAME "scanmotioncontrol_x64"
 #define SCANLABSMC_DEFAULT_RTCDLLRESOURCENAME "rtc6dllx64"
+#define SCANLABSMC_DEFAULT_RTCSERVICEDLLRESOURCENAME "RtcService_x64"
 #define SCANLABSMC_DEFAULT_XERCESDLLRESOURCENAME "xerces-c_3_2"
 
 using namespace LibMCDriver_ScanLabSMC::Impl;
@@ -52,7 +53,7 @@ using namespace LibMCDriver_ScanLabSMC::Impl;
 **************************************************************************************************************************/
 
 CDriver_ScanLabSMC::CDriver_ScanLabSMC(const std::string& sName, const std::string& sType, LibMCEnv::PDriverEnvironment pDriverEnvironment)
-    : m_sName (sName), m_sType (sType), m_pDriverEnvironment (pDriverEnvironment)
+    : m_sName (sName), m_sType (sType), m_pDriverEnvironment (pDriverEnvironment), m_bEnableJournaling (true)
 {
     if (pDriverEnvironment.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
@@ -104,7 +105,31 @@ void CDriver_ScanLabSMC::SetDLLResources(const std::string& sSMCDLLResourceName,
 
     if (m_RTCDLLResourceData.empty())
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTSTORERTCSDK);
+}
 
+void CDriver_ScanLabSMC::SetRTCServiceDLLResourceName(const std::string& sRTCServiceDLLResourceName)
+{
+    if (m_pSDK.get() != nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
+
+    m_RTCServiceDLLResourceData.resize(0);
+
+    if (sRTCServiceDLLResourceName.empty())
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCENAME);
+
+    if (m_pDriverEnvironment->MachineHasResourceData(sRTCServiceDLLResourceName)) {
+        m_pDriverEnvironment->RetrieveMachineResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
+    }
+    else {
+        if (m_pDriverEnvironment->DriverHasResourceData(sRTCServiceDLLResourceName)) {
+            m_pDriverEnvironment->RetrieveDriverResourceData(sRTCServiceDLLResourceName, m_RTCServiceDLLResourceData);
+        }
+        else
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND, "RTC SDK Resource not found: " + sRTCServiceDLLResourceName);
+    }
+
+    if (m_RTCServiceDLLResourceData.empty())
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCSERVICERESOURCENOTFOUND);
 }
 
 void CDriver_ScanLabSMC::SetXercesDLLResource(const std::string& sXercesDLLResourceName)
@@ -164,7 +189,27 @@ void CDriver_ScanLabSMC::SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nS
         m_RTCDLLResourceData.at(nRTCIndex) = *pRTCSrc;
         pRTCSrc++;
     }
+}
 
+void CDriver_ScanLabSMC::SetRTCServiceDLLResourceData(const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer)
+{
+    if (m_pSDK.get() != nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SDKALREADYLOADED);
+
+    m_RTCServiceDLLResourceData.resize(0);
+
+    if (nRTCServiceDLLResourceDataBufferSize == 0)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_EMPTYRTCSERVICEDLLRESOURCEDATA);
+
+    if (pRTCServiceDLLResourceDataBuffer == nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+
+    m_RTCServiceDLLResourceData.resize(nRTCServiceDLLResourceDataBufferSize);
+    auto pRTCSrvSrc = pRTCServiceDLLResourceDataBuffer;
+    for (size_t nRTCSrvIndex = 0; nRTCSrvIndex < nRTCServiceDLLResourceDataBufferSize; nRTCSrvIndex++) {
+        m_RTCServiceDLLResourceData.at(nRTCSrvIndex) = *pRTCSrvSrc;
+        pRTCSrvSrc++;
+    }
 }
 
 void CDriver_ScanLabSMC::SetCustomXercesDLLData(const LibMCDriver_ScanLabSMC_uint64 nXercesDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pXercesDLLResourceDataBuffer)
@@ -200,18 +245,33 @@ void CDriver_ScanLabSMC::LoadSDK()
 
     if (m_SMCDLLResourceData.empty() || m_RTCDLLResourceData.empty())
         SetDLLResources(SCANLABSMC_DEFAULT_SMCDLLRESOURCENAME, SCANLABSMC_DEFAULT_RTCDLLRESOURCENAME);
+
+    if ((m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-1.1" || m_sType == "scanlab-smc-latest") && m_RTCServiceDLLResourceData.empty())
+        SetRTCServiceDLLResourceName(SCANLABSMC_DEFAULT_RTCSERVICEDLLRESOURCENAME);
+
     if (m_XercesDLLResourceData.empty())
         SetXercesDLLResource(SCANLABSMC_DEFAULT_XERCESDLLRESOURCENAME);
 
     m_pSMCDLL = m_pDLLDirectory->StoreCustomData("SCANmotionControl_x64.dll", m_SMCDLLResourceData);
     m_pRTCDLL = m_pDLLDirectory->StoreCustomData("RTC6DLLx64.dll", m_RTCDLLResourceData);
+    
+    if (m_sType == "scanlab-smc-1.0" || m_sType == "scanlab-smc-1.1" || m_sType == "scanlab-smc-latest")
+        m_pRTCServiceDLL = m_pDLLDirectory->StoreCustomData("RtcService_x64.dll", m_RTCServiceDLLResourceData);
+
     m_pXercesDLL = m_pDLLDirectory->StoreCustomData("xerces-c_3_2.dll", m_XercesDLLResourceData);
 
     m_pSDK = std::make_shared<CScanLabSMCSDK>(m_pSMCDLL->GetAbsoluteFileName (), m_pDLLDirectory->GetAbsoluteFilePath ());
 
+    if (m_bEnableJournaling) {
+        std::string sJournalFileName = "journal.txt";
+        m_pJournalFile = m_pDLLDirectory->AddManagedFile(sJournalFileName);
+        m_pSDK->setJournal(std::make_shared<CScanLabSMCSDKJournal>(m_pJournalFile->GetAbsoluteFileName()));
+    }
+
     // Free up resource data buffers
     m_SMCDLLResourceData.resize(0);
     m_RTCDLLResourceData.resize(0);
+    m_RTCServiceDLLResourceData.resize(0);
     m_XercesDLLResourceData.resize(0);
 
     auto smcVersionInfo = m_pSDK->slsc_cfg_get_scanmotioncontrol_version();
@@ -245,7 +305,7 @@ ISMCContext* CDriver_ScanLabSMC::CreateContext(const std::string& sContextName, 
     if (m_pSDK.get() == nullptr)
         LoadSDK();
 
-    auto pContextInstance = std::make_shared<CSMCContextInstance>(sContextName, pSMCConfiguration, m_pSDK, m_pDriverEnvironment);
+    auto pContextInstance = std::make_shared<CSMCContextInstance>(sContextName, pSMCConfiguration, m_pSDK, m_pDriverEnvironment, m_pDLLDirectory->GetAbsoluteFilePath ());
     m_pContextMap.insert(std::make_pair (sContextName, pContextInstance));
 
     return new CSMCContext (pContextInstance, m_pDriverEnvironment);

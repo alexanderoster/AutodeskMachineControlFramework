@@ -216,7 +216,8 @@ CJournalReader::CJournalReader(AMCData::PSQLHandler pSQLHandler, const std::stri
     m_sJournalUUID (AMCCommon::CUtils::normalizeUUIDString (sJournalUUID)), 
     m_sJournalBasePath (sJournalBasePath), 
     m_nSchemaVersion (0),
-    m_nLifeTimeInMicroseconds (0)
+    m_nGlobalStartTimeStamp (0),
+    m_nGlobalEndTimeStamp (0)
 {
     if (pSQLHandler.get() == nullptr)
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
@@ -350,10 +351,19 @@ CJournalReader::CJournalReader(AMCData::PSQLHandler pSQLHandler, const std::stri
         if (nDataLength < 0)
             throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NEGATIVEJOURNALDATALENGTH, "Negative journal data length: " + std::to_string(nDataLength) + " (chunk #" + std::to_string(nChunkIndex) + ")");
 
-        if ((uint64_t)nStartTimeStamp < m_nLifeTimeInMicroseconds)
-            throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_JOURNALTIMESTAMPSNOTINCREASING, "Journal timestamps not increasing: " + std::to_string(nStartTimeStamp) + " (chunk #" + std::to_string(nChunkIndex) + ")");
+        // Compute global journal lifetime
+        if (nChunkCount == 0) {
+            m_nGlobalStartTimeStamp = nStartTimeStamp;
+            m_nGlobalEndTimeStamp = nEndTimeStamp;
+        }
+        else {
+            if ((uint64_t)nStartTimeStamp < m_nGlobalEndTimeStamp)
+                throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_JOURNALTIMESTAMPSNOTINCREASING, "Journal timestamps not increasing: " + std::to_string(nStartTimeStamp) + " (chunk #" + std::to_string(nChunkIndex) + ")");
+            if ((uint64_t)nEndTimeStamp < m_nGlobalEndTimeStamp)
+                throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_JOURNALTIMESTAMPSNOTINCREASING, "Journal timestamps not increasing: " + std::to_string(nEndTimeStamp) + " (chunk #" + std::to_string(nChunkIndex) + ")");
 
-        m_nLifeTimeInMicroseconds = (uint32_t)nEndTimeStamp;
+            m_nGlobalEndTimeStamp = nEndTimeStamp;
+        }        
 
         auto iChunkIter = m_ChunkMap.find(nChunkIndex);
         if (iChunkIter != m_ChunkMap.end())
@@ -419,7 +429,7 @@ IJournalChunkIntegerData * CJournalReader::ReadChunkIntegerData(const LibMCData_
 
 LibMCData_uint64 CJournalReader::GetLifeTimeInMicroseconds()
 {
-    return m_nLifeTimeInMicroseconds;
+    return m_nGlobalEndTimeStamp - m_nGlobalStartTimeStamp;
 }
 
 LibMCData_uint32 CJournalReader::GetVariableCount()

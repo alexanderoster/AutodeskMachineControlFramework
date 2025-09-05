@@ -511,7 +511,7 @@ export default class AMCApplication extends Common.AMCObject {
 					
 					uploadObject.setStateMessageToWaiting ();
 					
-                    application.axiosPostRequest("/upload/finish", {
+                    application.axiosPostRequest("/upload/" + uploadObject.streamuuid + "/finish", {
                         "streamuuid": uploadObject.streamuuid,
 						"context": "build",
                         "sha256": checkSum
@@ -1026,6 +1026,10 @@ export default class AMCApplication extends Common.AMCObject {
 	pageIsActive (page)
 	{
 		if (page) {
+					
+			if (page.isAlwaysActive)
+				return true;
+					
 			return page.name === this.AppState.activePage;
 		}
 		

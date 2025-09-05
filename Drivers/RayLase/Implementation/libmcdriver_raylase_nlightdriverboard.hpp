@@ -67,15 +67,45 @@ public:
 
     virtual ~CNLightDriverBoard();
 
-	void InitializeLaser() override;
+	void InitializeLaser(const bool bEnableAutomaticLaserModeSwitching) override;
 
 	void DisableLaser() override;
+
+	bool AutomaticLaserModeSwitchingIsEnabled() override;
+
+	void EnableAutomaticLaserModeSwitching() override;
+
+	void DisableAutomaticLaserModeSwitching() override;
+
+	void SetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode, const LibMCDriver_Raylase_double dMaxPowerInWatts) override;
+
+	LibMCDriver_Raylase_double GetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode) override;
+
+	void ClearLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode) override;
+
+	void ClearAllLaserModeMaxPowerOverrides() override;
 
 	void ClearError() override;
 
 	void SetLaserMode(const LibMCDriver_Raylase_uint32 nLaserMode) override;
+	
+	LibMCDriver_Raylase_uint32 GetRawDeviceState() override;
 
 	bool HasError() override;
+
+	bool IsReady() override;
+
+	bool ExternalControlIsReady() override;
+
+	bool IsEmission() override;
+
+	bool IsFirmwareReady() override;
+
+	bool IsWaterFlow() override;
+
+	void SetModeChangeDelays(const LibMCDriver_Raylase_uint32 nModeChangeSignalDelayInMicroseconds, const LibMCDriver_Raylase_uint32 nModeChangeApplyDelayInMicroseconds) override;
+
+	void GetModeChangeDelays(LibMCDriver_Raylase_uint32& nModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32& nModeChangeApplyDelayInMicroseconds) override;
 
 };
 

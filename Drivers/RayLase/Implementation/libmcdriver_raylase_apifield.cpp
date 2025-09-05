@@ -72,7 +72,20 @@ size_t CRaylaseAPIVariable::getOffset()
 bool CRaylaseAPIVariable::isBool()
 {
     return (m_Type == eRaylaseAPIVariableType::evtBool);
+}
 
+
+void CRaylaseAPIVariable::addEnumValue(const std::string& sEnumName, uint32_t nValue)
+{
+    m_EnumValues.insert(std::make_pair (sEnumName, nValue));
+}
+
+uint32_t CRaylaseAPIVariable::getEnumValue(const std::string& sEnumName)
+{
+    auto iIter = m_EnumValues.find(sEnumName);
+    if (iIter == m_EnumValues.end())
+        throw  ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_UNKNOWNENUMVALUE, "unknown enum value " + sEnumName + " for variable " + m_sName);
+    return iIter->second;
 }
 
 bool CRaylaseAPIVariable::isInteger()
@@ -321,7 +334,12 @@ void CRaylaseAPIField::setBool(const std::string& sVariableName, bool bValue)
 
 }
 
-void CRaylaseAPIField::setEnum(const std::string& sVariableName, uint32_t nValue)
+void CRaylaseAPIField::setEnum(const std::string& sVariableName, const std::string& sValue)
+{
+
+}
+
+void CRaylaseAPIField::setEnumRaw(const std::string& sVariableName, uint32_t nValue)
 {
     auto& variable = findVariable(sVariableName);
     size_t nOffset = variable.getOffset();

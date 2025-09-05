@@ -124,6 +124,11 @@ CRaylaseSDK::CRaylaseSDK(const std::string& sDLLNameUTF8)
 	this->ptrListAppendLaserOffDelay = (PrlListAppendLaserOffDelay)_loadRaylaseAddress(hLibrary, "rlListAppendLaserOffDelay");
 	this->ptrListAppendJumpAbs2D = (PrlListAppendJumpAbs2D)_loadRaylaseAddress(hLibrary, "rlListAppendJumpAbs2D");
 	this->ptrListAppendMarkAbs2D = (PrlListAppendMarkAbs2D)_loadRaylaseAddress(hLibrary, "rlListAppendMarkAbs2D");
+	this->ptrListAppendJumpAbs3D = (PrlListAppendJumpAbs3D)_loadRaylaseAddress(hLibrary, "rlListAppendJumpAbs3D");
+	this->ptrListAppendMarkAbs3D = (PrlListAppendMarkAbs3D)_loadRaylaseAddress(hLibrary, "rlListAppendMarkAbs3D");
+	this->ptrListAppendGpioValue = (PrlListAppendGpioValue)_loadRaylaseAddress(hLibrary, "rlListAppendGpioValue");
+	this->ptrListAppendSleep = (PrlListAppendSleep)_loadRaylaseAddress(hLibrary, "rlListAppendSleep");
+
 	this->ptrListSet = (PrlListSet)_loadRaylaseAddress(hLibrary, "rlListSet");
 	this->ptrListExecute = (PrlListExecute)_loadRaylaseAddress(hLibrary, "rlListExecute");
 	this->ptrListWaitForListIdle = (PrlListWaitForListIdle)_loadRaylaseAddress(hLibrary, "rlListWaitForListIdle");
@@ -422,6 +427,11 @@ void CRaylaseSDK::resetFunctionPtrs()
 	ptrListAppendLaserOffDelay = nullptr;
 	ptrListAppendJumpAbs2D = nullptr;
 	ptrListAppendMarkAbs2D = nullptr;
+	ptrListAppendJumpAbs3D = nullptr;
+	ptrListAppendMarkAbs3D = nullptr;
+	ptrListAppendGpioValue = nullptr;
+	ptrListAppendSleep = nullptr;
+
 	ptrListSet = nullptr;
 	ptrListExecute = nullptr;
 	ptrListWaitForListIdle = nullptr;
@@ -646,7 +656,7 @@ rlHandle CRaylaseSDK::rlConnect(const char* pszAddress, int32_t nPort)
 	
 }
 
-rlResult CRaylaseSDK::rlIsConnected(rlHandle handle, bool* pbIsConnected)
+rlResult CRaylaseSDK::rlIsConnected(rlHandle handle, uint32_t* pbIsConnected)
 {
 	if (m_bEnableJournal) {
 		logJournal("rlIsConnected (" + std::to_string(handle) + ", &bIsConnected);");
@@ -697,7 +707,7 @@ rlResult CRaylaseSDK::rlLaserLaserOff(rlHandle handle)
 
 }
 
-rlResult CRaylaseSDK::rlLaserIsPilotEnabled(rlHandle handle, bool& enabled)
+rlResult CRaylaseSDK::rlLaserIsPilotEnabled(rlHandle handle, uint32_t& enabled)
 {
 	if (m_bEnableJournal) {
 		logJournal("rlLaserIsPilotEnabled (" + std::to_string(handle) + ", bEnabled); ");
@@ -720,14 +730,14 @@ rlResult CRaylaseSDK::rlLaserEnablePilot(rlHandle handle, bool enable)
 
 }
 
-rlResult CRaylaseSDK::rlLaserIsLaserArmed(rlHandle handle, bool& armed)
+rlResult CRaylaseSDK::rlLaserIsLaserArmed(rlHandle handle, uint32_t& armed)
 {
 	if (m_bEnableJournal) {
-		logJournal("rlLaserEnablePilot (" + std::to_string(handle) + ", bArmed); ");
+		logJournal("rlLaserIsLaserArmed (" + std::to_string(handle) + ", bArmed); ");
 	}
 
 
-	return ptrLaserEnablePilot(handle, armed);
+	return ptrLaserIsLaserArmed(handle, armed);
 
 }
 
@@ -894,6 +904,45 @@ rlResult CRaylaseSDK::rlListAppendMarkAbs2D(rlListHandle handle, double x, doubl
 
 }
 
+rlResult CRaylaseSDK::rlListAppendJumpAbs3D(rlListHandle handle, double x, double y, double z)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlListAppendJumpAbs3D (" + std::to_string(handle) + ", " + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + "); ");
+	}
+
+	return ptrListAppendJumpAbs3D(handle, x, y, z);
+}
+
+rlResult CRaylaseSDK::rlListAppendMarkAbs3D(rlListHandle handle, double x, double y, double z)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlListAppendMarkAbs3D (" + std::to_string(handle) + ", " + std::to_string(x) + +", " + std::to_string(y) + ", " + std::to_string(z) + "); ");
+	}
+
+	return ptrListAppendMarkAbs3D(handle, x, y, z);
+
+}
+
+rlResult CRaylaseSDK::rlListAppendGpioValue(rlListHandle handle, eRLIOPort port, eRLPinAction action, uint32_t nValue)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlListAppendGpioValue (" + std::to_string(handle) + ", " + std::to_string((uint32_t)port) + ", " + std::to_string((uint32_t)action) + ", " + std::to_string (nValue) + "); ");
+	}
+
+	return ptrListAppendGpioValue(handle, port, action, nValue);
+
+}
+
+rlResult CRaylaseSDK::rlListAppendSleep(rlListHandle handle, double dDelay)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlListAppendSleep (" + std::to_string(handle) + ", " + std::to_string(dDelay) + "); ");
+	}
+
+	return ptrListAppendSleep(handle, dDelay);
+
+}
+
 rlResult CRaylaseSDK::rlListSet(rlHandle handle, int32_t listID, rlListHandle listHandle, bool append, int32_t executionLimit)
 {
 	if (m_bEnableJournal) {
@@ -913,7 +962,7 @@ rlResult CRaylaseSDK::rlListExecute(rlHandle handle, int32_t listID)
 	return ptrListExecute(handle, listID);
 }
 
-rlResult CRaylaseSDK::rlListWaitForListIdle(rlHandle handle, int32_t timeOutInMilliseconds, bool& successful, int32_t& listID)
+rlResult CRaylaseSDK::rlListWaitForListIdle(rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t& listID)
 {
 	if (m_bEnableJournal) {
 		logJournal("rlListWaitForListIdle (" + std::to_string(handle) + ", " + std::to_string(timeOutInMilliseconds) + ", bSuccessful, nListID); ");
@@ -923,7 +972,7 @@ rlResult CRaylaseSDK::rlListWaitForListIdle(rlHandle handle, int32_t timeOutInMi
 
 }
 
-rlResult CRaylaseSDK::rlListWaitForListDone(rlHandle handle, int32_t timeOutInMilliseconds, bool& successful, int32_t& listID)
+rlResult CRaylaseSDK::rlListWaitForListDone(rlHandle handle, int32_t timeOutInMilliseconds, uint32_t& successful, int32_t& listID)
 {
 	if (m_bEnableJournal) {
 		logJournal("rlListWaitForListDone (" + std::to_string(handle) + ", " + std::to_string(timeOutInMilliseconds) + ", bSuccessful, nListID); ");
@@ -961,13 +1010,13 @@ rlResult CRaylaseSDK::rlListAbortExecution(rlHandle handle)
 	return ptrListAbortExecution(handle);
 }
 
-rlResult CRaylaseSDK::rlListIsExecutionInProgress(rlHandle handle, bool & bInProgress)
+rlResult CRaylaseSDK::rlListIsExecutionInProgress(rlHandle handle, uint32_t & bInProgress)
 {
 	if (m_bEnableJournal) {
 		logJournal("rlListIsExecutionInProgress (" + std::to_string(handle) + ", bIsInProgress); ");
 	}
 
-	bInProgress = false;
+	bInProgress = 0;
 
 	return ptrListIsExecutionInProgress(handle, &bInProgress);
 }
@@ -1504,14 +1553,98 @@ rlResult CRaylaseSDK::rlScannerStoreConfig(rlHandle handle)
 	return ptrScannerStoreConfig(handle);
 }
 
-uint32_t CRaylaseSDK::rlGpioConfigMemorySize()
-{		
-	return 1024;
+
+rlResult CRaylaseSDK::rlSfioRead(rlHandle handle, eRLSfRegister eRegister, uint32_t& nValue)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioRead (" + std::to_string((uintptr_t)handle) + ", " + std::to_string ((uint32_t) eRegister) + ");");
+	}
+
+	return ptrSfioRead(handle, eRegister, nValue);
 }
 
-
-uint32_t CRaylaseSDK::rlSystemConfigMemorySize()
+rlResult CRaylaseSDK::rlSfioSpiInitConfig(rlSpiConfig* pConfig)
 {
-	return 1024;
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiInitConfig (" + std::to_string((uintptr_t)pConfig) + ");");
+	}
+
+	return ptrSfioSpiInitConfig(pConfig);
+}
+
+rlResult CRaylaseSDK::rlSfioSpiLoadConfig(rlHandle handle)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiLoadConfig (" + std::to_string((uintptr_t)handle) + ");");
+	}
+
+	return ptrSfioSpiLoadConfig(handle);
+}
+
+rlResult CRaylaseSDK::rlSfioSpiStoreConfig(rlHandle handle)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiStoreConfig (" + std::to_string((uintptr_t)handle) + ");");
+	}
+
+	return ptrSfioSpiStoreConfig(handle);
+}
+
+rlResult CRaylaseSDK::rlSfioSpiGetConfig(rlHandle handle, rlSpiConfig* pConfig)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiGetConfig (" + std::to_string((uintptr_t)handle) +", " + std::to_string((uintptr_t)pConfig) + ");");
+	}
+
+	return ptrSfioSpiGetConfig(handle, pConfig);
+}
+
+rlResult CRaylaseSDK::rlSfioSpiSetConfig(rlHandle handle, rlSpiConfig* pConfig)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiSetConfig (" + std::to_string((uintptr_t)handle) + ", " + std::to_string((uintptr_t)pConfig) + ");");
+	}
+
+	return ptrSfioSpiSetConfig(handle, pConfig);
+
+}
+
+rlResult CRaylaseSDK::rlSfioSpiTransmit(rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, uint32_t bAsync)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiTransmit (" + std::to_string((uintptr_t)handle) + ", " + std::to_string(nModule) + ", " + std::to_string ((intptr_t)pTransmitMessage) + ", " + std::to_string (nTransmitMessageLen) + ", " + std::to_string (bAsync) + ");");
+	}
+
+	return ptrSfioSpiTransmit (handle, nModule, pTransmitMessage, nTransmitMessageLen, bAsync);
+
+}
+
+rlResult CRaylaseSDK::rlSfioSpiTransceive(rlHandle handle, int32_t nModule, uint32_t* pTransmitMessage, uint32_t nTransmitMessageLen, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiTransceive (" + std::to_string((uintptr_t)handle) + ", " + std::to_string(nModule) + ", " + std::to_string((intptr_t)pTransmitMessage) + ", " + std::to_string(nTransmitMessageLen) + ", " + std::to_string(nTimeoutInMS) + ", " + std::to_string((intptr_t)pBuffer) + ", " + std::to_string(nBufferSize) + ", " + std::to_string(nReceiveLength) + + ");");
+	}
+
+	return ptrSfioSpiTransceive(handle, nModule, pTransmitMessage, nTransmitMessageLen, nTimeoutInMS, pBuffer, nBufferSize, nReceiveLength);
+
+}
+
+rlResult CRaylaseSDK::rlSfioSpiReceive(rlHandle handle, int32_t nModule, uint32_t nReadCount, int32_t nTimeoutInMS, uint32_t* pBuffer, uint32_t nBufferSize, uint32_t & nReceiveLength)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiReceive (" + std::to_string((uintptr_t)handle) + ", " + std::to_string(nModule) + ", " + std::to_string(nReadCount) + ", " + std::to_string(nTimeoutInMS) + ", " + std::to_string((intptr_t)pBuffer) + ", " + std::to_string(nBufferSize) + ", " + std::to_string(nReceiveLength) + ");");
+	}
+
+	return ptrSfioSpiReceive(handle, nModule, nReadCount, nTimeoutInMS, pBuffer, nBufferSize, nReceiveLength);
+
+}
+
+rlResult CRaylaseSDK::rlSfioSpiWaitForActiveTransfersDone(rlHandle handle, int32_t nModule)
+{
+	if (m_bEnableJournal) {
+		logJournal("rlSfioSpiWaitForActiveTransfersDone (" + std::to_string((uintptr_t)handle) + ", " + std::to_string(nModule) + ");");
+	}
+
+	return ptrSfioSpiWaitForActiveTransfersDone(handle, nModule);
 }
 

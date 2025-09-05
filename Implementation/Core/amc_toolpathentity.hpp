@@ -74,12 +74,15 @@ namespace AMC {
 		std::vector<PToolpathCustomSegmentAttribute> m_CustomSegmentAttributes;
 
 		std::map<std::string, Lib3MF::PAttachment> m_Attachments;
+		std::map<std::string, Lib3MF::PAttachment> m_AttachmentsByRelationship;
 
 		std::string m_sDebugName;
 
 		void copyMetaDataNode (AMC::PXMLDocumentNodeInstance pTargetNodeInstance, Lib3MF::PCustomXMLNode pSourceNodeInstance);
 
 		Lib3MF::PAttachment findBinaryMetaData(const std::string& sPath, bool bMustExist);
+		Lib3MF::PAttachment findUniqueBinaryMetaDataBySchema(const std::string& sRelationShipSchema, bool bMustExist);
+		
 
 	public:
 
@@ -118,8 +121,15 @@ namespace AMC {
 
 		void getBinaryMetaData(const std::string& sPath, uint64_t nMetaDataBufferSize, uint64_t* pMetaDataNeededCount, uint8_t* pMetaDataBuffer);
 
-		std::string getBinaryMetaDataRelationship(const std::string& sPath);
+		std::string getBinaryMetaDataAsString(const std::string& sPath);
 
+		bool hasUniqueBinaryMetaDataSchema(const std::string& sRelationshipSchema);
+
+		void getBinaryMetaDataBySchema(const std::string& sRelationshipSchema, uint64_t nMetaDataBufferSize, uint64_t* pMetaDataNeededCount, uint8_t* pMetaDataBuffer);
+
+		std::string getBinaryMetaDataAsStringBySchema(const std::string& sRelationshipSchema);
+
+		std::string getBinaryMetaDataRelationship(const std::string& sPath);
 
 	};
 

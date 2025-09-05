@@ -71,6 +71,7 @@ namespace AMC {
 		std::string m_sPackageName;
 		std::string m_sPackageCoreClient;
 		std::string m_sPackageConfig;
+		std::string m_sPackageAPIDocs;
 
 		bool m_bUseSSL;
 		std::string m_sServerCertificatePEM;
@@ -92,6 +93,7 @@ namespace AMC {
 		std::string getConnectionString ();
 		std::string getPackageName ();
 		std::string getPackageCoreClient ();
+		std::string getPackageAPIDocs ();
 		std::string getPackageConfig ();
 		std::string getBaseTempDirectory ();
 

@@ -250,5 +250,45 @@ void CToolpathAccessor::GetBinaryMetaData(const std::string& sPath, LibMCEnv_uin
 
 }
 
+std::string CToolpathAccessor::GetBinaryMetaDataAsString(const std::string& sPackagePath)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, false);
+	if (pToolpathEntity == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHNOTLOADED);
+
+	return pToolpathEntity->getBinaryMetaDataAsString(sPackagePath);
+
+}
+
+bool CToolpathAccessor::HasBinaryMetaDataSchema(const std::string& sRelationshipSchema)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, false);
+	if (pToolpathEntity == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHNOTLOADED);
+
+	return pToolpathEntity->hasUniqueBinaryMetaDataSchema(sRelationshipSchema);
+
+}
+
+void CToolpathAccessor::GetBinaryMetaDataBySchema(const std::string& sRelationshipSchema, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8* pMetaDataBuffer)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, false);
+	if (pToolpathEntity == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHNOTLOADED);
+
+	pToolpathEntity->getBinaryMetaDataBySchema(sRelationshipSchema, nMetaDataBufferSize, pMetaDataNeededCount, pMetaDataBuffer);
+
+}
+
+std::string CToolpathAccessor::GetBinaryMetaDataAsStringBySchema(const std::string& sRelationshipSchema)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, false);
+	if (pToolpathEntity == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHNOTLOADED);
+
+	return pToolpathEntity->getBinaryMetaDataAsStringBySchema(sRelationshipSchema);
+
+}
+
 
 

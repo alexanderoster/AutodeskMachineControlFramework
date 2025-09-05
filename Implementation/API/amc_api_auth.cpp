@@ -32,29 +32,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_exceptiontypes.hpp"
 #include "amc_parameterhandler.hpp"
 #include "amc_userinformation.hpp"
+#include "amc_ui_frontendstate.hpp"
 
 #include "common_utils.hpp"
 
 using namespace AMC;
 
 
-CAPIAuth::CAPIAuth(const std::string& sSessionUUID, const std::string& sSessionKey, PUserInformation pUserInformation, bool bIsAuthorized, PParameterHandler pClientVariableHandler, AMCCommon::PChrono pGlobalChrono)
+CAPIAuth::CAPIAuth(const std::string& sSessionUUID, const std::string& sSessionKey, PUserInformation pUserInformation, bool bIsAuthorized, PUIFrontendState pFrontendState)
 	: m_sSessionUUID(AMCCommon::CUtils::normalizeUUIDString(sSessionUUID)), 
 	m_sSessionKey (AMCCommon::CUtils::normalizeSHA256String(sSessionKey)),
 	m_pUserInformation(pUserInformation),
-	m_bIsAuthorized (bIsAuthorized)
+	m_bIsAuthorized (bIsAuthorized),
+	m_pUIFrontendState (pFrontendState)
 
 {
 	if (pUserInformation.get() == nullptr)
 		throw ELibMCCustomException (LIBMC_ERROR_INVALIDPARAM, "CAPIAuth::CAPIAuth - pUserInformation is null");
 
-	if (pClientVariableHandler.get () != nullptr) {
-		m_pClientVariableHandler = pClientVariableHandler;
-	}
-	else
-	{
-		m_pClientVariableHandler = std::make_shared<CParameterHandler>("", pGlobalChrono);
-	}
 }
 
 CAPIAuth::~CAPIAuth()
@@ -100,10 +95,26 @@ std::string CAPIAuth::getUserUUID()
 }
 
 
-PParameterHandler CAPIAuth::getClientVariableHandler()
+PUIFrontendState CAPIAuth::getFrontendState()
 {
-	return m_pClientVariableHandler;
+	return m_pUIFrontendState;
 }
+
+CParameterHandler* CAPIAuth::getLegacyParameterHandler(bool bAllowNull)
+{
+	if (m_pUIFrontendState.get() != nullptr) {
+		auto pParameterHandler = m_pUIFrontendState->getLegacyParameterHandler();
+		if (pParameterHandler.get() != nullptr) 
+			return pParameterHandler.get();
+	}
+
+	if (!bAllowNull)
+		throw ELibMCInterfaceException(LIBMC_ERROR_TRIEDTOACCESSNULLCLIENTPARAMETERS);
+
+	return nullptr;
+
+}
+
 
 std::string CAPIAuth::createStreamDownloadTicket(const std::string& sStreamUUID, const std::string& sDownloadFileName)
 {

@@ -34,54 +34,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <memory>
+namespace LibMCDriver_Raylase {
+    namespace Impl {
 
-class CRaylaseAPIField_rlSpiConfig_v3 : public CRaylaseAPIField {
-  public:
-    CRaylaseAPIField_rlSpiConfig_v3 ()
-      : CRaylaseAPIField ("rlSpiConfig", 3, 232)
-    {
-      registerVariable ("Module0.Enabled", 12, eRaylaseAPIVariableType::evtBool);
-      registerVariable ("Module0.SpiSyncMode", 16, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module0.BitsPerWord", 20, eRaylaseAPIVariableType::evtUint16);
-      registerVariable ("Module0.PreDelay", 24, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module0.PostDelay", 32, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module0.FrameDelay", 40, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module0.OutputSource", 48, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module0.BitOrder", 52, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module0.ClockPeriod", 56, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module1.Enabled", 68, eRaylaseAPIVariableType::evtBool);
-      registerVariable ("Module1.SpiSyncMode", 72, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module1.BitsPerWord", 76, eRaylaseAPIVariableType::evtUint16);
-      registerVariable ("Module1.PreDelay", 80, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module1.PostDelay", 88, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module1.FrameDelay", 96, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module1.OutputSource", 104, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module1.BitOrder", 108, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module1.ClockPeriod", 112, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module2.Enabled", 124, eRaylaseAPIVariableType::evtBool);
-      registerVariable ("Module2.SpiSyncMode", 128, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module2.BitsPerWord", 132, eRaylaseAPIVariableType::evtUint16);
-      registerVariable ("Module2.PreDelay", 136, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module2.PostDelay", 144, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module2.FrameDelay", 152, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module2.OutputSource", 160, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module2.BitOrder", 164, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module2.ClockPeriod", 168, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module3.Enabled", 180, eRaylaseAPIVariableType::evtBool);
-      registerVariable ("Module3.SpiSyncMode", 184, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module3.BitsPerWord", 188, eRaylaseAPIVariableType::evtUint16);
-      registerVariable ("Module3.PreDelay", 192, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module3.PostDelay", 200, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module3.FrameDelay", 208, eRaylaseAPIVariableType::evtDouble);
-      registerVariable ("Module3.OutputSource", 216, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module3.BitOrder", 220, eRaylaseAPIVariableType::evtEnum32);
-      registerVariable ("Module3.ClockPeriod", 224, eRaylaseAPIVariableType::evtDouble);
+        class CRaylaseAPIField_rlSpiConfig_v3 : public CRaylaseAPIField {
+        public:
+            CRaylaseAPIField_rlSpiConfig_v3()
+                : CRaylaseAPIField("rlSpiConfig", 3, 232)
+            {
+                registerVariable("Module0.Enabled", 12, eRaylaseAPIVariableType::evtBool);
+                registerVariable("Module0.SpiSyncMode", 16, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module0.BitsPerWord", 20, eRaylaseAPIVariableType::evtUint16);
+                registerVariable("Module0.PreDelay", 24, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module0.PostDelay", 32, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module0.FrameDelay", 40, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module0.OutputSource", 48, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module0.BitOrder", 52, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module0.ClockPeriod", 56, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module1.Enabled", 68, eRaylaseAPIVariableType::evtBool);
+                registerVariable("Module1.SpiSyncMode", 72, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module1.BitsPerWord", 76, eRaylaseAPIVariableType::evtUint16);
+                registerVariable("Module1.PreDelay", 80, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module1.PostDelay", 88, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module1.FrameDelay", 96, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module1.OutputSource", 104, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module1.BitOrder", 108, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module1.ClockPeriod", 112, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module2.Enabled", 124, eRaylaseAPIVariableType::evtBool);
+                registerVariable("Module2.SpiSyncMode", 128, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module2.BitsPerWord", 132, eRaylaseAPIVariableType::evtUint16);
+                registerVariable("Module2.PreDelay", 136, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module2.PostDelay", 144, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module2.FrameDelay", 152, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module2.OutputSource", 160, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module2.BitOrder", 164, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module2.ClockPeriod", 168, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module3.Enabled", 180, eRaylaseAPIVariableType::evtBool);
+                registerVariable("Module3.SpiSyncMode", 184, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module3.BitsPerWord", 188, eRaylaseAPIVariableType::evtUint16);
+                registerVariable("Module3.PreDelay", 192, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module3.PostDelay", 200, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module3.FrameDelay", 208, eRaylaseAPIVariableType::evtDouble);
+                registerVariable("Module3.OutputSource", 216, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module3.BitOrder", 220, eRaylaseAPIVariableType::evtEnum32);
+                registerVariable("Module3.ClockPeriod", 224, eRaylaseAPIVariableType::evtDouble);
+            }
+
+            virtual ~CRaylaseAPIField_rlSpiConfig_v3()
+            {
+            }
+        };
+
     }
-    
-    virtual ~CRaylaseAPIField_rlSpiConfig_v3 ()
-    {
-    }
-};
+
+}
 
 
 #endif //__LIBMCDRIVER_RAYLASE_RLSPICONFIG_3

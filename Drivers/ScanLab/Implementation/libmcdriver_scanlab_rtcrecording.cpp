@@ -60,6 +60,12 @@ void CRTCRecording::Clear()
 	m_pInstance->clear();
 }
 
+std::string CRTCRecording::GetUUID()
+{
+	return m_pInstance->getUUID();
+}
+
+
 void CRTCRecording::AddChannel(const std::string & sChannelName, const LibMCDriver_ScanLab::eRTCChannelType eChannelType)
 {
 	m_pInstance->addChannel(sChannelName, eChannelType);

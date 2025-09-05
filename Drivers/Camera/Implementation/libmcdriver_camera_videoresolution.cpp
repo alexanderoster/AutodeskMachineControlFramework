@@ -35,14 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace LibMCDriver_Camera::Impl;
 
-CVideoResolution::CVideoResolution(uint32_t nWidth, uint32_t nHeight, uint32_t nFramerate)
-    : m_nWidth (nWidth), m_nHeight (nHeight), m_nFramerate (nFramerate)
+CVideoResolution::CVideoResolution(uint32_t nWidth, uint32_t nHeight, uint32_t nFramerate, const std::string& sTypeUUID)
+    : m_nWidth (nWidth), m_nHeight (nHeight), m_nFramerate (nFramerate), m_sTypeUUID (sTypeUUID)
 {
     if ((nWidth < CAMERARESOLUTION_MIN) || (nWidth > CAMERARESOLUTION_MAX))
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDCAMERARESOLUTION, "invalid camera resolution: " + std::to_string (nWidth) + "x" + std::to_string (nHeight));
     if ((nHeight < CAMERARESOLUTION_MIN) || (nHeight > CAMERARESOLUTION_MAX))
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDCAMERARESOLUTION, "invalid camera resolution: " + std::to_string(nWidth) + "x" + std::to_string(nHeight));
-    if ((nFramerate < CAMERARESOLUTION_MIN) || (nFramerate > CAMERARESOLUTION_MAX))
+    if ((nFramerate < CAMERAFRAMERATE_MIN) || (nFramerate > CAMERAFRAMERATE_MAX))
         throw ELibMCDriver_CameraInterfaceException(LIBMCDRIVER_CAMERA_ERROR_INVALIDCAMERAFRAMERATE, "invalid camera framerate: " + std::to_string(nFramerate));
 }
 
@@ -64,4 +64,9 @@ uint32_t CVideoResolution::getHeight()
 uint32_t CVideoResolution::getFramerate()
 {
     return m_nFramerate;
+}
+
+std::string CVideoResolution::getTypeUUID()
+{
+    return m_sTypeUUID;
 }

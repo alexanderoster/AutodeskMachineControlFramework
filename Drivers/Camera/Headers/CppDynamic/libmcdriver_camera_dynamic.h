@@ -178,43 +178,104 @@ typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetSupportedRe
 *
 * @param[in] pVideoDevice - VideoDevice instance.
 * @param[in] nIndex - Index to return. 0-based.
-* @param[out] pWidth - Width in pixels.
-* @param[out] pHeight - Height in pixels.
+* @param[out] pResolutionX - Width in pixels.
+* @param[out] pResolutionY - Height in pixels.
 * @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
+* @param[out] pSourceFormat - Video Source format.
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetSupportedResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 * pWidth, LibMCDriver_Camera_uint32 * pHeight, LibMCDriver_Camera_uint32 * pFramerate);
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetSupportedResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 * pResolutionX, LibMCDriver_Camera_uint32 * pResolutionY, LibMCDriver_Camera_uint32 * pFramerate, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
 
 /**
 * Returns a the current resolution and Framerate of the video stream.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
-* @param[out] pWidth - Width in pixels.
-* @param[out] pHeight - Height in pixels.
+* @param[out] pResolutionX - Width in pixels.
+* @param[out] pResolutionY - Height in pixels.
+* @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
+* @param[out] pSourceFormat - Video Source format.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionX, LibMCDriver_Camera_uint32 * pResolutionY, LibMCDriver_Camera_uint32 * pFramerate, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
+
+/**
+* Returns the current X resolution of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pResolutionX - Width in pixels.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentResolutionXPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionX);
+
+/**
+* Returns the current resolution of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pResolutionY - Height in pixels.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentResolutionYPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pResolutionY);
+
+/**
+* Returns a the current Framerate of the video stream.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
 * @param[out] pFramerate - Framerate in FPS. Currently only integer framerates are supported.
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pWidth, LibMCDriver_Camera_uint32 * pHeight, LibMCDriver_Camera_uint32 * pFramerate);
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentFrameratePtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 * pFramerate);
+
+/**
+* Returns the current source format of the video streams.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[out] pSourceFormat - Source format.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetCurrentSourceFormatPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera::eVideoSourceFormat * pSourceFormat);
+
+/**
+* Returns a description for a source format enum.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[in] eSourceFormat - Source format.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Source format Description., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_GetSourceFormatDescriptionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera::eVideoSourceFormat eSourceFormat, const LibMCDriver_Camera_uint32 nDescriptionBufferSize, LibMCDriver_Camera_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
 
 /**
 * Sets the resolution of the video stream. Fails if framerate is not supported.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
-* @param[in] nWidth - Width in pixels.
-* @param[in] nHeight - Height in pixels.
+* @param[in] nResolutionX - Width in pixels.
+* @param[in] nResolutionY - Height in pixels.
 * @param[in] nFramerate - Framerate in FPS to set. Currently only integer framerates are supported.
+* @param[in] eSourceFormat - Video Source format.
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_SetResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nWidth, LibMCDriver_Camera_uint32 nHeight, LibMCDriver_Camera_uint32 nFramerate);
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_SetResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nResolutionX, LibMCDriver_Camera_uint32 nResolutionY, LibMCDriver_Camera_uint32 nFramerate, LibMCDriver_Camera::eVideoSourceFormat eSourceFormat);
+
+/**
+* Sets the resolution of the video stream to a supported resolution by index.
+*
+* @param[in] pVideoDevice - VideoDevice instance.
+* @param[in] nIndex - Index to the supported resolution list. 0-based. Fails if equal or larger than SupportedResolutionCount.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_SetToSupportedResolutionPtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCDriver_Camera_uint32 nIndex);
 
 /**
 * Captures a still image from the video stream.
 *
 * @param[in] pVideoDevice - VideoDevice instance.
 * @param[in] pImageData - Capture image object.
+* @param[out] pImageCaptured - If true, an image has been captured. If false then no image was captured.
 * @return error code or 0 (success)
 */
-typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_CaptureRawImagePtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCEnv_ImageData pImageData);
+typedef LibMCDriver_CameraResult (*PLibMCDriver_CameraVideoDevice_CaptureRawImagePtr) (LibMCDriver_Camera_VideoDevice pVideoDevice, LibMCEnv_ImageData pImageData, bool * pImageCaptured);
 
 /**
 * Starts automatic capturing of the video into a video stream. If a stream capture is active, it will stop the current capture process.
@@ -432,7 +493,13 @@ typedef struct {
 	PLibMCDriver_CameraVideoDevice_GetSupportedResolutionCountPtr m_VideoDevice_GetSupportedResolutionCount;
 	PLibMCDriver_CameraVideoDevice_GetSupportedResolutionPtr m_VideoDevice_GetSupportedResolution;
 	PLibMCDriver_CameraVideoDevice_GetCurrentResolutionPtr m_VideoDevice_GetCurrentResolution;
+	PLibMCDriver_CameraVideoDevice_GetCurrentResolutionXPtr m_VideoDevice_GetCurrentResolutionX;
+	PLibMCDriver_CameraVideoDevice_GetCurrentResolutionYPtr m_VideoDevice_GetCurrentResolutionY;
+	PLibMCDriver_CameraVideoDevice_GetCurrentFrameratePtr m_VideoDevice_GetCurrentFramerate;
+	PLibMCDriver_CameraVideoDevice_GetCurrentSourceFormatPtr m_VideoDevice_GetCurrentSourceFormat;
+	PLibMCDriver_CameraVideoDevice_GetSourceFormatDescriptionPtr m_VideoDevice_GetSourceFormatDescription;
 	PLibMCDriver_CameraVideoDevice_SetResolutionPtr m_VideoDevice_SetResolution;
+	PLibMCDriver_CameraVideoDevice_SetToSupportedResolutionPtr m_VideoDevice_SetToSupportedResolution;
 	PLibMCDriver_CameraVideoDevice_CaptureRawImagePtr m_VideoDevice_CaptureRawImage;
 	PLibMCDriver_CameraVideoDevice_StartStreamCapturePtr m_VideoDevice_StartStreamCapture;
 	PLibMCDriver_CameraVideoDevice_StopStreamCapturePtr m_VideoDevice_StopStreamCapture;

@@ -714,6 +714,24 @@ typedef LibMCDriver_ScanLabOIEResult (*PLibMCDriver_ScanLabOIEOIEDevice_StopAppP
 typedef LibMCDriver_ScanLabOIEResult (*PLibMCDriver_ScanLabOIEOIEDevice_AppIsRunningPtr) (LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, bool * pValue);
 
 /**
+* Sets the recording frequency for the OIE. Fails if App is already running. Fails if Version is not OIEVersion3.
+*
+* @param[in] pOIEDevice - OIEDevice instance.
+* @param[in] eFrequency - Frequency of data acquisition.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabOIEResult (*PLibMCDriver_ScanLabOIEOIEDevice_SetRecordingFrequencyPtr) (LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, LibMCDriver_ScanLabOIE::eOIERecordingFrequency eFrequency);
+
+/**
+* Returns the recording frequency for the OIE. Default is 100kHz. Returns invalid for all versions smaller than OIEVersion3.
+*
+* @param[in] pOIEDevice - OIEDevice instance.
+* @param[out] pFrequency - Frequency of data acquisition.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabOIEResult (*PLibMCDriver_ScanLabOIEOIEDevice_GetRecordingFrequencyPtr) (LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, LibMCDriver_ScanLabOIE::eOIERecordingFrequency * pFrequency);
+
+/**
 * Returns if the app that is currently running on the device. Fails if no app is running on the device.
 *
 * @param[in] pOIEDevice - OIEDevice instance.
@@ -1084,6 +1102,8 @@ typedef struct {
 	PLibMCDriver_ScanLabOIEOIEDevice_StartAppByMinorVersionPtr m_OIEDevice_StartAppByMinorVersion;
 	PLibMCDriver_ScanLabOIEOIEDevice_StopAppPtr m_OIEDevice_StopApp;
 	PLibMCDriver_ScanLabOIEOIEDevice_AppIsRunningPtr m_OIEDevice_AppIsRunning;
+	PLibMCDriver_ScanLabOIEOIEDevice_SetRecordingFrequencyPtr m_OIEDevice_SetRecordingFrequency;
+	PLibMCDriver_ScanLabOIEOIEDevice_GetRecordingFrequencyPtr m_OIEDevice_GetRecordingFrequency;
 	PLibMCDriver_ScanLabOIEOIEDevice_GetRunningAppPtr m_OIEDevice_GetRunningApp;
 	PLibMCDriver_ScanLabOIEOIEDevice_InstallAppPtr m_OIEDevice_InstallApp;
 	PLibMCDriver_ScanLabOIEOIEDevice_UninstallAppByNamePtr m_OIEDevice_UninstallAppByName;

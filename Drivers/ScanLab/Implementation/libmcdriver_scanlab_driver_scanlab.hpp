@@ -49,8 +49,7 @@ Abstract: This is the class declaration of CDriver_ScanLab
 // Include custom headers here.
 #include "libmcdriver_scanlab_sdk.hpp"
 
-#define RTC6_MIN_MAXLASERPOWER 10.0
-#define RTC6_MAX_MAXLASERPOWER 10000.0
+
 
 #define RTC6_MIN_LASER_DELAY -1000000.0f
 #define RTC6_MAX_LASER_DELAY 1000000.0f

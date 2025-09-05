@@ -44,7 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_alertlist.hpp"
 #include "amc_ui_module_contentitem_parameterlist.hpp"
 #include "amc_ui_module_contentitem_upload.hpp"
-#include "amc_ui_module_contentitem_layerview.hpp"
 #include "amc_ui_module_contentitem_form.hpp"
 
 
@@ -60,7 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-	: CUIModule(getNameFromXML(xmlNode)), m_nNamingIDCounter(1)
+	: CUIModule(getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ()), m_nNamingIDCounter(1)
 {
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
 
@@ -69,8 +68,6 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 
 	if (sPath.empty())
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULEPATH, m_sName);
-
-	m_sModulePath = sPath + "." + m_sName;
 	
 	auto headlineAttrib = xmlNode.attribute("headline");
 	if (!headlineAttrib.empty ())
@@ -107,8 +104,6 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 			addItem(CUIModule_ContentExecutionList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 		if (sChildName == "alertlist")
 			addItem(CUIModule_ContentAlertList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "layerview")
-			addItem(CUIModule_ContentLayerView::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 		if (sChildName == "buttongroup") 
 			addItem(CUIModule_ContentButtonGroup::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 		if (sChildName == "upload")
@@ -170,7 +165,7 @@ void CUIModule_Content::populateClientVariables(CParameterHandler* pParameterHan
 
 }
 
-void CUIModule_Content::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULETYPE, getType());
@@ -183,7 +178,7 @@ void CUIModule_Content::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterOb
 	CJSONWriterArray itemsNode(writer);
 	for (auto item : m_Items) {
 		CJSONWriterObject itemObject(writer);
-		item->addDefinitionToJSON(writer, itemObject, pClientVariableHandler);
+		item->addLegacyContentToJSON(writer, itemObject, pLegacyClientVariableHandler, 0);
 		itemsNode.addObject(itemObject);
 	}
 	moduleObject.addArray(AMC_API_KEY_UI_ITEMS, itemsNode);

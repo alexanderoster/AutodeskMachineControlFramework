@@ -20,6 +20,7 @@ if not exist "build" (mkdir "build")
 if not exist "build\Framework" (mkdir "build\Framework")
 if not exist "build\Output" (mkdir "build\Output")
 if not exist "build\Output\data" (mkdir "build\Output\data")
+if not exist "build\Output\temp" (mkdir "build\Output\temp")
 
 echo "Extracting DevPackages\amcf_win64_%DEVPACKAGE%.zip"
 
@@ -32,9 +33,9 @@ echo "Found GIT hash %GITHASH%"
 cd build
 REM call cmake -G "MinGW Makefiles" ..
 call cmake  ..
-call cmake --build . --config Release
+call cmake --build . --config Release -- /m
 
-".\Framework\create_package_xml.exe" --config ".\Output\%GITHASH%_config.xml" --devpackage %GITHASH% --output ".\Output\%GITHASH%_package.xml" --serveroutput ".\Output\amc_server.xml"
+".\Framework\create_package_xml.exe" --config ".\Output\%GITHASH%_config.xml" --devpackage %GITHASH% --output ".\Output\%GITHASH%_package.xml" --serveroutput ".\Output\amc_server.xml" --tempdir "temp/"
 
 
 cd Output

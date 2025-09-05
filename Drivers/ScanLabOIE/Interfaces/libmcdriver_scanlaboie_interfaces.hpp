@@ -750,6 +750,18 @@ public:
 	virtual bool AppIsRunning() = 0;
 
 	/**
+	* IOIEDevice::SetRecordingFrequency - Sets the recording frequency for the OIE. Fails if App is already running. Fails if Version is not OIEVersion3.
+	* @param[in] eFrequency - Frequency of data acquisition.
+	*/
+	virtual void SetRecordingFrequency(const LibMCDriver_ScanLabOIE::eOIERecordingFrequency eFrequency) = 0;
+
+	/**
+	* IOIEDevice::GetRecordingFrequency - Returns the recording frequency for the OIE. Default is 100kHz. Returns invalid for all versions smaller than OIEVersion3.
+	* @return Frequency of data acquisition.
+	*/
+	virtual LibMCDriver_ScanLabOIE::eOIERecordingFrequency GetRecordingFrequency() = 0;
+
+	/**
 	* IOIEDevice::GetRunningApp - Returns if the app that is currently running on the device. Fails if no app is running on the device.
 	* @param[out] sName - Name of app.
 	* @param[out] nMajor - Major version of the app.

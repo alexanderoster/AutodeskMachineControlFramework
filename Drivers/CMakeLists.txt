@@ -13,7 +13,7 @@ Interface version: 1.0.0
 
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project("AMCDrivers")
 
@@ -27,6 +27,7 @@ add_subdirectory(Camera)
 add_subdirectory(LibOAPC)
 add_subdirectory(Marlin)
 add_subdirectory(OPCUA)
+add_subdirectory(OpenCV)
 add_subdirectory(FrameBuffer)
 add_subdirectory(UART)
 add_subdirectory(Rasterizer)
@@ -37,6 +38,4 @@ add_subdirectory(ScanLabOIE)
 add_subdirectory(ScanLabSMC)
 add_subdirectory(TCPIP)
 add_subdirectory(Ximc)
-add_subdirectory(TML)
-add_subdirectory(ASL)
 

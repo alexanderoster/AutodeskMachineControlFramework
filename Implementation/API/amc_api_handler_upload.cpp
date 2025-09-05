@@ -87,8 +87,21 @@ APIHandler_UploadType CAPIHandler_Upload::parseRequest(const std::string& sURI, 
 		else {
 
 			if (sParameterString == "/finish") {
+				// This is the legacy finish upload endpoint, might be deprecated in the future
 				return APIHandler_UploadType::utFinishUpload;
 			}
+
+
+			if ((sParameterString.substr(0, 1) == "/") && (sParameterString.length() == 44)) {
+				std::string sAdditionalPath = sParameterString.substr(37, 7);
+
+				if (sAdditionalPath == "/finish") {
+					// this is the /{uploaduuid}/finish endpoint, which replaces /finish
+					uploadUUID = AMCCommon::CUtils::normalizeUUIDString(sParameterString.substr(1, 36));
+					return APIHandler_UploadType::utFinishUpload;
+				}
+			}
+
 
 			if ((sParameterString.substr(0,1) == "/") && (sParameterString.length() == 37)) {
 				uploadUUID = AMCCommon::CUtils::normalizeUUIDString(sParameterString.substr(1));

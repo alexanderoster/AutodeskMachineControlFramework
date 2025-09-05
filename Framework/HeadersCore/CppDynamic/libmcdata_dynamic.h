@@ -765,6 +765,14 @@ typedef LibMCDataResult (*PLibMCDataStorageStream_GetMIMETypePtr) (LibMCData_Sto
 typedef LibMCDataResult (*PLibMCDataStorageStream_GetSHA2Ptr) (LibMCData_StorageStream pStorageStream, const LibMCData_uint32 nSHA2BufferSize, LibMCData_uint32* pSHA2NeededChars, char * pSHA2Buffer);
 
 /**
+* checks if the SHA256 is matching the computed SHA256 on disk. Will fail if there is a mismatch. Attention: Computation will take some time.
+*
+* @param[in] pStorageStream - StorageStream instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorageStream_EnsureSHA256IsValidPtr) (LibMCData_StorageStream pStorageStream);
+
+/**
 * returns the size of a storage stream.
 *
 * @param[in] pStorageStream - StorageStream instance.
@@ -1603,6 +1611,17 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_GetNamePtr) (LibMCData_BuildJob pBu
 typedef LibMCDataResult (*PLibMCDataBuildJob_GetStatusPtr) (LibMCData_BuildJob pBuildJob, LibMCData::eBuildJobStatus * pStatus);
 
 /**
+* returns the status of a build job as string.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[in] nStatusStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pStatusStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pStatusStringBuffer -  buffer of Status of build job as string., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetStatusStringPtr) (LibMCData_BuildJob pBuildJob, const LibMCData_uint32 nStatusStringBufferSize, LibMCData_uint32* pStatusStringNeededChars, char * pStatusStringBuffer);
+
+/**
 * returns the layer count of a build job.
 *
 * @param[in] pBuildJob - BuildJob instance.
@@ -1703,6 +1722,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_GetStorageStreamPtr) (LibMCData_Bui
 typedef LibMCDataResult (*PLibMCDataBuildJob_GetStorageStreamUUIDPtr) (LibMCData_BuildJob pBuildJob, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer);
 
 /**
+* returns the size of the storage stream in bytes.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[out] pStreamSize - Stream Size.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetStorageStreamSizePtr) (LibMCData_BuildJob pBuildJob, LibMCData_uint64 * pStreamSize);
+
+/**
 * Starts validation of a build job.
 *
 * @param[in] pBuildJob - BuildJob instance.
@@ -1720,7 +1748,7 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_StartValidatingPtr) (LibMCData_Buil
 typedef LibMCDataResult (*PLibMCDataBuildJob_FinishValidatingPtr) (LibMCData_BuildJob pBuildJob, LibMCData_uint32 nLayerCount);
 
 /**
-* Archives a Job. Job MUST not be opened in the system. Job MUST be of state validated.
+* Archives a Job. Job MUST be of state validated.
 *
 * @param[in] pBuildJob - BuildJob instance.
 * @return error code or 0 (success)
@@ -1734,6 +1762,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_ArchiveJobPtr) (LibMCData_BuildJob 
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJob_UnArchiveJobPtr) (LibMCData_BuildJob pBuildJob);
+
+/**
+* Changes the name of a job.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[in] pName - New name of the job. MUST not be empty. MUST have less than 1024 characters.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_ChangeNamePtr) (LibMCData_BuildJob pBuildJob, const char * pName);
 
 /**
 * Deletes a Job permanently including all referencing data objects. Job MUST be of state archived to succeed.
@@ -2505,6 +2542,325 @@ typedef LibMCDataResult (*PLibMCDataPersistencyHandler_RetrievePersistentInteger
 typedef LibMCDataResult (*PLibMCDataPersistencyHandler_RetrievePersistentBoolParameterPtr) (LibMCData_PersistencyHandler pPersistencyHandler, const char * pUUID, bool * pValue);
 
 /*************************************************************************************************************************
+ Class definition for MachineConfigurationVersion
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nVersionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pVersionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pVersionUUIDBuffer -  buffer of UUID of the configuration version., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetVersionUUIDPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nVersionUUIDBufferSize, LibMCData_uint32* pVersionUUIDNeededChars, char * pVersionUUIDBuffer);
+
+/**
+* Returns the UUID.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nXSDUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDUUIDBuffer -  buffer of UUID of the configuration XSD., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetXSDUUIDPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nXSDUUIDBufferSize, LibMCData_uint32* pXSDUUIDNeededChars, char * pXSDUUIDBuffer);
+
+/**
+* Returns the UUID of the corresponding Configuration type.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nTypeUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeUUIDBuffer -  buffer of UUID of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetTypeUUIDPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nTypeUUIDBufferSize, LibMCData_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer);
+
+/**
+* Returns the UUID of the parent Configuration Version.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nParentUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pParentUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pParentUUIDBuffer -  buffer of UUID of the configuration version that is the parent of this version. Returns 00000000-0000-0000-0000-000000000000, if Version is the default configuration., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetParentUUIDPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nParentUUIDBufferSize, LibMCData_uint32* pParentUUIDNeededChars, char * pParentUUIDBuffer);
+
+/**
+* Returns the Schema type of the configuration.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nSchemaTypeBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSchemaTypeNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSchemaTypeBuffer -  buffer of Schema type of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetSchemaTypePtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nSchemaTypeBufferSize, LibMCData_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer);
+
+/**
+* Returns the version number of the XSD in use..
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[out] pXSDVersion - Returns the XSD version.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetXSDVersionPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_uint32 * pXSDVersion);
+
+/**
+* Returns the XSD in use as string..
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nXSDStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDStringBuffer -  buffer of XSD String., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetXSDStringPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nXSDStringBufferSize, LibMCData_uint32* pXSDStringNeededChars, char * pXSDStringBuffer);
+
+/**
+* Returns the configuration XML as String.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] nXMLStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXMLStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXMLStringBuffer -  buffer of XML String., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_GetConfigurationXMLStringPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nXMLStringBufferSize, LibMCData_uint32* pXMLStringNeededChars, char * pXMLStringBuffer);
+
+/**
+* Creates a new configuration version from this version with the same XSD.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] pXMLString - New XML Configuration String. MUST conform to current XSD.
+* @param[in] pUserUUID - User UUID for logging the user who initiated the change.
+* @param[in] pTimeStampUTC - Current time in UTC.
+* @param[out] pCurrentInstance - returns the MachineConfigurationVersion instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_CreateNewVersionPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const char * pXMLString, const char * pUserUUID, const char * pTimeStampUTC, LibMCData_MachineConfigurationVersion * pCurrentInstance);
+
+/**
+* Creates a new configuration version from this version with another XSD.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[in] pNewXSD - New XSD to use. MUST be of the same type as the current. MUST have an increased version number.
+* @param[in] pXMLString - New XML Configuration String. MUST conform to new XSD.
+* @param[in] pUserUUID - User UUID for logging the user who initiated the change.
+* @param[in] pTimeStampUTC - Current time in UTC.
+* @param[out] pCurrentInstance - returns the MachineConfigurationVersion instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersion_MigrateToNewXSDPtr) (LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, LibMCData_MachineConfigurationXSD pNewXSD, const char * pXMLString, const char * pUserUUID, const char * pTimeStampUTC, LibMCData_MachineConfigurationVersion * pCurrentInstance);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationVersionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the version the iterator points at.
+*
+* @param[in] pMachineConfigurationVersionIterator - MachineConfigurationVersionIterator instance.
+* @param[out] pCurrentInstance - returns the MachineConfigurationVersion instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationVersionIterator_GetCurrentVersionPtr) (LibMCData_MachineConfigurationVersionIterator pMachineConfigurationVersionIterator, LibMCData_MachineConfigurationVersion * pCurrentInstance);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationXSD
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nXSDUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDUUIDBuffer -  buffer of UUID of the configuration XSD., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_GetUUIDPtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nXSDUUIDBufferSize, LibMCData_uint32* pXSDUUIDNeededChars, char * pXSDUUIDBuffer);
+
+/**
+* Returns the UUID of the corresponding Configuration type.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nTypeUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeUUIDBuffer -  buffer of UUID of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_GetTypeUUIDPtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nTypeUUIDBufferSize, LibMCData_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer);
+
+/**
+* Returns the Schema type of the configuration.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nSchemaTypeBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSchemaTypeNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSchemaTypeBuffer -  buffer of Schema type of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_GetSchemaTypePtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nSchemaTypeBufferSize, LibMCData_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer);
+
+/**
+* Returns the version number of the XSD..
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[out] pXSDVersion - Returns the XSD version.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_GetXSDVersionPtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, LibMCData_uint32 * pXSDVersion);
+
+/**
+* Returns the XSD as string..
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[in] nXSDStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXSDStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXSDStringBuffer -  buffer of XSD String., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_GetXSDStringPtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, const LibMCData_uint32 nXSDStringBufferSize, LibMCData_uint32* pXSDStringNeededChars, char * pXSDStringBuffer);
+
+/**
+* Lists all known Configuration version of the current XSD.
+*
+* @param[in] pMachineConfigurationXSD - MachineConfigurationXSD instance.
+* @param[out] pVersionIterator - Returns a list of versions.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationXSD_ListVersionsPtr) (LibMCData_MachineConfigurationXSD pMachineConfigurationXSD, LibMCData_MachineConfigurationVersionIterator * pVersionIterator);
+
+/*************************************************************************************************************************
+ Class definition for MachineConfigurationType
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nTypeUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeUUIDBuffer -  buffer of UUID of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetUUIDPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const LibMCData_uint32 nTypeUUIDBufferSize, LibMCData_uint32* pTypeUUIDNeededChars, char * pTypeUUIDBuffer);
+
+/**
+* Returns the Name.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetNamePtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const LibMCData_uint32 nNameBufferSize, LibMCData_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the Schema type of the configuration.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nSchemaTypeBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSchemaTypeNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSchemaTypeBuffer -  buffer of Schema type of the configuration type., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetSchemaTypePtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const LibMCData_uint32 nSchemaTypeBufferSize, LibMCData_uint32* pSchemaTypeNeededChars, char * pSchemaTypeBuffer);
+
+/**
+* Returns the latest Machine Configuration XSD.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXSDInstance - Returns the latest XSD of the configuration type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetLatestXSDPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationXSD * pXSDInstance);
+
+/**
+* Returns the latest Machine Configuration XSD Version.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXSDVersion - Returns the latest XSD version, or 0 if no XSD exists.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetLatestXSDVersionPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 * pXSDVersion);
+
+/**
+* Finds Machine Configuration XSD by UUID.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDUUID - UUID of the configuration XSD.
+* @param[out] pXSDInstance - Returns the latest XSD of the configuration type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_FindXSDByUUIDPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDUUID, LibMCData_MachineConfigurationXSD * pXSDInstance);
+
+/**
+* Creates a new XSD Version. Fails if version already exists or is not incrementing.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDString - XSD String of the version. MUST be incremental.
+* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
+* @param[in] pDefaultConfigurationXML - Default configuration XML to use for this XSD. MUST conform to XSD in question.
+* @param[out] pXSDInstance - Returns the new XSD of the configuration type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_CreateNewXSDPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCData_uint32 nXSDVersion, const char * pDefaultConfigurationXML, LibMCData_MachineConfigurationXSD * pXSDInstance);
+
+/**
+* Returns an Configuration XSD Version.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] nXSDVersion - Version to retrieve.
+* @param[out] pXSDInstance - Returns the XSD of the configuration type with the appropriate version number or null if it does not exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetXSDVersionPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_uint32 nXSDVersion, LibMCData_MachineConfigurationXSD * pXSDInstance);
+
+/**
+* Lists all known Configuration version of the current type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pVersionIterator - Returns a list of versions.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_ListVersionsPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersionIterator * pVersionIterator);
+
+/**
+* Finds a Configuration version by UUID.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pVersionUUID - UUID of the configuration version.
+* @param[out] pVersion - Returns the specific version or null if version does not exist or is of a different type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_FindVersionByUUIDPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCData_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the active Configuration version.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pVersionUUID - UUID of the configuration version.
+* @param[out] pVersion - Returns the specific version or null if no active version exists for this type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetActiveVersionPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, const char * pVersionUUID, LibMCData_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the latest Configuration version by Timestamp.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pVersion - Returns the specific version or null if no version exists for this type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataMachineConfigurationType_GetLatestVersionPtr) (LibMCData_MachineConfigurationType pMachineConfigurationType, LibMCData_MachineConfigurationVersion * pVersion);
+
+/*************************************************************************************************************************
  Class definition for InstallationInformation
 **************************************************************************************************************************/
 
@@ -2709,6 +3065,37 @@ typedef LibMCDataResult (*PLibMCDataDataModel_ClearLogCallbackPtr) (LibMCData_Da
 typedef LibMCDataResult (*PLibMCDataDataModel_HasLogCallbackPtr) (LibMCData_DataModel pDataModel, bool * pHasCallback);
 
 /**
+* Retrieves a configuration type by schema.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[in] pSchemaType - Configuration Schema Type String
+* @param[out] pIteratorInstance - Returns the Configuration Type instance, if it exists, NULL otherwise.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataModel_FindConfigurationTypeBySchemaPtr) (LibMCData_DataModel pDataModel, const char * pSchemaType, LibMCData_MachineConfigurationType * pIteratorInstance);
+
+/**
+* Retrieves a configuration type by uuid.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[in] pUUID - UUID String. Fails if not a proper UUID formatted string.
+* @param[out] pIteratorInstance - Returns the Configuration Type instance, if it exists, NULL otherwise.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataModel_FindConfigurationTypeByUUIDPtr) (LibMCData_DataModel pDataModel, const char * pUUID, LibMCData_MachineConfigurationType * pIteratorInstance);
+
+/**
+* Create a new configuration type for a schema. Fails if schema already exists..
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[in] pSchemaType - Configuration Schema Type String
+* @param[in] pName - Name of the type.
+* @param[out] pIteratorInstance - Returns the Configuration Type instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataModel_CreateConfigurationTypePtr) (LibMCData_DataModel pDataModel, const char * pSchemaType, const char * pName, LibMCData_MachineConfigurationType * pIteratorInstance);
+
+/**
 * Triggers the log callback. Fails if no log callback has been set.
 *
 * @param[in] pDataModel - DataModel instance.
@@ -2846,6 +3233,7 @@ typedef struct {
 	PLibMCDataStorageStream_GetNamePtr m_StorageStream_GetName;
 	PLibMCDataStorageStream_GetMIMETypePtr m_StorageStream_GetMIMEType;
 	PLibMCDataStorageStream_GetSHA2Ptr m_StorageStream_GetSHA2;
+	PLibMCDataStorageStream_EnsureSHA256IsValidPtr m_StorageStream_EnsureSHA256IsValid;
 	PLibMCDataStorageStream_GetSizePtr m_StorageStream_GetSize;
 	PLibMCDataStorageStream_GetContentPtr m_StorageStream_GetContent;
 	PLibMCDataStorageStream_GetCallbacksPtr m_StorageStream_GetCallbacks;
@@ -2921,6 +3309,7 @@ typedef struct {
 	PLibMCDataBuildJob_GetUUIDPtr m_BuildJob_GetUUID;
 	PLibMCDataBuildJob_GetNamePtr m_BuildJob_GetName;
 	PLibMCDataBuildJob_GetStatusPtr m_BuildJob_GetStatus;
+	PLibMCDataBuildJob_GetStatusStringPtr m_BuildJob_GetStatusString;
 	PLibMCDataBuildJob_GetLayerCountPtr m_BuildJob_GetLayerCount;
 	PLibMCDataBuildJob_GetExecutionCountPtr m_BuildJob_GetExecutionCount;
 	PLibMCDataBuildJob_GetTimeStampPtr m_BuildJob_GetTimeStamp;
@@ -2931,10 +3320,12 @@ typedef struct {
 	PLibMCDataBuildJob_GetCreatorNamePtr m_BuildJob_GetCreatorName;
 	PLibMCDataBuildJob_GetStorageStreamPtr m_BuildJob_GetStorageStream;
 	PLibMCDataBuildJob_GetStorageStreamUUIDPtr m_BuildJob_GetStorageStreamUUID;
+	PLibMCDataBuildJob_GetStorageStreamSizePtr m_BuildJob_GetStorageStreamSize;
 	PLibMCDataBuildJob_StartValidatingPtr m_BuildJob_StartValidating;
 	PLibMCDataBuildJob_FinishValidatingPtr m_BuildJob_FinishValidating;
 	PLibMCDataBuildJob_ArchiveJobPtr m_BuildJob_ArchiveJob;
 	PLibMCDataBuildJob_UnArchiveJobPtr m_BuildJob_UnArchiveJob;
+	PLibMCDataBuildJob_ChangeNamePtr m_BuildJob_ChangeName;
 	PLibMCDataBuildJob_DeleteJobPtr m_BuildJob_DeleteJob;
 	PLibMCDataBuildJob_JobCanBeArchivedPtr m_BuildJob_JobCanBeArchived;
 	PLibMCDataBuildJob_AddJobDataPtr m_BuildJob_AddJobData;
@@ -3000,6 +3391,35 @@ typedef struct {
 	PLibMCDataPersistencyHandler_RetrievePersistentDoubleParameterPtr m_PersistencyHandler_RetrievePersistentDoubleParameter;
 	PLibMCDataPersistencyHandler_RetrievePersistentIntegerParameterPtr m_PersistencyHandler_RetrievePersistentIntegerParameter;
 	PLibMCDataPersistencyHandler_RetrievePersistentBoolParameterPtr m_PersistencyHandler_RetrievePersistentBoolParameter;
+	PLibMCDataMachineConfigurationVersion_GetVersionUUIDPtr m_MachineConfigurationVersion_GetVersionUUID;
+	PLibMCDataMachineConfigurationVersion_GetXSDUUIDPtr m_MachineConfigurationVersion_GetXSDUUID;
+	PLibMCDataMachineConfigurationVersion_GetTypeUUIDPtr m_MachineConfigurationVersion_GetTypeUUID;
+	PLibMCDataMachineConfigurationVersion_GetParentUUIDPtr m_MachineConfigurationVersion_GetParentUUID;
+	PLibMCDataMachineConfigurationVersion_GetSchemaTypePtr m_MachineConfigurationVersion_GetSchemaType;
+	PLibMCDataMachineConfigurationVersion_GetXSDVersionPtr m_MachineConfigurationVersion_GetXSDVersion;
+	PLibMCDataMachineConfigurationVersion_GetXSDStringPtr m_MachineConfigurationVersion_GetXSDString;
+	PLibMCDataMachineConfigurationVersion_GetConfigurationXMLStringPtr m_MachineConfigurationVersion_GetConfigurationXMLString;
+	PLibMCDataMachineConfigurationVersion_CreateNewVersionPtr m_MachineConfigurationVersion_CreateNewVersion;
+	PLibMCDataMachineConfigurationVersion_MigrateToNewXSDPtr m_MachineConfigurationVersion_MigrateToNewXSD;
+	PLibMCDataMachineConfigurationVersionIterator_GetCurrentVersionPtr m_MachineConfigurationVersionIterator_GetCurrentVersion;
+	PLibMCDataMachineConfigurationXSD_GetUUIDPtr m_MachineConfigurationXSD_GetUUID;
+	PLibMCDataMachineConfigurationXSD_GetTypeUUIDPtr m_MachineConfigurationXSD_GetTypeUUID;
+	PLibMCDataMachineConfigurationXSD_GetSchemaTypePtr m_MachineConfigurationXSD_GetSchemaType;
+	PLibMCDataMachineConfigurationXSD_GetXSDVersionPtr m_MachineConfigurationXSD_GetXSDVersion;
+	PLibMCDataMachineConfigurationXSD_GetXSDStringPtr m_MachineConfigurationXSD_GetXSDString;
+	PLibMCDataMachineConfigurationXSD_ListVersionsPtr m_MachineConfigurationXSD_ListVersions;
+	PLibMCDataMachineConfigurationType_GetUUIDPtr m_MachineConfigurationType_GetUUID;
+	PLibMCDataMachineConfigurationType_GetNamePtr m_MachineConfigurationType_GetName;
+	PLibMCDataMachineConfigurationType_GetSchemaTypePtr m_MachineConfigurationType_GetSchemaType;
+	PLibMCDataMachineConfigurationType_GetLatestXSDPtr m_MachineConfigurationType_GetLatestXSD;
+	PLibMCDataMachineConfigurationType_GetLatestXSDVersionPtr m_MachineConfigurationType_GetLatestXSDVersion;
+	PLibMCDataMachineConfigurationType_FindXSDByUUIDPtr m_MachineConfigurationType_FindXSDByUUID;
+	PLibMCDataMachineConfigurationType_CreateNewXSDPtr m_MachineConfigurationType_CreateNewXSD;
+	PLibMCDataMachineConfigurationType_GetXSDVersionPtr m_MachineConfigurationType_GetXSDVersion;
+	PLibMCDataMachineConfigurationType_ListVersionsPtr m_MachineConfigurationType_ListVersions;
+	PLibMCDataMachineConfigurationType_FindVersionByUUIDPtr m_MachineConfigurationType_FindVersionByUUID;
+	PLibMCDataMachineConfigurationType_GetActiveVersionPtr m_MachineConfigurationType_GetActiveVersion;
+	PLibMCDataMachineConfigurationType_GetLatestVersionPtr m_MachineConfigurationType_GetLatestVersion;
 	PLibMCDataInstallationInformation_GetInstallationUUIDPtr m_InstallationInformation_GetInstallationUUID;
 	PLibMCDataInstallationInformation_GetInstallationSecretPtr m_InstallationInformation_GetInstallationSecret;
 	PLibMCDataInstallationInformation_GetBaseTempDirectoryPtr m_InstallationInformation_GetBaseTempDirectory;
@@ -3020,6 +3440,9 @@ typedef struct {
 	PLibMCDataDataModel_SetLogCallbackPtr m_DataModel_SetLogCallback;
 	PLibMCDataDataModel_ClearLogCallbackPtr m_DataModel_ClearLogCallback;
 	PLibMCDataDataModel_HasLogCallbackPtr m_DataModel_HasLogCallback;
+	PLibMCDataDataModel_FindConfigurationTypeBySchemaPtr m_DataModel_FindConfigurationTypeBySchema;
+	PLibMCDataDataModel_FindConfigurationTypeByUUIDPtr m_DataModel_FindConfigurationTypeByUUID;
+	PLibMCDataDataModel_CreateConfigurationTypePtr m_DataModel_CreateConfigurationType;
 	PLibMCDataDataModel_TriggerLogCallbackPtr m_DataModel_TriggerLogCallback;
 	PLibMCDataGetVersionPtr m_GetVersion;
 	PLibMCDataGetLastErrorPtr m_GetLastError;

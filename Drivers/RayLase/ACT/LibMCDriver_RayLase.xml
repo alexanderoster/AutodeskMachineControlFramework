@@ -84,6 +84,23 @@
 		<error name="INVALIDFIELDDATASIZE" code="1032" description="Invalid field data size" />
 		<error name="INVALIDNLIGHTLASERMODE" code="1033" description="Invalid nLight Laser Mode" />
 		<error name="INVALIDVARIABLEINDEX" code="1034" description="Invalid Variable Index" />
+		<error name="SCANNINGCANCELED" code="1035" description="Scanning canceled" />
+		<error name="UNKNOWNENUMVALUE" code="1036" description="Unknown enum value" />
+		<error name="INVALIDNLIGHTAFXMODE" code="1038" description="Invalid nLight afx mode" />
+		<error name="INVALIDNLIGHTMODECHANGESIGNALDELAY" code="1039" description="Invalid nLight mode change signal delay" />
+		<error name="INVALIDNLIGHTMODECHANGEAPPLYDELAY" code="1040" description="Invalid nLight mode change apply delay" />	
+		<error name="NLIGHTFIRMWAREISNOTREADY" code="1041" description="nLight Firmware is not ready" />
+		<error name="NLIGHTEXTERNALCONTROLNOTREADY" code="1042" description="nLight External control is not ready" />
+		<error name="NLIGHTLASERNOTREADYAFTERSYSTEMON" code="1043" description="nLight Laser is not ready after SYSTEMON" />
+		<error name="COULDNOTRECEIVESPIPACKET" code="1044" description="Could not receive SPI Packet" />		
+		<error name="INVALIDLASERMODE" code="1045" description="Invalid laser mode" />
+		<error name="NLIGHTLASERMODEHASNOPOWEROVERRIDE" code="1046" description="nLight laser mode has no power override" />
+		
+		
+		
+		
+		
+		
 		
 				
 	</errors>
@@ -101,7 +118,12 @@
 		<member name="Y2" type="single" />
 	</struct>
 
-	
+	<enum name="PartSuppressionMode">
+	   <option name="DontSuppress" value="0" description="Part is exposed with full power." />
+	   <option name="SkipPart" value="1" description="Part is skipped and not exposed at all." />
+	   <option name="NoPower" value="2" description="Part is exposed with a power of 0 Watts." />
+	</enum>
+
 <!--
 
 This base Driver interface MUST be in Sync with LibMCDriver.xml
@@ -154,6 +176,11 @@ Custom implementation
 
 -->
 
+	<functiontype name="ExposureCancellationCallback" description="A callback function to provide exposure cancellation functionality.">
+		<param name="ScanningTimeInMilliseconds" type="uint64" pass="in" description="Current scanning time in milliseconds"/>
+		<param name="UserData" type="pointer" pass="in" description="Userdata that is passed to the callback function"/>
+		<param name="Abort" type="bool" pass="return" description="Returns whether the exposure should be aborted"/>
+	</functiontype>
 
 
 
@@ -170,9 +197,37 @@ Custom implementation
 	<class name="NLightDriverBoard" parent="Base" description="Object to control the nLight Driver board attached to a card.">
 
 		<method name="InitializeLaser" description="Initializes the NLight laser via the driver board.">
+			<param name="EnableAutomaticLaserModeSwitching" type="bool" pass="in" description="If true, laser modes will be used from the corresponding build file." />
 		</method>
 
 		<method name="DisableLaser" description="Disables the NLight laser via the driver board.">
+		</method>
+
+		<method name="AutomaticLaserModeSwitchingIsEnabled" description="Returns if the automatic laser mode switching is enabled.">
+			<param name="EnableAutomaticLaserModeSwitching" type="bool" pass="return" description="If true, laser modes will be used from the corresponding build file." />
+		</method>
+		
+		<method name="EnableAutomaticLaserModeSwitching" description="Enables the Automatic laser mode switching.">
+		</method>
+
+		<method name="DisableAutomaticLaserModeSwitching" description="Disables the Automatic laser mode switching.">
+		</method>
+
+		<method name="SetLaserModeMaxPowerOverride" description="Sets an override for the maximum available laser power used for a specific laser mode. Can not be changed for laser mode 0.">
+			<param name="LaserMode" type="uint32" pass="in" description="The laser mode that shall be changed. MUST be between 1 and 7." />
+			<param name="MaxPowerInWatts" type="double" pass="in" description="Maximum laser power in Watts. MUST be larger than 1.0." />
+		</method>
+
+		<method name="GetLaserModeMaxPowerOverride" description="Gets an override for the maximum available laser power used for a specific laser mode. Returns default max laser power for laser mode 0 or if no laser mode override has been set.">
+			<param name="LaserMode" type="uint32" pass="in" description="The laser mode that shall be queried. MUST be between 0 and 7." />
+			<param name="MaxPowerInWatts" type="double" pass="return" description="Maximum laser power in Watts for this Laser Mode." />
+		</method>
+
+		<method name="ClearLaserModeMaxPowerOverride" description="Clears a power override for a specific laser mode.">
+			<param name="LaserMode" type="uint32" pass="in" description="The laser mode that shall be changed. MUST be between 1 and 7." />
+		</method>
+
+		<method name="ClearAllLaserModeMaxPowerOverrides" description="Clears all max power overrides for the different laser modes.">
 		</method>
 		
 		<method name="ClearError" description="Clears any error state in the NLight laser via the driver board.">
@@ -182,10 +237,44 @@ Custom implementation
 			<param name="LaserMode" type="uint32" pass="in" description="Sets the laser mode." />
 		</method>
 
+		<method name="GetRawDeviceState" description="Returns the raw device state as bit field. See nLight extension board documentation for details.">
+			<param name="DeviceState" type="uint32" pass="return" description="Device state bit field." />
+		</method>
+
 		<method name="HasError" description="Checks, if the laser is in an error state.">
 			<param name="ErrorState" type="bool" pass="return" description="Returns true if the laser is in an error state." />
 		</method>
 
+		<method name="IsReady" description="Checks, if the laser is in a ready state.">
+			<param name="ReadyState" type="bool" pass="return" description="Returns true if the laser has the ready state flag set." />
+		</method>
+
+		<method name="ExternalControlIsReady" description="Checks, if the laser state can react to external control.">
+			<param name="ExtControlReadyState" type="bool" pass="return" description="Returns true if the laser has the ExtControlReady state flag set." />
+		</method>
+
+		<method name="IsEmission" description="Checks, if the laser is in emission state.">
+			<param name="EmissionState" type="bool" pass="return" description="Returns true if the laser has the emission on flag set." />
+		</method>
+
+		<method name="IsFirmwareReady" description="Checks, if the laser firmware is ready.">
+			<param name="FirmwareReadyState" type="bool" pass="return" description="Returns true if the laser has the firmware ready flag set." />
+		</method>
+
+		<method name="IsWaterFlow" description="Checks, if the laser water flow is on.">
+			<param name="WaterFlowState" type="bool" pass="return" description="Returns true if the laser has the water flow flag set." />
+		</method>
+
+		<method name="SetModeChangeDelays" description="Sets the mode change delays.">
+			<param name="ModeChangeSignalDelayInMicroseconds" type="uint32" pass="in" description="New mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds." />
+			<param name="ModeChangeApplyDelayInMicroseconds" type="uint32" pass="in" description="New mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds." />
+		</method>
+
+		<method name="GetModeChangeDelays" description="Returns the mode change delays.">
+			<param name="ModeChangeSignalDelayInMicroseconds" type="uint32" pass="out" description="Current mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds." />
+			<param name="ModeChangeApplyDelayInMicroseconds" type="uint32" pass="out" description="Current mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds." />
+		</method>
+		
 	</class>
 
 
@@ -247,8 +336,32 @@ Custom implementation
 		<method name="GetAssignedLaserIndex" description="Returns the assigned laser index to the card. Default value is 0 (unassigned).">
 			<param name="LaserIndex" type="uint32" pass="return" description="Assigned laser index. This will map to the laser indices given in the build file. 0 means no assignment." />
 		</method>
+
+		<method name="AddPartSuppression" description="Adds a part suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.">
+			<param name="PartUUID" type="string" pass="in" description="UUID of a part. Fails if not a valid UUID." />
+			<param name="SuppressionMode" type="enum" class="PartSuppressionMode" pass="in" description="Part suppression mode. If DontSuppress is given, the part is removed from the list." />
+		</method>
+
+		<method name="GetPartSuppressionMode" description="Returns the suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.">
+			<param name="PartUUID" type="string" pass="in" description="UUID of a part. Fails if not a valid UUID." />
+			<param name="SuppressionMode" type="enum" class="PartSuppressionMode" pass="return" description="Part suppression mode." />
+		</method>
+
+		<method name="ClearAllPartSuppressions" description="Clears all part suppressions that have been set before.">
+		</method>
 		
-		<method name="DrawLayer" description="Draws a layer of a build stream. Blocks until the layer is drawn.">
+		<method name="RemovePartSuppression" description="Removes a part suppression that was added before. Does nothing if part suppression does not exist.">
+			<param name="PartUUID" type="string" pass="in" description="UUID of a part" />
+		</method>
+
+		<method name="DrawLayerWithCallback" description="Draws a layer of a build stream with a progress callback. Blocks until the layer is drawn.">
+			<param name="StreamUUID" type="string" pass="in" description="UUID of the build stream. Must have been loaded in memory by the system." />
+			<param name="LayerIndex" type="uint32" pass="in" description="Layer index of the build file." />
+			<param name="CancellationCallback" type="functiontype" class="ExposureCancellationCallback" pass="in" description="A callback that is repeatedly checked for canceling the exposure." />
+			<param name="UserData" type="pointer" pass="in" description="pointer to arbitrary user data that is passed without modification to the callback."/>
+		</method>
+		
+		<method name="DrawLayer" description="Draws a layer of a build stream with timeout. Blocks until the layer is drawn.">
 			<param name="StreamUUID" type="string" pass="in" description="UUID of the build stream. Must have been loaded in memory by the system." />
 			<param name="LayerIndex" type="uint32" pass="in" description="Layer index of the build file." />
 			<param name="ScanningTimeoutInMS" type="uint32" pass="in" description="Maximum duration of the scanning process in milliseconds." />
@@ -318,6 +431,14 @@ Custom implementation
 		<method name="DisconnectCard" description="Disconnects and unregisters a card. Does nothing if card does not exist.">
 			<param name="CardName" type="string" pass="in" description="Name of scanner card to disconnect. Card will be removed from driver." />
 		</method>		
+
+		<method name="DrawLayerMultiLaserWithCallback" description="Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.">
+			<param name="StreamUUID" type="string" pass="in" description="UUID of the build stream. Must have been loaded in memory by the system." />
+			<param name="LayerIndex" type="uint32" pass="in" description="Layer index of the build file." />
+			<param name="FailIfNonAssignedDataExists" type="bool" pass="in" description="If true, the call will fail in case a layer contains data that is not assigned to any defined scanner card." />
+			<param name="CancellationCallback" type="functiontype" class="ExposureCancellationCallback" pass="in" description="A callback that is repeatedly checked for canceling the exposure." />
+			<param name="UserData" type="pointer" pass="in" description="pointer to arbitrary user data that is passed without modification to the callback."/>
+		</method>
 
 		<method name="DrawLayerMultiLaser" description="Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.">
 			<param name="StreamUUID" type="string" pass="in" description="UUID of the build stream. Must have been loaded in memory by the system." />

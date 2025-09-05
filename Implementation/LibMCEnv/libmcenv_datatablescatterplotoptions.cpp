@@ -33,6 +33,7 @@ Abstract: This is a stub class definition of CDataTableScatterPlotOptions
 
 #include "libmcenv_datatablescatterplotoptions.hpp"
 #include "libmcenv_interfaceexception.hpp"
+#include "libmcenv_scatterplotdatachanneliterator.hpp"
 
 using namespace LibMCEnv::Impl;
 
@@ -98,6 +99,29 @@ LibMCEnv_double CDataTableScatterPlotOptions::GetYAxisOffset()
 
 void CDataTableScatterPlotOptions::AddDataChannel(const std::string & sChannelIdentifier, const std::string & sColumnIdentifier, const LibMCEnv_double dScaleFactor, const LibMCEnv_double dOffsetFactor, const LibMCEnv_uint32 nColor)
 {
-	
+    auto dataColumn = new CScatterPlotDataColumn(sColumnIdentifier, dScaleFactor, dOffsetFactor);
+
+    auto channelIt = m_DataChannelsMap.find(sChannelIdentifier);
+
+    if (channelIt != m_DataChannelsMap.end()) {
+        auto& dataChannel = channelIt->second;
+        dataChannel->AddScatterPlotDataColumn(dataColumn);
+    }
+    else {
+        auto dataChannel = std::make_unique<CScatterPlotDataChannel>(sChannelIdentifier);
+        dataChannel->AddScatterPlotDataColumn(dataColumn);
+        m_DataChannelsMap[sChannelIdentifier] = std::move(dataChannel);
+    }
 }
 
+IScatterPlotDataChannelIterator* CDataTableScatterPlotOptions::ListDataChannels()
+{
+    std::unique_ptr<CScatterPlotDataChannelIterator> pResult(new CScatterPlotDataChannelIterator());
+
+    for (const auto& it : m_DataChannelsMap) {
+        auto dataChannel =  std::shared_ptr<CScatterPlotDataChannel>(CScatterPlotDataChannel::makeFrom(it.second.get()));
+        pResult->AddScatterPlotDataChannel(dataChannel);
+    }
+
+    return pResult.release();
+}

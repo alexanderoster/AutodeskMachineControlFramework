@@ -59,7 +59,10 @@ private:
 	AMC::PStateSignalHandler m_pSignalHandler;
 	std::string m_sInstanceName;
 	std::string m_sSignalName;
-	std::string m_sTriggeredUUID;
+	std::string m_sSignalUUID;
+
+	bool m_bIsPreparing;	
+	uint32_t m_nReactionTimeOutInMs;
 
 	AMC::PParameterGroup m_pParameterGroup;
 	AMC::PParameterGroup m_pResultGroup;
@@ -76,12 +79,29 @@ public:
 
 	virtual ~CSignalTrigger();
 
+	std::string GetSignalUUID() override;
 
 	bool CanTrigger() override;
 
+	LibMCEnv_uint32 GetAvailableSignalQueueSlots() override;
+
+	LibMCEnv_uint32 GetTotalSignalQueueSlots() override;
+
+	LibMCEnv::eSignalPhase GetSignalPhase() override;
+
+	void SetReactionTimeOut(const LibMCEnv_uint32 nReactionTimeOutInMs) override;
+
+	LibMCEnv_uint32 GetReactionTimeOut() override;
+
 	void Trigger() override;
 
-	bool WaitForHandling(const LibMCEnv_uint32 nTimeOut);
+	bool TryTrigger() override;
+
+	bool TryTriggerWithTimeout(const LibMCEnv_uint32 nReactionTimeOutInMs) override;
+
+	bool WaitForHandling(const LibMCEnv_uint32 nWaitTime) override;
+
+	bool HasBeenHandled() override;
 
 	std::string GetName() override;
 

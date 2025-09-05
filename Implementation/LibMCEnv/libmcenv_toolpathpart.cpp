@@ -73,6 +73,6 @@ IModelDataComponentInstance* CToolpathPart::GetRootComponent()
 
 	auto transform = AMC::CMeshUtils::map3MFTransform(pBuildItem->GetObjectTransform());
 
-	return new CModelDataComponentInstance(pModel, pBuildItem->GetObjectResource(), transform, m_pMeshHandler);
+	return new CModelDataComponentInstance(pModel, pBuildItem->GetObjectResource(), AMC::CMeshUtils::createIdentityTransform (), transform, m_pMeshHandler);
 }
 

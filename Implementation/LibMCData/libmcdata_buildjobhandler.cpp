@@ -67,6 +67,7 @@ IBuildJob* CBuildJobHandler::CreateJob(const std::string& sJobUUID, const std::s
     if ((sName.length() == 0) || (sName.length() >= 255))
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
     std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
+	std::string sNormalizedStorageStreamUUID = AMCCommon::CUtils::normalizeUUIDString(sStorageStreamUUID);
 
     auto pTransaction = m_pSQLHandler->beginTransaction();
 
@@ -84,7 +85,17 @@ IBuildJob* CBuildJobHandler::CreateJob(const std::string& sJobUUID, const std::s
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_USERNOTFOUND, "user not found: " + sNormalizedUserUUID);
 
     std::string sUserName = pUserStatement->getColumnString(1);
-    pUserStatement = 0;
+    pUserStatement = nullptr;
+
+	std::string sStorageStreamQuery = "SELECT size FROM storage_streams WHERE uuid=?";
+    auto pStorageStreamStatement = pTransaction->prepareStatement(sStorageStreamQuery);
+    pStorageStreamStatement->setString(1, sNormalizedStorageStreamUUID);
+    if (!pStorageStreamStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STORAGESTREAMNOTFOUND, "storage stream not found: " + sStorageStreamUUID);
+    uint64_t nStorageStreamSize = pStorageStreamStatement->getColumnInt64(1);
+    pStorageStreamStatement = nullptr;
+    if (nStorageStreamSize == 0)
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDSTORAGESTREAMSIZE, "storage stream size for build is zero");
 
 
     std::string sTimeStamp = AMCCommon::CChrono::convertToISO8601TimeUTC(nAbsoluteTimeStamp); 
@@ -96,14 +107,14 @@ IBuildJob* CBuildJobHandler::CreateJob(const std::string& sJobUUID, const std::s
     pInsertStatement->setString(2, sName);
     pInsertStatement->setString(3, CBuildJob::convertBuildJobStatusToString (eJobStatus));
     pInsertStatement->setString(4, sTimeStamp);
-    pInsertStatement->setString(5, sStorageStreamUUID);
+    pInsertStatement->setString(5, sNormalizedStorageStreamUUID);
     pInsertStatement->setString(6, sNormalizedUserUUID);
     pInsertStatement->setString(7, sUserName); // This is for legacy use
     pInsertStatement->execute();
 
     pTransaction->commit ();
 
-    return CBuildJob::make(sParsedJobUUID, sName, eJobStatus, sTimeStamp, sStorageStreamUUID, sNormalizedUserUUID, sUserName, 0, 0, AMCCommon::CUtils::createEmptyUUID (), m_pSQLHandler, m_pStorageState);
+    return CBuildJob::make(sParsedJobUUID, sName, eJobStatus, sTimeStamp, sNormalizedStorageStreamUUID, nStorageStreamSize, sNormalizedUserUUID, sUserName, 0, 0, AMCCommon::CUtils::createEmptyUUID (), m_pSQLHandler, m_pStorageState);
     
 }
 
@@ -128,7 +139,7 @@ IBuildJobIterator* CBuildJobHandler::ListJobsByStatus(const LibMCData::eBuildJob
 
     std::unique_ptr<CBuildJobIterator> pJobIterator(new CBuildJobIterator());
 
-    std::string sQuery = "SELECT buildjobs.uuid, buildjobs.name, buildjobs.status, buildjobs.timestamp, buildjobs.storagestreamuuid, buildjobs.layercount, buildjobs.useruuid, users.login, (SELECT count(buildjobexecutions.uuid) FROM buildjobexecutions WHERE buildjobexecutions.jobuuid=buildjobs.uuid), buildjobs.thumbnailuuid FROM buildjobs LEFT JOIN users On users.uuid=buildjobs.useruuid WHERE buildjobs.status=? ORDER BY buildjobs.timestamp DESC";
+    std::string sQuery = "SELECT buildjobs.uuid, buildjobs.name, buildjobs.status, buildjobs.timestamp, buildjobs.storagestreamuuid, buildjobs.layercount, buildjobs.useruuid, users.login, (SELECT count(buildjobexecutions.uuid) FROM buildjobexecutions WHERE buildjobexecutions.jobuuid=buildjobs.uuid), buildjobs.thumbnailuuid, storage_streams.size FROM buildjobs LEFT JOIN users On users.uuid=buildjobs.useruuid LEFT JOIN storage_streams ON storage_streams.uuid=buildjobs.storagestreamuuid WHERE buildjobs.status=? ORDER BY buildjobs.timestamp DESC";
     auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
     pStatement->setString(1, CBuildJob::convertBuildJobStatusToString(eStatus));
     while (pStatement->nextRow()) {
@@ -152,7 +163,9 @@ IBuildJobIterator* CBuildJobHandler::ListJobsByStatus(const LibMCData::eBuildJob
 
         std::string sThumbnailUUID = pStatement->getColumnString(10);
 
-        pJobIterator->AddJob (CBuildJob::makeShared (sUUID, sName, eJobStatus, sTimeStamp, sStorageStreamUUID, sUserUUID, sUserName, nLayerCount, (uint32_t) nExecutionCount, sThumbnailUUID, m_pSQLHandler, m_pStorageState));
+		uint64_t nStorageStreamSize = pStatement->getColumnInt64 (11);
+
+        pJobIterator->AddJob (CBuildJob::makeShared (sUUID, sName, eJobStatus, sTimeStamp, sStorageStreamUUID, nStorageStreamSize, sUserUUID, sUserName, nLayerCount, (uint32_t) nExecutionCount, sThumbnailUUID, m_pSQLHandler, m_pStorageState));
     }
 
     return pJobIterator.release();

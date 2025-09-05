@@ -58,6 +58,23 @@ namespace AMC {
 
 	}
 
+	Lib3MF::sTransform CMeshUtils::mapTo3MFTransform(const LibMCEnv::sModelDataTransform transform)
+	{
+		Lib3MF::sTransform transform3MF;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				transform3MF.m_Fields[j][i] = (float)transform.m_Matrix[j][i];
+			}
+
+			transform3MF.m_Fields[3][i] = (float)transform.m_Translation[i];;
+		}
+
+		return transform3MF;
+
+	}
+
+
 	LibMCEnv::sModelDataTransform CMeshUtils::createIdentityTransform()
 	{
 		// Create identity transform

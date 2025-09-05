@@ -94,9 +94,21 @@
 		<error name="COULDNOTGETJOBCHARACTERISTIC" code="1040" description="Could not get job characteristic." />		
 		<error name="JOBDURATIONHASNOTBEENPARSED" code="1041" description="Job duration has not been parsed." />		
 		<error name="COULDNOTSTOPJOBEXECUTION" code="1042" description="Could not stop job execution." />		
+		<error name="COULDNOTSETBLENDMODE" code="1043" description="Could not set blend mode." />		
+		<error name="INVALIDBLENDMODE" code="1044" description="Invalid blend mode." />		
+		<error name="INVALIDWARNINGLEVEL" code="1045" description="Invalid warning level." />	
+		<error name="LINEARPOWERVALUESAREINCOMPLETE" code="1046" description="Linear power values are incomplete." />
+		<error name="NONLINEARPOWERVALUESAREINCOMPLETE" code="1047" description="Nonlinear power values are incomplete." />
+		<error name="INTERPOLATIONDATAISNOTINCREASING" code="1048" description="Interpolation data is not increasing." />
+		<error name="EMPTYRTCSERVICEDLLRESOURCENAME" code="1049" description="Empty RTC Service DLL Resource Name." />
+		<error name="RTCSERVICERESOURCENOTFOUND" code="1050" description="RTC Service Resource not found." />
+		<error name="EMPTYRTCSERVICEDLLRESOURCEDATA" code="1051" description="Empty RTC Service DLL Resource Data." />
+		<error name="SIMULATIONDATALOADINGISNOTSUPPORTED" code="1052" description="Simulation data loading is not supported for this version." />
+		<error name="COULDNOTREADSIMULATIONFILE" code="1053" description="Could not read simulation file." />
+		<error name="CSVPARSERUNKNOWNFIELDPARSERTYPE" code="1054" description="Unknown Field Parser Type." />
+		<error name="CSVPARSERINTERPOLATEINDEXOUTOFRANGE" code="1055" description="Index out of range in Interpolate." />
+		<error name="INVALIDMAXPOWERVALUE" code="1056" description="Invalid max power value." />
 		
-		
-											
 	</errors>
 
 	<struct name="Point2D">
@@ -113,8 +125,8 @@
 
 	<enum name="BlendMode">
 	   <option name="Deactivated" value="0" />
-	   <option name="MaxAccuracy" value="1" />
-	   <option name="Fast" value="2" />
+	   <option name="SwiftBlending" value="1" />
+	   <option name="MaxAccuracy" value="2" />
 	</enum>
 	
 	<enum name="DynamicViolationReaction">
@@ -136,6 +148,8 @@
 	   <option name="Unknown" value="0" />
 	   <option name="Version_0_8" value="8" />
 	   <option name="Version_0_9" value="9" />
+	   <option name="Version_1_0" value="10" />
+	   <option name="Version_1_1" value="11" />
 	</enum>
 
 	<enum name="JobCharacteristic">
@@ -269,7 +283,7 @@ Custom implementation
 			<param name="MarkSpeed" type="double" pass="in" description="Mark speed in mm/s" />
 			<param name="MinimalMarkSpeed" type="double" pass="in" description="Minimal allowed mark speed in mm/s" />
 			<param name="JumpSpeed" type="double" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="double" pass="in" description="Laser power in percent" />
+			<param name="PowerInWatts" type="double" pass="in" description="Laser power in Watts" />
 			<param name="CornerTolerance" type="double" pass="in" description="Allowed position deviation on corners (in mm.)" />
 			<param name="ZValue" type="double" pass="in" description="Focus Z Value" />
 		</method>
@@ -279,7 +293,7 @@ Custom implementation
 			<param name="MarkSpeed" type="double" pass="in" description="Mark speed in mm/s" />
 			<param name="MinimalMarkSpeed" type="double" pass="in" description="Minimal allowed mark speed in mm/s" />
 			<param name="JumpSpeed" type="double" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="double" pass="in" description="Laser power in percent" />
+			<param name="PowerInWatts" type="double" pass="in" description="Laser power in Watts" />
 			<param name="CornerTolerance" type="double" pass="in" description="Allowed position deviation on corners (in mm.)" />
 			<param name="ZValue" type="double" pass="in" description="Focus Z Value" />
 		</method>
@@ -288,7 +302,7 @@ Custom implementation
 			<param name="Hatches" type="structarray" class="Hatch2D" pass="in" description="Hatches to draw." />
 			<param name="MarkSpeed" type="double" pass="in" description="Mark speed in mm/s" />
 			<param name="JumpSpeed" type="double" pass="in" description="Jump speed in mm/s" />
-			<param name="Power" type="double" pass="in" description="Laser power in percent" />
+			<param name="PowerInWatts" type="double" pass="in" description="Laser power in Watts" />
 			<param name="ZValue" type="double" pass="in" description="Focus Z Value" />
 		</method>
 		
@@ -328,6 +342,11 @@ Custom implementation
 			<param name="JobDuration" type="double" pass="return" description="Duration in seconds." />
 		</method>	
 		
+		<method name="ExecuteLaserInitSequence" description="Starts the laser initialization sequence.">
+		</method>	
+
+		<method name="ExecuteLaserShutdownSequence" description="Starts the laser shutdown sequence.">
+		</method>	
 
 	</class>
 
@@ -349,6 +368,23 @@ Custom implementation
 		<method name="GetWarnLevel" description="Returns the log warning level.">
 			<param name="Value" type="enum" class="WarnLevel" pass="return" description="Current Value." />
 		</method>		
+
+		<method name="SetBlendMode" description="Sets the blend mode.">
+			<param name="BlendMode" type="enum" class="BlendMode" pass="in" description="Blend Mode that the job shall be drawn in." />			
+		</method>	
+
+		<method name="GetBlendMode" description="Returns the blend mode.">
+			<param name="BlendMode" type="enum" class="BlendMode" pass="return" description="Blend Mode that the job shall be drawn in." />			
+		</method>		
+
+		<method name="SetSendToHardware" description="Sets if the computation shall be sent to the hardware.">
+			<param name="SendToHardware" type="bool" pass="in" description="Flag, if the computation shall be sent to the hardware." />
+		</method>	
+
+		<method name="GetSendToHardware" description="Returns if the computation shall be sent to the hardware.">
+			<param name="SendToHardware" type="bool" pass="return" description="Flag, if the computation shall be sent to the hardware." />
+		</method>
+
 	
 		<method name="SetSerialNumber" description="Sets the RTC Serial number. MUST be larger than 0.">
 			<param name="Value" type="uint32" class="WarnLevel" pass="in" description="Value to set." />
@@ -425,10 +461,6 @@ Custom implementation
 			<param name="IPAddress" type="string" pass="return" description="IP Address Value." />
 		</method>		
 
-		<method name="GetNetmask" description="Returns the Netmask of the RTC Card. Fails if driver has not been initialized.">		
-			<param name="Netmask" type="string" pass="return" description="Netmask Value." />
-		</method>		
-
 		<method name="GetSerialNumber" description="Returns serial number of card">
 			<param name="SerialNumber" type="uint32" pass="return" description="Returns serial number of board." />
 		</method>
@@ -472,7 +504,7 @@ Custom implementation
 		<method name="BeginJob" description="Starts a new job definition. Fails if another job is not finalized yet.">
 			<param name="StartPositionX" type="double" pass="in" description="Start position in X." />
 			<param name="StartPositionY" type="double" pass="in" description="Start position in Y." />
-			<param name="BlendMode" type="enum" class="BlendMode" pass="in" description="Blend Mode that the job shall be drawn in." />			
+			<param name="MaxPowerInWatts" type="double" pass="in" description="Maximum laser power in Watts." />
 			<param name="JobInstance" type="class" class="SMCJob" pass="return" description="SMC Job Instance." />
 		</method>
 		
@@ -483,6 +515,7 @@ Custom implementation
 		<method name="DrawLayer" description="Draws a layer of a build stream. Blocks until the layer is drawn.">
 			<param name="StreamUUID" type="string" pass="in" description="UUID of the build stream. Must have been loaded in memory by the system." />
 			<param name="LayerIndex" type="uint32" pass="in" description="Layer index of the build file." />
+			<param name="MaxPowerInWatts" type="double" pass="in" description="Maximum laser power in Watts." />
 		</method>
 						
 	</class>
@@ -496,6 +529,10 @@ Custom implementation
 			<param name="RTCDLLResourceName" type="string" pass="in" description="Resource name of RTC DLL" />
 		</method>
 
+		<method name="SetRTCServiceDLLResourceName" description="Sets the default resource name of the RTC Service DLL. Overrides custom resource data if set before.">
+			<param name="RTCServiceDLLResourceName" type="string" pass="in" description="Resource name of RTC Service DLL" />
+		</method>
+
 		<method name="SetXercesDLLResource" description="Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.">
 			<param name="XercesDLLResourceName" type="string" pass="in" description="Resource name of the Xerces dependency DLL" />
 		</method>
@@ -503,6 +540,10 @@ Custom implementation
 		<method name="SetCustomDLLData" description="Sets custom binaries for the needed SCANLAB DLLs. Overrides custom resource data if set before.">
 			<param name="SMCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of SCANmotionControl DLL" />
 			<param name="RTCDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC DLL" />
+		</method>
+
+		<method name="SetRTCServiceDLLResourceData" description="Sets custom binaries for the needed RTC Service DLLs. Overrides custom resource data if set before.">
+			<param name="RTCServiceDLLResourceData" type="basicarray" class="uint8" pass="in" description="Resource data of RTC Service DLL" />
 		</method>
 
 		<method name="SetCustomXercesDLLData" description="Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.">

@@ -224,11 +224,11 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_uartc
 * @param[in] pPointsBuffer - Point2D buffer of Points of polyline to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawpolyline(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawpolyline(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue);
 
 /**
 * Writes a polyline into the open list with OIE Enabled.
@@ -238,12 +238,12 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjo
 * @param[in] pPointsBuffer - Point2D buffer of Points of polyline to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawpolylineoie(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue, LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawpolylineoie(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue, LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
 
 /**
 * Writes a list of hatches into the open list
@@ -253,11 +253,11 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjo
 * @param[in] pHatchesBuffer - Hatch2D buffer of Hatches to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawhatches(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_drawhatches(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue);
 
 /**
 * adds a power change to the open list. MUST NOT be used for PID control.
@@ -356,6 +356,16 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjo
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_addfreevariable(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint32 nVariableNo, LibMCDriver_ScanLab_uint32 nValue);
 
+/**
+* Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+*
+* @param[in] pRTCJob - RTCJob instance.
+* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+* @param[in] pMicrovectorArrayBuffer - MicroVector buffer of Microvector array to execute.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjob_addmicrovectormovement(LibMCDriver_ScanLab_RTCJob pRTCJob, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer);
+
 /*************************************************************************************************************************
  Class definition for RTCRecording
 **************************************************************************************************************************/
@@ -367,6 +377,17 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcjo
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_clear(LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
+/**
+* Returns UUID of Recording.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID of Recording., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_getuuid(LibMCDriver_ScanLab_RTCRecording pRTCRecording, const LibMCDriver_ScanLab_uint32 nUUIDBufferSize, LibMCDriver_ScanLab_uint32* pUUIDNeededChars, char * pUUIDBuffer);
 
 /**
 * Adds a new channel to record. Fails if more than 8 channels are recorded. Fails if recording has been already started.
@@ -775,6 +796,107 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_nligh
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_nlightafxprofileselector_addcustomselection(LibMCDriver_ScanLab_NLightAFXProfileSelector pNLightAFXProfileSelector, LibMCDriver_ScanLab_uint32 nAFXModeIndex);
 
 /*************************************************************************************************************************
+ Class definition for OIEMeasurementTagMap
+**************************************************************************************************************************/
+
+/**
+* Returns the current maximum measurement tag that has been sent to the OIE.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[out] pMeasurementTag - Measurement Tag that has been sent to the OIE.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_getoiemaxmeasurementtag(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint32 * pMeasurementTag);
+
+/**
+* Maps an OIE Measurement tag back to the original scan parameters.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+* @param[out] pPartID - ID of the part.
+* @param[out] pProfileID - ID of the profile.
+* @param[out] pSegmentID - ID of the segment.
+* @param[out] pVectorID - ID of the vector.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtag(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab_uint32 * pPartID, LibMCDriver_ScanLab_uint32 * pProfileID, LibMCDriver_ScanLab_uint32 * pSegmentID, LibMCDriver_ScanLab_uint32 * pVectorID);
+
+/**
+* Maps an OIE Measurement tag back to the original scan parameters.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
+* @param[out] pData - Measurement as tag data struct.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtagdata(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint32 nMeasurementTag, LibMCDriver_ScanLab::sOIEMeasurementTagData * pData);
+
+/**
+* Maps an array of OIE Measurement tags back to the original scan parameters.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+* @param[in] pMeasurementTagBuffer - uint32 buffer of Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - OIEMeasurementTagData  buffer of Will be filled with all the tags associated with the input array. The length of the array will match the input array.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementtags(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, const LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab::sOIEMeasurementTagData * pDataBuffer);
+
+/**
+* Maps an array of OIE Measurement tags back to the original part IDs.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+* @param[in] pMeasurementTagBuffer - uint32 buffer of Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - uint32  buffer of Will be filled with all the part IDs associated with the input array. The length of the array will match the input array.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementpartids(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, const LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer);
+
+/**
+* Maps an array of OIE Measurement tags back to the original profile IDs.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+* @param[in] pMeasurementTagBuffer - uint32 buffer of Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - uint32  buffer of Will be filled with all the profile IDs associated with the input array. The length of the array will match the input array.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementprofileids(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, const LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer);
+
+/**
+* Maps an array of OIE Measurement tags back to the original segment IDs.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+* @param[in] pMeasurementTagBuffer - uint32 buffer of Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - uint32  buffer of Will be filled with all the segment IDs associated with the input array. The length of the array will match the input array.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementsegmentids(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, const LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer);
+
+/**
+* Maps an array of OIE Measurement tags back to the original vector IDs.
+*
+* @param[in] pOIEMeasurementTagMap - OIEMeasurementTagMap instance.
+* @param[in] nMeasurementTagBufferSize - Number of elements in buffer
+* @param[in] pMeasurementTagBuffer - uint32 buffer of Array of Measurement Tags that has been sent to the OIE. MUST NOT be empty!
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - uint32  buffer of Will be filled with all the vector  IDs associated with the input array. The length of the array will match the input array.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_oiemeasurementtagmap_mapoiemeasurementvectorids(LibMCDriver_ScanLab_OIEMeasurementTagMap pOIEMeasurementTagMap, LibMCDriver_ScanLab_uint64 nMeasurementTagBufferSize, const LibMCDriver_ScanLab_uint32 * pMeasurementTagBuffer, const LibMCDriver_ScanLab_uint64 nDataBufferSize, LibMCDriver_ScanLab_uint64* pDataNeededCount, LibMCDriver_ScanLab_uint32 * pDataBuffer);
+
+/*************************************************************************************************************************
  Class definition for RTCContext
 **************************************************************************************************************************/
 
@@ -805,7 +927,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_loadcorrectionfile(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, LibMCDriver_ScanLab_uint32 nTableNumber, LibMCDriver_ScanLab_uint32 nDimension);
 
 /**
-* Selects Correction Table on card.
+* Selects Correction Table on card. Reads the correction factorw out of the Table, if existent.
 *
 * @param[in] pRTCContext - RTCContext instance.
 * @param[in] nTableNumberHeadA - Table Number for HeadA (1..8) or off (0).
@@ -813,6 +935,16 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_selectcorrectiontable(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nTableNumberHeadA, LibMCDriver_ScanLab_uint32 nTableNumberHeadB);
+
+/**
+* Sets the correction factor manually.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] dCorrectionFactorXY - Scale correction factor in the XY plane. In bits per mm. MUST BE larger than 0.
+* @param[in] dCorrectionFactorZ - Scale correction factor in the Z axis. In bits per mm. Should be equal to CorrectionFactorXY for the RTC6 card. MUST BE larger than 0.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setcorrectionfactors(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dCorrectionFactorXY, LibMCDriver_ScanLab_double dCorrectionFactorZ);
 
 /**
 * Configures list buffer size.
@@ -896,6 +1028,46 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setstandbyinmicroseconds(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dHalfPeriod, LibMCDriver_ScanLab_double dPulseLength);
+
+/**
+* Sets laser control pulse interval (in 1/64th microseconds)
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pHalfPeriod - Half Output period in 1/64th microseconds
+* @param[out] pPulseLength - Pulse Length in 1/64th microseconds
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getlaserpulsesinbits(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pHalfPeriod, LibMCDriver_ScanLab_uint32 * pPulseLength);
+
+/**
+* Sets laser control pulse interval (in microseconds)
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pHalfPeriod - Half Output period in microseconds
+* @param[out] pPulseLength - Pulse Length in microseconds
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getlaserpulsesinmicroseconds(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double * pHalfPeriod, LibMCDriver_ScanLab_double * pPulseLength);
+
+/**
+* Sets standby pulse interval (in 1/64th microseconds)
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pHalfPeriod - Half Output period in 1/64th microseconds
+* @param[out] pPulseLength - Pulse Length in 1/64th microseconds
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getstandbyinbits(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pHalfPeriod, LibMCDriver_ScanLab_uint32 * pPulseLength);
+
+/**
+* Sets laser control pulse interval (in microseconds)
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pHalfPeriod - Half Output period in microseconds
+* @param[out] pPulseLength - Pulse Length in microseconds
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getstandbyinmicroseconds(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double * pHalfPeriod, LibMCDriver_ScanLab_double * pPulseLength);
 
 /**
 * Returns the IP Address of the RTC Card. Fails if driver has not been initialized.
@@ -1044,6 +1216,24 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setautochangepos(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nPosition);
 
 /**
+* Sets a factor for the Z defocus commands.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] dValue - Z Defocus Factor.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setdefocusfactor(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dValue);
+
+/**
+* Returns the current factor for the Z defocus commands.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pValue - Z Defocus Factor.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getdefocusfactor(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double * pValue);
+
+/**
 * Sets the laser delays
 *
 * @param[in] pRTCContext - RTCContext instance.
@@ -1082,11 +1272,11 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @param[in] pPointsBuffer - Point2D buffer of Points of polyline to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawpolyline(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawpolyline(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue);
 
 /**
 * Writes a polyline into the open list with OIE Enabled.
@@ -1096,12 +1286,12 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @param[in] pPointsBuffer - Point2D buffer of Points of polyline to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @param[in] nOIEPIDControlIndex - OIE PID Control Index. 0 disables PID Control, MUST be smaller or equal 63.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawpolylineoie(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue, LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawpolylineoie(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D * pPointsBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue, LibMCDriver_ScanLab_uint32 nOIEPIDControlIndex);
 
 /**
 * Writes a list of hatches into the open list
@@ -1111,11 +1301,11 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @param[in] pHatchesBuffer - Hatch2D buffer of Hatches to draw.
 * @param[in] fMarkSpeed - Mark speed in mm/s
 * @param[in] fJumpSpeed - Jump speed in mm/s
-* @param[in] fPower - Laser power in percent
+* @param[in] fPowerInPercent - Laser power in percent
 * @param[in] fZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawhatches(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPower, LibMCDriver_ScanLab_single fZValue);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_drawhatches(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLab_single fMarkSpeed, LibMCDriver_ScanLab_single fJumpSpeed, LibMCDriver_ScanLab_single fPowerInPercent, LibMCDriver_ScanLab_single fZValue);
 
 /**
 * adds a power change to the open list. MUST NOT be used for PID control.
@@ -1213,6 +1403,16 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_addfreevariable(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nVariableNo, LibMCDriver_ScanLab_uint32 nValue);
+
+/**
+* Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+* @param[in] pMicrovectorArrayBuffer - MicroVector buffer of Microvector array to execute.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_addmicrovectormovement(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer);
 
 /**
 * Returns the currently set free variable.
@@ -1440,6 +1640,14 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_initializeforoie(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nSignalChannelsBufferSize, const LibMCDriver_ScanLab_uint32 * pSignalChannelsBuffer, LibMCDriver_ScanLab::eOIEOperationMode eOperationMode);
 
 /**
+* Disables the on the fly marking after OIE initialization. This is a workaround that will become depreciated in newer versions..
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_disableontheflyforoie(LibMCDriver_ScanLab_RTCContext pRTCContext);
+
+/**
 * Sets the laser pin outputs to a certain state. Control command, has immediate effect.
 *
 * @param[in] pRTCContext - RTCContext instance.
@@ -1611,6 +1819,15 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_clearoiemeasurementtags(LibMCDriver_ScanLab_RTCContext pRTCContext);
 
 /**
+* Extracts all stored OIE Measurement tags of the context and returns them as separate object. New Tag Indices will start from 0 again.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pMeasurementTags - Instance of the OIE Measurement Tag data.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_retrieveoiemeasurementtags(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_OIEMeasurementTagMap * pMeasurementTags);
+
+/**
 * Enables OIE Measurement tagging.
 *
 * @param[in] pRTCContext - RTCContext instance.
@@ -1627,7 +1844,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_disableoiemeasurementtagging(LibMCDriver_ScanLab_RTCContext pRTCContext);
 
 /**
-* Returns the current maximum measurement tag that has been sent to the OIE.
+* Returns the current maximum measurement tag that has been sent to the OIE. Will return 0 after RetrieveOIEMeasurementTags has been called.
 *
 * @param[in] pRTCContext - RTCContext instance.
 * @param[out] pMeasurementTag - Measurement Tag that has been sent to the OIE.
@@ -1636,7 +1853,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getoiemaxmeasurementtag(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pMeasurementTag);
 
 /**
-* Maps an OIE Measurement tag back to the original scan parameters.
+* DEPRECIATED! Maps an OIE Measurement tag back to the original scan parameters. Use RetrieveOIEMeasurementTags instead.
 *
 * @param[in] pRTCContext - RTCContext instance.
 * @param[in] nMeasurementTag - Measurement Tag that has been sent to the OIE.
@@ -1788,6 +2005,24 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_findrecording(LibMCDriver_ScanLab_RTCContext pRTCContext, const char * pUUID, LibMCDriver_ScanLab_RTCRecording * pRecordingInstance);
 
 /**
+* Clears a recording if it exists in the driver memory. Does nothing if no such recording exists.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] pUUID - UUID of the recording to clear.
+* @param[out] pRecordingExists - Returns if the recording existed and has been cleared.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_clearrecording(LibMCDriver_ScanLab_RTCContext pRTCContext, const char * pUUID, bool * pRecordingExists);
+
+/**
+* Clears all recordings in the driver memory.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_clearallrecordings(LibMCDriver_ScanLab_RTCContext pRTCContext);
+
+/**
 * Enables timelag compensation.
 *
 * @param[in] pRTCContext - RTCContext instance.
@@ -1853,15 +2088,6 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_checkontheflyerror(LibMCDriver_ScanLab_RTCContext pRTCContext, bool bFailIfError, LibMCDriver_ScanLab_uint32 * pErrorCode);
 
 /**
-* Returns if the laser power calibration table is non-empty.
-*
-* @param[in] pRTCContext - RTCContext instance.
-* @param[out] pCalibrationEnabled - Laser Calibration Is Enabled
-* @return error code or 0 (success)
-*/
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_laserpowercalibrationisenabled(LibMCDriver_ScanLab_RTCContext pRTCContext, bool * pCalibrationEnabled);
-
-/**
 * Returns if the laser power calibration table has one entry.
 *
 * @param[in] pRTCContext - RTCContext instance.
@@ -1871,43 +2097,59 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_laserpowercalibrationislinear(LibMCDriver_ScanLab_RTCContext pRTCContext, bool * pCalibrationIsLinear);
 
 /**
-* Clears the laser power calibration table.
-*
-* @param[in] pRTCContext - RTCContext instance.
-* @return error code or 0 (success)
-*/
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_clearlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext);
-
-/**
 * Returns the laser power calibration table. Fails if laser calibration is not enabled.
 *
 * @param[in] pRTCContext - RTCContext instance.
+* @param[out] pLaserPowerAt0Percent - Laser Power at 0 percent
+* @param[out] pLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 * @param[in] nCalibrationPointsBufferSize - Number of elements in buffer
 * @param[out] pCalibrationPointsNeededCount - will be filled with the count of the written elements, or needed buffer size.
 * @param[out] pCalibrationPointsBuffer - LaserCalibrationPoint  buffer of Laser Calibration Points
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double * pLaserPowerAt0Percent, LibMCDriver_ScanLab_double * pLaserPowerAt100Percent, const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer);
 
 /**
 * Enables the laser power calibration with an affine linear tranformation.
 *
 * @param[in] pRTCContext - RTCContext instance.
-* @param[in] dPowerOffsetInPercent - Additional offset of the Power value.
-* @param[in] dPowerOutputScaling - Scaling factor of the laser output.
+* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setlinearlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dPowerOffsetInPercent, LibMCDriver_ScanLab_double dPowerOutputScaling);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setlinearlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dLaserPowerAt0Percent, LibMCDriver_ScanLab_double dLaserPowerAt100Percent);
 
 /**
 * Enables the laser power calibration with multiple calibration point values. Table MUST NOT have negative power entries. Laser Power Output will be linear scaled with the given values within their respective intervals. Any laser power outside of the minimum or maximum Power values will be scaled according to the respective minimum or maximum scaling value.
 *
 * @param[in] pRTCContext - RTCContext instance.
+* @param[in] dLaserPowerAt0Percent - Laser Power at 0 percent
+* @param[in] dLaserPowerAt100Percent - Laser Power at 100 percent. MUST be larger than Laser Power at 0 percent.
 * @param[in] nCalibrationPointsBufferSize - Number of elements in buffer
-* @param[in] pCalibrationPointsBuffer - LaserCalibrationPoint buffer of Laser Calibration Points. Array will be sorted by Laser Power Keys. Array MUST NOT be empty. Array MUST NOT have duplicate entries (to an accuracy of 0.01 Percent).
+* @param[in] pCalibrationPointsBuffer - LaserCalibrationPoint buffer of Laser Calibration Points that match percentage to power. The percentage values MUST be in sequentially increasing in the array (to an accuracy of 0.001 Percent). The power values MUST be sequentially increasing in the array (to an accuracy of 0.001 Watts).. Array MUST NOT be empty.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setpiecewiselinearlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer);
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setpiecewiselinearlaserpowercalibration(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dLaserPowerAt0Percent, LibMCDriver_ScanLab_double dLaserPowerAt100Percent, LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint * pCalibrationPointsBuffer);
+
+/**
+* Maps a laser power percentage value to the laser power in watts.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] dLaserPowerInPercent - Laser Power in Percent
+* @param[out] pLaserPowerInWatts - Laser Power in Watts
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_mappowerpercentagetowatts(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dLaserPowerInPercent, LibMCDriver_ScanLab_double * pLaserPowerInWatts);
+
+/**
+* Maps a laser power value to the laser power in percent.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] dLaserPowerInWatts - Laser Power in Watts
+* @param[out] pLaserPowerInPercent - Laser Power in Percent
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_mappowerwattstopercent(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_double dLaserPowerInWatts, LibMCDriver_ScanLab_double * pLaserPowerInPercent);
 
 /**
 * Enables a spatial laser power modulation via callback.
@@ -2232,13 +2474,37 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_drive
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6_initialise(LibMCDriver_ScanLab_Driver_ScanLab_RTC6 pDriver_ScanLab_RTC6, const char * pIP, const char * pNetmask, LibMCDriver_ScanLab_uint32 nTimeout, LibMCDriver_ScanLab_uint32 nSerialNumber);
 
 /**
-* Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+* Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserTimingDefaults.
 *
 * @param[in] pDriver_ScanLab_RTC6 - Driver_ScanLab_RTC6 instance.
 * @param[in] pPresetName - Name of the configuration preset.
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6_initialisefromconfiguration(LibMCDriver_ScanLab_Driver_ScanLab_RTC6 pDriver_ScanLab_RTC6, const char * pPresetName);
+
+/**
+* Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+*
+* @param[in] pDriver_ScanLab_RTC6 - Driver_ScanLab_RTC6 instance.
+* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6_setlasersignaltimingdefaults(LibMCDriver_ScanLab_Driver_ScanLab_RTC6 pDriver_ScanLab_RTC6, LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double dLaserPulseLength, LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double dStandbyPulseLength);
+
+/**
+* Returns the laser timing defaults for CO2 lasers.
+*
+* @param[in] pDriver_ScanLab_RTC6 - Driver_ScanLab_RTC6 instance.
+* @param[out] pLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+* @param[out] pLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+* @param[out] pStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+* @param[out] pStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6_getlasersignaltimingdefaults(LibMCDriver_ScanLab_Driver_ScanLab_RTC6 pDriver_ScanLab_RTC6, LibMCDriver_ScanLab_double * pLaserPulseHalfPeriod, LibMCDriver_ScanLab_double * pLaserPulseLength, LibMCDriver_ScanLab_double * pStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double * pStandbyPulseLength);
 
 /**
 * Set RTC Ethernet communication timeouts. The given values will be defaults for all subsequent connections.
@@ -2340,7 +2606,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_drive
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6_setcorrectionfile(LibMCDriver_ScanLab_Driver_ScanLab_RTC6 pDriver_ScanLab_RTC6, LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, LibMCDriver_ScanLab_uint32 nTableNumber, LibMCDriver_ScanLab_uint32 nDimension, LibMCDriver_ScanLab_uint32 nTableNumberHeadA, LibMCDriver_ScanLab_uint32 nTableNumberHeadB);
 
 /**
-* Configures the laser mode. MUST be called before any exposure.
+* Configures the laser mode. MUST be called before any exposure. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 *
 * @param[in] pDriver_ScanLab_RTC6 - Driver_ScanLab_RTC6 instance.
 * @param[in] eLaserMode - Laser Mode Enum
@@ -2520,7 +2786,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_drive
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6xn_initialisescanner(LibMCDriver_ScanLab_Driver_ScanLab_RTC6xN pDriver_ScanLab_RTC6xN, LibMCDriver_ScanLab_uint32 nScannerIndex, const char * pIP, const char * pNetmask, LibMCDriver_ScanLab_uint32 nTimeout, LibMCDriver_ScanLab_uint32 nSerialNumber, LibMCDriver_ScanLab_uint32 nLaserIndex);
 
 /**
-* Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode and ConfigureDelays.
+* Initializes the RTC6 Scanner Driver from a configuration preset. Calls Initialise, LoadFirmware, SetCorrectionFile, ConfigureLaserMode, ConfigureDelays and SetLaserSignalTimingDefaults.
 *
 * @param[in] pDriver_ScanLab_RTC6xN - Driver_ScanLab_RTC6xN instance.
 * @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
@@ -2528,6 +2794,32 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_drive
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6xn_initialisescannerfromconfiguration(LibMCDriver_ScanLab_Driver_ScanLab_RTC6xN pDriver_ScanLab_RTC6xN, LibMCDriver_ScanLab_uint32 nScannerIndex, const char * pPresetName);
+
+/**
+* Sets the laser timing defaults for CO2 lasers. Only has an effect if called before ConfigureLaserMode. For on the fly changing of the laser signal, the appropriate methods of CRTCContext need to be called.
+*
+* @param[in] pDriver_ScanLab_RTC6xN - Driver_ScanLab_RTC6xN instance.
+* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+* @param[in] dLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+* @param[in] dLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+* @param[in] dStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+* @param[in] dStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6xn_setlasersignaltimingdefaults(LibMCDriver_ScanLab_Driver_ScanLab_RTC6xN pDriver_ScanLab_RTC6xN, LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_double dLaserPulseHalfPeriod, LibMCDriver_ScanLab_double dLaserPulseLength, LibMCDriver_ScanLab_double dStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double dStandbyPulseLength);
+
+/**
+* Returns the laser timing defaults for CO2 lasers.
+*
+* @param[in] pDriver_ScanLab_RTC6xN - Driver_ScanLab_RTC6xN instance.
+* @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount
+* @param[out] pLaserPulseHalfPeriod - Half Output period for laser pulses in microseconds. Default is 5.
+* @param[out] pLaserPulseLength - Pulse Length in microseconds for full laser power. Default is 5.
+* @param[out] pStandbyPulseHalfPeriod - Half Output period for standby pulses in microseconds. Default is 1.
+* @param[out] pStandbyPulseLength - Standby Pulse Length in microseconds. Default is 1.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6xn_getlasersignaltimingdefaults(LibMCDriver_ScanLab_Driver_ScanLab_RTC6xN pDriver_ScanLab_RTC6xN, LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_double * pLaserPulseHalfPeriod, LibMCDriver_ScanLab_double * pLaserPulseLength, LibMCDriver_ScanLab_double * pStandbyPulseHalfPeriod, LibMCDriver_ScanLab_double * pStandbyPulseLength);
 
 /**
 * Returns the IP Address of the RTC Card. Fails if driver has not been initialized.
@@ -2635,7 +2927,7 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_drive
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_driver_scanlab_rtc6xn_setcorrectionfile(LibMCDriver_ScanLab_Driver_ScanLab_RTC6xN pDriver_ScanLab_RTC6xN, LibMCDriver_ScanLab_uint32 nScannerIndex, LibMCDriver_ScanLab_uint64 nCorrectionFileBufferSize, const LibMCDriver_ScanLab_uint8 * pCorrectionFileBuffer, LibMCDriver_ScanLab_uint32 nTableNumber, LibMCDriver_ScanLab_uint32 nDimension, LibMCDriver_ScanLab_uint32 nTableNumberHeadA, LibMCDriver_ScanLab_uint32 nTableNumberHeadB);
 
 /**
-* Configures the laser mode.
+* Configures the laser mode. For CO2 Lasers, SetLaserSignalTimingDefaults SHOULD be called before to set the proper laser signal timing.
 *
 * @param[in] pDriver_ScanLab_RTC6xN - Driver_ScanLab_RTC6xN instance.
 * @param[in] nScannerIndex - Index of the scanner (0-based). MUST be smaller than ScannerCount

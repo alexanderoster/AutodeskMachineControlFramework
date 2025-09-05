@@ -74,7 +74,7 @@ CUIModule_ContentUpload::~CUIModule_ContentUpload()
 
 }
 
-void CUIModule_ContentUpload::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
+void CUIModule_ContentUpload::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "upload");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);

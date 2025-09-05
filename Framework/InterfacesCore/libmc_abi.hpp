@@ -109,6 +109,15 @@ LIBMC_DECLSPEC LibMCResult libmc_streamconnection_getnewcontent(LibMC_StreamConn
 */
 LIBMC_DECLSPEC LibMCResult libmc_streamconnection_getidledelay(LibMC_StreamConnection pStreamConnection, LibMC_uint32 * pIdleDelay);
 
+/**
+* Returns the stream type.
+*
+* @param[in] pStreamConnection - StreamConnection instance.
+* @param[out] pStreamType - Content type of the stream.
+* @return error code or 0 (success)
+*/
+LIBMC_DECLSPEC LibMCResult libmc_streamconnection_getstreamtype(LibMC_StreamConnection pStreamConnection, LibMC::eStreamConnectionType * pStreamType);
+
 /*************************************************************************************************************************
  Class definition for APIRequestHandler
 **************************************************************************************************************************/
@@ -166,6 +175,16 @@ LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_setformdatafield(LibMC_APIReq
 * @return error code or 0 (success)
 */
 LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_setformstringfield(LibMC_APIRequestHandler pAPIRequestHandler, const char * pName, const char * pString);
+
+/**
+* Sets a request parameter.
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] pName - Name of the parameter.
+* @param[in] pValue - Value of the parameter.
+* @return error code or 0 (success)
+*/
+LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_setrequestparameter(LibMC_APIRequestHandler pAPIRequestHandler, const char * pName, const char * pValue);
 
 /**
 * handles the request.
@@ -298,6 +317,15 @@ LIBMC_DECLSPEC LibMCResult libmc_mccontext_instancestatehasfailed(LibMC_MCContex
 * @return error code or 0 (success)
 */
 LIBMC_DECLSPEC LibMCResult libmc_mccontext_loadclientpackage(LibMC_MCContext pMCContext, const char * pResourcePath);
+
+/**
+* load a package to serve the API documentation website.
+*
+* @param[in] pMCContext - MCContext instance.
+* @param[in] pResourcePath - Path to the resource package.
+* @return error code or 0 (success)
+*/
+LIBMC_DECLSPEC LibMCResult libmc_mccontext_loadapidocumentation(LibMC_MCContext pMCContext, const char * pResourcePath);
 
 /**
 * log message with a certain log level.

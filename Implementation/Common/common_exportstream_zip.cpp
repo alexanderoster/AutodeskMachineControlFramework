@@ -121,6 +121,7 @@ namespace AMCCommon {
 				throw std::runtime_error("zip stream could not deflate");
 
 			cbCount -= cbBytesWritten;
+			pByte += cbBytesWritten;
 		}
 
 		return cbTotalBytesToWrite;

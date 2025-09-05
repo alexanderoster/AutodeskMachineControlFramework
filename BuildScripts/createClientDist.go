@@ -68,7 +68,9 @@ func main() {
 			if (!info.IsDir()) {
 			
 				slashpath := strings.ReplaceAll (path, "\\", "/");
-				url := slashpath[5:];
+				
+				removeLen := len (inputPath) + 1;
+				url := slashpath[removeLen:];
 
 				if (url == "index.html") {
 					url = "";
@@ -99,7 +101,7 @@ func main() {
 					
 					Root.Entries = append (Root.Entries, entry);
 					
-					fmt.Printf("Adding %s (%d bytes)\n", path, info.Size())
+					fmt.Printf("Adding %s (%d bytes) as %s\n", path, info.Size(), url)
 					
 					input, err := ioutil.ReadFile(path)
 					if err != nil {

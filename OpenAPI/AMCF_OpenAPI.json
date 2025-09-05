@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Autodesk Machine Control Framework - External API Documentation",
-    "description": "This is an initial OpenAPI 3.0 specification of the Autodesk Machine control Framework.",
+    "title": "Autodesk Machine Control Framework - API Documentation",
+    "description": "This is an OpenAPI 3.0 specification of the Autodesk Machine control Framework's Server API.",
     "contact": {
       "email": "alexander.oster@autodesk.com"
     },
@@ -10,7 +10,7 @@
       "name": "BSD 3 clause",
       "url": "https://github.com/Autodesk/AutodeskMachineControlFramework/blob/master/LICENSE.md"
     },
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "externalDocs": {
     "description": "Find out more about the Autodesk Machine Control Framework on github",
@@ -23,84 +23,29 @@
   ],
   "tags": [
     {
-      "name": "general",
-      "description": "General API end points"
-    },
-    {
       "name": "auth",
       "description": "Authentication flow"
     },
     {
-      "name": "ui",
-      "description": "User Interface"
+      "name": "general",
+      "description": "General API end points, data exchange"
+    },
+    {
+      "name": "frontend",
+      "description": "Frontent end point"
+    },
+    {
+      "name": "ext",
+      "description": "Application specific end points"
     }
   ],
   "paths": {
-    "/version": {
-      "get": {
-        "tags": [
-          "general"
-        ],
-        "summary": "Queries the protocol version",
-        "description": "Returns the version of the protocol (to be implemented)",
-        "operationId": "retrieveVersion",
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VersionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/status": {
-      "get": {
-        "tags": [
-          "general"
-        ],
-        "summary": "Queries the full state of the system",
-        "description": "Returns a full image of all state variables",
-        "operationId": "retrieveStatus",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth": {
       "post": {
         "tags": [
           "auth"
         ],
-        "summary": "Creates a new authentication session",
+        "summary": "Create a new authentication session",
         "description": "Creates a new session and starts an authentication flow with the given user name. If user does not exist, the call will not fail but return random values in order to protect the service from a discovery attack.",
         "operationId": "createAuthSession",
         "requestBody": {
@@ -142,7 +87,7 @@
         "tags": [
           "auth"
         ],
-        "summary": "Authenticates a session with the proper challenge response mechanism.",
+        "summary": "Authenticate a session with the proper challenge response mechanism.",
         "description": "As second step of the authentication process, it uses the return values of a call to '/auth' and sends a computed response back in order to authenticate the session with the user's password.",
         "operationId": "authenticateSession",
         "parameters": [
@@ -191,12 +136,214 @@
         }
       }
     },
+    "/version": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Query the protocol version",
+        "description": "Returns the version of the protocol (to be implemented)",
+        "operationId": "retrieveVersion",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Query the full system state",
+        "description": "Queries a full image of all state variables",
+        "operationId": "retrieveStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/build": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "default": "validated"
+            },
+            "description": "can be archived or validated"
+          }
+        ],
+        "summary": "Retrieve build list of the system",
+        "description": "Retrieves build list from server, either the build which are currently in use or have been archived.",
+        "operationId": "getBuildList",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/build/{buildUUID}": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve details for a specific build",
+        "operationId": "buildDetails",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "buildUUID",
+            "in": "path",
+            "description": "build uuid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildDetailsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Update metadata of a build.",
+        "description": "Updates a build item's status or name.",
+        "operationId": "updateBuild",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "parameters": [
+          {
+            "name": "buildUUID",
+            "in": "path",
+            "description": "build uuid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildDetailsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/upload": {
       "post": {
         "tags": [
           "general"
         ],
-        "summary": "start upload session",
+        "summary": "Start data upload session",
         "operationId": "startUpload",
         "security": [
           {
@@ -242,7 +389,7 @@
         "tags": [
           "general"
         ],
-        "summary": "upload chunk",
+        "summary": "Upload data chunk",
         "operationId": "uploadChunk",
         "security": [
           {
@@ -267,20 +414,19 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "size" : {
+                  "size": {
                     "type": "integer",
                     "description": "chunk size"
                   },
-                  "offset" : {
+                  "offset": {
                     "type": "integer",
                     "description": "offset"
                   },
-                  "data" : {
+                  "data": {
                     "type": "string",
-                    "format" : "binary"
+                    "format": "binary"
                   }
                 }
-
               }
             }
           },
@@ -310,16 +456,28 @@
         }
       }
     },
-    "/upload/finish": {
+    "/upload/{streamUUID}/finish": {
       "post": {
         "tags": [
           "general"
         ],
-        "summary": "finish upload session",
+        "summary": "Finish data upload session",
         "operationId": "finishUpload",
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "streamUUID",
+            "in": "path",
+            "description": "stream uuid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -356,26 +514,33 @@
         }
       }
     },
-    "/build": {
+        "/download/{downloadUUID}": {
       "get": {
         "tags": [
           "general"
         ],
-        "summary": "Retrieves build list",
-        "description": "Retrieves build list from server",
-        "operationId": "getBuildList",
-        "security": [
+        "summary": "Download binary data by download ticket",
+        "operationId": "Download",
+        "parameters": [
           {
-            "bearerAuth": []
+            "name": "downloadUUID",
+            "in": "path",
+            "description": "download ticket uuid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "image/png": {
                 "schema": {
-                  "$ref": "#/components/schemas/BuildListResponse"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             }
@@ -383,59 +548,25 @@
         }
       }
     },
-    "/ui/config": {
+    "/frontend": {
       "get": {
         "tags": [
-          "ui"
+          "frontend"
         ],
-        "summary": "Retrieves config",
-        "description": "Retrieves config from server",
-        "operationId": "getConfig",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ui/event": {
-      "post": {
-        "tags": [
-          "ui"
-        ],
-        "summary": "Triggers a user interface event",
-        "description": "Triggers an event in the backend.",
-        "operationId": "triggerEvent",
+        "summary": "Query the full frontend status",
+        "operationId": "frontendStatus",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "Successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EventResponse"
+                  "$ref": "#/components/schemas/FrontendStatusResponse"
                 }
               }
             }
@@ -452,7 +583,207 @@
           }
         }
       }
+    },
+    "/frontend/pages/{pageUUID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Query the status of a single page.",
+        "operationId": "frontendPageStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageUUID",
+            "in": "path",
+            "description": "Frontend Page UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/frontend/pages/{pageUUID}/subscribe": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Subscribe to all attribute changes of a page.",
+        "operationId": "frontendPageSubscription",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageUUID",
+            "in": "path",
+            "description": "Frontend Page UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/frontend/modules/{moduleUUID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Query the status of a single module.",
+        "operationId": "frontendModuleStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moduleUUID",
+            "in": "path",
+            "description": "Frontend Module UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendModule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }      
+    },
+    "/frontend/modules/{moduleUUID}/subscribe": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Subscribe to attribute changes of a page.",
+        "operationId": "frontendModuleStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moduleUUID",
+            "in": "path",
+            "description": "Frontend Module UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendModule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }      
     }
+
+
   },
   "components": {
     "securitySchemes": {
@@ -492,7 +823,7 @@
           "protocol": {
             "type": "string",
             "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.error' and must be verified by the client.",
-            "example": "com.autodesk.machinecontrol.error"
+             "example": "com.autodesk.machinecontrol.error"
           },
           "version": {
             "type": "string",
@@ -559,7 +890,7 @@
           }
         }
       },
-      "UploadSession" : {
+      "UploadSession": {
         "required": [
           "protocol",
           "version",
@@ -582,7 +913,7 @@
           }
         }
       },
-      "UploadResult" : {
+      "UploadResult": {
         "type": "object",
         "properties": {
           "protocol": {
@@ -684,6 +1015,84 @@
               "type": "string",
               "example": "permission_start_build"
             }
+          }
+        }
+      },
+      "BuildPart": {
+        "required": [
+          "uuid",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "2ab9dcb8-73c1-475c-928b-a45ccff5c0ae",
+            "description": "The uuid of the part"
+          },
+          "geometryuuid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "2ab9dcb8-73c1-475c-928b-a45ccff5c0ae",
+            "description": "The uuid of the geometry of the part. multiple parts can share the same geometry."
+          },
+          "name": {
+            "type": "string",
+            "description": "User readable name of the part",
+            "example": "BOX 1"
+          }
+        }
+      },
+      "BuildLayer": {
+        "required": [
+          "layerindex"
+        ],
+        "type": "object",
+        "properties": {
+          "layerindex": {
+            "type": "integer",
+            "example": "12",
+            "description": "The index of the layer in the toolpath. 0-based."
+          },
+          "minz": {
+            "type": "number",
+            "example": "1.2",
+            "description": "The minimum Z value of the layer in mm"
+          },
+          "maxz": {
+            "type": "number",
+            "example": "1.3",
+            "description": "The maximum Z value of the layer in mm"
+          },
+          "thickness": {
+            "type": "number",
+            "example": "0.1",
+            "description": "The thickness of the layer in mm. MUST be maxz minus minz."
+          }
+        }
+      },
+      "BuildUpdateRequest": {
+        "required": [
+          "uuid"
+        ],
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "2ab9dcb8-73c1-475c-928b-a45ccff5c0ae",
+            "description": "The uuid of the build to update"
+          },
+          "name": {
+            "type": "string",
+            "description": "The new desired name of the build. If empty or omitted, name will not be updated.",
+            "example": "NewBuild.3mf"
+          },
+          "status": {
+            "type": "string",
+            "description": "The new desired status of the build. If empty or omitted, status will not be updated. Allowed update pathes are from status \"validated\" to \"archived\", and \"archived\" to \"validated\". Call will fail in any other combination.",
+            "example": "archived"
           }
         }
       },
@@ -795,10 +1204,20 @@
             "description": "The name of the build job",
             "example": "test.3mf"
           },
+          "status": {
+            "type": "string",
+            "description": "The status of the build job. Valid values are created, validating, validated, archived, deleted",
+            "example": "validated"
+          },
           "storagestream": {
             "type": "string",
             "description": "The UUID of the storage stream of the job data",
             "example": "e1118949-1b6b-4c4f-83e1-a4f5e03024bb"
+          },
+          "size": {
+            "type": "integer",
+            "description": "The size of the storage stream in bytes",
+            "example": 16777216
           },
           "layercount": {
             "type": "integer",
@@ -809,6 +1228,241 @@
             "type": "string",
             "description": "The UUID of the thumbnail",
             "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
+          }
+        }
+      },
+
+      "FrontendModule": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the frontend module",
+            "example": "viewer1"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of the frontend module",
+            "example": "93892df8-c5dd-486a-835f-b96fdeddd005"
+          },
+          "moduletype": {
+            "type": "string",
+            "description": "The type of the frontend module",
+            "example": "viewer"
+          },
+          "gridcolumn": {
+            "type": "integer",
+            "description": "The column of the module in its parent.",
+            "example": "1"
+          },
+          "gridrow": {
+            "type": "integer",
+            "description": "The row of the module in its parent.",
+            "example": "2"
+          },
+          "gridcolumnspan": {
+            "type": "integer",
+            "description": "The number columns the module takes in its parent.",
+            "example": "1"
+          },
+          "gridrowspan": {
+            "type": "integer",
+            "description": "The number of columns in its parent.",
+            "example": "1"
+          },
+
+          "attributes": {
+            "type": "object"
+          },
+
+          "submodules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrontendModule"
+            },
+            "example": [ ]
+          }
+        }
+      },
+
+      "FrontendPage": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the frontend page (must be unique for the system)",
+            "example": "joblibrary"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of the frontend page",
+            "example": "b68d7d3e-e3e4-44d8-af67-e65c84777dda"
+          },
+          "caption": {
+            "type": "string",
+            "description": "The caption of this frontend page (localized)",
+            "example": "Job Library"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of this frontend page (localized)",
+            "example": "Browse build jobs"
+          },
+          "icon": {
+            "type": "string",
+            "description": "The icon identifier for this page.",
+            "example": "LibraryBig"
+          },
+          "gridcolumns": {
+            "type": "integer",
+            "description": "The number of columns on the page.",
+            "example": "3"
+          },
+          "gridrows": {
+            "type": "integer",
+            "description": "The number of rows on the page",
+            "example": "2"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrontendModule"
+            }
+          }
+        }
+      },
+
+      "FrontendStatusResponse": {
+        "required": [
+          "protocol",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.build' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.frontend"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrontendPage"
+            }
+          }
+        }
+      },
+      "FrontendSubscriptionResponse": {
+        "required": [
+          "protocol",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.build' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.frontend"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "subscriptionuuid": {
+            "type": "string",
+            "description": "Subscription UUID.",
+            "example": "b7800e04-9200-4015-bd35-fd4cf9e00393"
+          }
+        }
+
+      },
+      "BuildDetailsResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "layercount",
+          "parts"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.build' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.build"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the build job",
+            "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the build job",
+            "example": "test.3mf"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the build job. Valid values are created, validating, validated, archived, deleted",
+            "example": "validated"
+          },
+          "storagestream": {
+            "type": "string",
+            "description": "The UUID of the storage stream of the job data",
+            "example": "e1118949-1b6b-4c4f-83e1-a4f5e03024bb"
+          },
+          "size": {
+            "type": "integer",
+            "description": "The size of the storage stream in bytes",
+            "example": 16777216
+          },
+          "layercount": {
+            "type": "integer",
+            "description": "The number of layers of the build job",
+            "example": 120
+          },
+          "thumbnail": {
+            "type": "string",
+            "description": "The UUID of the thumbnail",
+            "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildPart"
+            }
+          },
+          "variablelayers": {
+            "type": "boolean",
+            "description": "If true, the layer thicknesses have variable thickness.",
+            "example": false
+          },
+          "globallayerthickness": {
+            "type": "number",
+            "description": "If variablelayers is false, the global layer thickness in mm. MUST NOT be given for variable layer thicknesses",
+            "example": 0.04
+          },
+          "layers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildLayer"
+            }
           }
         }
       },
@@ -865,7 +1519,7 @@
           }
         }
       },
-      "UploadFinishRequest" : {
+      "UploadFinishRequest": {
         "required": [
           "streamuuid",
           "sha256",
@@ -875,6 +1529,7 @@
         "properties": {
           "streamuuid": {
             "type": "string",
+            "description": "UUID of upload to finish. MUST match the upload uuid in the request URL",
             "format": "uuid"
           },
           "context": {
@@ -882,56 +1537,6 @@
           },
           "sha256": {
             "type": "string"
-          }
-        }
-      },
-      "EventRequest": {
-        "required": [
-          "eventname",
-          "parameters"
-        ],
-        "type": "object",
-        "properties": {
-          "eventname": {
-            "type": "string",
-            "example": "onclick"
-          },
-          "senderuuid": {
-            "type": "string",
-            "example": "6d0d0bfc-72e5-4688-b806-54608e226ca9"
-          },
-          "parameters": {
-            "type": "object",
-            "example": {
-              "example_checkbox": true,
-              "example_run": "examplecalculation"
-            }
-          }
-        }
-      },
-      "EventResponse": {
-        "required": [
-          "protocol",
-          "version",
-          "instances"
-        ],
-        "type": "object",
-        "properties": {
-          "protocol": {
-            "type": "string",
-            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.ui' and must be verified by the client.",
-            "example": "com.autodesk.machinecontrol.ui"
-          },
-          "version": {
-            "type": "string",
-            "description": "Version of the protocol.",
-            "example": "2.0.0"
-          },
-          "results": {
-            "type": "object",
-            "example": {
-              "example_runtime": 123.45
-            }
           }
         }
       }

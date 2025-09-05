@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Core/amc_jsonwriter.hpp"
 #include "amc_ui_interfaces.hpp"
 #include "amc_logger.hpp"
+#include "amc_ui_frontendstate.hpp"
 
 namespace LibMCData {
 	amcDeclareDependingClass(CDataModel, PDataModel);
@@ -67,9 +68,10 @@ namespace AMC {
 		PUISystemState m_pUISystemState;
 		PResourcePackage m_pResourcePackage;
 		CUIModule_ContentRegistry* m_pContentRegistry;
+		CUIFrontendDefinition* m_pFrontendDefinition;
 
 	public:
-		CUIModuleEnvironment(PUISystemState pUISystemState, CUIModule_ContentRegistry* pContentRegistry, PResourcePackage pResourcePackage);
+		CUIModuleEnvironment(PUISystemState pUISystemState, CUIModule_ContentRegistry* pContentRegistry, PResourcePackage pResourcePackage, CUIFrontendDefinition* pFrontendDefinition);
 		virtual ~CUIModuleEnvironment();
 
 		PStateMachineData stateMachineData();
@@ -83,16 +85,22 @@ namespace AMC {
 
 		AMCCommon::PChrono getGlobalChrono();
 
+		CUIFrontendDefinition* getFrontendDefinition ();
+
 	};
 
 	class CUIModule {
 	protected:
 		std::string m_sName;
 		std::string m_sUUID;
+
+		std::string m_sModulePath;
+
+		PUIFrontendDefinitionModuleStore m_pModuleStore;
 		
 	public:
 
-		CUIModule(const std::string & sName);	
+		CUIModule(const std::string & sName, const std::string& sParentPath, CUIFrontendDefinition * pFrontendDefinition);
 		
 		virtual ~CUIModule();
 
@@ -100,24 +108,42 @@ namespace AMC {
 
 		virtual std::string getType() = 0;
 
-		virtual void writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject & moduleObject, CParameterHandler* pClientVariableHandler) = 0;
-
-		virtual PUIModuleItem findItem(const std::string& sUUID) = 0;
-
 		virtual std::string getCaption() = 0;
 
 		virtual std::string getUUID();
 
-		virtual void populateItemMap (std::map<std::string, PUIModuleItem> & itemMap) = 0;
-
 		static std::string getNameFromXML(pugi::xml_node& xmlNode);
+
 		static std::string getTypeFromXML(pugi::xml_node& xmlNode);
 
 		virtual void configurePostLoading() = 0;
 
+		virtual bool isVersion2FrontendModule();
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) = 0;
+
 		virtual void populateClientVariables(CParameterHandler* pParameterHandler) = 0;
 
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) = 0;
 
+		virtual PUIModuleItem findItem(const std::string& sUUID) = 0;
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// New UI Frontend System
+		/////////////////////////////////////////////////////////////////////////////////////
+		virtual void frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState);
+
+		std::string getModulePath();
+
+		PUIFrontendDefinitionAttribute registerUUIDAttribute(const std::string& sAttributeName, const CUIExpression & expression);
+		PUIFrontendDefinitionAttribute registerIntegerAttribute(const std::string& sAttributeName, const CUIExpression& expression);
+		PUIFrontendDefinitionAttribute registerNumberAttribute(const std::string& sAttributeName, const CUIExpression& expression);
+		PUIFrontendDefinitionAttribute registerStringAttribute(const std::string& sAttributeName, const CUIExpression& expression);
+		PUIFrontendDefinitionAttribute registerBoolAttribute(const std::string& sAttributeName, const CUIExpression& expression);
 	};
 
 	

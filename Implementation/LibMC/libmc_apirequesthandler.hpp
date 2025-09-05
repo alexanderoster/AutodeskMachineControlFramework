@@ -95,6 +95,8 @@ public:
 
 	void GetResultData(LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8 * pDataBuffer) override;
 
+	void SetRequestParameter(const std::string& sName, const std::string& sValue) override;
+
 	std::string GetContentDispositionName() override;
 	
 };

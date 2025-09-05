@@ -47,6 +47,7 @@ Abstract: This is a stub class definition of CDriverEnvironment
 #include "libmcenv_cryptocontext.hpp"
 #include "libmcenv_datatable.hpp"
 #include "libmcenv_imageloader.hpp"
+#include "libmcenv_jsonobject.hpp"
 
 // Include custom headers here.
 #include "common_utils.hpp"
@@ -119,7 +120,9 @@ IDriverStatusUpdateSession* CDriverEnvironment::CreateStatusUpdateSession()
 
 IWorkingDirectory* CDriverEnvironment::CreateWorkingDirectory()
 {
-    return new CWorkingDirectory(m_sBaseTempPath, m_pDriverResourcePackage);
+	auto pProcessDirectoryStructure = std::make_shared<AMC::CProcessDirectoryStructure>(m_sBaseTempPath, m_pGlobalChrono, m_pLogger);
+
+    return new CWorkingDirectory(pProcessDirectoryStructure, pProcessDirectoryStructure->getRootDirectory (), m_pDriverResourcePackage, m_pMachineResourcePackage, m_pGlobalChrono, m_pLogger);
 }
 
 ITCPIPConnection* CDriverEnvironment::CreateTCPIPConnection(const std::string& sIPAddress, const LibMCEnv_uint32 nPort, const LibMCEnv_uint32 nTimeOutInMS)
@@ -485,3 +488,17 @@ IDateTime* CDriverEnvironment::GetStartDateTime()
     return new CDateTime(m_pGlobalChrono->getStartTimeStampInMicrosecondsSince1970());
 }
 
+IJSONObject* CDriverEnvironment::CreateJSONObject()
+{
+    return new CJSONObject();
+}
+
+IJSONObject* CDriverEnvironment::ParseJSONString(const std::string& sJSONString)
+{
+    return new CJSONObject(sJSONString);
+}
+
+IJSONObject* CDriverEnvironment::ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8* pJSONDataBuffer)
+{
+    return new CJSONObject(pJSONDataBuffer, nJSONDataBufferSize);
+}

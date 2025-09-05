@@ -93,8 +93,6 @@ namespace AMC {
 
 		virtual std::string getTypeString() = 0;
 
-		virtual void addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler);
-
 		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler);
 
 		virtual std::string getElementPath();
@@ -220,9 +218,7 @@ namespace AMC {
 
 		virtual ~CUIModule_ContentForm();
 
-		void addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler) override;
-
-		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
 
 		void addEntity(PUIModule_ContentFormEntity pEntity);
 		

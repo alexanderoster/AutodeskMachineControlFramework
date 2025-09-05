@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component xmlns="http://schemas.autodesk.com/netfabb/automaticcomponenttoolkit/2018" 
+	libraryname="Library Wrapper for OpenCV Computer Vision Library" namespace="LibOpenCV" copyright="Autodesk Inc." year="2024" basename="libopencv"
+	version="1.2.0">
+	<license>
+		<line value="All rights reserved." />
+		<line value="" />
+		<line value="Redistribution and use in source and binary forms, with or without" />
+		<line value="modification, are permitted provided that the following conditions are met:" />
+		<line value="    * Redistributions of source code must retain the above copyright" />
+		<line value="      notice, this list of conditions and the following disclaimer." />
+		<line value="    * Redistributions in binary form must reproduce the above copyright" />
+		<line value="      notice, this list of conditions and the following disclaimer in the" />
+		<line value="      documentation and/or other materials provided with the distribution." />
+		<line value="    * Neither the name of the Autodesk Inc. nor the" />
+		<line value="      names of its contributors may be used to endorse or promote products" />
+		<line value="      derived from this software without specific prior written permission." />
+		<line value="" />
+		<line value="THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND" />
+		<line value="ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED" />
+		<line value="WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE" />
+		<line value="DISCLAIMED. IN NO EVENT SHALL AUTODESK INC. BE LIABLE FOR ANY" />
+		<line value="DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES" />
+		<line value="(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;" />
+		<line value="LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND" />
+		<line value="ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT" />
+		<line value="(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS" />
+		<line value="SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE." />
+		<line value="" />
+	</license>
+	
+	<bindings>
+		<binding language="CppDynamic" indentation="tabs" />
+	</bindings>
+	<implementations>
+		<implementation language="Cpp" indentation="tabs"/>
+	</implementations>
+	
+	<errors>
+			
+		<error name="NOTIMPLEMENTED" code="1001" description="functionality not implemented" />
+		<error name="INVALIDPARAM" code="1002" description="an invalid parameter was passed" />
+		<error name="INVALIDCAST" code="1003" description="a type cast failed" />
+		<error name="BUFFERTOOSMALL" code="1004" description="a provided buffer is too small" />
+		<error name="GENERICEXCEPTION" code="1005" description="a generic exception occurred" />
+		<error name="COULDNOTLOADLIBRARY" code="1006" description="the library could not be loaded" />
+		<error name="COULDNOTFINDLIBRARYEXPORT" code="1007" description="a required exported symbol could not be found in the library" />
+		<error name="INCOMPATIBLEBINARYVERSION" code="1008" description="the version of the binary interface does not match the bindings interface" />
+		<error name="INVALIDREADFORMAT" code="1009" description="Invalid read format" />
+		<error name="COULDNOTREADIMAGEFILE" code="1010" description="Could not read image file" />
+		<error name="COULDNOTCREATEEMPTYIMAGE" code="1011" description="Could not create empty image" />		
+		<error name="COULDNOTWRITEIMAGEFILE" code="1012" description="Could not write image file" />		
+		
+			
+		
+	</errors>
+	
+	
+	<enum name="ImageReadFormat">
+	   <option name="Unknown" value="0" />
+	   <option name="GrayScale" value="1" />
+	   <option name="BGR" value="2" />
+	   <option name="RGB" value="3" />
+	</enum>
+		
+	<class name="Base">
+	
+	</class>
+
+	<class name="ImageSaveParameters" parent="Base" description="Class that stores save parameters for an image.">
+		
+	</class>
+
+
+	<class name="Mat" parent="Base" description="Mat is a n-dimensional dense array class.">
+	
+		<method name="Empty" description="Returns if the Mat instance is empty.">
+			<param name="IsEmpty" type="bool" pass="return" description="Returns true if the Mat instance is empty. False otherwise." />
+		</method>
+
+		<method name="Cols" description="Returns the number of columns.">
+			<param name="NumberOfColumns" type="uint32" pass="return" description="Returns the number of columns of the matrix." />
+		</method>
+
+		<method name="Rows" description="Returns the number of rows.">
+			<param name="NumberOfRows" type="uint32" pass="return" description="Returns the number of rows of the matrix." />
+		</method>
+			
+		<method name="WriteToFile" description="Writes a matrix as image to a file.">
+			<param name="FileName" type="string" pass="in" description="Filename to write to (in UTF8). File type is derived from the file extension." />
+			<param name="SaveParameters" type="optionalclass" class="ImageSaveParameters" pass="in" description="Optional parameters for writing the image file." />
+		</method>		
+		
+	</class>
+
+
+	<class name="OpenCVContext" parent="Base" description="A wrapper of an OpenCV Context">
+
+		<method name="LoadImageFromFile" description="Loads an image from a file on disk.">
+			<param name="FileName" type="string" pass="in" description="Filename to read (in UTF8)." />
+			<param name="ReadFormat" type="enum" class="ImageReadFormat" pass="in" description="Image format to output." />			
+			<param name="MatInstance" type="class" class="Mat" pass="return" description="Mat instance of the image that has been loaded." />
+		</method>
+
+		<method name="CreateEmptyImage" description="Creates an empty image.">
+			<param name="ColumnCount" type="uint32" pass="in" description="Number of Column of the new image." />
+			<param name="RowCount" type="uint32" pass="in" description="Number of Rows of the new image." />
+			<param name="ReadFormat" type="enum" class="ImageReadFormat" pass="in" description="Image format to output." />			
+			<param name="MatInstance" type="class" class="Mat" pass="return" description="Mat instance of the image that has been loaded." />
+		</method>
+	
+
+	
+	</class>
+	
+	
+	<global baseclassname="Base" stringoutclassname="Base" acquiremethod="AcquireInstance"
+		releasemethod="ReleaseInstance" versionmethod="GetVersion" errormethod="GetLastError" journalmethod="SetJournal"		
+		symbollookupmethod="GetSymbolLookupMethod"
+		>
+		<method name="GetVersion" description = "retrieves the binary version of this library.">
+			<param name="Major" type="uint32" pass="out" description="returns the major version of this library" />
+			<param name="Minor" type="uint32" pass="out" description="returns the minor version of this library" />
+			<param name="Micro" type="uint32" pass="out" description="returns the micro version of this library" />
+		</method>
+		<method name="GetLastError" description="Returns the last error recorded on this object">
+			<param name="Instance" type="class" class="Base" pass="in" description="Instance Handle" />
+			<param name="ErrorMessage" type="string" pass="out" description="Message of the last error" />
+			<param name="HasError" type="bool" pass="return" description="Is there a last error to query" />
+		</method>
+		<method name="AcquireInstance" description="Acquire shared ownership of an Instance">
+			<param name="Instance" type="class" class="Base" pass="in" description="Instance Handle" />
+		</method>
+		<method name="ReleaseInstance" description="Releases shared ownership of an Instance">
+			<param name="Instance" type="class" class="Base" pass="in" description="Instance Handle" />
+		</method>
+
+		<method name="GetSymbolLookupMethod" description="Returns the address of the SymbolLookupMethod">
+			<param name="SymbolLookupMethod" type="pointer" pass="return" description="Address of the SymbolAddressMethod" />
+		</method>
+		
+		<method name="CreateContext" description="Creates an OpenCV Context">
+			<param name="ContextInstance" type="class" class="OpenCVContext" pass="return" description="OpenCVContext Instance" />
+		</method>
+		
+	</global>
+</component>

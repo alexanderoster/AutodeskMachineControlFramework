@@ -145,17 +145,21 @@ void CUIModule_ContentButton::writeVariablesToJSON(CJSONWriter& writer, CJSONWri
 
 void CUIModule_ContentButton::syncClientVariables(CParameterHandler* pClientVariableHandler)
 {
-	auto pGroup = getClientVariableGroup(pClientVariableHandler);
-	if (m_CaptionExpression.needsSync())
-		pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONCAPTION, m_CaptionExpression.evaluateStringValue(m_pStateMachineData));
-	if (m_DisabledExpression.needsSync())
-		pGroup->setBoolParameterValueByName(AMC_API_KEY_UI_BUTTONDISABLED, m_DisabledExpression.evaluateBoolValue(m_pStateMachineData));
-	if (m_TargetPageExpression.needsSync())
-		pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONTARGETPAGE, m_TargetPageExpression.evaluateStringValue(m_pStateMachineData));
-	if (m_EventExpression.needsSync())
-		pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONEVENT, m_EventExpression.evaluateStringValue(m_pStateMachineData));
-	if (m_IconExpression.needsSync())
-		pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONICON, m_IconExpression.evaluateStringValue(m_pStateMachineData));
+	if (pClientVariableHandler != nullptr) {
+
+		auto pGroup = getClientVariableGroup(pClientVariableHandler);
+		if (m_CaptionExpression.needsSync())
+			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONCAPTION, m_CaptionExpression.evaluateStringValue(m_pStateMachineData));
+		if (m_DisabledExpression.needsSync())
+			pGroup->setBoolParameterValueByName(AMC_API_KEY_UI_BUTTONDISABLED, m_DisabledExpression.evaluateBoolValue(m_pStateMachineData));
+		if (m_TargetPageExpression.needsSync())
+			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONTARGETPAGE, m_TargetPageExpression.evaluateStringValue(m_pStateMachineData));
+		if (m_EventExpression.needsSync())
+			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONEVENT, m_EventExpression.evaluateStringValue(m_pStateMachineData));
+		if (m_IconExpression.needsSync())
+			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONICON, m_IconExpression.evaluateStringValue(m_pStateMachineData));
+
+	}
 
 }
 
@@ -227,31 +231,7 @@ CUIModule_ContentButtonGroup::~CUIModule_ContentButtonGroup()
 }
 
 
-void CUIModule_ContentButtonGroup::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
-{
-	object.addString(AMC_API_KEY_UI_ITEMTYPE, "buttongroup");
-	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
-	object.addString(AMC_API_KEY_UI_BUTTONDISTRIBUTION, buttonDistributionToString (m_ButtonDistribution));
-
-	CJSONWriterArray buttonArray(writer);
-
-	for (auto pButton : m_Buttons) {
-		CJSONWriterObject buttonobject(writer);
-		pButton->writeVariablesToJSON(writer, buttonobject, pClientVariableHandler);
-
-		CJSONWriterArray buttonEventFormValues (writer);
-		pButton->writeFormValuesToJSON(buttonEventFormValues);
-		buttonobject.addArray(AMC_API_KEY_UI_BUTTONEVENTFORMVALUES, buttonEventFormValues);
-
-		buttonArray.addObject(buttonobject);
-	}
-
-
-	object.addArray(AMC_API_KEY_UI_ITEMBUTTONS, buttonArray);
-
-}
-
-void CUIModule_ContentButtonGroup::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_ContentButtonGroup::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pLegacyClientVariableHandler, uint32_t nStateID)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "buttongroup");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
@@ -261,8 +241,8 @@ void CUIModule_ContentButtonGroup::addContentToJSON(CJSONWriter& writer, CJSONWr
 
 	for (auto pButton : m_Buttons) {
 		CJSONWriterObject buttonobject(writer);
-		pButton->syncClientVariables(pClientVariableHandler);
-		pButton->writeVariablesToJSON(writer, buttonobject, pClientVariableHandler);
+		pButton->syncClientVariables(pLegacyClientVariableHandler);
+		pButton->writeVariablesToJSON(writer, buttonobject, pLegacyClientVariableHandler);
 
 		CJSONWriterArray buttonEventFormValues(writer);
 		pButton->writeFormValuesToJSON(buttonEventFormValues);

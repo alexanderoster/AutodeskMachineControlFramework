@@ -203,7 +203,7 @@ std::string CUIModule_GridSection::getRowPositionString()
 }
 
 CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode))
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -334,7 +334,7 @@ std::string CUIModule_Grid::getCaption()
 }
 
 
-void CUIModule_Grid::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_Grid::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
 	moduleObject.addString(AMC_API_KEY_UI_MODULEUUID, getUUID());
@@ -364,7 +364,7 @@ void CUIModule_Grid::writeDefinitionToJSON(CJSONWriter& writer, CJSONWriterObjec
 	CJSONWriterArray sectionsNode(writer);
 	for (auto section : m_SectionList) {
 		CJSONWriterObject sectionObject(writer);
-		section->getModule()->writeDefinitionToJSON (writer, sectionObject, pClientVariableHandler);
+		section->getModule()->writeLegacyDefinitionToJSON(writer, sectionObject, pLegacyClientVariableHandler);
 		sectionObject.addInteger(AMC_API_KEY_UI_COLUMNSTART, section->getColumnStart ());
 		sectionObject.addInteger(AMC_API_KEY_UI_COLUMNEND, section->getColumnEnd ());
 		sectionObject.addInteger(AMC_API_KEY_UI_ROWSTART, section->getRowStart());

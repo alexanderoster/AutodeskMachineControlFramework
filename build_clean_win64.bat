@@ -3,6 +3,9 @@ echo off
 
 set GO111MODULE=off
 
+set STARTTIME=%TIME%
+echo Compilation start time: %STARTTIME%
+
 set basepath=%~dp0
 echo %basepath%
 set builddir=%basepath%build_win64
@@ -11,6 +14,7 @@ set outputdir=%builddir%\Output
 if not exist "%builddir%" (mkdir "%builddir%")
 if not exist "%outputdir%" (mkdir "%outputdir%")
 if not exist "%outputdir%\data" (mkdir "%outputdir%\data")
+if not exist "%outputdir%\temp" (mkdir "%outputdir%\temp")
 if not exist "%builddir%\Artifacts" (mkdir "%builddir%\Artifacts")
 if not exist "%builddir%\DevPackage" (mkdir "%builddir%\DevPackage")
 if not exist "%builddir%\DevPackage\Framework" (mkdir "%builddir%\DevPackage\Framework")
@@ -90,19 +94,21 @@ if "%ERRORLEVEL%" neq "0" (
 	goto ERROR
 )
 
+copy /y "%basepath%Artifacts\apidocsdist\apidocspackage.zip" "%builddir%\Output\%GITHASH%_core.apidocs"
+if "%ERRORLEVEL%" neq "0" (
+	goto ERROR
+)
+
 cd "%builddir%"
 
 echo "Building Core Modules"
 call cmake ..
-if "%ERRORLEVEL%" neq "0" (
-	goto ERROR
-)
+if errorlevel 1 goto ERROR
 
 REM call cmake -G "MinGW Makefiles" ..
-call cmake --build . --config Release
-if "%ERRORLEVEL%" neq "0" (
-	goto ERROR
-)
+cmake --build . --config Release -- /m
+if errorlevel 1 goto ERROR
+
 
 echo "Building Package XML"
 
@@ -123,6 +129,7 @@ copy ..\Output\%GITHASH%_core_libmc.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_lib3mf.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_libmcdata.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core.client Framework\Dist\
+copy ..\Output\%GITHASH%_core.apidocs Framework\Dist\
 copy ..\Output\%GITHASH%_*.data Framework\Dist\
 copy ..\Output\%GITHASH%_driver_*.dll Framework\Dist\
 copy ..\..\Framework\HeadersDev\CppDynamic\*.* Framework\HeadersDev\CppDynamic
@@ -152,6 +159,12 @@ echo "FATAL BUILD ERROR!"
 echo "------------------------------------------------------------"
 
 :END
+
+echo Compilation start time: %STARTTIME%
+set ENDTIME=%TIME%
+echo Compilation end time: %ENDTIME%
+
+
 if "%1" neq "NOPAUSE" (
 	pause
 )

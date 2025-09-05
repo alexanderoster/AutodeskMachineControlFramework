@@ -35,6 +35,7 @@ Abstract: This is a stub class definition of CModelDataMeshInstance
 #include "libmcenv_interfaceexception.hpp"
 #include "libmcenv_meshobject.hpp"
 #include "libmcenv_persistentmeshobject.hpp"
+#include "libmcenv_boundingbox3d.hpp"
 
 // Include custom headers here.
 #include "common_utils.hpp"
@@ -110,6 +111,29 @@ IMeshObject * CModelDataMeshInstance::CreateCopiedMesh()
     return new CMeshObject(m_pMeshHandler, pMeshEntity);
 }
 
+IMeshObject* CModelDataMeshInstance::CreateTriangleSetOfMesh(const std::string& sTriangleSetName)
+{
+    if (!m_pMeshObject->HasTriangleSet(sTriangleSetName))
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TRIANGLESETNOTFOUND, sTriangleSetName);
+
+    std::string sUUID = AMCCommon::CUtils::createUUID();
+
+    auto pMeshEntity = std::make_shared<AMC::CMeshEntity>(sUUID, m_sName);
+
+    pMeshEntity->loadTriangleSetFrom3MF(m_pMeshObject.get(), sTriangleSetName);
+
+    return new CMeshObject(m_pMeshHandler, pMeshEntity);
+
+
+
+}
+
+bool CModelDataMeshInstance::HasTriangleSet(const std::string& sTriangleSetName)
+{
+    return m_pMeshObject->HasTriangleSet(sTriangleSetName);
+}
+
+
 IPersistentMeshObject * CModelDataMeshInstance::CreatePersistentMesh(const bool bBoundToLoginSession)
 {
     std::string sUUID = AMCCommon::CUtils::createUUID();
@@ -125,3 +149,16 @@ IPersistentMeshObject * CModelDataMeshInstance::CreatePersistentMesh(const bool 
 
 }
 
+IBoundingBox3D* CModelDataMeshInstance::CalculateBoundingBox()
+{
+    std::unique_ptr<CBoundingBox3D> boundingBox(new CBoundingBox3D());
+
+    // TODO: directly call Lib3MF
+    std::vector<Lib3MF::sPosition> verticesBuffer;
+    m_pMeshObject->GetVertices(verticesBuffer);
+
+    for (auto v : verticesBuffer)
+        boundingBox->AddPointCoordinates(v.m_Coordinates[0], v.m_Coordinates[1], v.m_Coordinates[2]);
+
+    return boundingBox.release ();
+}

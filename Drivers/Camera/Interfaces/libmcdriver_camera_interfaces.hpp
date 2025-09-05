@@ -386,33 +386,74 @@ public:
 	/**
 	* IVideoDevice::GetSupportedResolution - Returns a resolution from the supported resolution list.
 	* @param[in] nIndex - Index to return. 0-based.
-	* @param[out] nWidth - Width in pixels.
-	* @param[out] nHeight - Height in pixels.
+	* @param[out] nResolutionX - Width in pixels.
+	* @param[out] nResolutionY - Height in pixels.
 	* @param[out] nFramerate - Framerate in FPS. Currently only integer framerates are supported.
+	* @param[out] eSourceFormat - Video Source format.
 	*/
-	virtual void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate) = 0;
+	virtual void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, LibMCDriver_Camera::eVideoSourceFormat & eSourceFormat) = 0;
 
 	/**
 	* IVideoDevice::GetCurrentResolution - Returns a the current resolution and Framerate of the video stream.
-	* @param[out] nWidth - Width in pixels.
-	* @param[out] nHeight - Height in pixels.
+	* @param[out] nResolutionX - Width in pixels.
+	* @param[out] nResolutionY - Height in pixels.
 	* @param[out] nFramerate - Framerate in FPS. Currently only integer framerates are supported.
+	* @param[out] eSourceFormat - Video Source format.
 	*/
-	virtual void GetCurrentResolution(LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate) = 0;
+	virtual void GetCurrentResolution(LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, LibMCDriver_Camera::eVideoSourceFormat & eSourceFormat) = 0;
+
+	/**
+	* IVideoDevice::GetCurrentResolutionX - Returns the current X resolution of the video stream.
+	* @return Width in pixels.
+	*/
+	virtual LibMCDriver_Camera_uint32 GetCurrentResolutionX() = 0;
+
+	/**
+	* IVideoDevice::GetCurrentResolutionY - Returns the current resolution of the video stream.
+	* @return Height in pixels.
+	*/
+	virtual LibMCDriver_Camera_uint32 GetCurrentResolutionY() = 0;
+
+	/**
+	* IVideoDevice::GetCurrentFramerate - Returns a the current Framerate of the video stream.
+	* @return Framerate in FPS. Currently only integer framerates are supported.
+	*/
+	virtual LibMCDriver_Camera_uint32 GetCurrentFramerate() = 0;
+
+	/**
+	* IVideoDevice::GetCurrentSourceFormat - Returns the current source format of the video streams.
+	* @return Source format.
+	*/
+	virtual LibMCDriver_Camera::eVideoSourceFormat GetCurrentSourceFormat() = 0;
+
+	/**
+	* IVideoDevice::GetSourceFormatDescription - Returns a description for a source format enum.
+	* @param[in] eSourceFormat - Source format.
+	* @return Source format Description.
+	*/
+	virtual std::string GetSourceFormatDescription(const LibMCDriver_Camera::eVideoSourceFormat eSourceFormat) = 0;
 
 	/**
 	* IVideoDevice::SetResolution - Sets the resolution of the video stream. Fails if framerate is not supported.
-	* @param[in] nWidth - Width in pixels.
-	* @param[in] nHeight - Height in pixels.
+	* @param[in] nResolutionX - Width in pixels.
+	* @param[in] nResolutionY - Height in pixels.
 	* @param[in] nFramerate - Framerate in FPS to set. Currently only integer framerates are supported.
+	* @param[in] eSourceFormat - Video Source format.
 	*/
-	virtual void SetResolution(const LibMCDriver_Camera_uint32 nWidth, const LibMCDriver_Camera_uint32 nHeight, const LibMCDriver_Camera_uint32 nFramerate) = 0;
+	virtual void SetResolution(const LibMCDriver_Camera_uint32 nResolutionX, const LibMCDriver_Camera_uint32 nResolutionY, const LibMCDriver_Camera_uint32 nFramerate, const LibMCDriver_Camera::eVideoSourceFormat eSourceFormat) = 0;
+
+	/**
+	* IVideoDevice::SetToSupportedResolution - Sets the resolution of the video stream to a supported resolution by index.
+	* @param[in] nIndex - Index to the supported resolution list. 0-based. Fails if equal or larger than SupportedResolutionCount.
+	*/
+	virtual void SetToSupportedResolution(const LibMCDriver_Camera_uint32 nIndex) = 0;
 
 	/**
 	* IVideoDevice::CaptureRawImage - Captures a still image from the video stream.
 	* @param[in] pImageData - Capture image object.
+	* @return If true, an image has been captured. If false then no image was captured.
 	*/
-	virtual void CaptureRawImage(LibMCEnv::PImageData pImageData) = 0;
+	virtual bool CaptureRawImage(LibMCEnv::PImageData pImageData) = 0;
 
 	/**
 	* IVideoDevice::StartStreamCapture - Starts automatic capturing of the video into a video stream. If a stream capture is active, it will stop the current capture process.

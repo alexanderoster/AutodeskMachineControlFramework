@@ -70,6 +70,10 @@ class IDiscreteFieldData2DStoreOptions;
 class IDiscreteFieldData2D;
 class IDataTableWriteOptions;
 class IDataTableCSVWriteOptions;
+class IScatterPlotDataColumn;
+class IScatterPlotDataColumnIterator;
+class IScatterPlotDataChannel;
+class IScatterPlotDataChannelIterator;
 class IDataTableScatterPlotOptions;
 class IDataTable;
 class IDataSeries;
@@ -77,6 +81,7 @@ class IDateTimeDifference;
 class IDateTime;
 class IMeshObject;
 class IPersistentMeshObject;
+class IBoundingBox3D;
 class IModelDataMeshInstance;
 class IModelDataComponentInstance;
 class IMeshSceneItem;
@@ -88,9 +93,10 @@ class IToolpathAccessor;
 class IBuildExecution;
 class IBuildExecutionIterator;
 class IBuild;
-class IWorkingFileExecution;
+class IWorkingFileProcess;
 class IWorkingFile;
 class IWorkingFileIterator;
+class IWorkingFileWriter;
 class IWorkingDirectory;
 class IXMLDocumentAttribute;
 class IJSONObject;
@@ -119,6 +125,9 @@ class ILogEntryList;
 class IJournalHandler;
 class IUserDetailList;
 class IUserManagementHandler;
+class IMachineConfigurationVersion;
+class IMachineConfigurationType;
+class IMachineConfigurationHandler;
 class IStateEnvironment;
 class IUIItem;
 class IUIEnvironment;
@@ -829,6 +838,104 @@ typedef IBaseSharedPtr<IImageLoader> PIImageLoader;
 
 class IVideoStream : public virtual IBase {
 public:
+	/**
+	* IVideoStream::GetUUID - Global UUID of the video stream.
+	* @return Video stream UUID.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IVideoStream::GetWidth - Returns the width of the video stream in pixels.
+	* @return Width of the video stream in pixels.
+	*/
+	virtual LibMCEnv_uint32 GetWidth() = 0;
+
+	/**
+	* IVideoStream::GetHeight - Returns the height of the video stream in pixels.
+	* @return Height of the video stream in pixels.
+	*/
+	virtual LibMCEnv_uint32 GetHeight() = 0;
+
+	/**
+	* IVideoStream::GetExtents - Returns the width and height of the video stream in pixels.
+	* @param[out] nWidth - Width of the video stream in pixels.
+	* @param[out] nHeight - Height of the video stream in pixels.
+	*/
+	virtual void GetExtents(LibMCEnv_uint32 & nWidth, LibMCEnv_uint32 & nHeight) = 0;
+
+	/**
+	* IVideoStream::GetFrameCount - Returns the number of source frames in the stream.
+	* @return Number of frames that have been pushed to the stream.
+	*/
+	virtual LibMCEnv_uint32 GetFrameCount() = 0;
+
+	/**
+	* IVideoStream::GetDroppedFrameCount - Returns the number of source frames in the stream that have not been processed..
+	* @return Number of frames that have been dropped from the stream.
+	*/
+	virtual LibMCEnv_uint32 GetDroppedFrameCount() = 0;
+
+	/**
+	* IVideoStream::GetDesiredFrameDuration - Returns the desired frame duration of the stream.
+	* @return Duration of a frame. MUST be between 10000 and 60000000.
+	*/
+	virtual LibMCEnv_uint32 GetDesiredFrameDuration() = 0;
+
+	/**
+	* IVideoStream::GetDesiredFramerate - Returns the desired framerate of the stream.
+	* @return Desired Framerate in Frames per second. This is 1000000 divided by DesiredFrameDuration. MUST be between 1 frame per minute and 100 Frames per second.
+	*/
+	virtual LibMCEnv_double GetDesiredFramerate() = 0;
+
+	/**
+	* IVideoStream::GetPauseTolerance - Returns the how long the stream will be active without new source frames being available.
+	* @return Defines how many microseconds can pass until the stream becomes inactive. Duration MUST exceed the duration of a frame.
+	*/
+	virtual LibMCEnv_uint32 GetPauseTolerance() = 0;
+
+	/**
+	* IVideoStream::GetFrameCacheDuration - Returns how long frames will be cached in the stream. This adds a delay to the stream.
+	* @return How long frames will be cached in the stream. Value MUST not be smaller than DesiredFrameDuration or exceed 100 times DesiredFrameDuration.
+	*/
+	virtual LibMCEnv_uint32 GetFrameCacheDuration() = 0;
+
+	/**
+	* IVideoStream::IsActive - Returns if the video stream is active. A video stream is active, if the last source frame was available within 
+	* @return Returns true if the video stream is active.
+	*/
+	virtual bool IsActive() = 0;
+
+	/**
+	* IVideoStream::GetStreamStartTime - Returns the DateTime when the stream has started.
+	* @return DateTime when the stream has started.
+	*/
+	virtual IDateTime * GetStreamStartTime() = 0;
+
+	/**
+	* IVideoStream::GetLastSourceTime - Returns the timestamp of the last new video frame.
+	* @return Time in Microseconds since Start Time
+	*/
+	virtual LibMCEnv_uint64 GetLastSourceTime() = 0;
+
+	/**
+	* IVideoStream::GetLastSourceFrame - Returns the image of the last video frame.
+	* @return Returns an image containing the last source frame. Image format will be RGB24.
+	*/
+	virtual IImageData * GetLastSourceFrame() = 0;
+
+	/**
+	* IVideoStream::PushFrame - Pushes a frame to the stream irrespective of timing.
+	* @param[in] pSourceFrameImage - Fails if Image extents do not match or the video format is not RGB24.
+	*/
+	virtual void PushFrame(IImageData* pSourceFrameImage) = 0;
+
+	/**
+	* IVideoStream::PushFrameWithTime - Pushes a frame to the stream with a given timing. Frame will be dropped, if the given timestamp is in the past or beyond the current time plus the Frame Cache Duration.
+	* @return Time in Microseconds since Start Time.
+	* @param[in] pSourceFrameImage - Fails if Image extents do not match or the video format is not RGB24.
+	*/
+	virtual LibMCEnv_uint64 PushFrameWithTime(IImageData* pSourceFrameImage) = 0;
+
 };
 
 typedef IBaseSharedPtr<IVideoStream> PIVideoStream;
@@ -1119,6 +1226,98 @@ typedef IBaseSharedPtr<IDataTableCSVWriteOptions> PIDataTableCSVWriteOptions;
 
 
 /*************************************************************************************************************************
+ Class interface for ScatterPlotDataColumn 
+**************************************************************************************************************************/
+
+class IScatterPlotDataColumn : public virtual IBase {
+public:
+	/**
+	* IScatterPlotDataColumn::GetColumnIdentifier - Returns the Column Identifier.
+	* @return Identifier of the column to use. Must be alphanumeric and not empty.
+	*/
+	virtual std::string GetColumnIdentifier() = 0;
+
+	/**
+	* IScatterPlotDataColumn::GetScaleFactor - Returns Scale Factor to use.
+	* @return Scale factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	virtual LibMCEnv_double GetScaleFactor() = 0;
+
+	/**
+	* IScatterPlotDataColumn::GetOffsetFactor - Returns Offset Factor to use.
+	* @return Offset factor to use. The channel value will be computed as raw value times scale factor plus offset factor.
+	*/
+	virtual LibMCEnv_double GetOffsetFactor() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataColumn> PIScatterPlotDataColumn;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataColumnIterator 
+**************************************************************************************************************************/
+
+class IScatterPlotDataColumnIterator : public virtual IIterator {
+public:
+	/**
+	* IScatterPlotDataColumnIterator::GetCurrentScatterPlotDataColumn - Returns the Current Channel Column the iterator points at.
+	* @return returns the DataChannel instance.
+	*/
+	virtual IScatterPlotDataColumn * GetCurrentScatterPlotDataColumn() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataColumnIterator> PIScatterPlotDataColumnIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataChannel 
+**************************************************************************************************************************/
+
+class IScatterPlotDataChannel : public virtual IBase {
+public:
+	/**
+	* IScatterPlotDataChannel::GetChannelIdentifier - Returns the Scatter Plot Data Channel Identifier.
+	* @return Identifier of the channel. Must be alphanumeric and not empty.
+	*/
+	virtual std::string GetChannelIdentifier() = 0;
+
+	/**
+	* IScatterPlotDataChannel::AddScatterPlotDataColumn - Adds a new Columns to the Data Channel.
+	* @param[in] pColumnInstance - Column Instance
+	*/
+	virtual void AddScatterPlotDataColumn(IScatterPlotDataColumn* pColumnInstance) = 0;
+
+	/**
+	* IScatterPlotDataChannel::ListScatterPlotDataColumns - Lists all Columns of the Data Channel.
+	* @return Iterator instance.
+	*/
+	virtual IScatterPlotDataColumnIterator * ListScatterPlotDataColumns() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataChannel> PIScatterPlotDataChannel;
+
+
+/*************************************************************************************************************************
+ Class interface for ScatterPlotDataChannelIterator 
+**************************************************************************************************************************/
+
+class IScatterPlotDataChannelIterator : public virtual IIterator {
+public:
+	/**
+	* IScatterPlotDataChannelIterator::GetCurrentScatterPlotDataChannel - Returns the Current Scatter Plot Data Channel the iterator points at.
+	* @return returns the ScatterPlotDataChannel instance.
+	*/
+	virtual IScatterPlotDataChannel * GetCurrentScatterPlotDataChannel() = 0;
+
+};
+
+typedef IBaseSharedPtr<IScatterPlotDataChannelIterator> PIScatterPlotDataChannelIterator;
+
+
+/*************************************************************************************************************************
  Class interface for DataTableScatterPlotOptions 
 **************************************************************************************************************************/
 
@@ -1185,6 +1384,12 @@ public:
 	* @param[in] nColor - Base color to use.
 	*/
 	virtual void AddDataChannel(const std::string & sChannelIdentifier, const std::string & sColumnIdentifier, const LibMCEnv_double dScaleFactor, const LibMCEnv_double dOffsetFactor, const LibMCEnv_uint32 nColor) = 0;
+
+	/**
+	* IDataTableScatterPlotOptions::ListDataChannels - Lists all DataChannels of the ScatterPlot.
+	* @return Iterator instance.
+	*/
+	virtual IScatterPlotDataChannelIterator * ListDataChannels() = 0;
 
 };
 
@@ -1961,6 +2166,104 @@ typedef IBaseSharedPtr<IPersistentMeshObject> PIPersistentMeshObject;
 
 
 /*************************************************************************************************************************
+ Class interface for BoundingBox3D 
+**************************************************************************************************************************/
+
+class IBoundingBox3D : public virtual IBase {
+public:
+	/**
+	* IBoundingBox3D::IsEmpty - Returns if the bounding box is empty.
+	* @return Returns true if the Bounding box is empty.
+	*/
+	virtual bool IsEmpty() = 0;
+
+	/**
+	* IBoundingBox3D::Clear - Makes the bounding box empty.
+	*/
+	virtual void Clear() = 0;
+
+	/**
+	* IBoundingBox3D::SetExtent - Set Minimum and Maximum position. If coordinates are not ordered, they will be ordered.
+	* @param[in] MinimumPoint - Minimum Position.
+	* @param[in] MaximumPoint - Maximum Position.
+	*/
+	virtual void SetExtent(const LibMCEnv::sFloatPosition3D MinimumPoint, const LibMCEnv::sFloatPosition3D MaximumPoint) = 0;
+
+	/**
+	* IBoundingBox3D::GetExtents - Returns the extents of the team. Fails if Bounding box is empty.
+	* @param[out] dX - X Coordinate in mm
+	* @param[out] dY - Y Coordinate in mm
+	* @param[out] dZ - Z Coordinate in mm
+	*/
+	virtual void GetExtents(LibMCEnv_double & dX, LibMCEnv_double & dY, LibMCEnv_double & dZ) = 0;
+
+	/**
+	* IBoundingBox3D::AddPoint - Adds a new point to the boundary box.
+	* @param[in] Point - Position.
+	*/
+	virtual void AddPoint(const LibMCEnv::sFloatPosition3D Point) = 0;
+
+	/**
+	* IBoundingBox3D::AddPointCoordinates - Adds a new point to the boundary box.
+	* @param[in] dX - X Coordinate in mm
+	* @param[in] dY - Y Coordinate in mm
+	* @param[in] dZ - Z Coordinate in mm
+	*/
+	virtual void AddPointCoordinates(const LibMCEnv_double dX, const LibMCEnv_double dY, const LibMCEnv_double dZ) = 0;
+
+	/**
+	* IBoundingBox3D::HasMinimumExtents - Returns, if the extents are of a minimum value in each axis. Returns false, if Bounding Box is empty.
+	* @param[in] dMinimumExtents - Minimum Extents value. MUST be larger than 0.
+	* @return True, if the bounding box is of the minimum extents.
+	*/
+	virtual bool HasMinimumExtents(const LibMCEnv_double dMinimumExtents) = 0;
+
+	/**
+	* IBoundingBox3D::GetMinimum - Returns the minimum point. Fails if Bounding box is empty.
+	* @return Minimum Position.
+	*/
+	virtual LibMCEnv::sFloatPosition3D GetMinimum() = 0;
+
+	/**
+	* IBoundingBox3D::GetMaximum - Returns the maximum point. Fails if Bounding box is empty.
+	* @return Maximum Position.
+	*/
+	virtual LibMCEnv::sFloatPosition3D GetMaximum() = 0;
+
+	/**
+	* IBoundingBox3D::GetMinimumCoordinates - Returns the minimum point coordinates. Fails if Bounding box is empty.
+	* @param[out] dX - X Coordinate in mm
+	* @param[out] dY - Y Coordinate in mm
+	* @param[out] dZ - Z Coordinate in mm
+	*/
+	virtual void GetMinimumCoordinates(LibMCEnv_double & dX, LibMCEnv_double & dY, LibMCEnv_double & dZ) = 0;
+
+	/**
+	* IBoundingBox3D::GetMaximumCoordinates - Returns the maximum point coordinates. Fails if Bounding box is empty.
+	* @param[out] dX - X Coordinate in mm
+	* @param[out] dY - Y Coordinate in mm
+	* @param[out] dZ - Z Coordinate in mm
+	*/
+	virtual void GetMaximumCoordinates(LibMCEnv_double & dX, LibMCEnv_double & dY, LibMCEnv_double & dZ) = 0;
+
+	/**
+	* IBoundingBox3D::Duplicate - Returns a duplicate of the bounding box.
+	* @return Returns a duplicate instance.
+	*/
+	virtual IBoundingBox3D * Duplicate() = 0;
+
+	/**
+	* IBoundingBox3D::Merge - Merges another Bounding box. Will copy the other instance if current instance is empty. Will do nothing if other instance is empty.
+	* @param[in] pAnotherInstance - Instance to merge into the Bounding box.
+	*/
+	virtual void Merge(IBoundingBox3D* pAnotherInstance) = 0;
+
+};
+
+typedef IBaseSharedPtr<IBoundingBox3D> PIBoundingBox3D;
+
+
+/*************************************************************************************************************************
  Class interface for ModelDataMeshInstance 
 **************************************************************************************************************************/
 
@@ -1997,11 +2300,31 @@ public:
 	virtual IMeshObject * CreateCopiedMesh() = 0;
 
 	/**
+	* IModelDataMeshInstance::CreateTriangleSetOfMesh - Loads a triangle set copy of the mesh geometry into memory. Might be inefficient to use for many identical copies of the mesh in the scene.
+	* @param[in] sTriangleSetName - Triangle Set Name. Fails if triangle set does not exist in mesh.
+	* @return Returns the mesh object instance.
+	*/
+	virtual IMeshObject * CreateTriangleSetOfMesh(const std::string & sTriangleSetName) = 0;
+
+	/**
+	* IModelDataMeshInstance::HasTriangleSet - Returns if the mesh has a triangle set of a specific name.
+	* @param[in] sTriangleSetName - Triangle Set Name. Fails if triangle set does not exist in mesh.
+	* @return Returns true, if the triangle set name exists, false otherwise.
+	*/
+	virtual bool HasTriangleSet(const std::string & sTriangleSetName) = 0;
+
+	/**
 	* IModelDataMeshInstance::CreatePersistentMesh - Creates a persistent mesh of the geometry. Will not create a duplicate if the instance was already persisted before. The release of the memory should be handled with great care! 
 	* @param[in] bBoundToLoginSession - If true, the mesh will be freed once the client login session expires.
 	* @return Returns a persistent instance to the same mesh data.
 	*/
 	virtual IPersistentMeshObject * CreatePersistentMesh(const bool bBoundToLoginSession) = 0;
+
+	/**
+	* IModelDataMeshInstance::CalculateBoundingBox - Calculates the bounding box of the model.
+	* @return Bounding Box Instance.
+	*/
+	virtual IBoundingBox3D * CalculateBoundingBox() = 0;
 
 };
 
@@ -2076,6 +2399,12 @@ public:
 	* @return SubComponent. MUST be between 0 and ModelCount - 1.
 	*/
 	virtual IModelDataComponentInstance * GetSubComponent(const LibMCEnv_uint32 nIndex) = 0;
+
+	/**
+	* IModelDataComponentInstance::CalculateBoundingBox - Calculates the bounding box of the model.
+	* @return Bounding Box Instance.
+	*/
+	virtual IBoundingBox3D * CalculateBoundingBox() = 0;
 
 };
 
@@ -2324,13 +2653,6 @@ public:
 	virtual LibMCEnv::eToolpathSegmentType GetSegmentType(const LibMCEnv_uint32 nIndex) = 0;
 
 	/**
-	* IToolpathLayer::SegmentIsLoop - Returns if segment is a loop.
-	* @param[in] nIndex - Index. Must be between 0 and Count - 1.
-	* @return Flag if segment is a loop.
-	*/
-	virtual bool SegmentIsLoop(const LibMCEnv_uint32 nIndex) = 0;
-
-	/**
 	* IToolpathLayer::SegmentIsPolyline - Returns if segment is a polyline.
 	* @param[in] nIndex - Index. Must be between 0 and Count - 1.
 	* @return Flag if segment is a polyline.
@@ -2394,11 +2716,11 @@ public:
 	virtual void FindCustomSegmentAttributeInfo(const std::string & sNamespace, const std::string & sAttributeName, LibMCEnv_uint32 & nAttributeID, LibMCEnv::eToolpathAttributeType & eAttributeType) = 0;
 
 	/**
-	* IToolpathLayer::GetSegmentPointCount - Retrieves the number of points in the segment. For type hatch, the points are taken pairwise.
+	* IToolpathLayer::GetSegmentPolylinePointCount - Retrieves the number of points in the segment. Fails if segment is not of type polyline.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
-	* @return Hatch count of segment.
+	* @return Point count of the polyline.
 	*/
-	virtual LibMCEnv_uint32 GetSegmentPointCount(const LibMCEnv_uint32 nSegmentIndex) = 0;
+	virtual LibMCEnv_uint32 GetSegmentPolylinePointCount(const LibMCEnv_uint32 nSegmentIndex) = 0;
 
 	/**
 	* IToolpathLayer::GetSegmentHatchCount - Retrieves the number of hatches in the segment (i.e. PointCount / 2). Returns 0 if segment is not of type hatch.
@@ -2422,6 +2744,15 @@ public:
 	* @return Returns true if value exist.
 	*/
 	virtual bool SegmentProfileHasValue(const LibMCEnv_uint32 nSegmentIndex, const std::string & sNamespace, const std::string & sValueName) = 0;
+
+	/**
+	* IToolpathLayer::GetSegmentProfileModificationType - Retrieves the type of variation that a profile has through its modifiers and modification factors.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] sNamespace - Namespace to query for.
+	* @param[in] sValueName - Value Name to query for.
+	* @return Returns the profile modification type.
+	*/
+	virtual LibMCEnv::eToolpathProfileModificationType GetSegmentProfileModificationType(const LibMCEnv_uint32 nSegmentIndex, const std::string & sNamespace, const std::string & sValueName) = 0;
 
 	/**
 	* IToolpathLayer::GetSegmentProfileValue - Retrieves an assigned profile custom value. Fails if value does not exist.
@@ -2517,6 +2848,14 @@ public:
 	virtual LibMCEnv_double GetSegmentProfileTypedValueDef(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType, const LibMCEnv_double dDefaultValue) = 0;
 
 	/**
+	* IToolpathLayer::GetSegmentProfileTypedModificationType - Retrieves the modification type of assigned profile value of a standard type. Fails if value does not exist or is not a double value.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eValueType - Enum to query for. MUST NOT be custom.
+	* @return Returns the profile modification type.
+	*/
+	virtual LibMCEnv::eToolpathProfileModificationType GetSegmentProfileTypedModificationType(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType) = 0;
+
+	/**
 	* IToolpathLayer::GetSegmentPartUUID - Retrieves the assigned segment part uuid.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @return Segment Part UUID
@@ -2531,13 +2870,22 @@ public:
 	virtual LibMCEnv_uint32 GetSegmentLocalPartID(const LibMCEnv_uint32 nSegmentIndex) = 0;
 
 	/**
-	* IToolpathLayer::GetSegmentPointData - Retrieves the assigned segment point list. For type hatch, the points are taken pairwise.
+	* IToolpathLayer::GetSegmentPolylineData - Retrieves the assigned segment point list. Fails, if type is not polyline.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @param[in] nPointDataBufferSize - Number of elements in buffer
 	* @param[out] pPointDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
 	* @param[out] pPointDataBuffer - Position2D buffer of The point data array. Positions are absolute in units.
 	*/
-	virtual void GetSegmentPointData(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nPointDataBufferSize, LibMCEnv_uint64* pPointDataNeededCount, LibMCEnv::sPosition2D * pPointDataBuffer) = 0;
+	virtual void GetSegmentPolylineData(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nPointDataBufferSize, LibMCEnv_uint64* pPointDataNeededCount, LibMCEnv::sPosition2D * pPointDataBuffer) = 0;
+
+	/**
+	* IToolpathLayer::GetSegmentPolylineDataInMM - Retrieves the assigned segment point list. Fails, if type is not polyline.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] nPointDataBufferSize - Number of elements in buffer
+	* @param[out] pPointDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pPointDataBuffer - FloatPosition2D buffer of The point data array. Positions are absolute in mm.
+	*/
+	virtual void GetSegmentPolylineDataInMM(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nPointDataBufferSize, LibMCEnv_uint64* pPointDataNeededCount, LibMCEnv::sFloatPosition2D * pPointDataBuffer) = 0;
 
 	/**
 	* IToolpathLayer::GetSegmentHatchData - Retrieves the assigned segment hatch list. Fails if segment type is not hatch.
@@ -2549,15 +2897,6 @@ public:
 	virtual void GetSegmentHatchData(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nHatchDataBufferSize, LibMCEnv_uint64* pHatchDataNeededCount, LibMCEnv::sHatch2D * pHatchDataBuffer) = 0;
 
 	/**
-	* IToolpathLayer::GetSegmentPointDataInMM - Retrieves the assigned segment point list. For type hatch, the points are taken pairwise.
-	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
-	* @param[in] nPointDataBufferSize - Number of elements in buffer
-	* @param[out] pPointDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
-	* @param[out] pPointDataBuffer - FloatPosition2D buffer of The point data array. Positions are absolute in mm.
-	*/
-	virtual void GetSegmentPointDataInMM(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nPointDataBufferSize, LibMCEnv_uint64* pPointDataNeededCount, LibMCEnv::sFloatPosition2D * pPointDataBuffer) = 0;
-
-	/**
 	* IToolpathLayer::GetSegmentHatchDataInMM - Retrieves the assigned segment hatch list. Fails if segment type is not hatch.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @param[in] nHatchDataBufferSize - Number of elements in buffer
@@ -2567,32 +2906,30 @@ public:
 	virtual void GetSegmentHatchDataInMM(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nHatchDataBufferSize, LibMCEnv_uint64* pHatchDataNeededCount, LibMCEnv::sFloatHatch2D * pHatchDataBuffer) = 0;
 
 	/**
-	* IToolpathLayer::SegmentHasOverrideFactors - Returns if a segment has override factors attached to its points.
-	* @param[in] nSegmentIndex - Segment Index. Must be between 0 and Count - 1.
-	* @param[in] eOverrideFactor - Which override factor to return (F, G or H).
-	* @return Returns true if the Segment given has an override factor of a certain type.
+	* IToolpathLayer::EvaluateTypedHatchProfileModifier - Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
+	* @param[in] nEvaluationData1BufferSize - Number of elements in buffer
+	* @param[out] pEvaluationData1NeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pEvaluationData1Buffer - double buffer of Evaluated data on the first point on each hatch. Will return HatchCount elements.
+	* @param[in] nEvaluationData2BufferSize - Number of elements in buffer
+	* @param[out] pEvaluationData2NeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pEvaluationData2Buffer - double buffer of Evaluated data on the second point on each hatch. Will return HatchCount elements.
 	*/
-	virtual bool SegmentHasOverrideFactors(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor) = 0;
+	virtual void EvaluateTypedHatchProfileModifier(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType, LibMCEnv_uint64 nEvaluationData1BufferSize, LibMCEnv_uint64* pEvaluationData1NeededCount, LibMCEnv_double * pEvaluationData1Buffer, LibMCEnv_uint64 nEvaluationData2BufferSize, LibMCEnv_uint64* pEvaluationData2NeededCount, LibMCEnv_double * pEvaluationData2Buffer) = 0;
 
 	/**
-	* IToolpathLayer::GetSegmentPointOverrides - Retrieves factor overrides for a specific segment. For type hatch, the points are taken pairwise.
-	* @param[in] nSegmentIndex - Segment Index. Must be between 0 and Count - 1.
-	* @param[in] eOverrideFactor - Which override factor to return (F, G or H).
-	* @param[in] nOverrideDataBufferSize - Number of elements in buffer
-	* @param[out] pOverrideDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
-	* @param[out] pOverrideDataBuffer - double buffer of The override factor array. Will return as many override factors as points in the segment.
+	* IToolpathLayer::EvaluateTypedHatchProfileInterpolation - Evaluates the subinterpolation values of with its modifier factors. Fails if segment type is not hatch.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
+	* @param[in] nCountArrayBufferSize - Number of elements in buffer
+	* @param[out] pCountArrayNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pCountArrayBuffer - uint32 buffer of Number of subinterpolation values per hatch. Will contain HatchCount elements.
+	* @param[in] nEvaluationDataBufferSize - Number of elements in buffer
+	* @param[out] pEvaluationDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pEvaluationDataBuffer - Hatch2DSubInterpolationData buffer of Evaluated data on evaluation points for the full segment, in hatch order. Will contain the sum of CountArray elements.
 	*/
-	virtual void GetSegmentPointOverrides(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor, LibMCEnv_uint64 nOverrideDataBufferSize, LibMCEnv_uint64* pOverrideDataNeededCount, LibMCEnv_double * pOverrideDataBuffer) = 0;
-
-	/**
-	* IToolpathLayer::GetSegmentHatchOverrides - Retrieves factor overrides for a specific segment. Fails if segment type is not hatch.
-	* @param[in] nSegmentIndex - Segment Index. Must be between 0 and Count - 1.
-	* @param[in] eOverrideFactor - Which override factor to return (F, G or H).
-	* @param[in] nOverrideDataBufferSize - Number of elements in buffer
-	* @param[out] pOverrideDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
-	* @param[out] pOverrideDataBuffer - Hatch2DOverrides buffer of The override factor array. Will return as many override factors as hatches in the segment. Each element contains one factor for the first point or the second point.
-	*/
-	virtual void GetSegmentHatchOverrides(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileOverrideFactor eOverrideFactor, LibMCEnv_uint64 nOverrideDataBufferSize, LibMCEnv_uint64* pOverrideDataNeededCount, LibMCEnv::sHatch2DOverrides * pOverrideDataBuffer) = 0;
+	virtual void EvaluateTypedHatchProfileInterpolation(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType, LibMCEnv_uint64 nCountArrayBufferSize, LibMCEnv_uint64* pCountArrayNeededCount, LibMCEnv_uint32 * pCountArrayBuffer, LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv::sHatch2DSubInterpolationData * pEvaluationDataBuffer) = 0;
 
 	/**
 	* IToolpathLayer::GetZValue - Retrieves the layers Z Value in units.
@@ -2802,19 +3139,49 @@ public:
 
 	/**
 	* IToolpathAccessor::HasBinaryMetaData - Checks if a binary metadata exists in the build file with a certain path.
-	* @param[in] sIdentifier - Identifier of the binary metadata
+	* @param[in] sPackagePath - Path of the binary metadata in the 3MF Package
 	* @return Returns if the metadata exists.
 	*/
-	virtual bool HasBinaryMetaData(const std::string & sIdentifier) = 0;
+	virtual bool HasBinaryMetaData(const std::string & sPackagePath) = 0;
 
 	/**
 	* IToolpathAccessor::GetBinaryMetaData - Returns a binary metadata of the build file. Fails if binary metadata does not exist.
-	* @param[in] sIdentifier - Identifier of the binary metadata
+	* @param[in] sPackagePath - Path of the binary metadata in the 3MF Package
 	* @param[in] nMetaDataBufferSize - Number of elements in buffer
 	* @param[out] pMetaDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
 	* @param[out] pMetaDataBuffer - uint8 buffer of Returns the content of the binary binary data.
 	*/
-	virtual void GetBinaryMetaData(const std::string & sIdentifier, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8 * pMetaDataBuffer) = 0;
+	virtual void GetBinaryMetaData(const std::string & sPackagePath, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8 * pMetaDataBuffer) = 0;
+
+	/**
+	* IToolpathAccessor::GetBinaryMetaDataAsString - Returns a binary metadata of the build file as string. Fails if binary metadata does not exist.
+	* @param[in] sPackagePath - Path of the binary metadata in the 3MF Package
+	* @return Returns the content of the binary binary data.
+	*/
+	virtual std::string GetBinaryMetaDataAsString(const std::string & sPackagePath) = 0;
+
+	/**
+	* IToolpathAccessor::HasBinaryMetaDataSchema - Checks if a binary metadata exists in the build file with a certain relationship schema. Fails if schema does not exist or is not unique.
+	* @param[in] sRelationshipSchema - Relationship schema of the root part in the 3MF Package
+	* @return Returns if the metadata exists.
+	*/
+	virtual bool HasBinaryMetaDataSchema(const std::string & sRelationshipSchema) = 0;
+
+	/**
+	* IToolpathAccessor::GetBinaryMetaDataBySchema - Returns a binary metadata of the build file. Fails if binary metadata does not exist or is not unique.
+	* @param[in] sRelationshipSchema - Relationship schema of the root part in the 3MF Package
+	* @param[in] nMetaDataBufferSize - Number of elements in buffer
+	* @param[out] pMetaDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pMetaDataBuffer - uint8 buffer of Returns the content of the binary binary data.
+	*/
+	virtual void GetBinaryMetaDataBySchema(const std::string & sRelationshipSchema, LibMCEnv_uint64 nMetaDataBufferSize, LibMCEnv_uint64* pMetaDataNeededCount, LibMCEnv_uint8 * pMetaDataBuffer) = 0;
+
+	/**
+	* IToolpathAccessor::GetBinaryMetaDataAsStringBySchema - Returns a binary metadata of the build file as string. Fails if binary metadata does not exist or is not unique.
+	* @param[in] sRelationshipSchema - Relationship schema of the root part in the 3MF Package
+	* @return Returns the content of the binary binary data.
+	*/
+	virtual std::string GetBinaryMetaDataAsStringBySchema(const std::string & sRelationshipSchema) = 0;
 
 };
 
@@ -3157,6 +3524,11 @@ public:
 	virtual std::string GetStorageSHA256() = 0;
 
 	/**
+	* IBuild::EnsureStorageSHA256IsValid - Ensures that the build stream has not been modified on disk.
+	*/
+	virtual void EnsureStorageSHA256IsValid() = 0;
+
+	/**
 	* IBuild::GetLayerCount - Returns cached layer count of the toolpath.
 	* @return Returns layer count.
 	*/
@@ -3392,25 +3764,95 @@ typedef IBaseSharedPtr<IBuild> PIBuild;
 
 
 /*************************************************************************************************************************
- Class interface for WorkingFileExecution 
+ Class interface for WorkingFileProcess 
 **************************************************************************************************************************/
 
-class IWorkingFileExecution : public virtual IBase {
+class IWorkingFileProcess : public virtual IBase {
 public:
 	/**
-	* IWorkingFileExecution::GetStatus - Returns the execution status
+	* IWorkingFileProcess::GetStatus - Returns the process status
+	* @return Status of Process.
 	*/
-	virtual void GetStatus() = 0;
+	virtual LibMCEnv::eWorkingFileProcessStatus GetStatus() = 0;
 
 	/**
-	* IWorkingFileExecution::ReturnStdOut - Returns the output of the executable as string buffer
-	* @return stdout buffer
+	* IWorkingFileProcess::GetRunTime - Returns the Run Time of the process. Will return 0 if Status is ProcessInitializing. Fails if Status is Unknown.
+	* @return Duration.
 	*/
-	virtual std::string ReturnStdOut() = 0;
+	virtual IDateTimeDifference * GetRunTime() = 0;
+
+	/**
+	* IWorkingFileProcess::GetRunTimeInMilliseconds - Returns the Run Time of the process in Milliseconds. Will return 0 if Status is ProcessInitializing. Fails if Status is Unknown.
+	* @return Duration in Milliseconds.
+	*/
+	virtual LibMCEnv_uint64 GetRunTimeInMilliseconds() = 0;
+
+	/**
+	* IWorkingFileProcess::SetWorkingDirectory - Sets the working directory. Default is the directory of the executable. Fails if Status is not ProcessInitializing.
+	* @param[in] pDirectory - Wo.
+	*/
+	virtual void SetWorkingDirectory(IWorkingDirectory* pDirectory) = 0;
+
+	/**
+	* IWorkingFileProcess::AddEnvironmentVariable - Adds an environment variable. Fails if Status is not ProcessInitializing.
+	* @param[in] sVariableName - Environment Variable name. Alphanumeric string with _ and - allowed. Fails if Variable already exists.
+	* @param[in] sValue - Value for variables.
+	*/
+	virtual void AddEnvironmentVariable(const std::string & sVariableName, const std::string & sValue) = 0;
+
+	/**
+	* IWorkingFileProcess::EnvironmentVariableExists - Checks if an environment variable exists.
+	* @param[in] sVariableName - Environment Variable name. Alphanumeric string with _ and - allowed.
+	* @return Returns true if the variable exists, false otherwise.
+	*/
+	virtual bool EnvironmentVariableExists(const std::string & sVariableName) = 0;
+
+	/**
+	* IWorkingFileProcess::RemoveEnvironmentVariable - Removes an environment variable. Does nothing if variable does not exist. Fails if Status is not ProcessInitializing.
+	* @param[in] sVariableName - Environment Variable name. Alphanumeric string with _ and - allowed.
+	*/
+	virtual void RemoveEnvironmentVariable(const std::string & sVariableName) = 0;
+
+	/**
+	* IWorkingFileProcess::GetEnvironmentVariableCount - Returns the number of environment variables.
+	* @return Number of environment variables.
+	*/
+	virtual LibMCEnv_uint32 GetEnvironmentVariableCount() = 0;
+
+	/**
+	* IWorkingFileProcess::GetEnvironmentVariableByIndex - Returns the details of a environment variables.
+	* @param[in] nVariableIndex - Index of environment variables. 0-based.
+	* @param[out] sVariableName - Environment Variable name. Alphanumeric string with _ and -.
+	* @param[out] sValue - Value of variable.
+	*/
+	virtual void GetEnvironmentVariableByIndex(const LibMCEnv_uint32 nVariableIndex, std::string & sVariableName, std::string & sValue) = 0;
+
+	/**
+	* IWorkingFileProcess::ClearEnvironmentVariables - Clears all environment variables.
+	*/
+	virtual void ClearEnvironmentVariables() = 0;
+
+	/**
+	* IWorkingFileProcess::SetVerboseLogging - Enables or disables the the verbose logging mode.
+	* @param[in] bVerboseLogging - If true, all stdout messages of the process will be shown in the generic system log.
+	*/
+	virtual void SetVerboseLogging(const bool bVerboseLogging) = 0;
+
+	/**
+	* IWorkingFileProcess::StartProcess - Starts the process, if Status is ProcessInitializing. Does nothing otherwise.
+	* @param[in] sArgumentString - Argumnet to pass on the process. May be empty.
+	* @param[in] nTimeOut - Process Timeout in Milliseconds. 0 means no timeout.
+	*/
+	virtual void StartProcess(const std::string & sArgumentString, const LibMCEnv_uint32 nTimeOut) = 0;
+
+	/**
+	* IWorkingFileProcess::TerminateProcess - Terminates a process, if the process is running.
+	*/
+	virtual void TerminateProcess() = 0;
 
 };
 
-typedef IBaseSharedPtr<IWorkingFileExecution> PIWorkingFileExecution;
+typedef IBaseSharedPtr<IWorkingFileProcess> PIWorkingFileProcess;
 
 
 /*************************************************************************************************************************
@@ -3432,16 +3874,24 @@ public:
 	virtual LibMCEnv_uint64 GetSize() = 0;
 
 	/**
+	* IWorkingFile::ReadContent - Returns the content of the working file.
+	* @param[in] nFileContentBufferSize - Number of elements in buffer
+	* @param[out] pFileContentNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pFileContentBuffer - uint8 buffer of Array the content will be read into.
+	*/
+	virtual void ReadContent(LibMCEnv_uint64 nFileContentBufferSize, LibMCEnv_uint64* pFileContentNeededCount, LibMCEnv_uint8 * pFileContentBuffer) = 0;
+
+	/**
 	* IWorkingFile::CalculateSHA2 - Calculates the SHA256 checksum of the file.
 	* @return sha256 checksum
 	*/
 	virtual std::string CalculateSHA2() = 0;
 
 	/**
-	* IWorkingFile::ExecuteFile - Executes the temporary file, if it is an executable.
-	* @return execution object
+	* IWorkingFile::ExecuteFile - Creates a file process object.
+	* @return process object
 	*/
-	virtual IWorkingFileExecution * ExecuteFile() = 0;
+	virtual IWorkingFileProcess * ExecuteFile() = 0;
 
 	/**
 	* IWorkingFile::IsManaged - Returns if the file is managed.
@@ -3489,6 +3939,81 @@ typedef IBaseSharedPtr<IWorkingFileIterator> PIWorkingFileIterator;
 
 
 /*************************************************************************************************************************
+ Class interface for WorkingFileWriter 
+**************************************************************************************************************************/
+
+class IWorkingFileWriter : public virtual IBase {
+public:
+	/**
+	* IWorkingFileWriter::GetSize - Returns the current size of file.
+	* @return file size
+	*/
+	virtual LibMCEnv_uint64 GetSize() = 0;
+
+	/**
+	* IWorkingFileWriter::GetAbsoluteFileName - Retrieves absolute file name of the working file on disk
+	* @return global path of the file
+	*/
+	virtual std::string GetAbsoluteFileName() = 0;
+
+	/**
+	* IWorkingFileWriter::GetFileName - Retrieves relative file name of the working file in the directory (without path)
+	* @return local name of the file
+	*/
+	virtual std::string GetFileName() = 0;
+
+	/**
+	* IWorkingFileWriter::FlushBuffer - Writes all unwritten data to disk.
+	*/
+	virtual void FlushBuffer() = 0;
+
+	/**
+	* IWorkingFileWriter::Finish - Finishes the writing and returns the corresponding working file.
+	* @return returns the WorkingFile instance.
+	*/
+	virtual IWorkingFile * Finish() = 0;
+
+	/**
+	* IWorkingFileWriter::WriteData - Writes an array to the file.
+	* @param[in] nBufferBufferSize - Number of elements in buffer
+	* @param[in] pBufferBuffer - Buffer that will be written.
+	*/
+	virtual void WriteData(const LibMCEnv_uint64 nBufferBufferSize, const LibMCEnv_uint8 * pBufferBuffer) = 0;
+
+	/**
+	* IWorkingFileWriter::WriteString - Writes a string to the file.
+	* @param[in] sValue - String that will be written.
+	*/
+	virtual void WriteString(const std::string & sValue) = 0;
+
+	/**
+	* IWorkingFileWriter::WriteLine - Writes a string to the file with line ending.
+	* @param[in] sValue - String that will be written.
+	* @param[in] bUnixLineEnding - If true, the line will end with a LF (10), if false, the line will end with a windows line ending CRLF (13 10).
+	*/
+	virtual void WriteLine(const std::string & sValue, const bool bUnixLineEnding) = 0;
+
+	/**
+	* IWorkingFileWriter::WriteFixedFloat - Writes a double to the file with fixed number of digits.
+	* @param[in] dValue - Double that will be written.
+	* @param[in] nDigits - Number of Digits to export to.. (in mm)
+	*/
+	virtual void WriteFixedFloat(const LibMCEnv_double dValue, const LibMCEnv_uint32 nDigits) = 0;
+
+	/**
+	* IWorkingFileWriter::WriteFixedFloatLine - Writes a double to the file with fixed number of digits and a new line after.
+	* @param[in] dValue - Double that will be written.
+	* @param[in] nDigits - Number of Digits to export to.. (in mm)
+	* @param[in] bUnixLineEnding - If true, the line will end with a LF (10), if false, the line will end with a windows line ending CRLF (13 10).
+	*/
+	virtual void WriteFixedFloatLine(const LibMCEnv_double dValue, const LibMCEnv_uint32 nDigits, const bool bUnixLineEnding) = 0;
+
+};
+
+typedef IBaseSharedPtr<IWorkingFileWriter> PIWorkingFileWriter;
+
+
+/*************************************************************************************************************************
  Class interface for WorkingDirectory 
 **************************************************************************************************************************/
 
@@ -3499,6 +4024,13 @@ public:
 	* @return returns true if files can be read and written to the directory.
 	*/
 	virtual bool IsActive() = 0;
+
+	/**
+	* IWorkingDirectory::CreateSubDirectory - Creates a managed subdirectory in the directory.
+	* @param[in] sDirectoryName - Directory name to create. Can not include any path delimiters or ..
+	* @return Working directory instance.
+	*/
+	virtual IWorkingDirectory * CreateSubDirectory(const std::string & sDirectoryName) = 0;
 
 	/**
 	* IWorkingDirectory::GetAbsoluteFilePath - Retrieves absolute file path.
@@ -3532,6 +4064,14 @@ public:
 	virtual IWorkingFile * StoreDriverData(const std::string & sFileName, const std::string & sIdentifier) = 0;
 
 	/**
+	* IWorkingDirectory::StoreMachineResourceData - Stores machine resource data in a temporary file.
+	* @param[in] sFileName - filename to store to. Can not include any path delimiters or ..
+	* @param[in] sIdentifier - identifier of the binary data in the machine resource package.
+	* @return working file instance.
+	*/
+	virtual IWorkingFile * StoreMachineResourceData(const std::string & sFileName, const std::string & sIdentifier) = 0;
+
+	/**
 	* IWorkingDirectory::StoreCustomDataInTempFile - Stores a data buffer in a temporary file with a generated name.
 	* @param[in] sExtension - extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters.
 	* @param[in] nDataBufferBufferSize - Number of elements in buffer
@@ -3557,6 +4097,14 @@ public:
 	virtual IWorkingFile * StoreDriverDataInTempFile(const std::string & sExtension, const std::string & sIdentifier) = 0;
 
 	/**
+	* IWorkingDirectory::StoreMachineResourceDataInTempFile - Stores machine resource data in a temporary file.
+	* @param[in] sExtension - extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters.
+	* @param[in] sIdentifier - identifier of the binary data in the machine resource package.
+	* @return working file instance.
+	*/
+	virtual IWorkingFile * StoreMachineResourceDataInTempFile(const std::string & sExtension, const std::string & sIdentifier) = 0;
+
+	/**
 	* IWorkingDirectory::CleanUp - Deletes all managed files in the directory and the directory. No storing is possible after a cleanup.
 	* @return returns if deletion was successful.
 	*/
@@ -3568,6 +4116,13 @@ public:
 	* @return working file instance.
 	*/
 	virtual IWorkingFile * AddManagedFile(const std::string & sFileName) = 0;
+
+	/**
+	* IWorkingDirectory::AddManagedTempFile - Adds a managed temporary file in the directory (i.e. this file will be deleted at CleanUp). Subdirectories are not allowed.
+	* @param[in] sExtension - extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters.
+	* @return working file instance.
+	*/
+	virtual IWorkingFile * AddManagedTempFile(const std::string & sExtension) = 0;
 
 	/**
 	* IWorkingDirectory::HasUnmanagedFiles - Returns if the working directory has unmanaged files. A clean implementation will never deal with unmanaged files.
@@ -3592,6 +4147,22 @@ public:
 	* @return working file iterator instance.
 	*/
 	virtual IWorkingFileIterator * RetrieveAllFiles() = 0;
+
+	/**
+	* IWorkingDirectory::AddBufferedWriter - Adds a buffered writer to the directory.
+	* @param[in] sFileName - Filename to manage. The file will be created.
+	* @param[in] nBufferSizeInkB - Memory buffer size in Bytes. MUST be larger than 0 and smaller than 1048576.
+	* @return Working file writer instance.
+	*/
+	virtual IWorkingFileWriter * AddBufferedWriter(const std::string & sFileName, const LibMCEnv_uint32 nBufferSizeInkB) = 0;
+
+	/**
+	* IWorkingDirectory::AddBufferedWriterTempFile - Adds a buffered writer to the directory with a temporary file name.
+	* @param[in] sExtension - extension of the file to store. MAY be an empty string. MUST only include up to 64 alphanumeric characters.
+	* @param[in] nBufferSizeInkB - Memory buffer size in Bytes. MUST be larger than 0 and smaller than 1048576.
+	* @return Working file writer instance.
+	*/
+	virtual IWorkingFileWriter * AddBufferedWriterTempFile(const std::string & sExtension, const LibMCEnv_uint32 nBufferSizeInkB) = 0;
 
 };
 
@@ -3740,9 +4311,9 @@ public:
 	/**
 	* IJSONObject::GetMemberName - Returns the name of a member by index.
 	* @param[in] nIndex - Index of the member, 0-based. Fails if larger or equal than MemberCount
-	* @param[in] sName - Name of the member.
+	* @return Name of the member.
 	*/
-	virtual void GetMemberName(const LibMCEnv_uint64 nIndex, const std::string & sName) = 0;
+	virtual std::string GetMemberName(const LibMCEnv_uint64 nIndex) = 0;
 
 	/**
 	* IJSONObject::GetMemberType - Returns the member type. Returns unknown, if the member does not exist.
@@ -3752,11 +4323,18 @@ public:
 	virtual LibMCEnv::eJSONObjectType GetMemberType(const std::string & sName) = 0;
 
 	/**
-	* IJSONObject::GetValue - Returns a member as string value. Fails if member is of type Array or Object. Returns true or false in terms of Boolean value.
+	* IJSONObject::GetValue - Returns a member as string value. Fails if member is of type Array or Object. 
 	* @param[in] sName - Name of the member.
 	* @return Member value.
 	*/
 	virtual std::string GetValue(const std::string & sName) = 0;
+
+	/**
+	* IJSONObject::GetUUIDValue - Returns a member as string value. Fails if member is of type Array or Object. Fails if the value is not a proper UUID valu
+	* @param[in] sName - Name of the member.
+	* @return Member value.
+	*/
+	virtual std::string GetUUIDValue(const std::string & sName) = 0;
 
 	/**
 	* IJSONObject::GetIntegerValue - Returns a member as integer value. Fails if member is of type Array or Object, or a non-double string.
@@ -3809,23 +4387,23 @@ public:
 	/**
 	* IJSONObject::AddIntegerValue - Adds a member as integer value. Fails if member already exists.
 	* @param[in] sName - Name of the member.
-	* @return Member value.
+	* @param[in] nValue - Member value.
 	*/
-	virtual LibMCEnv_int64 AddIntegerValue(const std::string & sName) = 0;
+	virtual void AddIntegerValue(const std::string & sName, const LibMCEnv_int64 nValue) = 0;
 
 	/**
 	* IJSONObject::AddDoubleValue - Adds a member as double value. Fails if member already exists.
 	* @param[in] sName - Name of the member.
-	* @return Member value.
+	* @param[in] dValue - Member value.
 	*/
-	virtual LibMCEnv_double AddDoubleValue(const std::string & sName) = 0;
+	virtual void AddDoubleValue(const std::string & sName, const LibMCEnv_double dValue) = 0;
 
 	/**
 	* IJSONObject::AddBoolValue - Adds a member as bool value. Fails if member already exists.
 	* @param[in] sName - Name of the member.
-	* @return Member value.
+	* @param[in] bValue - Member value.
 	*/
-	virtual bool AddBoolValue(const std::string & sName) = 0;
+	virtual void AddBoolValue(const std::string & sName, const bool bValue) = 0;
 
 	/**
 	* IJSONObject::AddObjectValue - Returns a member as object value. Returns empty object. Fails if member already exists.
@@ -3840,6 +4418,12 @@ public:
 	* @return Member value.
 	*/
 	virtual IJSONArray * AddArrayValue(const std::string & sName) = 0;
+
+	/**
+	* IJSONObject::SerializeToString - Serialises the Object to a String.
+	* @return Serialised string value.
+	*/
+	virtual std::string SerializeToString() = 0;
 
 };
 
@@ -3871,6 +4455,13 @@ public:
 	* @return Element value.
 	*/
 	virtual std::string GetValue(const LibMCEnv_uint64 nIndex) = 0;
+
+	/**
+	* IJSONArray::GetUUIDValue - Returns a element as string value. Fails if member is of type Array or Object. Fails if the value is not a proper UUID valu
+	* @param[in] nIndex - Index of the element, 0-based. Fails if larger or equal than ElementCount
+	* @return Member value.
+	*/
+	virtual std::string GetUUIDValue(const LibMCEnv_uint64 nIndex) = 0;
 
 	/**
 	* IJSONArray::GetIntegerValue - Returns a element as integer value. Fails if element is of type Array or Object, or a non-double string.
@@ -3921,21 +4512,21 @@ public:
 
 	/**
 	* IJSONArray::AddIntegerValue - Adds a member as integer value.
-	* @return Member value.
+	* @param[in] nValue - Member value.
 	*/
-	virtual LibMCEnv_int64 AddIntegerValue() = 0;
+	virtual void AddIntegerValue(const LibMCEnv_int64 nValue) = 0;
 
 	/**
 	* IJSONArray::AddDoubleValue - Adds a member as double value.
-	* @return Member value.
+	* @param[in] dValue - Member value.
 	*/
-	virtual LibMCEnv_double AddDoubleValue() = 0;
+	virtual void AddDoubleValue(const LibMCEnv_double dValue) = 0;
 
 	/**
 	* IJSONArray::AddBoolValue - Adds a member as bool value.
-	* @return Member value.
+	* @param[in] bValue - Member value.
 	*/
-	virtual bool AddBoolValue() = 0;
+	virtual void AddBoolValue(const bool bValue) = 0;
 
 	/**
 	* IJSONArray::AddObjectValue - Returns a member as object value. Returns empty object.
@@ -3948,6 +4539,12 @@ public:
 	* @return Member value.
 	*/
 	virtual IJSONArray * AddArrayValue() = 0;
+
+	/**
+	* IJSONArray::SerializeToString - Serialises the Array to a String.
+	* @return Serialised string value.
+	*/
+	virtual std::string SerializeToString() = 0;
 
 };
 
@@ -4830,6 +5427,27 @@ public:
 	virtual IXMLDocument * ParseXMLData(const LibMCEnv_uint64 nXMLDataBufferSize, const LibMCEnv_uint8 * pXMLDataBuffer) = 0;
 
 	/**
+	* IDriverEnvironment::CreateJSONObject - creates an empty JSON object.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * CreateJSONObject() = 0;
+
+	/**
+	* IDriverEnvironment::ParseJSONString - parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] sJSONString - XML String.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONString(const std::string & sJSONString) = 0;
+
+	/**
+	* IDriverEnvironment::ParseJSONData - parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] nJSONDataBufferSize - Number of elements in buffer
+	* @param[in] pJSONDataBuffer - JSON Binary data.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8 * pJSONDataBuffer) = 0;
+
+	/**
 	* IDriverEnvironment::CreateDataTable - creates an empty data table.
 	* @return Data Table Instance.
 	*/
@@ -5122,22 +5740,77 @@ typedef IBaseSharedPtr<IDriverEnvironment> PIDriverEnvironment;
 class ISignalTrigger : public virtual IBase {
 public:
 	/**
-	* ISignalTrigger::CanTrigger - Returns, if signal channel is available.
+	* ISignalTrigger::GetSignalUUID - Returns the signal uuid.
+	* @return Signal Identifier
+	*/
+	virtual std::string GetSignalUUID() = 0;
+
+	/**
+	* ISignalTrigger::CanTrigger - Returns, if a spot is available in the signal queue.
 	* @return Returns true, if signal channel is available.
 	*/
 	virtual bool CanTrigger() = 0;
 
 	/**
-	* ISignalTrigger::Trigger - Triggers a signal, if signal channel is available.
+	* ISignalTrigger::GetAvailableSignalQueueSlots - Returns the number of slots available in the signal queue.
+	* @return Number of Queue Slots available.
+	*/
+	virtual LibMCEnv_uint32 GetAvailableSignalQueueSlots() = 0;
+
+	/**
+	* ISignalTrigger::GetTotalSignalQueueSlots - Returns the total number of slots of the signal queue.
+	* @return Total number of Queue Slots. If not specified in the config, default is 1.
+	*/
+	virtual LibMCEnv_uint32 GetTotalSignalQueueSlots() = 0;
+
+	/**
+	* ISignalTrigger::GetSignalPhase - Returns the phase of the signal.
+	* @return Returns the phase of the signal.
+	*/
+	virtual LibMCEnv::eSignalPhase GetSignalPhase() = 0;
+
+	/**
+	* ISignalTrigger::SetReactionTimeOut - Sets the signal reaction timeout to a specific value. Fails if Phase is not InPreparation. Default value is either set in the config file or 1 hour (3600000ms)
+	* @param[in] nReactionTimeOutInMs - Sets the Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms.
+	*/
+	virtual void SetReactionTimeOut(const LibMCEnv_uint32 nReactionTimeOutInMs) = 0;
+
+	/**
+	* ISignalTrigger::GetReactionTimeOut - Gets the signal reaction timeout. Default value is either set in the config file or 1 hour (3600000ms)
+	* @return Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms.
+	*/
+	virtual LibMCEnv_uint32 GetReactionTimeOut() = 0;
+
+	/**
+	* ISignalTrigger::Trigger - Triggers a signal, if signal queue spot is available. Fails if Phase is not InPreparation. Fails if signal queue is full.
 	*/
 	virtual void Trigger() = 0;
 
 	/**
-	* ISignalTrigger::WaitForHandling - Waits until the signal is reset.
-	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
+	* ISignalTrigger::TryTrigger - Tries to triggers the signal, if signal queue spot is available. Returns false, if Phase is not InPreparation. Returns false, if signal queue is full.
+	* @return Returns true, if signal has been successfully put in the signal queue.
+	*/
+	virtual bool TryTrigger() = 0;
+
+	/**
+	* ISignalTrigger::TryTriggerWithTimeout - Tries to triggers the signal, if signal queue spot is available. Returns false, if Phase is not InPreparation. Returns false, if signal queue is full.
+	* @param[in] nReactionTimeOutInMs - Sets the Reaction timeout in Milliseconds. MUST be larger than 0ms and not larger than 3600000ms.
+	* @return Returns true, if signal has been successfully put in the signal queue.
+	*/
+	virtual bool TryTriggerWithTimeout(const LibMCEnv_uint32 nReactionTimeOutInMs) = 0;
+
+	/**
+	* ISignalTrigger::WaitForHandling - Waits until the signal has been handled, meaning has reached the Phase Handled, Failed, TimedOut, Cleared or Retracted.
+	* @param[in] nWaitTime - Time to wait in Milliseconds. 0 for Immediate return.
 	* @return Flag if signal handling has been handled.
 	*/
-	virtual bool WaitForHandling(const LibMCEnv_uint32 nTimeOut) = 0;
+	virtual bool WaitForHandling(const LibMCEnv_uint32 nWaitTime) = 0;
+
+	/**
+	* ISignalTrigger::HasBeenHandled - Checks if the signal has been handled, meaning has reached the Phase Handled, Failed, TimedOut, Cleared or Retracted. Equivalent to WaitForHandling (0).
+	* @return Flag if signal handling has been handled.
+	*/
+	virtual bool HasBeenHandled() = 0;
 
 	/**
 	* ISignalTrigger::GetName - Returns the signal name.
@@ -5233,9 +5906,26 @@ typedef IBaseSharedPtr<ISignalTrigger> PISignalTrigger;
 class ISignalHandler : public virtual IBase {
 public:
 	/**
-	* ISignalHandler::SignalHandled - Marks signal as handled and resets signal channel.
+	* ISignalHandler::GetSignalPhase - Returns the phase of the signal.
+	* @return Returns the phase of the signal. Never will return InPreparation or Invalid.
+	*/
+	virtual LibMCEnv::eSignalPhase GetSignalPhase() = 0;
+
+	/**
+	* ISignalHandler::SignalHandled - Marks signal as Handled.. Fails if SignalPhase is not in InQueue or InProcess. if InQueue, the signal is automatically removed from its queue.
 	*/
 	virtual void SignalHandled() = 0;
+
+	/**
+	* ISignalHandler::SignalInProcess - Marks signal as InProcess and it removes it from its Queue. Fails if SignalPhase is not InQueue.
+	*/
+	virtual void SignalInProcess() = 0;
+
+	/**
+	* ISignalHandler::SignalFailed - Marks signal as Failed. Fails if SignalPhase is not in InQueue or InProcess.
+	* @param[in] sErrorMessage - Error Message describing the reason for the failure.
+	*/
+	virtual void SignalFailed(const std::string & sErrorMessage) = 0;
 
 	/**
 	* ISignalHandler::GetName - Returns the signal name.
@@ -5244,13 +5934,7 @@ public:
 	virtual std::string GetName() = 0;
 
 	/**
-	* ISignalHandler::GetSignalID - Returns the signal id. Depreciated.
-	* @return Signal Identifier
-	*/
-	virtual std::string GetSignalID() = 0;
-
-	/**
-	* ISignalHandler::GetSignalUUID - Returns the signal uuid. Identical to GetSignalID.
+	* ISignalHandler::GetSignalUUID - Returns the signal uuid.
 	* @return Signal Identifier
 	*/
 	virtual std::string GetSignalUUID() = 0;
@@ -6051,6 +6735,169 @@ typedef IBaseSharedPtr<IUserManagementHandler> PIUserManagementHandler;
 
 
 /*************************************************************************************************************************
+ Class interface for MachineConfigurationVersion 
+**************************************************************************************************************************/
+
+class IMachineConfigurationVersion : public virtual IBase {
+public:
+	/**
+	* IMachineConfigurationVersion::GetSchemaType - Returns the schema type.
+	* @return Schema Type String.
+	*/
+	virtual std::string GetSchemaType() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetTypeName - Returns the Name the type.
+	* @return Type Name.
+	*/
+	virtual std::string GetTypeName() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetTypeUUID - Returns the UUID the type.
+	* @return Type UUID.
+	*/
+	virtual std::string GetTypeUUID() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetXSDVersion - Returns the XSD Version Number of this configuration.
+	* @return Returns XSD version number.
+	*/
+	virtual LibMCEnv_uint32 GetXSDVersion() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetXSDString - Returns the XSD String that this configuration uses.
+	* @return Returns XSD string.
+	*/
+	virtual std::string GetXSDString() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetConfigurationXMLString - Returns the configuration as XML String.
+	* @return Returns XML string.
+	*/
+	virtual std::string GetConfigurationXMLString() = 0;
+
+	/**
+	* IMachineConfigurationVersion::GetConfigurationXMLDocument - Returns the configuration as XML Document class.
+	* @return Returns XML document.
+	*/
+	virtual IXMLDocument * GetConfigurationXMLDocument() = 0;
+
+	/**
+	* IMachineConfigurationVersion::MakeActive - Makes the current configuration the active one.
+	*/
+	virtual void MakeActive() = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationVersion> PIMachineConfigurationVersion;
+
+
+/*************************************************************************************************************************
+ Class interface for MachineConfigurationType 
+**************************************************************************************************************************/
+
+class IMachineConfigurationType : public virtual IBase {
+public:
+	/**
+	* IMachineConfigurationType::GetSchemaType - Returns the schema type.
+	* @return Schema Type String.
+	*/
+	virtual std::string GetSchemaType() = 0;
+
+	/**
+	* IMachineConfigurationType::GetTypeName - Returns the Name the type.
+	* @return Type Name.
+	*/
+	virtual std::string GetTypeName() = 0;
+
+	/**
+	* IMachineConfigurationType::GetTypeUUID - Returns the UUID the type.
+	* @return Type UUID.
+	*/
+	virtual std::string GetTypeUUID() = 0;
+
+	/**
+	* IMachineConfigurationType::GetLatestXSDVersion - Returns the latest Machine Configuration XSD Version.
+	* @return Returns the latest XSD version, or 0 if no XSD exists.
+	*/
+	virtual LibMCEnv_uint32 GetLatestXSDVersion() = 0;
+
+	/**
+	* IMachineConfigurationType::RegisterConfigurationXSD - Registers a new configuration XSD.
+	* @param[in] sXSDString - XSD String of the version. MUST be incremental.
+	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
+	* @param[in] sDefaultConfigurationXML - Default configuration XML to use for this XSD. MUST conform to XSD in question.
+	*/
+	virtual void RegisterConfigurationXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML) = 0;
+
+	/**
+	* IMachineConfigurationType::RegisterConfigurationXSDFromResource - Registers a new configuration XSD from machine resource files.
+	* @param[in] sXSDResourceName - Resource identifier of the XSD file of the version. MUST be incremental.
+	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion.
+	* @param[in] sDefaultConfigurationResourceName - Resource identifier of the configuration XML to use for this XSD. MUST conform to XSD in question.
+	*/
+	virtual void RegisterConfigurationXSDFromResource(const std::string & sXSDResourceName, const LibMCEnv_uint32 nXSDVersion, const std::string & sDefaultConfigurationResourceName) = 0;
+
+	/**
+	* IMachineConfigurationType::GetLatestConfiguration - Returns the latest Machine Configuration of this configuration type. Returns the default XML of the newest XSD if no configuration exists.
+	* @return Configuration Version instance.
+	*/
+	virtual IMachineConfigurationVersion * GetLatestConfiguration() = 0;
+
+	/**
+	* IMachineConfigurationType::GetActiveConfiguration - Returns the active Machine Configuration of this configuration type.
+	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
+	* @return Configuration Version instance.
+	*/
+	virtual IMachineConfigurationVersion * GetActiveConfiguration(const bool bFallBackToDefault) = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationType> PIMachineConfigurationType;
+
+
+/*************************************************************************************************************************
+ Class interface for MachineConfigurationHandler 
+**************************************************************************************************************************/
+
+class IMachineConfigurationHandler : public virtual IBase {
+public:
+	/**
+	* IMachineConfigurationHandler::RegisterMachineConfigurationType - Registers a new machine configuration type, or returns the unique existing one with the same schema type.
+	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
+	* @param[in] sName - Type Name. MUST not be empty. If the configuration type already exists, the name will be checked for identity!
+	* @return Instance of machine configuration type.
+	*/
+	virtual IMachineConfigurationType * RegisterMachineConfigurationType(const std::string & sSchemaType, const std::string & sName) = 0;
+
+	/**
+	* IMachineConfigurationHandler::HasMachineConfigurationType - Checks if a certain configuration schema type has been registered.
+	* @param[in] sSchemaType - Schema Type String. MUST not be empty.
+	* @return Returns true, if the system knows about a configuration schema type.
+	*/
+	virtual bool HasMachineConfigurationType(const std::string & sSchemaType) = 0;
+
+	/**
+	* IMachineConfigurationHandler::GetLatestConfiguration - Returns the latest Machine Configuration for a specific configuration type. Returns the default XML of the newest XSD if no configuration exists.
+	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
+	* @return Configuration Version instance.
+	*/
+	virtual IMachineConfigurationVersion * GetLatestConfiguration(const std::string & sSchemaType) = 0;
+
+	/**
+	* IMachineConfigurationHandler::GetActiveConfiguration - Returns the active Machine Configuration for a specific configuration type.
+	* @param[in] sSchemaType - Schema Type String. Fails if configuration schema type is not known.
+	* @param[in] bFallBackToDefault - If true, the default configuration is returned, if no active configuration exists. Otherwise null is returned.
+	* @return Configuration Version instance.
+	*/
+	virtual IMachineConfigurationVersion * GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault) = 0;
+
+};
+
+typedef IBaseSharedPtr<IMachineConfigurationHandler> PIMachineConfigurationHandler;
+
+
+/*************************************************************************************************************************
  Class interface for StateEnvironment 
 **************************************************************************************************************************/
 
@@ -6087,14 +6934,20 @@ public:
 	virtual bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, ISignalHandler*& pHandlerInstance) = 0;
 
 	/**
-	* IStateEnvironment::GetUnhandledSignal - Retrieves an unhandled signal By signal type name.
+	* IStateEnvironment::GetUnhandledSignal - Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
 	* @return Signal object. If no signal has been found the signal handler object will be null.
 	*/
 	virtual ISignalHandler * GetUnhandledSignal(const std::string & sSignalTypeName) = 0;
 
 	/**
-	* IStateEnvironment::ClearAllUnhandledSignals - Clears all unhandled signals and marks them invalid.
+	* IStateEnvironment::ClearUnhandledSignalsOfType - Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.
+	* @param[in] sSignalTypeName - Name Of Signal to be cleared.
+	*/
+	virtual void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName) = 0;
+
+	/**
+	* IStateEnvironment::ClearAllUnhandledSignals - Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.
 	*/
 	virtual void ClearAllUnhandledSignals() = 0;
 
@@ -6331,6 +7184,12 @@ public:
 	virtual IImageLoader * CreateImageLoader() = 0;
 
 	/**
+	* IStateEnvironment::CreateMachineConfigurationHandler - creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.
+	* @return MachineConfigurationHandler instance.
+	*/
+	virtual IMachineConfigurationHandler * CreateMachineConfigurationHandler() = 0;
+
+	/**
 	* IStateEnvironment::CreateDiscreteField2D - Creates an empty discrete field.
 	* @param[in] nPixelCountX - Pixel count in X. MUST be positive.
 	* @param[in] nPixelCountY - Pixel count in Y. MUST be positive.
@@ -6455,6 +7314,27 @@ public:
 	* @return XML Document Instance.
 	*/
 	virtual IXMLDocument * ParseXMLData(const LibMCEnv_uint64 nXMLDataBufferSize, const LibMCEnv_uint8 * pXMLDataBuffer) = 0;
+
+	/**
+	* IStateEnvironment::CreateJSONObject - creates an empty JSON object.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * CreateJSONObject() = 0;
+
+	/**
+	* IStateEnvironment::ParseJSONString - parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] sJSONString - XML String.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONString(const std::string & sJSONString) = 0;
+
+	/**
+	* IStateEnvironment::ParseJSONData - parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] nJSONDataBufferSize - Number of elements in buffer
+	* @param[in] pJSONDataBuffer - JSON Binary data.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8 * pJSONDataBuffer) = 0;
 
 	/**
 	* IStateEnvironment::CreateDataTable - creates an empty data table.
@@ -6950,6 +7830,27 @@ public:
 	virtual IXMLDocument * ParseXMLData(const LibMCEnv_uint64 nXMLDataBufferSize, const LibMCEnv_uint8 * pXMLDataBuffer) = 0;
 
 	/**
+	* IUIEnvironment::CreateJSONObject - creates an empty JSON object.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * CreateJSONObject() = 0;
+
+	/**
+	* IUIEnvironment::ParseJSONString - parses a JSON String and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] sJSONString - XML String.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONString(const std::string & sJSONString) = 0;
+
+	/**
+	* IUIEnvironment::ParseJSONData - parses a JSON Data and returns a JSON Object instance. Throws an error if JSON is malformatted.
+	* @param[in] nJSONDataBufferSize - Number of elements in buffer
+	* @param[in] pJSONDataBuffer - JSON Binary data.
+	* @return JSON Object Instance.
+	*/
+	virtual IJSONObject * ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8 * pJSONDataBuffer) = 0;
+
+	/**
 	* IUIEnvironment::CreateDataTable - creates an empty data table.
 	* @return Data Table Instance.
 	*/
@@ -7224,7 +8125,7 @@ public:
 	virtual IJSONObject * GetExternalEventParameters() = 0;
 
 	/**
-	* IUIEnvironment::GetExternalEventResults - Returns the external event results. This JSON Object will be passed on to an ext
+	* IUIEnvironment::GetExternalEventResults - Returns the external event results. This JSON Object will be passed on to the external API as result.
 	* @return Parameter value.
 	*/
 	virtual IJSONObject * GetExternalEventResults() = 0;

@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_handler.hpp"
 #include "amc_resourcepackage.hpp"
 #include "amc_accesscontrol.hpp"
+#include "amc_statesignalhandler.hpp"
 
 #include "amc_api_factory.hpp"
 #include "amc_api_sessionhandler.hpp"
@@ -59,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MACHINEDEFINITION_XMLSCHEMA "http://schemas.autodesk.com/amc/machinedefinitions/2020/02"
 #define MACHINEDEFINITIONTEST_XMLSCHEMA "http://schemas.autodesk.com/amc/testdefinitions/2020/02"
+
 
 using namespace LibMC::Impl;
 using namespace AMC;
@@ -95,9 +97,13 @@ CMCContext::CMCContext(LibMCData::PDataModel pDataModel)
     m_pAPI = std::make_shared<AMC::CAPI>();
     CAPIFactory factory (m_pAPI, m_pSystemState, m_InstanceList);
 
+    // Create API Documentation handler
+    m_pAPIDocumentationHandler = std::make_shared <CAPIHandler_APIDocs>(m_pSystemState->getClientHash());
+    m_pAPI->registerHandler(m_pAPIDocumentationHandler);
+
     // Create Client Dist Handler
     m_pClientDistHandler = std::make_shared <CAPIHandler_Root>(m_pSystemState->getClientHash ());
-    m_pAPI->registerHandler (m_pClientDistHandler);
+    m_pAPI->registerHandler(m_pClientDistHandler);
 
     // Proper threadsafe reading out of Base Temp directory (even if it might not matter at startup).
     auto pInstallationInformation = pDataModel->GetInstallationInformationObject();
@@ -164,6 +170,7 @@ void CMCContext::ParseConfiguration(const std::string & sXMLString)
             throw ELibMCNoContextException(LIBMC_ERROR_MISSINGMAINNODE);
         }
 
+
         auto xmlnsAttrib = mainNode.attribute("xmlns");
         if (xmlnsAttrib.empty())
             throw ELibMCNoContextException(LIBMC_ERROR_MISSINGXMLSCHEMA);
@@ -213,6 +220,28 @@ void CMCContext::ParseConfiguration(const std::string & sXMLString)
         {
             addDriver(driversNode);
         }
+
+        auto apiNode = mainNode.child("api");
+        bool bHasDocumentationResource = false;
+        if (!apiNode.empty()) {
+
+            auto documentationResourceAttrib = apiNode.attribute("documentationresource");
+            std::string sDocumentationResource = documentationResourceAttrib.as_string();
+
+            if (!sDocumentationResource.empty()) {
+
+                m_pSystemState->logger()->logMessage("Loading documentation resource: " + sDocumentationResource, LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
+
+                std::string sAPIDocumentationJSON = m_pCoreResourcePackage->readEntryUTF8String(sDocumentationResource);
+                m_pAPIDocumentationHandler->setCustomDocumentationJSON(sAPIDocumentationJSON);
+
+                bHasDocumentationResource = true;
+            }
+
+        }
+
+        if (!bHasDocumentationResource)
+            m_pSystemState->logger()->logMessage("No custom API definition given.", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
 
 
         m_pSystemState->logger()->logMessage("Initializing state machines...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
@@ -288,6 +317,15 @@ void CMCContext::LoadClientPackage(const std::string& sResourcePath)
     auto pPackage = CResourcePackage::makeFromStream(pStream, sResourcePath, AMCPACKAGE_SCHEMANAMESPACE);
 
     m_pClientDistHandler->LoadClientPackage (pPackage);
+}
+
+void CMCContext::LoadAPIDocumentation(const std::string& sResourcePath)
+{
+    auto pStream = std::make_shared<AMCCommon::CImportStream_Native>(sResourcePath);
+    auto pPackage = CResourcePackage::makeFromStream(pStream, sResourcePath, AMCPACKAGE_SCHEMANAMESPACE);
+
+    m_pAPIDocumentationHandler->LoadAPIDocsPackage(pPackage);
+
 }
 
 struct xml_sstream_writer : pugi::xml_writer
@@ -412,10 +450,13 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 
         std::list<CStateSignalParameter> SignalParameters;
         std::list<CStateSignalParameter> SignalResults;
+        uint32_t nSignalReactionTimeOut = 0;
+        uint32_t nSignalQueueSize = 0;
 
-        readSignalParameters(signalNameAttrib.as_string(), signalNode, SignalParameters, SignalResults);
+        readSignalParameters(signalNameAttrib.as_string(), signalNode, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
 
-        m_pSystemState->stateSignalHandler()->addSignalDefinition(sName, signalNameAttrib.as_string(), SignalParameters, SignalResults);
+        auto pStateSignalHandler = m_pSystemState->stateSignalHandler();
+        pStateSignalHandler->addSignalDefinition(sName, signalNameAttrib.as_string(), SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
 
     }
 
@@ -549,8 +590,35 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 }
 
 
-void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::list<AMC::CStateSignalParameter>& Parameters, std::list<AMC::CStateSignalParameter>& Results)
+void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::list<AMC::CStateSignalParameter>& Parameters, std::list<AMC::CStateSignalParameter>& Results, uint32_t & nSignalReactionTimeOut, uint32_t& nSignalQueueSize)
 {
+
+    auto reactionTimeOutAttrib = xmlNode.attribute("reactiontimeout");
+    if (!reactionTimeOutAttrib.empty()) {
+		nSignalReactionTimeOut = reactionTimeOutAttrib.as_uint();
+        if (nSignalReactionTimeOut < AMC_SIGNAL_MINREACTIONTIMEINMS)
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT, sSignalName);
+        if (nSignalReactionTimeOut > AMC_SIGNAL_MAXREACTIONTIMEINMS)
+            throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT, sSignalName);
+    }
+    else {
+		nSignalReactionTimeOut = 3600000; // Default value is 1 hour
+    }
+		
+
+    auto queueSizeAttrib = xmlNode.attribute("queuesize");
+    if (!queueSizeAttrib.empty()) {
+        nSignalQueueSize = queueSizeAttrib.as_uint();
+        if (nSignalQueueSize < AMC_SIGNAL_MINQUEUESIZE)
+            throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALQUEUESIZE, sSignalName);
+
+        if (nSignalQueueSize > AMC_SIGNAL_MAXQUEUESIZE)
+            throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALQUEUESIZE, sSignalName);
+    }
+    else {
+		nSignalQueueSize = 1; // Default value is 1
+    }
+
     auto signalParameters = xmlNode.children("parameter");
     for (pugi::xml_node signalParameter : signalParameters) {
         auto parameterNameAttrib = signalParameter.attribute("name");
@@ -924,12 +992,17 @@ IAPIRequestHandler* CMCContext::CreateAPIRequestHandler(const std::string& sURI,
             throw ELibMCNoContextException(LIBMC_ERROR_INVALIDAUTHORIZATION);
 
         if (bCreateNewSession) {
-            pAuth = pSessionHandler->createNewAuthenticationSession(m_pSystemState->getGlobalChronoInstance ());
+            auto pFrontendDefinition = m_pSystemState->uiHandler()->getFrontendDefinition();
+
+            pAuth = pSessionHandler->createNewAuthenticationSession(pFrontendDefinition);
             LibMCAssertNotNull(pAuth);
-            m_pSystemState->uiHandler()->populateClientVariables(pAuth->getClientVariableHandler().get());
+
+			auto pLegacyParameterHandler = pAuth->getLegacyParameterHandler(true);
+            if (pLegacyParameterHandler != nullptr)
+                m_pSystemState->uiHandler()->populateClientVariables (pLegacyParameterHandler);
         }
         else
-            pAuth = pSessionHandler->createEmptyAuthenticationSession(m_pSystemState->getGlobalChronoInstance());
+            pAuth = pSessionHandler->createEmptyAuthenticationSession();
 
     }
     else {

@@ -116,9 +116,8 @@
 		<error name="INVALIDOIEEXECUTIONMODE" code="1056" description="Invalid OIE Execution mode." />			
 		<error name="POSITIONMISSINGINOIERTCIDLIST" code="1057" description="Position missing in OIE RTC ID List." />	
 		<error name="INVALIDOIEDEVICESTATE" code="1058" description="Invalid OIE device state." />	
-		
-		
-		
+		<error name="FREQUENCYCHANGENOTALLOWED" code="1059" description="Frequency change not allowed." />	
+		<error name="INVALIDRECORDINGFREQUENCY" code="1060" description="Invalid recording frequency." />	
 		
 		
 	</errors>
@@ -136,6 +135,18 @@
 	   <option name="OIEVersion3" value="3" />
 	</enum>
 
+	<enum name="OIERecordingFrequency" description="Frequency to record OIE values.">
+	   <option name="InvalidFrequency" value="0" description="Invalid Frequency" />	   
+	   <option name="Record100kHz" value="1" description="Record with 100.000 entries per second (1:1)" />	   
+	   <option name="Record50kHz" value="2" description="Record with 50.000 entries per second (1:2)" />	   
+	   <option name="Record25kHz" value="4" description="Record with 25.000 entries per second (1:4)" />	   
+	   <option name="Record20kHz" value="5" description="Record with 20.000 entries per second (1:5)" />	   
+	   <option name="Record10kHz" value="10" description="Record with 10.000 entries per second (1:10)" />	   
+	   <option name="Record5kHz" value="20" description="Record with 5.000 entries per second (1:20)" />	   
+	   <option name="Record4kHz" value="25" description="Record with 4.000 entries per second (1:25)" />	   
+	   <option name="Record2kHz" value="50" description="Record with 2.000 entries per second (1:50)" />	   
+	   <option name="Record1kHz" value="100" description="Record with 1.000 entries per second (1:100)" />	   	
+	</enum>
 	
 <!--
 
@@ -474,6 +485,14 @@ Custom implementation
 		<method name="AppIsRunning" description="Returns if the device is running an app.">
 			<param name="Value" type="bool" pass="return" description="Flag if the device is running an app." />
 		</method>		
+		
+		<method name="SetRecordingFrequency" description="Sets the recording frequency for the OIE. Fails if App is already running. Fails if Version is not OIEVersion3.">
+			<param name="Frequency" type="enum" class="OIERecordingFrequency" pass="in" description="Frequency of data acquisition." />
+		</method>		
+		
+		<method name="GetRecordingFrequency" description="Returns the recording frequency for the OIE. Default is 100kHz. Returns invalid for all versions smaller than OIEVersion3.">
+			<param name="Frequency" type="enum" class="OIERecordingFrequency" pass="return" description="Frequency of data acquisition." />
+		</method>
 
 		<method name="GetRunningApp" description="Returns if the app that is currently running on the device. Fails if no app is running on the device.">
 			<param name="Name" type="string" pass="out" description="Name of app." />

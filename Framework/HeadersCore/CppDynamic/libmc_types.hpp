@@ -649,6 +649,49 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDCONTENTSTATEID 632 /** Invalid content state ID */
 #define LIBMC_ERROR_INVALIDWIDGETREQUEST 633 /** Invalid widget request */
 #define LIBMC_ERROR_SOURCEVARIABLENOTFOUND 634 /** Source variable not found */
+#define LIBMC_ERROR_INVALIDEVENTRETURNVALUES 635 /** Invalid event return values */
+#define LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT 636 /** Invalid modifier interpolation count */
+#define LIBMC_ERROR_INVALIDTOOLPATHMODIFIERTYPE 637 /** Invalid toolpath modifier type. */
+#define LIBMC_ERROR_INVALIDTOOLPATHMODIFIERFACTOR 638 /** Invalid toolpath modifier factor. */
+#define LIBMC_ERROR_BINARYMETADATARELATIONSHIPNOTFOUND 639 /** Binary metadata relationship not found. */
+#define LIBMC_ERROR_ENVIRONMENTVARIABLECHANGEAFTERSTART 640 /** Environment variable change after start. */
+#define LIBMC_ERROR_INVALIDENVIRONMENTVARIABLENAME 641 /** Invalid environment variable name. */
+#define LIBMC_ERROR_ENVIRONMENTVARIABLEALREADYEXISTS 642 /** Environment variable already exists. */
+#define LIBMC_ERROR_REACHEDENVIRONMENTVARIABLELIMIT 643 /** Reached Environment variable limit. */
+#define LIBMC_ERROR_ENVIRONMENTVARIABLENOTFOUND 644 /** Environment Variable not found. */
+#define LIBMC_ERROR_INVALIDENVIRONMENTVARIABLEINDEX 645 /** Invalid environment variable index. */
+#define LIBMC_ERROR_COULDNOTREADPROCESSPIPE 646 /** Could not read process pipe. */
+#define LIBMC_ERROR_PROCESSEXECUTABLENOTFOUND 647 /** Process executable not found. */
+#define LIBMC_ERROR_COULDNOTCREATEPROCESSPIPE 648 /** Could not create process pipe. */
+#define LIBMC_ERROR_CREATEPROCESSFAILED 649 /** Create process failed. */
+#define LIBMC_ERROR_PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST 650 /** Process executable directory does not exist. */
+#define LIBMC_ERROR_PROCESSCONTROLTIMEISINVALID 651 /** Process control time is invalid. */
+#define LIBMC_ERROR_PROCESSWORKINGDIRECTORYDOESNOTEXIST 652 /** Process working directory does not exist. */
+#define LIBMC_ERROR_PROCESSHASALREADYBEENSTARTED 653 /** Process has already been started. */
+#define LIBMC_ERROR_PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM 654 /** Process handling not implemented on Platform. */
+#define LIBMC_ERROR_INVALIDWRITEBUFFFERPOSITION 655 /** Invalid write buffer position. */
+#define LIBMC_ERROR_INVALIDWRITEBUFFERSIZE 656 /** Invalid write buffer size. */
+#define LIBMC_ERROR_CANNOTWRITETOFINISHEDFILE 658 /** Cannot write to finished file. */
+#define LIBMC_ERROR_WORKINGDIRECTORYHASBEENCLEANED 659 /** Working Directory has been cleaned. */
+#define LIBMC_ERROR_INVALIDCHARACTERINFILENAME 660 /** Invalid character in filename. */
+#define LIBMC_ERROR_WORKINGDIRECTORYCEASEDTOEXIST 661 /** Working directory ceased to exist. */
+#define LIBMC_ERROR_DIRECTORYALREADYEXISTS 662 /** Directory already exists. */
+#define LIBMC_ERROR_WORKINGDIRECTORYNOTFOUND 663 /** Working Directory not found. */
+#define LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT 664 /** Invalid Signal Reaction Timeout. */
+#define LIBMC_ERROR_INVALIDSIGNALQUEUESIZE 665 /** Invalid Signal queue size. */
+#define LIBMC_ERROR_SIGNALALREADYTRIGGERED 666 /** Signal has already been triggered. */
+#define LIBMC_ERROR_INVALIDQUERYPARAMETER 667 /** Invalid query parameter. */
+#define LIBMC_ERROR_DUPLICATEQUERYPARAMETER 668 /** Duplicate query parameter. */
+#define LIBMC_ERROR_QUERYPARAMETERNOTFOUND 669 /** Query parameter not found. */
+#define LIBMC_ERROR_INVALIDBUILDJOBSTATUSQUERY 670 /** Invalid build job status query. */
+#define LIBMC_ERROR_INVALIDNEWBUILDSTATUS 671 /** Invalid new build status. */
+#define LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON 672 /** Invalid Default OpenAPI JSON. */
+#define LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON 673 /** Invalid Custom OpenAPI JSON. */
+#define LIBMC_ERROR_USEDMODULEISLEGACY 674 /** Used module is legacy. */
+#define LIBMC_ERROR_TRIEDTOACCESSNULLCLIENTPARAMETERS 675 /** Tried to access null client parameters. */
+#define LIBMC_ERROR_INVALIDFRONTENDMODULEPATH 676 /** Invalid frontend module path. */
+#define LIBMC_ERROR_INVALIDFRONTENDATTRIBUTENAME 677 /** Invalid frontend attribute name. */
+#define LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME 678 /** Duplicate frontend attribute name. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1210,6 +1253,49 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDCONTENTSTATEID: return "Invalid content state ID";
     case LIBMC_ERROR_INVALIDWIDGETREQUEST: return "Invalid widget request";
     case LIBMC_ERROR_SOURCEVARIABLENOTFOUND: return "Source variable not found";
+    case LIBMC_ERROR_INVALIDEVENTRETURNVALUES: return "Invalid event return values";
+    case LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT: return "Invalid modifier interpolation count";
+    case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERTYPE: return "Invalid toolpath modifier type.";
+    case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERFACTOR: return "Invalid toolpath modifier factor.";
+    case LIBMC_ERROR_BINARYMETADATARELATIONSHIPNOTFOUND: return "Binary metadata relationship not found.";
+    case LIBMC_ERROR_ENVIRONMENTVARIABLECHANGEAFTERSTART: return "Environment variable change after start.";
+    case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLENAME: return "Invalid environment variable name.";
+    case LIBMC_ERROR_ENVIRONMENTVARIABLEALREADYEXISTS: return "Environment variable already exists.";
+    case LIBMC_ERROR_REACHEDENVIRONMENTVARIABLELIMIT: return "Reached Environment variable limit.";
+    case LIBMC_ERROR_ENVIRONMENTVARIABLENOTFOUND: return "Environment Variable not found.";
+    case LIBMC_ERROR_INVALIDENVIRONMENTVARIABLEINDEX: return "Invalid environment variable index.";
+    case LIBMC_ERROR_COULDNOTREADPROCESSPIPE: return "Could not read process pipe.";
+    case LIBMC_ERROR_PROCESSEXECUTABLENOTFOUND: return "Process executable not found.";
+    case LIBMC_ERROR_COULDNOTCREATEPROCESSPIPE: return "Could not create process pipe.";
+    case LIBMC_ERROR_CREATEPROCESSFAILED: return "Create process failed.";
+    case LIBMC_ERROR_PROCESSEXECUTABLEDIRECTORYDOESNOTEXIST: return "Process executable directory does not exist.";
+    case LIBMC_ERROR_PROCESSCONTROLTIMEISINVALID: return "Process control time is invalid.";
+    case LIBMC_ERROR_PROCESSWORKINGDIRECTORYDOESNOTEXIST: return "Process working directory does not exist.";
+    case LIBMC_ERROR_PROCESSHASALREADYBEENSTARTED: return "Process has already been started.";
+    case LIBMC_ERROR_PROCESSHANDLINGNOTIMPLEMENTEDONPLATFORM: return "Process handling not implemented on Platform.";
+    case LIBMC_ERROR_INVALIDWRITEBUFFFERPOSITION: return "Invalid write buffer position.";
+    case LIBMC_ERROR_INVALIDWRITEBUFFERSIZE: return "Invalid write buffer size.";
+    case LIBMC_ERROR_CANNOTWRITETOFINISHEDFILE: return "Cannot write to finished file.";
+    case LIBMC_ERROR_WORKINGDIRECTORYHASBEENCLEANED: return "Working Directory has been cleaned.";
+    case LIBMC_ERROR_INVALIDCHARACTERINFILENAME: return "Invalid character in filename.";
+    case LIBMC_ERROR_WORKINGDIRECTORYCEASEDTOEXIST: return "Working directory ceased to exist.";
+    case LIBMC_ERROR_DIRECTORYALREADYEXISTS: return "Directory already exists.";
+    case LIBMC_ERROR_WORKINGDIRECTORYNOTFOUND: return "Working Directory not found.";
+    case LIBMC_ERROR_INVALIDSIGNALREACTIONTIMEOUT: return "Invalid Signal Reaction Timeout.";
+    case LIBMC_ERROR_INVALIDSIGNALQUEUESIZE: return "Invalid Signal queue size.";
+    case LIBMC_ERROR_SIGNALALREADYTRIGGERED: return "Signal has already been triggered.";
+    case LIBMC_ERROR_INVALIDQUERYPARAMETER: return "Invalid query parameter.";
+    case LIBMC_ERROR_DUPLICATEQUERYPARAMETER: return "Duplicate query parameter.";
+    case LIBMC_ERROR_QUERYPARAMETERNOTFOUND: return "Query parameter not found.";
+    case LIBMC_ERROR_INVALIDBUILDJOBSTATUSQUERY: return "Invalid build job status query.";
+    case LIBMC_ERROR_INVALIDNEWBUILDSTATUS: return "Invalid new build status.";
+    case LIBMC_ERROR_INVALIDDEFAULTOPENAPIJSON: return "Invalid Default OpenAPI JSON.";
+    case LIBMC_ERROR_INVALIDCUSTOMOPENAPIJSON: return "Invalid Custom OpenAPI JSON.";
+    case LIBMC_ERROR_USEDMODULEISLEGACY: return "Used module is legacy.";
+    case LIBMC_ERROR_TRIEDTOACCESSNULLCLIENTPARAMETERS: return "Tried to access null client parameters.";
+    case LIBMC_ERROR_INVALIDFRONTENDMODULEPATH: return "Invalid frontend module path.";
+    case LIBMC_ERROR_INVALIDFRONTENDATTRIBUTENAME: return "Invalid frontend attribute name.";
+    case LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME: return "Duplicate frontend attribute name.";
     default: return "unknown error";
   }
 }
@@ -1247,10 +1333,16 @@ namespace LibMC {
     Testing = 3
   };
   
+  enum class eStreamConnectionType : LibMC_int32 {
+    JSONEventStream = 1,
+    JPEGImageStream = 2
+  };
+  
 } // namespace LibMC;
 
 // define legacy C-names for enums, structs and function types
 typedef LibMC::eLogLevel eLibMCLogLevel;
 typedef LibMC::eLogSubSystem eLibMCLogSubSystem;
+typedef LibMC::eStreamConnectionType eLibMCStreamConnectionType;
 
 #endif // __LIBMC_TYPES_HEADER_CPP

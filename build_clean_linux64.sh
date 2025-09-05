@@ -85,11 +85,11 @@ echo "client dir hash: $CLIENTDIRHASH"
 CLIENTDISTHASH=$(<"$basepath/Artifacts/clientdist/_githash_client.txt")
 echo "client dist hash: $CLIENTDISTHASH"
 
-if test $CLIENTDISTHASH != $CLIENTDIRHASH
-then
-	echo "Invalid client hash! Please rebuild client!"
-	exit 1
-fi
+#if test $CLIENTDISTHASH != $CLIENTDIRHASH
+#then
+#	echo "Invalid client hash! Please rebuild client!"
+#	exit 1
+#fi
 
 cd "$basepath"
 

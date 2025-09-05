@@ -166,12 +166,12 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @param[in] dMarkSpeed - Mark speed in mm/s
 * @param[in] dMinimalMarkSpeed - Minimal allowed mark speed in mm/s
 * @param[in] dJumpSpeed - Jump speed in mm/s
-* @param[in] dPower - Laser power in percent
+* @param[in] dPowerInWatts - Laser power in Watts
 * @param[in] dCornerTolerance - Allowed position deviation on corners (in mm.)
 * @param[in] dZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawpolyline(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPower, LibMCDriver_ScanLabSMC_double dCornerTolerance, LibMCDriver_ScanLabSMC_double dZValue);
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawpolyline(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPowerInWatts, LibMCDriver_ScanLabSMC_double dCornerTolerance, LibMCDriver_ScanLabSMC_double dZValue);
 
 /**
 * Writes a loop into the open list
@@ -182,12 +182,12 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @param[in] dMarkSpeed - Mark speed in mm/s
 * @param[in] dMinimalMarkSpeed - Minimal allowed mark speed in mm/s
 * @param[in] dJumpSpeed - Jump speed in mm/s
-* @param[in] dPower - Laser power in percent
+* @param[in] dPowerInWatts - Laser power in Watts
 * @param[in] dCornerTolerance - Allowed position deviation on corners (in mm.)
 * @param[in] dZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawloop(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPower, LibMCDriver_ScanLabSMC_double dCornerTolerance, LibMCDriver_ScanLabSMC_double dZValue);
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawloop(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D * pPointsBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dMinimalMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPowerInWatts, LibMCDriver_ScanLabSMC_double dCornerTolerance, LibMCDriver_ScanLabSMC_double dZValue);
 
 /**
 * Writes a list of hatches into the open list
@@ -197,11 +197,11 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @param[in] pHatchesBuffer - Hatch2D buffer of Hatches to draw.
 * @param[in] dMarkSpeed - Mark speed in mm/s
 * @param[in] dJumpSpeed - Jump speed in mm/s
-* @param[in] dPower - Laser power in percent
+* @param[in] dPowerInWatts - Laser power in Watts
 * @param[in] dZValue - Focus Z Value
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawhatches(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPower, LibMCDriver_ScanLabSMC_double dZValue);
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_drawhatches(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D * pHatchesBuffer, LibMCDriver_ScanLabSMC_double dMarkSpeed, LibMCDriver_ScanLabSMC_double dJumpSpeed, LibMCDriver_ScanLabSMC_double dPowerInWatts, LibMCDriver_ScanLabSMC_double dZValue);
 
 /**
 * Adds a layer instance to the current open list.
@@ -284,6 +284,22 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_getjobduration(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCDriver_ScanLabSMC_double * pJobDuration);
 
+/**
+* Starts the laser initialization sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelaserinitsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
+/**
+* Starts the laser shutdown sequence.
+*
+* @param[in] pSMCJob - SMCJob instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_executelasershutdownsequence(LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
+
 /*************************************************************************************************************************
  Class definition for SMCConfiguration
 **************************************************************************************************************************/
@@ -323,6 +339,42 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getwarnlevel(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, LibMCDriver_ScanLabSMC::eWarnLevel * pValue);
+
+/**
+* Sets the blend mode.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[in] eBlendMode - Blend Mode that the job shall be drawn in.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_setblendmode(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, LibMCDriver_ScanLabSMC::eBlendMode eBlendMode);
+
+/**
+* Returns the blend mode.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[out] pBlendMode - Blend Mode that the job shall be drawn in.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getblendmode(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, LibMCDriver_ScanLabSMC::eBlendMode * pBlendMode);
+
+/**
+* Sets if the computation shall be sent to the hardware.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[in] bSendToHardware - Flag, if the computation shall be sent to the hardware.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_setsendtohardware(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool bSendToHardware);
+
+/**
+* Returns if the computation shall be sent to the hardware.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[out] pSendToHardware - Flag, if the computation shall be sent to the hardware.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getsendtohardware(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pSendToHardware);
 
 /**
 * Sets the RTC Serial number. MUST be larger than 0.
@@ -496,17 +548,6 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_getipaddress(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, const LibMCDriver_ScanLabSMC_uint32 nIPAddressBufferSize, LibMCDriver_ScanLabSMC_uint32* pIPAddressNeededChars, char * pIPAddressBuffer);
 
 /**
-* Returns the Netmask of the RTC Card. Fails if driver has not been initialized.
-*
-* @param[in] pSMCContext - SMCContext instance.
-* @param[in] nNetmaskBufferSize - size of the buffer (including trailing 0)
-* @param[out] pNetmaskNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pNetmaskBuffer -  buffer of Netmask Value., may be NULL
-* @return error code or 0 (success)
-*/
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_getnetmask(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, const LibMCDriver_ScanLabSMC_uint32 nNetmaskBufferSize, LibMCDriver_ScanLabSMC_uint32* pNetmaskNeededChars, char * pNetmaskBuffer);
-
-/**
 * Returns serial number of card
 *
 * @param[in] pSMCContext - SMCContext instance.
@@ -594,11 +635,11 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @param[in] pSMCContext - SMCContext instance.
 * @param[in] dStartPositionX - Start position in X.
 * @param[in] dStartPositionY - Start position in Y.
-* @param[in] eBlendMode - Blend Mode that the job shall be drawn in.
+* @param[in] dMaxPowerInWatts - Maximum laser power in Watts.
 * @param[out] pJobInstance - SMC Job Instance.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_beginjob(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, LibMCDriver_ScanLabSMC_double dStartPositionX, LibMCDriver_ScanLabSMC_double dStartPositionY, LibMCDriver_ScanLabSMC::eBlendMode eBlendMode, LibMCDriver_ScanLabSMC_SMCJob * pJobInstance);
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_beginjob(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, LibMCDriver_ScanLabSMC_double dStartPositionX, LibMCDriver_ScanLabSMC_double dStartPositionY, LibMCDriver_ScanLabSMC_double dMaxPowerInWatts, LibMCDriver_ScanLabSMC_SMCJob * pJobInstance);
 
 /**
 * Returns the job that is not finalized yet. Returns null if no job is active.
@@ -615,9 +656,10 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @param[in] pSMCContext - SMCContext instance.
 * @param[in] pStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
 * @param[in] nLayerIndex - Layer index of the build file.
+* @param[in] dMaxPowerInWatts - Maximum laser power in Watts.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_drawlayer(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, const char * pStreamUUID, LibMCDriver_ScanLabSMC_uint32 nLayerIndex);
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smccontext_drawlayer(LibMCDriver_ScanLabSMC_SMCContext pSMCContext, const char * pStreamUUID, LibMCDriver_ScanLabSMC_uint32 nLayerIndex, LibMCDriver_ScanLabSMC_double dMaxPowerInWatts);
 
 /*************************************************************************************************************************
  Class definition for Driver_ScanLabSMC
@@ -632,6 +674,15 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setdllresources(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pSMCDLLResourceName, const char * pRTCDLLResourceName);
+
+/**
+* Sets the default resource name of the RTC Service DLL. Overrides custom resource data if set before.
+*
+* @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
+* @param[in] pRTCServiceDLLResourceName - Resource name of RTC Service DLL
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setrtcservicedllresourcename(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, const char * pRTCServiceDLLResourceName);
 
 /**
 * Sets the default resource name of auxiliary resource DLLs. Overrides custom resource data if set before.
@@ -653,6 +704,16 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setcustomdlldata(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pSMCDLLResourceDataBuffer, LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCDLLResourceDataBuffer);
+
+/**
+* Sets custom binaries for the needed RTC Service DLLs. Overrides custom resource data if set before.
+*
+* @param[in] pDriver_ScanLabSMC - Driver_ScanLabSMC instance.
+* @param[in] nRTCServiceDLLResourceDataBufferSize - Number of elements in buffer
+* @param[in] pRTCServiceDLLResourceDataBuffer - uint8 buffer of Resource data of RTC Service DLL
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_driver_scanlabsmc_setrtcservicedllresourcedata(LibMCDriver_ScanLabSMC_Driver_ScanLabSMC pDriver_ScanLabSMC, LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8 * pRTCServiceDLLResourceDataBuffer);
 
 /**
 * Sets the custom binary for auxiliary resource DLLs. Overrides custom resource data if set before.

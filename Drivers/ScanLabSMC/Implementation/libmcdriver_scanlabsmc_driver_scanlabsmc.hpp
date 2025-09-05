@@ -65,15 +65,20 @@ private:
     
     std::vector<uint8_t> m_SMCDLLResourceData;
     std::vector<uint8_t> m_RTCDLLResourceData;
+    std::vector<uint8_t> m_RTCServiceDLLResourceData;
     std::vector<uint8_t> m_XercesDLLResourceData;
 
     LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
     LibMCEnv::PWorkingDirectory m_pDLLDirectory;
     LibMCEnv::PWorkingFile m_pSMCDLL;
     LibMCEnv::PWorkingFile m_pRTCDLL;
+    LibMCEnv::PWorkingFile m_pRTCServiceDLL;
     LibMCEnv::PWorkingFile m_pXercesDLL;
-
+    LibMCEnv::PWorkingFile m_pJournalFile;
+    
     PScanLabSMCSDK m_pSDK;
+
+    bool m_bEnableJournaling;
 
     std::map<std::string, PSMCContextInstance> m_pContextMap;
 
@@ -85,10 +90,14 @@ public:
 
 	void SetDLLResources(const std::string& sSMCDLLResourceName, const std::string& sRTCDLLResourceName) override;
 
+    void SetRTCServiceDLLResourceName(const std::string& sRTCServiceDLLResourceName) override;
+
 	void SetXercesDLLResource(const std::string& sXercesDLLResourceName) override;
 
-	void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer) override;
+    void SetCustomDLLData(const LibMCDriver_ScanLabSMC_uint64 nSMCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pSMCDLLResourceDataBuffer, const LibMCDriver_ScanLabSMC_uint64 nRTCDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCDLLResourceDataBuffer) override;
 
+    void SetRTCServiceDLLResourceData(const LibMCDriver_ScanLabSMC_uint64 nRTCServiceDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pRTCServiceDLLResourceDataBuffer) override;
+	
 	void SetCustomXercesDLLData(const LibMCDriver_ScanLabSMC_uint64 nXercesDLLResourceDataBufferSize, const LibMCDriver_ScanLabSMC_uint8* pXercesDLLResourceDataBuffer) override;
 
 	void LoadSDK() override;

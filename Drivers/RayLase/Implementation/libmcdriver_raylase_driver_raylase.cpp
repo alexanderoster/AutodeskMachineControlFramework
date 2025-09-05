@@ -42,6 +42,7 @@ Abstract: This is a stub class definition of CDriver_Raylase
 using namespace LibMCDriver_Raylase::Impl;
 
 #include <set>
+//#include <iostream>
 
 /*************************************************************************************************************************
  Class definition of CDriver_Raylase 
@@ -224,9 +225,7 @@ bool CDriver_Raylase::IsSimulationMode()
     return m_bSimulationMode;
 }
 
-
-
-void CDriver_Raylase::DrawLayerMultiLaser(const std::string& sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase_uint32 nScanningTimeoutInMS)
+void CDriver_Raylase::DrawLayerMultiLaserWithCallback(const std::string& sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData)
 {
     std::map <uint32_t, PRaylaseCardImpl> laserMap;
     if (m_bSimulationMode)
@@ -239,13 +238,13 @@ void CDriver_Raylase::DrawLayerMultiLaser(const std::string& sStreamUUID, const 
         if (nLaserIndex != 0) {
             auto iExistingIter = laserMap.find(nLaserIndex);
             if (iExistingIter != laserMap.end())
-                throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_ASSIGNEDDUPLICATELASERINDEX, "a duplicate laser index was assigned: " + std::to_string (nLaserIndex) + " at cards " + pCard->getCardName () + " / " + iExistingIter->second->getCardName ());
+                throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_ASSIGNEDDUPLICATELASERINDEX, "a duplicate laser index was assigned: " + std::to_string(nLaserIndex) + " at cards " + pCard->getCardName() + " / " + iExistingIter->second->getCardName());
 
-            laserMap.insert (std::make_pair (nLaserIndex, pCard));
+            laserMap.insert(std::make_pair(nLaserIndex, pCard));
         }
     }
 
-    if (laserMap.empty ())
+    if (laserMap.empty())
         throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_NOLASERINDICESASSIGNED);
 
     auto pToolpathAccessor = m_pDriverEnvironment->CreateToolpathAccessor(sStreamUUID);
@@ -253,50 +252,163 @@ void CDriver_Raylase::DrawLayerMultiLaser(const std::string& sStreamUUID, const 
 
     std::vector<PRaylaseCardList> executionLists;
 
-    uint64_t nStartTime = m_pDriverEnvironment->GetGlobalTimerInMilliseconds();
+    uint32_t nAbortRetryMilliseconds = 100;
+    uint32_t nAbortRetryCount = 10;
 
-    for (auto iCardIter : laserMap) {
-        auto pCard = iCardIter.second;
-        uint32_t nLaserIndex = pCard->getAssignedLaserIndex();
+    try {
 
-        auto pList = pCard->createNewList();
-        pList->addLayerToList(pLayer, nLaserIndex, true);
-        pList->setListOnCard(0);
-        pList->executeList(0);
+        uint64_t nStartTime = m_pDriverEnvironment->GetGlobalTimerInMilliseconds();
 
-        executionLists.push_back(pList);
-    }
+        for (auto iCardIter : laserMap) {
+            auto pCard = iCardIter.second;
+            uint32_t nLaserIndex = pCard->getAssignedLaserIndex();
 
-    
-    std::set<CRaylaseCardList*> listsThatAreDone;
+            auto pList = pCard->createNewList();
+            executionLists.push_back(pList);
 
-    while (listsThatAreDone.size() < executionLists.size ()) {
+            pList->addLayerToList(pLayer, nLaserIndex, true);
+            pList->setListOnCard(0);
+            pList->executeList(0);
 
-        for (auto pList : executionLists) {
+        }
 
-            auto iFinishedIter = listsThatAreDone.find(pList.get());
-            if (iFinishedIter == listsThatAreDone.end()) {
 
+        std::set<CRaylaseCardList*> listsThatAreDone;
+
+        while (listsThatAreDone.size() < executionLists.size()) {
+
+            // Check lists finishing
+            for (auto pList : executionLists) {
+
+                auto iFinishedIter = listsThatAreDone.find(pList.get());
+                if (iFinishedIter == listsThatAreDone.end()) {
+
+                    bool listDone = pList->waitForExecution(100);
+                    if (listDone) {
+                        listsThatAreDone.insert(pList.get());
+                    }
+
+                }
+            }
+
+            // Check for cancellation
+            if (pCancellationCallback != nullptr) {
 
                 uint64_t nCurrentTime = m_pDriverEnvironment->GetGlobalTimerInMilliseconds();
                 if (nCurrentTime < nStartTime)
                     throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_INVALIDSYSTEMTIMING);
 
                 uint64_t nMillisecondsPassed = nCurrentTime - nStartTime;
-                if (nMillisecondsPassed > nScanningTimeoutInMS)
-                    throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_SCANNINGTIMEOUT);
+                uint32_t bCancel = 0;
+                //std::cout << "asking for cancellation: " << nMillisecondsPassed << std::endl;
+                pCancellationCallback(nMillisecondsPassed, pUserData, (bool*)&bCancel);
+                //std::cout << "returns: " << bCancel << std::endl;
 
-                bool listDone = pList->waitForExecution(100);
-                if (listDone) {
-                    listsThatAreDone.insert (pList.get ());
+                if (bCancel) {
+
+                    for (auto pList : executionLists) {
+
+                        auto iFinishedIter = listsThatAreDone.find(pList.get());
+                        if (iFinishedIter == listsThatAreDone.end()) {
+                            pList->abortExecution();
+                        }
+                    }
+                    throw ELibMCDriver_RaylaseInterfaceException(LIBMCDRIVER_RAYLASE_ERROR_SCANNINGCANCELED);
                 }
-
             }
-        }        
+
+        }
+
+       
+
+        auto deletionLists = executionLists;
+        executionLists.clear();
+        for (auto pList : deletionLists) {
+
+            for (uint32_t nRetryIndex = 0; nRetryIndex < nAbortRetryCount; nRetryIndex++) {
+                if (!pList->executionIsInProgress ())
+                    break;
+
+                m_pDriverEnvironment->Sleep(nAbortRetryMilliseconds);
+            }
+            
+            pList->deleteListListOnCard();
+        }
     }
 
-    for (auto pList : executionLists) {
-        pList->deleteListListOnCard();
+    catch (std::exception & E) {
+        m_pDriverEnvironment->LogMessage("Raylase Exposure exception: " + std::string (E.what ()));
+
+        m_pDriverEnvironment->LogMessage("Aborting executions...");
+        for (auto pList : executionLists) {
+            try {
+                pList->abortExecution();
+            }
+            catch (std::exception& abortE) {
+                m_pDriverEnvironment->LogMessage("Could not abort execution: " + std::string(abortE.what()));
+            }
+        }
+
+        auto deletionLists = executionLists;
+        executionLists.clear();
+        for (auto pList : deletionLists) {
+
+            for (uint32_t nRetryIndex = 0; nRetryIndex < nAbortRetryCount; nRetryIndex++) {
+                if (!pList->executionIsInProgress())
+                    break;
+
+                m_pDriverEnvironment->Sleep(nAbortRetryMilliseconds);
+            }
+
+            if (!pList->executionIsInProgress()) {
+                pList->deleteListListOnCard();
+            }
+            else {
+                m_pDriverEnvironment->LogMessage("Could not delete list that was in progress!");
+            }
+        }
+        throw;
     }
 
 }
+
+
+
+
+void onCheckMultilaserScanningTimeout(uint64_t nMillisecondsPassed, void* pUserData, bool* pbCancel)
+{
+    if (pbCancel) {
+        *pbCancel = false;
+
+        if (pUserData) {
+            sScanningTimeoutData* pTimeOutData = (sScanningTimeoutData*)pUserData;
+            uint64_t nTimeoutInMilliseconds = pTimeOutData->m_nTimeOutInMilliseconds;
+
+            if (nMillisecondsPassed > nTimeoutInMilliseconds) {
+                if (pTimeOutData->m_pDriverEnvironment) {
+                    pTimeOutData->m_pDriverEnvironment->LogMessage ("Raylase timeout of " + std::to_string (nTimeoutInMilliseconds) + "ms has passed.");                                        
+                }
+
+                *pbCancel = true;
+
+            }
+        }
+        else {
+            *pbCancel = true;
+
+        }
+    }
+
+}
+
+void CDriver_Raylase::DrawLayerMultiLaser(const std::string& sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase_uint32 nScanningTimeoutInMS)
+{
+    sScanningTimeoutData userData;
+    userData.m_nTimeOutInMilliseconds = nScanningTimeoutInMS;
+    userData.m_pDriverEnvironment = m_pDriverEnvironment.get();
+
+    DrawLayerMultiLaserWithCallback(sStreamUUID, nLayerIndex, bFailIfNonAssignedDataExists, onCheckMultilaserScanningTimeout, (void*)&userData);
+
+
+}
+ 

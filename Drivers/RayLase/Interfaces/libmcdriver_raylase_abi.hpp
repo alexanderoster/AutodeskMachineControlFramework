@@ -150,9 +150,10 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_rayla
 * Initializes the NLight laser via the driver board.
 *
 * @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[in] bEnableAutomaticLaserModeSwitching - If true, laser modes will be used from the corresponding build file.
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_initializelaser(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard);
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_initializelaser(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool bEnableAutomaticLaserModeSwitching);
 
 /**
 * Disables the NLight laser via the driver board.
@@ -161,6 +162,68 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nligh
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_disablelaser(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard);
+
+/**
+* Returns if the automatic laser mode switching is enabled.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pEnableAutomaticLaserModeSwitching - If true, laser modes will be used from the corresponding build file.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_automaticlasermodeswitchingisenabled(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pEnableAutomaticLaserModeSwitching);
+
+/**
+* Enables the Automatic laser mode switching.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_enableautomaticlasermodeswitching(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard);
+
+/**
+* Disables the Automatic laser mode switching.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_disableautomaticlasermodeswitching(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard);
+
+/**
+* Sets an override for the maximum available laser power used for a specific laser mode. Can not be changed for laser mode 0.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+* @param[in] dMaxPowerInWatts - Maximum laser power in Watts. MUST be larger than 1.0.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_setlasermodemaxpoweroverride(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 nLaserMode, LibMCDriver_Raylase_double dMaxPowerInWatts);
+
+/**
+* Gets an override for the maximum available laser power used for a specific laser mode. Returns default max laser power for laser mode 0 or if no laser mode override has been set.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[in] nLaserMode - The laser mode that shall be queried. MUST be between 0 and 7.
+* @param[out] pMaxPowerInWatts - Maximum laser power in Watts for this Laser Mode.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_getlasermodemaxpoweroverride(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 nLaserMode, LibMCDriver_Raylase_double * pMaxPowerInWatts);
+
+/**
+* Clears a power override for a specific laser mode.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_clearlasermodemaxpoweroverride(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 nLaserMode);
+
+/**
+* Clears all max power overrides for the different laser modes.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_clearalllasermodemaxpoweroverrides(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard);
 
 /**
 * Clears any error state in the NLight laser via the driver board.
@@ -180,6 +243,15 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nligh
 LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_setlasermode(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 nLaserMode);
 
 /**
+* Returns the raw device state as bit field. See nLight extension board documentation for details.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pDeviceState - Device state bit field.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_getrawdevicestate(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 * pDeviceState);
+
+/**
 * Checks, if the laser is in an error state.
 *
 * @param[in] pNLightDriverBoard - NLightDriverBoard instance.
@@ -187,6 +259,71 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nligh
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_haserror(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pErrorState);
+
+/**
+* Checks, if the laser is in a ready state.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pReadyState - Returns true if the laser has the ready state flag set.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_isready(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pReadyState);
+
+/**
+* Checks, if the laser state can react to external control.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pExtControlReadyState - Returns true if the laser has the ExtControlReady state flag set.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_externalcontrolisready(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pExtControlReadyState);
+
+/**
+* Checks, if the laser is in emission state.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pEmissionState - Returns true if the laser has the emission on flag set.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_isemission(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pEmissionState);
+
+/**
+* Checks, if the laser firmware is ready.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pFirmwareReadyState - Returns true if the laser has the firmware ready flag set.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_isfirmwareready(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pFirmwareReadyState);
+
+/**
+* Checks, if the laser water flow is on.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pWaterFlowState - Returns true if the laser has the water flow flag set.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_iswaterflow(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, bool * pWaterFlowState);
+
+/**
+* Sets the mode change delays.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[in] nModeChangeSignalDelayInMicroseconds - New mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+* @param[in] nModeChangeApplyDelayInMicroseconds - New mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_setmodechangedelays(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 nModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32 nModeChangeApplyDelayInMicroseconds);
+
+/**
+* Returns the mode change delays.
+*
+* @param[in] pNLightDriverBoard - NLightDriverBoard instance.
+* @param[out] pModeChangeSignalDelayInMicroseconds - Current mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+* @param[out] pModeChangeApplyDelayInMicroseconds - Current mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_nlightdriverboard_getmodechangedelays(LibMCDriver_Raylase_NLightDriverBoard pNLightDriverBoard, LibMCDriver_Raylase_uint32 * pModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32 * pModeChangeApplyDelayInMicroseconds);
 
 /*************************************************************************************************************************
  Class definition for RaylaseCard
@@ -325,7 +462,56 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_rayla
 LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_getassignedlaserindex(LibMCDriver_Raylase_RaylaseCard pRaylaseCard, LibMCDriver_Raylase_uint32 * pLaserIndex);
 
 /**
-* Draws a layer of a build stream. Blocks until the layer is drawn.
+* Adds a part suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+*
+* @param[in] pRaylaseCard - RaylaseCard instance.
+* @param[in] pPartUUID - UUID of a part. Fails if not a valid UUID.
+* @param[in] eSuppressionMode - Part suppression mode. If DontSuppress is given, the part is removed from the list.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_addpartsuppression(LibMCDriver_Raylase_RaylaseCard pRaylaseCard, const char * pPartUUID, LibMCDriver_Raylase::ePartSuppressionMode eSuppressionMode);
+
+/**
+* Returns the suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+*
+* @param[in] pRaylaseCard - RaylaseCard instance.
+* @param[in] pPartUUID - UUID of a part. Fails if not a valid UUID.
+* @param[out] pSuppressionMode - Part suppression mode.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_getpartsuppressionmode(LibMCDriver_Raylase_RaylaseCard pRaylaseCard, const char * pPartUUID, LibMCDriver_Raylase::ePartSuppressionMode * pSuppressionMode);
+
+/**
+* Clears all part suppressions that have been set before.
+*
+* @param[in] pRaylaseCard - RaylaseCard instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_clearallpartsuppressions(LibMCDriver_Raylase_RaylaseCard pRaylaseCard);
+
+/**
+* Removes a part suppression that was added before. Does nothing if part suppression does not exist.
+*
+* @param[in] pRaylaseCard - RaylaseCard instance.
+* @param[in] pPartUUID - UUID of a part
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_removepartsuppression(LibMCDriver_Raylase_RaylaseCard pRaylaseCard, const char * pPartUUID);
+
+/**
+* Draws a layer of a build stream with a progress callback. Blocks until the layer is drawn.
+*
+* @param[in] pRaylaseCard - RaylaseCard instance.
+* @param[in] pStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+* @param[in] nLayerIndex - Layer index of the build file.
+* @param[in] pCancellationCallback - A callback that is repeatedly checked for canceling the exposure.
+* @param[in] pUserData - pointer to arbitrary user data that is passed without modification to the callback.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_raylasecard_drawlayerwithcallback(LibMCDriver_Raylase_RaylaseCard pRaylaseCard, const char * pStreamUUID, LibMCDriver_Raylase_uint32 nLayerIndex, LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, LibMCDriver_Raylase_pvoid pUserData);
+
+/**
+* Draws a layer of a build stream with timeout. Blocks until the layer is drawn.
 *
 * @param[in] pRaylaseCard - RaylaseCard instance.
 * @param[in] pStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
@@ -458,6 +644,19 @@ LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_drive
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_driver_raylase_disconnectcard(LibMCDriver_Raylase_Driver_Raylase pDriver_Raylase, const char * pCardName);
+
+/**
+* Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.
+*
+* @param[in] pDriver_Raylase - Driver_Raylase instance.
+* @param[in] pStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+* @param[in] nLayerIndex - Layer index of the build file.
+* @param[in] bFailIfNonAssignedDataExists - If true, the call will fail in case a layer contains data that is not assigned to any defined scanner card.
+* @param[in] pCancellationCallback - A callback that is repeatedly checked for canceling the exposure.
+* @param[in] pUserData - pointer to arbitrary user data that is passed without modification to the callback.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_RAYLASE_DECLSPEC LibMCDriver_RaylaseResult libmcdriver_raylase_driver_raylase_drawlayermultilaserwithcallback(LibMCDriver_Raylase_Driver_Raylase pDriver_Raylase, const char * pStreamUUID, LibMCDriver_Raylase_uint32 nLayerIndex, bool bFailIfNonAssignedDataExists, LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, LibMCDriver_Raylase_pvoid pUserData);
 
 /**
 * Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.

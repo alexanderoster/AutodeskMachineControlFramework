@@ -133,41 +133,6 @@ CUIModule_ContentParameterList::~CUIModule_ContentParameterList()
 
 }
 
-void CUIModule_ContentParameterList::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
-{
-	object.addString(AMC_API_KEY_UI_ITEMTYPE, "parameterlist");
-	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
-	object.addString(AMC_API_KEY_UI_ITEMLOADINGTEXT, m_sLoadingText);
-	object.addInteger(AMC_API_KEY_UI_ITEMENTRIESPERPAGE, m_nEntriesPerPage);
-	
-	CJSONWriterArray headersArray(writer);	
-
-	CJSONWriterObject headerObject1(writer);
-	headerObject1.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterDescCaption);
-	headerObject1.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERDESCRIPTION);
-	headersArray.addObject(headerObject1);
-
-	CJSONWriterObject headerObject2(writer);
-	headerObject2.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterValueCaption);
-	headerObject2.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERVALUE);
-	headersArray.addObject(headerObject2);
-
-	CJSONWriterObject headerObject3(writer);
-	headerObject3.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterGroupCaption);
-	headerObject3.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERGROUP);
-	headersArray.addObject(headerObject3);
-
-	CJSONWriterObject headerObject4(writer);
-	headerObject4.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterSystemCaption);
-	headerObject4.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERSYSTEM);
-	headersArray.addObject(headerObject4);
-
-	object.addArray(AMC_API_KEY_UI_ITEMHEADERS, headersArray);
-
-	CJSONWriterArray entriesArray(writer);
-	object.addArray(AMC_API_KEY_UI_ITEMENTRIES, entriesArray);
-
-}
 
 
 void CUIModule_ContentParameterList::addParameterGroupToJSON(CJSONWriter& writer, PParameterGroup pParameterGroup, CJSONWriterArray& entryArray, bool fullGroup, const std::string& sParameterName, const std::string& sParameterHandlerDescription)
@@ -215,8 +180,41 @@ void CUIModule_ContentParameterList::addParameterGroupToJSON(CJSONWriter& writer
 }
 
 
-void CUIModule_ContentParameterList::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModule_ContentParameterList::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
+
+	object.addString(AMC_API_KEY_UI_ITEMTYPE, "parameterlist");
+	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
+	object.addString(AMC_API_KEY_UI_ITEMLOADINGTEXT, m_sLoadingText);
+	object.addInteger(AMC_API_KEY_UI_ITEMENTRIESPERPAGE, m_nEntriesPerPage);
+
+	CJSONWriterArray headersArray(writer);
+
+	CJSONWriterObject headerObject1(writer);
+	headerObject1.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterDescCaption);
+	headerObject1.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERDESCRIPTION);
+	headersArray.addObject(headerObject1);
+
+	CJSONWriterObject headerObject2(writer);
+	headerObject2.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterValueCaption);
+	headerObject2.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERVALUE);
+	headersArray.addObject(headerObject2);
+
+	CJSONWriterObject headerObject3(writer);
+	headerObject3.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterGroupCaption);
+	headerObject3.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERGROUP);
+	headersArray.addObject(headerObject3);
+
+	CJSONWriterObject headerObject4(writer);
+	headerObject4.addString(AMC_API_KEY_UI_ITEMTEXT, m_sParameterSystemCaption);
+	headerObject4.addString(AMC_API_KEY_UI_ITEMVALUE, AMC_API_KEY_UI_ITEMPARAMETERSYSTEM);
+	headersArray.addObject(headerObject4);
+
+	object.addArray(AMC_API_KEY_UI_ITEMHEADERS, headersArray);
+
+	CJSONWriterArray entriesArray(writer);
+	object.addArray(AMC_API_KEY_UI_ITEMENTRIES, entriesArray);
+
 
 	CJSONWriterArray entryArray(writer);
 

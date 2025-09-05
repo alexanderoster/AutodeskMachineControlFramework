@@ -221,6 +221,17 @@ public:
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDFIELDDATASIZE: return "INVALIDFIELDDATASIZE";
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTLASERMODE: return "INVALIDNLIGHTLASERMODE";
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDVARIABLEINDEX: return "INVALIDVARIABLEINDEX";
+			case LIBMCDRIVER_RAYLASE_ERROR_SCANNINGCANCELED: return "SCANNINGCANCELED";
+			case LIBMCDRIVER_RAYLASE_ERROR_UNKNOWNENUMVALUE: return "UNKNOWNENUMVALUE";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTAFXMODE: return "INVALIDNLIGHTAFXMODE";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGESIGNALDELAY: return "INVALIDNLIGHTMODECHANGESIGNALDELAY";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGEAPPLYDELAY: return "INVALIDNLIGHTMODECHANGEAPPLYDELAY";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTFIRMWAREISNOTREADY: return "NLIGHTFIRMWAREISNOTREADY";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTEXTERNALCONTROLNOTREADY: return "NLIGHTEXTERNALCONTROLNOTREADY";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERNOTREADYAFTERSYSTEMON: return "NLIGHTLASERNOTREADYAFTERSYSTEMON";
+			case LIBMCDRIVER_RAYLASE_ERROR_COULDNOTRECEIVESPIPACKET: return "COULDNOTRECEIVESPIPACKET";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDLASERMODE: return "INVALIDLASERMODE";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERMODEHASNOPOWEROVERRIDE: return "NLIGHTLASERMODEHASNOPOWEROVERRIDE";
 		}
 		return "UNKNOWN";
 	}
@@ -272,6 +283,17 @@ public:
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDFIELDDATASIZE: return "Invalid field data size";
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTLASERMODE: return "Invalid nLight Laser Mode";
 			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDVARIABLEINDEX: return "Invalid Variable Index";
+			case LIBMCDRIVER_RAYLASE_ERROR_SCANNINGCANCELED: return "Scanning canceled";
+			case LIBMCDRIVER_RAYLASE_ERROR_UNKNOWNENUMVALUE: return "Unknown enum value";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTAFXMODE: return "Invalid nLight afx mode";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGESIGNALDELAY: return "Invalid nLight mode change signal delay";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDNLIGHTMODECHANGEAPPLYDELAY: return "Invalid nLight mode change apply delay";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTFIRMWAREISNOTREADY: return "nLight Firmware is not ready";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTEXTERNALCONTROLNOTREADY: return "nLight External control is not ready";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERNOTREADYAFTERSYSTEMON: return "nLight Laser is not ready after SYSTEMON";
+			case LIBMCDRIVER_RAYLASE_ERROR_COULDNOTRECEIVESPIPACKET: return "Could not receive SPI Packet";
+			case LIBMCDRIVER_RAYLASE_ERROR_INVALIDLASERMODE: return "Invalid laser mode";
+			case LIBMCDRIVER_RAYLASE_ERROR_NLIGHTLASERMODEHASNOPOWEROVERRIDE: return "nLight laser mode has no power override";
 		}
 		return "unknown error";
 	}
@@ -512,11 +534,26 @@ public:
 	{
 	}
 	
-	inline void InitializeLaser();
+	inline void InitializeLaser(const bool bEnableAutomaticLaserModeSwitching);
 	inline void DisableLaser();
+	inline bool AutomaticLaserModeSwitchingIsEnabled();
+	inline void EnableAutomaticLaserModeSwitching();
+	inline void DisableAutomaticLaserModeSwitching();
+	inline void SetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode, const LibMCDriver_Raylase_double dMaxPowerInWatts);
+	inline LibMCDriver_Raylase_double GetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode);
+	inline void ClearLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode);
+	inline void ClearAllLaserModeMaxPowerOverrides();
 	inline void ClearError();
 	inline void SetLaserMode(const LibMCDriver_Raylase_uint32 nLaserMode);
+	inline LibMCDriver_Raylase_uint32 GetRawDeviceState();
 	inline bool HasError();
+	inline bool IsReady();
+	inline bool ExternalControlIsReady();
+	inline bool IsEmission();
+	inline bool IsFirmwareReady();
+	inline bool IsWaterFlow();
+	inline void SetModeChangeDelays(const LibMCDriver_Raylase_uint32 nModeChangeSignalDelayInMicroseconds, const LibMCDriver_Raylase_uint32 nModeChangeApplyDelayInMicroseconds);
+	inline void GetModeChangeDelays(LibMCDriver_Raylase_uint32 & nModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32 & nModeChangeApplyDelayInMicroseconds);
 };
 	
 /*************************************************************************************************************************
@@ -548,6 +585,11 @@ public:
 	inline void GetLaserStatus(bool & bPilotIsEnabled, bool & bLaserIsArmed, bool & bLaserAlarm);
 	inline void AssignLaserIndex(const LibMCDriver_Raylase_uint32 nLaserIndex);
 	inline LibMCDriver_Raylase_uint32 GetAssignedLaserIndex();
+	inline void AddPartSuppression(const std::string & sPartUUID, const ePartSuppressionMode eSuppressionMode);
+	inline ePartSuppressionMode GetPartSuppressionMode(const std::string & sPartUUID);
+	inline void ClearAllPartSuppressions();
+	inline void RemovePartSuppression(const std::string & sPartUUID);
+	inline void DrawLayerWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData);
 	inline void DrawLayer(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const LibMCDriver_Raylase_uint32 nScanningTimeoutInMS);
 	inline void SetRotationalCoordinateTransform(const LibMCDriver_Raylase_double dM11, const LibMCDriver_Raylase_double dM12, const LibMCDriver_Raylase_double dM21, const LibMCDriver_Raylase_double dM22);
 	inline void GetRotationalCoordinateTransform(LibMCDriver_Raylase_double & dM11, LibMCDriver_Raylase_double & dM12, LibMCDriver_Raylase_double & dM21, LibMCDriver_Raylase_double & dM22);
@@ -577,6 +619,7 @@ public:
 	inline PRaylaseCard GetConnectedCard(const std::string & sCardName);
 	inline bool CardExists(const std::string & sCardName);
 	inline void DisconnectCard(const std::string & sCardName);
+	inline void DrawLayerMultiLaserWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData);
 	inline void DrawLayerMultiLaser(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase_uint32 nScanningTimeoutInMS);
 };
 	
@@ -711,9 +754,24 @@ public:
 		pWrapperTable->m_RaylaseCommandLog_RetrieveAsString = nullptr;
 		pWrapperTable->m_NLightDriverBoard_InitializeLaser = nullptr;
 		pWrapperTable->m_NLightDriverBoard_DisableLaser = nullptr;
+		pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled = nullptr;
+		pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching = nullptr;
+		pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching = nullptr;
+		pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride = nullptr;
+		pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride = nullptr;
+		pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride = nullptr;
+		pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides = nullptr;
 		pWrapperTable->m_NLightDriverBoard_ClearError = nullptr;
 		pWrapperTable->m_NLightDriverBoard_SetLaserMode = nullptr;
+		pWrapperTable->m_NLightDriverBoard_GetRawDeviceState = nullptr;
 		pWrapperTable->m_NLightDriverBoard_HasError = nullptr;
+		pWrapperTable->m_NLightDriverBoard_IsReady = nullptr;
+		pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady = nullptr;
+		pWrapperTable->m_NLightDriverBoard_IsEmission = nullptr;
+		pWrapperTable->m_NLightDriverBoard_IsFirmwareReady = nullptr;
+		pWrapperTable->m_NLightDriverBoard_IsWaterFlow = nullptr;
+		pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays = nullptr;
+		pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays = nullptr;
 		pWrapperTable->m_RaylaseCard_IsConnected = nullptr;
 		pWrapperTable->m_RaylaseCard_ResetToSystemDefaults = nullptr;
 		pWrapperTable->m_RaylaseCard_EnableCommandLogging = nullptr;
@@ -729,6 +787,11 @@ public:
 		pWrapperTable->m_RaylaseCard_GetLaserStatus = nullptr;
 		pWrapperTable->m_RaylaseCard_AssignLaserIndex = nullptr;
 		pWrapperTable->m_RaylaseCard_GetAssignedLaserIndex = nullptr;
+		pWrapperTable->m_RaylaseCard_AddPartSuppression = nullptr;
+		pWrapperTable->m_RaylaseCard_GetPartSuppressionMode = nullptr;
+		pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions = nullptr;
+		pWrapperTable->m_RaylaseCard_RemovePartSuppression = nullptr;
+		pWrapperTable->m_RaylaseCard_DrawLayerWithCallback = nullptr;
 		pWrapperTable->m_RaylaseCard_DrawLayer = nullptr;
 		pWrapperTable->m_RaylaseCard_SetRotationalCoordinateTransform = nullptr;
 		pWrapperTable->m_RaylaseCard_GetRotationalCoordinateTransform = nullptr;
@@ -742,6 +805,7 @@ public:
 		pWrapperTable->m_Driver_Raylase_GetConnectedCard = nullptr;
 		pWrapperTable->m_Driver_Raylase_CardExists = nullptr;
 		pWrapperTable->m_Driver_Raylase_DisconnectCard = nullptr;
+		pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback = nullptr;
 		pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaser = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
@@ -882,6 +946,69 @@ public:
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled = (PLibMCDriver_RaylaseNLightDriverBoard_AutomaticLaserModeSwitchingIsEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_automaticlasermodeswitchingisenabled");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled = (PLibMCDriver_RaylaseNLightDriverBoard_AutomaticLaserModeSwitchingIsEnabledPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_automaticlasermodeswitchingisenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching = (PLibMCDriver_RaylaseNLightDriverBoard_EnableAutomaticLaserModeSwitchingPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_enableautomaticlasermodeswitching");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching = (PLibMCDriver_RaylaseNLightDriverBoard_EnableAutomaticLaserModeSwitchingPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_enableautomaticlasermodeswitching");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching = (PLibMCDriver_RaylaseNLightDriverBoard_DisableAutomaticLaserModeSwitchingPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_disableautomaticlasermodeswitching");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching = (PLibMCDriver_RaylaseNLightDriverBoard_DisableAutomaticLaserModeSwitchingPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_disableautomaticlasermodeswitching");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_SetLaserModeMaxPowerOverridePtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_setlasermodemaxpoweroverride");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_SetLaserModeMaxPowerOverridePtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_setlasermodemaxpoweroverride");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_GetLaserModeMaxPowerOverridePtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_getlasermodemaxpoweroverride");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_GetLaserModeMaxPowerOverridePtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_getlasermodemaxpoweroverride");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_ClearLaserModeMaxPowerOverridePtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearlasermodemaxpoweroverride");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride = (PLibMCDriver_RaylaseNLightDriverBoard_ClearLaserModeMaxPowerOverridePtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearlasermodemaxpoweroverride");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides = (PLibMCDriver_RaylaseNLightDriverBoard_ClearAllLaserModeMaxPowerOverridesPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearalllasermodemaxpoweroverrides");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides = (PLibMCDriver_RaylaseNLightDriverBoard_ClearAllLaserModeMaxPowerOverridesPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearalllasermodemaxpoweroverrides");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_NLightDriverBoard_ClearError = (PLibMCDriver_RaylaseNLightDriverBoard_ClearErrorPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearerror");
 		#else // _WIN32
 		pWrapperTable->m_NLightDriverBoard_ClearError = (PLibMCDriver_RaylaseNLightDriverBoard_ClearErrorPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_clearerror");
@@ -900,12 +1027,84 @@ public:
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetRawDeviceState = (PLibMCDriver_RaylaseNLightDriverBoard_GetRawDeviceStatePtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_getrawdevicestate");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetRawDeviceState = (PLibMCDriver_RaylaseNLightDriverBoard_GetRawDeviceStatePtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_getrawdevicestate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_GetRawDeviceState == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_NLightDriverBoard_HasError = (PLibMCDriver_RaylaseNLightDriverBoard_HasErrorPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_haserror");
 		#else // _WIN32
 		pWrapperTable->m_NLightDriverBoard_HasError = (PLibMCDriver_RaylaseNLightDriverBoard_HasErrorPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_haserror");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_NLightDriverBoard_HasError == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsReady = (PLibMCDriver_RaylaseNLightDriverBoard_IsReadyPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_isready");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsReady = (PLibMCDriver_RaylaseNLightDriverBoard_IsReadyPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_isready");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_IsReady == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady = (PLibMCDriver_RaylaseNLightDriverBoard_ExternalControlIsReadyPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_externalcontrolisready");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady = (PLibMCDriver_RaylaseNLightDriverBoard_ExternalControlIsReadyPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_externalcontrolisready");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsEmission = (PLibMCDriver_RaylaseNLightDriverBoard_IsEmissionPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_isemission");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsEmission = (PLibMCDriver_RaylaseNLightDriverBoard_IsEmissionPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_isemission");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_IsEmission == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsFirmwareReady = (PLibMCDriver_RaylaseNLightDriverBoard_IsFirmwareReadyPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_isfirmwareready");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsFirmwareReady = (PLibMCDriver_RaylaseNLightDriverBoard_IsFirmwareReadyPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_isfirmwareready");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_IsFirmwareReady == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsWaterFlow = (PLibMCDriver_RaylaseNLightDriverBoard_IsWaterFlowPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_iswaterflow");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_IsWaterFlow = (PLibMCDriver_RaylaseNLightDriverBoard_IsWaterFlowPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_iswaterflow");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_IsWaterFlow == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays = (PLibMCDriver_RaylaseNLightDriverBoard_SetModeChangeDelaysPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_setmodechangedelays");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays = (PLibMCDriver_RaylaseNLightDriverBoard_SetModeChangeDelaysPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_setmodechangedelays");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays = (PLibMCDriver_RaylaseNLightDriverBoard_GetModeChangeDelaysPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_nlightdriverboard_getmodechangedelays");
+		#else // _WIN32
+		pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays = (PLibMCDriver_RaylaseNLightDriverBoard_GetModeChangeDelaysPtr) dlsym(hLibrary, "libmcdriver_raylase_nlightdriverboard_getmodechangedelays");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays == nullptr)
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1044,6 +1243,51 @@ public:
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_RaylaseCard_AddPartSuppression = (PLibMCDriver_RaylaseRaylaseCard_AddPartSuppressionPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_addpartsuppression");
+		#else // _WIN32
+		pWrapperTable->m_RaylaseCard_AddPartSuppression = (PLibMCDriver_RaylaseRaylaseCard_AddPartSuppressionPtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_addpartsuppression");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RaylaseCard_AddPartSuppression == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RaylaseCard_GetPartSuppressionMode = (PLibMCDriver_RaylaseRaylaseCard_GetPartSuppressionModePtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_getpartsuppressionmode");
+		#else // _WIN32
+		pWrapperTable->m_RaylaseCard_GetPartSuppressionMode = (PLibMCDriver_RaylaseRaylaseCard_GetPartSuppressionModePtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_getpartsuppressionmode");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RaylaseCard_GetPartSuppressionMode == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions = (PLibMCDriver_RaylaseRaylaseCard_ClearAllPartSuppressionsPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_clearallpartsuppressions");
+		#else // _WIN32
+		pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions = (PLibMCDriver_RaylaseRaylaseCard_ClearAllPartSuppressionsPtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_clearallpartsuppressions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RaylaseCard_RemovePartSuppression = (PLibMCDriver_RaylaseRaylaseCard_RemovePartSuppressionPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_removepartsuppression");
+		#else // _WIN32
+		pWrapperTable->m_RaylaseCard_RemovePartSuppression = (PLibMCDriver_RaylaseRaylaseCard_RemovePartSuppressionPtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_removepartsuppression");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RaylaseCard_RemovePartSuppression == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RaylaseCard_DrawLayerWithCallback = (PLibMCDriver_RaylaseRaylaseCard_DrawLayerWithCallbackPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_drawlayerwithcallback");
+		#else // _WIN32
+		pWrapperTable->m_RaylaseCard_DrawLayerWithCallback = (PLibMCDriver_RaylaseRaylaseCard_DrawLayerWithCallbackPtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_drawlayerwithcallback");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RaylaseCard_DrawLayerWithCallback == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_RaylaseCard_DrawLayer = (PLibMCDriver_RaylaseRaylaseCard_DrawLayerPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_raylasecard_drawlayer");
 		#else // _WIN32
 		pWrapperTable->m_RaylaseCard_DrawLayer = (PLibMCDriver_RaylaseRaylaseCard_DrawLayerPtr) dlsym(hLibrary, "libmcdriver_raylase_raylasecard_drawlayer");
@@ -1158,6 +1402,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Driver_Raylase_DisconnectCard == nullptr)
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback = (PLibMCDriver_RaylaseDriver_Raylase_DrawLayerMultiLaserWithCallbackPtr) GetProcAddress(hLibrary, "libmcdriver_raylase_driver_raylase_drawlayermultilaserwithcallback");
+		#else // _WIN32
+		pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback = (PLibMCDriver_RaylaseDriver_Raylase_DrawLayerMultiLaserWithCallbackPtr) dlsym(hLibrary, "libmcdriver_raylase_driver_raylase_drawlayermultilaserwithcallback");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback == nullptr)
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1284,6 +1537,34 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_DisableLaser == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_automaticlasermodeswitchingisenabled", (void**)&(pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_enableautomaticlasermodeswitching", (void**)&(pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_EnableAutomaticLaserModeSwitching == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_disableautomaticlasermodeswitching", (void**)&(pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_DisableAutomaticLaserModeSwitching == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_setlasermodemaxpoweroverride", (void**)&(pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_SetLaserModeMaxPowerOverride == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_getlasermodemaxpoweroverride", (void**)&(pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_GetLaserModeMaxPowerOverride == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_clearlasermodemaxpoweroverride", (void**)&(pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_ClearLaserModeMaxPowerOverride == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_clearalllasermodemaxpoweroverrides", (void**)&(pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_clearerror", (void**)&(pWrapperTable->m_NLightDriverBoard_ClearError));
 		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_ClearError == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -1292,8 +1573,40 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_SetLaserMode == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_getrawdevicestate", (void**)&(pWrapperTable->m_NLightDriverBoard_GetRawDeviceState));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_GetRawDeviceState == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_haserror", (void**)&(pWrapperTable->m_NLightDriverBoard_HasError));
 		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_HasError == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_isready", (void**)&(pWrapperTable->m_NLightDriverBoard_IsReady));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_IsReady == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_externalcontrolisready", (void**)&(pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_ExternalControlIsReady == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_isemission", (void**)&(pWrapperTable->m_NLightDriverBoard_IsEmission));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_IsEmission == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_isfirmwareready", (void**)&(pWrapperTable->m_NLightDriverBoard_IsFirmwareReady));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_IsFirmwareReady == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_iswaterflow", (void**)&(pWrapperTable->m_NLightDriverBoard_IsWaterFlow));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_IsWaterFlow == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_setmodechangedelays", (void**)&(pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_SetModeChangeDelays == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_nlightdriverboard_getmodechangedelays", (void**)&(pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays));
+		if ( (eLookupError != 0) || (pWrapperTable->m_NLightDriverBoard_GetModeChangeDelays == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_isconnected", (void**)&(pWrapperTable->m_RaylaseCard_IsConnected));
@@ -1356,6 +1669,26 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_GetAssignedLaserIndex == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_addpartsuppression", (void**)&(pWrapperTable->m_RaylaseCard_AddPartSuppression));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_AddPartSuppression == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_getpartsuppressionmode", (void**)&(pWrapperTable->m_RaylaseCard_GetPartSuppressionMode));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_GetPartSuppressionMode == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_clearallpartsuppressions", (void**)&(pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_ClearAllPartSuppressions == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_removepartsuppression", (void**)&(pWrapperTable->m_RaylaseCard_RemovePartSuppression));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_RemovePartSuppression == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_drawlayerwithcallback", (void**)&(pWrapperTable->m_RaylaseCard_DrawLayerWithCallback));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_DrawLayerWithCallback == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_raylase_raylasecard_drawlayer", (void**)&(pWrapperTable->m_RaylaseCard_DrawLayer));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RaylaseCard_DrawLayer == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -1406,6 +1739,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_raylase_driver_raylase_disconnectcard", (void**)&(pWrapperTable->m_Driver_Raylase_DisconnectCard));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Raylase_DisconnectCard == nullptr) )
+			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_raylase_driver_raylase_drawlayermultilaserwithcallback", (void**)&(pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaserWithCallback == nullptr) )
 			return LIBMCDRIVER_RAYLASE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_raylase_driver_raylase_drawlayermultilaser", (void**)&(pWrapperTable->m_Driver_Raylase_DrawLayerMultiLaser));
@@ -1552,10 +1889,11 @@ public:
 	
 	/**
 	* CNLightDriverBoard::InitializeLaser - Initializes the NLight laser via the driver board.
+	* @param[in] bEnableAutomaticLaserModeSwitching - If true, laser modes will be used from the corresponding build file.
 	*/
-	void CNLightDriverBoard::InitializeLaser()
+	void CNLightDriverBoard::InitializeLaser(const bool bEnableAutomaticLaserModeSwitching)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_InitializeLaser(m_pHandle));
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_InitializeLaser(m_pHandle, bEnableAutomaticLaserModeSwitching));
 	}
 	
 	/**
@@ -1564,6 +1902,74 @@ public:
 	void CNLightDriverBoard::DisableLaser()
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_DisableLaser(m_pHandle));
+	}
+	
+	/**
+	* CNLightDriverBoard::AutomaticLaserModeSwitchingIsEnabled - Returns if the automatic laser mode switching is enabled.
+	* @return If true, laser modes will be used from the corresponding build file.
+	*/
+	bool CNLightDriverBoard::AutomaticLaserModeSwitchingIsEnabled()
+	{
+		bool resultEnableAutomaticLaserModeSwitching = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_AutomaticLaserModeSwitchingIsEnabled(m_pHandle, &resultEnableAutomaticLaserModeSwitching));
+		
+		return resultEnableAutomaticLaserModeSwitching;
+	}
+	
+	/**
+	* CNLightDriverBoard::EnableAutomaticLaserModeSwitching - Enables the Automatic laser mode switching.
+	*/
+	void CNLightDriverBoard::EnableAutomaticLaserModeSwitching()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_EnableAutomaticLaserModeSwitching(m_pHandle));
+	}
+	
+	/**
+	* CNLightDriverBoard::DisableAutomaticLaserModeSwitching - Disables the Automatic laser mode switching.
+	*/
+	void CNLightDriverBoard::DisableAutomaticLaserModeSwitching()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_DisableAutomaticLaserModeSwitching(m_pHandle));
+	}
+	
+	/**
+	* CNLightDriverBoard::SetLaserModeMaxPowerOverride - Sets an override for the maximum available laser power used for a specific laser mode. Can not be changed for laser mode 0.
+	* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+	* @param[in] dMaxPowerInWatts - Maximum laser power in Watts. MUST be larger than 1.0.
+	*/
+	void CNLightDriverBoard::SetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode, const LibMCDriver_Raylase_double dMaxPowerInWatts)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_SetLaserModeMaxPowerOverride(m_pHandle, nLaserMode, dMaxPowerInWatts));
+	}
+	
+	/**
+	* CNLightDriverBoard::GetLaserModeMaxPowerOverride - Gets an override for the maximum available laser power used for a specific laser mode. Returns default max laser power for laser mode 0 or if no laser mode override has been set.
+	* @param[in] nLaserMode - The laser mode that shall be queried. MUST be between 0 and 7.
+	* @return Maximum laser power in Watts for this Laser Mode.
+	*/
+	LibMCDriver_Raylase_double CNLightDriverBoard::GetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode)
+	{
+		LibMCDriver_Raylase_double resultMaxPowerInWatts = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_GetLaserModeMaxPowerOverride(m_pHandle, nLaserMode, &resultMaxPowerInWatts));
+		
+		return resultMaxPowerInWatts;
+	}
+	
+	/**
+	* CNLightDriverBoard::ClearLaserModeMaxPowerOverride - Clears a power override for a specific laser mode.
+	* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+	*/
+	void CNLightDriverBoard::ClearLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_ClearLaserModeMaxPowerOverride(m_pHandle, nLaserMode));
+	}
+	
+	/**
+	* CNLightDriverBoard::ClearAllLaserModeMaxPowerOverrides - Clears all max power overrides for the different laser modes.
+	*/
+	void CNLightDriverBoard::ClearAllLaserModeMaxPowerOverrides()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_ClearAllLaserModeMaxPowerOverrides(m_pHandle));
 	}
 	
 	/**
@@ -1584,6 +1990,18 @@ public:
 	}
 	
 	/**
+	* CNLightDriverBoard::GetRawDeviceState - Returns the raw device state as bit field. See nLight extension board documentation for details.
+	* @return Device state bit field.
+	*/
+	LibMCDriver_Raylase_uint32 CNLightDriverBoard::GetRawDeviceState()
+	{
+		LibMCDriver_Raylase_uint32 resultDeviceState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_GetRawDeviceState(m_pHandle, &resultDeviceState));
+		
+		return resultDeviceState;
+	}
+	
+	/**
 	* CNLightDriverBoard::HasError - Checks, if the laser is in an error state.
 	* @return Returns true if the laser is in an error state.
 	*/
@@ -1593,6 +2011,86 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_HasError(m_pHandle, &resultErrorState));
 		
 		return resultErrorState;
+	}
+	
+	/**
+	* CNLightDriverBoard::IsReady - Checks, if the laser is in a ready state.
+	* @return Returns true if the laser has the ready state flag set.
+	*/
+	bool CNLightDriverBoard::IsReady()
+	{
+		bool resultReadyState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_IsReady(m_pHandle, &resultReadyState));
+		
+		return resultReadyState;
+	}
+	
+	/**
+	* CNLightDriverBoard::ExternalControlIsReady - Checks, if the laser state can react to external control.
+	* @return Returns true if the laser has the ExtControlReady state flag set.
+	*/
+	bool CNLightDriverBoard::ExternalControlIsReady()
+	{
+		bool resultExtControlReadyState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_ExternalControlIsReady(m_pHandle, &resultExtControlReadyState));
+		
+		return resultExtControlReadyState;
+	}
+	
+	/**
+	* CNLightDriverBoard::IsEmission - Checks, if the laser is in emission state.
+	* @return Returns true if the laser has the emission on flag set.
+	*/
+	bool CNLightDriverBoard::IsEmission()
+	{
+		bool resultEmissionState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_IsEmission(m_pHandle, &resultEmissionState));
+		
+		return resultEmissionState;
+	}
+	
+	/**
+	* CNLightDriverBoard::IsFirmwareReady - Checks, if the laser firmware is ready.
+	* @return Returns true if the laser has the firmware ready flag set.
+	*/
+	bool CNLightDriverBoard::IsFirmwareReady()
+	{
+		bool resultFirmwareReadyState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_IsFirmwareReady(m_pHandle, &resultFirmwareReadyState));
+		
+		return resultFirmwareReadyState;
+	}
+	
+	/**
+	* CNLightDriverBoard::IsWaterFlow - Checks, if the laser water flow is on.
+	* @return Returns true if the laser has the water flow flag set.
+	*/
+	bool CNLightDriverBoard::IsWaterFlow()
+	{
+		bool resultWaterFlowState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_IsWaterFlow(m_pHandle, &resultWaterFlowState));
+		
+		return resultWaterFlowState;
+	}
+	
+	/**
+	* CNLightDriverBoard::SetModeChangeDelays - Sets the mode change delays.
+	* @param[in] nModeChangeSignalDelayInMicroseconds - New mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+	* @param[in] nModeChangeApplyDelayInMicroseconds - New mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+	*/
+	void CNLightDriverBoard::SetModeChangeDelays(const LibMCDriver_Raylase_uint32 nModeChangeSignalDelayInMicroseconds, const LibMCDriver_Raylase_uint32 nModeChangeApplyDelayInMicroseconds)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_SetModeChangeDelays(m_pHandle, nModeChangeSignalDelayInMicroseconds, nModeChangeApplyDelayInMicroseconds));
+	}
+	
+	/**
+	* CNLightDriverBoard::GetModeChangeDelays - Returns the mode change delays.
+	* @param[out] nModeChangeSignalDelayInMicroseconds - Current mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+	* @param[out] nModeChangeApplyDelayInMicroseconds - Current mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+	*/
+	void CNLightDriverBoard::GetModeChangeDelays(LibMCDriver_Raylase_uint32 & nModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32 & nModeChangeApplyDelayInMicroseconds)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_NLightDriverBoard_GetModeChangeDelays(m_pHandle, &nModeChangeSignalDelayInMicroseconds, &nModeChangeApplyDelayInMicroseconds));
 	}
 	
 	/**
@@ -1756,7 +2254,59 @@ public:
 	}
 	
 	/**
-	* CRaylaseCard::DrawLayer - Draws a layer of a build stream. Blocks until the layer is drawn.
+	* CRaylaseCard::AddPartSuppression - Adds a part suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+	* @param[in] sPartUUID - UUID of a part. Fails if not a valid UUID.
+	* @param[in] eSuppressionMode - Part suppression mode. If DontSuppress is given, the part is removed from the list.
+	*/
+	void CRaylaseCard::AddPartSuppression(const std::string & sPartUUID, const ePartSuppressionMode eSuppressionMode)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RaylaseCard_AddPartSuppression(m_pHandle, sPartUUID.c_str(), eSuppressionMode));
+	}
+	
+	/**
+	* CRaylaseCard::GetPartSuppressionMode - Returns the suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+	* @param[in] sPartUUID - UUID of a part. Fails if not a valid UUID.
+	* @return Part suppression mode.
+	*/
+	ePartSuppressionMode CRaylaseCard::GetPartSuppressionMode(const std::string & sPartUUID)
+	{
+		ePartSuppressionMode resultSuppressionMode = (ePartSuppressionMode) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RaylaseCard_GetPartSuppressionMode(m_pHandle, sPartUUID.c_str(), &resultSuppressionMode));
+		
+		return resultSuppressionMode;
+	}
+	
+	/**
+	* CRaylaseCard::ClearAllPartSuppressions - Clears all part suppressions that have been set before.
+	*/
+	void CRaylaseCard::ClearAllPartSuppressions()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RaylaseCard_ClearAllPartSuppressions(m_pHandle));
+	}
+	
+	/**
+	* CRaylaseCard::RemovePartSuppression - Removes a part suppression that was added before. Does nothing if part suppression does not exist.
+	* @param[in] sPartUUID - UUID of a part
+	*/
+	void CRaylaseCard::RemovePartSuppression(const std::string & sPartUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RaylaseCard_RemovePartSuppression(m_pHandle, sPartUUID.c_str()));
+	}
+	
+	/**
+	* CRaylaseCard::DrawLayerWithCallback - Draws a layer of a build stream with a progress callback. Blocks until the layer is drawn.
+	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+	* @param[in] nLayerIndex - Layer index of the build file.
+	* @param[in] pCancellationCallback - A callback that is repeatedly checked for canceling the exposure.
+	* @param[in] pUserData - pointer to arbitrary user data that is passed without modification to the callback.
+	*/
+	void CRaylaseCard::DrawLayerWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RaylaseCard_DrawLayerWithCallback(m_pHandle, sStreamUUID.c_str(), nLayerIndex, pCancellationCallback, pUserData));
+	}
+	
+	/**
+	* CRaylaseCard::DrawLayer - Draws a layer of a build stream with timeout. Blocks until the layer is drawn.
 	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
 	* @param[in] nLayerIndex - Layer index of the build file.
 	* @param[in] nScanningTimeoutInMS - Maximum duration of the scanning process in milliseconds.
@@ -1906,6 +2456,19 @@ public:
 	void CDriver_Raylase::DisconnectCard(const std::string & sCardName)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Raylase_DisconnectCard(m_pHandle, sCardName.c_str()));
+	}
+	
+	/**
+	* CDriver_Raylase::DrawLayerMultiLaserWithCallback - Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.
+	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+	* @param[in] nLayerIndex - Layer index of the build file.
+	* @param[in] bFailIfNonAssignedDataExists - If true, the call will fail in case a layer contains data that is not assigned to any defined scanner card.
+	* @param[in] pCancellationCallback - A callback that is repeatedly checked for canceling the exposure.
+	* @param[in] pUserData - pointer to arbitrary user data that is passed without modification to the callback.
+	*/
+	void CDriver_Raylase::DrawLayerMultiLaserWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Raylase_DrawLayerMultiLaserWithCallback(m_pHandle, sStreamUUID.c_str(), nLayerIndex, bFailIfNonAssignedDataExists, pCancellationCallback, pUserData));
 	}
 	
 	/**

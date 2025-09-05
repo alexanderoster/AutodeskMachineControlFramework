@@ -421,12 +421,42 @@ void CXMLDocumentNodeInstance::addChildEx (PXMLDocumentNodeInstance pNode)
 
 void CXMLDocumentNodeInstance::RemoveChild(CXMLDocumentNodeInstance* pChildInstance)
 {
-	throw ELibMCInterfaceException(LIBMC_ERROR_NOTIMPLEMENTED);
+	if (pChildInstance == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	m_Children.erase(std::remove_if(m_Children.begin(), m_Children.end(),
+		[pChildInstance](const std::shared_ptr<CXMLDocumentNodeInstance>& ptr) {
+			return ptr.get() == pChildInstance;
+		}),
+		m_Children.end());
+
+
+	auto mapKey = std::make_pair(pChildInstance->GetNameSpace().get(), pChildInstance->GetName());
+	m_ChildMap.erase(mapKey);
+
+	auto iChildIter = m_ChildMapCounter.find(mapKey);
+	if (iChildIter != m_ChildMapCounter.end()) {
+		iChildIter->second--;
+	}
 }
 
 void CXMLDocumentNodeInstance::RemoveChildrenWithName(CXMLDocumentNameSpace* pNameSpace, const std::string& sName)
 {
-	throw ELibMCInterfaceException(LIBMC_ERROR_NOTIMPLEMENTED);
+	if (pNameSpace == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	m_Children.erase(std::remove_if(m_Children.begin(), m_Children.end(),
+		[pNameSpace, sName](const std::shared_ptr<CXMLDocumentNodeInstance>& ptr) {
+			return (ptr->GetNameSpace().get() == pNameSpace) && (ptr->GetName () == sName);
+		}),
+		m_Children.end());
+
+
+	auto mapKey = std::make_pair(pNameSpace, sName);
+
+	m_ChildMap.erase(mapKey);
+	m_ChildMapCounter.erase(mapKey);
+
 }
 
 std::string CXMLDocumentNodeInstance::getPrefixedName()

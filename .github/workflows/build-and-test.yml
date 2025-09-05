@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Show current Git branch
+      run: git branch --show-current
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc g++ cmake golang uuid-dev
+
+    - name: Run pre-build script
+      run: |
+        chmod +x ./build_clean_linux64.sh
+        ./build_clean_linux64.sh
+      shell: bash
+
+    - name: Run unit tests
+      run: ./build_linux64/Output/amc_unittest

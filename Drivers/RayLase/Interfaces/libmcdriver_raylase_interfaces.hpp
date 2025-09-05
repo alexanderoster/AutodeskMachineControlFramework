@@ -336,13 +336,55 @@ class INLightDriverBoard : public virtual IBase {
 public:
 	/**
 	* INLightDriverBoard::InitializeLaser - Initializes the NLight laser via the driver board.
+	* @param[in] bEnableAutomaticLaserModeSwitching - If true, laser modes will be used from the corresponding build file.
 	*/
-	virtual void InitializeLaser() = 0;
+	virtual void InitializeLaser(const bool bEnableAutomaticLaserModeSwitching) = 0;
 
 	/**
 	* INLightDriverBoard::DisableLaser - Disables the NLight laser via the driver board.
 	*/
 	virtual void DisableLaser() = 0;
+
+	/**
+	* INLightDriverBoard::AutomaticLaserModeSwitchingIsEnabled - Returns if the automatic laser mode switching is enabled.
+	* @return If true, laser modes will be used from the corresponding build file.
+	*/
+	virtual bool AutomaticLaserModeSwitchingIsEnabled() = 0;
+
+	/**
+	* INLightDriverBoard::EnableAutomaticLaserModeSwitching - Enables the Automatic laser mode switching.
+	*/
+	virtual void EnableAutomaticLaserModeSwitching() = 0;
+
+	/**
+	* INLightDriverBoard::DisableAutomaticLaserModeSwitching - Disables the Automatic laser mode switching.
+	*/
+	virtual void DisableAutomaticLaserModeSwitching() = 0;
+
+	/**
+	* INLightDriverBoard::SetLaserModeMaxPowerOverride - Sets an override for the maximum available laser power used for a specific laser mode. Can not be changed for laser mode 0.
+	* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+	* @param[in] dMaxPowerInWatts - Maximum laser power in Watts. MUST be larger than 1.0.
+	*/
+	virtual void SetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode, const LibMCDriver_Raylase_double dMaxPowerInWatts) = 0;
+
+	/**
+	* INLightDriverBoard::GetLaserModeMaxPowerOverride - Gets an override for the maximum available laser power used for a specific laser mode. Returns default max laser power for laser mode 0 or if no laser mode override has been set.
+	* @param[in] nLaserMode - The laser mode that shall be queried. MUST be between 0 and 7.
+	* @return Maximum laser power in Watts for this Laser Mode.
+	*/
+	virtual LibMCDriver_Raylase_double GetLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode) = 0;
+
+	/**
+	* INLightDriverBoard::ClearLaserModeMaxPowerOverride - Clears a power override for a specific laser mode.
+	* @param[in] nLaserMode - The laser mode that shall be changed. MUST be between 1 and 7.
+	*/
+	virtual void ClearLaserModeMaxPowerOverride(const LibMCDriver_Raylase_uint32 nLaserMode) = 0;
+
+	/**
+	* INLightDriverBoard::ClearAllLaserModeMaxPowerOverrides - Clears all max power overrides for the different laser modes.
+	*/
+	virtual void ClearAllLaserModeMaxPowerOverrides() = 0;
 
 	/**
 	* INLightDriverBoard::ClearError - Clears any error state in the NLight laser via the driver board.
@@ -356,10 +398,60 @@ public:
 	virtual void SetLaserMode(const LibMCDriver_Raylase_uint32 nLaserMode) = 0;
 
 	/**
+	* INLightDriverBoard::GetRawDeviceState - Returns the raw device state as bit field. See nLight extension board documentation for details.
+	* @return Device state bit field.
+	*/
+	virtual LibMCDriver_Raylase_uint32 GetRawDeviceState() = 0;
+
+	/**
 	* INLightDriverBoard::HasError - Checks, if the laser is in an error state.
 	* @return Returns true if the laser is in an error state.
 	*/
 	virtual bool HasError() = 0;
+
+	/**
+	* INLightDriverBoard::IsReady - Checks, if the laser is in a ready state.
+	* @return Returns true if the laser has the ready state flag set.
+	*/
+	virtual bool IsReady() = 0;
+
+	/**
+	* INLightDriverBoard::ExternalControlIsReady - Checks, if the laser state can react to external control.
+	* @return Returns true if the laser has the ExtControlReady state flag set.
+	*/
+	virtual bool ExternalControlIsReady() = 0;
+
+	/**
+	* INLightDriverBoard::IsEmission - Checks, if the laser is in emission state.
+	* @return Returns true if the laser has the emission on flag set.
+	*/
+	virtual bool IsEmission() = 0;
+
+	/**
+	* INLightDriverBoard::IsFirmwareReady - Checks, if the laser firmware is ready.
+	* @return Returns true if the laser has the firmware ready flag set.
+	*/
+	virtual bool IsFirmwareReady() = 0;
+
+	/**
+	* INLightDriverBoard::IsWaterFlow - Checks, if the laser water flow is on.
+	* @return Returns true if the laser has the water flow flag set.
+	*/
+	virtual bool IsWaterFlow() = 0;
+
+	/**
+	* INLightDriverBoard::SetModeChangeDelays - Sets the mode change delays.
+	* @param[in] nModeChangeSignalDelayInMicroseconds - New mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+	* @param[in] nModeChangeApplyDelayInMicroseconds - New mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+	*/
+	virtual void SetModeChangeDelays(const LibMCDriver_Raylase_uint32 nModeChangeSignalDelayInMicroseconds, const LibMCDriver_Raylase_uint32 nModeChangeApplyDelayInMicroseconds) = 0;
+
+	/**
+	* INLightDriverBoard::GetModeChangeDelays - Returns the mode change delays.
+	* @param[out] nModeChangeSignalDelayInMicroseconds - Current mode change signal delay in microseconds. This is the length of the signal peak to the AFX laser. Default value is 10 microseconds.
+	* @param[out] nModeChangeApplyDelayInMicroseconds - Current mode change apply delay in microseconds. This is the wait delay after the new mode has sent. Default value is 30000 microseconds.
+	*/
+	virtual void GetModeChangeDelays(LibMCDriver_Raylase_uint32 & nModeChangeSignalDelayInMicroseconds, LibMCDriver_Raylase_uint32 & nModeChangeApplyDelayInMicroseconds) = 0;
 
 };
 
@@ -460,7 +552,41 @@ public:
 	virtual LibMCDriver_Raylase_uint32 GetAssignedLaserIndex() = 0;
 
 	/**
-	* IRaylaseCard::DrawLayer - Draws a layer of a build stream. Blocks until the layer is drawn.
+	* IRaylaseCard::AddPartSuppression - Adds a part suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+	* @param[in] sPartUUID - UUID of a part. Fails if not a valid UUID.
+	* @param[in] eSuppressionMode - Part suppression mode. If DontSuppress is given, the part is removed from the list.
+	*/
+	virtual void AddPartSuppression(const std::string & sPartUUID, const LibMCDriver_Raylase::ePartSuppressionMode eSuppressionMode) = 0;
+
+	/**
+	* IRaylaseCard::GetPartSuppressionMode - Returns the suppression. If Drawlayer encounters a part of a specific ID, it will suppress it depending on the suppression mode.
+	* @param[in] sPartUUID - UUID of a part. Fails if not a valid UUID.
+	* @return Part suppression mode.
+	*/
+	virtual LibMCDriver_Raylase::ePartSuppressionMode GetPartSuppressionMode(const std::string & sPartUUID) = 0;
+
+	/**
+	* IRaylaseCard::ClearAllPartSuppressions - Clears all part suppressions that have been set before.
+	*/
+	virtual void ClearAllPartSuppressions() = 0;
+
+	/**
+	* IRaylaseCard::RemovePartSuppression - Removes a part suppression that was added before. Does nothing if part suppression does not exist.
+	* @param[in] sPartUUID - UUID of a part
+	*/
+	virtual void RemovePartSuppression(const std::string & sPartUUID) = 0;
+
+	/**
+	* IRaylaseCard::DrawLayerWithCallback - Draws a layer of a build stream with a progress callback. Blocks until the layer is drawn.
+	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+	* @param[in] nLayerIndex - Layer index of the build file.
+	* @param[in] pCancellationCallback - callback function
+	* @param[in] nUserData - pointer to arbitrary user data that is passed without modification to the callback.
+	*/
+	virtual void DrawLayerWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData) = 0;
+
+	/**
+	* IRaylaseCard::DrawLayer - Draws a layer of a build stream with timeout. Blocks until the layer is drawn.
 	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
 	* @param[in] nLayerIndex - Layer index of the build file.
 	* @param[in] nScanningTimeoutInMS - Maximum duration of the scanning process in milliseconds.
@@ -561,6 +687,16 @@ public:
 	* @param[in] sCardName - Name of scanner card to disconnect. Card will be removed from driver.
 	*/
 	virtual void DisconnectCard(const std::string & sCardName) = 0;
+
+	/**
+	* IDriver_Raylase::DrawLayerMultiLaserWithCallback - Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.
+	* @param[in] sStreamUUID - UUID of the build stream. Must have been loaded in memory by the system.
+	* @param[in] nLayerIndex - Layer index of the build file.
+	* @param[in] bFailIfNonAssignedDataExists - If true, the call will fail in case a layer contains data that is not assigned to any defined scanner card.
+	* @param[in] pCancellationCallback - callback function
+	* @param[in] nUserData - pointer to arbitrary user data that is passed without modification to the callback.
+	*/
+	virtual void DrawLayerMultiLaserWithCallback(const std::string & sStreamUUID, const LibMCDriver_Raylase_uint32 nLayerIndex, const bool bFailIfNonAssignedDataExists, const LibMCDriver_Raylase::ExposureCancellationCallback pCancellationCallback, const LibMCDriver_Raylase_pvoid pUserData) = 0;
 
 	/**
 	* IDriver_Raylase::DrawLayerMultiLaser - Draws a layer of a build stream. Blocks until the layer is drawn. The call will fail if the laser assignment of the cards is not unique.

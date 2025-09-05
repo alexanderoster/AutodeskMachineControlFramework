@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcdata_loginhandler.hpp"
 #include "libmcdata_persistencyhandler.hpp"
 #include "libmcdata_installationinformation.hpp"
+#include "libmcdata_machineconfigurationtype.hpp"
 
 #include "amcdata_databasemigrator.hpp"
 #include "amcdata_sqlhandler_sqlite.hpp"
@@ -50,6 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amcdata_databasemigrator_users.hpp"
 #include "amcdata_databasemigrator_persistentparameters.hpp"
 #include "amcdata_databasemigrator_journals.hpp"
+#include "amcdata_databasemigrator_machineconfiguration.hpp"
 
 #include "common_utils.hpp"
 #include "common_chrono.hpp"
@@ -132,6 +134,7 @@ void CDataModel::InitialiseDatabase(const std::string & sDataDirectory, const Li
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_Users>());
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_PersistentParameters>());
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_Journals>());
+    migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_MachineConfiguration>());
     migrator.migrateDatabaseSchemas(m_pSQLHandler, m_sInstallationUUID, m_sInstallationSecret);
 
     // Store Database type after successful initialisation
@@ -285,4 +288,19 @@ void CDataModel::TriggerLogCallback(const std::string& sLogMessage, const std::s
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NOLOGCALLBACK);
 
     m_pLogCallback(sLogMessage.c_str(), sSubSystem.c_str(), eLogLevel, sTimestamp.c_str (), m_pLogUserData);
+}
+
+IMachineConfigurationType* CDataModel::FindConfigurationTypeBySchema(const std::string& sSchemaType)
+{
+    return CMachineConfigurationType::makeBySchema (m_pSQLHandler, sSchemaType);
+}
+
+IMachineConfigurationType* CDataModel::FindConfigurationTypeByUUID(const std::string& sUUID)
+{
+    return CMachineConfigurationType::makeByUUID (m_pSQLHandler, sUUID);
+}
+
+IMachineConfigurationType* CDataModel::CreateConfigurationType(const std::string& sSchemaType, const std::string& sName)
+{
+    return CMachineConfigurationType::createNewConfigurationType(m_pSQLHandler, sSchemaType, sName);
 }

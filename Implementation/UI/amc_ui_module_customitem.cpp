@@ -65,7 +65,7 @@ std::string CUIModuleCustomItem_Properties::getUUID()
 }
 
 
-void CUIModuleCustomItem_Properties::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModuleCustomItem_Properties::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
 
@@ -174,7 +174,7 @@ std::string CUIModuleCustomItem_Event::getUUID()
 
 
 
-void CUIModuleCustomItem_Event::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+void CUIModuleCustomItem_Event::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 
 	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);

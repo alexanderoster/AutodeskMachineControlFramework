@@ -234,6 +234,14 @@ public:
 			case LIBMCDRIVER_CAMERA_ERROR_COULDNOTLOCKMEDIABUFFER: return "COULDNOTLOCKMEDIABUFFER";
 			case LIBMCDRIVER_CAMERA_ERROR_RAWBUFFERRETURNEDNULL: return "RAWBUFFERRETURNEDNULL";
 			case LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH: return "YUY2SAMPLEBUFFERSIZEMISMATCH";
+			case LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET: return "CAMERARESOLUTIONNOTSET";
+			case LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIASUBTYPE: return "COULDNOTGETMEDIASUBTYPE";
+			case LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE: return "INVALIDMEDIASUBTYPE";
+			case LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR: return "PLATFORMERROR";
+			case LIBMCDRIVER_CAMERA_ERROR_INVALIDVIDEOSOURCEFORMAT: return "INVALIDVIDEOSOURCEFORMAT";
+			case LIBMCDRIVER_CAMERA_ERROR_SOURCEFORMATNOTSUPPORTED: return "SOURCEFORMATNOTSUPPORTED";
+			case LIBMCDRIVER_CAMERA_ERROR_NV12SAMPLEBUFFERSIZEMISMATCH: return "NV12SAMPLEBUFFERSIZEMISMATCH";
+			case LIBMCDRIVER_CAMERA_ERROR_CAMERAENCODINGNEEDSEVENIMAGEEXTENTS: return "CAMERAENCODINGNEEDSEVENIMAGEEXTENTS";
 		}
 		return "UNKNOWN";
 	}
@@ -290,6 +298,14 @@ public:
 			case LIBMCDRIVER_CAMERA_ERROR_COULDNOTLOCKMEDIABUFFER: return "Could not lock media buffer";
 			case LIBMCDRIVER_CAMERA_ERROR_RAWBUFFERRETURNEDNULL: return "Raw buffer returned null";
 			case LIBMCDRIVER_CAMERA_ERROR_YUY2SAMPLEBUFFERSIZEMISMATCH: return "YUY2 sample buffer size mismatch";
+			case LIBMCDRIVER_CAMERA_ERROR_CAMERARESOLUTIONNOTSET: return "Camera resolution not set";
+			case LIBMCDRIVER_CAMERA_ERROR_COULDNOTGETMEDIASUBTYPE: return "Could not get media subtype";
+			case LIBMCDRIVER_CAMERA_ERROR_INVALIDMEDIASUBTYPE: return "Invalid media subtype";
+			case LIBMCDRIVER_CAMERA_ERROR_PLATFORMERROR: return "Platform error";
+			case LIBMCDRIVER_CAMERA_ERROR_INVALIDVIDEOSOURCEFORMAT: return "Invalid video source format";
+			case LIBMCDRIVER_CAMERA_ERROR_SOURCEFORMATNOTSUPPORTED: return "Source format not supported";
+			case LIBMCDRIVER_CAMERA_ERROR_NV12SAMPLEBUFFERSIZEMISMATCH: return "NV12 Sample Buffer size mismatch";
+			case LIBMCDRIVER_CAMERA_ERROR_CAMERAENCODINGNEEDSEVENIMAGEEXTENTS: return "Camera encoding needs even image extents";
 		}
 		return "unknown error";
 	}
@@ -536,10 +552,16 @@ public:
 	
 	inline std::string GetIdentifier();
 	inline LibMCDriver_Camera_uint32 GetSupportedResolutionCount();
-	inline void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate);
-	inline void GetCurrentResolution(LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate);
-	inline void SetResolution(const LibMCDriver_Camera_uint32 nWidth, const LibMCDriver_Camera_uint32 nHeight, const LibMCDriver_Camera_uint32 nFramerate);
-	inline void CaptureRawImage(classParam<LibMCEnv::CImageData> pImageData);
+	inline void GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, eVideoSourceFormat & eSourceFormat);
+	inline void GetCurrentResolution(LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, eVideoSourceFormat & eSourceFormat);
+	inline LibMCDriver_Camera_uint32 GetCurrentResolutionX();
+	inline LibMCDriver_Camera_uint32 GetCurrentResolutionY();
+	inline LibMCDriver_Camera_uint32 GetCurrentFramerate();
+	inline eVideoSourceFormat GetCurrentSourceFormat();
+	inline std::string GetSourceFormatDescription(const eVideoSourceFormat eSourceFormat);
+	inline void SetResolution(const LibMCDriver_Camera_uint32 nResolutionX, const LibMCDriver_Camera_uint32 nResolutionY, const LibMCDriver_Camera_uint32 nFramerate, const eVideoSourceFormat eSourceFormat);
+	inline void SetToSupportedResolution(const LibMCDriver_Camera_uint32 nIndex);
+	inline bool CaptureRawImage(classParam<LibMCEnv::CImageData> pImageData);
 	inline void StartStreamCapture(classParam<LibMCEnv::CVideoStream> pStreamInstance);
 	inline void StopStreamCapture();
 	inline bool StreamCaptureIsActive();
@@ -752,7 +774,13 @@ public:
 		pWrapperTable->m_VideoDevice_GetSupportedResolutionCount = nullptr;
 		pWrapperTable->m_VideoDevice_GetSupportedResolution = nullptr;
 		pWrapperTable->m_VideoDevice_GetCurrentResolution = nullptr;
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionX = nullptr;
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionY = nullptr;
+		pWrapperTable->m_VideoDevice_GetCurrentFramerate = nullptr;
+		pWrapperTable->m_VideoDevice_GetCurrentSourceFormat = nullptr;
+		pWrapperTable->m_VideoDevice_GetSourceFormatDescription = nullptr;
 		pWrapperTable->m_VideoDevice_SetResolution = nullptr;
+		pWrapperTable->m_VideoDevice_SetToSupportedResolution = nullptr;
 		pWrapperTable->m_VideoDevice_CaptureRawImage = nullptr;
 		pWrapperTable->m_VideoDevice_StartStreamCapture = nullptr;
 		pWrapperTable->m_VideoDevice_StopStreamCapture = nullptr;
@@ -940,12 +968,66 @@ public:
 			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionX = (PLibMCDriver_CameraVideoDevice_GetCurrentResolutionXPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_getcurrentresolutionx");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionX = (PLibMCDriver_CameraVideoDevice_GetCurrentResolutionXPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_getcurrentresolutionx");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_GetCurrentResolutionX == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionY = (PLibMCDriver_CameraVideoDevice_GetCurrentResolutionYPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_getcurrentresolutiony");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentResolutionY = (PLibMCDriver_CameraVideoDevice_GetCurrentResolutionYPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_getcurrentresolutiony");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_GetCurrentResolutionY == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentFramerate = (PLibMCDriver_CameraVideoDevice_GetCurrentFrameratePtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_getcurrentframerate");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentFramerate = (PLibMCDriver_CameraVideoDevice_GetCurrentFrameratePtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_getcurrentframerate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_GetCurrentFramerate == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentSourceFormat = (PLibMCDriver_CameraVideoDevice_GetCurrentSourceFormatPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_getcurrentsourceformat");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_GetCurrentSourceFormat = (PLibMCDriver_CameraVideoDevice_GetCurrentSourceFormatPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_getcurrentsourceformat");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_GetCurrentSourceFormat == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_GetSourceFormatDescription = (PLibMCDriver_CameraVideoDevice_GetSourceFormatDescriptionPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_getsourceformatdescription");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_GetSourceFormatDescription = (PLibMCDriver_CameraVideoDevice_GetSourceFormatDescriptionPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_getsourceformatdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_GetSourceFormatDescription == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_VideoDevice_SetResolution = (PLibMCDriver_CameraVideoDevice_SetResolutionPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_setresolution");
 		#else // _WIN32
 		pWrapperTable->m_VideoDevice_SetResolution = (PLibMCDriver_CameraVideoDevice_SetResolutionPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_setresolution");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_VideoDevice_SetResolution == nullptr)
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_VideoDevice_SetToSupportedResolution = (PLibMCDriver_CameraVideoDevice_SetToSupportedResolutionPtr) GetProcAddress(hLibrary, "libmcdriver_camera_videodevice_settosupportedresolution");
+		#else // _WIN32
+		pWrapperTable->m_VideoDevice_SetToSupportedResolution = (PLibMCDriver_CameraVideoDevice_SetToSupportedResolutionPtr) dlsym(hLibrary, "libmcdriver_camera_videodevice_settosupportedresolution");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_VideoDevice_SetToSupportedResolution == nullptr)
 			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1187,8 +1269,32 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetCurrentResolution == nullptr) )
 			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_getcurrentresolutionx", (void**)&(pWrapperTable->m_VideoDevice_GetCurrentResolutionX));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetCurrentResolutionX == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_getcurrentresolutiony", (void**)&(pWrapperTable->m_VideoDevice_GetCurrentResolutionY));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetCurrentResolutionY == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_getcurrentframerate", (void**)&(pWrapperTable->m_VideoDevice_GetCurrentFramerate));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetCurrentFramerate == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_getcurrentsourceformat", (void**)&(pWrapperTable->m_VideoDevice_GetCurrentSourceFormat));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetCurrentSourceFormat == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_getsourceformatdescription", (void**)&(pWrapperTable->m_VideoDevice_GetSourceFormatDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_GetSourceFormatDescription == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_setresolution", (void**)&(pWrapperTable->m_VideoDevice_SetResolution));
 		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_SetResolution == nullptr) )
+			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_settosupportedresolution", (void**)&(pWrapperTable->m_VideoDevice_SetToSupportedResolution));
+		if ( (eLookupError != 0) || (pWrapperTable->m_VideoDevice_SetToSupportedResolution == nullptr) )
 			return LIBMCDRIVER_CAMERA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_camera_videodevice_capturerawimage", (void**)&(pWrapperTable->m_VideoDevice_CaptureRawImage));
@@ -1434,45 +1540,125 @@ public:
 	/**
 	* CVideoDevice::GetSupportedResolution - Returns a resolution from the supported resolution list.
 	* @param[in] nIndex - Index to return. 0-based.
-	* @param[out] nWidth - Width in pixels.
-	* @param[out] nHeight - Height in pixels.
+	* @param[out] nResolutionX - Width in pixels.
+	* @param[out] nResolutionY - Height in pixels.
 	* @param[out] nFramerate - Framerate in FPS. Currently only integer framerates are supported.
+	* @param[out] eSourceFormat - Video Source format.
 	*/
-	void CVideoDevice::GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate)
+	void CVideoDevice::GetSupportedResolution(const LibMCDriver_Camera_uint32 nIndex, LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, eVideoSourceFormat & eSourceFormat)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetSupportedResolution(m_pHandle, nIndex, &nWidth, &nHeight, &nFramerate));
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetSupportedResolution(m_pHandle, nIndex, &nResolutionX, &nResolutionY, &nFramerate, &eSourceFormat));
 	}
 	
 	/**
 	* CVideoDevice::GetCurrentResolution - Returns a the current resolution and Framerate of the video stream.
-	* @param[out] nWidth - Width in pixels.
-	* @param[out] nHeight - Height in pixels.
+	* @param[out] nResolutionX - Width in pixels.
+	* @param[out] nResolutionY - Height in pixels.
 	* @param[out] nFramerate - Framerate in FPS. Currently only integer framerates are supported.
+	* @param[out] eSourceFormat - Video Source format.
 	*/
-	void CVideoDevice::GetCurrentResolution(LibMCDriver_Camera_uint32 & nWidth, LibMCDriver_Camera_uint32 & nHeight, LibMCDriver_Camera_uint32 & nFramerate)
+	void CVideoDevice::GetCurrentResolution(LibMCDriver_Camera_uint32 & nResolutionX, LibMCDriver_Camera_uint32 & nResolutionY, LibMCDriver_Camera_uint32 & nFramerate, eVideoSourceFormat & eSourceFormat)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentResolution(m_pHandle, &nWidth, &nHeight, &nFramerate));
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentResolution(m_pHandle, &nResolutionX, &nResolutionY, &nFramerate, &eSourceFormat));
+	}
+	
+	/**
+	* CVideoDevice::GetCurrentResolutionX - Returns the current X resolution of the video stream.
+	* @return Width in pixels.
+	*/
+	LibMCDriver_Camera_uint32 CVideoDevice::GetCurrentResolutionX()
+	{
+		LibMCDriver_Camera_uint32 resultResolutionX = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentResolutionX(m_pHandle, &resultResolutionX));
+		
+		return resultResolutionX;
+	}
+	
+	/**
+	* CVideoDevice::GetCurrentResolutionY - Returns the current resolution of the video stream.
+	* @return Height in pixels.
+	*/
+	LibMCDriver_Camera_uint32 CVideoDevice::GetCurrentResolutionY()
+	{
+		LibMCDriver_Camera_uint32 resultResolutionY = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentResolutionY(m_pHandle, &resultResolutionY));
+		
+		return resultResolutionY;
+	}
+	
+	/**
+	* CVideoDevice::GetCurrentFramerate - Returns a the current Framerate of the video stream.
+	* @return Framerate in FPS. Currently only integer framerates are supported.
+	*/
+	LibMCDriver_Camera_uint32 CVideoDevice::GetCurrentFramerate()
+	{
+		LibMCDriver_Camera_uint32 resultFramerate = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentFramerate(m_pHandle, &resultFramerate));
+		
+		return resultFramerate;
+	}
+	
+	/**
+	* CVideoDevice::GetCurrentSourceFormat - Returns the current source format of the video streams.
+	* @return Source format.
+	*/
+	eVideoSourceFormat CVideoDevice::GetCurrentSourceFormat()
+	{
+		eVideoSourceFormat resultSourceFormat = (eVideoSourceFormat) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetCurrentSourceFormat(m_pHandle, &resultSourceFormat));
+		
+		return resultSourceFormat;
+	}
+	
+	/**
+	* CVideoDevice::GetSourceFormatDescription - Returns a description for a source format enum.
+	* @param[in] eSourceFormat - Source format.
+	* @return Source format Description.
+	*/
+	std::string CVideoDevice::GetSourceFormatDescription(const eVideoSourceFormat eSourceFormat)
+	{
+		LibMCDriver_Camera_uint32 bytesNeededDescription = 0;
+		LibMCDriver_Camera_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetSourceFormatDescription(m_pHandle, eSourceFormat, 0, &bytesNeededDescription, nullptr));
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_GetSourceFormatDescription(m_pHandle, eSourceFormat, bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0]));
+		
+		return std::string(&bufferDescription[0]);
 	}
 	
 	/**
 	* CVideoDevice::SetResolution - Sets the resolution of the video stream. Fails if framerate is not supported.
-	* @param[in] nWidth - Width in pixels.
-	* @param[in] nHeight - Height in pixels.
+	* @param[in] nResolutionX - Width in pixels.
+	* @param[in] nResolutionY - Height in pixels.
 	* @param[in] nFramerate - Framerate in FPS to set. Currently only integer framerates are supported.
+	* @param[in] eSourceFormat - Video Source format.
 	*/
-	void CVideoDevice::SetResolution(const LibMCDriver_Camera_uint32 nWidth, const LibMCDriver_Camera_uint32 nHeight, const LibMCDriver_Camera_uint32 nFramerate)
+	void CVideoDevice::SetResolution(const LibMCDriver_Camera_uint32 nResolutionX, const LibMCDriver_Camera_uint32 nResolutionY, const LibMCDriver_Camera_uint32 nFramerate, const eVideoSourceFormat eSourceFormat)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_SetResolution(m_pHandle, nWidth, nHeight, nFramerate));
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_SetResolution(m_pHandle, nResolutionX, nResolutionY, nFramerate, eSourceFormat));
+	}
+	
+	/**
+	* CVideoDevice::SetToSupportedResolution - Sets the resolution of the video stream to a supported resolution by index.
+	* @param[in] nIndex - Index to the supported resolution list. 0-based. Fails if equal or larger than SupportedResolutionCount.
+	*/
+	void CVideoDevice::SetToSupportedResolution(const LibMCDriver_Camera_uint32 nIndex)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_SetToSupportedResolution(m_pHandle, nIndex));
 	}
 	
 	/**
 	* CVideoDevice::CaptureRawImage - Captures a still image from the video stream.
 	* @param[in] pImageData - Capture image object.
+	* @return If true, an image has been captured. If false then no image was captured.
 	*/
-	void CVideoDevice::CaptureRawImage(classParam<LibMCEnv::CImageData> pImageData)
+	bool CVideoDevice::CaptureRawImage(classParam<LibMCEnv::CImageData> pImageData)
 	{
 		LibMCEnvHandle hImageData = pImageData.GetHandle();
-		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_CaptureRawImage(m_pHandle, hImageData));
+		bool resultImageCaptured = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_VideoDevice_CaptureRawImage(m_pHandle, hImageData, &resultImageCaptured));
+		
+		return resultImageCaptured;
 	}
 	
 	/**

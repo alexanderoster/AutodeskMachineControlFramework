@@ -78,10 +78,16 @@ namespace LibMCDriver_Raylase {
 			eRaylaseAPIVariableType m_Type;
 			size_t m_nOffset;
 
+			std::map<std::string, uint32_t> m_EnumValues;
+
 		public:
 			CRaylaseAPIVariable(const std::string& sName, size_t nOffset, eRaylaseAPIVariableType variableType);
 
 			virtual ~CRaylaseAPIVariable();
+
+			void addEnumValue(const std::string & sName, uint32_t nValue);
+
+			uint32_t getEnumValue(const std::string& sName);
 
 			std::string getName();
 
@@ -129,7 +135,8 @@ namespace LibMCDriver_Raylase {
 			void setInteger (const std::string & sVariableName, int64_t nValue);
 			void setDouble (const std::string& sVariableName, double dValue);
 			void setBool (const std::string& sVariableName, bool bValue);
-			void setEnum (const std::string& sVariableName, uint32_t nValue);
+			void setEnumRaw (const std::string& sVariableName, uint32_t nValue);
+			void setEnum (const std::string& sVariableName, const std::string & sValue);
 
 			int64_t getInteger(const std::string& sVariableName);
 			double getDouble(const std::string& sVariableName);

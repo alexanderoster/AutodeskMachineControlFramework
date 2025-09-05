@@ -34,6 +34,7 @@ Abstract: This is a stub class definition of CModelDataComponentInstance
 #include "libmcenv_modeldatacomponentinstance.hpp"
 #include "libmcenv_modeldatameshinstance.hpp"
 #include "libmcenv_interfaceexception.hpp"
+#include "libmcenv_boundingbox3d.hpp"
 
 // Include custom headers here.
 
@@ -47,8 +48,8 @@ using namespace LibMCEnv::Impl;
  Class definition of CModelDataComponentInstance 
 **************************************************************************************************************************/
 
-CModelDataComponentInstance::CModelDataComponentInstance(Lib3MF::PModel pModel, Lib3MF::PObject p3MFObject, LibMCEnv::sModelDataTransform transform, AMC::PMeshHandler pMeshHandler)
-	: m_LocalTransform (transform), m_pModel (pModel), m_pMeshHandler (pMeshHandler)
+CModelDataComponentInstance::CModelDataComponentInstance(Lib3MF::PModel pModel, Lib3MF::PObject p3MFObject, LibMCEnv::sModelDataTransform parentTransform, LibMCEnv::sModelDataTransform localTransform, AMC::PMeshHandler pMeshHandler)
+	: m_LocalTransform (localTransform), m_ParentTransform (parentTransform), m_pModel (pModel), m_pMeshHandler (pMeshHandler)
 {
 	if (pMeshHandler == nullptr)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
@@ -115,6 +116,7 @@ CModelDataComponentInstance::CModelDataComponentInstance(Lib3MF::PModel pModel, 
 	}
 
 	m_LocalTransform = AMC::CMeshUtils::createIdentityTransform();
+	m_ParentTransform = AMC::CMeshUtils::createIdentityTransform();
 
 	addBuildItem(p3MFBuildItem);
 }
@@ -132,6 +134,7 @@ CModelDataComponentInstance::CModelDataComponentInstance(Lib3MF::PModel pModel, 
 	m_sUUID = AMCCommon::CUtils::createUUID();
 
 	m_LocalTransform = AMC::CMeshUtils::createIdentityTransform();
+	m_ParentTransform = AMC::CMeshUtils::createIdentityTransform();
 
 	auto pBuildItemIterator = m_pModel->GetBuildItems();
 	while (pBuildItemIterator->MoveNext()) {
@@ -155,6 +158,7 @@ CModelDataComponentInstance::CModelDataComponentInstance(Lib3MF::CWrapper* p3MFW
 	m_sUUID = AMCCommon::CUtils::createUUID();
 
 	m_LocalTransform = AMC::CMeshUtils::createIdentityTransform();
+	m_ParentTransform = AMC::CMeshUtils::createIdentityTransform();
 	m_pModel = p3MFWrapper->CreateModel();
 
 	std::vector<uint8_t> Buffer;
@@ -285,7 +289,7 @@ IModelDataComponentInstance * CModelDataComponentInstance::GetSubComponent(const
 {
 	if (nIndex < m_SubComponents.size()) {
 		auto& iter = m_SubComponents.at(nIndex);
-		return new CModelDataComponentInstance(m_pModel, iter.first, iter.second, m_pMeshHandler);
+		return new CModelDataComponentInstance(m_pModel, iter.first, GetAbsoluteTransform (), iter.second, m_pMeshHandler);
 	}
 	else {
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCOMPONENTINDEX);
@@ -293,4 +297,47 @@ IModelDataComponentInstance * CModelDataComponentInstance::GetSubComponent(const
 	}
 
 }
+
+IBoundingBox3D* CModelDataComponentInstance::CalculateBoundingBox() 
+{
+	std::unique_ptr<CBoundingBox3D> boundingBox(new CBoundingBox3D());
+
+	for (auto iSubComponent : m_SubComponents) {
+
+		auto subcomponentTransform = AMC::CMeshUtils::multiplyTransforms(GetAbsoluteTransform(), iSubComponent.second);
+
+		auto transform3MF = AMC::CMeshUtils::mapTo3MFTransform (subcomponentTransform);
+
+		auto box3MF = iSubComponent.first->GetOutboxWithTransform (transform3MF);
+		boundingBox->AddPointCoordinates(box3MF.m_MinCoordinate[0], box3MF.m_MinCoordinate[1], box3MF.m_MinCoordinate[2]);
+		boundingBox->AddPointCoordinates(box3MF.m_MaxCoordinate[0], box3MF.m_MaxCoordinate[1], box3MF.m_MaxCoordinate[2]);
+	}
+
+	for (auto iSolid : m_Solids) {
+
+		auto solidTransform = AMC::CMeshUtils::multiplyTransforms(GetAbsoluteTransform(), iSolid.second);
+
+		auto transform3MF = AMC::CMeshUtils::mapTo3MFTransform(solidTransform);
+
+		auto box3MF = iSolid.first->GetOutboxWithTransform(transform3MF);
+		boundingBox->AddPointCoordinates(box3MF.m_MinCoordinate[0], box3MF.m_MinCoordinate[1], box3MF.m_MinCoordinate[2]);
+		boundingBox->AddPointCoordinates(box3MF.m_MaxCoordinate[0], box3MF.m_MaxCoordinate[1], box3MF.m_MaxCoordinate[2]);
+	}
+
+	for (auto iSupport : m_Supports) {
+
+		auto solidTransform = AMC::CMeshUtils::multiplyTransforms(GetAbsoluteTransform(), iSupport.second);
+
+		auto transform3MF = AMC::CMeshUtils::mapTo3MFTransform(solidTransform);
+
+		auto box3MF = iSupport.first.first->GetOutboxWithTransform(transform3MF);
+		boundingBox->AddPointCoordinates(box3MF.m_MinCoordinate[0], box3MF.m_MinCoordinate[1], box3MF.m_MinCoordinate[2]);
+		boundingBox->AddPointCoordinates(box3MF.m_MaxCoordinate[0], box3MF.m_MaxCoordinate[1], box3MF.m_MaxCoordinate[2]);
+	}
+
+
+	return boundingBox.release();
+
+}
+
 

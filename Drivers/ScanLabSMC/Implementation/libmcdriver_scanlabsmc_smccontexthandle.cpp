@@ -44,8 +44,8 @@ using namespace LibMCDriver_ScanLabSMC::Impl;
 **************************************************************************************************************************/
 
 
-CSMCContextHandle::CSMCContextHandle(PScanLabSMCSDK pSDK, slscHandle handle)
-    : m_Handle(handle), m_pSDK (pSDK)
+CSMCContextHandle::CSMCContextHandle(PScanLabSMCSDK pSDK, slscHandle handle, eLibMCDriver_ScanLabSMCSMCConfigVersion version)
+    : m_Handle(handle), m_pSDK (pSDK), m_Version (version)
 {
 
 }

@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "header_pugixml.hpp"
 #include "amc_resourcepackage.hpp"
 #include "amc_ui_interfaces.hpp"
+#include "amc_ui_frontendstate.hpp"
+#include "amc_ui_frontenddefinition.hpp"
 #include "amc_ui_expression.hpp"
 
 #include <memory>
@@ -127,6 +129,8 @@ namespace AMC {
 		LibMCUI::PEventHandler m_pUIEventHandler;
 		LibMCEnv::PWrapper m_pEnvironmentWrapper;
 
+		PUIFrontendDefinition m_pFrontendDefinition;
+
 
 		void addMenuItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string & sDescription, const std::string& sTargetPage, const std::string & sEventName);
 		void addToolbarItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName);
@@ -143,11 +147,9 @@ namespace AMC {
 		
 		virtual ~CUIHandler();
 		
+		// Generic functionality
 		std::string getAppName();
 		std::string getCopyrightString();
-
-		void writeConfigurationToJSON (CJSONWriter & writer, CParameterHandler* pClientVariableHandler);
-		void writeStateToJSON(CJSONWriter& writer, CParameterHandler* pClientVariableHandler);
 
 		void loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibraryPath);
 
@@ -155,20 +157,36 @@ namespace AMC {
 
 		PResourcePackage getCoreResourcePackage ();
 
-		PUIModuleItem findModuleItem(const std::string & sUUID);
-
-		PUIPage findPageOfModuleItem(const std::string& sUUID);
 
 		CUIHandleEventResponse handleEvent(const std::string& sEventName, const std::string& sSenderUUID, const std::string& sEventFormPayloadJSON, const std::string & sEventParameterJSON, PAPIAuth pAPIAuth);
 
 		virtual void ensureUIEventExists(const std::string& sEventName) override;
 
-		virtual void populateClientVariables(CParameterHandler * pClientVariableHandler);
-
 		PUIPage findPage(const std::string& sName);
 		PUIDialog findDialog(const std::string& sName);
+		PUIPage findPageByUUID(const std::string& sUUID);
+		PUIDialog findDialogByUUID(const std::string& sUUID);
 
 		AMC::PUISystemState getUISystemState();
+
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
+		void writeLegacyConfigurationToJSON (CJSONWriter& writer);
+		void writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* pLegacyClientVariableHandler);
+		PUIModuleItem findModuleItem(const std::string& sUUID);
+		PUIPage findPageOfModuleItem(const std::string& sUUID);
+		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler);
+
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// New UI Frontend System
+		/////////////////////////////////////////////////////////////////////////////////////
+		void frontendWriteStatusToJSON (CJSONWriter& writer, CUIFrontendState * pFrontendState);
+
+		PUIFrontendDefinition getFrontendDefinition ();
+
 	};
 	
 	typedef std::shared_ptr<CUIHandler> PUIHandler;

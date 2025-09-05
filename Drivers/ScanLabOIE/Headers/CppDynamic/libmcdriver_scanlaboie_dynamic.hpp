@@ -245,6 +245,8 @@ public:
 			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEEXECUTIONMODE: return "INVALIDOIEEXECUTIONMODE";
 			case LIBMCDRIVER_SCANLABOIE_ERROR_POSITIONMISSINGINOIERTCIDLIST: return "POSITIONMISSINGINOIERTCIDLIST";
 			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEDEVICESTATE: return "INVALIDOIEDEVICESTATE";
+			case LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED: return "FREQUENCYCHANGENOTALLOWED";
+			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDRECORDINGFREQUENCY: return "INVALIDRECORDINGFREQUENCY";
 		}
 		return "UNKNOWN";
 	}
@@ -320,6 +322,8 @@ public:
 			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEEXECUTIONMODE: return "Invalid OIE Execution mode.";
 			case LIBMCDRIVER_SCANLABOIE_ERROR_POSITIONMISSINGINOIERTCIDLIST: return "Position missing in OIE RTC ID List.";
 			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEDEVICESTATE: return "Invalid OIE device state.";
+			case LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED: return "Frequency change not allowed.";
+			case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDRECORDINGFREQUENCY: return "Invalid recording frequency.";
 		}
 		return "unknown error";
 	}
@@ -630,6 +634,8 @@ public:
 	inline void StartAppByMinorVersion(const std::string & sName, const LibMCDriver_ScanLabOIE_uint32 nMajorVersion, const LibMCDriver_ScanLabOIE_uint32 nMinorVersion);
 	inline void StopApp();
 	inline bool AppIsRunning();
+	inline void SetRecordingFrequency(const eOIERecordingFrequency eFrequency);
+	inline eOIERecordingFrequency GetRecordingFrequency();
 	inline void GetRunningApp(std::string & sName, LibMCDriver_ScanLabOIE_uint32 & nMajor, LibMCDriver_ScanLabOIE_uint32 & nMinor, LibMCDriver_ScanLabOIE_uint32 & nPatch);
 	inline void InstallApp(const CInputVector<LibMCDriver_ScanLabOIE_uint8> & AppPackageBuffer);
 	inline void UninstallAppByName(const std::string & sName);
@@ -854,6 +860,8 @@ public:
 		pWrapperTable->m_OIEDevice_StartAppByMinorVersion = nullptr;
 		pWrapperTable->m_OIEDevice_StopApp = nullptr;
 		pWrapperTable->m_OIEDevice_AppIsRunning = nullptr;
+		pWrapperTable->m_OIEDevice_SetRecordingFrequency = nullptr;
+		pWrapperTable->m_OIEDevice_GetRecordingFrequency = nullptr;
 		pWrapperTable->m_OIEDevice_GetRunningApp = nullptr;
 		pWrapperTable->m_OIEDevice_InstallApp = nullptr;
 		pWrapperTable->m_OIEDevice_UninstallAppByName = nullptr;
@@ -1484,6 +1492,24 @@ public:
 			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_OIEDevice_SetRecordingFrequency = (PLibMCDriver_ScanLabOIEOIEDevice_SetRecordingFrequencyPtr) GetProcAddress(hLibrary, "libmcdriver_scanlaboie_oiedevice_setrecordingfrequency");
+		#else // _WIN32
+		pWrapperTable->m_OIEDevice_SetRecordingFrequency = (PLibMCDriver_ScanLabOIEOIEDevice_SetRecordingFrequencyPtr) dlsym(hLibrary, "libmcdriver_scanlaboie_oiedevice_setrecordingfrequency");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEDevice_SetRecordingFrequency == nullptr)
+			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OIEDevice_GetRecordingFrequency = (PLibMCDriver_ScanLabOIEOIEDevice_GetRecordingFrequencyPtr) GetProcAddress(hLibrary, "libmcdriver_scanlaboie_oiedevice_getrecordingfrequency");
+		#else // _WIN32
+		pWrapperTable->m_OIEDevice_GetRecordingFrequency = (PLibMCDriver_ScanLabOIEOIEDevice_GetRecordingFrequencyPtr) dlsym(hLibrary, "libmcdriver_scanlaboie_oiedevice_getrecordingfrequency");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OIEDevice_GetRecordingFrequency == nullptr)
+			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_OIEDevice_GetRunningApp = (PLibMCDriver_ScanLabOIEOIEDevice_GetRunningAppPtr) GetProcAddress(hLibrary, "libmcdriver_scanlaboie_oiedevice_getrunningapp");
 		#else // _WIN32
 		pWrapperTable->m_OIEDevice_GetRunningApp = (PLibMCDriver_ScanLabOIEOIEDevice_GetRunningAppPtr) dlsym(hLibrary, "libmcdriver_scanlaboie_oiedevice_getrunningapp");
@@ -2011,6 +2037,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlaboie_oiedevice_appisrunning", (void**)&(pWrapperTable->m_OIEDevice_AppIsRunning));
 		if ( (eLookupError != 0) || (pWrapperTable->m_OIEDevice_AppIsRunning == nullptr) )
+			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlaboie_oiedevice_setrecordingfrequency", (void**)&(pWrapperTable->m_OIEDevice_SetRecordingFrequency));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEDevice_SetRecordingFrequency == nullptr) )
+			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlaboie_oiedevice_getrecordingfrequency", (void**)&(pWrapperTable->m_OIEDevice_GetRecordingFrequency));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OIEDevice_GetRecordingFrequency == nullptr) )
 			return LIBMCDRIVER_SCANLABOIE_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlaboie_oiedevice_getrunningapp", (void**)&(pWrapperTable->m_OIEDevice_GetRunningApp));
@@ -2916,6 +2950,27 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_OIEDevice_AppIsRunning(m_pHandle, &resultValue));
 		
 		return resultValue;
+	}
+	
+	/**
+	* COIEDevice::SetRecordingFrequency - Sets the recording frequency for the OIE. Fails if App is already running. Fails if Version is not OIEVersion3.
+	* @param[in] eFrequency - Frequency of data acquisition.
+	*/
+	void COIEDevice::SetRecordingFrequency(const eOIERecordingFrequency eFrequency)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEDevice_SetRecordingFrequency(m_pHandle, eFrequency));
+	}
+	
+	/**
+	* COIEDevice::GetRecordingFrequency - Returns the recording frequency for the OIE. Default is 100kHz. Returns invalid for all versions smaller than OIEVersion3.
+	* @return Frequency of data acquisition.
+	*/
+	eOIERecordingFrequency COIEDevice::GetRecordingFrequency()
+	{
+		eOIERecordingFrequency resultFrequency = (eOIERecordingFrequency) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OIEDevice_GetRecordingFrequency(m_pHandle, &resultFrequency));
+		
+		return resultFrequency;
 	}
 	
 	/**

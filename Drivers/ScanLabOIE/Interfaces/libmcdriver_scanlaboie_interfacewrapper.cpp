@@ -1994,6 +1994,56 @@ LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_appisrunning(LibMC
 	}
 }
 
+LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_setrecordingfrequency(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, eLibMCDriver_ScanLabOIEOIERecordingFrequency eFrequency)
+{
+	IBase* pIBaseClass = (IBase *)pOIEDevice;
+
+	try {
+		IOIEDevice* pIOIEDevice = dynamic_cast<IOIEDevice*>(pIBaseClass);
+		if (!pIOIEDevice)
+			throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDCAST);
+		
+		pIOIEDevice->SetRecordingFrequency(eFrequency);
+
+		return LIBMCDRIVER_SCANLABOIE_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabOIEInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabOIEException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_getrecordingfrequency(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, eLibMCDriver_ScanLabOIEOIERecordingFrequency * pFrequency)
+{
+	IBase* pIBaseClass = (IBase *)pOIEDevice;
+
+	try {
+		if (pFrequency == nullptr)
+			throw ELibMCDriver_ScanLabOIEInterfaceException (LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDPARAM);
+		IOIEDevice* pIOIEDevice = dynamic_cast<IOIEDevice*>(pIBaseClass);
+		if (!pIOIEDevice)
+			throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDCAST);
+		
+		*pFrequency = pIOIEDevice->GetRecordingFrequency();
+
+		return LIBMCDRIVER_SCANLABOIE_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabOIEInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabOIEException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabOIEResult libmcdriver_scanlaboie_oiedevice_getrunningapp(LibMCDriver_ScanLabOIE_OIEDevice pOIEDevice, const LibMCDriver_ScanLabOIE_uint32 nNameBufferSize, LibMCDriver_ScanLabOIE_uint32* pNameNeededChars, char * pNameBuffer, LibMCDriver_ScanLabOIE_uint32 * pMajor, LibMCDriver_ScanLabOIE_uint32 * pMinor, LibMCDriver_ScanLabOIE_uint32 * pPatch)
 {
 	IBase* pIBaseClass = (IBase *)pOIEDevice;
@@ -2809,6 +2859,10 @@ LibMCDriver_ScanLabOIEResult LibMCDriver_ScanLabOIE::Impl::LibMCDriver_ScanLabOI
 		*ppProcAddress = (void*) &libmcdriver_scanlaboie_oiedevice_stopapp;
 	if (sProcName == "libmcdriver_scanlaboie_oiedevice_appisrunning") 
 		*ppProcAddress = (void*) &libmcdriver_scanlaboie_oiedevice_appisrunning;
+	if (sProcName == "libmcdriver_scanlaboie_oiedevice_setrecordingfrequency") 
+		*ppProcAddress = (void*) &libmcdriver_scanlaboie_oiedevice_setrecordingfrequency;
+	if (sProcName == "libmcdriver_scanlaboie_oiedevice_getrecordingfrequency") 
+		*ppProcAddress = (void*) &libmcdriver_scanlaboie_oiedevice_getrecordingfrequency;
 	if (sProcName == "libmcdriver_scanlaboie_oiedevice_getrunningapp") 
 		*ppProcAddress = (void*) &libmcdriver_scanlaboie_oiedevice_getrunningapp;
 	if (sProcName == "libmcdriver_scanlaboie_oiedevice_installapp") 

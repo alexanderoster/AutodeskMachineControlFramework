@@ -100,6 +100,43 @@ namespace AMC {
 		return std::stoull(sString);
 	}
 
+	void CAPIFormFields::addRequestParameter(const std::string& sName, const std::string& sValue)
+	{
+		if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sName))
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDQUERYPARAMETER, sName);
+
+		auto iIter = m_RequestParameters.find(sName);
+		if (iIter != m_RequestParameters.end())
+			throw ELibMCInterfaceException(LIBMC_ERROR_DUPLICATEQUERYPARAMETER, sName);
+
+		m_RequestParameters.insert(std::make_pair(sName, sValue));
+
+	}
+
+	bool CAPIFormFields::hasRequestParameter(const std::string& sName)
+	{
+		auto iIter = m_RequestParameters.find(sName);
+		if (iIter != m_RequestParameters.end())
+			return true;
+
+		return false;
+	}
+
+	std::string CAPIFormFields::getRequestParameter(const std::string& sName, bool bFailIfNotExistent)
+	{
+		auto iIter = m_RequestParameters.find(sName);
+		if (iIter != m_RequestParameters.end())
+			return iIter->second;
+
+		if (bFailIfNotExistent)
+			throw ELibMCInterfaceException(LIBMC_ERROR_QUERYPARAMETERNOTFOUND, sName);
+
+		return "";
+
+
+	}
+
+
 	CAPIHandler::CAPIHandler(const std::string& sClientHash)
 		: m_sClientHash (sClientHash)
 	{

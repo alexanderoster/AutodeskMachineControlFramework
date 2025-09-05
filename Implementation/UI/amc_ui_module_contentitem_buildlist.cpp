@@ -231,9 +231,9 @@ void CUIModule_ContentBuildList::writeButtonsToJSON(CJSONWriter& writer, CJSONWr
 }
 
 
-void CUIModule_ContentBuildList::addDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
-{
 
+void CUIModule_ContentBuildList::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pLegacyClientVariableHandler, uint32_t nStateID)
+{
 	std::string sLoadingText = m_LoadingText.evaluateStringValue(m_pStateMachineData);
 
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "buildlist");
@@ -243,16 +243,6 @@ void CUIModule_ContentBuildList::addDefinitionToJSON(CJSONWriter& writer, CJSONW
 	object.addString(AMC_API_KEY_UI_ITEMSELECTIONVALUEUUID, m_sSelectedBuildFieldUUID);
 	object.addString(AMC_API_KEY_UI_ITEMBUTTONVALUEUUID, m_sSelectedButtonFieldUUID);
 	object.addInteger(AMC_API_KEY_UI_ITEMENTRIESPERPAGE, m_nEntriesPerPage);
-
-	writeHeadersToJSON(writer, object);
-	writeButtonsToJSON(writer, object);
-
-	CJSONWriterArray entriesArray(writer);
-	object.addArray(AMC_API_KEY_UI_ITEMENTRIES, entriesArray);
-}
-
-void CUIModule_ContentBuildList::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
-{
 
 	writeHeadersToJSON(writer, object);
 	writeButtonsToJSON(writer, object);

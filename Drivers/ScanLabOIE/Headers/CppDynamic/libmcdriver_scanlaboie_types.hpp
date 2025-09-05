@@ -163,6 +163,8 @@ typedef void * LibMCDriver_ScanLabOIE_pvoid;
 #define LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEEXECUTIONMODE 1056 /** Invalid OIE Execution mode. */
 #define LIBMCDRIVER_SCANLABOIE_ERROR_POSITIONMISSINGINOIERTCIDLIST 1057 /** Position missing in OIE RTC ID List. */
 #define LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEDEVICESTATE 1058 /** Invalid OIE device state. */
+#define LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED 1059 /** Frequency change not allowed. */
+#define LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDRECORDINGFREQUENCY 1060 /** Invalid recording frequency. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLabOIE
@@ -238,6 +240,8 @@ inline const char * LIBMCDRIVER_SCANLABOIE_GETERRORSTRING (LibMCDriver_ScanLabOI
     case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEEXECUTIONMODE: return "Invalid OIE Execution mode.";
     case LIBMCDRIVER_SCANLABOIE_ERROR_POSITIONMISSINGINOIERTCIDLIST: return "Position missing in OIE RTC ID List.";
     case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDOIEDEVICESTATE: return "Invalid OIE device state.";
+    case LIBMCDRIVER_SCANLABOIE_ERROR_FREQUENCYCHANGENOTALLOWED: return "Frequency change not allowed.";
+    case LIBMCDRIVER_SCANLABOIE_ERROR_INVALIDRECORDINGFREQUENCY: return "Invalid recording frequency.";
     default: return "unknown error";
   }
 }
@@ -272,10 +276,27 @@ namespace LibMCDriver_ScanLabOIE {
     OIEVersion3 = 3
   };
   
+  /**
+  * enum class eOIERecordingFrequency - Frequency to record OIE values.
+  */
+  enum class eOIERecordingFrequency : LibMCDriver_ScanLabOIE_int32 {
+    InvalidFrequency = 0, /** Invalid Frequency */
+    Record100kHz = 1, /** Record with 100.000 entries per second (1:1) */
+    Record50kHz = 2, /** Record with 50.000 entries per second (1:2) */
+    Record25kHz = 4, /** Record with 25.000 entries per second (1:4) */
+    Record20kHz = 5, /** Record with 20.000 entries per second (1:5) */
+    Record10kHz = 10, /** Record with 10.000 entries per second (1:10) */
+    Record5kHz = 20, /** Record with 5.000 entries per second (1:20) */
+    Record4kHz = 25, /** Record with 4.000 entries per second (1:25) */
+    Record2kHz = 50, /** Record with 2.000 entries per second (1:50) */
+    Record1kHz = 100 /** Record with 1.000 entries per second (1:100) */
+  };
+  
 } // namespace LibMCDriver_ScanLabOIE;
 
 // define legacy C-names for enums, structs and function types
 typedef LibMCDriver_ScanLabOIE::eRTCDeviceType eLibMCDriver_ScanLabOIERTCDeviceType;
 typedef LibMCDriver_ScanLabOIE::eOIEDeviceDriverType eLibMCDriver_ScanLabOIEOIEDeviceDriverType;
+typedef LibMCDriver_ScanLabOIE::eOIERecordingFrequency eLibMCDriver_ScanLabOIEOIERecordingFrequency;
 
 #endif // __LIBMCDRIVER_SCANLABOIE_TYPES_HEADER_CPP

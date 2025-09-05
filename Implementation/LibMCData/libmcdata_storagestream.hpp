@@ -119,6 +119,8 @@ public:
 
 	AMCCommon::CImportStream * getImportStream ();
 
+	void EnsureSHA256IsValid() override;
+
 };
 
 } // namespace Impl

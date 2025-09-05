@@ -41,13 +41,16 @@ Abstract: This is a stub class definition of CImageData
 // Include custom headers here.
 #include "Libraries/LodePNG/lodepng.h"
 
+#include "common_jpeg.hpp"
+
 #include <cmath>
-#include <turbojpeg.h>
+
 
 using namespace LibMCEnv::Impl;
 
 #define IMAGEDATA_MAXPIXELCOUNT (1024ULL * 1024ULL * 32ULL)
 #define IMAGEDATA_MAXPIXELSIZE (1024ULL * 1024ULL)
+
 
 /*************************************************************************************************************************
  Class definition of CImageData 
@@ -141,84 +144,50 @@ CImageData* CImageData::createFromJPEG(const uint8_t* pBuffer, uint64_t nBufferS
 	if (nBufferSize > IMAGEDATA_MAXJPEGSIZE)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJPEGBUFFERSIZE);
 
-	bool bStopOnWarning = false;
-	bool bFastUpsample = false;
-	bool bFastDCT = false;
-	
-	auto tjInstance = tj3Init(TJINIT_DECOMPRESS);
-	if (tjInstance == nullptr)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTINITIALIZEJPEGLIBRARY);
+	if (nBufferSize > IMAGEDATA_MAXJPEGSIZE)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJPEGSTREAMSIZE);
 
-	if (tj3Set(tjInstance, TJPARAM_STOPONWARNING, (int) bStopOnWarning) < 0)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTSETJPEGSTOPONWARNING);
-	if (tj3Set(tjInstance, TJPARAM_FASTUPSAMPLE, (int)bFastUpsample) < 0)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTSETFASTUPSAMPLE);
-	if (tj3Set(tjInstance, TJPARAM_FASTDCT, (int)bFastDCT) < 0)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTSETFASTDCT);
-	// Maybe TODO: TJPARAM_SCANLIMIT / TJPARAM_MAXMEMORY	
+	AMCCommon::CJPEGImageDecoder jpegDecoder(pBuffer, nBufferSize);
 
-	if (tj3DecompressHeader (tjInstance, pBuffer, nBufferSize) < 0)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTREADJPEGHEADER);
-
-	int nSubSamppling = tj3Get(tjInstance, TJPARAM_SUBSAMP);
-	int nWidth = tj3Get(tjInstance, TJPARAM_JPEGWIDTH);
-	int nHeight = tj3Get(tjInstance, TJPARAM_JPEGHEIGHT);
-	int nPrecision = tj3Get(tjInstance, TJPARAM_PRECISION);
+	int32_t nWidth = jpegDecoder.getWidth();
+	int32_t nHeight = jpegDecoder.getHeight();
 
 	if ((nWidth <= 0) || (nHeight <= 0) || (nWidth >= IMAGEDATA_MAXPIXELCOUNT) || (nHeight >= IMAGEDATA_MAXPIXELCOUNT))
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJPEGIMAGESIZE, "invalid JPEG image size: " + std::to_string (nWidth) + "x" + std::to_string (nHeight));
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDJPEGIMAGESIZE, "invalid JPEG image size: " + std::to_string(nWidth) + "x" + std::to_string(nHeight));
 
-	if (nPrecision > 8)
-		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_JPEGCOLORPRECISIONTOOHIGH, "JPEG color precisition is too high");
-	
+
 	size_t nPixelCount = (size_t)nWidth * (size_t)nHeight;
 
 	switch (pixelFormat) {
-		case eImagePixelFormat::GreyScale8bit: {
-			std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
-			pixelBuffer->resize(nPixelCount);
+	case eImagePixelFormat::GreyScale8bit: {
+		std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
+		jpegDecoder.writeToBufferGreyScale8bit(*pixelBuffer.get());
 
-			if (tj3Decompress8(tjInstance, pBuffer, nBufferSize, (unsigned char*)pixelBuffer.get (), 0, TJPF_GRAY) < 0)
-				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTDECOMPRESSJPEG, "could not decompress JPEG");
+		return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::GreyScale8bit, false);
 
-			return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::GreyScale8bit, false);
-
-			break;
-		}
-
-		case eImagePixelFormat::RGB24bit: {
-			std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
-			pixelBuffer->resize(nPixelCount * 3);
-
-			if (tj3Decompress8(tjInstance, pBuffer, nBufferSize, (unsigned char*)pixelBuffer.get(), 0, TJPF_RGB) < 0)
-				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTDECOMPRESSJPEG, "could not decompress JPEG");
-
-			return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::RGB24bit, false);
-
-			break;
-		}
-
-		case eImagePixelFormat::RGBA32bit: {
-			std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
-			pixelBuffer->resize(nPixelCount * 4);
-
-			if (tj3Decompress8(tjInstance, pBuffer, nBufferSize, (unsigned char*)pixelBuffer.get(), 0, TJPF_RGBX) < 0)
-				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTDECOMPRESSJPEG, "could not decompress JPEG");
-
-			uint8_t* pTarget = &pixelBuffer->at(3);
-			for (size_t nPixelIndex = 0; nPixelIndex < nPixelCount; nPixelIndex++) {
-				*pTarget = 255;
-				pTarget += 4;
-			}
-
-			return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::RGBA32bit, false);
-
-			break;
-		}
-
-		default:
-			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPIXELFORMAT, "Invalid pixel format");
 	}
+
+	case eImagePixelFormat::RGB24bit: {
+		std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
+		jpegDecoder.writeToBufferRGB24bit(*pixelBuffer.get());
+
+		return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::RGB24bit, false);
+
+	}
+
+	case eImagePixelFormat::RGBA32bit: {
+		std::unique_ptr <std::vector<uint8_t>> pixelBuffer(new std::vector<uint8_t>());
+		jpegDecoder.writeToBufferRGBA32bit(*pixelBuffer.get());
+
+		return new CImageData(pixelBuffer.release(), nWidth, nHeight, dDPIValueX, dDPIValueY, eImagePixelFormat::RGBA32bit, false);
+
+	}
+
+	default:
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPIXELFORMAT, "Invalid pixel format");
+	}
+	
+	
 
 }
 
@@ -495,7 +464,7 @@ IPNGImageData* CImageData::CreatePNGImage(IPNGImageStoreOptions* pPNGStorageOpti
 
 			case LibMCEnv::ePNGStorageFormat::RGB24bit:
 				convertedPixelData.resize(nTotalPixelCount * 3);
-				writeToRawMemoryEx_RGBA32bit(0, 0, m_nPixelCountX, m_nPixelCountY, convertedPixelData.data(), m_nPixelCountX * 3);
+				writeToRawMemoryEx_RGB24bit(0, 0, m_nPixelCountX, m_nPixelCountY, convertedPixelData.data(), m_nPixelCountX * 3);
 				errorCode = lodepng::encode(pResult->getPNGStreamBuffer(), convertedPixelData, m_nPixelCountX, m_nPixelCountY, LCT_RGB, 8);
 				break;
 
@@ -635,24 +604,27 @@ IJPEGImageData* CImageData::CreateJPEGImage(IJPEGImageStoreOptions* pJPEGStorage
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDIMAGEBUFFER);
 
 	std::unique_ptr<CJPEGImageData> pResult(new CJPEGImageData(m_nPixelCountX, m_nPixelCountY));
-
+	auto & jpegStream = pResult->getJPEGStreamBuffer();
 	switch (m_PixelFormat) {
-	case eImagePixelFormat::GreyScale8bit:
-		//error = lodepng::encode(pResult->getPNGStreamBuffer(), *m_PixelData, m_nPixelCountX, m_nPixelCountY, LCT_GREY, 8);
+	case eImagePixelFormat::GreyScale8bit: {
+		AMCCommon::CJPEGImageEncoder encoder(m_nPixelCountX, m_nPixelCountY, AMCCommon::eJPEGChannelCount::ccGray, m_PixelData->data(), jpegStream, false);
 		break;
-	case eImagePixelFormat::RGB24bit:
-		//error = lodepng::encode(pResult->getPNGStreamBuffer(), *m_PixelData, m_nPixelCountX, m_nPixelCountY, LCT_RGB, 8);
+	}
+	case eImagePixelFormat::RGB24bit: {
+		AMCCommon::CJPEGImageEncoder encoder(m_nPixelCountX, m_nPixelCountY, AMCCommon::eJPEGChannelCount::ccRGB, m_PixelData->data(), jpegStream, false);
 		break;
-	case eImagePixelFormat::RGBA32bit:
-		//error = lodepng::encode(pResult->getPNGStreamBuffer(), *m_PixelData, m_nPixelCountX, m_nPixelCountY, LCT_RGBA, 8);
+	}
+	case eImagePixelFormat::RGBA32bit: {
+		AMCCommon::CJPEGImageEncoder encoder(m_nPixelCountX, m_nPixelCountY, AMCCommon::eJPEGChannelCount::ccRGBAlpha, m_PixelData->data(), jpegStream, false);
 		break;
+	}
 
 	default:
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPIXELFORMAT);
 
 	}	
 
-	if (pResult->getJPEGStreamBuffer().empty())
+	if (jpegStream.empty())
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTSTOREJPEGIMAGE);
 
 	return pResult.release();
