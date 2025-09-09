@@ -43,16 +43,18 @@ namespace AMC {
 	private:
 
 		PParameterHandler m_pLegacyParameterHandler;
-		
-
+	
 		PUIFrontendDefinition m_pFrontendDefinition;
 
 	public:
+
 		CUIFrontendState (PUIFrontendDefinition pFrontendDefinition);
 
 		virtual ~CUIFrontendState();
 
 		PParameterHandler getLegacyParameterHandler ();
+
+		void writeModuleAttributesToJSON(CJSONWriter& writer, CJSONWriterObject &attributesObject, CUIFrontendDefinitionModuleStore * pModuleStore, CStateMachineData* pStateMachineData);
 
 	};
 

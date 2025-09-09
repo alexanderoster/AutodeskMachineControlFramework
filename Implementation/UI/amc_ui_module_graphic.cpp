@@ -127,7 +127,7 @@ void CUIModule_Graphic::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 
 }
 
-PUIModuleItem CUIModule_Graphic::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_Graphic::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
 	if (iIter != m_ItemMap.end())
@@ -136,7 +136,7 @@ PUIModuleItem CUIModule_Graphic::findItem(const std::string& sUUID)
 	return nullptr;
 }
 
-void CUIModule_Graphic::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_Graphic::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	for (auto item : m_Items) {
 		auto referenceList = item->getReferenceUUIDs();
@@ -146,12 +146,8 @@ void CUIModule_Graphic::populateItemMap(std::map<std::string, PUIModuleItem>& it
 	}
 }
 
-void CUIModule_Graphic::configurePostLoading()
-{
-}
 
-
-void CUIModule_Graphic::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_Graphic::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 

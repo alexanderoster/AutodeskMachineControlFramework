@@ -47,6 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
+
+
 CUIModule_LogsItem::CUIModule_LogsItem (const std::string& sItemPath, PUIModuleEnvironment pUIModuleEnvironment)
   : CUIModuleItem(sItemPath), m_pUIModuleEnvironment(pUIModuleEnvironment), m_sUUID(AMCCommon::CUtils::createUUID())
 {
@@ -66,6 +68,7 @@ std::string CUIModule_LogsItem::findElementPathByUUID(const std::string& sUUID)
 
 	return "";
 }
+
 
 void CUIModule_LogsItem::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
@@ -110,21 +113,9 @@ void CUIModule_LogsItem::setEventPayloadValue(const std::string& sEventName, con
 
 }
 
-void CUIModule_LogsItem::populateClientVariables(CParameterHandler* pClientVariableHandler)
-{
-	auto pStateMachineData = m_pUIModuleEnvironment->stateMachineData();
-/*	auto pGroup = pClientVariableHandler->addGroup(getItemPath(), "layer view");
-	pGroup->addNewUUIDParameter(AMC_API_KEY_UI_BUILDUUID, "Build UUID", AMCCommon::CUtils::createEmptyUUID());
-	pGroup->addNewIntParameter(AMC_API_KEY_UI_CURRENTLAYER, "Current layer index", 0);
-	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_SIZEX, "Platform size x", m_SizeX.evaluateNumberValue (pStateMachineData), 1.0);
-	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_SIZEY, "Platform size y", m_SizeY.evaluateNumberValue(pStateMachineData), 1.0);
-	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ORIGINX, "Platform origin x", m_OriginX.evaluateNumberValue(pStateMachineData), 1.0);
-	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ORIGINY, "Platform origin y", m_OriginY.evaluateNumberValue(pStateMachineData), 1.0);
-	pGroup->addNewStringParameter(AMC_API_KEY_UI_BASEIMAGERESOURCE, "Platform base image", m_BaseImage.evaluateStringValue(pStateMachineData)); */
-
-}
-
-
+/////////////////////////////////////////////////////////////////////////////////////
+// General module functionality
+/////////////////////////////////////////////////////////////////////////////////////
 
 CUIModule_Logs::CUIModule_Logs(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
 : CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
@@ -166,6 +157,10 @@ std::string CUIModule_Logs::getCaption()
 	return m_sCaption;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Legacy UI System
+/////////////////////////////////////////////////////////////////////////////////////
+
 
 void CUIModule_Logs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
@@ -177,7 +172,7 @@ void CUIModule_Logs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWrite
 
 }
 
-PUIModuleItem CUIModule_Logs::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_Logs::findLegacyItem(const std::string& sUUID)
 {
 	if (sUUID == m_sUUID)
 		return m_LogsItem;
@@ -188,23 +183,17 @@ PUIModuleItem CUIModule_Logs::findItem(const std::string& sUUID)
 	return nullptr;
 }
 
-void CUIModule_Logs::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_Logs::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	itemMap.insert (std::make_pair (m_sUUID, m_LogsItem));
 	itemMap.insert(std::make_pair(m_LogsItem->getUUID(), m_LogsItem));
 }
 
-void CUIModule_Logs::configurePostLoading()
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool CUIModule_Logs::isVersion2FrontendModule()
 {
+	return true;
 }
-
-
-void CUIModule_Logs::populateClientVariables(CParameterHandler* pParameterHandler)
-{
-	LibMCAssertNotNull(pParameterHandler);
-
-	m_LogsItem->populateClientVariables(pParameterHandler);
-
-
-}
-

@@ -92,7 +92,7 @@ APIHandler_FrontendType CAPIHandler_Frontend::parseRequest(const std::string& sU
 
 	if (requestType == eAPIRequestType::rtGet) {
 
-		if (sURI.empty () || (sURI == "/"))
+		if (sParameterString.empty () || (sParameterString == "/"))
 			return APIHandler_FrontendType::ftStatus;
 
 	}
@@ -109,7 +109,7 @@ APIHandler_FrontendType CAPIHandler_Frontend::parseRequest(const std::string& sU
 
 void CAPIHandler_Frontend::checkAuthorizationMode(const std::string& sURI, const eAPIRequestType requestType, bool& bNeedsToBeAuthorized, bool& bCreateNewSession)
 {
-	bNeedsToBeAuthorized = true;
+	bNeedsToBeAuthorized = true; 
 	bCreateNewSession = false;
 	
 }
@@ -142,7 +142,7 @@ PAPIResponse CAPIHandler_Frontend::handleRequest(const std::string& sURI, const 
 	auto uiType = parseRequest(sURI, requestType, sParameterUUID, sAdditionalParameter);
 
 	CJSONWriter writer;
-	writeJSONHeader(writer, AMC_API_PROTOCOL_UI);
+	writeJSONHeader(writer, AMC_API_PROTOCOL_FRONTEND);
 
 	switch (uiType) {
 	case APIHandler_FrontendType::ftStatus:

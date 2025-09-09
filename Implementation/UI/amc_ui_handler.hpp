@@ -135,11 +135,11 @@ namespace AMC {
 		void addMenuItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string & sDescription, const std::string& sTargetPage, const std::string & sEventName);
 		void addToolbarItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName);
 
-		PUIPage addPage_Unsafe (const std::string& sName);
+		PUIPage addPage_Unsafe (const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
 
-		PUICustomPage addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName);
+		PUICustomPage addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
 
-		PUIDialog addDialog_Unsafe(const std::string& sName, const std::string& sTitle);
+		PUIDialog addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
 
 	public:
 

@@ -156,7 +156,7 @@ std::string CUIModule_Content::getSubtitle()
 	return m_sSubtitle;
 }
 
-void CUIModule_Content::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_Content::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 
@@ -185,7 +185,7 @@ void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 
 }
 
-PUIModuleItem CUIModule_Content::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_Content::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
 	if (iIter != m_ItemMap.end())
@@ -207,7 +207,7 @@ void CUIModule_Content::addItem(PUIModule_ContentItem pItem)
 }
 
 
-void CUIModule_Content::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_Content::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	for (auto item : m_Items) {
 		auto referenceList = item->getReferenceUUIDs();
@@ -217,7 +217,7 @@ void CUIModule_Content::populateItemMap(std::map<std::string, PUIModuleItem>& it
 	}
 }
 
-void CUIModule_Content::configurePostLoading()
+void CUIModule_Content::configureLegacyPostLoading()
 {
 	for (auto item : m_Items)
 		item->configurePostLoading();

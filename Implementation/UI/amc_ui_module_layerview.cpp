@@ -359,7 +359,7 @@ void CUIModule_LayerView::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSON
 
 }
 
-PUIModuleItem CUIModule_LayerView::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_LayerView::findLegacyItem(const std::string& sUUID)
 {
 	if (m_PlatformItem->getUUID() == sUUID)
 		return m_PlatformItem;
@@ -367,17 +367,13 @@ PUIModuleItem CUIModule_LayerView::findItem(const std::string& sUUID)
 	return nullptr;
 }
 
-void CUIModule_LayerView::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_LayerView::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	itemMap.insert (std::make_pair (m_PlatformItem->getUUID (), m_PlatformItem));
 }
 
-void CUIModule_LayerView::configurePostLoading()
-{
-}
 
-
-void CUIModule_LayerView::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_LayerView::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 
@@ -386,3 +382,7 @@ void CUIModule_LayerView::populateClientVariables(CParameterHandler* pParameterH
 
 }
 
+bool CUIModule_LayerView::isVersion2FrontendModule()
+{
+	return true;
+}

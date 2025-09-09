@@ -174,7 +174,7 @@ void CUIModule_Custom::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWri
 
 }
 
-PUIModuleItem CUIModule_Custom::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_Custom::findLegacyItem(const std::string& sUUID)
 {
 	if (m_pCustomItem->getUUID() == sUUID)
 		return m_pCustomItem;
@@ -188,7 +188,7 @@ PUIModuleItem CUIModule_Custom::findItem(const std::string& sUUID)
 }
 
 
-void CUIModule_Custom::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_Custom::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	itemMap.insert(std::make_pair(m_pCustomItem->getUUID(), m_pCustomItem));
 	for (auto iEventIter : m_EventItemNameMap) {
@@ -200,12 +200,8 @@ void CUIModule_Custom::populateItemMap(std::map<std::string, PUIModuleItem>& ite
 	}
 }
 
-void CUIModule_Custom::configurePostLoading()
-{
-}
 
-
-void CUIModule_Custom::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_Custom::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 

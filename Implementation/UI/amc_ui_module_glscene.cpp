@@ -197,7 +197,7 @@ void CUIModule_GLSceneItem::addLegacyContentToJSON(CJSONWriter& writer, CJSONWri
 
 	auto pStateMachineData = m_pUIModuleEnvironment->stateMachineData();
 
-	m_pScene->writeSceneToJSON(writer, object, pClientVariableHandler);
+	m_pScene->writeLegacySceneToJSON(writer, object, pClientVariableHandler);
 
 }
 
@@ -332,7 +332,7 @@ std::string CUIModule_GLScene::getCaption()
 	return m_sCaption;
 }
 
-void CUIModule_GLScene::writeSceneToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
+void CUIModule_GLScene::writeLegacySceneToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)
 {
 	CJSONWriterObject sceneNode(writer);
 
@@ -370,7 +370,7 @@ void CUIModule_GLScene::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 	m_pSceneItem->addLegacyContentToJSON(writer, moduleObject, pLegacyClientVariableHandler, 0);
 }
 
-PUIModuleItem CUIModule_GLScene::findItem(const std::string& sUUID)
+PUIModuleItem CUIModule_GLScene::findLegacyItem(const std::string& sUUID)
 {
 	if (m_pSceneItem->getUUID() == sUUID)
 		return m_pSceneItem;
@@ -379,17 +379,13 @@ PUIModuleItem CUIModule_GLScene::findItem(const std::string& sUUID)
 }
 
 
-void CUIModule_GLScene::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_GLScene::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	itemMap.insert(std::make_pair(m_pSceneItem->getUUID(), m_pSceneItem));
 }
 
-void CUIModule_GLScene::configurePostLoading()
-{
-}
 
-
-void CUIModule_GLScene::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_GLScene::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 

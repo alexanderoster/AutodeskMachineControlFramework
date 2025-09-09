@@ -73,15 +73,15 @@ namespace AMC {
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		std::string m_sIcon;
-		std::string m_sCaption;
-		std::string m_sDescription;
+		CUIExpression m_Icon;
+		CUIExpression m_Caption;
+		CUIExpression m_Description;
 		uint32_t m_nGridColumns;
 		uint32_t m_nGridRows;
 
 	public:
 
-		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler);
+		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description);
 		
 		virtual ~CUIPage();
 
@@ -108,7 +108,7 @@ namespace AMC {
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		void frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState);
+		void frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState, CStateMachineData * pStateMachineData);
 										
 	};
 		

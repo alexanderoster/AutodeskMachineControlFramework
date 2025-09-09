@@ -94,11 +94,20 @@ namespace AMC {
 		std::string m_sName;
 		std::string m_sUUID;
 
+		uint32_t m_nGridColumn;
+		uint32_t m_nGridRow;
+		uint32_t m_nGridColumnSpan;
+		uint32_t m_nGridRowSpan;
+
 		std::string m_sModulePath;
 
 		PUIFrontendDefinitionModuleStore m_pModuleStore;
 		
 	public:
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// General module functionality
+		/////////////////////////////////////////////////////////////////////////////////////
 
 		CUIModule(const std::string & sName, const std::string& sParentPath, CUIFrontendDefinition * pFrontendDefinition);
 		
@@ -116,28 +125,32 @@ namespace AMC {
 
 		static std::string getTypeFromXML(pugi::xml_node& xmlNode);
 
-		virtual void configurePostLoading() = 0;
-
-		virtual bool isVersion2FrontendModule();
-
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Legacy UI System
 		/////////////////////////////////////////////////////////////////////////////////////
 
-		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) = 0;
+		virtual void populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap);
 
-		virtual void populateClientVariables(CParameterHandler* pParameterHandler) = 0;
+		virtual void populateLegacyClientVariables(CParameterHandler* pParameterHandler);
 
-		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) = 0;
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler);
 
-		virtual PUIModuleItem findItem(const std::string& sUUID) = 0;
+		virtual PUIModuleItem findLegacyItem(const std::string& sUUID);
+
+		virtual void configureLegacyPostLoading();
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		virtual void frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState);
+
+		virtual void frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData *pStateMachineData);
+
+		virtual bool isVersion2FrontendModule();
 
 		std::string getModulePath();
+
+		void setGridSpan(uint32_t nGridColumn, uint32_t nGridRow, uint32_t nGridColumnSpan, uint32_t nGridRowSpan);
+		void getGridSpan(uint32_t & nGridColumn, uint32_t & nGridRow, uint32_t & nGridColumnSpan, uint32_t & nGridRowSpan);
 
 		PUIFrontendDefinitionAttribute registerUUIDAttribute(const std::string& sAttributeName, const CUIExpression & expression);
 		PUIFrontendDefinitionAttribute registerIntegerAttribute(const std::string& sAttributeName, const CUIExpression& expression);

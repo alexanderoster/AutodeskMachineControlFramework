@@ -98,20 +98,14 @@ namespace AMC {
 	class CUIModule_GridSection {
 	private:
 		PUIModule m_pModule;
-		int m_nColumnStart, m_nColumnEnd, m_nRowStart, m_nRowEnd;
 		eUIModule_GridColumnPosition m_ColumnPosition;
 		eUIModule_GridRowPosition m_RowPosition;
 		bool m_bScrollbars;
 
 	public:
-		CUIModule_GridSection(PUIModule pModule, int nColumnStart, int nColumnEnd, int nRowStart, int nRowEnd, eUIModule_GridColumnPosition columnPosition, eUIModule_GridRowPosition rowPosition, bool bScrollbars);
+		CUIModule_GridSection(PUIModule pModule, eUIModule_GridColumnPosition columnPosition, eUIModule_GridRowPosition rowPosition, bool bScrollbars);
 
 		CUIModule * getModule();
-
-		int getColumnStart();
-		int getColumnEnd();
-		int getRowStart();
-		int getRowEnd ();
 
 		eUIModule_GridColumnPosition getColumnPosition ();
 		std::string getColumnPositionString();
@@ -125,8 +119,6 @@ namespace AMC {
 	class CUIModule_Grid : public CUIModule {
 	protected:		
 
-		std::string m_sCaption;
-
 		std::map<std::string, PUIModuleItem> m_ItemMap;
 		std::map<std::string, PUIModule_GridSection> m_SectionMap;
 		std::vector<PUIModule_GridSection> m_SectionList;
@@ -134,9 +126,13 @@ namespace AMC {
 		std::vector<PUIModule_GridRow> m_Rows;
 		std::vector<PUIModule_GridColumn> m_Columns;
 
-		void addSection(PUIModule pModule, int nColumnStart, int nColumnEnd, int nRowStart, int nRowEnd, eUIModule_GridColumnPosition columnPosition, eUIModule_GridRowPosition rowPosition, bool bScrollbars);
+		void addSection(PUIModule pModule, eUIModule_GridColumnPosition columnPosition, eUIModule_GridRowPosition rowPosition, bool bScrollbars);
 
 	public:
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// General module functionality
+		/////////////////////////////////////////////////////////////////////////////////////
 
 		CUIModule_Grid(pugi::xml_node & xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment);
 		
@@ -148,16 +144,29 @@ namespace AMC {
 
 		std::string getCaption () override;
 
-		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
-
-		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
-
-		virtual PUIModuleItem findItem(const std::string& sUUID) override;
 		PUIModule_GridSection findSection(const std::string& sUUID);
 
-		void configurePostLoading() override;
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
 
-		virtual void populateClientVariables(CParameterHandler* pParameterHandler) override;
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
+
+		virtual void populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
+
+		virtual PUIModuleItem findLegacyItem(const std::string& sUUID) override;
+
+		void configureLegacyPostLoading() override;
+
+		virtual void populateLegacyClientVariables(CParameterHandler* pParameterHandler) override;
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// New UI Frontend System
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		virtual void frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData) override;
+
+		bool isVersion2FrontendModule() override;
 
 
 	};

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2025 Autodesk Inc.
 
 All rights reserved.
 
@@ -28,30 +28,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#define __AMCIMPL_UI_DIALOG
-#define __AMCIMPL_UI_PAGE
-#define __AMCIMPL_UI_MODULE
 
-#include "amc_ui_page.hpp"
-#include "amc_ui_dialog.hpp"
-#include "amc_ui_module.hpp"
-#include "libmc_exceptiontypes.hpp"
-#include "common_utils.hpp"
+#ifndef __AMC_API_HANDLER_VERSION
+#define __AMC_API_HANDLER_VERSION
 
-using namespace AMC;
+#include "amc_api_handler.hpp"
+#include "amc_logger.hpp"
+#include "amc_api_response.hpp"
 
-CUIDialog::CUIDialog(const std::string& sName, const std::string& sTitle, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
-	: CUIPage (sName, pUIEventHandler, icon, caption, description), m_sTitle (sTitle)
-{
+#include "amc_systemstate.hpp"
 
+namespace AMC {
+
+	enum class APIHandler_VersionType {
+		vtUnknown = 0,
+		vtVersion = 1
+	};
+
+	class CAPIHandler_Version : public CAPIHandler {
+	private:
+
+		PSystemState m_pSystemState;
+		
+		APIHandler_VersionType parseRequest(const std::string& sURI, const eAPIRequestType requestType, std::string & sParameterUUID, std::string & sAdditionalParameter);
+
+		void handleStatusRequest(CJSONWriter& writer, PAPIAuth pAuth);
+
+	public:
+
+		CAPIHandler_Version(PSystemState pSystemState);
+
+		virtual ~CAPIHandler_Version();
+				
+		virtual void checkAuthorizationMode(const std::string& sURI, const eAPIRequestType requestType, bool& bNeedsToBeAuthorized, bool& bCreateNewSession) override;
+
+		virtual std::string getBaseURI () override;
+
+		virtual PAPIResponse handleRequest(const std::string& sURI, const eAPIRequestType requestType, CAPIFormFields & pFormFields, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth) override;
+
+	};
+
+	
 }
 
-CUIDialog::~CUIDialog()
-{
 
-}
+#endif //__AMC_API_HANDLER_VERSION
 
-std::string CUIDialog::getTitle()
-{
-	return m_sTitle;
-}
