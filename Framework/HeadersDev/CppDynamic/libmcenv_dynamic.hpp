@@ -2538,6 +2538,7 @@ public:
 	inline LibMCEnv_int64 GetAttributeIntegerValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_int64 nMinValue, const LibMCEnv_int64 nMaxValue);
 	inline void SetAttributeIntegerValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_int64 nValue);
 	inline LibMCEnv_double GetAttributeDoubleValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue);
+	inline void SetAttributeDoubleValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_double dValue);
 	inline bool GetAttributeBoolValue(const std::string & sNameSpace, const std::string & sName);
 	inline std::string GetAttributeUUIDValue(const std::string & sNameSpace, const std::string & sName);
 	inline std::string GetAttributeValueDef(const std::string & sNameSpace, const std::string & sName, const std::string & sDefaultValue);
@@ -4162,6 +4163,7 @@ public:
 		pWrapperTable->m_XMLDocumentNode_GetAttributeIntegerValue = nullptr;
 		pWrapperTable->m_XMLDocumentNode_SetAttributeIntegerValue = nullptr;
 		pWrapperTable->m_XMLDocumentNode_GetAttributeDoubleValue = nullptr;
+		pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue = nullptr;
 		pWrapperTable->m_XMLDocumentNode_GetAttributeBoolValue = nullptr;
 		pWrapperTable->m_XMLDocumentNode_GetAttributeUUIDValue = nullptr;
 		pWrapperTable->m_XMLDocumentNode_GetAttributeValueDef = nullptr;
@@ -9580,6 +9582,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_XMLDocumentNode_GetAttributeDoubleValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue = (PLibMCEnvXMLDocumentNode_SetAttributeDoubleValuePtr) GetProcAddress(hLibrary, "libmcenv_xmldocumentnode_setattributedoublevalue");
+		#else // _WIN32
+		pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue = (PLibMCEnvXMLDocumentNode_SetAttributeDoubleValuePtr) dlsym(hLibrary, "libmcenv_xmldocumentnode_setattributedoublevalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16038,6 +16049,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_xmldocumentnode_getattributedoublevalue", (void**)&(pWrapperTable->m_XMLDocumentNode_GetAttributeDoubleValue));
 		if ( (eLookupError != 0) || (pWrapperTable->m_XMLDocumentNode_GetAttributeDoubleValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_xmldocumentnode_setattributedoublevalue", (void**)&(pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_XMLDocumentNode_SetAttributeDoubleValue == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_xmldocumentnode_getattributeboolvalue", (void**)&(pWrapperTable->m_XMLDocumentNode_GetAttributeBoolValue));
@@ -25303,6 +25318,17 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_XMLDocumentNode_GetAttributeDoubleValue(m_pHandle, sNameSpace.c_str(), sName.c_str(), dMinValue, dMaxValue, &resultValue));
 		
 		return resultValue;
+	}
+	
+	/**
+	* CXMLDocumentNode::SetAttributeDoubleValue - Sets double value of an attribute. Fails if attribute does not exist or attribute is not a double value.
+	* @param[in] sNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+	* @param[in] sName - Name of the attribute.
+	* @param[in] dValue - Attribute value.
+	*/
+	void CXMLDocumentNode::SetAttributeDoubleValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_XMLDocumentNode_SetAttributeDoubleValue(m_pHandle, sNameSpace.c_str(), sName.c_str(), dValue));
 	}
 	
 	/**

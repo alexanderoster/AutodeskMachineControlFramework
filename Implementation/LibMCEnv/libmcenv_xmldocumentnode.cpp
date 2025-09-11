@@ -142,6 +142,12 @@ LibMCEnv_double CXMLDocumentNode::GetAttributeDoubleValue(const std::string& sNa
 
 }
 
+void CXMLDocumentNode::SetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dValue)
+{
+	std::unique_ptr<IXMLDocumentAttribute> pAttribute(FindAttribute(sNameSpace, sName, true));
+	return pAttribute->SetDoubleValue(dValue);
+}
+
 bool CXMLDocumentNode::GetAttributeBoolValue(const std::string& sNameSpace, const std::string& sName)
 {
     std::unique_ptr<IXMLDocumentAttribute> pAttribute(FindAttribute(sNameSpace, sName, true));

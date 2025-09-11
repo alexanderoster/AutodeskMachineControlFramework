@@ -5845,6 +5845,17 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_setattributeintegerval
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_getattributedoublevalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_double dMinValue, LibMCEnv_double dMaxValue, LibMCEnv_double * pValue);
 
 /**
+* Sets double value of an attribute. Fails if attribute does not exist or attribute is not a double value.
+*
+* @param[in] pXMLDocumentNode - XMLDocumentNode instance.
+* @param[in] pNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+* @param[in] pName - Name of the attribute.
+* @param[in] dValue - Attribute value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_xmldocumentnode_setattributedoublevalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_double dValue);
+
+/**
 * Returns bool value of an attribute. Fails if attribute does not exist or attribute is not a boolean value.
 *
 * @param[in] pXMLDocumentNode - XMLDocumentNode instance.

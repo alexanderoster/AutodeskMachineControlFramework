@@ -5832,6 +5832,17 @@ typedef LibMCEnvResult (*PLibMCEnvXMLDocumentNode_SetAttributeIntegerValuePtr) (
 typedef LibMCEnvResult (*PLibMCEnvXMLDocumentNode_GetAttributeDoubleValuePtr) (LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_double dMinValue, LibMCEnv_double dMaxValue, LibMCEnv_double * pValue);
 
 /**
+* Sets double value of an attribute. Fails if attribute does not exist or attribute is not a double value.
+*
+* @param[in] pXMLDocumentNode - XMLDocumentNode instance.
+* @param[in] pNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+* @param[in] pName - Name of the attribute.
+* @param[in] dValue - Attribute value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvXMLDocumentNode_SetAttributeDoubleValuePtr) (LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_double dValue);
+
+/**
 * Returns bool value of an attribute. Fails if attribute does not exist or attribute is not a boolean value.
 *
 * @param[in] pXMLDocumentNode - XMLDocumentNode instance.
@@ -11479,6 +11490,7 @@ typedef struct {
 	PLibMCEnvXMLDocumentNode_GetAttributeIntegerValuePtr m_XMLDocumentNode_GetAttributeIntegerValue;
 	PLibMCEnvXMLDocumentNode_SetAttributeIntegerValuePtr m_XMLDocumentNode_SetAttributeIntegerValue;
 	PLibMCEnvXMLDocumentNode_GetAttributeDoubleValuePtr m_XMLDocumentNode_GetAttributeDoubleValue;
+	PLibMCEnvXMLDocumentNode_SetAttributeDoubleValuePtr m_XMLDocumentNode_SetAttributeDoubleValue;
 	PLibMCEnvXMLDocumentNode_GetAttributeBoolValuePtr m_XMLDocumentNode_GetAttributeBoolValue;
 	PLibMCEnvXMLDocumentNode_GetAttributeUUIDValuePtr m_XMLDocumentNode_GetAttributeUUIDValue;
 	PLibMCEnvXMLDocumentNode_GetAttributeValueDefPtr m_XMLDocumentNode_GetAttributeValueDef;

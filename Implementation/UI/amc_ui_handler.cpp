@@ -959,6 +959,8 @@ void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* 
     for (auto iter : m_Pages) {
         CJSONWriterObject page(writer);
         page.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
+        page.addString(AMC_API_KEY_UI_UUID, iter.second->getUUID());
+        page.addString(AMC_API_KEY_UI_PAGESHOWEVENT, iter.second->getShowEvent());
 
         CJSONWriterArray modules(writer);
         iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);

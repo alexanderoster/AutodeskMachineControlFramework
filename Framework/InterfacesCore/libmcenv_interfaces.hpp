@@ -4660,6 +4660,14 @@ public:
 	virtual LibMCEnv_double GetAttributeDoubleValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue) = 0;
 
 	/**
+	* IXMLDocumentNode::SetAttributeDoubleValue - Sets double value of an attribute. Fails if attribute does not exist or attribute is not a double value.
+	* @param[in] sNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
+	* @param[in] sName - Name of the attribute.
+	* @param[in] dValue - Attribute value.
+	*/
+	virtual void SetAttributeDoubleValue(const std::string & sNameSpace, const std::string & sName, const LibMCEnv_double dValue) = 0;
+
+	/**
 	* IXMLDocumentNode::GetAttributeBoolValue - Returns bool value of an attribute. Fails if attribute does not exist or attribute is not a boolean value.
 	* @param[in] sNameSpace - Namespace of the attribute. If empty, it inherits the namespace of the node.
 	* @param[in] sName - Name of the attribute.

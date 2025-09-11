@@ -93,6 +93,8 @@ public:
 
 	LibMCEnv_double GetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue) override;
 
+	void SetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dValue) override;
+
 	bool GetAttributeBoolValue(const std::string& sNameSpace, const std::string& sName) override;
 
 	std::string GetAttributeUUIDValue(const std::string& sNameSpace, const std::string& sName) override;

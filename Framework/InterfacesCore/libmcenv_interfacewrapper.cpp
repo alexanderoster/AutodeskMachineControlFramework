@@ -17201,6 +17201,36 @@ LibMCEnvResult libmcenv_xmldocumentnode_getattributedoublevalue(LibMCEnv_XMLDocu
 	}
 }
 
+LibMCEnvResult libmcenv_xmldocumentnode_setattributedoublevalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, LibMCEnv_double dValue)
+{
+	IBase* pIBaseClass = (IBase *)pXMLDocumentNode;
+
+	try {
+		if (pNameSpace == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pName == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sNameSpace(pNameSpace);
+		std::string sName(pName);
+		IXMLDocumentNode* pIXMLDocumentNode = dynamic_cast<IXMLDocumentNode*>(pIBaseClass);
+		if (!pIXMLDocumentNode)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIXMLDocumentNode->SetAttributeDoubleValue(sNameSpace, sName, dValue);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_xmldocumentnode_getattributeboolvalue(LibMCEnv_XMLDocumentNode pXMLDocumentNode, const char * pNameSpace, const char * pName, bool * pValue)
 {
 	IBase* pIBaseClass = (IBase *)pXMLDocumentNode;
@@ -33961,6 +33991,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_xmldocumentnode_setattributeintegervalue;
 	if (sProcName == "libmcenv_xmldocumentnode_getattributedoublevalue") 
 		*ppProcAddress = (void*) &libmcenv_xmldocumentnode_getattributedoublevalue;
+	if (sProcName == "libmcenv_xmldocumentnode_setattributedoublevalue") 
+		*ppProcAddress = (void*) &libmcenv_xmldocumentnode_setattributedoublevalue;
 	if (sProcName == "libmcenv_xmldocumentnode_getattributeboolvalue") 
 		*ppProcAddress = (void*) &libmcenv_xmldocumentnode_getattributeboolvalue;
 	if (sProcName == "libmcenv_xmldocumentnode_getattributeuuidvalue") 

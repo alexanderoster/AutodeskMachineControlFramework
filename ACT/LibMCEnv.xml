@@ -3367,6 +3367,12 @@
 			<param name="Value" type="double" pass="return" description="Attribute value." />
 		</method>
 
+		<method name="SetAttributeDoubleValue" description="Sets double value of an attribute. Fails if attribute does not exist or attribute is not a double value.">
+			<param name="NameSpace" type="string" pass="in" description="Namespace of the attribute. If empty, it inherits the namespace of the node." />
+			<param name="Name" type="string" pass="in" description="Name of the attribute." />
+			<param name="Value" type="double" pass="in" description="Attribute value." />
+		</method>
+
 		<method name="GetAttributeBoolValue" description="Returns bool value of an attribute. Fails if attribute does not exist or attribute is not a boolean value.">
 			<param name="NameSpace" type="string" pass="in" description="Namespace of the attribute. If empty, it inherits the namespace of the node." />
 			<param name="Name" type="string" pass="in" description="Name of the attribute." />
