@@ -82,7 +82,7 @@ public:
 	* Public member functions to implement.
 	*/
 
-	CMachineConfigurationXSDIterator::CMachineConfigurationXSDIterator(LibMCData::PMachineConfigurationXSDIterator pMachineConfigurationXSDIterator);
+	CMachineConfigurationXSDIterator(LibMCData::PMachineConfigurationXSDIterator pMachineConfigurationXSDIterator);
 
 	virtual ~CMachineConfigurationXSDIterator();
 
