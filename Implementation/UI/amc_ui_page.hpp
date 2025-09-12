@@ -59,9 +59,13 @@ namespace AMC {
 	protected:
 		std::string m_sName;
 		std::string m_sUUID;
+		std::string m_sShowEvent;
 
 		std::vector<PUIModule> m_Modules;
+		std::map<std::string, PUIModule> m_ModuleMapOfPage;
+		
 		CUIModule_UIEventHandler* m_pUIEventHandler;
+
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -81,11 +85,15 @@ namespace AMC {
 
 	public:
 
-		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description);
+		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description, const std::string& sShowEvent);
 		
 		virtual ~CUIPage();
 
 		std::string getName();
+
+		std::string getUUID();
+
+		std::string getShowEvent();
 
 		void addModule (PUIModule pModule);
 
@@ -100,6 +108,7 @@ namespace AMC {
 		// Legacy UI System
 		/////////////////////////////////////////////////////////////////////////////////////
 		virtual void writeLegacyModulesToJSON(CJSONWriter & writer, CJSONWriterArray & moduleArray, CParameterHandler* pLegacyClientVariableHandler);
+		virtual PUIModule findModuleByUUID(const std::string& sUUID) override;
 		virtual PUIModuleItem findModuleItemByUUID(const std::string& sUUID) override;
 		virtual void registerFormName(const std::string& sFormUUID, const std::string& sFormName) override;
 		virtual std::string findFormUUIDByName(const std::string& sFormName) override;

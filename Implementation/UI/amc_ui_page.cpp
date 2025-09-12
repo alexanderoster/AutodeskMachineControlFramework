@@ -45,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 
-CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
-	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1), m_Icon(icon), m_Description(description), m_Caption (caption)
+CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
+	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1), m_Icon(icon), m_Description(description), m_Caption (caption), m_sShowEvent(sShowEvent)
 {
 	if (sName.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -67,6 +67,16 @@ std::string CUIPage::getName()
 	return m_sName;
 }
 
+std::string CUIPage::getUUID()
+{
+	return m_sUUID;
+}
+
+std::string CUIPage::getShowEvent()
+{
+	return m_sShowEvent;
+}
+
 void CUIPage::addModule(PUIModule pModule)
 {
 	if (pModule.get() == nullptr)
@@ -77,8 +87,11 @@ void CUIPage::addModule(PUIModule pModule)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDMODULENAME);
 
 	m_Modules.push_back(pModule);
+	m_ModuleMapOfPage.insert(std::make_pair(pModule->getUUID(), pModule));
 
 	pModule->populateLegacyItemMap(m_ItemMapOfPage);
+
+	pModule->populateModuleMap(m_ModuleMapOfPage);
 	
 }
 
@@ -122,6 +135,14 @@ void CUIPage::writeLegacyModulesToJSON(CJSONWriter& writer, CJSONWriterArray& mo
 	}
 }
 
+PUIModule CUIPage::findModuleByUUID(const std::string& sUUID)
+{
+	auto iIter = m_ModuleMapOfPage.find(sUUID);
+	if (iIter != m_ModuleMapOfPage.end())
+		return iIter->second;
+
+	return nullptr;
+}
 
 PUIModuleItem CUIPage::findModuleItemByUUID(const std::string& sUUID)
 {

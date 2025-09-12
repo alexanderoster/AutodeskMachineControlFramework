@@ -117,9 +117,13 @@ namespace AMC {
 
 		virtual std::string getType() = 0;
 
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) = 0;
+
 		virtual std::string getCaption() = 0;
 
 		virtual std::string getUUID();
+
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) = 0;
 
 		static std::string getNameFromXML(pugi::xml_node& xmlNode);
 

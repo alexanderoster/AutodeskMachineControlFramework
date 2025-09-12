@@ -352,6 +352,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				
 			uiOnTimer() {
 				if (this.Application) {
+					this.Application.updateModules ();
 					this.Application.updateContentItems ();			
 				}													
 			},

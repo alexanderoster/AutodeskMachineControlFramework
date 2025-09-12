@@ -45,6 +45,7 @@ Abstract: This is the class declaration of CMachineConfigurationVersionIterator
 #endif
 
 // Include custom headers here.
+#include "libmcdata_machineconfigurationversion.hpp"
 
 
 namespace LibMCData {
@@ -79,8 +80,11 @@ public:
 	* Public member functions to implement.
 	*/
 
-	IMachineConfigurationVersion * GetCurrentVersion() override;
+	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
 
+	IMachineConfigurationVersion* GetCurrent() override;
+	
+	IMachineConfigurationVersionIterator* Clone() override;
 };
 
 } // namespace Impl

@@ -127,6 +127,10 @@ void CUIModule_Graphic::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 
 }
 
+void CUIModule_Graphic::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+}
+
 PUIModuleItem CUIModule_Graphic::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
@@ -134,6 +138,11 @@ PUIModuleItem CUIModule_Graphic::findLegacyItem(const std::string& sUUID)
 		return iIter->second;
 
 	return nullptr;
+}
+
+void CUIModule_Graphic::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Graphic>(*this)));
 }
 
 void CUIModule_Graphic::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)

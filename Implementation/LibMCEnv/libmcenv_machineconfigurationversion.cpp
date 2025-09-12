@@ -43,43 +43,63 @@ using namespace LibMCEnv::Impl;
  Class definition of CMachineConfigurationVersion 
 **************************************************************************************************************************/
 
-std::string CMachineConfigurationVersion::GetSchemaType()
+CMachineConfigurationVersion::CMachineConfigurationVersion(LibMCData::PMachineConfigurationVersion pMachineConfigurationVersion)
+    : m_pMachineConfigurationVersion(pMachineConfigurationVersion)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    if (pMachineConfigurationVersion.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
 }
 
-std::string CMachineConfigurationVersion::GetTypeName()
+CMachineConfigurationVersion::~CMachineConfigurationVersion()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
 }
 
-std::string CMachineConfigurationVersion::GetTypeUUID()
+std::string CMachineConfigurationVersion::GetVersionUUID()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetVersionUUID();
 }
 
-LibMCEnv_uint32 CMachineConfigurationVersion::GetXSDVersion()
+std::string CMachineConfigurationVersion::GetXSDUUID()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetXSDUUID();
 }
 
-std::string CMachineConfigurationVersion::GetXSDString()
+LibMCEnv_uint32 CMachineConfigurationVersion::GetNumericVersion()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetNumericVersion();
+}
+
+std::string CMachineConfigurationVersion::GetParentUUID()
+{
+    return m_pMachineConfigurationVersion->GetParentUUID();
 }
 
 std::string CMachineConfigurationVersion::GetConfigurationXMLString()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetConfigurationXMLString();
 }
 
-IXMLDocument * CMachineConfigurationVersion::GetConfigurationXMLDocument()
+std::string CMachineConfigurationVersion::GetUserUUID()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetUserUUID();
 }
 
-void CMachineConfigurationVersion::MakeActive()
+std::string CMachineConfigurationVersion::GetTimestamp()
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+    return m_pMachineConfigurationVersion->GetTimestamp();
 }
 
+IMachineConfigurationVersion* CMachineConfigurationVersion::CreateNewVersion(const std::string& sXMLString, const std::string& sUserUUID)
+{
+    auto pNewConfigurationVersion = m_pMachineConfigurationVersion->CreateNewVersion(sXMLString, sUserUUID);
+
+    if (pNewConfigurationVersion.get() == nullptr)
+        return nullptr;
+
+    return new CMachineConfigurationVersion(pNewConfigurationVersion);
+}
+
+IMachineConfigurationVersion* CMachineConfigurationVersion::MigrateToNewXSD(IMachineConfigurationXSD* pNewXSD, const std::string& sXMLString, const std::string& sUserUUID)
+{
+    throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+}

@@ -85,9 +85,15 @@ public:
 	
 	std::string GetAttributeValue(const std::string& sNameSpace, const std::string& sName) override;
 
+	void SetAttributeValue(const std::string& sNameSpace, const std::string& sName, const std::string& sValue) override;
+
 	LibMCEnv_int64 GetAttributeIntegerValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_int64 nMinValue, const LibMCEnv_int64 nMaxValue) override;
 
+	void SetAttributeIntegerValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_int64 nValue) override;
+
 	LibMCEnv_double GetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue) override;
+
+	void SetAttributeDoubleValue(const std::string& sNameSpace, const std::string& sName, const LibMCEnv_double dValue) override;
 
 	bool GetAttributeBoolValue(const std::string& sNameSpace, const std::string& sName) override;
 

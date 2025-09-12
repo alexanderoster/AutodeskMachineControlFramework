@@ -128,6 +128,17 @@ void CUIModule_Tabs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWrite
 
 }
 
+void CUIModule_Tabs::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+	CJSONWriterArray tabsNode(writer);
+	for (auto tab : m_Tabs) {
+		CJSONWriterObject tabObject(writer);
+		tab->addContentToJSON(writer, tabObject, pClientVariableHandler, nStateID);
+		tabsNode.addObject(tabObject);
+	}
+	moduleObject.addArray(AMC_API_KEY_UI_TABS, tabsNode);
+}
+
 PUIModuleItem CUIModule_Tabs::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
@@ -156,6 +167,16 @@ void CUIModule_Tabs::populateLegacyClientVariables(CParameterHandler* pParameter
 	for (auto pTab : m_Tabs)
 		pTab->populateLegacyClientVariables(pParameterHandler);
 
+}
+
+void CUIModule_Tabs::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Tabs>(*this)));
+
+	for (auto pTab : m_Tabs) {
+		moduleMap.insert(std::make_pair(pTab->getUUID(), pTab));
+		pTab->populateModuleMap(moduleMap);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

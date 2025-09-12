@@ -41,6 +41,8 @@ export default class AMCApplicationItem_Content_Form extends Common.AMCApplicati
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_Form");
 				
+		this.visible = true;
+
 		Assert.ArrayValue (itemJSON.entities);		
 		// TODO: parse input
 		this.entities = itemJSON.entities;
@@ -74,6 +76,8 @@ export default class AMCApplicationItem_Content_Form extends Common.AMCApplicati
 	{
 		Assert.ObjectValue (updateJSON);
 		
+		this.setVisible(updateJSON.visible);
+
 		if (updateJSON.entities) {
 			Assert.ArrayValue (updateJSON.entities);
 			
@@ -104,6 +108,8 @@ export default class AMCApplicationItem_Content_Form extends Common.AMCApplicati
 		
 				
 	}
-	
-		
+
+	setVisible(flag) {
+		this.visible = !!flag;
+  	}		
 }

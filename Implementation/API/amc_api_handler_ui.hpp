@@ -53,7 +53,8 @@ namespace AMC {
 		utDownload = 9,
 		utPointCloud = 10,
 		utWidgetRequest = 11,
-		utPointChannel = 12
+		utPointChannel = 12,
+		utModule = 13
 	};
 
 	class CAPIHandler_UI : public CAPIHandler {
@@ -73,6 +74,8 @@ namespace AMC {
 		void handleEventRequest(CJSONWriter& writer, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth);
 		void handleWidgetRequest(CJSONWriter& writer, const std::string & sWidgetUUID, const std::string& sRequestType, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth);
 		void handlePointChannelDataRequest(CJSONWriter& writer, const std::string& sParameterUUID, const std::string& sAdditionalParameter, PAPIAuth pAuth);
+
+		void handleModuleRequest(CJSONWriter& writer, const std::string& sParameterUUID, PAPIAuth pAuth, uint32_t nStateID);
 
 	public:
 

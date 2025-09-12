@@ -694,6 +694,8 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME 678 /** Duplicate frontend attribute name. */
 #define LIBMC_ERROR_INVALIDCOLUMNRANGE 679 /** Invalid column range. */
 #define LIBMC_ERROR_INVALIDROWRANGE 680 /** Invalid row range. */
+#define LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING 681 /** Configuration list name missing */
+#define LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING 682 /** Configuration list button name missing */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1300,6 +1302,8 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_DUPLICATEFRONTENDATTRIBUTENAME: return "Duplicate frontend attribute name.";
     case LIBMC_ERROR_INVALIDCOLUMNRANGE: return "Invalid column range.";
     case LIBMC_ERROR_INVALIDROWRANGE: return "Invalid row range.";
+    case LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING: return "Configuration list name missing";
+    case LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING: return "Configuration list button name missing";
     default: return "unknown error";
   }
 }
