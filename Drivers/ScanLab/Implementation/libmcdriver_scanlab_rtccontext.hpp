@@ -45,9 +45,10 @@ namespace Impl {
 /*************************************************************************************************************************
  Class declaration of CRTCContext 
 **************************************************************************************************************************/
-class CRTCContextOwnerData {
+
+class CRTCPowerMapping {
 private:
-	struct sPowerMappingKnot{ double x; double y; }; // generic point; interpret x/y per table
+	struct sPowerMappingKnot { double x; double y; }; // generic point; interpret x/y per table
 
 	// Invariants:
 	// - m_wattsToPercent is sorted by x = watts, y = percent, spans [w0..w100] -> [0..100]
@@ -55,20 +56,49 @@ private:
 	std::vector<sPowerMappingKnot> m_wattsToPercent;
 	std::vector<sPowerMappingKnot> m_percentToWatts;
 
+	double m_d0PercentLaserPowerInWatts;
+	double m_d100PercentLaserPowerInWatts;
+
 	double m_dEpsilon;
+
+	bool nearlyEqual(double a, double b, double eps);
+	void buildAndValidateMappings(const std::map<double, double>& userMap);
+	bool interpolate(const std::vector<sPowerMappingKnot>& pts, double x, double& y);
+
+public:
+
+	CRTCPowerMapping();
+
+	virtual ~CRTCPowerMapping();
+
+	void setMaxLaserPowerNoPowerCorrection(double d100PercentLaserPowerInWatts);
+	void setMaxLaserPowerLinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts);
+	void setMaxLaserPowerNonlinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts, std::map<double, double> laserPowerMapping);
+
+	double get0PercentLaserPowerInWatts();
+	double get100PercentLaserPowerInWatts();
+	bool mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts, double& dPercent);
+	bool mapLaserPowerFromPercentToWatts(double dLaserPowerInPercent, double& dWatts);
+	std::vector<sPowerMappingKnot>& getPercentToWattTable();
+	bool getLaserPowerCalibrationIsLinear();
+
+};
+
+typedef std::shared_ptr<CRTCPowerMapping> PRTCPowerMapping;
+
+
+class CRTCContextOwnerData {
+private:
+
 
 
 	PScanLabSDK m_pScanlabSDK;
 	std::string m_sAttributeFilterNameSpace;
 	std::string m_sAttributeFilterName;
 	int64_t m_nAttributeFilterValue;
-	double m_d0PercentLaserPowerInWatts;
-	double m_d100PercentLaserPowerInWatts;
+
 	eOIERecordingMode m_OIERecordingMode;
 
-	bool nearlyEqual(double a, double b, double eps);
-	void buildAndValidateMappings(const std::map<double, double>& userMap);
-	bool interpolate(const std::vector<sPowerMappingKnot>& pts, double x, double& y);
 
 
 public:
@@ -78,17 +108,6 @@ public:
 	void getAttributeFilters(std::string& sAttributeFilterNameSpace, std::string& sAttributeFilterName, int64_t& nAttributeFilterValue);
 	void setAttributeFilters(const std::string& sAttributeFilterNameSpace, const std::string& sAttributeFilterName, const int64_t sAttributeFilterValue);
 	
-	void setMaxLaserPowerNoPowerCorrection (double d100PercentLaserPowerInWatts);
-	void setMaxLaserPowerLinearPowerCorrection (double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts);
-	void setMaxLaserPowerNonlinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts, std::map<double, double> laserPowerMapping);
-
-	double get0PercentLaserPowerInWatts();
-	double get100PercentLaserPowerInWatts();
-	bool mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts, double & dPercent);
-	bool mapLaserPowerFromPercentToWatts(double dLaserPowerInPercent, double & dWatts);
-	std::vector<sPowerMappingKnot> & getPercentToWattTable ();
-	bool getLaserPowerCalibrationIsLinear();
-
 	void setOIERecordingMode(eOIERecordingMode oieRecordingMode);
 	eOIERecordingMode getOIERecordingMode();
 	PScanLabSDK getScanLabSDK();
@@ -160,6 +179,8 @@ protected:
 	std::map<std::string, PGPIOSequenceInstance> m_GPIOSequences;
 
 	PNLightAFXProfileSelectorInstance m_pNLightAFXSelectorInstance;
+
+	PRTCPowerMapping m_pPowerMapping;
 	
 	void writeJumpSpeed (float jumpSpeed);
 

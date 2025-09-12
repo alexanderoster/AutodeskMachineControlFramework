@@ -422,7 +422,7 @@ void CDriver_ScanLab_RTC6::ConfigureLaserMode(const LibMCDriver_ScanLab::eLaserM
         if (((float)dMaxLaserPower < RTC6_MIN_MAXLASERPOWER) || ((float)dMaxLaserPower > RTC6_MAX_MAXLASERPOWER))
             throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER);
 
-        m_pOwnerData->setMaxLaserPowerNoPowerCorrection(dMaxLaserPower);
+        m_pRTCContext->SetLinearLaserPowerCalibration(0.0, dMaxLaserPower);
 
         m_pRTCContext->ConfigureLists(1 << 22, 1 << 22);
         m_pRTCContext->SetLaserMode(eLaserMode, eLaserPort);
