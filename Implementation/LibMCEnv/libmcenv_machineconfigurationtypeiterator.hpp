@@ -81,7 +81,7 @@ public:
 	* Public member functions to implement.
 	*/
 
-	CMachineConfigurationTypeIterator::CMachineConfigurationTypeIterator(LibMCData::PMachineConfigurationTypeIterator pMachineConfigurationTypeIterator);
+	CMachineConfigurationTypeIterator(LibMCData::PMachineConfigurationTypeIterator pMachineConfigurationTypeIterator);
 
 	virtual ~CMachineConfigurationTypeIterator();
 
