@@ -59,26 +59,11 @@ namespace Impl {
 class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
 private:
 
-	/**
-	* Put private members here.
-	*/
-
-protected:
-
-	/**
-	* Put protected members here.
-	*/
-
 public:
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+    CMachineConfigurationVersionIterator();
 
-
-	/**
-	* Public member functions to implement.
-	*/
+    virtual ~CMachineConfigurationVersionIterator();
 
 	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
 

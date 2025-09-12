@@ -43,6 +43,17 @@ using namespace LibMCData::Impl;
  Class definition of CMachineConfigurationXSDIterator 
 **************************************************************************************************************************/
 
+CMachineConfigurationXSDIterator::CMachineConfigurationXSDIterator()
+{
+
+}
+
+CMachineConfigurationXSDIterator::~CMachineConfigurationXSDIterator()
+{
+
+}
+
+
 void CMachineConfigurationXSDIterator::AddXSDVersion(std::shared_ptr<CMachineConfigurationXSD> pVersion)
 {
     if (!pVersion)

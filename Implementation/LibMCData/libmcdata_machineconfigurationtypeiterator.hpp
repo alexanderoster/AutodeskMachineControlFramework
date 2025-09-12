@@ -58,26 +58,12 @@ namespace Impl {
 class CMachineConfigurationTypeIterator : public virtual IMachineConfigurationTypeIterator, public virtual CIterator {
 private:
 
-	/**
-	* Put private members here.
-	*/
-
-protected:
-
-	/**
-	* Put protected members here.
-	*/
 
 public:
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+    CMachineConfigurationTypeIterator();
 
-
-	/**
-	* Public member functions to implement.
-	*/
+    virtual ~CMachineConfigurationTypeIterator();
 
 	void AddType(std::shared_ptr<LibMCData::Impl::CMachineConfigurationType> pType);
 

@@ -43,6 +43,17 @@ using namespace LibMCData::Impl;
  Class definition of CMachineConfigurationTypeIterator 
 **************************************************************************************************************************/
 
+CMachineConfigurationTypeIterator::CMachineConfigurationTypeIterator()
+{
+
+}
+
+CMachineConfigurationTypeIterator::~CMachineConfigurationTypeIterator()
+{
+
+}
+
+
 void CMachineConfigurationTypeIterator::AddType(std::shared_ptr<CMachineConfigurationType> pType)
 {
 	if (!pType)

@@ -83,7 +83,7 @@ public:
 	* Put additional public members here. They will not be visible in the external API.
 	*/
 
-	CMachineConfigurationXSD::CMachineConfigurationXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sUUID, const std::string& sTypeUUID, const LibMCData_uint32 nXSDVersion, const std::string& sXSDString, const std::string& sTimestamp);
+	CMachineConfigurationXSD(AMCData::PSQLHandler pSQLHandler, const std::string& sUUID, const std::string& sTypeUUID, const LibMCData_uint32 nXSDVersion, const std::string& sXSDString, const std::string& sTimestamp);
 
 	virtual ~CMachineConfigurationXSD();
 

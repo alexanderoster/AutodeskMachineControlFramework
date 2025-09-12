@@ -58,26 +58,15 @@ namespace Impl {
 class CMachineConfigurationXSDIterator : public virtual IMachineConfigurationXSDIterator, public virtual CIterator {
 private:
 
-	/**
-	* Put private members here.
-	*/
 
 protected:
 
-	/**
-	* Put protected members here.
-	*/
 
 public:
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+    CMachineConfigurationXSDIterator();
 
-
-	/**
-	* Public member functions to implement.
-	*/
+	virtual ~CMachineConfigurationXSDIterator();
 
 	void AddXSDVersion(std::shared_ptr<CMachineConfigurationXSD> pVersion);
 

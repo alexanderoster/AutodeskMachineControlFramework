@@ -42,6 +42,17 @@ using namespace LibMCData::Impl;
 /*************************************************************************************************************************
  Class definition of CMachineConfigurationVersionIterator 
 **************************************************************************************************************************/
+
+CMachineConfigurationVersionIterator::CMachineConfigurationVersionIterator()
+{
+
+}
+
+CMachineConfigurationVersionIterator::~CMachineConfigurationVersionIterator()
+{
+
+}
+
 void CMachineConfigurationVersionIterator::AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion)
 {
     if (!pVersion)
