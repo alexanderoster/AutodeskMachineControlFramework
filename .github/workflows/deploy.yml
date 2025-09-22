@@ -3,7 +3,7 @@ name: Deploy Website to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
     paths:
       - 'Documentation/Website/**'
       - '.github/workflows/deploy.yml'
