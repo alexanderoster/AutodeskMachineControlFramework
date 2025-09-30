@@ -23,22 +23,28 @@ func addFile (zipWriter * zip.Writer, diskPath string, zipPath string) (error) {
 	if err != nil {
 		return err
 	}
-		
-		
+
+	// Get file info to preserve permissions
+	fileInfo, err := os.Stat(diskPath)
+	if err != nil {
+		return err
+	}
+
 	var header zip.FileHeader;
 	header.Name = zipPath;
 	header.Method = zip.Deflate;
-		
+	header.SetMode(fileInfo.Mode()); // Preserve Unix file permissions
+
 	filewriter, err := zipWriter.CreateHeader(&header)
 	if err != nil {
 		return err
 	}
-		
+
 	_, err = filewriter.Write(input)
 	if err != nil {
 		return err
 	}
-	
+
 	return nil;
 
 }
