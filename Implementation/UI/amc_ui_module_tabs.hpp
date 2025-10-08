@@ -67,6 +67,10 @@ namespace AMC {
 
 	public:
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// General module functionality
+		/////////////////////////////////////////////////////////////////////////////////////
+
 		CUIModule_Tabs(pugi::xml_node & xmlNode, const std::string & sPath, PUIModuleEnvironment pUIModuleEnvironment);
 		
 		virtual ~CUIModule_Tabs();
@@ -77,16 +81,33 @@ namespace AMC {
 
 		std::string getCaption () override;
 
-		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
-
-		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
-
-		virtual PUIModuleItem findItem(const std::string& sUUID) override;
 		PUIModule findTab(const std::string& sUUID);
 
-		void configurePostLoading() override;
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
 
-		virtual void populateClientVariables(CParameterHandler* pParameterHandler) override;
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
+		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
+
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) override;
+		
+		virtual void populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
+
+		virtual PUIModuleItem findLegacyItem(const std::string& sUUID) override;
+
+		void configureLegacyPostLoading() override;
+
+		virtual void populateLegacyClientVariables(CParameterHandler* pParameterHandler) override;
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// New UI Frontend System
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		void frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData) override;
+
+		bool isVersion2FrontendModule();
 
 	};
 

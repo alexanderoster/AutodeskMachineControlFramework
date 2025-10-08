@@ -30,7 +30,7 @@ Maintainers are responsible for responding to pull requests and issues, as well 
 
 We currently have three maintainers:
 - Alexander Oster alexander.oster@autodesk.com
-- Martin Wassmann martin.wassmann@autodesk.com
+- Martin Wassmann martin.weismann@autodesk.com
 - Philipp Neumann philipp.neumann@autodesk.com
 
 If you've established yourself as an impactful contributor to the project, and are willing take on the extra work, we'd love to have your help maintaining it! Email the current maintainers for details.

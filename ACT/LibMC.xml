@@ -701,6 +701,10 @@
 		<error name="INVALIDFRONTENDMODULEPATH" code="676" description="Invalid frontend module path." />				
 		<error name="INVALIDFRONTENDATTRIBUTENAME" code="677" description="Invalid frontend attribute name." />
 		<error name="DUPLICATEFRONTENDATTRIBUTENAME" code="678" description="Duplicate frontend attribute name." />
+		<error name="INVALIDCOLUMNRANGE" code="679" description="Invalid column range." />
+		<error name="INVALIDROWRANGE" code="680" description="Invalid row range." />
+		<error name="CONFIGURATIONLISTNAMEMISSING" code="681" description="Configuration list name missing" />
+		<error name="CONFIGURATIONLISTBUTTONNAMEMISSING" code="682" description="Configuration list button name missing" />
 						
 	</errors>
 	

@@ -45,25 +45,26 @@ namespace AMCData {
 			sConfigurationTypes += "`uuid` varchar ( 64 ) UNIQUE NOT NULL,";
 			sConfigurationTypes += "`name` varchar ( 256 ) NOT NULL,";
 			sConfigurationTypes += "`schematype` varchar ( 64 ) NOT NULL,";
-			sConfigurationTypes += "`activeversionuuid` varchar ( 256 ) NOT NULL,";
+			sConfigurationTypes += "`activeversionuuid` varchar ( 64 ) NOT NULL,";
 			sConfigurationTypes += "`timestamp` varchar ( 64 ) NOT NULL)";
 			pTransaction->executeStatement(sConfigurationTypes);
 
 			std::string sConfigurationXSDs = "CREATE TABLE `machineconfiguration_xsds` (";
 			sConfigurationXSDs += "`uuid` varchar ( 64 ) UNIQUE NOT NULL,";
-			sConfigurationXSDs += "`typeuuid` varchar ( 256 ) NOT NULL,";
+			sConfigurationXSDs += "`typeuuid` varchar ( 64 ) NOT NULL,";
 			sConfigurationXSDs += "`schemaversionnumber` INTEGER NOT NULL,";
 			sConfigurationXSDs += "`configurationxsdstring` text NOT NULL,";
-			sConfigurationXSDs += "`defaultconfigurationxml` text NOT NULL,";
+			//sConfigurationXSDs += "`defaultconfigurationxml` text NOT NULL,";
 			sConfigurationXSDs += "`timestamp` varchar ( 64 ) NOT NULL)";
 			pTransaction->executeStatement(sConfigurationXSDs);
 
 			std::string sVersions = "CREATE TABLE `machineconfiguration_versions` (";
 			sVersions += "`uuid` varchar ( 64 ) UNIQUE NOT NULL,";
-			sVersions += "`xsduuid` varchar ( 256 ) NOT NULL,";
-			sVersions += "`parentversionuuid` varchar ( 256 ) NOT NULL,";
+			sVersions += "`xsduuid` varchar ( 64 ) NOT NULL,";
+			sVersions += "`configurationversionnumber` INTEGER NOT NULL,";
+			sVersions += "`parentversionuuid` varchar ( 64 ) NOT NULL,";
 			sVersions += "`configurationxmlstring` text NOT NULL,";
-			sVersions += "`useruuid` varchar ( 256 ) NOT NULL,";
+			sVersions += "`useruuid` varchar ( 64 ) NOT NULL,";
 			sVersions += "`timestamp` varchar ( 64 ) NOT NULL)";
 			pTransaction->executeStatement(sVersions);
 

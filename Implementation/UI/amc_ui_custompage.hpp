@@ -60,7 +60,7 @@ namespace AMC {
 
 	public:
 
-		CUICustomPage(const std::string & sName, const std::string& sComponentName, CUIModule_UIEventHandler* pUIEventHandler);
+		CUICustomPage(const std::string & sName, const std::string& sComponentName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
 		
 		virtual ~CUICustomPage();
 

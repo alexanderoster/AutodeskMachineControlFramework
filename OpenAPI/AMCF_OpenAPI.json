@@ -35,6 +35,10 @@
       "description": "Frontent end point"
     },
     {
+      "name": "stream",
+      "description": "Data streaming end points"
+    },
+    {
       "name": "ext",
       "description": "Application specific end points"
     }
@@ -548,6 +552,7 @@
         }
       }
     },
+
     "/frontend": {
       "get": {
         "tags": [
@@ -584,6 +589,45 @@
         }
       }
     },
+
+    "/frontend/event": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Trigger a frontend event.",
+        "operationId": "frontendPageStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
     "/frontend/pages/{pageUUID}": {
       "get": {
         "tags": [
@@ -733,13 +777,15 @@
         }
       }      
     },
+
+    
     "/frontend/modules/{moduleUUID}/subscribe": {
       "post": {
         "tags": [
           "frontend"
         ],
-        "summary": "Subscribe to attribute changes of a page.",
-        "operationId": "frontendModuleStatus",
+        "summary": "Subscribe to attribute changes of a module.",
+        "operationId": "frontendModuleSubscription",
         "security": [
           {
             "bearerAuth": []
@@ -764,7 +810,160 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FrontendModule"
+                  "$ref": "#/components/schemas/FrontendSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }      
+    },
+
+
+
+     "/frontend/subscription/{subscriptionUUID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Get the current state of a subscription.",
+        "operationId": "frontendSubscriptionInfo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionUUID",
+            "in": "path",
+            "description": "Frontend Subscription UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }      
+    },
+
+    "/frontend/subscription/{subscriptionUUID}/keepalive": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Keep a subscription alive.",
+        "operationId": "frontendSubscriptionKeepAlive",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionUUID",
+            "in": "path",
+            "description": "Frontend Subscription UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }      
+    },
+
+
+    "/frontend/subscription/{subscriptionUUID}/reset": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Reset a subscription to resend all data.",
+        "operationId": "frontendSubscriptionReset",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionUUID",
+            "in": "path",
+            "description": "Frontend Subscription UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrontendSubscriptionResponse"
                 }
               }
             }
@@ -782,7 +981,6 @@
         }
       }      
     }
-
 
   },
   "components": {
@@ -1319,6 +1517,11 @@
             "description": "The icon identifier for this page.",
             "example": "LibraryBig"
           },
+          "showinmenu": {
+            "type": "boolean",
+            "description": "If true, the page is added to the main menu. The menu entries are ordered by menupriority.",
+            "example": "true"
+          },
           "gridcolumns": {
             "type": "integer",
             "description": "The number of columns on the page.",
@@ -1384,6 +1587,56 @@
             "type": "string",
             "description": "Subscription UUID.",
             "example": "b7800e04-9200-4015-bd35-fd4cf9e00393"
+          },
+          "expiration": {
+            "type": "integer",
+            "description": "Expiration time of this subscription as Unix time stamp.",
+            "example": "2134534532"
+          },
+          "versioncounter": {
+            "type": "integer",
+            "description": "Current version counter of the Subscription.",
+            "example": "24"
+          }
+        }
+
+      },
+      "FrontendSubscriptionPatch": {
+        "required": [
+          "protocol",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.build' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.frontend"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "subscriptionuuid": {
+            "type": "string",
+            "description": "Subscription UUID.",
+            "example": "b7800e04-9200-4015-bd35-fd4cf9e00393"
+          },
+          "baseversioncounter": {
+            "type": "integer",
+            "description": "Base version counter of the Subscription.",
+            "example": "24"
+          },
+          "newversioncounter": {
+            "type": "integer",
+            "description": "New version counter of the Subscription.",
+            "example": "25"
+          },
+          "attributes": {
+            "type": "array",
+            "description": "Attribute differences to apply.",
+            "example": []
           }
         }
 

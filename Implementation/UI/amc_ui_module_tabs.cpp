@@ -43,6 +43,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
+/////////////////////////////////////////////////////////////////////////////////////
+// General module functionality
+/////////////////////////////////////////////////////////////////////////////////////
+
 CUIModule_Tabs::CUIModule_Tabs(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
 : CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
 {
@@ -80,6 +84,33 @@ std::string CUIModule_Tabs::getCaption()
 }
 
 
+PUIModule CUIModule_Tabs::findTab(const std::string& sUUID)
+{
+	auto iIter = m_TabMap.find(sUUID);
+	if (iIter != m_TabMap.end())
+		return iIter->second;
+
+	return nullptr;
+}
+
+void CUIModule_Tabs::addTab(PUIModule pTab)
+{
+	if (pTab.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	m_Tabs.push_back(pTab);
+	m_TabMap.insert(std::make_pair(pTab->getUUID(), pTab));
+
+	pTab->populateLegacyItemMap(m_ItemMap);
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Legacy UI System
+/////////////////////////////////////////////////////////////////////////////////////
+
+
 void CUIModule_Tabs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
 {
 	moduleObject.addString(AMC_API_KEY_UI_MODULENAME, getName());
@@ -97,7 +128,18 @@ void CUIModule_Tabs::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWrite
 
 }
 
-PUIModuleItem CUIModule_Tabs::findItem(const std::string& sUUID)
+void CUIModule_Tabs::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
+{
+	CJSONWriterArray tabsNode(writer);
+	for (auto tab : m_Tabs) {
+		CJSONWriterObject tabObject(writer);
+		tab->addContentToJSON(writer, tabObject, pClientVariableHandler, nStateID);
+		tabsNode.addObject(tabObject);
+	}
+	moduleObject.addArray(AMC_API_KEY_UI_TABS, tabsNode);
+}
+
+PUIModuleItem CUIModule_Tabs::findLegacyItem(const std::string& sUUID)
 {
 	auto iIter = m_ItemMap.find(sUUID);
 	if (iIter != m_ItemMap.end())
@@ -106,44 +148,66 @@ PUIModuleItem CUIModule_Tabs::findItem(const std::string& sUUID)
 	return nullptr;
 }
 
-PUIModule CUIModule_Tabs::findTab(const std::string& sUUID)
-{
-	auto iIter = m_TabMap.find(sUUID);
-	if (iIter != m_TabMap.end())
-		return iIter->second;
-
-	return nullptr;
-}
-
-void CUIModule_Tabs::addTab(PUIModule pTab)
-{
-	if (pTab.get() == nullptr)
-		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
-
-	m_Tabs.push_back(pTab);
-	m_TabMap.insert(std::make_pair (pTab->getUUID (), pTab));
-
-	pTab->populateItemMap(m_ItemMap);
-
-}
-
-void CUIModule_Tabs::populateItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+void CUIModule_Tabs::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
 	for (auto pTab : m_Tabs)
-		pTab->populateItemMap(itemMap);
+		pTab->populateLegacyItemMap(itemMap);
 }
 
-void CUIModule_Tabs::configurePostLoading()
+void CUIModule_Tabs::configureLegacyPostLoading()
 {
 	for (auto pTab : m_Tabs)
-		pTab->configurePostLoading();
+		pTab->configureLegacyPostLoading();
 }
 
 
-void CUIModule_Tabs::populateClientVariables(CParameterHandler* pParameterHandler)
+void CUIModule_Tabs::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
 {
 	LibMCAssertNotNull(pParameterHandler);
 	for (auto pTab : m_Tabs)
-		pTab->populateClientVariables(pParameterHandler);
+		pTab->populateLegacyClientVariables(pParameterHandler);
 
+}
+
+void CUIModule_Tabs::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
+{
+	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Tabs>(*this)));
+
+	for (auto pTab : m_Tabs) {
+		moduleMap.insert(std::make_pair(pTab->getUUID(), pTab));
+		pTab->populateModuleMap(moduleMap);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+void CUIModule_Tabs::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	CUIModule::frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState, pStateMachineData);
+
+	CJSONWriterArray submodulesArray(writer);
+
+	for (auto & pTab : m_Tabs) {
+
+		if (pTab->isVersion2FrontendModule()) {
+
+			CJSONWriterObject subModuleObject(writer);
+			pTab->frontendWriteModuleStatusToJSON(writer, subModuleObject, pFrontendState, pStateMachineData);
+			submodulesArray.addObject(subModuleObject);
+
+		}
+
+	}
+
+	moduleObject.addArray("submodules", submodulesArray);
+
+}
+
+
+bool CUIModule_Tabs::isVersion2FrontendModule()
+{
+	return true;
 }

@@ -52,6 +52,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_PROTOCOL_SIGNAL "com.autodesk.machinecontrol.signal"
 #define AMC_API_PROTOCOL_AUTH "com.autodesk.machinecontrol.auth"
 #define AMC_API_PROTOCOL_UI "com.autodesk.machinecontrol.ui"
+#define AMC_API_PROTOCOL_FRONTEND "com.autodesk.machinecontrol.frontend"
+#define AMC_API_PROTOCOL_VERSIONREQUEST "com.autodesk.machinecontrol.version"
 #define AMC_API_PROTOCOL_TOKEN "com.autodesk.machinecontrol.token"
 #define AMC_API_PROTOCOL_EXTERNAL "com.autodesk.machinecontrol.external"
 
@@ -141,6 +143,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_KEY_UI_TOOLBARITEMS "toolbaritems"
 #define AMC_API_KEY_UI_TOOLBARLOGOUUID "toolbarlogouuid"
 #define AMC_API_KEY_UI_PAGENAME "name"
+#define AMC_API_KEY_UI_PAGESHOWEVENT "showevent"
 #define AMC_API_KEY_UI_COMPONENTNAME "component"
 #define AMC_API_KEY_UI_DIALOGNAME "name"
 #define AMC_API_KEY_UI_DIALOGTITLE "title"
@@ -282,6 +285,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_KEY_UI_ITEMALERTACKNOWLEDGE "alertNeedsAcknowledge"
 #define AMC_API_KEY_UI_ITEMALERTACTIVE "alertActive"
 #define AMC_API_KEY_UI_ITEMALERTLEVEL "alertLevel"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONNAME "configurationName"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONLAYERS "configurationLayers"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONUUID "configurationUUID"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONTIMESTAMP "configurationTimestamp"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONTHUMBNAIL "configurationThumbnail"
+#define AMC_API_KEY_UI_ITEMCONFIGURATIONUSER "configurationUser"
 
 #define AMC_API_KEY_UI_FORMUUID "uuid"
 #define AMC_API_KEY_UI_FORMTYPE "type"
@@ -315,6 +324,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_KEY_UI_SCENE "scene"
 #define AMC_API_KEY_UI_DATASERIES "dataseries"
 #define AMC_API_KEY_UI_VERSION "version"
+#define AMC_API_KEY_UI_VISIBLE "visible"
 
 #define AMC_API_KEY_UI_ITEM_MINENTRIESPERPAGE 4
 #define AMC_API_KEY_UI_ITEM_MAXENTRIESPERPAGE 1024

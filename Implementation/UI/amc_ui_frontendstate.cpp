@@ -55,4 +55,13 @@ PParameterHandler CUIFrontendState::getLegacyParameterHandler()
 	return m_pLegacyParameterHandler;
 }
 
+void CUIFrontendState::writeModuleAttributesToJSON(CJSONWriter& writer, CJSONWriterObject & attributesObject, CUIFrontendDefinitionModuleStore * pModuleStore, CStateMachineData* pStateMachineData)
+{
+	auto attributes = pModuleStore->getAttributes();
+	for (auto& pAttribute : attributes) {
+		pAttribute->writeToFrontendJSON(writer, attributesObject, pStateMachineData);
+	}
+
+}
+
 

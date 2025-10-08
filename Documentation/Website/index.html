@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--
+
+Autodesk and the Autodesk logo are registered trademarks or trademarks 
+of Autodesk, Inc., and/or its subsidiaries and/or affiliates in the USA 
+and/or other countries. All other brand names, product names, or trademarks 
+belong to their respective holders. Autodesk reserves the right to alter 
+product and services offerings, and specifications and pricing at any time 
+without notice, and is not responsible for typographical or graphical 
+errors that may appear in this document. 
+
+© 2025 Autodesk. All rights reserved.
+
+For more information, please visit
+
+https://www.autodesk.com/company/terms-of-use/en/general-terms
+
+
+--->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Autodesk Machine Control Framework</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+
+  <script src="https://fast.wistia.com/player.js" async></script>
+  <script src="https://fast.wistia.com/embed/9mqfkoaga1.js" async type="module"></script>
+  <script src="https://fast.wistia.com/embed/9duxtm71yf.js" async type="module"></script>
+  <script src="https://fast.wistia.com/embed/r79584g3zl.js" async type="module"></script>
+  <script src="https://fast.wistia.com/embed/i3xeyuer9p.js" async type="module"></script>
+  <script src="https://fast.wistia.com/embed/gcavx9yikn.js" async type="module"></script>
+
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen py-12 px-4">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="flex flex-wrap">
+      <div class="w-full sm:w-8/12 mb-10">
+        <div class="container mx-auto h-full sm:p-10">
+          <nav class="flex px-4 justify-between items-center">
+            <div class="text-4xl font-bold">
+              <p><img src="./autodesklogo.png" alt="Autodesk" class="inline-block h-[1em] w-auto align-[-0.125em]"></p>
+              Machine Control Framework<span class="text-sky-700">.</span>
+            </div>
+          </nav>
+          <header class="container px-4 lg:flex mt-10 items-center h-full lg:mt-0">
+            <div class="w-full">
+              <h1 class="text-4xl lg:text-6xl font-bold">Build <span class="text-sky-700">custom</span> machine tools
+                fast.</h1>
+              <div class="w-20 h-2 bg-sky-700 my-4"></div>
+              <p class="text-xl mb-10">An Open Source Middleware Framework to integrate CAD/CAM software with machine
+                hardware systems into a production-ready, complete and cohesive closed loop system, that can produce
+                high quality products out of the box.</p>
+              <p class="text-xl mb-10">Originally developed for laser-based Additive Manufacturing processes, its
+                generic principles remove development barriers for a multitude of machine tool verticals - saving
+                implementers millions of dollars in R&amp;D costs.</p>
+              <a href="#overview"><button
+                  class="mb-2 bg-sky-700 hover:bg-sky-600 text-white text-1xl font-medium px-4 py-2 shadow">Overview</button></a>
+              <a href="#casestudies"><button
+                  class="mb-2 bg-sky-700 hover:bg-sky-600 text-white text-1xl font-medium px-4 py-2 shadow">Case
+                  Studies</button></a>
+              <a href="#fusionintegration"><button
+                  class="mb-2 bg-sky-700 hover:bg-sky-600 text-white text-1xl font-medium px-4 py-2 shadow">Fusion
+                  Integration</button></a>
+              <a href="#features"><button
+                  class="mb-2 bg-sky-700 hover:bg-sky-600 text-white text-1xl font-medium px-4 py-2 shadow">Features</button></a>
+              <a href="#gettingstarted"><button
+                  class="mb-2 bg-sky-700 hover:bg-sky-600 text-white text-1xl font-medium px-4 py-2 shadow">Getting
+                  Started</button></a>
+            </div>
+          </header>
+        </div>
+      </div>
+      <img src="./amcf_titleimage.jpg" alt="Machine Control Image"
+        class="w-full h-48 object-cover sm:h-screen sm:w-4/12">
+
+      <div id="overview" class="mx-auto max-w-6xl mt-8">
+        <ul class="mt-16 grid grid-cols-1 gap-6 text-center text-slate-700 md:grid-cols-3">
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">Maximum Flexibility.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_plugins.jpg">
+              <img src="./overview_plugins.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              With an extensive plugin mechanism at its core, the framework allows the plug and play combination of
+              many commercial off-the-shelf components.
+            </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">
+              Making complete machine tools has never been easier!
+            </p>
+
+          </li>
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">Full feature set from day one.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_featureset.jpg">
+              <img src="./overview_featureset.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              For special machinery builders, a focus on differentiating features is the central necessity. But
+              table-stakes are
+              often out of scope in a project. </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">
+              Ship a complete product
+              with the first release!
+            </p>
+
+          </li>
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">Closed loop application stack.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_closedloop.jpg">
+              <img src="./overview_closedloop.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              The framework architecture allows an easy integration of feedback
+              loops, either offline or inside the process, layer by layer or real-time.
+            </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">
+              A real manufacturing process is never linear!
+            </p>
+
+
+          </li>
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Unbelievable productivity boost.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_productivity.jpg">
+              <img src="./overview_productivity.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              Building on a rich codebase takes care of many small decisions and saves any implementer
+              dozens of developer years in duplicate effort.
+            </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">Go to market faster!</p>
+
+          </li>
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Open licensing model.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_licensing.jpg">
+              <img src="./overview_licensing.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              The framework is open source and based on a decade of work done by the 3MF Consortium under the Linux
+              Foundation.
+            </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">Own your code and avoid vendor lock-ins.</p>
+          </li>
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Integrator stays in full control.</h2>
+            <button type="button" class="mx-auto block focus:outline-none" aria-label="Open image fullscreen"
+              data-lightbox data-lightbox-src="./overview_ipcontrol.jpg">
+              <img src="./overview_ipcontrol.jpg" alt="" class="mx-auto">
+            </button>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 text-justify">
+              A liberal licensing scheme protects the implementer's process IP. Proprietary derivatives are explicitely encouraged. 
+            </p>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500 italic">Your Intellectual Property always stays yours.</p>
+          </li>
+        </ul>
+		
+      </div>
+
+      <h2 id="casestudies" class="text-3xl font-bold text-gray-900 dark:text-white mb-8 mt-8">Case Studies</h2>
+
+      <!-- Use Cases -->
+      <section class="mb-16">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          <!-- Product Card 1 -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.youtube.com/watch?v=A3aRkSwrCVg" target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_scanlab.mp4" type="video/mp4" autoplay
+                  muted loop></video></a>
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">SCANLAB Technology Demonstrator</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">SCANLAB is a leading supplier of components for laser
+                beam deflection. Its demonstrator showcases the next leap of industrial laser-based Additive
+                Manufacturing equipment.</p>
+            </div>
+            <a href="https://www.youtube.com/watch?v=A3aRkSwrCVg" target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://rapture.ethz.ch/" target="_blank" rel="noopener noreferrer"><video
+                  class="w-full h-48 object-cover" src="./amcfsite_case_rapture.mp4" type="video/mp4" autoplay muted
+                  loop></video></a>
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">ETH Zurich - RAPTURE</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">The ETH Zurich's Advanced Manufacturing Lab built a novel
+                multi-material LPBF system with rotating recoater and continuous laser processing. A machine tailored
+                for rocket applications.</p>
+            </div>
+            <a href="https://rapture.ethz.ch/" target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.mec.ed.tum.de/en/lbam/research/innovative-process-strategies-in-pbf-lb-m/"
+                target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_tum.mp4" type="video/mp4" autoplay muted
+                  loop></video></a>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">TUM - Hybrid Polymer Machine</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">The Chair of Additive Manufacturing at the Technical
+                University of Munich developed a novel polymer system that combines InkJet technology with Selective
+                Laser Sintering to create multi-material properties in a single component.</p>
+            </div>
+            <a href="https://www.mec.ed.tum.de/en/lbam/research/innovative-process-strategies-in-pbf-lb-m/"
+              target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://davidwenzler.github.io/reAM250/" target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_iwb.mp4" type="video/mp4" autoplay muted
+                  loop></video></a>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">iwb - ReAM 250</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">The Institute for Machine Tools and Production Management
+                (iwb) developed a complete Open Source System, including CAD Drawings, PLC Software and Machine Control
+                Software.</p>
+            </div>
+            <a href="https://davidwenzler.github.io/reAM250/" target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.hs-aalen.de/en/facilities/97" target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_aalen.mp4" type="video/mp4" autoplay muted
+                  loop></video></a>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Aalen University - Research Machine
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">The Laser Application Center at the Aalen University
+                built a research machine that pushes the frontier of what is possible with LPBF process monitoring and
+                closed loop control.</p>
+            </div>
+            <a href="https://www.hs-aalen.de/en/facilities/97" target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.bias.de/en-gb/laserbearbeitung" target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_bias.mp4" type="video/mp4" autoplay muted
+                  loop></video>
+            </div></a>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">BIAS - RegelMap</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">The Bremen Institute for Applied Beam Technology
+                developed a novel inter-layer control loop that significantly improves the thermal management of Metal
+                LPBF processes.</p>
+            </div>
+            <a href="https://www.bias.de/en-gb/laserbearbeitung" target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://3dprint.com/302379/slm-solutions-acquires-addcreative-tech-to-enhance-large-scale-metal-3d-printing/"
+                target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_adira.mp4" type="video/mp4" autoplay muted
+                  loop></video>
+              </a>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">ADIRA AddCreative</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Acquired by Nikon SLM Solutions, ADIRA's moving source
+                multi-laser system extends the reach of Metal Additive Manufacturing into huge build volumes of
+                arbitrary sizes.</p>
+            </div>
+            <a href="https://3dprint.com/302379/slm-solutions-acquires-addcreative-tech-to-enhance-large-scale-metal-3d-printing/"
+              target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.schaeffler-special-machinery.de/en/products/additive-manufacturing/omni-fusion-3d/"
+                target="_blank" rel="noopener noreferrer">
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_schaeffler.mp4" type="video/mp4" autoplay
+                  muted loop></video>
+              </a>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Schaeffler OmniFusion</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Schaeffler Special Machinery developed a state-of-the-art
+                multi material, multi laser, multi beam shape Metal Additive Manufacturing system with open parameters.
+              </p>
+            </div>
+            <a href="https://www.schaeffler-special-machinery.de/en/products/additive-manufacturing/omni-fusion-3d/"
+              target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+            <div class="relative">
+              <a href="https://www.mpa.uni-stuttgart.de/institut/abteilungen/fuegetechnik-und-additive-fertigung/additive-fertigung/"
+                target="_blank" rel="noopener noreferrer">
+
+                <video class="w-full h-48 object-cover" src="./amcfsite_case_evobeam.mp4" type="video/mp4" autoplay
+                  muted loop></video>
+              </a>
+
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Evobeam</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">With a background in electron beam welding and vacuum
+                machines, Evobeam's SLAvam 300 system ventures into Powder Bed Fusion, and offers high temperature
+                processes up to 1000° degree C in a vacuum atmosphere.</p>
+            </div>
+            <a href="https://www.mpa.uni-stuttgart.de/institut/abteilungen/fuegetechnik-und-additive-fertigung/additive-fertigung/"
+              target="_blank" rel="noopener noreferrer" class="mt-auto w-full inline-flex items-center justify-center
+							bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium
+							py-2 px-4 rounded-lg transition-colors">
+              Learn more
+            </a>
+          </div>
+
+        </div>
+
+      </section>
+
+      <h2 id="fusionintegration" class="text-3xl font-bold text-gray-900 dark:text-white mb-8 mt-8">Integration into
+        Autodesk Fusion</h2>
+
+      <div class="flex pt-12 items-center justify-center bg-hero overflow-hidden">
+        <div class="flex flex-col  gap-6 md:flex-row items-center max-w-8xl">
+          <div class="w-full sm:w-6/12 lg:pr-32">
+            <h2 class="text-4xl lg:text-4xl text-center md:text-left text-sky-700 leading-tight font-medium">Directly
+              connected to the Fusion Manufacturing Extension!</h2>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              Affordable and easy-to-learn, the Fusion Manufacturing extension combines CAD, CAE, Data Preparation for
+              Additive Manufacturing, 3-5 Axis CAM, Turning, Sheet Metal Nesting and more into a single and modern user
+              interface.
+            </h3>
+            <div class="mt-10 flex flex-col sm:flex-row justify-center md:justify-start">
+              <a target="_blank" rel="noopener noreferrer" href="./fusion_manufacturing_extension.pdf"><button
+                  class="w-full sm:w-40 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Download
+                  Fusion PDF</button></a>
+              <a target="_blank" rel="noopener noreferrer"
+                href="https://www.autodesk.com/products/fusion-360/fusion-for-manufacturing"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-40 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">Subscribe
+                  to Fusion today</button></a>
+            </div>
+          </div>
+          <div class="w-full sm:w-6/12 flex justify-center md:justify-end">
+            <style>
+              wistia-player[media-id='9duxtm71yf']:not(:defined) {
+                background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/9duxtm71yf/swatch');
+                display: block;
+                filter: blur(5px);
+                padding-top: 56.25%;
+              }
+            </style> <wistia-player class="w-full h-full object-cover border-2 border-sky-700" media-id="9duxtm71yf"
+              aspect="1.7777777777777777"></wistia-player>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex pt-12 items-center justify-center bg-hero overflow-hidden mt-16">
+        <div class="flex flex-col  gap-6 md:flex-row items-center max-w-8xl">
+          <div class="w-full sm:w-6/12 flex justify-center md:justify-end">
+            <style>
+              wistia-player[media-id='9mqfkoaga1']:not(:defined) {
+                background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/9mqfkoaga1/swatch');
+                display: block;
+                filter: blur(5px);
+                padding-top: 56.25%;
+              }
+            </style> <wistia-player class="w-full h-full object-cover border-2 border-sky-700" media-id="9mqfkoaga1"
+              aspect="1.7777777777777777"></wistia-player>
+          </div>
+          <div class="w-full sm:w-6/12 lg:pl-32">
+            <h2 class="text-4xl lg:text-4xl text-center md:text-left text-sky-700 leading-tight font-medium">Tightest
+              Integration between CAD, CAM and Machine!</h2>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              With the closest integration of upstream CAD/CAM software possible, metadata can seamlessly flow from the
+              CAD system through the hatching steps directly to the components of the machine control software.
+              Development timelines shrink from months or even years to days.
+            </h3>
+            <div class="mt-10 flex flex-col sm:flex-row justify-end">
+              <a target="_blank" rel="noopener noreferrer" href="./fusion_amcf.pdf"><button
+                  class="w-full sm:w-40 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Download
+                  Machine PDF</button></a>
+              <a href="#gettingstarted"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-40 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">Start
+                  Implementing</button></a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex pt-12 items-center justify-center bg-hero overflow-hidden mt-16">
+        <div class="flex flex-col  gap-6 md:flex-row items-center max-w-8xl">
+          <div class="w-full sm:w-6/12 lg:pr-32">
+            <h2 class="text-4xl lg:text-4xl text-center md:text-left text-sky-700 leading-tight font-medium">
+              Industry-leading Toolpathing Kernels!</h2>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              Fusion's Advanced Toolpathing kernels leapfrog the state of the industry and allow an easy to modify
+              adoption of any process parameter to the microsecond level.
+              Driving advanced industries like Space or Medical for decades, Fusion offers a direct commercialization
+              platform for any process developer's IP.
+            </h3>
+            <div class="mt-10 flex flex-col sm:flex-row justify-center md:justify-start">
+              <a target="_blank" rel="noopener noreferrer" href="./fusion_toolpath.pdf"><button
+                  class="w-full sm:w-40 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Download
+                  Toolpath PDF</button></a>
+              <a target="_blank" rel="noopener noreferrer" href="mailto:amcf@autodesk.com"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-40 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">Contact
+                  us for details</button></a>
+            </div>
+          </div>
+          <div class="w-full sm:w-6/12 flex justify-center md:justify-end">
+            <style>
+              wistia-player[media-id='gcavx9yikn']:not(:defined) {
+                background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/gcavx9yikn/swatch');
+                display: block;
+                filter: blur(5px);
+                padding-top: 56.25%;
+              }
+            </style> <wistia-player class="w-full h-full object-cover border-2 border-sky-700" media-id="gcavx9yikn"
+              aspect="1.7777777777777777"></wistia-player>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex pt-12 items-center justify-center bg-hero overflow-hidden mt-16">
+        <div class="flex flex-col  gap-6 md:flex-row items-center max-w-8xl">
+          <div class="w-full sm:w-6/12 flex justify-center md:justify-end">
+            <style>
+              wistia-player[media-id='i3xeyuer9p']:not(:defined) {
+                background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/i3xeyuer9p/swatch');
+                display: block;
+                filter: blur(5px);
+                padding-top: 56.25%;
+              }
+            </style> <wistia-player class="w-full h-full object-cover border-2 border-sky-700" media-id="i3xeyuer9p"
+              aspect="1.7777777777777777"></wistia-player>
+          </div>
+          <div class="w-full sm:w-6/12 lg:pl-32">
+            <h2 class="text-4xl lg:text-4xl text-center md:text-left text-sky-700 leading-tight font-medium">Fusion is
+              great for the mechanical design alone!</h2>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              Independent of the control software, Fusion itself is a fantastic platform to develop the mechanical
+              systems of any machine tool. The integrated FEA, Manufacturing and Electronic workspaces allow any
+              engineering team to efficiently Design and Make their hardware.
+            </h3>
+            <div class="mt-10 flex flex-col sm:flex-row justify-end">
+              <a target="_blank" rel="noopener noreferrer"
+                href="https://youtu.be/3dmlSJXtCSk?si=0UZeQQ6ybuNgJUI7"><button
+                  class="w-full sm:w-40 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Photocentric
+                  Case Study</button></a>
+              <a target="_blank" rel="noopener noreferrer"
+                href="https://fusion-360-social.wistia.com/medias/s9j36mv0i1"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-40 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">View
+                  LBR Case Study</button></a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-16">Features</h2>
+
+      <div id="features" class="mx-auto max-w-7xl mt-8 mb-8">
+        <ul class="mt-8 grid grid-cols-1 gap-6 text-center text-slate-700 md:grid-cols-3">
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">Modern Client-Server Architecture</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              All functionality runs headless on a server inside of the machine tool. Clients communicate with standard REST protocols, documented with OpenAPI 3.0.
+            </p>
+
+          </li>
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">API First System Design</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The system is built on its own public facing REST APIs.
+			  The eat-your-dogfood approach allows the transparent integration of all machine functionality into larger systems (like an MES) with ease. 
+            </p>
+
+          </li>
+		 				  
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">Configurable User Interface Widgets</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The framework comes with a widget-based user interface system, which can be set up from the backend. No web development experience is required.
+            </p>
+
+          </li>		  
+		  
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Multi-Platform</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Everything is built to compile and run on Windows, Linux, MacOS X and ARM platforms.
+            </p>
+          </li>		  			
+		  
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Multi-User</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Being Login and permission-driven, user roles define the capabilities and there is a record who did what when on the machine tool.
+            </p>
+          </li>		  			
+
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Multi-Language</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              An internationalization module allows the adaptation of the User Interface into multiple regions and languages.
+            </p>
+          </li>		  			
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+
+            <h2 class="font-display font-bold">State-of-the-art Plugin mechanism, Stable APIs and Stable ABIs.</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Using a modern component toolkit from Autodesk, custom code is easily combined with the Framework. Stable interfaces (binary and semantic) make the development sustainable over many years and versions.
+            </p>
+
+          </li>
+		  
+
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Separation of Framework and Machine Specialization</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              A clean separation of generic functionality from the specifics of the machine tool allow huge portions of the code to be reusable across domains. The custom machine code often stays at a few hundred lines.
+            </p>
+          </li>		
+		  		  		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Separation of Core Development from Developer Experience</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+				With separated release cycles, the large core framework can be precompiled and referenced from a small machine-specific repository as third party. 
+            </p>
+
+          </li>	  
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Consistent use of a Database backend</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Every build information, log message or user setting is consistently stored in a light-weight SQLite database. All data is extractable via public API. No directories with random CSV or CLI files are created.
+            </p>
+
+          </li>
+		  
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Data Migration and Backward Compatibility</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The database structure can evolve and migrate with system updates. Machine data and settings are not lost but can continuously be accessed from newer versions.
+            </p>
+          </li>
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Data Interfaces and Forward Compatibility.</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              A stable data interface layer makes older versions compatible with new database schemes. This allows the possibility to temporarily downgrade releases or even run multiple development branches on the same machine.
+            </p>
+          </li>
+		  
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Built-in concurrency and signal handling.</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              A key element for a responsive and stable machine workflow is the integration of concurrent subsystems into a whole. A staged and recorded signalling system make this easy.
+            </p>
+          </li>		  
+		  
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Alert System and Error Propagation</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Errors and warnings in subsystems are propagated with best practices throughout the architectural layers - and either mitigated or acknowledged by the user.
+            </p>
+          </li>			  
+
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Advanced Logging and Journaling concepts</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Every state and variable change in the machine execution is logged and recorded in a data lake with microsecond accuracy and with its concurrency context - replay any job in retrospective and detect anomalies quickly.
+            </p>
+          </li>		  
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Visual Finite State Machine flow design.</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              With a strict finite state machine concept, the general machine architecture is granularly visualizable - which is a great discussion point with mechanical engineers who do not have an extensive software development background.
+            </p>
+          </li>
+
+		  <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Charts, Toolpath viewers, Point cloud inspectors.</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The User Interface system provides widgets to directly analyse aggregated machine data by the operator on the machine or from remote access. Big data is granularly accessible without downloading gigabytes of CSV files or minutes of access time. 
+            </p>
+          </li>		  			
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">3MF Toolpath and Metadata management</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The Machine Control Framework is based on the 3MF Toolpath extension, allowing to granularly attach meta information to any aspect of the process: Build-level, Part-level, Style-level, Hatch-level, Subhatch-level. The data handling easily scales into Gigabytes of build data that run for weeks uninterrupted.
+            </p>
+          </li>		  
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Extensible Driver Ecosystem</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              By wrapping proprietary vendor SDKs into driver plugins, the deployment and use of commercial hardware is streamlined and straightforward. The integrated resource management even allows to switch between various versions of an SDK, depending on use case and machine.
+            </p>
+          </li>
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Downstream firmware deployment</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              If a hardware component permits it, all the downstream firmware and realtime software is patched and updated from the framework itself. This allows up- and downgrades of software versions and makes sure a deployed system is in a well-defined state.
+            </p>
+          </li>
+		  
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Over the air updates</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              The system is made for rolling out updates over the cloud and synchronize new versions to a central repository - including firmware and downstream hardware.
+            </p>
+          </li>
+
+
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Package management, CI/CD and proper build pipelines</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Developed with git in mind, the framework allows modern CI/CD integration, deployment over package management tools and custom build pipelines.
+            </p>
+          </li>
+		           		 		
+          <li class="rounded-xl bg-white px-6 py-8 shadow-sm">
+            <h2 class="font-display font-bold">Lowest possible dependencies</h2>
+            <p class="mt-1.5 text-sm leading-6 text-secondary-500">
+              Building upon plain C++, the amount of system dependencies are minimal and allow the deployment on any system from Business Laptop to Raspberry Pi. No more runtime environment mismatches or gigabytes of dependency hell for a development environment.
+            </p>
+          </li>
+	  					  
+		  
+
+        </ul>
+      </div>
+
+      <h2 id="gettingstarted" class="text-3xl font-bold text-gray-900 dark:text-white mb-8 mt-8">Start Development within five minutes</h2>
+
+      <div class="flex pt-12 items-center justify-center bg-hero overflow-hidden">
+        <div class="flex flex-col  gap-6 md:flex-row items-center">
+          <div class="w-full sm:w-5/12">
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              Download the source code from Github, run <span class="italic">build_clean_win64.bat</span>, and make your first machine control software within a few days.
+            </h3>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              Your Windows development environment should host <a href="https://visualstudio.microsoft.com/">Visual Studio</a>, <a href="https://cmake.org/">CMake</a>, <a href="https://go.dev/">Go</a> and <a href="https://git-scm.com/">git</a>.
+            </h3>
+            <h3
+              class="mt-6 md:mt-10 text-md lg:text-xl text-center md:text-left text-gray-700 font-light tracking-wider leading-relaxed">
+              If you are considering to use the software in your commercial or academic machine project, the maintainers are happy to meet and advise you in person. Connect with us at <a href="mailto:amcf@autodesk.com">amcf@autodesk.com</a>.
+            </h3>
+            <div class="mt-10 flex flex-col sm:flex-row justify-center md:justify-start">
+              <a target="_blank" rel="noopener noreferrer" href="https://github.com/Autodesk/AutodeskMachineControlFramework"><button
+                  class="w-full sm:w-40 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Visit the GitHub project page
+                  </button></a>
+              <a target="_blank" rel="noopener noreferrer" href="mailto:amcf@autodesk.com"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-40 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">Contact
+                  us for details</button></a>
+            </div>
+          </div>
+          <div class="w-full sm:w-7/12 flex justify-center md:justify-end">
+            <a target="_blank" rel="noopener noreferrer" href="https://github.com/Autodesk/AutodeskMachineControlFramework"><img src="github_repo.png" alt="" class="w-full border-2 border-sky-700" /></a>
+          </div>
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-8 mt-16">Community and Contributors</h2>
+
+    <div class="rounded-xl py-12 bg-white sm:py-16 lg:py-20">
+      <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+
+        <div
+          class="grid max-w-6xl grid-cols-1 px-20 mx-auto mt-12 text-center sm:px-0 sm:grid-cols-2 md:mt-20 gap-x-8 md:grid-cols-4 gap-y-12 lg:gap-x-16 xl:gap-x-20">
+            <div>
+              <a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/alexander-oster-08018111/">
+              <img class="object-cover w-32 h-32 mx-auto rounded-full lg:w-44 lg:h-44 grayscale filter"
+                src="community_ao.jpg" alt="Alexander Oster" /></a>
+              <p class="mt-5 text-lg font-bold text-gray-900 sm:text-xl sm:mt-8 font-pj">Alexander Oster</p>
+              <p class="mt-2 text-base font-normal text-gray-600 font-pj">Autodesk</p>
+            </div>
+
+            <div>
+              <a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/sebastian-aagaard/">
+              <img class="object-cover w-32 h-32 mx-auto rounded-full lg:w-44 lg:h-44 grayscale filter"
+                src="community_saa.jpg" alt="Sebastian Aagard" /></a>
+              <p class="mt-5 text-lg font-bold text-gray-900 sm:text-xl sm:mt-8 font-pj">Sebastian Aagaard</p>
+              <p class="mt-2 text-base font-normal text-gray-600 font-pj">Aagaard AM</p>
+            </div>
+
+            <div>
+              <a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/craig-sturgess-a049aa51">
+              <img class="object-cover w-32 h-32 mx-auto rounded-full lg:w-44 lg:h-44 grayscale filter"
+                src="community_cs.jpg" alt="Craig Sturgess" /></a>
+              <p class="mt-5 text-lg font-bold text-gray-900 sm:text-xl sm:mt-8 font-pj">Craig Sturgess</p>
+              <p class="mt-2 text-base font-normal text-gray-600 font-pj">Added Scientific</p>
+            </div>
+
+            <div>
+              <a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/yury-rodzikau-b1251a9b">
+              <img class="object-cover w-32 h-32 mx-auto rounded-full lg:w-44 lg:h-44 grayscale filter"
+                src="community_yr.jpg" alt="Yury Rodzikau" /></a>
+              <p class="mt-5 text-lg font-bold text-gray-900 sm:text-xl sm:mt-8 font-pj">Yury Rodzikau</p>
+              <p class="mt-2 text-base font-normal text-gray-600 font-pj">SCANLAB</p>
+            </div>
+
+        </div>
+
+		<div class="w-10/12 mx-auto">
+
+	        <h3
+              class="mt-16 text-md lg:text-xl text-justify text-gray-700 font-light tracking-wider leading-relaxed">
+			  Besides Autodesk, there is a growing community of individuals and companies contributing to this project. To enrich the ecosystem, some third parties are offering consulting services to adapt the code to your specific machine technology needs. 
+			 </h3>
+
+		<div class="mt-8 text-center">
+              <a target="_blank" rel="noopener noreferrer" href="https://github.com/Autodesk/AutodeskMachineControlFramework/blob/master/CONTRIBUTING.md"><button
+                  class="w-full sm:w-80 px-4 py-3 rounded font-semibold text-md bg-sky-700 text-white border-2 border-sky-700">Read the contributor's guide</button></a>
+              <a target="_blank" rel="noopener noreferrer" href="mailto:amcf@autodesk.com"><button
+                  class="w-full mt-4 sm:mt-0 sm:ml-4 sm:w-80 px-4 py-3 rounded font-semibold text-md bg-white text-sky-700 border-2 border-gray-500">Contact
+                  us for details</button></a>
+				  
+		</div>
+		
+		</div>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+  <dialog id="lightbox" class="m-0 p-0 w-screen h-screen max-w-none bg-transparent backdrop:bg-black/60">
+    <div class="w-full h-full flex items-center justify-center p-4">
+      <div class="relative">
+        <img id="lightbox-img" alt="" tabindex="0" class="max-h-[90vh] max-w-[90vw] object-contain border-[2px] border-sky-700 rounded
+               outline-none" />
+        <p id="lightbox-caption" class="mt-2 text-center text-sm text-white/90"></p>
+      </div>
+    </div>
+  </dialog>
+
+
+  <script>
+      (() => {
+        const dlg = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        const caption = document.getElementById('lightbox-caption');
+
+        let lastTrigger = null;
+
+        function openFrom(el) {
+          const src =
+            el.getAttribute('data-lightbox-src') ||
+            el.getAttribute('src') ||
+            el.getAttribute('href');
+          if (!src) return;
+
+          lastTrigger = el;
+
+          const cap = el.getAttribute('data-lightbox-caption') || el.getAttribute('alt') || '';
+          img.src = src;
+          img.alt = cap;
+          caption.textContent = cap;
+
+          dlg.showModal();
+          // Fokus aufs Bild (nicht auf einen nicht existierenden [data-close]-Button)
+          requestAnimationFrame(() => img.focus());
+        }
+
+        // Öffnen: Klick auf beliebiges [data-lightbox]
+        document.addEventListener('click', (e) => {
+          const trigger = e.target.closest('[data-lightbox]');
+          if (!trigger) return;
+          if (trigger.tagName === 'A') e.preventDefault();
+          openFrom(trigger);
+        });
+
+        // Öffnen per Enter/Space auf fokussierbaren Thumbnails (falls du tabindex nutzt)
+        document.addEventListener('keydown', (e) => {
+          const el = e.target.closest('[data-lightbox]');
+          if (!el) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openFrom(el);
+          }
+        });
+
+        // Schließen: Klick aufs Bild ODER auf den Backdrop
+        dlg.addEventListener('click', (e) => {
+          if (e.target === dlg || e.target === img) dlg.close();
+        });
+
+        // Schließen per Enter/Space auf dem Bild (Esc funktioniert von Haus aus)
+        img.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            dlg.close();
+          }
+        });
+
+        // Aufräumen & Fokus zurück
+        dlg.addEventListener('close', () => {
+          img.removeAttribute('src');
+          if (lastTrigger && typeof lastTrigger.focus === 'function') lastTrigger.focus();
+        });
+      })();
+  </script>
+
+  <script>
+
+
+
+    function toggleDarkMode() {
+
+      document.documentElement.classList.toggle('dark');
+    }
+
+
+  </script>
+</body>
+
+</html>

@@ -69,23 +69,42 @@ def main():
         print("No token found in response.")
         
         
-    # Step 5: Send GET to /api/build/ with Bearer token
+    # Step 5: Send GET to /api/version/ with Bearer token
     if token:
-        build_url = f"{base_url}/api/build/?archived=1"
+        version_url = f"{base_url}/api/version"
         headers = {
             "Authorization": f"Bearer {token}"
         }
 
         try:
-            build_response = requests.get(build_url, headers=headers)
-            build_response.raise_for_status()
-            build_data = build_response.json()
-            print("\nBuild data response:")
-            print(json.dumps(build_data, indent=4))
+            version_response = requests.get(version_url, headers=headers)
+            version_response.raise_for_status()
+            version_data = version_response.json()
+            print("\Version response:")
+            print(json.dumps(version_data, indent=4))
         except requests.exceptions.RequestException as e:
-            print(f"GET /api/build/ failed: {e}")
+            print(f"GET /api/version/ failed: {e}")
         except json.JSONDecodeError:
-            print("Failed to decode build response as JSON.")
+            print("Failed to decode version response as JSON.")
+
+
+    # Step 6: Send GET to /api/frontend/ with Bearer token
+    if token:
+        frontend_url = f"{base_url}/api/frontend"
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+
+        try:
+            frontend_response = requests.get(frontend_url, headers=headers)
+            frontend_response.raise_for_status()
+            frontend_data = frontend_response.json()
+            print("\nFrontend response:")
+            print(json.dumps(frontend_data, indent=4))
+        except requests.exceptions.RequestException as e:
+            print(f"GET /api/frontend/ failed: {e}")
+        except json.JSONDecodeError:
+            print("Failed to decode frontend response as JSON.")
 
 
 if __name__ == "__main__":

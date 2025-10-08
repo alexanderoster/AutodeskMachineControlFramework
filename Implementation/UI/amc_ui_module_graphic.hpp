@@ -75,6 +75,10 @@ namespace AMC {
 
 	public:
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// General module functionality
+		/////////////////////////////////////////////////////////////////////////////////////
+
 		CUIModule_Graphic(pugi::xml_node & xmlNode, const std::string & sPath, PUIModuleEnvironment pUIModuleEnvironment);
 		
 		virtual ~CUIModule_Graphic();
@@ -85,16 +89,25 @@ namespace AMC {
 
 		std::string getCaption () override;
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
+		
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
 		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler) override;
 
-		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) override;
 
-		virtual PUIModuleItem findItem(const std::string& sUUID) override;
+		virtual void populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
 
-		void configurePostLoading() override;
+		virtual PUIModuleItem findLegacyItem(const std::string& sUUID) override;
 
-		virtual void populateClientVariables(CParameterHandler* pParameterHandler) override;
+		virtual void populateLegacyClientVariables(CParameterHandler* pParameterHandler) override;
 		
+		/////////////////////////////////////////////////////////////////////////////////////
+		// New UI Frontend System
+		/////////////////////////////////////////////////////////////////////////////////////
 
 
 	};

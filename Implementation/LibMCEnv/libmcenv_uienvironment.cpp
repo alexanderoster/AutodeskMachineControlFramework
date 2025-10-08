@@ -49,6 +49,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_tempstreamwriter.hpp"
 #include "libmcenv_zipstreamwriter.hpp"
 #include "libmcenv_imageloader.hpp"
+#include "libmcenv_machineconfigurationhandler.hpp"
 
 #include "amc_systemstate.hpp"
 #include "amc_accesscontrol.hpp"
@@ -1084,4 +1085,9 @@ IJSONObject* CUIEnvironment::ParseJSONString(const std::string& sJSONString)
 IJSONObject* CUIEnvironment::ParseJSONData(const LibMCEnv_uint64 nJSONDataBufferSize, const LibMCEnv_uint8* pJSONDataBuffer)
 {
     return new CJSONObject(pJSONDataBuffer, nJSONDataBufferSize);
+}
+
+IMachineConfigurationHandler* CUIEnvironment::CreateMachineConfigurationHandler()
+{
+    return new CMachineConfigurationHandler(m_pUISystemState->getDataModel());
 }
