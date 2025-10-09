@@ -182,12 +182,14 @@ namespace AMC {
 	
 	class CUIModule_ContentFormCombobox : public CUIModule_ContentFormEntity {
 	protected:
-
+		CUIExpression m_ValueExpression;
+		std::string m_sOnChangeEvent;
+		std::vector<std::pair<std::string, int>> m_Items;
 	public:
 
 		static PUIModule_ContentFormCombobox makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData);
 
-		CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, PStateMachineData pStateMachineData);
+		CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, const std::string& sOnChangeEvent, PStateMachineData pStateMachineData, const std::vector<std::pair<std::string, int>>& items);
 
 		virtual ~CUIModule_ContentFormCombobox();
 
@@ -207,6 +209,7 @@ namespace AMC {
 		std::map<std::string, PUIModule_ContentFormEntity> m_EntityNameMap;
 		std::map<std::string, PUIModule_ContentFormEntity> m_EntityUUIDMap;
 		std::string m_sName;
+		bool m_bVisible;
 
 		PStateMachineData m_pStateMachineData;
 
@@ -214,7 +217,7 @@ namespace AMC {
 
 		static PUIModule_ContentForm makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment);
 
-		CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath);
+		CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath, bool bVisible);
 
 		virtual ~CUIModule_ContentForm();
 
@@ -223,6 +226,8 @@ namespace AMC {
 		void addEntity(PUIModule_ContentFormEntity pEntity);
 		
 		std::string getName();
+
+		bool IsVisible();
 
 		bool hasEntityWithName(const std::string& sName);
 		PUIModule_ContentFormEntity findEntityByName(const std::string& sName);

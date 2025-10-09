@@ -46,6 +46,7 @@ Abstract: This is the class declaration of CMachineConfigurationType
 
 // Include custom headers here.
 #include "amcdata_sqlhandler.hpp"
+//#include "libmcdata_machineconfigurationtypeiterator.hpp"
 
 namespace LibMCData {
 namespace Impl {
@@ -66,15 +67,21 @@ private:
 
 public:
 
+	static CMachineConfigurationType* makeFrom(CMachineConfigurationType* pMachineConfigurationType);
+
 	static CMachineConfigurationType* makeBySchema (AMCData::PSQLHandler pSQLHandler, const std::string& sSchemaType);
 
 	static CMachineConfigurationType* makeByUUID (AMCData::PSQLHandler pSQLHandler, const std::string& sUUID);
 
 	static CMachineConfigurationType* createNewConfigurationType(AMCData::PSQLHandler pSQLHandler, const std::string& sSchemaType, const std::string & sName);
 
+	static IMachineConfigurationTypeIterator* listRegisteredConfigurationTypes(AMCData::PSQLHandler pSQLHandler);
+
 	CMachineConfigurationType(AMCData::PSQLHandler pSQLHandler, const std::string & sUUID, const std::string& sName, const std::string& sSchemaType, const std::string& sTimestamp);
 
 	virtual ~CMachineConfigurationType();
+
+	AMCData::PSQLHandler GetSQLHandler();
 
 	std::string GetUUID() override;
 
@@ -82,24 +89,33 @@ public:
 
 	std::string GetSchemaType() override;
 
-	IMachineConfigurationXSD * GetLatestXSD() override;
+	std::string GetTimestamp() override;
 
-	LibMCData_uint32 GetLatestXSDVersion() override;
+	IMachineConfigurationXSD* GetLatestXSD() override;
+									  
+	IMachineConfigurationXSDIterator* ListXSDVersions() override;
 
-	IMachineConfigurationXSD * FindXSDByUUID(const std::string & sXSDUUID) override;
+	LibMCData_uint32 GetLatestXSDNumericVersion() override;
 
-	IMachineConfigurationXSD * CreateNewXSD(const std::string & sXSDString, const LibMCData_uint32 nXSDVersion, const std::string & sDefaultConfigurationXML) override;
+	IMachineConfigurationXSD* FindXSDByUUID(const std::string & sXSDUUID) override;
 
-	IMachineConfigurationXSD * GetXSDVersion(const LibMCData_uint32 nXSDVersion) override;
+	IMachineConfigurationXSD* FindXSDByNumericVersion(const LibMCData_uint32 nXSDNumericVersion) override;
 
-	IMachineConfigurationVersionIterator * ListVersions() override;
+	IMachineConfigurationXSD* RegisterNewXSD(const std::string& sXSDString, const LibMCData_uint32 nXSDVersion) override;
 
-	IMachineConfigurationVersion * FindVersionByUUID(const std::string & sVersionUUID) override;
+	IMachineConfigurationVersion* CreateDefaultConfiguration(const std::string& sXSDUUID, const std::string& sDefaultXML, const std::string& sTimeStampUTC) override;
+		
+	IMachineConfigurationVersionIterator* ListAllConfigurationVersions() override;
+		
+	IMachineConfigurationVersionIterator* ListConfigurationVersionsForXSD(const std::string& sXSDUUID) override;
 
-	IMachineConfigurationVersion * GetActiveVersion(const std::string & sVersionUUID) override;
+	IMachineConfigurationVersion* FindConfigurationVersionByUUID(const std::string & sVersionUUID) override;
 
-	IMachineConfigurationVersion * GetLatestVersion() override;
+	IMachineConfigurationVersion* GetActiveConfigurationVersion()  override;
 
+	IMachineConfigurationVersion* GetLatestConfigurationVersion() override;
+
+	void SetActiveConfigurationVersion(const std::string& sVersionUUID) override;
 };
 
 } // namespace Impl

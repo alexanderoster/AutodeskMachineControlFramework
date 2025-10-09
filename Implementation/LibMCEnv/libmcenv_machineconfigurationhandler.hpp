@@ -64,16 +64,17 @@ public:
 
     CMachineConfigurationHandler (LibMCData::PDataModel pDataModel);
 
-    ~CMachineConfigurationHandler ();
+    virtual ~CMachineConfigurationHandler();
 
 	IMachineConfigurationType * RegisterMachineConfigurationType(const std::string & sSchemaType, const std::string & sName) override;
 
 	bool HasMachineConfigurationType(const std::string & sSchemaType) override;
 
-	IMachineConfigurationVersion * GetLatestConfiguration(const std::string & sSchemaType) override;
+    IMachineConfigurationTypeIterator* ListRegisteredTypes() override;
 
-	IMachineConfigurationVersion * GetActiveConfiguration(const std::string & sSchemaType, const bool bFallBackToDefault) override;
+    IMachineConfigurationType* FindConfigurationTypeByUUID(const std::string& sTypeUUID) override;
 
+    IMachineConfigurationType* FindConfigurationTypeBySchema(const std::string& sSchemaType) override;
 };
 
 } // namespace Impl

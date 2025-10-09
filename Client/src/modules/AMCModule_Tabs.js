@@ -57,5 +57,20 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 		}
 				
 	}
+
+	updateFromJSON(updateJSON) {
+		Assert.ObjectValue(updateJSON);
+	
+		if (updateJSON.tabs && Array.isArray(updateJSON.tabs)) {
+			
+			for (let tabUpdate of updateJSON.tabs) {
 		
+				let tab = this.tabs.find(t => t.uuid === tabUpdate.uuid);
+				if (tab && typeof tab.updateFromJSON === "function") {
+					
+					tab.updateFromJSON(tabUpdate);
+				}
+			}
+		}
+	}
 }

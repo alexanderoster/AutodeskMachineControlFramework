@@ -43,8 +43,37 @@ using namespace LibMCData::Impl;
  Class definition of CMachineConfigurationVersionIterator 
 **************************************************************************************************************************/
 
-IMachineConfigurationVersion * CMachineConfigurationVersionIterator::GetCurrentVersion()
+CMachineConfigurationVersionIterator::CMachineConfigurationVersionIterator()
 {
-	throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED);
+
 }
 
+CMachineConfigurationVersionIterator::~CMachineConfigurationVersionIterator()
+{
+
+}
+
+void CMachineConfigurationVersionIterator::AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion)
+{
+    if (!pVersion)
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+
+    m_List.push_back(pVersion);
+}
+
+IMachineConfigurationVersion* CMachineConfigurationVersionIterator::GetCurrent()
+{
+    if ((m_nCurrentIndex < 0) || (m_nCurrentIndex >= m_List.size()))
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDITERATOR);
+
+    auto pConfiguration = std::dynamic_pointer_cast<CMachineConfigurationVersion> (m_List[m_nCurrentIndex]);
+    if (pConfiguration.get() == nullptr)
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+
+    return CMachineConfigurationVersion::makeFrom(pConfiguration.get());
+}
+
+IMachineConfigurationVersionIterator* CMachineConfigurationVersionIterator::Clone()
+{
+    throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_NOTIMPLEMENTED);
+}

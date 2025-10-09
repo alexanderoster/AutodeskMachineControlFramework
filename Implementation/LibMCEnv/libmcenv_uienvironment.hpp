@@ -272,7 +272,7 @@ public:
 
 	IJSONObject* GetExternalEventResults() override;
 
-
+	IMachineConfigurationHandler* CreateMachineConfigurationHandler() override;
 };
 
 } // namespace Impl

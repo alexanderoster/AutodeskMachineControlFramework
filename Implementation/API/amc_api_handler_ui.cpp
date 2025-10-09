@@ -263,6 +263,18 @@ APIHandler_UIType CAPIHandler_UI::parseRequest(const std::string& sURI, const eA
 			}
 		}
 
+		if (sParameterString.length() >= 43) {
+			if (sParameterString.substr(0, 8) == "/module/") {
+				sParameterUUID = AMCCommon::CUtils::normalizeUUIDString(sParameterString.substr(8, 36));
+				if (sParameterString.length() > 43) {
+					if (sParameterString.at(43) == '/') {
+						sAdditionalParameter = sParameterString.substr(44);
+					}
+				}
+
+				return APIHandler_UIType::utModule;
+			}
+		}
 	}
 
 
@@ -461,6 +473,21 @@ void CAPIHandler_UI::handleContentItemRequest(CJSONWriter& writer, const std::st
 	writer.addObject(AMC_API_KEY_UI_CONTENT, object);
 }
 
+void CAPIHandler_UI::handleModuleRequest(CJSONWriter& writer, const std::string& sParameterUUID, PAPIAuth pAuth, uint32_t nStateID)
+{
+	if (pAuth.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	 
+	auto pWidget = m_pSystemState->uiHandler()->findModule(sParameterUUID);
+	if (pWidget.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_MODULENOTFOUND, "Module UUID = " + sParameterUUID);
+	
+	CJSONWriterObject object(writer);
+	pWidget->addContentToJSON(writer, object, pAuth->getLegacyParameterHandler(true), nStateID);
+	writer.addString(AMC_API_KEY_UI_ITEMUUID, sParameterUUID);
+	writer.addObject(AMC_API_KEY_UI_CONTENT, object);
+}
+
 void CAPIHandler_UI::handleEventRequest(CJSONWriter& writer, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth)
 {
 	if (pAuth.get() == nullptr)
@@ -478,10 +505,16 @@ void CAPIHandler_UI::handleEventRequest(CJSONWriter& writer, const uint8_t* pBod
 	if (apiRequest.hasValue(AMC_API_KEY_UI_FORMVALUEJSON)) {
 		sFormValueJSON = apiRequest.getJSONObjectString(AMC_API_KEY_UI_FORMVALUEJSON, LIBMC_ERROR_INVALIDFORMVALUES);
 	}
+
+	std::string sEventParameterJSON;
+	if (apiRequest.hasValue(AMC_API_KEY_STATUSPARAMETERGROUP_PARAMETERS))
+	{
+		sEventParameterJSON = apiRequest.getJSONObjectString(AMC_API_KEY_STATUSPARAMETERGROUP_PARAMETERS, LIBMC_ERROR_INVALIDFORMVALUES);
+	}
 	
 	auto pUIHandler = m_pSystemState->uiHandler();
 
-	auto pEventResult = pUIHandler->handleEvent(sEventName, sSenderUUID, sFormValueJSON, "", pAuth);
+	auto pEventResult = pUIHandler->handleEvent(sEventName, sSenderUUID, sFormValueJSON, sEventParameterJSON, pAuth);
 
 	CJSONWriterArray contentUpdateNode(writer);
 
@@ -623,6 +656,19 @@ PAPIResponse CAPIHandler_UI::handleRequest(const std::string& sURI, const eAPIRe
 
 	case APIHandler_UIType::utPointChannel: {
 		handlePointChannelDataRequest(writer, sParameterUUID, sAdditionalParameter, pAuth);
+		break;
+	}
+
+	case APIHandler_UIType::utModule: {
+
+		int64_t nStateID = 0;
+		if (!sAdditionalParameter.empty()) {
+			nStateID = std::stoi(sAdditionalParameter);
+
+			if ((nStateID < 0) || (nStateID > INT32_MAX))
+				throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCONTENTSTATEID, "Invalid content state id: " + sAdditionalParameter);
+		}
+		handleModuleRequest(writer, sParameterUUID, pAuth, (uint32_t)nStateID);
 		break;
 	}
 

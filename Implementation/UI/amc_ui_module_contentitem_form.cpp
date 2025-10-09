@@ -355,18 +355,30 @@ void CUIModule_ContentFormMemo::writeVariablesToJSON(CJSONWriter& writer, CJSONW
 PUIModule_ContentFormCombobox CUIModule_ContentFormCombobox::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
 {
 	auto nameAttrib = xmlNode.attribute("name");
+	auto changeeventAttrib = xmlNode.attribute("changeevent");
 
 	if (nameAttrib.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_FORMENTITYNAMEMISSING);
 	CUIExpression caption(xmlNode, "caption");
 	CUIExpression value(xmlNode, "value");
 
-	return std::make_shared<CUIModule_ContentFormCombobox>(nameAttrib.as_string(), sFormPath, caption, value, pStateMachineData);
+	// Prepare vector to hold items
+	std::vector<std::pair<std::string, int>> items;
 
+	// Iterate over all child nodes named "Item"
+	for (auto itemNode : xmlNode.children("item")) {
+		auto textAttrib = itemNode.attribute("text");
+		auto valueAttrib = itemNode.attribute("value");
+		std::string text = textAttrib.as_string();
+		int intValue = valueAttrib.as_int();
+		items.emplace_back(text, intValue);
+	}
+
+	return std::make_shared<CUIModule_ContentFormCombobox>(nameAttrib.as_string(), sFormPath, caption, value, changeeventAttrib.as_string(), pStateMachineData, items);
 }
 
-CUIModule_ContentFormCombobox::CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, PStateMachineData pStateMachineData)
-	: CUIModule_ContentFormEntity(sName, sFormPath, Caption, pStateMachineData)
+CUIModule_ContentFormCombobox::CUIModule_ContentFormCombobox(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, const std::string& sOnChangeEvent, PStateMachineData pStateMachineData, const std::vector<std::pair<std::string, int>>& items)
+	: CUIModule_ContentFormEntity(sName, sFormPath, Caption, pStateMachineData), m_ValueExpression(Value), m_sOnChangeEvent(sOnChangeEvent), m_Items(items)
 {
 
 }
@@ -385,25 +397,43 @@ std::string CUIModule_ContentFormCombobox::getTypeString()
 void CUIModule_ContentFormCombobox::populateClientVariables(CParameterHandler* pClientVariableHandler)
 {
 	auto pGroup = registerClientVariableGroup(pClientVariableHandler);
+	pGroup->addNewStringParameter(AMC_API_KEY_UI_FORMDEFAULTVALUE, "combo value", m_ValueExpression.evaluateStringValue(m_pStateMachineData));
 }
 
 void CUIModule_ContentFormCombobox::syncClientVariables(CParameterHandler* pClientVariableHandler)
 {
-
+	auto pGroup = getClientVariableGroup(pClientVariableHandler);
+	if (m_ValueExpression.needsSync())
+		pGroup->setIntParameterValueByName(AMC_API_KEY_UI_FORMDEFAULTVALUE, m_ValueExpression.evaluateIntegerValue(m_pStateMachineData));
 }
 
 void CUIModule_ContentFormCombobox::writeVariablesToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
 {
 	auto pGroup = getClientVariableGroup(pClientVariableHandler);
+
+	object.addString("type", "combobox");
+	object.addInteger(AMC_API_KEY_UI_FORMDEFAULTVALUE, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_FORMDEFAULTVALUE));
+	object.addString("changeevent", m_sOnChangeEvent);
+
+	// Create an array for the items
+	CJSONWriterArray itemsArray(writer);
+	for (const auto& item : m_Items) {
+		CJSONWriterObject itemObject(writer);
+		itemObject.addString("text", item.first);
+		itemObject.addInteger("value", item.second);
+		itemsArray.addObject(itemObject);
+	}
+	object.addArray("items", itemsArray);
 }
-
-
 
 PUIModule_ContentForm CUIModule_ContentForm::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment)
 {
 	LibMCAssertNotNull(pUIModuleEnvironment);
 
-	auto pForm = std::make_shared <CUIModule_ContentForm>(pUIModuleEnvironment->stateMachineData(), sItemName, sModulePath);
+	auto visibleAttrib = xmlNode.attribute("visible");
+	auto bVisible = visibleAttrib.empty() ? true : visibleAttrib.as_bool();
+
+	auto pForm = std::make_shared <CUIModule_ContentForm>(pUIModuleEnvironment->stateMachineData(), sItemName, sModulePath, bVisible);
 
 	pUIModuleEnvironment->contentRegistry()->registerFormName(pForm->getUUID(), pForm->getName());
 
@@ -436,10 +466,12 @@ PUIModule_ContentForm CUIModule_ContentForm::makeFromXML(const pugi::xml_node& x
 }
 
 
-CUIModule_ContentForm::CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath)
+CUIModule_ContentForm::CUIModule_ContentForm(PStateMachineData pStateMachineData, const std::string& sName, const std::string& sModulePath, bool bVisible)
 	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sName, sModulePath),
 	  m_sName(sName),
-	  m_pStateMachineData(pStateMachineData)
+	  m_pStateMachineData(pStateMachineData),
+	  m_bVisible(bVisible)
+
 {
 	LibMCAssertNotNull(pStateMachineData);
 
@@ -452,13 +484,17 @@ CUIModule_ContentForm::~CUIModule_ContentForm()
 }
 
 
-
 void CUIModule_ContentForm::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "form");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
+	object.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
 
 	CJSONWriterArray entityArray(writer);
+	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
+	auto bVisible = pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_VISIBLE);
+	object.addBool(AMC_API_KEY_UI_VISIBLE, bVisible);
+
 	for (auto pEntity : m_Entities) {
 		CJSONWriterObject entityObject(writer);
 		pEntity->addContentToJSON(writer, entityObject, pClientVariableHandler);
@@ -471,15 +507,23 @@ void CUIModule_ContentForm::addLegacyContentToJSON(CJSONWriter& writer, CJSONWri
 void CUIModule_ContentForm::populateClientVariables(CParameterHandler* pClientVariableHandler)
 {
 	LibMCAssertNotNull(pClientVariableHandler);
+
+	auto pGroup = pClientVariableHandler->addGroup(getItemPath(), "form UI element");
+	pGroup->addNewBoolParameter(AMC_API_KEY_UI_VISIBLE, "visibility of the UI form", m_bVisible);
+
 	for (auto pEntity : m_Entities) {
 		pEntity->populateClientVariables(pClientVariableHandler);
 	}
-
 }
 
 std::string CUIModule_ContentForm::getName()
 {
 	return m_sName;
+}
+
+bool CUIModule_ContentForm::IsVisible()
+{
+	return m_bVisible;
 }
 
 void CUIModule_ContentForm::addEntity(PUIModule_ContentFormEntity pEntity)

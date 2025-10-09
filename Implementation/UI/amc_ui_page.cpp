@@ -45,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 
-CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler)
-	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1)
+CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
+	: m_sName(sName), m_pUIEventHandler(pUIEventHandler), m_nGridColumns(1), m_nGridRows(1), m_Icon(icon), m_Description(description), m_Caption (caption), m_sShowEvent(sShowEvent)
 {
 	if (sName.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -67,6 +67,16 @@ std::string CUIPage::getName()
 	return m_sName;
 }
 
+std::string CUIPage::getUUID()
+{
+	return m_sUUID;
+}
+
+std::string CUIPage::getShowEvent()
+{
+	return m_sShowEvent;
+}
+
 void CUIPage::addModule(PUIModule pModule)
 {
 	if (pModule.get() == nullptr)
@@ -77,15 +87,18 @@ void CUIPage::addModule(PUIModule pModule)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDMODULENAME);
 
 	m_Modules.push_back(pModule);
+	m_ModuleMapOfPage.insert(std::make_pair(pModule->getUUID(), pModule));
 
-	pModule->populateItemMap(m_ItemMapOfPage);
+	pModule->populateLegacyItemMap(m_ItemMapOfPage);
+
+	pModule->populateModuleMap(m_ModuleMapOfPage);
 	
 }
 
 void CUIPage::configurePostLoading()
 {
 	for (auto pModule : m_Modules)
-		pModule->configurePostLoading();
+		pModule->configureLegacyPostLoading();
 }
 
 
@@ -122,6 +135,14 @@ void CUIPage::writeLegacyModulesToJSON(CJSONWriter& writer, CJSONWriterArray& mo
 	}
 }
 
+PUIModule CUIPage::findModuleByUUID(const std::string& sUUID)
+{
+	auto iIter = m_ModuleMapOfPage.find(sUUID);
+	if (iIter != m_ModuleMapOfPage.end())
+		return iIter->second;
+
+	return nullptr;
+}
 
 PUIModuleItem CUIPage::findModuleItemByUUID(const std::string& sUUID)
 {
@@ -161,7 +182,7 @@ void CUIPage::populateClientVariables(CParameterHandler* pParameterHandler)
 	pGroup->addNewStringParameter ("custom", "custom page parameter", "");
 
 	for (auto pModule : m_Modules) {
-		pModule->populateClientVariables(pParameterHandler);
+		pModule->populateLegacyClientVariables(pParameterHandler);
 	}
 }
 
@@ -170,31 +191,33 @@ void CUIPage::populateClientVariables(CParameterHandler* pParameterHandler)
 // New UI Frontend System
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState)
+void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
 {
+
 	pageObject.addString("name", m_sName);
 	pageObject.addString("uuid", AMCCommon::CUtils::normalizeUUIDString(m_sUUID));
 
-	if (!m_sCaption.empty())
-		pageObject.addString("caption", m_sCaption);
-	if (!m_sDescription.empty())
-		pageObject.addString("description", m_sDescription);
-	if (!m_sIcon.empty())
-		pageObject.addString("icon", m_sIcon);
+	if (!m_Caption.isEmpty (pStateMachineData))
+		pageObject.addString("caption", m_Caption.evaluateStringValue (pStateMachineData));
+	if (!m_Description.isEmpty(pStateMachineData))
+		pageObject.addString("description", m_Description.evaluateStringValue (pStateMachineData));
+	if (!m_Icon.isEmpty(pStateMachineData))
+		pageObject.addString("icon", m_Icon.evaluateStringValue (pStateMachineData));
 
-	if (m_nGridColumns > 1)
-		pageObject.addInteger("gridcolumns", m_nGridColumns);
-	if (m_nGridRows > 1)
-		pageObject.addInteger("gridrows", m_nGridRows);
+	pageObject.addInteger("gridcolumns", m_nGridColumns);
+	pageObject.addInteger("gridrows", m_nGridRows);
 
 	CJSONWriterArray moduleArray(writer);
 
 	for (auto pModule : m_Modules) {
-		CJSONWriterObject moduleObject(writer);
 
-		pModule->frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState);
+		if (pModule->isVersion2FrontendModule()) {
+			CJSONWriterObject moduleObject(writer);
 
-		moduleArray.addObject(moduleObject);
+			pModule->frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState, pStateMachineData);
+
+			moduleArray.addObject(moduleObject);
+		}
 	}
 
 

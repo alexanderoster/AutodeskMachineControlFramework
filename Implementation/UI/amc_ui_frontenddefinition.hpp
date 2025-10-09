@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common_chrono.hpp"
 
 #include "amc_ui_expression.hpp"
+#include "amc_jsonwriter.hpp"
 
 #include <memory>
 #include <map>
@@ -49,7 +50,7 @@ namespace AMC {
 		atBoolean = 4,
 		atUUID = 5,
 		atArray = 6,
-		atObjet = 7
+		atObject = 7
 	};
 
 	class CUIFrontendDefinitionAttribute {
@@ -67,6 +68,8 @@ namespace AMC {
 		std::string getName();
 
 		eUIFrontendDefinitionAttributeType getAttributeType();
+
+		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData) = 0;
 	};
 
 	typedef std::shared_ptr<CUIFrontendDefinitionAttribute> PUIFrontendDefinitionAttribute;
@@ -81,6 +84,8 @@ namespace AMC {
 		CUIFrontendDefinitionExpressionAttribute(const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression& valueExpression);
 
 		virtual ~CUIFrontendDefinitionExpressionAttribute();
+
+		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData * pStateMachineData) override;
 
 	};
 
@@ -100,6 +105,8 @@ namespace AMC {
 
 		PUIFrontendDefinitionAttribute registerValue (const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression & valueExpression);
 
+		std::vector<PUIFrontendDefinitionAttribute> getAttributes();
+
 	};
 
 	typedef std::shared_ptr<CUIFrontendDefinitionModuleStore> PUIFrontendDefinitionModuleStore;
@@ -118,7 +125,7 @@ namespace AMC {
 
 		PUIFrontendDefinitionModuleStore registerModuleStore (const std::string& sModuleUUID, const std::string& sPath);
 
-		AMCCommon::PChrono getGlobalChrono();
+		AMCCommon::PChrono getGlobalChrono();	
 
 	};
 

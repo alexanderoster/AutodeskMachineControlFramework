@@ -69,6 +69,44 @@ CUIFrontendDefinitionExpressionAttribute::~CUIFrontendDefinitionExpressionAttrib
 
 }
 
+void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData)
+{
+
+	switch (getAttributeType()) {
+		case eUIFrontendDefinitionAttributeType::atBoolean: {
+			bool bValue = m_ValueExpression.evaluateBoolValue (pStateMachineData);
+			attributesObject.addBool(getName(), bValue);
+			break;
+		}
+
+		case eUIFrontendDefinitionAttributeType::atString: {
+			std::string sValue = m_ValueExpression.evaluateStringValue(pStateMachineData);
+			attributesObject.addString(getName(), sValue);
+			break;
+		}
+
+		case eUIFrontendDefinitionAttributeType::atNumber: {
+			double dValue = m_ValueExpression.evaluateNumberValue(pStateMachineData);
+			attributesObject.addDouble(getName(), dValue);
+			break;
+		}
+
+		case eUIFrontendDefinitionAttributeType::atInteger: {
+			int64_t nValue = m_ValueExpression.evaluateIntegerValue(pStateMachineData);
+			attributesObject.addInteger(getName(), nValue);
+			break;
+		}
+
+		case eUIFrontendDefinitionAttributeType::atUUID: {
+			std::string sValue = m_ValueExpression.evaluateUUIDValue(pStateMachineData);
+			attributesObject.addString(getName(), sValue);
+			break;
+		}
+
+	}
+}
+
+
 CUIFrontendDefinitionModuleStore::CUIFrontendDefinitionModuleStore(const std::string& sModuleUUID, const std::string& sModulePath)
 	: m_sUUID(AMCCommon::CUtils::normalizeUUIDString(sModuleUUID)), m_sPath(sModulePath)
 {
@@ -97,6 +135,16 @@ PUIFrontendDefinitionAttribute CUIFrontendDefinitionModuleStore::registerValue (
 }
 
 
+std::vector<PUIFrontendDefinitionAttribute> CUIFrontendDefinitionModuleStore::getAttributes()
+{
+	std::vector<PUIFrontendDefinitionAttribute> attributes;
+	for (auto attributePair : m_Attributes) {
+		attributes.push_back(attributePair.second);
+	}
+	return attributes;
+}
+
+
 CUIFrontendDefinition::CUIFrontendDefinition(AMCCommon::PChrono pGlobalChrono)
 	: m_pGlobalChrono (pGlobalChrono)
 {
@@ -120,3 +168,4 @@ AMCCommon::PChrono CUIFrontendDefinition::getGlobalChrono()
 {
 	return m_pGlobalChrono;
 }
+

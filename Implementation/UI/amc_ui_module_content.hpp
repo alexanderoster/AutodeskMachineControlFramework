@@ -69,6 +69,8 @@ namespace AMC {
 
 		uint32_t m_nNamingIDCounter;
 
+		bool m_bVisible;
+
 		std::map<std::string, PUIModule_ContentItem> m_ItemMap;
 		std::vector<PUIModule_ContentItem> m_Items;
 
@@ -78,6 +80,10 @@ namespace AMC {
 		std::string readItemNameFromXML (const pugi::xml_node & itemNode, const std::string & sPrefix);
 
 	public:
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// General module functionality
+		/////////////////////////////////////////////////////////////////////////////////////
 
 		CUIModule_Content(pugi::xml_node & xmlNode, const std::string & sPath, PUIModuleEnvironment pUIModuleEnvironment);
 		
@@ -93,16 +99,25 @@ namespace AMC {
 		std::string getTitle ();
 		std::string getSubtitle ();
 
+		bool isVisible();
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Legacy UI System
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		virtual void addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
 		virtual void writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler) override;
 
-		virtual void populateItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
+		virtual void populateModuleMap(std::map<std::string, PUIModule>& moduleMap) override;
 
+		virtual void populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap) override;
 
-		virtual PUIModuleItem findItem(const std::string& sUUID) override;
+		virtual PUIModuleItem findLegacyItem(const std::string& sUUID) override;
 
-		void configurePostLoading() override;
+		void configureLegacyPostLoading() override;
 
-		virtual void populateClientVariables(CParameterHandler* pParameterHandler) override;
+		virtual void populateLegacyClientVariables(CParameterHandler* pParameterHandler) override;
 
 	};
 

@@ -60,47 +60,33 @@ using namespace LibMCDriver_ScanLab::Impl;
 
 #define RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ 3600UL * 100000UL
 
-CRTCContextOwnerData::CRTCContextOwnerData()
-	: m_nAttributeFilterValue (0), m_OIERecordingMode (LibMCDriver_ScanLab::eOIERecordingMode::OIERecordingDisabled), m_d100PercentLaserPowerInWatts (100.0), m_d0PercentLaserPowerInWatts (0.0),
-	m_dEpsilon (1.0e-6)
+
+CRTCPowerMapping::CRTCPowerMapping ()
+ : m_d100PercentLaserPowerInWatts(100.0), m_d0PercentLaserPowerInWatts(0.0), m_dEpsilon(1.0e-6)
 {
 
 }
 
-CRTCContextOwnerData::~CRTCContextOwnerData()
+CRTCPowerMapping::~CRTCPowerMapping()
 {
 
 }
 
-void CRTCContextOwnerData::getAttributeFilters(std::string& sAttributeFilterNameSpace, std::string& sAttributeFilterName, int64_t& nAttributeFilterValue)
-{
-	sAttributeFilterNameSpace = m_sAttributeFilterNameSpace;
-	sAttributeFilterName = m_sAttributeFilterName;
-	nAttributeFilterValue = m_nAttributeFilterValue;
-}
-
-void CRTCContextOwnerData::setAttributeFilters(const std::string& sAttributeFilterNameSpace, const std::string& sAttributeFilterName, const int64_t nAttributeFilterValue)
-{
-	m_sAttributeFilterNameSpace = sAttributeFilterNameSpace;
-	m_sAttributeFilterName = sAttributeFilterName;
-	m_nAttributeFilterValue = nAttributeFilterValue;
-}
-
-void CRTCContextOwnerData::setMaxLaserPowerNoPowerCorrection(double d100PercentLaserPowerInWatts)
+void CRTCPowerMapping::setMaxLaserPowerNoPowerCorrection(double d100PercentLaserPowerInWatts)
 {
 	setMaxLaserPowerLinearPowerCorrection(0.0, d100PercentLaserPowerInWatts);
 }
 
-void CRTCContextOwnerData::setMaxLaserPowerLinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts)
+void CRTCPowerMapping::setMaxLaserPowerLinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts)
 {
 	std::map<double, double> emptyLaserPowerMapping;
 	setMaxLaserPowerNonlinearPowerCorrection(d0PercentLaserPowerInWatts, d100PercentLaserPowerInWatts, emptyLaserPowerMapping);
 }
 
-void CRTCContextOwnerData::setMaxLaserPowerNonlinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts, std::map<double, double> laserPowerMapping)
+void CRTCPowerMapping::setMaxLaserPowerNonlinearPowerCorrection(double d0PercentLaserPowerInWatts, double d100PercentLaserPowerInWatts, std::map<double, double> laserPowerMapping)
 {
 	if ((d0PercentLaserPowerInWatts < 0.0) || (d0PercentLaserPowerInWatts > RTC6_MAX_MAXLASERPOWER))
-		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid 0 percent laser power: " + std::to_string (d0PercentLaserPowerInWatts));
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid 0 percent laser power: " + std::to_string(d0PercentLaserPowerInWatts));
 	if ((d100PercentLaserPowerInWatts < RTC6_MIN_MAXLASERPOWER) || (d100PercentLaserPowerInWatts > RTC6_MAX_MAXLASERPOWER))
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDMAXLASERPOWER, "invalid 100 percent laser power: " + std::to_string(d100PercentLaserPowerInWatts));
 
@@ -113,27 +99,27 @@ void CRTCContextOwnerData::setMaxLaserPowerNonlinearPowerCorrection(double d0Per
 	buildAndValidateMappings(laserPowerMapping);
 }
 
-double CRTCContextOwnerData::get0PercentLaserPowerInWatts()
+double CRTCPowerMapping::get0PercentLaserPowerInWatts()
 {
 	return m_d0PercentLaserPowerInWatts;
 }
 
-double CRTCContextOwnerData::get100PercentLaserPowerInWatts()
+double CRTCPowerMapping::get100PercentLaserPowerInWatts()
 {
 	return m_d100PercentLaserPowerInWatts;
 }
 
-bool CRTCContextOwnerData::getLaserPowerCalibrationIsLinear()
+bool CRTCPowerMapping::getLaserPowerCalibrationIsLinear()
 {
 	return m_percentToWatts.size() > 2;
 }
 
 
-bool CRTCContextOwnerData::mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts, double& dPercent)
+bool CRTCPowerMapping::mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts, double& dPercent)
 {
-	
+
 	if (m_wattsToPercent.size() <= 2) {
-		
+
 
 		// No mapping available, just return linear mapping
 		if (dLaserPowerInWatts < m_d0PercentLaserPowerInWatts) {
@@ -145,22 +131,29 @@ bool CRTCContextOwnerData::mapLaserPowerFromWattsToPercent(double dLaserPowerInW
 			dPercent = 100.0;
 			return false;
 		}
-		
+
 		dPercent = (dLaserPowerInWatts - m_d0PercentLaserPowerInWatts) / (m_d100PercentLaserPowerInWatts - m_d0PercentLaserPowerInWatts) * 100.0;
 		return true;
-		
+
 	}
+
+	/*std::cout << "Calculating nonlinear mapping for " << dLaserPowerInWatts << "watts" << std::endl;
+	std::cout << "Mapping table: " << m_wattsToPercent.size() << " entries" << std::endl;
+
+	for (auto iIter : m_wattsToPercent) {
+		std::cout << "  " << iIter.x << " W -> " << iIter.y << " %" << std::endl;
+	}*/
 
 	return interpolate(m_wattsToPercent, dLaserPowerInWatts, dPercent);
 }
 
-std::vector<CRTCContextOwnerData::sPowerMappingKnot>& CRTCContextOwnerData::getPercentToWattTable()
+std::vector<CRTCPowerMapping::sPowerMappingKnot>& CRTCPowerMapping::getPercentToWattTable()
 {
 	return m_percentToWatts;
 }
 
 
-bool CRTCContextOwnerData::mapLaserPowerFromPercentToWatts(double dLaserPowerInPercent, double& dWatts)
+bool CRTCPowerMapping::mapLaserPowerFromPercentToWatts(double dLaserPowerInPercent, double& dWatts)
 {
 	if (m_percentToWatts.size() <= 2) {
 		// No mapping available, just return linear mapping
@@ -181,7 +174,7 @@ bool CRTCContextOwnerData::mapLaserPowerFromPercentToWatts(double dLaserPowerInP
 }
 
 
-bool CRTCContextOwnerData::interpolate(const std::vector<sPowerMappingKnot>& pts, double x, double& y)
+bool CRTCPowerMapping::interpolate(const std::vector<sPowerMappingKnot>& pts, double x, double& y)
 {
 	if (pts.size() < 2) {
 		y = 0.0;
@@ -223,11 +216,11 @@ bool CRTCContextOwnerData::interpolate(const std::vector<sPowerMappingKnot>& pts
 	return true;
 }
 
-bool CRTCContextOwnerData::nearlyEqual(double a, double b, double eps) {
+bool CRTCPowerMapping::nearlyEqual(double a, double b, double eps) {
 	return std::abs(a - b) <= eps * std::max({ 1.0, std::abs(a), std::abs(b) });
 }
 
-void CRTCContextOwnerData::buildAndValidateMappings(const std::map<double, double>& userMap)
+void CRTCPowerMapping::buildAndValidateMappings(const std::map<double, double>& userMap)
 {
 	const double w0 = m_d0PercentLaserPowerInWatts;
 	const double w1 = m_d100PercentLaserPowerInWatts;
@@ -239,7 +232,7 @@ void CRTCContextOwnerData::buildAndValidateMappings(const std::map<double, doubl
 	for (const auto& kv : userMap) {
 		const double p = kv.first;
 		const double w = kv.second;
-		
+
 		if (w < w0 - m_dEpsilon || w > w1 + m_dEpsilon)
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERPOWERMAPPING,
 				"mapping watt value out of bounds: " + std::to_string(w));
@@ -303,6 +296,34 @@ void CRTCContextOwnerData::buildAndValidateMappings(const std::map<double, doubl
 			"inverse mapping percent domain inconsistent");
 	}
 }
+
+CRTCContextOwnerData::CRTCContextOwnerData()
+	: m_nAttributeFilterValue (0), m_OIERecordingMode (LibMCDriver_ScanLab::eOIERecordingMode::OIERecordingDisabled)
+{
+
+}
+
+CRTCContextOwnerData::~CRTCContextOwnerData()
+{
+
+}
+
+void CRTCContextOwnerData::getAttributeFilters(std::string& sAttributeFilterNameSpace, std::string& sAttributeFilterName, int64_t& nAttributeFilterValue)
+{
+	sAttributeFilterNameSpace = m_sAttributeFilterNameSpace;
+	sAttributeFilterName = m_sAttributeFilterName;
+	nAttributeFilterValue = m_nAttributeFilterValue;
+}
+
+void CRTCContextOwnerData::setAttributeFilters(const std::string& sAttributeFilterNameSpace, const std::string& sAttributeFilterName, const int64_t nAttributeFilterValue)
+{
+	m_sAttributeFilterNameSpace = sAttributeFilterNameSpace;
+	m_sAttributeFilterName = sAttributeFilterName;
+	m_nAttributeFilterValue = nAttributeFilterValue;
+}
+
+
+
 void CRTCContextOwnerData::setOIERecordingMode(LibMCDriver_ScanLab::eOIERecordingMode oieRecordingMode)
 {
 	m_OIERecordingMode = oieRecordingMode;
@@ -370,9 +391,12 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
 {
 	if (pOwnerData.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+
 	m_pScanLabSDK = pOwnerData->getScanLabSDK();
 	if (m_pScanLabSDK.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+
+	m_pPowerMapping = std::make_shared<CRTCPowerMapping>();
 
 	if (pDriverEnvironment.get () == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
@@ -1146,17 +1170,17 @@ void CRTCContext::StopExecution()
 
 bool CRTCContext::LaserPowerCalibrationIsLinear()
 {
-	return m_pOwnerData->getLaserPowerCalibrationIsLinear();
+	return m_pPowerMapping->getLaserPowerCalibrationIsLinear();
 }
 
 
 
 void CRTCContext::GetLaserPowerCalibration(LibMCDriver_ScanLab_double& dLaserPowerAt0Percent, LibMCDriver_ScanLab_double& dLaserPowerAt100Percent, LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, LibMCDriver_ScanLab_uint64* pCalibrationPointsNeededCount, LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer)
 {
-	dLaserPowerAt0Percent = m_pOwnerData->get0PercentLaserPowerInWatts();
-	dLaserPowerAt100Percent = m_pOwnerData->get100PercentLaserPowerInWatts();
+	dLaserPowerAt0Percent = m_pPowerMapping->get0PercentLaserPowerInWatts();
+	dLaserPowerAt100Percent = m_pPowerMapping->get100PercentLaserPowerInWatts();
 
-	auto percentToWattTable = m_pOwnerData->getPercentToWattTable();
+	auto percentToWattTable = m_pPowerMapping->getPercentToWattTable();
 
 	if (percentToWattTable.size() < 2) {
 		if (pCalibrationPointsNeededCount != nullptr)
@@ -1188,7 +1212,7 @@ void CRTCContext::GetLaserPowerCalibration(LibMCDriver_ScanLab_double& dLaserPow
 
 void CRTCContext::SetLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent)
 {
-	m_pOwnerData->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
+	m_pPowerMapping->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
 }
 
 void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_ScanLab_double dLaserPowerAt0Percent, const LibMCDriver_ScanLab_double dLaserPowerAt100Percent, const LibMCDriver_ScanLab_uint64 nCalibrationPointsBufferSize, const LibMCDriver_ScanLab::sLaserCalibrationPoint* pCalibrationPointsBuffer) 
@@ -1206,18 +1230,18 @@ void CRTCContext::SetPiecewiseLinearLaserPowerCalibration(const LibMCDriver_Scan
 			nonLinearPoints.insert (std::make_pair (pPoint->m_PowerSetPointInPercent, pPoint->m_PowerOutputInWatts));
 		}
 
-		m_pOwnerData->setMaxLaserPowerNonlinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent, nonLinearPoints);
+		m_pPowerMapping->setMaxLaserPowerNonlinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent, nonLinearPoints);
 
 	}
 	else {
-		m_pOwnerData->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
+		m_pPowerMapping->setMaxLaserPowerLinearPowerCorrection(dLaserPowerAt0Percent, dLaserPowerAt100Percent);
 	}
 }
 
 LibMCDriver_ScanLab_double CRTCContext::MapPowerPercentageToWatts(const LibMCDriver_ScanLab_double dLaserPowerInPercent)
 {
 	double dLaserPowerInWatts = 0.0;
-	bool bSuccess = m_pOwnerData->mapLaserPowerFromPercentToWatts(dLaserPowerInPercent, dLaserPowerInWatts);
+	bool bSuccess = m_pPowerMapping->mapLaserPowerFromPercentToWatts(dLaserPowerInPercent, dLaserPowerInWatts);
 	if (!bSuccess)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOWATTS, "could not convert laser power to watts: " + std::to_string (dLaserPowerInPercent) + "%");
 
@@ -1227,7 +1251,7 @@ LibMCDriver_ScanLab_double CRTCContext::MapPowerPercentageToWatts(const LibMCDri
 LibMCDriver_ScanLab_double CRTCContext::MapPowerWattsToPercent(const LibMCDriver_ScanLab_double dLaserPowerInWatts)
 {
 	double dLaserPowerInPercent = 0.0;
-	bool bSuccess = m_pOwnerData->mapLaserPowerFromWattsToPercent(dLaserPowerInWatts, dLaserPowerInPercent);
+	bool bSuccess = m_pPowerMapping->mapLaserPowerFromWattsToPercent(dLaserPowerInWatts, dLaserPowerInPercent);
 	if (!bSuccess)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_COULDNOTCONVERTLASERPOWERTOPERCENT, "could not convert laser power to watts: " + std::to_string(dLaserPowerInWatts) + "W");
 
@@ -2805,7 +2829,7 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 			float fPowerInWatts = (float)pLayer->GetSegmentProfileTypedValue(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower);
 			
 			double dPowerInPercent = 0.0;
-			if (!m_pOwnerData->mapLaserPowerFromWattsToPercent((double)fPowerInWatts, dPowerInPercent)) {
+			if (!m_pPowerMapping->mapLaserPowerFromWattsToPercent((double)fPowerInWatts, dPowerInPercent)) {
 				// TODO: Throw exception?
 			}
 				

@@ -45,6 +45,7 @@ Abstract: This is the class declaration of CMachineConfigurationVersionIterator
 #endif
 
 // Include custom headers here.
+#include "libmcdata_machineconfigurationversion.hpp"
 
 
 namespace LibMCData {
@@ -58,29 +59,17 @@ namespace Impl {
 class CMachineConfigurationVersionIterator : public virtual IMachineConfigurationVersionIterator, public virtual CIterator {
 private:
 
-	/**
-	* Put private members here.
-	*/
-
-protected:
-
-	/**
-	* Put protected members here.
-	*/
-
 public:
 
-	/**
-	* Put additional public members here. They will not be visible in the external API.
-	*/
+    CMachineConfigurationVersionIterator();
 
+    virtual ~CMachineConfigurationVersionIterator();
 
-	/**
-	* Public member functions to implement.
-	*/
+	void AddVersion(std::shared_ptr<CMachineConfigurationVersion> pVersion);
 
-	IMachineConfigurationVersion * GetCurrentVersion() override;
-
+	IMachineConfigurationVersion* GetCurrent() override;
+	
+	IMachineConfigurationVersionIterator* Clone() override;
 };
 
 } // namespace Impl

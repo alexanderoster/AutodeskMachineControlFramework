@@ -107,7 +107,10 @@ PDataSeriesHandler CUIModuleEnvironment::dataSeriesHandler()
 
 
 CUIModule::CUIModule(const std::string& sName, const std::string& sParentPath, CUIFrontendDefinition* pFrontendDefinition)
-	: m_sName (sName), m_sUUID (AMCCommon::CUtils::createUUID ())
+	: m_sName (sName), 
+	m_sUUID (AMCCommon::CUtils::createUUID ()),
+	m_nGridColumn (1), m_nGridRow (1), m_nGridColumnSpan (1), m_nGridRowSpan (1)
+
 {
 	LibMCAssertNotNull(pFrontendDefinition);
 
@@ -155,14 +158,80 @@ bool CUIModule::isVersion2FrontendModule()
 	return false;
 }
 
-void CUIModule::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState)
+void CUIModule::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
 {
+	if (pFrontendState == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	moduleObject.addString("moduletype", getType ());
+	moduleObject.addString("uuid", m_sUUID);
+	if ((m_nGridColumn > 1) || (m_nGridRow > 1)) {
+		moduleObject.addInteger("gridcolumn", m_nGridColumn);
+		moduleObject.addInteger("gridrow", m_nGridRow);
+	}
+	if ((m_nGridColumnSpan > 1) || (m_nGridRowSpan > 1)) {
+		moduleObject.addInteger("gridcolumnspan", m_nGridColumnSpan);
+		moduleObject.addInteger("gridrowspan", m_nGridRowSpan);
+	}
+
+	CJSONWriterObject attributesObject(writer);
+
+	pFrontendState->writeModuleAttributesToJSON (writer, attributesObject, m_pModuleStore.get(), pStateMachineData);	
+
+	moduleObject.addObject("attributes", attributesObject);
+
+}
+
+
+void CUIModule::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
+{
+
+}
+
+void CUIModule::populateLegacyClientVariables(CParameterHandler* pParameterHandler)
+{
+
+}
+
+void CUIModule::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pLegacyClientVariableHandler)
+{
+
+}
+
+PUIModuleItem CUIModule::findLegacyItem(const std::string& sUUID)
+{
+	return nullptr;
+}
+
+void CUIModule::configureLegacyPostLoading()
+{
+
 }
 
 std::string CUIModule::getModulePath()
 {
 	return m_sModulePath;
 }
+
+void CUIModule::setGridSpan(uint32_t nGridColumn, uint32_t nGridRow, uint32_t nGridColumnSpan, uint32_t nGridRowSpan)
+{
+	m_nGridColumn = nGridColumn;
+	m_nGridColumnSpan = nGridColumnSpan;
+	m_nGridRow = nGridRow;
+	m_nGridRowSpan = nGridRowSpan;
+
+}
+
+void CUIModule::getGridSpan(uint32_t& nGridColumn, uint32_t& nGridRow, uint32_t& nGridColumnSpan, uint32_t& nGridRowSpan)
+{
+
+	nGridColumn = m_nGridColumn;
+	nGridRow = m_nGridRow;	
+	nGridColumnSpan = m_nGridColumnSpan;	
+	nGridRowSpan = m_nGridRowSpan;
+
+}
+
 
 PUIFrontendDefinitionAttribute CUIModule::registerUUIDAttribute(const std::string& sAttributeName, const CUIExpression& expression)
 {

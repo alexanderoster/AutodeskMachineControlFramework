@@ -188,9 +188,7 @@ PUIPage CUIHandler::findPage(const std::string& sName)
     return pResult;
 }
 
-
-
-PUIPage CUIHandler::addPage_Unsafe(const std::string& sName)
+PUIPage CUIHandler::addPage_Unsafe(const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent)
 {
     if (sName.empty ())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPAGENAME);
@@ -203,13 +201,13 @@ PUIPage CUIHandler::addPage_Unsafe(const std::string& sName)
     if (iCustomPageIterator != m_CustomPages.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEPAGE, sName);
 
-    auto pPage = std::make_shared<CUIPage> (sName, this);
+    auto pPage = std::make_shared<CUIPage> (sName, this, icon, caption, description, sShowEvent);
     m_Pages.insert (std::make_pair (sName, pPage));
 
     return pPage;
 }
 
-PUICustomPage CUIHandler::addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName)
+PUICustomPage CUIHandler::addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
 {
     if (sName.empty())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPAGENAME);
@@ -222,14 +220,14 @@ PUICustomPage CUIHandler::addCustomPage_Unsafe(const std::string& sName, const s
     if (iCustomPageIterator != m_CustomPages.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEPAGE, sName);
 
-    auto pPage = std::make_shared<CUICustomPage>(sName, sComponentName, this);
+    auto pPage = std::make_shared<CUICustomPage>(sName, sComponentName, this, icon, caption, description);
     m_CustomPages.insert(std::make_pair(sName, pPage));
 
     return pPage;
 
 }
 
-PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::string& sTitle)
+PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
 {
     if (sName.empty())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDDIALOGNAME);
@@ -238,7 +236,7 @@ PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::stri
     if (iIterator != m_Dialogs.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEDIALOG, sName);
 
-    auto pDialog = std::make_shared<CUIDialog>(sName, sTitle, this);
+    auto pDialog = std::make_shared<CUIDialog>(sName, sTitle, this, icon, caption, description);
     m_Dialogs.insert(std::make_pair(sName, pDialog));
 
     return pDialog;
@@ -392,8 +390,17 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         if (pageNameAttrib.empty())
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGPAGENAME);
         std::string sPageName(pageNameAttrib.as_string());
+        
+        std::string sShowEvent;
+        auto pageShowEventAttrib = pageNode.attribute("showevent");
+        if (!pageShowEventAttrib.empty())
+            sShowEvent = pageShowEventAttrib.as_string();
 
-        auto pPage = addPage_Unsafe(sPageName);
+        CUIExpression icon(pageNode, "icon");
+        CUIExpression caption(pageNode, "caption");
+        CUIExpression description(pageNode, "description");
+
+        auto pPage = addPage_Unsafe(sPageName, icon, caption, description, sShowEvent);
 
         auto pageChildren = pageNode.children();
         for (pugi::xml_node pageChild : pageChildren) {
@@ -415,13 +422,17 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGPAGENAME);
         std::string sPageName(pageNameAttrib.as_string());
 
+        CUIExpression icon(custompageNode, "icon");
+        CUIExpression caption(custompageNode, "caption");
+        CUIExpression description(custompageNode, "description");
+
         auto componentNameAttrib = custompageNode.attribute("component");
         if (componentNameAttrib.empty())
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGCOMPONENTNAME);
         std::string sComponentName(componentNameAttrib.as_string());
         
 
-        auto pPage = addCustomPage_Unsafe(sPageName, sComponentName);
+        auto pPage = addCustomPage_Unsafe(sPageName, sComponentName, icon, caption, description);
 
         auto pCustomModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
         auto pCustomModule = std::make_shared<CUIModule_Custom>(custompageNode, sPageName, pCustomModuleEnvironment);
@@ -452,10 +463,14 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGPAGENAME);
         std::string sDialogName(dialogNameAttrib.as_string());
 
+        CUIExpression icon(dialogNode, "icon");
+        CUIExpression caption(dialogNode, "caption");
+        CUIExpression description(dialogNode, "description");
+
         auto dialogTitleAttrib = dialogNode.attribute("title");
         std::string sDialogTitle(dialogTitleAttrib.as_string());
 
-        auto pDialog = addDialog_Unsafe(sDialogName, sDialogTitle);
+        auto pDialog = addDialog_Unsafe(sDialogName, sDialogTitle, icon, caption, description);
 
         auto dialogChildren = dialogNode.children();
         for (pugi::xml_node dialogChild : dialogChildren) {
@@ -535,6 +550,43 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
 }
 
+PUIModule CUIHandler::findModule(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        auto pModuleItem = pPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        auto pModuleItem = pCustomPage.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    for (auto pDialog : m_Dialogs) {
+        auto pModuleItem = pDialog.second->findModuleByUUID(sUUID);
+        if (pModuleItem.get() != nullptr)
+            return pModuleItem;
+    }
+
+    return nullptr;
+}
+
+PUIPage CUIHandler::findPageByUUID(const std::string& sUUID)
+{
+    for (auto pPage : m_Pages) {
+        if (pPage.second->getUUID() == sUUID)
+            return pPage.second;
+    }
+
+    for (auto pCustomPage : m_CustomPages) {
+        if (pCustomPage.second->getUUID() == sUUID)
+            return pCustomPage.second;
+    }
+
+    return nullptr;
+}
 template <class C> std::shared_ptr<C> mapInternalUIEnvInstance(std::shared_ptr<LibMCEnv::Impl::IBase> pImplInstance, LibMCEnv::PWrapper pWrapper)
 {
     if (pWrapper.get() == nullptr)
@@ -596,15 +648,24 @@ CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, co
             }
             else {
 
-                pPage = findPageOfModuleItem(sSenderUUID);
-                if (pPage.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
+				// Try to find the page of the sender
+                pPage = findPageByUUID(sSenderUUID);
+				if (pPage.get() != nullptr) {
+                    // If we have a page, we can use the sender path
+                    sSenderPath = pPage->getName();
+				}
+                else {
+					// Try to find the page of the module item
+                    pPage = findPageOfModuleItem(sSenderUUID);
+                    if (pPage.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDERPAGE, sEventName + "/" + sSenderUUID);
 
-                auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
-                if (pModuleItem.get() == nullptr)
-                    throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
+                    auto pModuleItem = pPage->findModuleItemByUUID(sSenderUUID);
+                    if (pModuleItem.get() == nullptr)
+                        throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
 
-                sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                    sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                }
 
             }
 
@@ -898,6 +959,8 @@ void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* 
     for (auto iter : m_Pages) {
         CJSONWriterObject page(writer);
         page.addString(AMC_API_KEY_UI_PAGENAME, iter.second->getName());
+        page.addString(AMC_API_KEY_UI_UUID, iter.second->getUUID());
+        page.addString(AMC_API_KEY_UI_PAGESHOWEVENT, iter.second->getShowEvent());
 
         CJSONWriterArray modules(writer);
         iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);
@@ -947,11 +1010,13 @@ void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* 
 /////////////////////////////////////////////////////////////////////////////////////
 void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState* pFrontendState)
 {
+
+    auto pStateMachineData = m_pUISystemState->getStateMachineData().get ();
     CJSONWriterArray pages(writer);
     for (auto iter : m_Pages) {
         CJSONWriterObject pageObject(writer);
 
-        iter.second->frontendWritePageStatusToJSON(writer, pageObject, pFrontendState);
+        iter.second->frontendWritePageStatusToJSON(writer, pageObject, pFrontendState, pStateMachineData);
 
         pages.addObject(pageObject);
     }

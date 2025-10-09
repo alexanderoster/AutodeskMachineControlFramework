@@ -45,6 +45,8 @@ export default class AMCApplicationPage extends Common.AMCObject {
 			
 		this.application = application;
 		this.name = pageJSON.name;
+		this.uuid = pageJSON.uuid;
+		this.showevent = pageJSON.showevent || "";
 		this.modules = [];
 				
 		for (let moduleDefinitionJSON of pageJSON.modules) {
@@ -87,4 +89,12 @@ export default class AMCApplicationPage extends Common.AMCObject {
 		
 		return false;
 	}
+
+	setActive () 
+	{
+    	if (this.showevent && typeof this.application.triggerUIEvent === "function") {
+        	this.application.triggerUIEvent(this.showevent, this.uuid, {}, () => {});
+		}
+    }
+
 }

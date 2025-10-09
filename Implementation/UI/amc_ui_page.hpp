@@ -59,9 +59,13 @@ namespace AMC {
 	protected:
 		std::string m_sName;
 		std::string m_sUUID;
+		std::string m_sShowEvent;
 
 		std::vector<PUIModule> m_Modules;
+		std::map<std::string, PUIModule> m_ModuleMapOfPage;
+		
 		CUIModule_UIEventHandler* m_pUIEventHandler;
+
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -73,19 +77,23 @@ namespace AMC {
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		std::string m_sIcon;
-		std::string m_sCaption;
-		std::string m_sDescription;
+		CUIExpression m_Icon;
+		CUIExpression m_Caption;
+		CUIExpression m_Description;
 		uint32_t m_nGridColumns;
 		uint32_t m_nGridRows;
 
 	public:
 
-		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler);
+		CUIPage(const std::string & sName, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression & icon, const CUIExpression & caption, const CUIExpression & description, const std::string& sShowEvent);
 		
 		virtual ~CUIPage();
 
 		std::string getName();
+
+		std::string getUUID();
+
+		std::string getShowEvent();
 
 		void addModule (PUIModule pModule);
 
@@ -100,6 +108,7 @@ namespace AMC {
 		// Legacy UI System
 		/////////////////////////////////////////////////////////////////////////////////////
 		virtual void writeLegacyModulesToJSON(CJSONWriter & writer, CJSONWriterArray & moduleArray, CParameterHandler* pLegacyClientVariableHandler);
+		virtual PUIModule findModuleByUUID(const std::string& sUUID) override;
 		virtual PUIModuleItem findModuleItemByUUID(const std::string& sUUID) override;
 		virtual void registerFormName(const std::string& sFormUUID, const std::string& sFormName) override;
 		virtual std::string findFormUUIDByName(const std::string& sFormName) override;
@@ -108,7 +117,7 @@ namespace AMC {
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		void frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState);
+		void frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState, CStateMachineData * pStateMachineData);
 										
 	};
 		
