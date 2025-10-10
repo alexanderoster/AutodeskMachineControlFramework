@@ -795,8 +795,10 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
         {{CSMCCSVParser::FieldParserType::Double, CSMCCSVParser::FieldProcessingStep::Extend | CSMCCSVParser::FieldProcessingStep::Interpolate }, &scanheadY},
         {{CSMCCSVParser::FieldParserType::LaserSignal,CSMCCSVParser::FieldProcessingStep::Nop}, &laserSignal},
         {{CSMCCSVParser::FieldParserType::UInt32,CSMCCSVParser::FieldProcessingStep::Nop}, &laserToggle},
-        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
-        {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        //{{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        //{{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
+        {{CSMCCSVParser::FieldParserType::Double,CSMCCSVParser::FieldProcessingStep::Nop}, &activeChannel0},
+        {{CSMCCSVParser::FieldParserType::Double,CSMCCSVParser::FieldProcessingStep::Nop}, &activeChannel1},
         {{CSMCCSVParser::FieldParserType::Int,CSMCCSVParser::FieldProcessingStep::Nop}, &cmdCount},
         {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
         {{CSMCCSVParser::FieldParserType::None,CSMCCSVParser::FieldProcessingStep::Nop}, nullptr},
@@ -815,8 +817,8 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
     pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("y", "Y", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("laseron", "LaserOn", LibMCEnv::eDataTableColumnType::Uint32Column);
+    pDataTable->AddColumn("active0", "Active Channel 0", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("active1", "Active Channel 1", LibMCEnv::eDataTableColumnType::DoubleColumn);
-    pDataTable->AddColumn("active2", "Active Channel 2", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("cmdindex", "Command Index", LibMCEnv::eDataTableColumnType::Int32Column);
 
     m_dJobDuration = (double)timestampValues.size() / (double)SCANLABSMC_MICROSTEPSPERSECOND;
@@ -833,6 +835,12 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
 
     pDataTable->SetUint32ColumnValues("laseron", laserSignal);
     laserSignal.resize(0);
+
+    pDataTable->SetDoubleColumnValues("active0", activeChannel0);
+    activeChannel0.resize(0);
+
+    pDataTable->SetDoubleColumnValues("active1", activeChannel1);
+    activeChannel1.resize(0);    
 }
 
 void CSMCJobInstance::ReadLogRecordFile(LibMCEnv::PDataTable pDataTable)
