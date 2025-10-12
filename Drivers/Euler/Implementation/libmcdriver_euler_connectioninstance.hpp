@@ -93,9 +93,9 @@ public:
 
 	std::string createBuild(const std::string & sJobName, const LibMCDriver_Euler_uint32 nLayerCount);
 
-	void uploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv::PImageData pImage);
+	void uploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv::PImageData pImage);
 
-	void setJobStatus(const std::string & sBuildJobID);
+	void setJobStatus(const std::string & sBuildJobID, const LibMCDriver_Euler::eEulerJobStatus eJobStatus);
 
 	void closeConnection();
 

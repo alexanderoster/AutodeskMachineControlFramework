@@ -129,6 +129,56 @@ IEulerConnection * CDriver_Euler::Connect(const std::string & sIdentifier, const
 
 }
 
+IEulerConnection* CDriver_Euler::ConnectWithLicenseData(const std::string& sIdentifier, const LibMCDriver_Euler_uint64 nLicenseDataBufferSize, const LibMCDriver_Euler_uint8* pLicenseDataBuffer, const std::string& sDeviceID)
+{
+	if (pLicenseDataBuffer == nullptr)
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+	if (nLicenseDataBufferSize == 0)
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+
+
+	auto pLicenseTempFile = m_pWorkingDirectory->StoreCustomDataInTempFile(".lic", LibMCEnv::CInputVector<uint8_t>(pLicenseDataBuffer, nLicenseDataBufferSize));
+	std::string sLicenseFilePath = pLicenseTempFile->GetAbsoluteFileName();
+
+	auto licenseInfo = m_pLibEulerSDK->euler_connect_read_license(sLicenseFilePath.c_str ());
+	if (licenseInfo == nullptr)
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_COULDNOTREADLICENSEDATA);
+
+	std::string sBaseURL;
+	if (licenseInfo->m_pszBaseURL != nullptr)
+		sBaseURL = std::string(licenseInfo->m_pszBaseURL);
+
+	std::string sAPIKey;
+	if (licenseInfo->m_pszAPIKey != nullptr)
+		sAPIKey = std::string(licenseInfo->m_pszAPIKey);
+
+	std::string sErrorMessage;
+	if (licenseInfo->m_pszErrorMessage != nullptr)
+		sErrorMessage = std::string(licenseInfo->m_pszErrorMessage);
+
+	bool bSuccess = (licenseInfo->m_pszBaseURL != nullptr) && (licenseInfo->m_pszAPIKey != nullptr);
+
+	m_pLibEulerSDK->euler_connect_free_license_info(licenseInfo);
+
+	if (!bSuccess) 
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDLICENSEDATA, "invalid euler license data:" + sErrorMessage);
+	
+	return Connect(sIdentifier, sBaseURL, sAPIKey, sDeviceID);
+}
+
+IEulerConnection* CDriver_Euler::ConnectWithLicenseResource(const std::string& sIdentifier, const std::string& sLicenseResourceName, const std::string& sDeviceID)
+{
+	std::vector<uint8_t> resourceData;
+	m_pDriverEnvironment->RetrieveMachineResourceData(sLicenseResourceName, resourceData);
+
+	if (resourceData.size() == 0)
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDLICENSERESOURCE, "license resource is empty: " + sLicenseResourceName);
+
+	return ConnectWithLicenseData(sIdentifier, resourceData.size(), resourceData.data(), sDeviceID);
+
+}
+
+
 IEulerConnection * CDriver_Euler::FindConnection(const std::string & sIdentifier)
 {
 	auto iIter = m_Connections.find(sIdentifier);
@@ -166,4 +216,5 @@ void CDriver_Euler::LoadSDK()
 		m_pLibEulerSDK = std::make_shared<CLibEulerSDK>(m_pLibEulerDLLFile->GetAbsoluteFileName());
 	}
 }
+
 

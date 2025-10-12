@@ -109,6 +109,10 @@ public:
 
 	IEulerConnection * Connect(const std::string & sIdentifier, const std::string & sBaseURL, const std::string & sAPIKey, const std::string & sDeviceID) override;
 
+	IEulerConnection* ConnectWithLicenseData(const std::string& sIdentifier, const LibMCDriver_Euler_uint64 nLicenseDataBufferSize, const LibMCDriver_Euler_uint8* pLicenseDataBuffer, const std::string& sDeviceID) override;
+
+	IEulerConnection* ConnectWithLicenseResource(const std::string& sIdentifier, const std::string& sLicenseResourceName, const std::string& sDeviceID) override;
+
 	IEulerConnection * FindConnection(const std::string & sIdentifier) override;
 
 	bool ConnectionExists(const std::string & sIdentifier) override;

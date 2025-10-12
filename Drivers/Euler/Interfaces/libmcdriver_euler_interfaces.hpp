@@ -378,15 +378,17 @@ public:
 	* IEulerConnection::UploadImage - Uploads an image to a build job.
 	* @param[in] sBuildJobID - BuildJob ID
 	* @param[in] nLayerIndex - Layer Index
+	* @param[in] eImageType - Image Type
 	* @param[in] pImage - Image Instance
 	*/
-	virtual void UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv::PImageData pImage) = 0;
+	virtual void UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv::PImageData pImage) = 0;
 
 	/**
 	* IEulerConnection::SetJobStatus - Updates a Job's status
 	* @param[in] sBuildJobID - BuildJob ID
+	* @param[in] eJobStatus - New Job Status
 	*/
-	virtual void SetJobStatus(const std::string & sBuildJobID) = 0;
+	virtual void SetJobStatus(const std::string & sBuildJobID, const LibMCDriver_Euler::eEulerJobStatus eJobStatus) = 0;
 
 };
 
@@ -421,6 +423,25 @@ public:
 	* @return Euler Connection Instance.
 	*/
 	virtual IEulerConnection * Connect(const std::string & sIdentifier, const std::string & sBaseURL, const std::string & sAPIKey, const std::string & sDeviceID) = 0;
+
+	/**
+	* IDriver_Euler::ConnectWithLicenseData - Creates a Euler Connection from a license file data.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing.
+	* @param[in] nLicenseDataBufferSize - Number of elements in buffer
+	* @param[in] pLicenseDataBuffer - License Data file to use.
+	* @param[in] sDeviceID - Device ID to use.
+	* @return Euler Connection Instance.
+	*/
+	virtual IEulerConnection * ConnectWithLicenseData(const std::string & sIdentifier, const LibMCDriver_Euler_uint64 nLicenseDataBufferSize, const LibMCDriver_Euler_uint8 * pLicenseDataBuffer, const std::string & sDeviceID) = 0;
+
+	/**
+	* IDriver_Euler::ConnectWithLicenseResource - Creates a Euler Connection from a license file resource.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing.
+	* @param[in] sLicenseResourceName - License Data resource to use.
+	* @param[in] sDeviceID - Device ID to use.
+	* @return Euler Connection Instance.
+	*/
+	virtual IEulerConnection * ConnectWithLicenseResource(const std::string & sIdentifier, const std::string & sLicenseResourceName, const std::string & sDeviceID) = 0;
 
 	/**
 	* IDriver_Euler::FindConnection - Finds a connection. Fails if connection does not exist.

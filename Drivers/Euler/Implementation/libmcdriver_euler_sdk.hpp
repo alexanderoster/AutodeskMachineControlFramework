@@ -43,6 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #endif
 
+#define EULERSDK_IMAGETYPE_RECOAT 0
+#define EULERSDK_IMAGETYPE_EXPOSURE 1
+
+#define EULERSDK_JOBSTATUS_INPROGRESS 0
+#define EULERSDK_JOBSTATUS_COMPLETED 1
 
 namespace LibMCDriver_Euler {
 	namespace Impl {
@@ -80,7 +85,7 @@ namespace LibMCDriver_Euler {
 
 		typedef void(EULER_CALLINGCONVENTION* Peuler_connect_free_string) (char * pszString);
 		typedef void(EULER_CALLINGCONVENTION* Peuler_connect_destroy) (libEulerHandle pHandle);
-		typedef sLibEulerConnectLicenseInfo* (EULER_CALLINGCONVENTION* Peuler_connect_read_license) (libEulerHandle pHandle, const char *pszLicensePath);
+		typedef sLibEulerConnectLicenseInfo* (EULER_CALLINGCONVENTION* Peuler_connect_read_license) (const char *pszLicensePath);
 		typedef void(EULER_CALLINGCONVENTION* Peuler_connect_free_license_info) (sLibEulerConnectLicenseInfo * pLicenseInfo);
 
 

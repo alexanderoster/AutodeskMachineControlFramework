@@ -107,13 +107,14 @@ std::string CEulerConnection::CreateBuild(const std::string & sJobName, const Li
 	return m_pConnectionInstance->createBuild (sJobName, nLayerCount);
 }
 
-void CEulerConnection::UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv::PImageData pImage)
+void CEulerConnection::UploadImage(const std::string& sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv::PImageData pImage)
 {
-	m_pConnectionInstance->uploadImage(sBuildJobID, nLayerIndex, pImage);
+	m_pConnectionInstance->uploadImage(sBuildJobID, nLayerIndex, eImageType, pImage);
 }
 
-void CEulerConnection::SetJobStatus(const std::string & sBuildJobID)
+void CEulerConnection::SetJobStatus(const std::string& sBuildJobID, const LibMCDriver_Euler::eEulerJobStatus eJobStatus)
 {
-	m_pConnectionInstance->setJobStatus(sBuildJobID);
+	m_pConnectionInstance->setJobStatus(sBuildJobID, eJobStatus);
 }
+
 

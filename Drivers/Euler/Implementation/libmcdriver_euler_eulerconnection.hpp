@@ -88,9 +88,9 @@ public:
 
 	std::string CreateBuild(const std::string & sJobName, const LibMCDriver_Euler_uint32 nLayerCount) override;
 
-	void UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv::PImageData pImage) override;
+	void UploadImage(const std::string& sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv::PImageData pImage) override;
 
-	void SetJobStatus(const std::string & sBuildJobID) override;
+	void SetJobStatus(const std::string& sBuildJobID, const LibMCDriver_Euler::eEulerJobStatus eJobStatus) override;
 
 };
 

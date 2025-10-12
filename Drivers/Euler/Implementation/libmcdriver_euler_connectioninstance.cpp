@@ -139,7 +139,7 @@ std::string CEulerConnectionInstance::createBuild(const std::string& sJobName, c
         throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_HASBEENDISCONNECTED);
 
 	char * pszNewJobID = m_pLibEulerSDK->euler_connect_new_build_job(m_hConnectionHandle, sJobName.c_str(), nLayerCount);
-    if (pszNewJobID == nullptr) {
+    if (pszNewJobID != nullptr) {
         std::string sNewJobID (pszNewJobID);
 
         return sNewJobID;
@@ -150,15 +150,73 @@ std::string CEulerConnectionInstance::createBuild(const std::string& sJobName, c
 
 }
 
-void CEulerConnectionInstance::uploadImage(const std::string& sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv::PImageData pImage)
+void CEulerConnectionInstance::uploadImage(const std::string& sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv::PImageData pImage)
 {
+    if (m_hConnectionHandle == nullptr)
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_HASBEENDISCONNECTED);
+
+    if (sBuildJobID.empty ())
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID);
+
+    if (pImage.get() == nullptr)
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_HASBEENDISCONNECTED);
+
+    auto pJPEGOptions = pImage->CreateJPEGOptions();
+    pJPEGOptions->ResetToDefaults();
+
+    auto pJPEGImage = pImage->CreateJPEGImage(pJPEGOptions);
+
+    std::vector<uint8_t> jpegBuffer;
+    pJPEGImage->GetJPEGDataStream(jpegBuffer);
+
+    if (jpegBuffer.size() == 0)
+		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_COULDNOTENCODEJPEGIMAGE);
+
+    uint32_t imageTypeConst = 0;
+    switch (eImageType) {
+    case LibMCDriver_Euler::eEulerImageType::Recoat:
+        imageTypeConst = EULERSDK_IMAGETYPE_RECOAT;
+        break;
+    case LibMCDriver_Euler::eEulerImageType::Exposure:
+        imageTypeConst = EULERSDK_IMAGETYPE_EXPOSURE;
+        break;
+    default:
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDIMAGETYPE);
+    }
+
+    bool bSuccess = m_pLibEulerSDK->euler_connect_upload_layer_image(m_hConnectionHandle, sBuildJobID.c_str(), nLayerIndex, imageTypeConst, jpegBuffer.data(), jpegBuffer.size());
+    if (!bSuccess)
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_COULDNOTUPLOADLAYERIMAGE);
 
 }
 
-void CEulerConnectionInstance::setJobStatus(const std::string& sBuildJobID)
+void CEulerConnectionInstance::setJobStatus(const std::string& sBuildJobID, const LibMCDriver_Euler::eEulerJobStatus eJobStatus)
 {
+    if (m_hConnectionHandle == nullptr)
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_HASBEENDISCONNECTED);
+
+    if (sBuildJobID.empty())
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID);
+
+    uint32_t jobStatusConst = 0;
+    switch (eJobStatus) {
+    case LibMCDriver_Euler::eEulerJobStatus::InProgress:
+        jobStatusConst = EULERSDK_JOBSTATUS_INPROGRESS;
+        break;
+    case LibMCDriver_Euler::eEulerJobStatus::Completed:
+        jobStatusConst = EULERSDK_JOBSTATUS_COMPLETED;
+        break;
+    default:
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDJOBSTATUS);
+    }
+
+
+    bool bSuccess = m_pLibEulerSDK->euler_connect_set_job_status(m_hConnectionHandle, sBuildJobID.c_str(), jobStatusConst);
+    if (!bSuccess)
+        throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_COULDUPDATEJOBSTATUS);
 
 }
+
 
 void CEulerConnectionInstance::closeConnection()
 {

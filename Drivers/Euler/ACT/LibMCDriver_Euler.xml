@@ -73,19 +73,33 @@
 		<error name="CONNECTIONIDENTIFIERNOTFOUND" code="1018" description="Connection identifier not found" />
 		<error name="LIBEULERDLLNOTSPECIFIED" code="1019" description="LibEuler dll not specified" />
 		
+		<error name="INVALIDBUILDJOBID" code="1020" description="Invalid build job id" />
+		<error name="INVALIDIMAGETYPE" code="1021" description="Invalid image type" />
+		<error name="COULDNOTUPLOADLAYERIMAGE" code="1022" description="Could not upload layer image" />
+		<error name="INVALIDJOBSTATUS" code="1023" description="Invalid job status" />
+		<error name="COULDUPDATEJOBSTATUS" code="1024" description="Could not update job status" />
 		
-		
-		
-		
-		
-		
-		
-		
-		
+		<error name="INVALIDLICENSERESOURCE" code="1025" description="Invalid license resource" />
+		<error name="COULDNOTENCODEJPEGIMAGE" code="1026" description="Could not encode JPEG Image" />
+		<error name="COULDNOTREADLICENSEDATA" code="1027" description="Could not read license data" />
+		<error name="INVALIDLICENSEDATA" code="1028" description="Invalid license data" />
 				
+		
+		
+		
 		
 						
 	</errors>
+
+	<enum name="EulerImageType">
+		<option name="Recoat" value="0"/>
+		<option name="Exposure" value="1"/>
+	</enum>	
+
+	<enum name="EulerJobStatus">
+		<option name="InProgress" value="0"/>
+		<option name="Completed" value="1"/>
+	</enum>	
 
 	
 <!--
@@ -185,11 +199,13 @@ Custom implementation
 		<method name="UploadImage" description="Uploads an image to a build job.">
 			<param name="BuildJobID" type="string" pass="in" description="BuildJob ID" />	
 			<param name="LayerIndex" type="uint32" pass="in" description="Layer Index" />	
+			<param name="ImageType" type="enum" class="EulerImageType" pass="in" description="Image Type" />	
 			<param name="Image" type="class" class="LibMCEnv:ImageData" pass="in" description="Image Instance" />	
 		</method>
 
 		<method name="SetJobStatus" description="Updates a Job's status">
 			<param name="BuildJobID" type="string" pass="in" description="BuildJob ID" />	
+			<param name="JobStatus" type="enum" class="EulerJobStatus" pass="in" description="New Job Status" />	
 		</method>
 		
 	</class>
@@ -210,6 +226,20 @@ Custom implementation
 			<param name="Identifier" type="string" pass="in" description="Identifier for the connection. Fails if identifier is already existing." />
 			<param name="BaseURL" type="string" pass="in" description="BaseURL to use." />				
 			<param name="APIKey" type="string" pass="in" description="API Key to use." />				
+			<param name="DeviceID" type="string" pass="in" description="Device ID to use." />
+			<param name="Connection" type="class" class="EulerConnection" pass="return" description="Euler Connection Instance." />
+		</method>
+
+		<method name="ConnectWithLicenseData" description= "Creates a Euler Connection from a license file data.">
+			<param name="Identifier" type="string" pass="in" description="Identifier for the connection. Fails if identifier is already existing." />
+			<param name="LicenseData" type="basicarray" class="uint8" pass="in" description="License Data file to use." />				
+			<param name="DeviceID" type="string" pass="in" description="Device ID to use." />
+			<param name="Connection" type="class" class="EulerConnection" pass="return" description="Euler Connection Instance." />
+		</method>
+
+		<method name="ConnectWithLicenseResource" description= "Creates a Euler Connection from a license file resource.">
+			<param name="Identifier" type="string" pass="in" description="Identifier for the connection. Fails if identifier is already existing." />
+			<param name="LicenseResourceName" type="string" pass="in" description="License Data resource to use." />				
 			<param name="DeviceID" type="string" pass="in" description="Device ID to use." />
 			<param name="Connection" type="class" class="EulerConnection" pass="return" description="Euler Connection Instance." />
 		</method>

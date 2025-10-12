@@ -198,6 +198,15 @@ public:
 			case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "CONNECTIONIDENTIFIERALREADYINUSE";
 			case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "CONNECTIONIDENTIFIERNOTFOUND";
 			case LIBMCDRIVER_EULER_ERROR_LIBEULERDLLNOTSPECIFIED: return "LIBEULERDLLNOTSPECIFIED";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID: return "INVALIDBUILDJOBID";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDIMAGETYPE: return "INVALIDIMAGETYPE";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTUPLOADLAYERIMAGE: return "COULDNOTUPLOADLAYERIMAGE";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDJOBSTATUS: return "INVALIDJOBSTATUS";
+			case LIBMCDRIVER_EULER_ERROR_COULDUPDATEJOBSTATUS: return "COULDUPDATEJOBSTATUS";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSERESOURCE: return "INVALIDLICENSERESOURCE";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTENCODEJPEGIMAGE: return "COULDNOTENCODEJPEGIMAGE";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTREADLICENSEDATA: return "COULDNOTREADLICENSEDATA";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSEDATA: return "INVALIDLICENSEDATA";
 		}
 		return "UNKNOWN";
 	}
@@ -234,6 +243,15 @@ public:
 			case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "Connection identifier already in use";
 			case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "Connection identifier not found";
 			case LIBMCDRIVER_EULER_ERROR_LIBEULERDLLNOTSPECIFIED: return "LibEuler dll not specified";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID: return "Invalid build job id";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDIMAGETYPE: return "Invalid image type";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTUPLOADLAYERIMAGE: return "Could not upload layer image";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDJOBSTATUS: return "Invalid job status";
+			case LIBMCDRIVER_EULER_ERROR_COULDUPDATEJOBSTATUS: return "Could not update job status";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSERESOURCE: return "Invalid license resource";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTENCODEJPEGIMAGE: return "Could not encode JPEG Image";
+			case LIBMCDRIVER_EULER_ERROR_COULDNOTREADLICENSEDATA: return "Could not read license data";
+			case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSEDATA: return "Invalid license data";
 		}
 		return "unknown error";
 	}
@@ -465,8 +483,8 @@ public:
 	inline void StartHeartBeat();
 	inline void StopHeartBeat();
 	inline std::string CreateBuild(const std::string & sJobName, const LibMCDriver_Euler_uint32 nLayerCount);
-	inline void UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, classParam<LibMCEnv::CImageData> pImage);
-	inline void SetJobStatus(const std::string & sBuildJobID);
+	inline void UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const eEulerImageType eImageType, classParam<LibMCEnv::CImageData> pImage);
+	inline void SetJobStatus(const std::string & sBuildJobID, const eEulerJobStatus eJobStatus);
 };
 	
 /*************************************************************************************************************************
@@ -486,6 +504,8 @@ public:
 	inline void SetCustomSDKResource(const std::string & sResourceName);
 	inline void SetApplicationDetails(const std::string & sApplicationName, const std::string & sApplicationVersion);
 	inline PEulerConnection Connect(const std::string & sIdentifier, const std::string & sBaseURL, const std::string & sAPIKey, const std::string & sDeviceID);
+	inline PEulerConnection ConnectWithLicenseData(const std::string & sIdentifier, const CInputVector<LibMCDriver_Euler_uint8> & LicenseDataBuffer, const std::string & sDeviceID);
+	inline PEulerConnection ConnectWithLicenseResource(const std::string & sIdentifier, const std::string & sLicenseResourceName, const std::string & sDeviceID);
 	inline PEulerConnection FindConnection(const std::string & sIdentifier);
 	inline bool ConnectionExists(const std::string & sIdentifier);
 	inline void CloseAllConnections();
@@ -634,6 +654,8 @@ public:
 		pWrapperTable->m_Driver_Euler_SetCustomSDKResource = nullptr;
 		pWrapperTable->m_Driver_Euler_SetApplicationDetails = nullptr;
 		pWrapperTable->m_Driver_Euler_Connect = nullptr;
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseData = nullptr;
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource = nullptr;
 		pWrapperTable->m_Driver_Euler_FindConnection = nullptr;
 		pWrapperTable->m_Driver_Euler_ConnectionExists = nullptr;
 		pWrapperTable->m_Driver_Euler_CloseAllConnections = nullptr;
@@ -884,6 +906,24 @@ public:
 			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseData = (PLibMCDriver_EulerDriver_Euler_ConnectWithLicenseDataPtr) GetProcAddress(hLibrary, "libmcdriver_euler_driver_euler_connectwithlicensedata");
+		#else // _WIN32
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseData = (PLibMCDriver_EulerDriver_Euler_ConnectWithLicenseDataPtr) dlsym(hLibrary, "libmcdriver_euler_driver_euler_connectwithlicensedata");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_Euler_ConnectWithLicenseData == nullptr)
+			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource = (PLibMCDriver_EulerDriver_Euler_ConnectWithLicenseResourcePtr) GetProcAddress(hLibrary, "libmcdriver_euler_driver_euler_connectwithlicenseresource");
+		#else // _WIN32
+		pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource = (PLibMCDriver_EulerDriver_Euler_ConnectWithLicenseResourcePtr) dlsym(hLibrary, "libmcdriver_euler_driver_euler_connectwithlicenseresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource == nullptr)
+			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Driver_Euler_FindConnection = (PLibMCDriver_EulerDriver_Euler_FindConnectionPtr) GetProcAddress(hLibrary, "libmcdriver_euler_driver_euler_findconnection");
 		#else // _WIN32
 		pWrapperTable->m_Driver_Euler_FindConnection = (PLibMCDriver_EulerDriver_Euler_FindConnectionPtr) dlsym(hLibrary, "libmcdriver_euler_driver_euler_findconnection");
@@ -1071,6 +1111,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_euler_driver_euler_connect", (void**)&(pWrapperTable->m_Driver_Euler_Connect));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Euler_Connect == nullptr) )
+			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_euler_driver_euler_connectwithlicensedata", (void**)&(pWrapperTable->m_Driver_Euler_ConnectWithLicenseData));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Euler_ConnectWithLicenseData == nullptr) )
+			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_euler_driver_euler_connectwithlicenseresource", (void**)&(pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Euler_ConnectWithLicenseResource == nullptr) )
 			return LIBMCDRIVER_EULER_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_euler_driver_euler_findconnection", (void**)&(pWrapperTable->m_Driver_Euler_FindConnection));
@@ -1339,21 +1387,23 @@ public:
 	* CEulerConnection::UploadImage - Uploads an image to a build job.
 	* @param[in] sBuildJobID - BuildJob ID
 	* @param[in] nLayerIndex - Layer Index
+	* @param[in] eImageType - Image Type
 	* @param[in] pImage - Image Instance
 	*/
-	void CEulerConnection::UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, classParam<LibMCEnv::CImageData> pImage)
+	void CEulerConnection::UploadImage(const std::string & sBuildJobID, const LibMCDriver_Euler_uint32 nLayerIndex, const eEulerImageType eImageType, classParam<LibMCEnv::CImageData> pImage)
 	{
 		LibMCEnvHandle hImage = pImage.GetHandle();
-		CheckError(m_pWrapper->m_WrapperTable.m_EulerConnection_UploadImage(m_pHandle, sBuildJobID.c_str(), nLayerIndex, hImage));
+		CheckError(m_pWrapper->m_WrapperTable.m_EulerConnection_UploadImage(m_pHandle, sBuildJobID.c_str(), nLayerIndex, eImageType, hImage));
 	}
 	
 	/**
 	* CEulerConnection::SetJobStatus - Updates a Job's status
 	* @param[in] sBuildJobID - BuildJob ID
+	* @param[in] eJobStatus - New Job Status
 	*/
-	void CEulerConnection::SetJobStatus(const std::string & sBuildJobID)
+	void CEulerConnection::SetJobStatus(const std::string & sBuildJobID, const eEulerJobStatus eJobStatus)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_EulerConnection_SetJobStatus(m_pHandle, sBuildJobID.c_str()));
+		CheckError(m_pWrapper->m_WrapperTable.m_EulerConnection_SetJobStatus(m_pHandle, sBuildJobID.c_str(), eJobStatus));
 	}
 	
 	/**
@@ -1391,6 +1441,42 @@ public:
 	{
 		LibMCDriver_EulerHandle hConnection = nullptr;
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Euler_Connect(m_pHandle, sIdentifier.c_str(), sBaseURL.c_str(), sAPIKey.c_str(), sDeviceID.c_str(), &hConnection));
+		
+		if (!hConnection) {
+			CheckError(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CEulerConnection>(m_pWrapper, hConnection);
+	}
+	
+	/**
+	* CDriver_Euler::ConnectWithLicenseData - Creates a Euler Connection from a license file data.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing.
+	* @param[in] LicenseDataBuffer - License Data file to use.
+	* @param[in] sDeviceID - Device ID to use.
+	* @return Euler Connection Instance.
+	*/
+	PEulerConnection CDriver_Euler::ConnectWithLicenseData(const std::string & sIdentifier, const CInputVector<LibMCDriver_Euler_uint8> & LicenseDataBuffer, const std::string & sDeviceID)
+	{
+		LibMCDriver_EulerHandle hConnection = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Euler_ConnectWithLicenseData(m_pHandle, sIdentifier.c_str(), (LibMCDriver_Euler_uint64)LicenseDataBuffer.size(), LicenseDataBuffer.data(), sDeviceID.c_str(), &hConnection));
+		
+		if (!hConnection) {
+			CheckError(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CEulerConnection>(m_pWrapper, hConnection);
+	}
+	
+	/**
+	* CDriver_Euler::ConnectWithLicenseResource - Creates a Euler Connection from a license file resource.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing.
+	* @param[in] sLicenseResourceName - License Data resource to use.
+	* @param[in] sDeviceID - Device ID to use.
+	* @return Euler Connection Instance.
+	*/
+	PEulerConnection CDriver_Euler::ConnectWithLicenseResource(const std::string & sIdentifier, const std::string & sLicenseResourceName, const std::string & sDeviceID)
+	{
+		LibMCDriver_EulerHandle hConnection = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Euler_ConnectWithLicenseResource(m_pHandle, sIdentifier.c_str(), sLicenseResourceName.c_str(), sDeviceID.c_str(), &hConnection));
 		
 		if (!hConnection) {
 			CheckError(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);

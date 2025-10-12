@@ -728,7 +728,7 @@ LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_createbuild(LibMCDrive
 	}
 }
 
-LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv_ImageData pImage)
+LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, LibMCDriver_Euler_uint32 nLayerIndex, eLibMCDriver_EulerEulerImageType eImageType, LibMCEnv_ImageData pImage)
 {
 	IBase* pIBaseClass = (IBase *)pEulerConnection;
 
@@ -745,7 +745,7 @@ LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDrive
 		if (!pIEulerConnection)
 			throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDCAST);
 		
-		pIEulerConnection->UploadImage(sBuildJobID, nLayerIndex, pIImage);
+		pIEulerConnection->UploadImage(sBuildJobID, nLayerIndex, eImageType, pIImage);
 
 		return LIBMCDRIVER_EULER_SUCCESS;
 	}
@@ -760,7 +760,7 @@ LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDrive
 	}
 }
 
-LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_setjobstatus(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID)
+LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_setjobstatus(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, eLibMCDriver_EulerEulerJobStatus eJobStatus)
 {
 	IBase* pIBaseClass = (IBase *)pEulerConnection;
 
@@ -772,7 +772,7 @@ LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_setjobstatus(LibMCDriv
 		if (!pIEulerConnection)
 			throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDCAST);
 		
-		pIEulerConnection->SetJobStatus(sBuildJobID);
+		pIEulerConnection->SetJobStatus(sBuildJobID, eJobStatus);
 
 		return LIBMCDRIVER_EULER_SUCCESS;
 	}
@@ -873,6 +873,79 @@ LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connect(LibMCDriver_Euler
 			throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDCAST);
 		
 		pBaseConnection = pIDriver_Euler->Connect(sIdentifier, sBaseURL, sAPIKey, sDeviceID);
+
+		*pConnection = (IBase*)(pBaseConnection);
+		return LIBMCDRIVER_EULER_SUCCESS;
+	}
+	catch (ELibMCDriver_EulerInterfaceException & Exception) {
+		return handleLibMCDriver_EulerException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connectwithlicensedata(LibMCDriver_Euler_Driver_Euler pDriver_Euler, const char * pIdentifier, LibMCDriver_Euler_uint64 nLicenseDataBufferSize, const LibMCDriver_Euler_uint8 * pLicenseDataBuffer, const char * pDeviceID, LibMCDriver_Euler_EulerConnection * pConnection)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_Euler;
+
+	try {
+		if (pIdentifier == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if ( (!pLicenseDataBuffer) && (nLicenseDataBufferSize>0))
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if (pDeviceID == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if (pConnection == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		std::string sIdentifier(pIdentifier);
+		std::string sDeviceID(pDeviceID);
+		IBase* pBaseConnection(nullptr);
+		IDriver_Euler* pIDriver_Euler = dynamic_cast<IDriver_Euler*>(pIBaseClass);
+		if (!pIDriver_Euler)
+			throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDCAST);
+		
+		pBaseConnection = pIDriver_Euler->ConnectWithLicenseData(sIdentifier, nLicenseDataBufferSize, pLicenseDataBuffer, sDeviceID);
+
+		*pConnection = (IBase*)(pBaseConnection);
+		return LIBMCDRIVER_EULER_SUCCESS;
+	}
+	catch (ELibMCDriver_EulerInterfaceException & Exception) {
+		return handleLibMCDriver_EulerException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connectwithlicenseresource(LibMCDriver_Euler_Driver_Euler pDriver_Euler, const char * pIdentifier, const char * pLicenseResourceName, const char * pDeviceID, LibMCDriver_Euler_EulerConnection * pConnection)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_Euler;
+
+	try {
+		if (pIdentifier == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if (pLicenseResourceName == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if (pDeviceID == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		if (pConnection == nullptr)
+			throw ELibMCDriver_EulerInterfaceException (LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
+		std::string sIdentifier(pIdentifier);
+		std::string sLicenseResourceName(pLicenseResourceName);
+		std::string sDeviceID(pDeviceID);
+		IBase* pBaseConnection(nullptr);
+		IDriver_Euler* pIDriver_Euler = dynamic_cast<IDriver_Euler*>(pIBaseClass);
+		if (!pIDriver_Euler)
+			throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDCAST);
+		
+		pBaseConnection = pIDriver_Euler->ConnectWithLicenseResource(sIdentifier, sLicenseResourceName, sDeviceID);
 
 		*pConnection = (IBase*)(pBaseConnection);
 		return LIBMCDRIVER_EULER_SUCCESS;
@@ -1029,6 +1102,10 @@ LibMCDriver_EulerResult LibMCDriver_Euler::Impl::LibMCDriver_Euler_GetProcAddres
 		*ppProcAddress = (void*) &libmcdriver_euler_driver_euler_setapplicationdetails;
 	if (sProcName == "libmcdriver_euler_driver_euler_connect") 
 		*ppProcAddress = (void*) &libmcdriver_euler_driver_euler_connect;
+	if (sProcName == "libmcdriver_euler_driver_euler_connectwithlicensedata") 
+		*ppProcAddress = (void*) &libmcdriver_euler_driver_euler_connectwithlicensedata;
+	if (sProcName == "libmcdriver_euler_driver_euler_connectwithlicenseresource") 
+		*ppProcAddress = (void*) &libmcdriver_euler_driver_euler_connectwithlicenseresource;
 	if (sProcName == "libmcdriver_euler_driver_euler_findconnection") 
 		*ppProcAddress = (void*) &libmcdriver_euler_driver_euler_findconnection;
 	if (sProcName == "libmcdriver_euler_driver_euler_connectionexists") 

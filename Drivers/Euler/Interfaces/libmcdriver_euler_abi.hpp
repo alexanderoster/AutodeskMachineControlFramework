@@ -240,19 +240,21 @@ LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_eulerconnec
 * @param[in] pEulerConnection - EulerConnection instance.
 * @param[in] pBuildJobID - BuildJob ID
 * @param[in] nLayerIndex - Layer Index
+* @param[in] eImageType - Image Type
 * @param[in] pImage - Image Instance
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, LibMCDriver_Euler_uint32 nLayerIndex, LibMCEnv_ImageData pImage);
+LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_uploadimage(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, LibMCDriver_Euler_uint32 nLayerIndex, LibMCDriver_Euler::eEulerImageType eImageType, LibMCEnv_ImageData pImage);
 
 /**
 * Updates a Job's status
 *
 * @param[in] pEulerConnection - EulerConnection instance.
 * @param[in] pBuildJobID - BuildJob ID
+* @param[in] eJobStatus - New Job Status
 * @return error code or 0 (success)
 */
-LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_setjobstatus(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID);
+LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_eulerconnection_setjobstatus(LibMCDriver_Euler_EulerConnection pEulerConnection, const char * pBuildJobID, LibMCDriver_Euler::eEulerJobStatus eJobStatus);
 
 /*************************************************************************************************************************
  Class definition for Driver_Euler
@@ -289,6 +291,31 @@ LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_driver_eule
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connect(LibMCDriver_Euler_Driver_Euler pDriver_Euler, const char * pIdentifier, const char * pBaseURL, const char * pAPIKey, const char * pDeviceID, LibMCDriver_Euler_EulerConnection * pConnection);
+
+/**
+* Creates a Euler Connection from a license file data.
+*
+* @param[in] pDriver_Euler - Driver_Euler instance.
+* @param[in] pIdentifier - Identifier for the connection. Fails if identifier is already existing.
+* @param[in] nLicenseDataBufferSize - Number of elements in buffer
+* @param[in] pLicenseDataBuffer - uint8 buffer of License Data file to use.
+* @param[in] pDeviceID - Device ID to use.
+* @param[out] pConnection - Euler Connection Instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connectwithlicensedata(LibMCDriver_Euler_Driver_Euler pDriver_Euler, const char * pIdentifier, LibMCDriver_Euler_uint64 nLicenseDataBufferSize, const LibMCDriver_Euler_uint8 * pLicenseDataBuffer, const char * pDeviceID, LibMCDriver_Euler_EulerConnection * pConnection);
+
+/**
+* Creates a Euler Connection from a license file resource.
+*
+* @param[in] pDriver_Euler - Driver_Euler instance.
+* @param[in] pIdentifier - Identifier for the connection. Fails if identifier is already existing.
+* @param[in] pLicenseResourceName - License Data resource to use.
+* @param[in] pDeviceID - Device ID to use.
+* @param[out] pConnection - Euler Connection Instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_EULER_DECLSPEC LibMCDriver_EulerResult libmcdriver_euler_driver_euler_connectwithlicenseresource(LibMCDriver_Euler_Driver_Euler pDriver_Euler, const char * pIdentifier, const char * pLicenseResourceName, const char * pDeviceID, LibMCDriver_Euler_EulerConnection * pConnection);
 
 /**
 * Finds a connection. Fails if connection does not exist.

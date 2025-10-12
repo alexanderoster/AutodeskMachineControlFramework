@@ -124,6 +124,15 @@ typedef void * LibMCDriver_Euler_pvoid;
 #define LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERALREADYINUSE 1017 /** Connection identifier already in use */
 #define LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERNOTFOUND 1018 /** Connection identifier not found */
 #define LIBMCDRIVER_EULER_ERROR_LIBEULERDLLNOTSPECIFIED 1019 /** LibEuler dll not specified */
+#define LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID 1020 /** Invalid build job id */
+#define LIBMCDRIVER_EULER_ERROR_INVALIDIMAGETYPE 1021 /** Invalid image type */
+#define LIBMCDRIVER_EULER_ERROR_COULDNOTUPLOADLAYERIMAGE 1022 /** Could not upload layer image */
+#define LIBMCDRIVER_EULER_ERROR_INVALIDJOBSTATUS 1023 /** Invalid job status */
+#define LIBMCDRIVER_EULER_ERROR_COULDUPDATEJOBSTATUS 1024 /** Could not update job status */
+#define LIBMCDRIVER_EULER_ERROR_INVALIDLICENSERESOURCE 1025 /** Invalid license resource */
+#define LIBMCDRIVER_EULER_ERROR_COULDNOTENCODEJPEGIMAGE 1026 /** Could not encode JPEG Image */
+#define LIBMCDRIVER_EULER_ERROR_COULDNOTREADLICENSEDATA 1027 /** Could not read license data */
+#define LIBMCDRIVER_EULER_ERROR_INVALIDLICENSEDATA 1028 /** Invalid license data */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_Euler
@@ -160,6 +169,15 @@ inline const char * LIBMCDRIVER_EULER_GETERRORSTRING (LibMCDriver_EulerResult nE
     case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "Connection identifier already in use";
     case LIBMCDRIVER_EULER_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "Connection identifier not found";
     case LIBMCDRIVER_EULER_ERROR_LIBEULERDLLNOTSPECIFIED: return "LibEuler dll not specified";
+    case LIBMCDRIVER_EULER_ERROR_INVALIDBUILDJOBID: return "Invalid build job id";
+    case LIBMCDRIVER_EULER_ERROR_INVALIDIMAGETYPE: return "Invalid image type";
+    case LIBMCDRIVER_EULER_ERROR_COULDNOTUPLOADLAYERIMAGE: return "Could not upload layer image";
+    case LIBMCDRIVER_EULER_ERROR_INVALIDJOBSTATUS: return "Invalid job status";
+    case LIBMCDRIVER_EULER_ERROR_COULDUPDATEJOBSTATUS: return "Could not update job status";
+    case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSERESOURCE: return "Invalid license resource";
+    case LIBMCDRIVER_EULER_ERROR_COULDNOTENCODEJPEGIMAGE: return "Could not encode JPEG Image";
+    case LIBMCDRIVER_EULER_ERROR_COULDNOTREADLICENSEDATA: return "Could not read license data";
+    case LIBMCDRIVER_EULER_ERROR_INVALIDLICENSEDATA: return "Invalid license data";
     default: return "unknown error";
   }
 }
@@ -175,8 +193,24 @@ typedef LibMCDriver_EulerHandle LibMCDriver_Euler_Driver_Euler;
 
 namespace LibMCDriver_Euler {
 
+  /*************************************************************************************************************************
+   Declaration of enums
+  **************************************************************************************************************************/
+  
+  enum class eEulerImageType : LibMCDriver_Euler_int32 {
+    Recoat = 0,
+    Exposure = 1
+  };
+  
+  enum class eEulerJobStatus : LibMCDriver_Euler_int32 {
+    InProgress = 0,
+    Completed = 1
+  };
+  
 } // namespace LibMCDriver_Euler;
 
 // define legacy C-names for enums, structs and function types
+typedef LibMCDriver_Euler::eEulerImageType eLibMCDriver_EulerEulerImageType;
+typedef LibMCDriver_Euler::eEulerJobStatus eLibMCDriver_EulerEulerJobStatus;
 
 #endif // __LIBMCDRIVER_EULER_TYPES_HEADER_CPP
