@@ -78,17 +78,6 @@ set GOARCH=amd64
 set GOOS=windows
 go build -o "%builddir%/DevPackage/Framework/buildresources.exe" -ldflags="-s -w" "%basepath%/BuildScripts/buildresources.go"
 
-REM echo "Building Resource builder (Linux64)..."
-REM set GOARCH=amd64
-REM set GOOS=linux
-REM go build -o "%builddir%/DevPackage/Framework/buildresources.linux" -ldflags="-s -w" "%basepath%/BuildScripts/buildresources.go"
-
-REM echo "Building Resource builder (LinuxARM)..."
-REM set GOARCH=arm
-REM set GOOS=linux
-REM set GOARM=5
-REM go build -o "%builddir%/DevPackage/Framework/buildresources.arm" -ldflags="-s -w" "%basepath%/BuildScripts/buildresources.go"
-
 copy /y "%basepath%Artifacts\clientdist\clientpackage.zip" "%builddir%\Output\%GITHASH%_core.client"
 if "%ERRORLEVEL%" neq "0" (
 	goto ERROR
