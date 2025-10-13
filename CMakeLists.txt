@@ -901,3 +901,68 @@ if(UNIX)
 endif()
 
 
+
+
+#[[++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++ packageManager Target
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+]]
+
+
+file(GLOB PACKAGE_MANAGER_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/packageManager.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/crossguid/guid.cpp
+)
+
+add_executable(package_manager ${PACKAGE_MANAGER_SRC} ${LIBMC_SRC_DEP_PUGIXML})
+
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML)
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PicoSHA2)
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl)
+target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
+
+set_target_properties(package_manager
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	
+	OUTPUT_NAME "package_manager"	
+
+	VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/Output"	    
+)
+
+
+target_compile_options(package_manager PRIVATE "-D__GITHASH=${GLOBALGITHASH}")
+target_compile_options(package_manager PRIVATE "-DLIBUS_NO_SSL")
+target_compile_options(package_manager PRIVATE "-DUNICODE")
+target_compile_options(package_manager PRIVATE "-D_UNICODE")
+
+
+if(MSVC)
+	target_link_libraries(package_manager shlwapi.lib)
+	target_link_libraries(package_manager ws2_32.lib)
+	target_link_libraries(package_manager bcrypt.lib)	
+
+	target_link_libraries(package_manager ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl/win64/tls-24.lib)
+	target_link_libraries(package_manager ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl/win64/crypto-49.lib)
+	target_link_libraries(package_manager ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl/win64/ssl-52.lib)
+endif()
+
+if(UNIX)
+	if(NOT LIBUUID_PATH)
+		message(FATAL_ERROR "libuuid not found")
+	endif()
+	target_link_libraries(package_manager ${LIBUUID_PATH})
+endif()
+
+
