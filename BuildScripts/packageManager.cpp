@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
                     }
                 }
                 catch (const std::exception& ex) {
-                    std::cerr << "Error reading downloaded file: " << ex.what() << "\n";
+                    std::cerr << "Error reading downloaded file: " <<  ex.what() << "\n";
                     return 1;
                 }
             }
