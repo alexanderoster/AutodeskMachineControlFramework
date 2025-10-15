@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<v-container dense>				
 		<template v-for="entity in moduleitem.entities">			
 			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='edit')">
-				<v-col cols="12"><v-text-field outlined dense v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" :prefix="entity.prefix" :suffix="entity.suffix" :rules="checkRules (entity)"/></v-col>
+				<v-col cols="12"><v-text-field outlined dense v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" :prefix="entity.prefix" :suffix="entity.suffix" :rules="checkRules (entity)" @blur="uiEditBoxChange(entity)" @keyup.enter="uiEditBoxChange(entity)"/></v-col>
 			</v-row>
 
 			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='switch')">
@@ -112,6 +112,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				}
 			}
 		},
+		
+		
+	  uiEditBoxChange(editentity) {
+	  
+	  
+
+		  if (!editentity || !editentity.dataObject) return;
+		  
+		  // skip if no change event defined
+		  if (!editentity.changeevent || editentity.changeevent === "") return;
+
+		  // don't send updates for read-only or disabled fields
+		  if (editentity.dataObject.readonly || editentity.dataObject.disabled) return;
+
+		  const formvalues = this.Application.assembleFormValues([ editentity.uuid ]);
+		  const senderuuid = editentity.uuid;
+
+
+		  console.log('BLUR EVENT', {
+			event: editentity.changeevent,
+			sender: editentity.uuid,
+			value: editentity.dataObject.value
+		  });
+
+		  this.Application.triggerUIEvent(editentity.changeevent, senderuuid, formvalues);
+		},
+		
 		
 		checkRules (editentity) {
 		

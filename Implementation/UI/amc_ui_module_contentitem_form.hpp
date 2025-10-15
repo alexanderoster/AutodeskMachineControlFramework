@@ -115,11 +115,12 @@ namespace AMC {
 		CUIExpression m_MinValueExpression;
 		CUIExpression m_MaxValueExpression;
 
+		std::string m_sOnChangeEvent;
 	public:
 
 		static PUIModule_ContentFormEdit makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData);
 
-		CUIModule_ContentFormEdit(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, CUIExpression Prefix, CUIExpression Suffix, PStateMachineData pStateMachineData);
+		CUIModule_ContentFormEdit(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, CUIExpression Prefix, CUIExpression Suffix, std::string sOnChangeEvent, PStateMachineData pStateMachineData);
 
 		virtual ~CUIModule_ContentFormEdit();
 
