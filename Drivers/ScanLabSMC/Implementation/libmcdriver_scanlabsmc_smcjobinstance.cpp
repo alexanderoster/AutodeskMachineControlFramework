@@ -817,7 +817,7 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
     pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("y", "Y", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("laseron", "LaserOn", LibMCEnv::eDataTableColumnType::Uint32Column);
-    pDataTable->AddColumn("active0", "Active Channel 0", LibMCEnv::eDataTableColumnType::DoubleColumn);
+    pDataTable->AddColumn("power", "Laser Power", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("active1", "Active Channel 1", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("cmdindex", "Command Index", LibMCEnv::eDataTableColumnType::Int32Column);
 
@@ -836,7 +836,7 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
     pDataTable->SetUint32ColumnValues("laseron", laserSignal);
     laserSignal.resize(0);
 
-    pDataTable->SetDoubleColumnValues("active0", activeChannel0);
+    pDataTable->SetDoubleColumnValues("power", activeChannel0);
     activeChannel0.resize(0);
 
     pDataTable->SetDoubleColumnValues("active1", activeChannel1);
