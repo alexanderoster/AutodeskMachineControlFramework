@@ -564,10 +564,36 @@ typedef LibMCEnvResult (*PLibMCEnvImageLoader_LoadPNGImagePtr) (LibMCEnv_ImageLo
 * @param[in] dDPIValueX - DPI Value in X. MUST be positive.
 * @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
 * @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
-* @param[out] pImageDataInstance - Image instance containing the PNG image.
+* @param[out] pImageDataInstance - Image instance containing the JPEG image.
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvImageLoader_LoadJPEGImagePtr) (LibMCEnv_ImageLoader pImageLoader, LibMCEnv_uint64 nJPEGDataBufferSize, const LibMCEnv_uint8 * pJPEGDataBuffer, LibMCEnv_double dDPIValueX, LibMCEnv_double dDPIValueY, LibMCEnv::eImagePixelFormat ePixelFormat, LibMCEnv_ImageData * pImageDataInstance);
+
+/**
+* creates an image object from a machine PNG resource data.
+*
+* @param[in] pImageLoader - ImageLoader instance.
+* @param[in] pResourceName - PNG Data Resource Name. Fails if image cannot be loaded.
+* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+* @param[out] pImageDataInstance - Image instance containing the PNG image.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvImageLoader_LoadPNGImageFromResourcePtr) (LibMCEnv_ImageLoader pImageLoader, const char * pResourceName, LibMCEnv_double dDPIValueX, LibMCEnv_double dDPIValueY, LibMCEnv::eImagePixelFormat ePixelFormat, LibMCEnv_ImageData * pImageDataInstance);
+
+/**
+* creates an image object from a machine JPEG resource data.
+*
+* @param[in] pImageLoader - ImageLoader instance.
+* @param[in] pResourceName - JPEG Data Resource Name. Fails if image cannot be loaded.
+* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+* @param[out] pImageDataInstance - Image instance containing the JPEG image.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvImageLoader_LoadJPEGImageFromResourcePtr) (LibMCEnv_ImageLoader pImageLoader, const char * pResourceName, LibMCEnv_double dDPIValueX, LibMCEnv_double dDPIValueY, LibMCEnv::eImagePixelFormat ePixelFormat, LibMCEnv_ImageData * pImageDataInstance);
 
 /**
 * creates an image object from raw RGB24 Data. (3 bytes per pixel)
@@ -10991,6 +11017,8 @@ typedef struct {
 	PLibMCEnvImageData_ReadFromRawMemoryPtr m_ImageData_ReadFromRawMemory;
 	PLibMCEnvImageLoader_LoadPNGImagePtr m_ImageLoader_LoadPNGImage;
 	PLibMCEnvImageLoader_LoadJPEGImagePtr m_ImageLoader_LoadJPEGImage;
+	PLibMCEnvImageLoader_LoadPNGImageFromResourcePtr m_ImageLoader_LoadPNGImageFromResource;
+	PLibMCEnvImageLoader_LoadJPEGImageFromResourcePtr m_ImageLoader_LoadJPEGImageFromResource;
 	PLibMCEnvImageLoader_CreateImageFromRawRGB24DataPtr m_ImageLoader_CreateImageFromRawRGB24Data;
 	PLibMCEnvImageLoader_CreateImageFromRawRGBA32DataPtr m_ImageLoader_CreateImageFromRawRGBA32Data;
 	PLibMCEnvImageLoader_CreateImageFromRawYUY2DataPtr m_ImageLoader_CreateImageFromRawYUY2Data;

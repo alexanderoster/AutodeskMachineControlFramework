@@ -518,7 +518,16 @@ IImageData* CStateEnvironment::CreateEmptyImage(const LibMCEnv_uint32 nPixelSize
 
 IImageLoader* CStateEnvironment::CreateImageLoader()
 {
-	return new CImageLoader();
+	auto pUIHandler = m_pSystemState->uiHandler();
+	if (pUIHandler == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+	auto pResourcePackage = pUIHandler->getCoreResourcePackage();
+	if (pResourcePackage.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+	return new CImageLoader(pResourcePackage);
+
 }
 
 LibMCEnv_uint64 CStateEnvironment::GetGlobalTimerInMilliseconds()

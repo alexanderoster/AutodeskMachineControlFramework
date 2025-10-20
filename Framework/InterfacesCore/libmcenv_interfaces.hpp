@@ -788,9 +788,29 @@ public:
 	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
 	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
 	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
-	* @return Image instance containing the PNG image.
+	* @return Image instance containing the JPEG image.
 	*/
 	virtual IImageData * LoadJPEGImage(const LibMCEnv_uint64 nJPEGDataBufferSize, const LibMCEnv_uint8 * pJPEGDataBuffer, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv::eImagePixelFormat ePixelFormat) = 0;
+
+	/**
+	* IImageLoader::LoadPNGImageFromResource - creates an image object from a machine PNG resource data.
+	* @param[in] sResourceName - PNG Data Resource Name. Fails if image cannot be loaded.
+	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+	* @return Image instance containing the PNG image.
+	*/
+	virtual IImageData * LoadPNGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv::eImagePixelFormat ePixelFormat) = 0;
+
+	/**
+	* IImageLoader::LoadJPEGImageFromResource - creates an image object from a machine JPEG resource data.
+	* @param[in] sResourceName - JPEG Data Resource Name. Fails if image cannot be loaded.
+	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+	* @return Image instance containing the JPEG image.
+	*/
+	virtual IImageData * LoadJPEGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv::eImagePixelFormat ePixelFormat) = 0;
 
 	/**
 	* IImageLoader::CreateImageFromRawRGB24Data - creates an image object from raw RGB24 Data. (3 bytes per pixel)

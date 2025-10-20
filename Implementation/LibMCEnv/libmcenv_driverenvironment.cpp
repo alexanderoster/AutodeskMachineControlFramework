@@ -338,7 +338,7 @@ IImageData* CDriverEnvironment::CreateEmptyImage(const LibMCEnv_uint32 nPixelSiz
 
 IImageLoader* CDriverEnvironment::CreateImageLoader()
 {
-    return new CImageLoader();
+    return new CImageLoader(m_pMachineResourcePackage);
 }
 
 

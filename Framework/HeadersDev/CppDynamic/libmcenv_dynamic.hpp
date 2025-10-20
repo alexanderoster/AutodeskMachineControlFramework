@@ -1431,6 +1431,8 @@ public:
 	
 	inline PImageData LoadPNGImage(const CInputVector<LibMCEnv_uint8> & PNGDataBuffer, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageData LoadJPEGImage(const CInputVector<LibMCEnv_uint8> & JPEGDataBuffer, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
+	inline PImageData LoadPNGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
+	inline PImageData LoadJPEGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageData CreateImageFromRawRGB24Data(const CInputVector<LibMCEnv_uint8> & RGB24DataBuffer, const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageData CreateImageFromRawRGBA32Data(const CInputVector<LibMCEnv_uint8> & RGBA32DataBuffer, const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageData CreateImageFromRawYUY2Data(const CInputVector<LibMCEnv_uint8> & YUY2DataBuffer, const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
@@ -3664,6 +3666,8 @@ public:
 		pWrapperTable->m_ImageData_ReadFromRawMemory = nullptr;
 		pWrapperTable->m_ImageLoader_LoadPNGImage = nullptr;
 		pWrapperTable->m_ImageLoader_LoadJPEGImage = nullptr;
+		pWrapperTable->m_ImageLoader_LoadPNGImageFromResource = nullptr;
+		pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource = nullptr;
 		pWrapperTable->m_ImageLoader_CreateImageFromRawRGB24Data = nullptr;
 		pWrapperTable->m_ImageLoader_CreateImageFromRawRGBA32Data = nullptr;
 		pWrapperTable->m_ImageLoader_CreateImageFromRawYUY2Data = nullptr;
@@ -5091,6 +5095,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_ImageLoader_LoadJPEGImage == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ImageLoader_LoadPNGImageFromResource = (PLibMCEnvImageLoader_LoadPNGImageFromResourcePtr) GetProcAddress(hLibrary, "libmcenv_imageloader_loadpngimagefromresource");
+		#else // _WIN32
+		pWrapperTable->m_ImageLoader_LoadPNGImageFromResource = (PLibMCEnvImageLoader_LoadPNGImageFromResourcePtr) dlsym(hLibrary, "libmcenv_imageloader_loadpngimagefromresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ImageLoader_LoadPNGImageFromResource == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource = (PLibMCEnvImageLoader_LoadJPEGImageFromResourcePtr) GetProcAddress(hLibrary, "libmcenv_imageloader_loadjpegimagefromresource");
+		#else // _WIN32
+		pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource = (PLibMCEnvImageLoader_LoadJPEGImageFromResourcePtr) dlsym(hLibrary, "libmcenv_imageloader_loadjpegimagefromresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -14055,6 +14077,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_ImageLoader_LoadJPEGImage == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_imageloader_loadpngimagefromresource", (void**)&(pWrapperTable->m_ImageLoader_LoadPNGImageFromResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ImageLoader_LoadPNGImageFromResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_imageloader_loadjpegimagefromresource", (void**)&(pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ImageLoader_LoadJPEGImageFromResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_imageloader_createimagefromrawrgb24data", (void**)&(pWrapperTable->m_ImageLoader_CreateImageFromRawRGB24Data));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ImageLoader_CreateImageFromRawRGB24Data == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -18564,12 +18594,50 @@ public:
 	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
 	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
 	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
-	* @return Image instance containing the PNG image.
+	* @return Image instance containing the JPEG image.
 	*/
 	PImageData CImageLoader::LoadJPEGImage(const CInputVector<LibMCEnv_uint8> & JPEGDataBuffer, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat)
 	{
 		LibMCEnvHandle hImageDataInstance = nullptr;
 		CheckError(m_pWrapper->m_WrapperTable.m_ImageLoader_LoadJPEGImage(m_pHandle, (LibMCEnv_uint64)JPEGDataBuffer.size(), JPEGDataBuffer.data(), dDPIValueX, dDPIValueY, ePixelFormat, &hImageDataInstance));
+		
+		if (!hImageDataInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CImageData>(m_pWrapper, hImageDataInstance);
+	}
+	
+	/**
+	* CImageLoader::LoadPNGImageFromResource - creates an image object from a machine PNG resource data.
+	* @param[in] sResourceName - PNG Data Resource Name. Fails if image cannot be loaded.
+	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+	* @return Image instance containing the PNG image.
+	*/
+	PImageData CImageLoader::LoadPNGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat)
+	{
+		LibMCEnvHandle hImageDataInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_ImageLoader_LoadPNGImageFromResource(m_pHandle, sResourceName.c_str(), dDPIValueX, dDPIValueY, ePixelFormat, &hImageDataInstance));
+		
+		if (!hImageDataInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CImageData>(m_pWrapper, hImageDataInstance);
+	}
+	
+	/**
+	* CImageLoader::LoadJPEGImageFromResource - creates an image object from a machine JPEG resource data.
+	* @param[in] sResourceName - JPEG Data Resource Name. Fails if image cannot be loaded.
+	* @param[in] dDPIValueX - DPI Value in X. MUST be positive.
+	* @param[in] dDPIValueY - DPI Value in Y. MUST be positive.
+	* @param[in] ePixelFormat - Pixel format to use. Might lose color and alpha information.
+	* @return Image instance containing the JPEG image.
+	*/
+	PImageData CImageLoader::LoadJPEGImageFromResource(const std::string & sResourceName, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat)
+	{
+		LibMCEnvHandle hImageDataInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_ImageLoader_LoadJPEGImageFromResource(m_pHandle, sResourceName.c_str(), dDPIValueX, dDPIValueY, ePixelFormat, &hImageDataInstance));
 		
 		if (!hImageDataInstance) {
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);

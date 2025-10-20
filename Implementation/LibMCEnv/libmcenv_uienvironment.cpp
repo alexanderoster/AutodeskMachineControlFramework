@@ -392,7 +392,12 @@ IImageData* CUIEnvironment::CreateEmptyImage(const LibMCEnv_uint32 nPixelSizeX, 
 
 IImageLoader* CUIEnvironment::CreateImageLoader()
 {
-    return new CImageLoader();
+
+    auto pCoreResourcePackage = m_pUIHandler->getCoreResourcePackage();
+    if (pCoreResourcePackage.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+    return new CImageLoader (pCoreResourcePackage);
 }
 
 
