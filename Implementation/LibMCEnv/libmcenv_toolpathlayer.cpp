@@ -559,7 +559,7 @@ void CToolpathLayer::EvaluateTypedHatchProfileInterpolation(const LibMCEnv_uint3
 		}
 		else {
 			if ((pCountArrayBuffer != nullptr) || (pEvaluationDataBuffer != nullptr)) {
-				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTEVALUATEHATCHPROFILES);
+				//throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTEVALUATEHATCHPROFILES);
 
 			}
 		}

@@ -326,6 +326,28 @@ class LayerViewImpl {
 
 	}
 
+	computeChannelColumnRange (pointsChannelName, pointsColumnName)
+	{
+		if (this[pointsChannelName] && this[pointsChannelName][pointsColumnName]) {
+			let dataArray = this[pointsChannelName][pointsColumnName];
+
+			let maxValue = Number.NEGATIVE_INFINITY;
+			let minValue = Number.POSITIVE_INFINITY;
+
+			for (let i = 0; i < dataArray.length; i++) {
+				let value = dataArray[i];
+				if (value > maxValue) {
+					maxValue = value;
+				}
+				if (value < minValue) {
+					minValue = value;
+				}
+			}
+			this[pointsChannelName][pointsColumnName].max = maxValue;
+			this[pointsChannelName][pointsColumnName].min = minValue;
+		}
+	}
+
 	makeLaserOnColors ()
 	{		
 		this.laserOnPointsColorArray = null;
@@ -350,6 +372,37 @@ class LayerViewImpl {
 		}
 		
 	}
+	
+	makeLaserPowerColors ()
+	{
+		this.layerPointsColorArray = null;
+
+		if (this.laser && this.laser.power && this.layerPointsArray) {
+			const powerRange = (this.laser.power.max - this.laser.power.min);
+			if (powerRange > 0) {
+
+				let pointCount = this.laser.power.length;
+				let colors = [];
+				
+				for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+					let power = this.laser.power[pointIndex];
+					let fraction = (power - this.laser.power.min) / powerRange;
+					if (fraction >= 0.0) {
+						if (fraction > 1.0)
+							fraction = 1.0;
+					} else {
+						fraction = 0.0;
+					}
+					
+					const hue = (fraction) * 240 / 360;
+					colors.push (this.hslToRgb (hue, 1.0, 0.5));				
+				}
+				
+				this.layerPointsColorArray = colors;
+			}
+		}
+	}
+	
 	
 	hslToRgb(h, s, l) {
 		// Ensure h, s, l are in the range [0, 1]
@@ -429,6 +482,8 @@ class LayerViewImpl {
 
   		// Assign the data array to the corresponding column
   		this[pointsChannelName][pointsColumnName] = pointsChannelDataArray;
+
+		this.computeChannelColumnRange (pointsChannelName, pointsColumnName);
 	}
 	
 	clearPoints ()
@@ -468,6 +523,10 @@ class LayerViewImpl {
 
 		if (this.layerPointsMode == "laseron") {
 			this.makeLaserOnColors ();
+		}
+
+		if (this.layerPointsMode == "powerramp") {
+			this.makeLaserPowerColors ();
 		}
 	}
 	
@@ -585,6 +644,16 @@ class LayerViewImpl {
 		
 		return null;
 					
+	}
+
+	getPointPower (pointIndex)
+	{
+		if (this.laser && this.laser.power) {
+			if (pointIndex >= 0 && pointIndex < this.laser.power.length) {
+				return this.laser.power[pointIndex];				
+			}
+		}
+		return null;
 	}
 
 	updateLoadedLayer () {

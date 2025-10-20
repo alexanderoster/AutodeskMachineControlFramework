@@ -429,9 +429,11 @@ namespace AMC {
 
 						}
 
-				
+#if USEALLMODIFICATIONFACTORS 				
 						for (uint32_t nFactorIndex = 0; nFactorIndex < 3; nFactorIndex++) {
-
+#else // USE ONLY FACTOR_F MODIFICATOR
+						for (uint32_t nFactorIndex = 0; nFactorIndex < 1; nFactorIndex++) {
+#endif
 							Lib3MF::eToolpathProfileModificationFactor factorType = Lib3MF::eToolpathProfileModificationFactor::Unknown;
 							uint32_t factorFlag = 0;
 							switch (nFactorIndex) {
@@ -478,7 +480,8 @@ namespace AMC {
 										Lib3MF::sHatchModificationInterpolationData* pSubInterpolationData = nullptr;
 										if (nonLinearCounts.size() > 0) {
 											nSubInterpolationCount = nonLinearCounts.at(nHatchIndex);
-											pSubInterpolationData = &m_InterpolationData.at(nInterpolationDataStartIndex + nTotalSubInterpolationCount);
+											if (nSubInterpolationCount > 0)
+												pSubInterpolationData = &m_InterpolationData.at(nInterpolationDataStartIndex + nTotalSubInterpolationCount);
 										}
 
 										pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point1Factor;

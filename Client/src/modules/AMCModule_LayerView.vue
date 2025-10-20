@@ -157,8 +157,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					this.LayerViewerInstance.setColorMode ("laseron");
 				} 
 				else if (this.LayerViewerInstance.layerPointsMode == "laseron") {
+					this.LayerViewerInstance.setColorMode ("powerramp");
+				} 
+				else if (this.LayerViewerInstance.layerPointsMode == "powerramp") {
 					this.LayerViewerInstance.setColorMode ("uniform");
-				} else {				
+				}
+				else {				
 					this.LayerViewerInstance.setColorMode ("time");
 				}				
 			},			 
@@ -238,6 +242,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 				if (this.LayerViewerInstance.layerPointsMode == "laseron") {
 					return "Color: LaserOn";
+				} 
+				
+				if (this.LayerViewerInstance.layerPointsMode == "powerramp") {
+					return "Color: Power";
 				} 
 				
 				return "Color: Uniform";
@@ -352,6 +360,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 										const floatArray = new Float32Array(value);
 										console.log(`Key "${key}" contains Float32Array with length: ${floatArray.length}`);
 										if (key.toLowerCase() === 'laseron') {
+											if (this.LayerViewerInstance) {
+												this.LayerViewerInstance.loadPointsChannelData ("laser", key.toLowerCase(), floatArray);
+											} else {
+												console.log(`${key}: ${floatArray.length}`);
+											}
+										} else if (key.toLowerCase() === 'power') {
 											if (this.LayerViewerInstance) {
 												this.LayerViewerInstance.loadPointsChannelData ("laser", key.toLowerCase(), floatArray);
 											} else {
@@ -588,6 +602,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 							let pointVelocity = this.LayerViewerInstance.getPointVelocity (pointIndex);
 							let pointAcceleration = this.LayerViewerInstance.getPointAcceleration (pointIndex);
 							let pointJerk = this.LayerViewerInstance.getPointJerk (pointIndex);
+							let pointPower = this.LayerViewerInstance.getPointPower (pointIndex);
 							
 							let infoCaption = `Point ID = ${pointIndex.toFixed(0)}\n`;
 							if (pointPosition) {
@@ -605,7 +620,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 								let jerkinmeterspersecondsquared = pointJerk.j / 1000000.0;
 								infoCaption += `Jerk: ${jerkinmeterspersecondsquared.toFixed(4)} km/s³\n`;
 							}
-
+							if (pointPower) {
+								let powerinwatts = pointPower; // * 1000.0;
+								infoCaption += `Power: ${powerinwatts.toFixed(4)} W\n`;
+							}
 						
 							this.lastMouseX = mouseX;
 							this.lastMouseY = mouseY;
