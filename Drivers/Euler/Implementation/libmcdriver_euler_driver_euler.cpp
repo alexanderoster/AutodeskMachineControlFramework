@@ -136,8 +136,9 @@ IEulerConnection* CDriver_Euler::ConnectWithLicenseData(const std::string& sIden
 	if (nLicenseDataBufferSize == 0)
 		throw ELibMCDriver_EulerInterfaceException(LIBMCDRIVER_EULER_ERROR_INVALIDPARAM);
 
+	LoadSDK();
 
-	auto pLicenseTempFile = m_pWorkingDirectory->StoreCustomDataInTempFile(".lic", LibMCEnv::CInputVector<uint8_t>(pLicenseDataBuffer, nLicenseDataBufferSize));
+	auto pLicenseTempFile = m_pWorkingDirectory->StoreCustomDataInTempFile("lic", LibMCEnv::CInputVector<uint8_t>(pLicenseDataBuffer, nLicenseDataBufferSize));
 	std::string sLicenseFilePath = pLicenseTempFile->GetAbsoluteFileName();
 
 	auto licenseInfo = m_pLibEulerSDK->euler_connect_read_license(sLicenseFilePath.c_str ());
