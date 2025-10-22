@@ -10988,6 +10988,46 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getexternaleventparamete
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_addexternaleventresultvalue(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
 
 /**
+* Sets a string result value for external event return (typed convenience wrapper).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] pReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setstringresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
+
+/**
+* Sets an integer result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] nReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setintegerresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_int64 nReturnValue);
+
+/**
+* Sets a boolean result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] bReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setboolresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, bool bReturnValue);
+
+/**
+* Sets a double result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] dReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setdoubleresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_double dReturnValue);
+
+/**
 * Returns the external event parameters. This JSON Object was passed on from the external API.
 *
 * @param[in] pUIEnvironment - UIEnvironment instance.

@@ -198,6 +198,8 @@ public:
 
 	IBuildExecution* GetBuildExecution(const std::string& sExecutionUUID) override;
 
+	IBuildIterator* GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount) override;
+
 	IDiscreteFieldData2D* CreateDiscreteField2D(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue) override;
 
 	IDiscreteFieldData2D* CreateDiscreteField2DFromImage(IImageData* pImageDataInstance, const LibMCEnv_double dBlackValue, const LibMCEnv_double dWhiteValue, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY) override;
@@ -267,6 +269,15 @@ public:
 	std::string GetExternalEventParameter(const std::string& sParameterName) override;
 
 	void AddExternalEventResultValue(const std::string& sReturnValueName, const std::string& sReturnValue) override;
+
+	// Typed result setters for /api/ext event handlers
+	void SetStringResult(const std::string& sReturnValueName, const std::string& sReturnValue) override;
+
+	void SetIntegerResult(const std::string& sReturnValueName, const LibMCEnv_int64 nReturnValue) override;
+
+	void SetBoolResult(const std::string& sReturnValueName, const bool bReturnValue) override;
+
+	void SetDoubleResult(const std::string& sReturnValueName, const LibMCEnv_double dReturnValue) override;
 
 	IJSONObject* GetExternalEventParameters() override;
 

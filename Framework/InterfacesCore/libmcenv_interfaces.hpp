@@ -92,6 +92,7 @@ class IToolpathLayer;
 class IToolpathAccessor;
 class IBuildExecution;
 class IBuildExecutionIterator;
+class IBuildIterator;
 class IBuild;
 class IWorkingFileProcess;
 class IWorkingFile;
@@ -3515,6 +3516,23 @@ public:
 };
 
 typedef IBaseSharedPtr<IBuildExecutionIterator> PIBuildExecutionIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for BuildIterator 
+**************************************************************************************************************************/
+
+class IBuildIterator : public virtual IIterator {
+public:
+	/**
+	* IBuildIterator::GetCurrentBuild - Returns the build the iterator points at.
+	* @return returns the Build instance.
+	*/
+	virtual IBuild * GetCurrentBuild() = 0;
+
+};
+
+typedef IBaseSharedPtr<IBuildIterator> PIBuildIterator;
 
 
 /*************************************************************************************************************************
@@ -8140,6 +8158,13 @@ public:
 	virtual IBuildExecution * GetBuildExecution(const std::string & sExecutionUUID) = 0;
 
 	/**
+	* IUIEnvironment::GetRecentBuildJobs - Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+	* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+	* @return Iterator for build jobs, ordered newest first.
+	*/
+	virtual IBuildIterator * GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount) = 0;
+
+	/**
 	* IUIEnvironment::CreateDiscreteField2D - Creates an empty discrete field.
 	* @param[in] nPixelCountX - Pixel count in X. MUST be positive.
 	* @param[in] nPixelCountY - Pixel count in Y. MUST be positive.
@@ -8372,6 +8397,34 @@ public:
 	* @param[in] sReturnValue - Return value.
 	*/
 	virtual void AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue) = 0;
+
+	/**
+	* IUIEnvironment::SetStringResult - Sets a string result value for external event return (typed convenience wrapper).
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] sReturnValue - Return value.
+	*/
+	virtual void SetStringResult(const std::string & sReturnValueName, const std::string & sReturnValue) = 0;
+
+	/**
+	* IUIEnvironment::SetIntegerResult - Sets an integer result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] nReturnValue - Return value.
+	*/
+	virtual void SetIntegerResult(const std::string & sReturnValueName, const LibMCEnv_int64 nReturnValue) = 0;
+
+	/**
+	* IUIEnvironment::SetBoolResult - Sets a boolean result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] bReturnValue - Return value.
+	*/
+	virtual void SetBoolResult(const std::string & sReturnValueName, const bool bReturnValue) = 0;
+
+	/**
+	* IUIEnvironment::SetDoubleResult - Sets a double result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] dReturnValue - Return value.
+	*/
+	virtual void SetDoubleResult(const std::string & sReturnValueName, const LibMCEnv_double dReturnValue) = 0;
 
 	/**
 	* IUIEnvironment::GetExternalEventParameters - Returns the external event parameters. This JSON Object was passed on from the external API.

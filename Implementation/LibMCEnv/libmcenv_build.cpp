@@ -81,6 +81,19 @@ CBuild::~CBuild()
 {
 }
 
+CBuild* CBuild::makeFrom(CBuild* pBuild)
+{
+	if (pBuild == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+	return new CBuild(pBuild->m_pDataModel, pBuild->m_sBuildJobUUID, pBuild->m_pToolpathHandler, pBuild->m_pMeshHandler, pBuild->m_pGlobalChrono, pBuild->m_pStateJournal);
+}
+
+std::shared_ptr<CBuild> CBuild::makeSharedFrom(CBuild* pBuild)
+{
+	return std::shared_ptr<CBuild>(makeFrom(pBuild));
+}
+
 std::string CBuild::GetName()
 {
 	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
