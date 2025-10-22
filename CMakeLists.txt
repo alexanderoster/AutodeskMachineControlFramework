@@ -932,7 +932,9 @@ target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/I
 target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML)
 target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
 target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PicoSHA2)
+if(MSVC)
 target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl)
+endif()
 target_include_directories(package_manager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
 
 set_target_properties(package_manager
@@ -966,17 +968,11 @@ endif()
 if(UNIX AND NOT APPLE)
 
 	find_package(Threads REQUIRED)
-	if(THREADS_HAVE_PTHREAD_ARG)
-	  target_compile_options(package_manager PUBLIC "-pthread")
-	endif()
-	if(CMAKE_THREAD_LIBS_INIT)
-	  target_link_libraries(package_manager "${CMAKE_THREAD_LIBS_INIT}")
-	endif()
 
 	if(NOT LIBUUID_PATH)
 		message(FATAL_ERROR "libuuid not found")
 	endif()
-	target_link_libraries(package_manager ${LIBUUID_PATH} OpenSSL::SSL OpenSSL::Crypto)
+	target_link_libraries(package_manager ${LIBUUID_PATH} OpenSSL::SSL OpenSSL::Crypto Threads::Threads)
 endif()
 
 
