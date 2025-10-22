@@ -22,7 +22,7 @@
 
 #include "Libraries/cpp-httplib/httplib.h"
 #include "Libraries/PugiXML/pugixml.hpp"             
-#include "Libraries/rapidjson/document.h"  
+#include "Libraries/RapidJSON/document.h"  
 #include "Libraries/PicoSHA2/picosha2.h"               // SHA-256 (header-only)
 
 
