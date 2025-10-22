@@ -912,6 +912,12 @@ endif()
 ]]
 
 
+if(UNIX AND NOT APPLE)
+  # If you ever want to force static later, set this to TRUE before find_package.
+  # set(OPENSSL_USE_STATIC_LIBS TRUE)
+  find_package(OpenSSL REQUIRED)     # provides OpenSSL::SSL and OpenSSL::Crypto
+endif()
+
 file(GLOB PACKAGE_MANAGER_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/packageManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
@@ -943,7 +949,6 @@ set_target_properties(package_manager
 
 
 target_compile_options(package_manager PRIVATE "-D__GITHASH=${GLOBALGITHASH}")
-target_compile_options(package_manager PRIVATE "-DLIBUS_NO_SSL")
 target_compile_options(package_manager PRIVATE "-DUNICODE")
 target_compile_options(package_manager PRIVATE "-D_UNICODE")
 
@@ -958,11 +963,20 @@ if(MSVC)
 	target_link_libraries(package_manager ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libressl/win64/ssl-52.lib)
 endif()
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
+
+	find_package(Threads REQUIRED)
+	if(THREADS_HAVE_PTHREAD_ARG)
+	  target_compile_options(package_manager PUBLIC "-pthread")
+	endif()
+	if(CMAKE_THREAD_LIBS_INIT)
+	  target_link_libraries(package_manager "${CMAKE_THREAD_LIBS_INIT}")
+	endif()
+
 	if(NOT LIBUUID_PATH)
 		message(FATAL_ERROR "libuuid not found")
 	endif()
-	target_link_libraries(package_manager ${LIBUUID_PATH})
+	target_link_libraries(package_manager ${LIBUUID_PATH} OpenSSL::SSL OpenSSL::Crypto)
 endif()
 
 

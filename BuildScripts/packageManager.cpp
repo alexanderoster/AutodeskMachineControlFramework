@@ -12,9 +12,7 @@
 #include <cstdlib>
 #include <sys/stat.h>
 
-#ifdef _WIN32
 #define CPPHTTPLIB_OPENSSL_SUPPORT
-#endif
 
 #include "common_utils.hpp" 
 #include "common_exportstream_native.hpp"
