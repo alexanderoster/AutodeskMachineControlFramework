@@ -95,6 +95,39 @@ std::string CBuild::GetBuildUUID()
 	return pBuildJob->GetUUID();
 }
 
+std::string CBuild::GetCreatedTimestamp()
+{
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+	return pBuildJob->GetTimeStamp();
+}
+
+std::string CBuild::GetLastExecutionTimestamp()
+{
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+
+	// Find the latest execution timestamp
+	std::string sLatestExecutionTime = "";
+	uint64_t nLatestExecutionMicroseconds = 0;
+
+	auto pJobExecutionIterator = pBuildJob->RetrieveBuildJobExecutions("");
+	while (pJobExecutionIterator->MoveNext()) {
+		auto pJobExecution = pJobExecutionIterator->GetCurrentJobExecution();
+		uint64_t nExecutionTime = pJobExecution->GetStartTimeStampInMicroseconds();
+		if (nExecutionTime > nLatestExecutionMicroseconds) {
+			nLatestExecutionMicroseconds = nExecutionTime;
+		}
+	}
+
+	// Convert to ISO 8601 format if we found any executions
+	if (nLatestExecutionMicroseconds > 0) {
+		sLatestExecutionTime = AMCCommon::CChrono::convertToISO8601TimeUTC(nLatestExecutionMicroseconds);
+	}
+
+	return sLatestExecutionTime;
+}
+
 std::string CBuild::GetStorageUUID()
 {
 	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();

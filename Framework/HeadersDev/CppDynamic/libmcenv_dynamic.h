@@ -4261,6 +4261,28 @@ typedef LibMCEnvResult (*PLibMCEnvBuild_GetNamePtr) (LibMCEnv_Build pBuild, cons
 typedef LibMCEnvResult (*PLibMCEnvBuild_GetBuildUUIDPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nBuildUUIDBufferSize, LibMCEnv_uint32* pBuildUUIDNeededChars, char * pBuildUUIDBuffer);
 
 /**
+* Returns creation timestamp of the build in ISO-8601 format.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_GetCreatedTimestampPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
+* Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Most recent execution timestamp in ISO-8601 format. Empty string if never executed., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_GetLastExecutionTimestampPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
 * Returns storage uuid of the build stream.
 *
 * @param[in] pBuild - Build instance.
@@ -11406,6 +11428,8 @@ typedef struct {
 	PLibMCEnvBuildExecutionIterator_GetCurrentExecutionPtr m_BuildExecutionIterator_GetCurrentExecution;
 	PLibMCEnvBuild_GetNamePtr m_Build_GetName;
 	PLibMCEnvBuild_GetBuildUUIDPtr m_Build_GetBuildUUID;
+	PLibMCEnvBuild_GetCreatedTimestampPtr m_Build_GetCreatedTimestamp;
+	PLibMCEnvBuild_GetLastExecutionTimestampPtr m_Build_GetLastExecutionTimestamp;
 	PLibMCEnvBuild_GetStorageUUIDPtr m_Build_GetStorageUUID;
 	PLibMCEnvBuild_GetStorageSHA256Ptr m_Build_GetStorageSHA256;
 	PLibMCEnvBuild_EnsureStorageSHA256IsValidPtr m_Build_EnsureStorageSHA256IsValid;

@@ -4248,6 +4248,19 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_loadattachedjournal(Lib
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecutioniterator_getcurrentexecution(LibMCEnv_BuildExecutionIterator pBuildExecutionIterator, LibMCEnv_BuildExecution * pBuildExecutionInstance);
 
 /*************************************************************************************************************************
+ Class definition for BuildIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the build the iterator points at.
+*
+* @param[in] pBuildIterator - BuildIterator instance.
+* @param[out] pBuildInstance - returns the Build instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_builditerator_getcurrentbuild(LibMCEnv_BuildIterator pBuildIterator, LibMCEnv_Build * pBuildInstance);
+
+/*************************************************************************************************************************
  Class definition for Build
 **************************************************************************************************************************/
 
@@ -4272,6 +4285,28 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getname(LibMCEnv_Build pBuild, c
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getbuilduuid(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nBuildUUIDBufferSize, LibMCEnv_uint32* pBuildUUIDNeededChars, char * pBuildUUIDBuffer);
+
+/**
+* Returns creation timestamp of the build in ISO-8601 format.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getcreatedtimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
+* Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Most recent execution timestamp in ISO-8601 format. Empty string if never executed., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getlastexecutiontimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
 
 /**
 * Returns storage uuid of the build stream.
@@ -10599,6 +10634,16 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_hasbuildexecution(LibMCE
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getbuildexecution(LibMCEnv_UIEnvironment pUIEnvironment, const char * pExecutionUUID, LibMCEnv_BuildExecution * pExecutionInstance);
+
+/**
+* Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+* @param[out] pBuildIterator - Iterator for build jobs, ordered newest first.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getrecentbuildjobs(LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_uint32 nMaxCount, LibMCEnv_BuildIterator * pBuildIterator);
 
 /**
 * Creates an empty discrete field.

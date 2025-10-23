@@ -3536,6 +3536,18 @@ public:
 	virtual std::string GetBuildUUID() = 0;
 
 	/**
+	* IBuild::GetCreatedTimestamp - Returns creation timestamp of the build in ISO-8601 format.
+	* @return Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z).
+	*/
+	virtual std::string GetCreatedTimestamp() = 0;
+
+	/**
+	* IBuild::GetLastExecutionTimestamp - Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+	* @return Most recent execution timestamp in ISO-8601 format. Empty string if never executed.
+	*/
+	virtual std::string GetLastExecutionTimestamp() = 0;
+
+	/**
 	* IBuild::GetStorageUUID - Returns storage uuid of the build stream.
 	* @return Storage UUID of the build.
 	*/

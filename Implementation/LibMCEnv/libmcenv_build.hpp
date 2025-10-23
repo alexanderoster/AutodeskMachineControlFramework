@@ -77,6 +77,10 @@ public:
 
 	std::string GetBuildUUID() override;
 
+	std::string GetCreatedTimestamp() override;
+
+	std::string GetLastExecutionTimestamp() override;
+
 	std::string GetStorageUUID() override;
 
 	std::string GetStorageSHA256() override;
