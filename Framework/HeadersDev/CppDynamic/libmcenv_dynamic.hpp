@@ -2248,6 +2248,8 @@ public:
 	
 	inline std::string GetName();
 	inline std::string GetBuildUUID();
+	inline std::string GetCreatedTimestamp();
+	inline std::string GetLastExecutionTimestamp();
 	inline std::string GetStorageUUID();
 	inline std::string GetStorageSHA256();
 	inline void EnsureStorageSHA256IsValid();
@@ -4023,6 +4025,8 @@ public:
 		pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution = nullptr;
 		pWrapperTable->m_Build_GetName = nullptr;
 		pWrapperTable->m_Build_GetBuildUUID = nullptr;
+		pWrapperTable->m_Build_GetCreatedTimestamp = nullptr;
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = nullptr;
 		pWrapperTable->m_Build_GetStorageUUID = nullptr;
 		pWrapperTable->m_Build_GetStorageSHA256 = nullptr;
 		pWrapperTable->m_Build_EnsureStorageSHA256IsValid = nullptr;
@@ -8248,6 +8252,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Build_GetBuildUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) dlsym(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) dlsym(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -15519,6 +15541,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_build_getbuilduuid", (void**)&(pWrapperTable->m_Build_GetBuildUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetBuildUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getcreatedtimestamp", (void**)&(pWrapperTable->m_Build_GetCreatedTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getlastexecutiontimestamp", (void**)&(pWrapperTable->m_Build_GetLastExecutionTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_getstorageuuid", (void**)&(pWrapperTable->m_Build_GetStorageUUID));
@@ -23345,6 +23375,36 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetBuildUUID(m_pHandle, bytesNeededBuildUUID, &bytesWrittenBuildUUID, &bufferBuildUUID[0]));
 		
 		return std::string(&bufferBuildUUID[0]);
+	}
+	
+	/**
+	* CBuild::GetCreatedTimestamp - Returns creation timestamp of the build in ISO-8601 format.
+	* @return Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z).
+	*/
+	std::string CBuild::GetCreatedTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
+	}
+	
+	/**
+	* CBuild::GetLastExecutionTimestamp - Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+	* @return Most recent execution timestamp in ISO-8601 format. Empty string if never executed.
+	*/
+	std::string CBuild::GetLastExecutionTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
 	}
 	
 	/**

@@ -12286,6 +12286,102 @@ LibMCEnvResult libmcenv_build_getbuilduuid(LibMCEnv_Build pBuild, const LibMCEnv
 	}
 }
 
+LibMCEnvResult libmcenv_build_getcreatedtimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pBuild;
+
+	try {
+		if ( (!pTimestampBuffer) && !(pTimestampNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sTimestamp("");
+		IBuild* pIBuild = dynamic_cast<IBuild*>(pIBaseClass);
+		if (!pIBuild)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pTimestampBuffer == nullptr);
+		if (isCacheCall) {
+			sTimestamp = pIBuild->GetCreatedTimestamp();
+
+			pIBuild->_setCache (new ParameterCache_1<std::string> (sTimestamp));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIBuild->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimestamp);
+			pIBuild->_setCache (nullptr);
+		}
+		
+		if (pTimestampNeededChars)
+			*pTimestampNeededChars = (LibMCEnv_uint32) (sTimestamp.size()+1);
+		if (pTimestampBuffer) {
+			if (sTimestamp.size() >= nTimestampBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimestamp = 0; iTimestamp < sTimestamp.size(); iTimestamp++)
+				pTimestampBuffer[iTimestamp] = sTimestamp[iTimestamp];
+			pTimestampBuffer[sTimestamp.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_build_getlastexecutiontimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pBuild;
+
+	try {
+		if ( (!pTimestampBuffer) && !(pTimestampNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sTimestamp("");
+		IBuild* pIBuild = dynamic_cast<IBuild*>(pIBaseClass);
+		if (!pIBuild)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pTimestampBuffer == nullptr);
+		if (isCacheCall) {
+			sTimestamp = pIBuild->GetLastExecutionTimestamp();
+
+			pIBuild->_setCache (new ParameterCache_1<std::string> (sTimestamp));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIBuild->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimestamp);
+			pIBuild->_setCache (nullptr);
+		}
+		
+		if (pTimestampNeededChars)
+			*pTimestampNeededChars = (LibMCEnv_uint32) (sTimestamp.size()+1);
+		if (pTimestampBuffer) {
+			if (sTimestamp.size() >= nTimestampBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimestamp = 0; iTimestamp < sTimestamp.size(); iTimestamp++)
+				pTimestampBuffer[iTimestamp] = sTimestamp[iTimestamp];
+			pTimestampBuffer[sTimestamp.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_build_getstorageuuid(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nStorageUUIDBufferSize, LibMCEnv_uint32* pStorageUUIDNeededChars, char * pStorageUUIDBuffer)
 {
 	IBase* pIBaseClass = (IBase *)pBuild;
@@ -33871,6 +33967,10 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_build_getname;
 	if (sProcName == "libmcenv_build_getbuilduuid") 
 		*ppProcAddress = (void*) &libmcenv_build_getbuilduuid;
+	if (sProcName == "libmcenv_build_getcreatedtimestamp") 
+		*ppProcAddress = (void*) &libmcenv_build_getcreatedtimestamp;
+	if (sProcName == "libmcenv_build_getlastexecutiontimestamp") 
+		*ppProcAddress = (void*) &libmcenv_build_getlastexecutiontimestamp;
 	if (sProcName == "libmcenv_build_getstorageuuid") 
 		*ppProcAddress = (void*) &libmcenv_build_getstorageuuid;
 	if (sProcName == "libmcenv_build_getstoragesha256") 

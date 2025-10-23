@@ -2602,6 +2602,14 @@
 			<param name="BuildUUID" type="string" pass="return" description="UUID of the build." />
 		</method>
 
+		<method name="GetCreatedTimestamp" description="Returns creation timestamp of the build in ISO-8601 format.">
+			<param name="Timestamp" type="string" pass="return" description="Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)." />
+		</method>
+
+		<method name="GetLastExecutionTimestamp" description="Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.">
+			<param name="Timestamp" type="string" pass="return" description="Most recent execution timestamp in ISO-8601 format. Empty string if never executed." />
+		</method>
+
 		<method name="GetStorageUUID" description="Returns storage uuid of the build stream.">
 			<param name="StorageUUID" type="string" pass="return" description="Storage UUID of the build." />
 		</method>
