@@ -7,18 +7,21 @@ export GO111MODULE="off"
 basepath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 PLATFORMNAME="linux64"
+CMAKE_OPTIONS=""
 
 for var in "$@"
 do
-echo "command line parameter: $var"
-if test $var = "--buildrpi"
-then
-	PLATFORMNAME="rpi"	
-fi	
-if test $var = "--buildwin64"
-then
-	PLATFORMNAME="win64"	
-fi	
+  echo "command line parameter: $var"
+  if test "$var" = "--buildrpi"
+  then
+    PLATFORMNAME="rpi"
+  elif test "$var" = "--buildwin64"
+  then
+    PLATFORMNAME="win64"
+  elif [[ "$var" == -D* ]]
+  then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS $var"
+  fi
 done
 
 builddir="$basepath/build_${PLATFORMNAME}"
@@ -136,9 +139,9 @@ cd "$builddir"
 echo "Building Core Modules"
 if test $PLATFORMNAME = "win64"
 then
-cmake -DOVERRIDE_PLATFORM=linux64 -DCMAKE_TOOLCHAIN_FILE=$basepath/BuildScripts/CrossCompile_Win32FromDebian.txt ..
+cmake -DOVERRIDE_PLATFORM=linux64 -DCMAKE_TOOLCHAIN_FILE=$basepath/BuildScripts/CrossCompile_Win32FromDebian.txt $CMAKE_OPTIONS ..
 else
-cmake -DOVERRIDE_PLATFORM=$PLATFORMNAME ..
+cmake -DOVERRIDE_PLATFORM=$PLATFORMNAME $CMAKE_OPTIONS ..
 fi
 
 cmake --build . --config Release
@@ -167,7 +170,7 @@ cp ../Output/${GITHASH}_core_libmcdata.${DLLEXT} Framework/Dist/
 cp ../Output/${GITHASH}_*.data Framework/Dist/
 cp ../Output/${GITHASH}_core.client Framework/Dist/
 cp ../Output/${GITHASH}_package.xml Framework/Dist/
-cp ../Output/${GITHASH}_driver_*.${DLLEXT} Framework/Dist/
+cp ../Output/${GITHASH}_driver_*.${DLLEXT} Framework/Dist/ 2>/dev/null || echo "No driver libraries found"
 cp ../../Framework/HeadersDev/CppDynamic/*.* Framework/HeadersDev/CppDynamic
 cp ../../Framework/InterfacesDev/*.* Framework/InterfacesDev
 cp ../../Framework/PluginCpp/*.* Framework/PluginCpp
