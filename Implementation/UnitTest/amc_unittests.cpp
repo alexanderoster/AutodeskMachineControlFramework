@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_accesspermission.hpp"
 
 #include "amc_unittests_signalslot.hpp"
+#include "amc_unittests_chrono.hpp"
 
 
 using namespace AMCUnitTest;
@@ -60,4 +61,5 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessPermission>());
 
 	registerTestGroup(std::make_shared <CUnitTestGroup_SignalSlot>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Chrono>());
 }

@@ -1,0 +1,147 @@
+/*++
+
+Copyright (C) 2025 Autodesk Inc.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+	* Redistributions of source code must retain the above copyright
+	  notice, this list of conditions and the following disclaimer.
+	* Redistributions in binary form must reproduce the above copyright
+	  notice, this list of conditions and the following disclaimer in the
+	  documentation and/or other materials provided with the distribution.
+	* Neither the name of the Autodesk Inc. nor the
+	  names of its contributors may be used to endorse or promote products
+	  derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL AUTODESK INC. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+#ifndef __AMCTEST_UNITTEST_CHRONO
+#define __AMCTEST_UNITTEST_CHRONO
+
+
+#include "amc_unittests.hpp"
+#include "common_chrono.hpp"
+#include <cstdlib>
+#include <ctime>
+
+namespace AMCUnitTest {
+
+    class CUnitTestGroup_Chrono : public CUnitTestGroup {
+    public:
+
+
+        virtual std::string getTestGroupName() override {
+            return "Chrono";
+        }
+
+        virtual void registerTests() override {
+            registerTest("ISO8601RoundTrip", "ISO 8601 UTC string should round-trip correctly through parse/convert cycle", eUnitTestCategory::utMandatoryPass,
+                std::bind(&CUnitTestGroup_Chrono::testISO8601RoundTrip, this));
+
+            registerTest("TimezoneIndependence", "UTC parsing should be independent of system timezone", eUnitTestCategory::utMandatoryPass,
+                std::bind(&CUnitTestGroup_Chrono::testTimezoneIndependence, this));
+
+            registerTest("MidnightBoundary", "Midnight timestamps should round-trip correctly", eUnitTestCategory::utMandatoryPass,
+                std::bind(&CUnitTestGroup_Chrono::testMidnightBoundary, this));
+
+            registerTest("LeapYear", "Leap year date should round-trip correctly", eUnitTestCategory::utOptionalPass,
+                std::bind(&CUnitTestGroup_Chrono::testLeapYear, this));
+        }
+
+        virtual void initializeTests() override {
+            // Optional setup logic
+        }
+
+    private:
+
+        void testISO8601RoundTrip() {
+            // Test multiple different timestamps to ensure fix works across different dates/times
+
+            std::vector<std::string> testCases = {
+                "2025-01-01T00:00:00.000000Z",
+                "2025-06-15T12:30:45.123456Z",
+                "2025-12-31T23:59:59.999999Z",
+                "2025-10-01T15:24:29.729232Z", // original bug detected date
+                "2024-02-29T18:45:30.500000Z"  // Leap year
+            };
+
+            for (const auto& original : testCases) {
+                uint64_t microseconds = AMCCommon::CChrono::parseISO8601TimeUTC(original);
+                std::string converted = AMCCommon::CChrono::convertToISO8601TimeUTC(microseconds);
+
+                assertTrue(original == converted, "Timestamp '" + original + "' should round-trip correctly, got '" + converted + "'");
+            }
+        }
+
+
+        void testTimezoneIndependence() {
+            // Test that UTC parsing is independent of system timezone
+
+            const char* originalTZ = std::getenv("TZ");
+
+            // Parse in UTC timezone
+            setenv("TZ", "UTC", 1);
+            tzset();
+            uint64_t utcResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
+
+            // Parse in UTC+2 timezone
+            setenv("TZ", "Europe/Helsinki", 1);
+            tzset();
+            uint64_t helsinkiResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
+
+            // Parse in UTC-5 timezone
+            setenv("TZ", "America/New_York", 1);
+            tzset();
+            uint64_t newYorkResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
+
+            // Restore original timezone
+            if (originalTZ) {
+                setenv("TZ", originalTZ, 1);
+            } else {
+                unsetenv("TZ");
+            }
+            tzset();
+
+            // All results should be identical since they represent the same UTC time
+            assertTrue(utcResult == helsinkiResult, "UTC parsing should be timezone-independent (UTC vs UTC+2)");
+            assertTrue(utcResult == newYorkResult, "UTC parsing should be timezone-independent (UTC vs UTC-5)");
+        }
+
+        void testMidnightBoundary() {
+            // Test midnight times specifically, as this is where getMicrosecondsSince1970FromDay starts
+
+            std::string original = "2025-10-01T00:00:00.000000Z";
+            uint64_t microseconds = AMCCommon::CChrono::parseISO8601TimeUTC(original);
+            std::string converted = AMCCommon::CChrono::convertToISO8601TimeUTC(microseconds);
+
+            assertTrue(original == converted, "Midnight timestamp must round-trip correctly");
+        }
+
+        void testLeapYear() {
+            // Test leap year date (Feb 29, 2024)
+
+            std::string original = "2024-02-29T12:00:00.000000Z";
+            uint64_t microseconds = AMCCommon::CChrono::parseISO8601TimeUTC(original);
+            std::string converted = AMCCommon::CChrono::convertToISO8601TimeUTC(microseconds);
+
+            assertTrue(original == converted, "Leap year timestamp must round-trip correctly");
+        }
+
+    };
+
+}
+
+#endif // __AMCTEST_UNITTEST_CHRONO
