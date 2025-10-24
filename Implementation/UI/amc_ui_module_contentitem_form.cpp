@@ -145,6 +145,8 @@ PParameterGroup CUIModule_ContentFormEntity::getClientVariableGroup(CParameterHa
 PUIModule_ContentFormEdit CUIModule_ContentFormEdit::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
 {
 	auto nameAttrib = xmlNode.attribute("name");
+	auto changeeventAttrib = xmlNode.attribute("changeevent");
+
 
 	if (nameAttrib.empty())
 		throw ELibMCInterfaceException(LIBMC_ERROR_FORMENTITYNAMEMISSING);
@@ -158,7 +160,9 @@ PUIModule_ContentFormEdit CUIModule_ContentFormEdit::makeFromXML(const pugi::xml
 	CUIExpression minvalue(xmlNode, "minvalue");
 	CUIExpression maxvalue(xmlNode, "maxvalue");
 
-	auto pEdit = std::make_shared<CUIModule_ContentFormEdit>(nameAttrib.as_string(), sFormPath, caption, value, prefix, suffix, pStateMachineData);
+	std::string sOnChangeEvent = changeeventAttrib.as_string();
+
+	auto pEdit = std::make_shared<CUIModule_ContentFormEdit>(nameAttrib.as_string(), sFormPath, caption, value, prefix, suffix, sOnChangeEvent, pStateMachineData);
 
 	pEdit->setValidationExpressions(validation, validationmessage, minvalue, maxvalue);
 
@@ -166,8 +170,8 @@ PUIModule_ContentFormEdit CUIModule_ContentFormEdit::makeFromXML(const pugi::xml
 
 }
 
-CUIModule_ContentFormEdit::CUIModule_ContentFormEdit(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, CUIExpression Prefix, CUIExpression Suffix, PStateMachineData pStateMachineData)
-	: CUIModule_ContentFormEntity (sName, sFormPath, Caption, pStateMachineData), m_PrefixExpression (Prefix), m_SuffixExpression (Suffix), m_ValueExpression (Value)
+CUIModule_ContentFormEdit::CUIModule_ContentFormEdit(const std::string& sName, const std::string& sFormPath, CUIExpression Caption, CUIExpression Value, CUIExpression Prefix, CUIExpression Suffix, std::string sOnChangeEvent, PStateMachineData pStateMachineData)
+	: CUIModule_ContentFormEntity (sName, sFormPath, Caption, pStateMachineData), m_PrefixExpression (Prefix), m_SuffixExpression (Suffix), m_ValueExpression (Value), m_sOnChangeEvent(sOnChangeEvent)
 {
 	m_PrefixExpression.checkExpressionSyntax(m_pStateMachineData);
 	m_SuffixExpression.checkExpressionSyntax(m_pStateMachineData);
@@ -240,6 +244,10 @@ void CUIModule_ContentFormEdit::writeVariablesToJSON(CJSONWriter& writer, CJSONW
 	object.addString(AMC_API_KEY_UI_FORMPREFIX, pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMPREFIX));
 	object.addString(AMC_API_KEY_UI_FORMSUFFIX, pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMSUFFIX));
 	std::string sValidation = pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMVALIDATION);
+
+	if (!m_sOnChangeEvent.empty())
+		object.addString(AMC_API_KEY_UI_FORMCHANGEEVENT, m_sOnChangeEvent);
+
 	if (sValidation == "double") {
 		object.addString(AMC_API_KEY_UI_FORMVALIDATION, sValidation);
 		object.addString(AMC_API_KEY_UI_FORMVALIDATIONMESSAGE, pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMVALIDATIONMESSAGE));
