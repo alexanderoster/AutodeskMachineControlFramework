@@ -37,6 +37,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <ctime>
 
+
+// Portable helpers to set/unset TZ and apply changes
+namespace portable_tz {
+
+    inline const char* get_tz() {
+        return std::getenv("TZ");
+    }
+
+#if defined(_WIN32)
+    inline void set_tz(const char* value) {
+        _putenv_s("TZ", value ? value : "");
+        _tzset();
+    }
+    inline void unset_tz() {
+        _putenv_s("TZ", "");
+        _tzset();
+    }
+#else
+    inline void set_tz(const char* value) {
+        if (value) setenv("TZ", value, 1);
+        else unsetenv("TZ");
+        tzset();
+    }
+    inline void unset_tz() {
+        unsetenv("TZ");
+        tzset();
+    }
+#endif
+
+} // namespace portable_tz
+
 namespace AMCUnitTest {
 
     class CUnitTestGroup_Chrono : public CUnitTestGroup {
@@ -87,37 +118,39 @@ namespace AMCUnitTest {
         }
 
 
+
+
+
         void testTimezoneIndependence() {
-            // Test that UTC parsing is independent of system timezone
+            // Save original TZ (may be null)
+            const char* originalTZ = portable_tz::get_tz();
+            std::string originalCopy = originalTZ ? std::string(originalTZ) : std::string();
 
-            const char* originalTZ = std::getenv("TZ");
-
-            // Parse in UTC timezone
-            setenv("TZ", "UTC", 1);
-            tzset();
+            // We’ll use POSIX TZ strings so it also works on Windows:
+            // "GMT0"      -> UTC+0
+            // "EET-2"     -> UTC+2  (note the minus means +2)
+            // "EST+5"     -> UTC-5  (plus means -5)
+            // The exact offsets don’t matter for this test; we just want different locals.
+            portable_tz::set_tz("GMT0");
             uint64_t utcResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
 
-            // Parse in UTC+2 timezone
-            setenv("TZ", "Europe/Helsinki", 1);
-            tzset();
-            uint64_t helsinkiResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
+            portable_tz::set_tz("EET-2"); // "UTC+2"
+            uint64_t plus2Result = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
 
-            // Parse in UTC-5 timezone
-            setenv("TZ", "America/New_York", 1);
-            tzset();
-            uint64_t newYorkResult = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
+            portable_tz::set_tz("EST+5"); // "UTC-5"
+            uint64_t minus5Result = AMCCommon::CChrono::parseISO8601TimeUTC("2025-10-01T15:24:29Z");
 
-            // Restore original timezone
-            if (originalTZ) {
-                setenv("TZ", originalTZ, 1);
-            } else {
-                unsetenv("TZ");
+            // Restore original TZ
+            if (!originalCopy.empty()) {
+                portable_tz::set_tz(originalCopy.c_str());
             }
-            tzset();
+            else {
+                portable_tz::unset_tz();
+            }
 
             // All results should be identical since they represent the same UTC time
-            assertTrue(utcResult == helsinkiResult, "UTC parsing should be timezone-independent (UTC vs UTC+2)");
-            assertTrue(utcResult == newYorkResult, "UTC parsing should be timezone-independent (UTC vs UTC-5)");
+            assertTrue(utcResult == plus2Result, "UTC parsing should be timezone-independent (UTC vs UTC+2)");
+            assertTrue(utcResult == minus5Result, "UTC parsing should be timezone-independent (UTC vs UTC-5)");
         }
 
         void testMidnightBoundary() {
