@@ -838,6 +838,11 @@
 			<param name="XMLString" type="string" pass="in" description="XML Configuration String." />
 		</method>
 		
+		<method name="SetParameterOverride" description="overrides a parameter with a certain value. Fails if parameter group or parameter does not exist. Fails if Value is not fitting the parameter type.">
+			<param name="ParameterPath" type="string" pass="in" description="Path of the parameter. Example: main.configgroup.currentjob" />
+			<param name="ParameterValue" type="string" pass="in" description="New Value of the parameter" />
+		</method>
+
 		<method name="StartAllThreads" description="starts the threads for all the state machines.">
 		</method>
 

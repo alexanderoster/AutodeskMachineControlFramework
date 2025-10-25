@@ -267,6 +267,11 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 		m_pContext->Log("Parsing package configuration", LibMC::eLogSubSystem::System, LibMC::eLogLevel::Message);
 		m_pContext->ParseConfiguration(sPackageConfigurationXML);
 
+		for (auto iParameterOverride : m_ParameterOverrides) {
+			m_pContext->Log("Overriding parameter: " + iParameterOverride.first + " = " + iParameterOverride.second, LibMC::eLogSubSystem::System, LibMC::eLogLevel::Message);
+			m_pContext->SetParameterOverride(iParameterOverride.first, iParameterOverride.second);
+		}
+
 		m_pContext->Log("Loading HTTP Client from " + m_pServerConfiguration->getPackageCoreClient() + "...", LibMC::eLogSubSystem::System, LibMC::eLogLevel::Message);
 		m_pContext->LoadClientPackage(m_pServerConfiguration->getPackageCoreClient());
 
@@ -616,6 +621,12 @@ void CServer::log(const std::string& sMessage)
 {
 	m_pServerIO->logMessageString(sMessage);
 }
+
+void CServer::addConfigurationParameterOverride(const std::string& sParameterName, const std::string& sParameterValue)
+{
+	m_ParameterOverrides.emplace_back(sParameterName, sParameterValue);
+}
+
 
 PServerIO CServer::getServerIO()
 {

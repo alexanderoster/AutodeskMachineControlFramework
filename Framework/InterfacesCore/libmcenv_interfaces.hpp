@@ -6877,6 +6877,12 @@ public:
 	virtual std::string GetConfigurationXMLString() = 0;
 
 	/**
+	* IMachineConfigurationVersion::GetConfigurationXML - Returns the configuration XML instance.
+	* @return XML Document.
+	*/
+	virtual IXMLDocument * GetConfigurationXML() = 0;
+
+	/**
 	* IMachineConfigurationVersion::GetUserUUID - Returns the User UUID.
 	* @return UUID of the User.
 	*/
@@ -6984,6 +6990,16 @@ public:
 	virtual IMachineConfigurationXSD * RegisterNewXSD(const std::string & sXSDString, const LibMCEnv_uint32 nXSDVersion) = 0;
 
 	/**
+	* IMachineConfigurationType::RegisterXSDFromResource - Registers a XSD from a resource file including its default configuration.
+	* @param[in] sXSDResourceName - XSD Resource Name. Resource MUST exist.
+	* @param[in] sDefaultXMLResourceName - Default XML Resource Name. Resource MUST exist.
+	* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion if FailIfExisting is true.
+	* @param[in] bFailIfExisting - If true, the call will fail if XSDVersion is not larger than GetLatestXSDVersion. If false, the call will return the new XSDInstance, if XSDVersion is larger than GetLatestXSDVersion, null otherwise. 
+	* @return Returns the new XSD of the configuration type, if it has been newly registered.
+	*/
+	virtual IMachineConfigurationXSD * RegisterXSDFromResource(const std::string & sXSDResourceName, const std::string & sDefaultXMLResourceName, const LibMCEnv_uint32 nXSDVersion, const bool bFailIfExisting) = 0;
+
+	/**
 	* IMachineConfigurationType::FindXSDByNumericVersion - Finds a specific XSD of this type by its Numeric Version Number.
 	* @param[in] nXSDNumericVersion - Requested version number.
 	* @return XSD instance if exists.
@@ -7037,6 +7053,18 @@ public:
 	* @return Latest configuration version or null.
 	*/
 	virtual IMachineConfigurationVersion * GetLatestConfigurationVersion() = 0;
+
+	/**
+	* IMachineConfigurationType::GetActiveConfigurationXML - Returns the currently active configuration XML for this type.
+	* @return XML Document.
+	*/
+	virtual IXMLDocument * GetActiveConfigurationXML() = 0;
+
+	/**
+	* IMachineConfigurationType::GetLatestConfigurationXML - Returns the most recently created configuration XML for this type.
+	* @return XML Document.
+	*/
+	virtual IXMLDocument * GetLatestConfigurationXML() = 0;
 
 	/**
 	* IMachineConfigurationType::SetActiveConfigurationVersion - Sets the active configuration version for this type.

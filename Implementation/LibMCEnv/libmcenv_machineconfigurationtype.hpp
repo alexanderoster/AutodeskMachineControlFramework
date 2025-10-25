@@ -82,6 +82,8 @@ public:
 
 	IMachineConfigurationXSD* RegisterNewXSD(const std::string& sXSDString, const LibMCEnv_uint32 nXSDVersion) override;
 
+	IMachineConfigurationXSD* RegisterXSDFromResource(const std::string& sXSDResourceName, const std::string& sDefaultXMLResourceName, const LibMCEnv_uint32 nXSDVersion, const bool bFailIfExisting) override;
+
 	IMachineConfigurationVersion* CreateDefaultConfiguration(const std::string& sXSDUUID, const std::string& sDefaultXML, const std::string& sTimeStampUTC) override;
 
 	IMachineConfigurationXSD* FindXSDByNumericVersion(const LibMCEnv_uint32 nXSDVersion) override;
@@ -95,8 +97,12 @@ public:
 	IMachineConfigurationVersion* FindConfigurationVersionByUUID(const std::string& sVersionUUID) override;
 
 	IMachineConfigurationVersion* GetActiveConfigurationVersion() override;
-
+	
 	IMachineConfigurationVersion* GetLatestConfigurationVersion() override;
+		
+	IXMLDocument* GetActiveConfigurationXML() override;
+
+	IXMLDocument* GetLatestConfigurationXML() override;
 	
 	void SetActiveConfigurationVersion(const std::string& sVersionUUID) override;
 };

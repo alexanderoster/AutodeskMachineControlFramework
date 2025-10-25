@@ -295,6 +295,22 @@ void CMCContext::ParseConfiguration(const std::string & sXMLString)
 }
 
 
+void CMCContext::SetParameterOverride(const std::string& sParameterPath, const std::string& sParameterValue)
+{
+    auto pStateMachineData = m_pSystemState->stateMachineData();
+
+    std::string sParameterInstance;
+    std::string sParameterGroup;
+    std::string sParameterName;
+
+    pStateMachineData->extractParameterDetailsFromDotString(sParameterPath, sParameterInstance, sParameterGroup, sParameterName, false, false);
+
+    auto pParameterInstanceHandler = pStateMachineData->getParameterHandler(sParameterInstance);
+    auto pParamaterGroup = pParameterInstanceHandler->findGroup(sParameterGroup, true);
+	pParamaterGroup->setParameterValueByName(sParameterName, sParameterValue);
+}
+
+
 void CMCContext::RegisterLibraryPath(const std::string& sLibraryName, const std::string& sLibraryPath, const std::string& sLibraryResource)
 {
     m_pSystemState->logger()->logMessage("mapping " + sLibraryName + " to " + sLibraryPath + "...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);

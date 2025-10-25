@@ -8841,6 +8841,15 @@ typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationVersion_GetParentUUIDPtr) 
 typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLStringPtr) (LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nXMLStringBufferSize, LibMCEnv_uint32* pXMLStringNeededChars, char * pXMLStringBuffer);
 
 /**
+* Returns the configuration XML instance.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLPtr) (LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_XMLDocument * pXMLInstance);
+
+/**
 * Returns the User UUID.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
@@ -8985,6 +8994,19 @@ typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_GetLatestXSDNumericVe
 typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_RegisterNewXSDPtr) (LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCEnv_uint32 nXSDVersion, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
+* Registers a XSD from a resource file including its default configuration.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDResourceName - XSD Resource Name. Resource MUST exist.
+* @param[in] pDefaultXMLResourceName - Default XML Resource Name. Resource MUST exist.
+* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion if FailIfExisting is true.
+* @param[in] bFailIfExisting - If true, the call will fail if XSDVersion is not larger than GetLatestXSDVersion. If false, the call will return the new XSDInstance, if XSDVersion is larger than GetLatestXSDVersion, null otherwise. 
+* @param[out] pXSDInstance - Returns the new XSD of the configuration type, if it has been newly registered.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_RegisterXSDFromResourcePtr) (LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDResourceName, const char * pDefaultXMLResourceName, LibMCEnv_uint32 nXSDVersion, bool bFailIfExisting, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
+
+/**
 * Finds a specific XSD of this type by its Numeric Version Number.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
@@ -9062,6 +9084,24 @@ typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_GetActiveConfiguratio
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_GetLatestConfigurationVersionPtr) (LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the currently active configuration XML for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_GetActiveConfigurationXMLPtr) (LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_XMLDocument * pXMLInstance);
+
+/**
+* Returns the most recently created configuration XML for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationType_GetLatestConfigurationXMLPtr) (LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_XMLDocument * pXMLInstance);
 
 /**
 * Sets the active configuration version for this type.
@@ -11792,6 +11832,7 @@ typedef struct {
 	PLibMCEnvMachineConfigurationVersion_GetNumericVersionPtr m_MachineConfigurationVersion_GetNumericVersion;
 	PLibMCEnvMachineConfigurationVersion_GetParentUUIDPtr m_MachineConfigurationVersion_GetParentUUID;
 	PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLStringPtr m_MachineConfigurationVersion_GetConfigurationXMLString;
+	PLibMCEnvMachineConfigurationVersion_GetConfigurationXMLPtr m_MachineConfigurationVersion_GetConfigurationXML;
 	PLibMCEnvMachineConfigurationVersion_GetUserUUIDPtr m_MachineConfigurationVersion_GetUserUUID;
 	PLibMCEnvMachineConfigurationVersion_GetTimestampPtr m_MachineConfigurationVersion_GetTimestamp;
 	PLibMCEnvMachineConfigurationVersion_CreateNewVersionPtr m_MachineConfigurationVersion_CreateNewVersion;
@@ -11805,6 +11846,7 @@ typedef struct {
 	PLibMCEnvMachineConfigurationType_ListXSDVersionsPtr m_MachineConfigurationType_ListXSDVersions;
 	PLibMCEnvMachineConfigurationType_GetLatestXSDNumericVersionPtr m_MachineConfigurationType_GetLatestXSDNumericVersion;
 	PLibMCEnvMachineConfigurationType_RegisterNewXSDPtr m_MachineConfigurationType_RegisterNewXSD;
+	PLibMCEnvMachineConfigurationType_RegisterXSDFromResourcePtr m_MachineConfigurationType_RegisterXSDFromResource;
 	PLibMCEnvMachineConfigurationType_FindXSDByNumericVersionPtr m_MachineConfigurationType_FindXSDByNumericVersion;
 	PLibMCEnvMachineConfigurationType_FindXSDByUUIDPtr m_MachineConfigurationType_FindXSDByUUID;
 	PLibMCEnvMachineConfigurationType_CreateDefaultConfigurationPtr m_MachineConfigurationType_CreateDefaultConfiguration;
@@ -11813,6 +11855,8 @@ typedef struct {
 	PLibMCEnvMachineConfigurationType_FindConfigurationVersionByUUIDPtr m_MachineConfigurationType_FindConfigurationVersionByUUID;
 	PLibMCEnvMachineConfigurationType_GetActiveConfigurationVersionPtr m_MachineConfigurationType_GetActiveConfigurationVersion;
 	PLibMCEnvMachineConfigurationType_GetLatestConfigurationVersionPtr m_MachineConfigurationType_GetLatestConfigurationVersion;
+	PLibMCEnvMachineConfigurationType_GetActiveConfigurationXMLPtr m_MachineConfigurationType_GetActiveConfigurationXML;
+	PLibMCEnvMachineConfigurationType_GetLatestConfigurationXMLPtr m_MachineConfigurationType_GetLatestConfigurationXML;
 	PLibMCEnvMachineConfigurationType_SetActiveConfigurationVersionPtr m_MachineConfigurationType_SetActiveConfigurationVersion;
 	PLibMCEnvMachineConfigurationTypeIterator_GetCurrentPtr m_MachineConfigurationTypeIterator_GetCurrent;
 	PLibMCEnvMachineConfigurationHandler_RegisterMachineConfigurationTypePtr m_MachineConfigurationHandler_RegisterMachineConfigurationType;

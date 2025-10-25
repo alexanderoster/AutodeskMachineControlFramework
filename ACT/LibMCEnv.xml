@@ -290,11 +290,10 @@
 		<error name="INVALIDREACTIONTIMEOUT" code="10250" description="Invalid reaction timeout." />	
 		<error name="COULDNOTSETREACTIONTIMEOUT" code="10251" description="Could not set reaction timeout." />	
 		<error name="MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED" code="10252" description="Schema type already registered, but with a different name." />	
+		<error name="NOCONFIGURATIONVERSIONFOUND" code="10253" description="No configuration version found." />	
+		<error name="NOCONFIGURATIONVERSIONACTIVE" code="10254" description="No configuration version active." />	
 		
 		
-		
-		
-					
 	</errors>
 
 	<enum name="AlertLevel">

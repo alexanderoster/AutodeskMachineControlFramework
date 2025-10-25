@@ -116,6 +116,8 @@ public:
 
 	void ParseConfiguration(const std::string & sXMLString) override;
 
+	void SetParameterOverride(const std::string& sParameterPath, const std::string& sParameterValue) override;
+
 	void RegisterLibraryPath(const std::string& sLibraryName, const std::string& sLibraryPath, const std::string& sLibraryResource) override;
 
 	void SetTempBasePath(const std::string& sTempBasePath) override;

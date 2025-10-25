@@ -39,6 +39,7 @@ Abstract: This is a stub class definition of CMachineConfigurationType
 #include "libmcenv_machineconfigurationxsditerator.hpp"
 #include "libmcenv_machineconfigurationversion.hpp"
 #include "libmcenv_machineconfigurationversioniterator.hpp"
+#include "libmcenv_xmldocument.hpp"
 
 using namespace LibMCEnv::Impl;
 
@@ -109,6 +110,13 @@ IMachineConfigurationXSD* CMachineConfigurationType::RegisterNewXSD(const std::s
 		return nullptr;
 
 	return new CMachineConfigurationXSD(pConfigurationXSD);
+}
+
+IMachineConfigurationXSD* CMachineConfigurationType::RegisterXSDFromResource(const std::string& sXSDResourceName, const std::string& sDefaultXMLResourceName, const LibMCEnv_uint32 nXSDVersion, const bool bFailIfExisting)
+{
+
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED, "RegisterXSDFromResource not implemented yet");
+
 }
 
 IMachineConfigurationVersion* CMachineConfigurationType::CreateDefaultConfiguration(const std::string & sXSDUUID, const std::string & sDefaultXML, const std::string & sTimeStampUTC)
@@ -194,4 +202,36 @@ IMachineConfigurationVersion* CMachineConfigurationType::GetLatestConfigurationV
 void CMachineConfigurationType::SetActiveConfigurationVersion(const std::string& sVersionUUID)
 {
 	m_pMachineConfigurationType->SetActiveConfigurationVersion(sVersionUUID);
+}
+
+LibMCEnv::Impl::IXMLDocument* CMachineConfigurationType::GetActiveConfigurationXML()
+{
+	auto pMachineConfigurationVersion = m_pMachineConfigurationType->GetActiveConfigurationVersion();
+
+	if (pMachineConfigurationVersion.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOCONFIGURATIONVERSIONACTIVE, "no active configuration version for configuration type: " + GetName());
+
+	std::string sXMLString = pMachineConfigurationVersion->GetConfigurationXMLString();
+
+	auto pXMLDocumentInstance = std::make_shared<AMC::CXMLDocumentInstance>();
+	pXMLDocumentInstance->parseXMLString(sXMLString);
+
+	return new CXMLDocument(pXMLDocumentInstance);
+
+}
+
+LibMCEnv::Impl::IXMLDocument* CMachineConfigurationType::GetLatestConfigurationXML()
+{
+	auto pMachineConfigurationVersion = m_pMachineConfigurationType->GetLatestConfigurationVersion();
+
+	if (pMachineConfigurationVersion.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOCONFIGURATIONVERSIONFOUND, "no configuration version for configuration type: " + GetName());
+
+	std::string sXMLString = pMachineConfigurationVersion->GetConfigurationXMLString();
+
+	auto pXMLDocumentInstance = std::make_shared<AMC::CXMLDocumentInstance>();
+	pXMLDocumentInstance->parseXMLString(sXMLString);
+
+	return new CXMLDocument(pXMLDocumentInstance);
+
 }

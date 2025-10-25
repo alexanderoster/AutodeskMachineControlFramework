@@ -347,6 +347,8 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT 10250 /** Invalid reaction timeout. */
 #define LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT 10251 /** Could not set reaction timeout. */
 #define LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED 10252 /** Schema type already registered, but with a different name. */
+#define LIBMCENV_ERROR_NOCONFIGURATIONVERSIONFOUND 10253 /** No configuration version found. */
+#define LIBMCENV_ERROR_NOCONFIGURATIONVERSIONACTIVE 10254 /** No configuration version active. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -606,6 +608,8 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_INVALIDREACTIONTIMEOUT: return "Invalid reaction timeout.";
     case LIBMCENV_ERROR_COULDNOTSETREACTIONTIMEOUT: return "Could not set reaction timeout.";
     case LIBMCENV_ERROR_MACHINECONFIGURATIONSCHEMATYPEALREADYREGISTERED: return "Schema type already registered, but with a different name.";
+    case LIBMCENV_ERROR_NOCONFIGURATIONVERSIONFOUND: return "No configuration version found.";
+    case LIBMCENV_ERROR_NOCONFIGURATIONVERSIONACTIVE: return "No configuration version active.";
     default: return "unknown error";
   }
 }

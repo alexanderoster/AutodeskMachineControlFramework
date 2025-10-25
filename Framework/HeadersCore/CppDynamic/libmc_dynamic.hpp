@@ -1646,6 +1646,7 @@ public:
 	inline void RegisterLibraryPath(const std::string & sLibraryName, const std::string & sLibraryPath, const std::string & sLibraryResource);
 	inline void SetTempBasePath(const std::string & sTempBasePath);
 	inline void ParseConfiguration(const std::string & sXMLString);
+	inline void SetParameterOverride(const std::string & sParameterPath, const std::string & sParameterValue);
 	inline void StartAllThreads();
 	inline void TerminateAllThreads();
 	inline void StartInstanceThread(const std::string & sInstanceName);
@@ -1783,6 +1784,7 @@ public:
 		pWrapperTable->m_MCContext_RegisterLibraryPath = nullptr;
 		pWrapperTable->m_MCContext_SetTempBasePath = nullptr;
 		pWrapperTable->m_MCContext_ParseConfiguration = nullptr;
+		pWrapperTable->m_MCContext_SetParameterOverride = nullptr;
 		pWrapperTable->m_MCContext_StartAllThreads = nullptr;
 		pWrapperTable->m_MCContext_TerminateAllThreads = nullptr;
 		pWrapperTable->m_MCContext_StartInstanceThread = nullptr;
@@ -2001,6 +2003,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_MCContext_ParseConfiguration == nullptr)
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_MCContext_SetParameterOverride = (PLibMCMCContext_SetParameterOverridePtr) GetProcAddress(hLibrary, "libmc_mccontext_setparameteroverride");
+		#else // _WIN32
+		pWrapperTable->m_MCContext_SetParameterOverride = (PLibMCMCContext_SetParameterOverridePtr) dlsym(hLibrary, "libmc_mccontext_setparameteroverride");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_MCContext_SetParameterOverride == nullptr)
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2238,6 +2249,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmc_mccontext_parseconfiguration", (void**)&(pWrapperTable->m_MCContext_ParseConfiguration));
 		if ( (eLookupError != 0) || (pWrapperTable->m_MCContext_ParseConfiguration == nullptr) )
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmc_mccontext_setparameteroverride", (void**)&(pWrapperTable->m_MCContext_SetParameterOverride));
+		if ( (eLookupError != 0) || (pWrapperTable->m_MCContext_SetParameterOverride == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmc_mccontext_startallthreads", (void**)&(pWrapperTable->m_MCContext_StartAllThreads));
@@ -2544,6 +2559,16 @@ public:
 	void CMCContext::ParseConfiguration(const std::string & sXMLString)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_MCContext_ParseConfiguration(m_pHandle, sXMLString.c_str()));
+	}
+	
+	/**
+	* CMCContext::SetParameterOverride - overrides a parameter with a certain value. Fails if parameter group or parameter does not exist. Fails if Value is not fitting the parameter type.
+	* @param[in] sParameterPath - Path of the parameter. Example: main.configgroup.currentjob
+	* @param[in] sParameterValue - New Value of the parameter
+	*/
+	void CMCContext::SetParameterOverride(const std::string & sParameterPath, const std::string & sParameterValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_MCContext_SetParameterOverride(m_pHandle, sParameterPath.c_str(), sParameterValue.c_str()));
 	}
 	
 	/**

@@ -8854,6 +8854,15 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getparentu
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getconfigurationxmlstring(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCEnv_uint32 nXMLStringBufferSize, LibMCEnv_uint32* pXMLStringNeededChars, char * pXMLStringBuffer);
 
 /**
+* Returns the configuration XML instance.
+*
+* @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationversion_getconfigurationxml(LibMCEnv_MachineConfigurationVersion pMachineConfigurationVersion, LibMCEnv_XMLDocument * pXMLInstance);
+
+/**
 * Returns the User UUID.
 *
 * @param[in] pMachineConfigurationVersion - MachineConfigurationVersion instance.
@@ -8998,6 +9007,19 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestxsdn
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_registernewxsd(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDString, LibMCEnv_uint32 nXSDVersion, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
 
 /**
+* Registers a XSD from a resource file including its default configuration.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[in] pXSDResourceName - XSD Resource Name. Resource MUST exist.
+* @param[in] pDefaultXMLResourceName - Default XML Resource Name. Resource MUST exist.
+* @param[in] nXSDVersion - New Version to add. MUST be larger than GetLatestXSDVersion if FailIfExisting is true.
+* @param[in] bFailIfExisting - If true, the call will fail if XSDVersion is not larger than GetLatestXSDVersion. If false, the call will return the new XSDInstance, if XSDVersion is larger than GetLatestXSDVersion, null otherwise. 
+* @param[out] pXSDInstance - Returns the new XSD of the configuration type, if it has been newly registered.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_registerxsdfromresource(LibMCEnv_MachineConfigurationType pMachineConfigurationType, const char * pXSDResourceName, const char * pDefaultXMLResourceName, LibMCEnv_uint32 nXSDVersion, bool bFailIfExisting, LibMCEnv_MachineConfigurationXSD * pXSDInstance);
+
+/**
 * Finds a specific XSD of this type by its Numeric Version Number.
 *
 * @param[in] pMachineConfigurationType - MachineConfigurationType instance.
@@ -9075,6 +9097,24 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getactiveconf
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestconfigurationversion(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_MachineConfigurationVersion * pVersion);
+
+/**
+* Returns the currently active configuration XML for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getactiveconfigurationxml(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_XMLDocument * pXMLInstance);
+
+/**
+* Returns the most recently created configuration XML for this type.
+*
+* @param[in] pMachineConfigurationType - MachineConfigurationType instance.
+* @param[out] pXMLInstance - XML Document.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_machineconfigurationtype_getlatestconfigurationxml(LibMCEnv_MachineConfigurationType pMachineConfigurationType, LibMCEnv_XMLDocument * pXMLInstance);
 
 /**
 * Sets the active configuration version for this type.
