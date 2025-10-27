@@ -245,6 +245,12 @@ CScanLabSMCSDK::CScanLabSMCSDK(const std::string& sDLLNameUTF8, const std::strin
 	this->ptr_slsc_ctrl_exec_init_laser_sequence = (PScanLabSMCPtr_slsc_ctrl_exec_init_laser_sequence)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_exec_init_laser_sequence");
 	this->ptr_slsc_ctrl_exec_shutdown_laser_sequence = (PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_exec_shutdown_laser_sequence");
 	this->ptr_slsc_job_write_analog_x = (PScanLabSMCPtr_slsc_job_write_analog_x)_loadScanLabSMCAddress(hLibrary, "slsc_job_write_analog_x");
+	
+	this->ptr_slsc_ctrl_write_digital_x = (PScanLabSMCPtr_slsc_ctrl_write_digital_x)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_write_digital_x");
+	this->ptr_slsc_ctrl_write_digital_mask_x = (PScanLabSMCPtr_slsc_ctrl_write_digital_mask_x)_loadScanLabSMCAddress(hLibrary, "slsc_ctrl_write_digital_mask_x");
+
+	this->ptr_slsc_job_write_digital_x = (PScanLabSMCPtr_slsc_job_write_digital_x)_loadScanLabSMCAddress(hLibrary, "slsc_job_write_digital_x");
+	this->ptr_slsc_job_write_digital_mask_x = (PScanLabSMCPtr_slsc_job_write_digital_mask_x)_loadScanLabSMCAddress(hLibrary, "slsc_job_write_digital_mask_x");
 
 	m_LibraryHandle = (void*) hLibrary;
 }
@@ -655,6 +661,38 @@ slscReturnValue CScanLabSMCSDK::slsc_job_write_analog_x(size_t Handle, slsc_Anal
 		m_pLogJournal->logCall("slsc_job_write_analog_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Value) + ", " + std::to_string(TimeDelay));
 
 	return this->ptr_slsc_job_write_analog_x(Handle, Channel, Value, TimeDelay);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_write_digital_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Value)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_write_digital_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Value));
+
+	return this->ptr_slsc_ctrl_write_digital_x(Handle, Channel, Value);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_ctrl_write_digital_mask_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_ctrl_write_digital_mask_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Mask) + ", " + std::to_string(Value));
+
+	return this->ptr_slsc_ctrl_write_digital_mask_x(Handle, Channel, Mask, Value);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_write_digital_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Value, double TimeDelay)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_write_digital_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Value) + ", " + std::to_string(TimeDelay));
+
+	return this->ptr_slsc_job_write_digital_x(Handle, Channel, Value, TimeDelay);
+}
+
+slscReturnValue CScanLabSMCSDK::slsc_job_write_digital_mask_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value, double TimeDelay)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("slsc_job_write_digital_mask_x", std::to_string(Handle) + ", " + std::to_string((uint32_t)Channel) + ", " + std::to_string(Mask) + ", " + std::to_string(Value) + ", " + std::to_string(TimeDelay));
+
+	return this->ptr_slsc_job_write_digital_mask_x(Handle, Channel, Mask, Value, TimeDelay);
 }
 
 void CScanLabSMCSDK::setJournal(PScanLabSMCSDKJournal pLogJournal)

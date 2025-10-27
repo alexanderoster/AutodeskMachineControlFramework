@@ -202,6 +202,11 @@ namespace LibMCDriver_ScanLabSMC {
 			slsc_AnalogOutput_2 = 1
 		};
 		
+		enum class slsc_DigitalOutput : uint8_t
+		{
+			slsc_DigitalOutput_1 = 0,
+			slsc_DigitalOutput_2 = 1,
+		};
 
 		typedef struct _slsc_PolylineOptions slsc_PolylineOptions;
 		typedef struct _slsc_VersionInfo slsc_VersionInfo;
@@ -249,6 +254,11 @@ namespace LibMCDriver_ScanLabSMC {
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence) (size_t Handle);
 
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_write_analog_x) (size_t Handle, slsc_AnalogOutput Channel, double Value, double TimeDelay);
+
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_write_digital_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Value);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_ctrl_write_digital_mask_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_write_digital_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Value, double TimeDelay);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_write_digital_mask_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value, double TimeDelay);
 
 		class CScanLabSMCSDKJournal {
 		private:
@@ -336,6 +346,10 @@ namespace LibMCDriver_ScanLabSMC {
 			PScanLabSMCPtr_slsc_ctrl_exec_init_laser_sequence ptr_slsc_ctrl_exec_init_laser_sequence = nullptr;
 			PScanLabSMCPtr_slsc_ctrl_exec_shutdown_laser_sequence ptr_slsc_ctrl_exec_shutdown_laser_sequence = nullptr;
 			PScanLabSMCPtr_slsc_job_write_analog_x ptr_slsc_job_write_analog_x = nullptr;
+			PScanLabSMCPtr_slsc_ctrl_write_digital_x ptr_slsc_ctrl_write_digital_x = nullptr;
+			PScanLabSMCPtr_slsc_ctrl_write_digital_mask_x ptr_slsc_ctrl_write_digital_mask_x = nullptr;
+			PScanLabSMCPtr_slsc_job_write_digital_x ptr_slsc_job_write_digital_x = nullptr;
+			PScanLabSMCPtr_slsc_job_write_digital_mask_x ptr_slsc_job_write_digital_mask_x = nullptr;
 
 		public:
 
@@ -393,6 +407,11 @@ namespace LibMCDriver_ScanLabSMC {
 
 			slscReturnValue slsc_job_write_analog_x(size_t Handle, slsc_AnalogOutput Channel, double Value, double TimeDelay);
 
+			slscReturnValue slsc_ctrl_write_digital_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Value);
+			slscReturnValue slsc_ctrl_write_digital_mask_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value);
+
+			slscReturnValue slsc_job_write_digital_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Value, double TimeDelay);
+			slscReturnValue slsc_job_write_digital_mask_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value, double TimeDelay);
 
 		};
 
