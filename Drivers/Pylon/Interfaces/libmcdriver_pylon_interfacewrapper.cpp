@@ -1302,6 +1302,37 @@ LibMCDriver_PylonResult libmcdriver_pylon_driver_pylon_connectionexists(LibMCDri
 	}
 }
 
+LibMCDriver_PylonResult libmcdriver_pylon_driver_pylon_finddeviceconnection(LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_Pylon;
+
+	try {
+		if (pIdentifier == nullptr)
+			throw ELibMCDriver_PylonInterfaceException (LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
+		if (pDevice == nullptr)
+			throw ELibMCDriver_PylonInterfaceException (LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
+		std::string sIdentifier(pIdentifier);
+		IBase* pBaseDevice(nullptr);
+		IDriver_Pylon* pIDriver_Pylon = dynamic_cast<IDriver_Pylon*>(pIBaseClass);
+		if (!pIDriver_Pylon)
+			throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDCAST);
+		
+		pBaseDevice = pIDriver_Pylon->FindDeviceConnection(sIdentifier);
+
+		*pDevice = (IBase*)(pBaseDevice);
+		return LIBMCDRIVER_PYLON_SUCCESS;
+	}
+	catch (ELibMCDriver_PylonInterfaceException & Exception) {
+		return handleLibMCDriver_PylonException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_PylonResult libmcdriver_pylon_driver_pylon_closeallconnections(LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon)
 {
 	IBase* pIBaseClass = (IBase *)pDriver_Pylon;
@@ -1415,6 +1446,8 @@ LibMCDriver_PylonResult LibMCDriver_Pylon::Impl::LibMCDriver_Pylon_GetProcAddres
 		*ppProcAddress = (void*) &libmcdriver_pylon_driver_pylon_connecttouniquegigedevice;
 	if (sProcName == "libmcdriver_pylon_driver_pylon_connectionexists") 
 		*ppProcAddress = (void*) &libmcdriver_pylon_driver_pylon_connectionexists;
+	if (sProcName == "libmcdriver_pylon_driver_pylon_finddeviceconnection") 
+		*ppProcAddress = (void*) &libmcdriver_pylon_driver_pylon_finddeviceconnection;
 	if (sProcName == "libmcdriver_pylon_driver_pylon_closeallconnections") 
 		*ppProcAddress = (void*) &libmcdriver_pylon_driver_pylon_closeallconnections;
 	if (sProcName == "libmcdriver_pylon_getversion") 

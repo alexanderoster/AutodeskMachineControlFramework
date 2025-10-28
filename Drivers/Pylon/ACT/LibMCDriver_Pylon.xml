@@ -60,6 +60,7 @@
 		<error name="COULDNOTCREATEGIGEDEVICE" code="1008" description="Could not create GigE Device" />		
 		<error name="INVALIDIDENTIFIER" code="1009" description="Invalid device identifier" />		
 		<error name="CONNECTIONIDENTIFIERALREADYINUSE" code="1010" description="Connection identifier already in use" />		
+		<error name="CONNECTIONIDENTIFIERNOTFOUND" code="1011" description="Connection identifier not found" />		
 		
 		
 		
@@ -277,6 +278,11 @@ Custom implementation
 		<method name="ConnectionExists" description= "Checks if a connection exists with a certain identifier.">
 			<param name="Identifier" type="string" pass="in" description="Identifier for the connection." />
 			<param name="Exists" type="bool" pass="return" description="Returns true, if the connection exists, false otherwise." />
+		</method>
+
+		<method name="FindDeviceConnection" description= "Returns a connection by an identifier. Fails if connection does not exist.">
+			<param name="Identifier" type="string" pass="in" description="Identifier for the connection." />
+			<param name="Device" type="class" class="PylonDevice" pass="return" description="Device Instance" />
 		</method>
 
 		<method name="CloseAllConnections" description= "Closes all connections.">

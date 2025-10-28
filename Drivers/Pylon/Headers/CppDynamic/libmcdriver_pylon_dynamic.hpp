@@ -193,6 +193,7 @@ public:
 			case LIBMCDRIVER_PYLON_ERROR_COULDNOTCREATEGIGEDEVICE: return "COULDNOTCREATEGIGEDEVICE";
 			case LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER: return "INVALIDIDENTIFIER";
 			case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "CONNECTIONIDENTIFIERALREADYINUSE";
+			case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "CONNECTIONIDENTIFIERNOTFOUND";
 		}
 		return "UNKNOWN";
 	}
@@ -220,6 +221,7 @@ public:
 			case LIBMCDRIVER_PYLON_ERROR_COULDNOTCREATEGIGEDEVICE: return "Could not create GigE Device";
 			case LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER: return "Invalid device identifier";
 			case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "Connection identifier already in use";
+			case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "Connection identifier not found";
 		}
 		return "unknown error";
 	}
@@ -505,6 +507,7 @@ public:
 	inline PPylonDevice ConnectToUniqueGenericDevice(const std::string & sIdentifier);
 	inline PPylonDevice ConnectToUniqueGigEDevice(const std::string & sIdentifier);
 	inline bool ConnectionExists(const std::string & sIdentifier);
+	inline PPylonDevice FindDeviceConnection(const std::string & sIdentifier);
 	inline void CloseAllConnections();
 };
 	
@@ -667,6 +670,7 @@ public:
 		pWrapperTable->m_Driver_Pylon_ConnectToUniqueGenericDevice = nullptr;
 		pWrapperTable->m_Driver_Pylon_ConnectToUniqueGigEDevice = nullptr;
 		pWrapperTable->m_Driver_Pylon_ConnectionExists = nullptr;
+		pWrapperTable->m_Driver_Pylon_FindDeviceConnection = nullptr;
 		pWrapperTable->m_Driver_Pylon_CloseAllConnections = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
@@ -1059,6 +1063,15 @@ public:
 			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Driver_Pylon_FindDeviceConnection = (PLibMCDriver_PylonDriver_Pylon_FindDeviceConnectionPtr) GetProcAddress(hLibrary, "libmcdriver_pylon_driver_pylon_finddeviceconnection");
+		#else // _WIN32
+		pWrapperTable->m_Driver_Pylon_FindDeviceConnection = (PLibMCDriver_PylonDriver_Pylon_FindDeviceConnectionPtr) dlsym(hLibrary, "libmcdriver_pylon_driver_pylon_finddeviceconnection");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_Pylon_FindDeviceConnection == nullptr)
+			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Driver_Pylon_CloseAllConnections = (PLibMCDriver_PylonDriver_Pylon_CloseAllConnectionsPtr) GetProcAddress(hLibrary, "libmcdriver_pylon_driver_pylon_closeallconnections");
 		#else // _WIN32
 		pWrapperTable->m_Driver_Pylon_CloseAllConnections = (PLibMCDriver_PylonDriver_Pylon_CloseAllConnectionsPtr) dlsym(hLibrary, "libmcdriver_pylon_driver_pylon_closeallconnections");
@@ -1292,6 +1305,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_connectionexists", (void**)&(pWrapperTable->m_Driver_Pylon_ConnectionExists));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Pylon_ConnectionExists == nullptr) )
+			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_finddeviceconnection", (void**)&(pWrapperTable->m_Driver_Pylon_FindDeviceConnection));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Pylon_FindDeviceConnection == nullptr) )
 			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_closeallconnections", (void**)&(pWrapperTable->m_Driver_Pylon_CloseAllConnections));
@@ -1809,6 +1826,22 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Pylon_ConnectionExists(m_pHandle, sIdentifier.c_str(), &resultExists));
 		
 		return resultExists;
+	}
+	
+	/**
+	* CDriver_Pylon::FindDeviceConnection - Returns a connection by an identifier. Fails if connection does not exist.
+	* @param[in] sIdentifier - Identifier for the connection.
+	* @return Device Instance
+	*/
+	PPylonDevice CDriver_Pylon::FindDeviceConnection(const std::string & sIdentifier)
+	{
+		LibMCDriver_PylonHandle hDevice = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Pylon_FindDeviceConnection(m_pHandle, sIdentifier.c_str(), &hDevice));
+		
+		if (!hDevice) {
+			CheckError(LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CPylonDevice>(m_pWrapper, hDevice);
 	}
 	
 	/**

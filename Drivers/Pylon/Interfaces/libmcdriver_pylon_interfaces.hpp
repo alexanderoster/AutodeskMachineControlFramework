@@ -548,6 +548,13 @@ public:
 	virtual bool ConnectionExists(const std::string & sIdentifier) = 0;
 
 	/**
+	* IDriver_Pylon::FindDeviceConnection - Returns a connection by an identifier. Fails if connection does not exist.
+	* @param[in] sIdentifier - Identifier for the connection.
+	* @return Device Instance
+	*/
+	virtual IPylonDevice * FindDeviceConnection(const std::string & sIdentifier) = 0;
+
+	/**
 	* IDriver_Pylon::CloseAllConnections - Closes all connections.
 	*/
 	virtual void CloseAllConnections() = 0;

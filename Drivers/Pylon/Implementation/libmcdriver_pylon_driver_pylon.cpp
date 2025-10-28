@@ -55,7 +55,7 @@ CDriver_Pylon::CDriver_Pylon(const std::string& sName, LibMCEnv::PDriverEnvironm
 
 CDriver_Pylon::~CDriver_Pylon()
 {
-
+	unloadPylonSDK();
 }
 
 
@@ -145,6 +145,8 @@ IPylonDevice * CDriver_Pylon::ConnectToUniqueGenericDevice(const std::string & s
 
 	checkIdentifier(sIdentifier);
 
+	loadPylonSDK();
+
 	size_t numDevices = 0;
 	m_pPylonSDK->checkError(m_pPylonSDK->PylonEnumerateDevices(&numDevices));
 
@@ -169,6 +171,8 @@ IPylonDevice * CDriver_Pylon::ConnectToUniqueGigEDevice(const std::string & sIde
 	auto iIter = m_ConnectedDevices.find(sIdentifier);
 	if (iIter != m_ConnectedDevices.end())
 		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE, "connection identifier already in use: " + sIdentifier);
+
+	loadPylonSDK();
 
 	size_t numDevices = 0;
 	m_pPylonSDK->checkError(m_pPylonSDK->PylonGigEEnumerateAllDevices(&numDevices));
@@ -201,4 +205,14 @@ void CDriver_Pylon::CloseAllConnections()
 		iIter.second->close();
 	m_ConnectedDevices.clear();
 }
+
+IPylonDevice* CDriver_Pylon::FindDeviceConnection(const std::string& sIdentifier)
+{
+	auto iIter = m_ConnectedDevices.find(sIdentifier);
+	if (iIter == m_ConnectedDevices.end())
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND, "connection identifier not found: " + sIdentifier);
+
+	return new CPylonDevice(iIter->second);
+}
+
 

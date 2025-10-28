@@ -102,6 +102,8 @@ public:
 
 	bool ConnectionExists(const std::string & sIdentifier) override;
 
+	IPylonDevice* FindDeviceConnection(const std::string& sIdentifier) override;
+
 	void CloseAllConnections() override;
 
 };

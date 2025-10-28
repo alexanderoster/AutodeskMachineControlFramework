@@ -441,6 +441,16 @@ typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_ConnectToUnique
 typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_ConnectionExistsPtr) (LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, bool * pExists);
 
 /**
+* Returns a connection by an identifier. Fails if connection does not exist.
+*
+* @param[in] pDriver_Pylon - Driver_Pylon instance.
+* @param[in] pIdentifier - Identifier for the connection.
+* @param[out] pDevice - Device Instance
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_FindDeviceConnectionPtr) (LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice);
+
+/**
 * Closes all connections.
 *
 * @param[in] pDriver_Pylon - Driver_Pylon instance.
@@ -561,6 +571,7 @@ typedef struct {
 	PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueGenericDevicePtr m_Driver_Pylon_ConnectToUniqueGenericDevice;
 	PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueGigEDevicePtr m_Driver_Pylon_ConnectToUniqueGigEDevice;
 	PLibMCDriver_PylonDriver_Pylon_ConnectionExistsPtr m_Driver_Pylon_ConnectionExists;
+	PLibMCDriver_PylonDriver_Pylon_FindDeviceConnectionPtr m_Driver_Pylon_FindDeviceConnection;
 	PLibMCDriver_PylonDriver_Pylon_CloseAllConnectionsPtr m_Driver_Pylon_CloseAllConnections;
 	PLibMCDriver_PylonGetVersionPtr m_GetVersion;
 	PLibMCDriver_PylonGetLastErrorPtr m_GetLastError;

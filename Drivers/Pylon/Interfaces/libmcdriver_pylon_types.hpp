@@ -115,6 +115,7 @@ typedef void * LibMCDriver_Pylon_pvoid;
 #define LIBMCDRIVER_PYLON_ERROR_COULDNOTCREATEGIGEDEVICE 1008 /** Could not create GigE Device */
 #define LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER 1009 /** Invalid device identifier */
 #define LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE 1010 /** Connection identifier already in use */
+#define LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND 1011 /** Connection identifier not found */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_Pylon
@@ -142,6 +143,7 @@ inline const char * LIBMCDRIVER_PYLON_GETERRORSTRING (LibMCDriver_PylonResult nE
     case LIBMCDRIVER_PYLON_ERROR_COULDNOTCREATEGIGEDEVICE: return "Could not create GigE Device";
     case LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER: return "Invalid device identifier";
     case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "Connection identifier already in use";
+    case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "Connection identifier not found";
     default: return "unknown error";
   }
 }
