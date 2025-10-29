@@ -116,6 +116,13 @@ typedef void * LibMCDriver_Pylon_pvoid;
 #define LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER 1009 /** Invalid device identifier */
 #define LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE 1010 /** Connection identifier already in use */
 #define LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND 1011 /** Connection identifier not found */
+#define LIBMCDRIVER_PYLON_ERROR_INVALIDPAYLOADSIZE 1012 /** Invalid payload size */
+#define LIBMCDRIVER_PYLON_ERROR_IMAGENOTREADY 1013 /** Image not ready */
+#define LIBMCDRIVER_PYLON_ERROR_COULDNOTGRABIMAGE 1014 /** Could not grab image */
+#define LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABOFFSET 1015 /** Unsupported Grab Offset */
+#define LIBMCDRIVER_PYLON_ERROR_INVALIDGRABIMAGESIZE 1016 /** Invalid Grab Image Size */
+#define LIBMCDRIVER_PYLON_ERROR_IMAGEDATASIZEMISMATCH 1017 /** Image data size mismatch */
+#define LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABPADDING 1018 /** Unsupported Grab Padding */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_Pylon
@@ -144,6 +151,13 @@ inline const char * LIBMCDRIVER_PYLON_GETERRORSTRING (LibMCDriver_PylonResult nE
     case LIBMCDRIVER_PYLON_ERROR_INVALIDIDENTIFIER: return "Invalid device identifier";
     case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERALREADYINUSE: return "Connection identifier already in use";
     case LIBMCDRIVER_PYLON_ERROR_CONNECTIONIDENTIFIERNOTFOUND: return "Connection identifier not found";
+    case LIBMCDRIVER_PYLON_ERROR_INVALIDPAYLOADSIZE: return "Invalid payload size";
+    case LIBMCDRIVER_PYLON_ERROR_IMAGENOTREADY: return "Image not ready";
+    case LIBMCDRIVER_PYLON_ERROR_COULDNOTGRABIMAGE: return "Could not grab image";
+    case LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABOFFSET: return "Unsupported Grab Offset";
+    case LIBMCDRIVER_PYLON_ERROR_INVALIDGRABIMAGESIZE: return "Invalid Grab Image Size";
+    case LIBMCDRIVER_PYLON_ERROR_IMAGEDATASIZEMISMATCH: return "Image data size mismatch";
+    case LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABPADDING: return "Unsupported Grab Padding";
     default: return "unknown error";
   }
 }

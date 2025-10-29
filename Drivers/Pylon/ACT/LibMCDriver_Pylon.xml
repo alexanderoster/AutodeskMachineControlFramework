@@ -61,6 +61,19 @@
 		<error name="INVALIDIDENTIFIER" code="1009" description="Invalid device identifier" />		
 		<error name="CONNECTIONIDENTIFIERALREADYINUSE" code="1010" description="Connection identifier already in use" />		
 		<error name="CONNECTIONIDENTIFIERNOTFOUND" code="1011" description="Connection identifier not found" />		
+		<error name="INVALIDPAYLOADSIZE" code="1012" description="Invalid payload size" />		
+		<error name="IMAGENOTREADY" code="1013" description="Image not ready" />		
+		<error name="COULDNOTGRABIMAGE" code="1014" description="Could not grab image" />		
+		<error name="UNSUPPORTEDGRABOFFSET" code="1015" description="Unsupported Grab Offset" />		
+		<error name="INVALIDGRABIMAGESIZE" code="1016" description="Invalid Grab Image Size" />		
+		<error name="IMAGEDATASIZEMISMATCH" code="1017" description="Image data size mismatch" />		
+		<error name="UNSUPPORTEDGRABPADDING" code="1018" description="Unsupported Grab Padding" />		
+		
+		
+		
+		
+		
+		
 		
 		
 		

@@ -190,5 +190,45 @@ double CPylonDeviceInstance::getExposureTime()
 
 void CPylonDeviceInstance::grabSingleGreyscaleImage(const LibMCDriver_Pylon_uint32 nChannelID, const LibMCDriver_Pylon_uint32 nTimeoutInMS, LibMCEnv::PImageData pImageInstance)
 {
+    if (pImageInstance.get () == nullptr)
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
+
+    int64_t nPayloadSize = getIntegerFeature("PayloadSize");
+    if (nPayloadSize <= 0)
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDPAYLOADSIZE);
+
+    std::vector<uint8_t> payloadBuffer;
+    payloadBuffer.resize((size_t)nPayloadSize);
+	sPylonGrabResult grabResult;
+	memset((void*)&grabResult, 0, sizeof(sPylonGrabResult));
+	pylonBool bReady = 0;
+
+	m_pPylonSDK->checkError(m_pPylonSDK->PylonDeviceGrabSingleFrame(m_pDeviceHandle, nChannelID, payloadBuffer.data (), nPayloadSize, &grabResult, &bReady, nTimeoutInMS));
+
+    if (bReady == 0)
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_IMAGENOTREADY);
+
+	if (grabResult.m_Status != ePylonGrabStatus::pgsGrabbed)
+        throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_COULDNOTGRABIMAGE, "Could not grab image (#" + std::to_string (grabResult.m_nErrorCode) + ")");
+
+    if ((grabResult.m_OffsetX != 0) || (grabResult.m_OffsetY != 0))
+        throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABOFFSET, "Unsupported Grab Offset (" + std::to_string(grabResult.m_OffsetX) + "/" + std::to_string(grabResult.m_OffsetY) + ")");
+
+    if ((grabResult.m_SizeX <= 0) || (grabResult.m_SizeY <= 0))
+        throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDGRABIMAGESIZE, "Invalid Grab Image Size (" + std::to_string(grabResult.m_SizeX) + "/" + std::to_string(grabResult.m_SizeY) + ")");
+
+	uint32_t nImageSizeX = 0;
+    uint32_t nImageSizeY = 0;
+    pImageInstance->GetSizeInPixels(nImageSizeX, nImageSizeY);
+
+    if ((nImageSizeX != (uint32_t)grabResult.m_SizeX) || (nImageSizeY != (uint32_t)grabResult.m_SizeY))
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_IMAGEDATASIZEMISMATCH, "Image data size does not match grabbed image size " + 
+            std::to_string(nImageSizeX) + "x" + std::to_string(nImageSizeY) + " != " +
+			std::to_string(grabResult.m_SizeX) + "x" + std::to_string(grabResult.m_SizeY));
+
+    if ((grabResult.m_PaddingX != 0) || (grabResult.m_PaddingY != 0))
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABPADDING, "Unsupported Grab Padding (" + std::to_string(grabResult.m_PaddingX) + "/" + std::to_string(grabResult.m_PaddingY) + ")");
+	
+	pImageInstance->SetPixels(0, 0, nImageSizeX, nImageSizeY, LibMCEnv::eImagePixelFormat::GreyScale8bit, payloadBuffer);
 
 }
