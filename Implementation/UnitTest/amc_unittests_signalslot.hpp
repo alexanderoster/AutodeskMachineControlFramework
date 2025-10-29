@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <thread>
 #include <sstream>
+#include <iomanip>
 #include <atomic>
 #include <vector>
 #include <list>
@@ -128,20 +129,20 @@ private:
 
     void test_QueueOverflow() {
         AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 1);
-        assertTrue(slot.addNewInQueueSignalInternal("uuid1", "{}", 500));
-        assertFalse(slot.addNewInQueueSignalInternal("uuid2", "{}", 500)); // queue full
+        assertTrue(slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500));
+        assertFalse(slot.addNewInQueueSignalInternal("00000002-0000-0000-0000-000000000002", "{}", 500)); // queue full
     }
 
     void test_PeekQueue() {
         AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3);
-        slot.addNewInQueueSignalInternal("uuid-a", "{\"a\":1}", 400);
-        slot.addNewInQueueSignalInternal("uuid-b", "{\"b\":2}", 400);
-        assertTrue(slot.peekMessageFromQueueInternal() == AMCCommon::CUtils::normalizeUUIDString("uuid-a"));
+        slot.addNewInQueueSignalInternal("aaaaaaaa-0000-0000-0000-000000000001", "{\"a\":1}", 400);
+        slot.addNewInQueueSignalInternal("bbbbbbbb-0000-0000-0000-000000000002", "{\"b\":2}", 400);
+        assertTrue(slot.peekMessageFromQueueInternal() == AMCCommon::CUtils::normalizeUUIDString("aaaaaaaa-0000-0000-0000-000000000001"));
     }
 
     void test_ParameterResultAccess() {
         AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2);
-        std::string uuid = "testuuid";
+        std::string uuid = "e5e57000-0000-0000-0000-000000000001";
         slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"abc\"}", 1000);
         assertTrue(slot.getParameterDataJSONInternal(uuid) == "{\"param\":\"abc\"}");
         slot.changeSignalPhaseToHandledInternal(uuid, "{\"result\":123}");
@@ -150,8 +151,8 @@ private:
 
     void test_ClearQueueWorks() {
         AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2);
-        slot.addNewInQueueSignalInternal("one", "{}", 500);
-        slot.addNewInQueueSignalInternal("two", "{}", 500);
+        slot.addNewInQueueSignalInternal("11110001-0000-0000-0000-000000000001", "{}", 500);
+        slot.addNewInQueueSignalInternal("22220002-0000-0000-0000-000000000002", "{}", 500);
 
         std::vector<std::string> clearedUUIDs;
         slot.clearQueueInternal(clearedUUIDs);
@@ -168,8 +169,8 @@ private:
 
         for (int i = 0; i < total; ++i) {
             std::stringstream ss;
-            ss << "overflow-" << i;
-            std::string uuid = AMCCommon::CUtils::normalizeUUIDString(ss.str());
+            ss << "f10" << std::setfill('0') << std::setw(5) << i << "-0000-0000-0000-000000000000";
+            std::string uuid = ss.str();
 
             bool ok = slot.addNewInQueueSignalInternal(uuid, "{}", 50);
             if (ok) accepted.push_back(uuid);
