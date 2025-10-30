@@ -77,13 +77,20 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
     m_pSDK = m_pContextHandle->getSDK();
 
     auto contextHandle = m_pContextHandle->getHandle();
+
+	// Initialize digital output to 0
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1, 0));
+	
+    // Begin job
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_begin(contextHandle, &m_JobID));
     
+	// Set digital output to 1
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1,  1, 0 ) );
 
     slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
     slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
 
-    //m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
 
     if (dMaxPowerInWatts < SCANLABSMC_MIN_MAXPOWERINWATTS || dMaxPowerInWatts > SCANLABSMC_MAX_MAXPOWERINWATTS)
 		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE);
@@ -106,7 +113,11 @@ void CSMCJobInstance::Finalize()
     
     auto contextHandle = m_pContextHandle->getHandle();
 
-    //m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_stop_record(contextHandle));
+    // Set digital output to 0
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1, 0, 0));
+
+	// Stop recording
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_stop_record(contextHandle));
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_end(contextHandle));
     m_bIsFinalized = true;
