@@ -34,9 +34,18 @@ Abstract: This is a stub class definition of CPylonDeviceInstance
 #include "libmcdriver_pylon_pylondeviceinstance.hpp"
 #include "libmcdriver_pylon_interfaceexception.hpp"
 
+//#include <iostream>
+
 // Include custom headers here.
 #define PYLONFEATURENAME_AUTOEXPOSURE "ExposureAuto"
 #define PYLONFEATURENAME_EXPOSURETIME "ExposureTime"
+
+/* pylon device access modes */
+#define PYLONACCESS_MODE_MONITOR  0
+#define PYLONACCESS_MODE_CONTROL   1
+#define PYLONACCESS_MODE_STREAM    2
+#define PYLONACCESS_MODE_EVENT     4
+#define PYLONACCESS_MODE_EXCLUSIVE 8
 
 using namespace LibMCDriver_Pylon::Impl;
 
@@ -52,11 +61,25 @@ CPylonDeviceInstance::CPylonDeviceInstance(const std::string & sIdentifier, PLib
     if (pDeviceHandle == nullptr)
         throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
 
+    m_pPylonSDK->checkError (m_pPylonSDK->PylonDeviceOpen(m_pDeviceHandle, PYLONACCESS_MODE_CONTROL | PYLONACCESS_MODE_STREAM));
+
 }
 
 CPylonDeviceInstance::~CPylonDeviceInstance()
 {
     if (m_pPylonSDK.get() != nullptr) {
+
+        if (m_pDeviceHandle != nullptr) {
+			pylonBool bIsOpen = 0;
+            pylonResult nResult = m_pPylonSDK->PylonDeviceIsOpen(m_pDeviceHandle, &bIsOpen);
+
+            if (nResult == 0) {
+                if (bIsOpen != 0) {
+                    m_pPylonSDK->PylonDeviceClose(m_pDeviceHandle);
+                }
+            }
+		}
+
         m_pPylonSDK->PylonDestroyDevice(m_pDeviceHandle);
     }
     m_pDeviceHandle = nullptr;
@@ -211,8 +234,11 @@ void CPylonDeviceInstance::grabSingleGreyscaleImage(const LibMCDriver_Pylon_uint
 	if (grabResult.m_Status != ePylonGrabStatus::pgsGrabbed)
         throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_COULDNOTGRABIMAGE, "Could not grab image (#" + std::to_string (grabResult.m_nErrorCode) + ")");
 
-    if ((grabResult.m_OffsetX != 0) || (grabResult.m_OffsetY != 0))
-        throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABOFFSET, "Unsupported Grab Offset (" + std::to_string(grabResult.m_OffsetX) + "/" + std::to_string(grabResult.m_OffsetY) + ")");
+    //if ((grabResult.m_OffsetX != 0) || (grabResult.m_OffsetY != 0))
+        //throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABOFFSET, "Unsupported Grab Offset (" + std::to_string(grabResult.m_OffsetX) + "/" + std::to_string(grabResult.m_OffsetY) + ")");
+
+	//std::cout << "Grab offset: " << std::to_string(grabResult.m_OffsetX) + "/" + std::to_string(grabResult.m_OffsetY) << std::endl;
+    //std::cout << "Padding: " << std::to_string(grabResult.m_PaddingX) + "/" + std::to_string(grabResult.m_PaddingY) << std::endl;
 
     if ((grabResult.m_SizeX <= 0) || (grabResult.m_SizeY <= 0))
         throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_INVALIDGRABIMAGESIZE, "Invalid Grab Image Size (" + std::to_string(grabResult.m_SizeX) + "/" + std::to_string(grabResult.m_SizeY) + ")");
@@ -226,8 +252,8 @@ void CPylonDeviceInstance::grabSingleGreyscaleImage(const LibMCDriver_Pylon_uint
             std::to_string(nImageSizeX) + "x" + std::to_string(nImageSizeY) + " != " +
 			std::to_string(grabResult.m_SizeX) + "x" + std::to_string(grabResult.m_SizeY));
 
-    if ((grabResult.m_PaddingX != 0) || (grabResult.m_PaddingY != 0))
-		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABPADDING, "Unsupported Grab Padding (" + std::to_string(grabResult.m_PaddingX) + "/" + std::to_string(grabResult.m_PaddingY) + ")");
+    //if ((grabResult.m_PaddingX != 0) || (grabResult.m_PaddingY != 0))
+//		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_UNSUPPORTEDGRABPADDING, "Unsupported Grab Padding (" + std::to_string(grabResult.m_PaddingX) + "/" + std::to_string(grabResult.m_PaddingY) + ")");
 	
 	pImageInstance->SetPixels(0, 0, nImageSizeX, nImageSizeY, LibMCEnv::eImagePixelFormat::GreyScale8bit, payloadBuffer);
 

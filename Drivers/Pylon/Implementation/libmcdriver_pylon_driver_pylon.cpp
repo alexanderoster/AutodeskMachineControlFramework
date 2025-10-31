@@ -112,13 +112,23 @@ void CDriver_Pylon::loadPylonSDK()
 	if (m_pPylonSDK.get() == nullptr) {
 		unloadPylonSDK();
 
-		if (m_PylonCDLLData.empty())
-			throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_SDKRESOURCENOTSET);
+		try {
 
-		m_pWorkingDirectory = m_pDriverEnvironment->CreateWorkingDirectory();
-		m_pPylonCDLLFile = m_pWorkingDirectory->StoreCustomData("pylonC.dll", m_PylonCDLLData);
+			if (m_PylonCDLLData.empty())
+				throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_SDKRESOURCENOTSET);
 
-		m_pPylonSDK = std::make_shared<CLibPylonSDK>(m_pPylonCDLLFile->GetAbsoluteFileName());
+			m_pWorkingDirectory = m_pDriverEnvironment->CreateWorkingDirectory();
+			m_pPylonCDLLFile = m_pWorkingDirectory->StoreCustomData("pylonC.dll", m_PylonCDLLData);
+
+			m_pPylonSDK = std::make_shared<CLibPylonSDK>(m_pPylonCDLLFile->GetAbsoluteFileName());
+
+			m_pPylonSDK->checkError(m_pPylonSDK->PylonInitialize());
+
+		}
+		catch (...) {
+			unloadPylonSDK();
+			throw;
+		}
 	}
 }
 

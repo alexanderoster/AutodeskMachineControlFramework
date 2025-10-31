@@ -135,6 +135,7 @@ CLibPylonSDK::CLibPylonSDK(const std::string& sDLLNameUTF8)
 	this->PylonDeviceSetBooleanFeature = (PPylonDeviceSetBooleanFeature)_loadPylonAddress(hLibrary, "PylonDeviceSetBooleanFeature", 12);
 	this->PylonDeviceGetBooleanFeature = (PPylonDeviceGetBooleanFeature)_loadPylonAddress(hLibrary, "PylonDeviceGetBooleanFeature", 12);
 	this->PylonDeviceGrabSingleFrame = (PPylonDeviceGrabSingleFrame)_loadPylonAddress(hLibrary, "PylonDeviceGrabSingleFrame", 32);
+	this->GenApiGetLastErrorDetail = (PGenApiGetLastErrorDetail)_loadPylonAddress(hLibrary, "GenApiGetLastErrorDetail", 8);
 
 	m_LibraryHandle = (void*) hLibrary;
 }
@@ -191,12 +192,26 @@ void CLibPylonSDK::resetFunctionPtrs()
 	this->PylonDeviceSetBooleanFeature = nullptr;
 	this->PylonDeviceGetBooleanFeature = nullptr;
 	this->PylonDeviceGrabSingleFrame = nullptr;
+	this->GenApiGetLastErrorDetail = nullptr;
 
 }
 
 void CLibPylonSDK::checkError(pylonResult statusCode)
 {
 	if (statusCode != 0) {
-		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_PYLONSDKERROR, "Pylon SDK Error: " + std::to_string (statusCode));
+		std::string sErrorMessage = "unknown error";
+
+		if (this->GenApiGetLastErrorDetail != nullptr) {
+			size_t nBufferSize = 0;
+			this->GenApiGetLastErrorDetail (nullptr, &nBufferSize);
+			if (nBufferSize > 0) {
+				std::vector<char> buffer;
+				buffer.resize(nBufferSize + 1);
+				this->GenApiGetLastErrorDetail(&buffer[0], &nBufferSize);
+				buffer.at(nBufferSize) = 0;
+				sErrorMessage = std::string(&buffer[0]);
+			}
+		}
+		throw ELibMCDriver_PylonInterfaceException(LIBMCDRIVER_PYLON_ERROR_PYLONSDKERROR, "Pylon SDK Error #" + std::to_string(statusCode) + ": " + sErrorMessage);
 	}
 }

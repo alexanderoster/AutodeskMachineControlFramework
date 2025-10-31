@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef _WIN32
 
-#define PYLON_CALLINGCONVENTION __stdcall
+#define PYLON_CALLINGCONVENTION __cdecl
 
 #else
 
@@ -54,8 +54,8 @@ namespace LibMCDriver_Pylon {
 		typedef void* libPylonDeviceInfoHandle;
 		typedef void* libPylonDeviceHandle;
 		typedef void* libPylonStreamBufferHandle;
-		typedef uint64_t pylonResult;
-		typedef uint32_t pylonBool;
+		typedef int32_t pylonResult;
+		typedef int8_t pylonBool;
 
 		enum class ePylonGrabStatus : int32_t
 		{
@@ -147,6 +147,7 @@ namespace LibMCDriver_Pylon {
 
 		typedef pylonResult(PYLON_CALLINGCONVENTION* PPylonDeviceGrabSingleFrame) (libPylonDeviceHandle pDeviceHandle, size_t nChannel, uint8_t * pBuffer, size_t nBufferSize, sPylonGrabResult * pGrabResult, pylonBool * pbReady, uint32_t nTimeOut);
 
+		typedef pylonResult(PYLON_CALLINGCONVENTION* PGenApiGetLastErrorDetail) (char * pszBuffer, size_t * pnBufLen);
 
 
 		class CLibPylonSDK {
@@ -186,6 +187,7 @@ namespace LibMCDriver_Pylon {
 			PPylonDeviceSetBooleanFeature PylonDeviceSetBooleanFeature = nullptr;
 			PPylonDeviceGetBooleanFeature PylonDeviceGetBooleanFeature = nullptr;
 			PPylonDeviceGrabSingleFrame PylonDeviceGrabSingleFrame = nullptr;
+			PGenApiGetLastErrorDetail GenApiGetLastErrorDetail = nullptr;
 
 			CLibPylonSDK(const std::string & sDLLNameUTF8);
 
