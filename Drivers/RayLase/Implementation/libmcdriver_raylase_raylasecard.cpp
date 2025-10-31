@@ -245,8 +245,22 @@ void CRaylaseCard::DrawLayerWithCallback(const std::string& sStreamUUID, const L
             pDriverEnvironment->LogMessage("Deleting list from card");
 
     }
+    catch (std::exception & E)
+    {
+        pDriverEnvironment->LogWarning("Fatal Error occured: " + std::string (E.what ()));
+
+        // Abort execution, if it is still running
+        m_pRaylaseCardImpl->abortListExecution();
+
+        // Always delete list on card
+        pList->deleteListListOnCard();
+
+        throw;
+    }
     catch (...)
     {
+        pDriverEnvironment->LogWarning("Unknown fatal error occured");
+
         // Abort execution, if it is still running
         m_pRaylaseCardImpl->abortListExecution();
 
