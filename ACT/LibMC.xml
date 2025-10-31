@@ -705,6 +705,12 @@
 		<error name="INVALIDROWRANGE" code="680" description="Invalid row range." />
 		<error name="CONFIGURATIONLISTNAMEMISSING" code="681" description="Configuration list name missing" />
 		<error name="CONFIGURATIONLISTBUTTONNAMEMISSING" code="682" description="Configuration list button name missing" />
+		<error name="NONLINEAROVERRIDEPARAMETERNOTINCREASING" code="683" description="Nonlinear override parameter not increasing" />
+		<error name="NONLINEAROVERRIDEPARAMETEROUTOFRANGE" code="684" description="Nonlinear override parameter out of range" />
+		<error name="NONLINEAROVERRIDEFACTOROUTOFRANGE" code="685" description="Nonlinear override factor out of range" />
+		
+		
+		
 						
 	</errors>
 	

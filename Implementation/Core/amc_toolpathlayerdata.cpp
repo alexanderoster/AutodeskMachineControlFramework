@@ -464,8 +464,22 @@ namespace AMC {
 
 								size_t nInterpolationDataStartIndex = m_InterpolationData.size();
 								if (nonLinearValues.size() > 0) {
-									for (auto & interpolationData : nonLinearValues)
+									double dPreviousParameter = 0.0;
+									double dMinParameterIncrease = 1e-5;
+									double dMaxParameter = 1.0 - dMinParameterIncrease;
+
+									for (auto& interpolationData : nonLinearValues) {
+										if (interpolationData.m_Parameter < dPreviousParameter + dMinParameterIncrease) 
+											throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING, std::to_string (interpolationData.m_Parameter) + " in " + m_sDebugName);
+
+										if (interpolationData.m_Parameter > dMaxParameter)
+											throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE, std::to_string(interpolationData.m_Parameter) + " in " + m_sDebugName);
+
+										if (interpolationData.m_Factor < 0.0 || interpolationData.m_Factor > 1.0)
+											throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE, std::to_string(interpolationData.m_Factor) + " in " + m_sDebugName);
+
 										m_InterpolationData.push_back(interpolationData);
+									}
 								}
 
 								if (hatchFactors.size() > 0) {

@@ -696,6 +696,9 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDROWRANGE 680 /** Invalid row range. */
 #define LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING 681 /** Configuration list name missing */
 #define LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING 682 /** Configuration list button name missing */
+#define LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING 683 /** Nonlinear override parameter not increasing */
+#define LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE 684 /** Nonlinear override parameter out of range */
+#define LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE 685 /** Nonlinear override factor out of range */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1304,6 +1307,9 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDROWRANGE: return "Invalid row range.";
     case LIBMC_ERROR_CONFIGURATIONLISTNAMEMISSING: return "Configuration list name missing";
     case LIBMC_ERROR_CONFIGURATIONLISTBUTTONNAMEMISSING: return "Configuration list button name missing";
+    case LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING: return "Nonlinear override parameter not increasing";
+    case LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE: return "Nonlinear override parameter out of range";
+    case LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE: return "Nonlinear override factor out of range";
     default: return "unknown error";
   }
 }
