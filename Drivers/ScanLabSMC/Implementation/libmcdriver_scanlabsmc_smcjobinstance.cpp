@@ -353,7 +353,7 @@ void CSMCJobInstance::drawHatchesExNonLinearPower(const LibMCDriver_ScanLabSMC_u
                 double dSectionDelta = dCurrentSection - dLastSection;
 
                 if (dSectionDelta < 0.0)
-                    throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING);
+                    throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INTERPOLATIONDATAISNOTINCREASING, "interpolation data is not increasing: " + std::to_string (dLastSection) + " MUST be smaller than " + std::to_string (dCurrentSection));
 
                 auto& section = paraSections.at(nSubinterpolationIndex);
                 section.m_dS = dSectionDelta;
