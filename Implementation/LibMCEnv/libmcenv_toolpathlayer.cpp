@@ -513,11 +513,12 @@ void CToolpathLayer::EvaluateTypedHatchProfileInterpolation(const LibMCEnv_uint3
 
 				uint32_t nTotalCount = 0;
 
+				LibMCEnv::sHatch2DSubInterpolationData* pTargetHatchInterpolationData = pEvaluationDataBuffer;
+
 				for (uint64_t nHatchIndex = 0; nHatchIndex < nNeededHatchCount; nHatchIndex++) {
 
 					uint32_t nSubInterpolationCount = 0;
 					Lib3MF::sHatchModificationInterpolationData * pSourceHatchInterpolationData = nullptr;
-					LibMCEnv::sHatch2DSubInterpolationData* pTargetHatchInterpolationData = pEvaluationDataBuffer;
 					m_pToolpathLayerData->getHatchSubinterpolationData(nSegmentIndex, (uint32_t)nHatchIndex, nSubInterpolationCount, pSourceHatchInterpolationData);
 
 					pCountArrayBuffer[nHatchIndex] = nSubInterpolationCount;

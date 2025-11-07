@@ -491,20 +491,21 @@ namespace AMC {
 
 									for (uint32_t nHatchIndex = 0; nHatchIndex < hatchFactors.size(); nHatchIndex++) {
 										uint32_t nSubInterpolationCount = 0;
-										Lib3MF::sHatchModificationInterpolationData* pSubInterpolationData = nullptr;
+										uint32_t nSubInterpolationOffset = 0;
+										//Lib3MF::sHatchModificationInterpolationData* pSubInterpolationData = nullptr;
 										if (nonLinearCounts.size() > 0) {
 											nSubInterpolationCount = nonLinearCounts.at(nHatchIndex);
 											if (nSubInterpolationCount > 0)
-												pSubInterpolationData = &m_InterpolationData.at(nInterpolationDataStartIndex + nTotalSubInterpolationCount);
+												nSubInterpolationOffset = (uint32_t)(nInterpolationDataStartIndex + nTotalSubInterpolationCount);
 										}
 
 										pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point1Factor;
 										pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
-										pDstOverride->m_pSubInterpolationData = pSubInterpolationData;
+										pDstOverride->m_nSubInterpolationOffset = nSubInterpolationOffset;
 										pDstOverride++;
 										pDstOverride->m_dFactors[nFactorIndex] = pSrcOverride->m_Point2Factor;
 										pDstOverride->m_nSubInterpolationCount = nSubInterpolationCount;
-										pDstOverride->m_pSubInterpolationData = pSubInterpolationData;
+										pDstOverride->m_nSubInterpolationOffset = nSubInterpolationOffset;
 										pDstOverride++;
 										pSrcOverride++;
 
@@ -1084,7 +1085,8 @@ namespace AMC {
 		uint32_t nStartIndex = pSegment->m_PointStartIndex;
 		if (pSegment->m_PointCount > 0) {
 			uint32_t nPointIndex = nStartIndex + nHatchIndex * 2;
-			pSubInterpolationData = m_OverrideFactors.at(nPointIndex).m_pSubInterpolationData;
+			uint32_t nSubInterpolationOffset = m_OverrideFactors.at(nPointIndex).m_nSubInterpolationOffset;
+			pSubInterpolationData = &m_InterpolationData.at (nSubInterpolationOffset);
 			nSubInterpolationCount = m_OverrideFactors.at(nPointIndex).m_nSubInterpolationCount;
 		}
 		else {
