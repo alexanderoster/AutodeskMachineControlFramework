@@ -87,7 +87,7 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
 	// Set digital output to 1
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1,  1, 0 ) );
 
-    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
+    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_HeadAPosition;
     slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
