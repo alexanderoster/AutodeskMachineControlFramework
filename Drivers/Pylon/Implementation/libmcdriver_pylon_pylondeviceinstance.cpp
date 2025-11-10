@@ -35,6 +35,7 @@ Abstract: This is a stub class definition of CPylonDeviceInstance
 #include "libmcdriver_pylon_interfaceexception.hpp"
 
 //#include <iostream>
+#include <cstring>
 
 // Include custom headers here.
 #define PYLONFEATURENAME_AUTOEXPOSURE "ExposureAuto"
