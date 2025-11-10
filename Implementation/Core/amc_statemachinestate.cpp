@@ -85,7 +85,8 @@ namespace AMC {
 
 	void CStateMachineState::updateExecutionTime()
 	{
-		m_LastExecutionTimeStampInMicroseconds = m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970 ();
+		// Use monotonic elapsed time to avoid issues with NTP clock adjustments
+		m_LastExecutionTimeStampInMicroseconds = m_pGlobalChrono->getElapsedMicroseconds();
 	}
 
 
@@ -161,8 +162,9 @@ namespace AMC {
 
 		if (chunkInMilliseconds < AMC_MINREPEATDELAY_MS)
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDREPEATDELAY, m_sInstanceName);
-		
-		uint64_t executionTimeInMicroSeconds = m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
+
+		// Use monotonic elapsed time - not affected by NTP or system clock adjustments
+		uint64_t executionTimeInMicroSeconds = m_pGlobalChrono->getElapsedMicroseconds();
 		if (m_LastExecutionTimeStampInMicroseconds > executionTimeInMicroSeconds)
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDEXECUTIONDELAY, std::to_string (m_LastExecutionTimeStampInMicroseconds));
 
@@ -171,7 +173,7 @@ namespace AMC {
 		while (deltaExecutionTimeInMicroSeconds < (m_nRepeatDelay * 1000ULL)) {
 			m_pGlobalChrono->sleepMilliseconds(chunkInMilliseconds);
 
-			uint64_t newExecutionTimeInMicroSeconds = m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
+			uint64_t newExecutionTimeInMicroSeconds = m_pGlobalChrono->getElapsedMicroseconds();
 			if (m_LastExecutionTimeStampInMicroseconds > newExecutionTimeInMicroSeconds)
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDEXECUTIONDELAY, std::to_string(m_LastExecutionTimeStampInMicroseconds));
 

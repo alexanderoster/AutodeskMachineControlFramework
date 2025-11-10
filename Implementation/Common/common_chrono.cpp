@@ -187,6 +187,11 @@ namespace AMCCommon {
 		return convertToISO8601TimeUTC(getUTCTimeStampInMicrosecondsSince1970());
 	}
 
+	uint64_t CChrono::getElapsedMicroseconds()
+	{
+		return m_pChronoImpl->getElapsedMicroseconds();
+	}
+
 	void CChrono::sleepSeconds(const uint64_t seconds)
 	{
 		sleepMicroseconds(seconds * 1000000ULL);
