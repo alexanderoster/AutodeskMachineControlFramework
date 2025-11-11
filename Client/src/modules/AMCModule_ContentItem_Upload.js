@@ -53,11 +53,11 @@ export default class AMCApplicationItem_Content_Upload extends Common.AMCApplica
 		this.acceptedtypes = "";
 				
 		if (this.uploadclass == "build") {
-			this.acceptedtypes = ".3mf";
+			this.acceptedtypes = itemJSON.acceptedtypes || ".3mf";
 		}
 
 		if (this.uploadclass == "image") {
-			this.acceptedtypes = ".png,.jpg";
+			this.acceptedtypes = itemJSON.acceptedtypes || ".png,.jpg";
 		}
 				
 		this.state = new AMCUploadState (this.uuid);
