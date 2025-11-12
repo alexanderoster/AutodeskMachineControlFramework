@@ -87,7 +87,7 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
 	// Set digital output to 1
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1,  1, 0 ) );
 
-    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_HeadAPosition;
+    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
     slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
@@ -140,9 +140,10 @@ void CSMCJobInstance::drawPolylineEx(slscHandle contextHandle, const uint64_t nP
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_analog_x(contextHandle, slsc_AnalogOutput::slsc_AnalogOutput_1, dPowerFactor, 0.0));
 
     auto& startPoint = pPointsBuffer[0];
-    std::array<double, 2> startPosition;
+    std::array<double, 3> startPosition;
     startPosition[0] = startPoint.m_X;
     startPosition[1] = startPoint.m_Y;
+    startPosition[2] = 0.0;
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_jump(contextHandle, startPosition.data()));
 
     slsc_PolylineOptions polyLineOptions;
@@ -157,9 +158,10 @@ void CSMCJobInstance::drawPolylineEx(slscHandle contextHandle, const uint64_t nP
 
     for (size_t nPointIndex = 1; nPointIndex < nPointsBufferSize; nPointIndex++) {
         auto& nextPoint = pPointsBuffer[nPointIndex];
-        std::array<double, 2> nextPosition;
+        std::array<double, 3> nextPosition;
         nextPosition[0] = nextPoint.m_X;
         nextPosition[1] = nextPoint.m_Y;
+		nextPosition[2] = 0.0;
         m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_line(contextHandle, nextPosition.data()));
     }
 
@@ -235,13 +237,15 @@ void CSMCJobInstance::drawHatchesEx(const LibMCDriver_ScanLabSMC_uint64 nHatches
 
         for (uint64_t nHatchIndex = 0; nHatchIndex < nHatchesBufferSize; nHatchIndex++) {
             auto& hatch = pHatchesBuffer[nHatchIndex];
-            std::array<double, 2> point1;
+            std::array<double, 3> point1;
             point1[0] = hatch.m_X1;
             point1[1] = hatch.m_Y1;
+            point1[2] = 0.0;
 
-            std::array<double, 2> point2;
+            std::array<double, 3> point2;
             point2[0] = hatch.m_X2;
             point2[1] = hatch.m_Y2;
+            point2[2] = 0.0;
 
 
             m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_jump(contextHandle, point1.data()));
@@ -276,13 +280,15 @@ void CSMCJobInstance::drawHatchesExLinearPower(const LibMCDriver_ScanLabSMC_uint
 
         for (uint64_t nHatchIndex = 0; nHatchIndex < nHatchesBufferSize; nHatchIndex++) {
             auto& hatch = pHatchesBuffer[nHatchIndex];
-            std::array<double, 2> point1;
+            std::array<double, 3> point1;
             point1[0] = hatch.m_X1;
             point1[1] = hatch.m_Y1;
+            point1[2] = 0.0;
 
-            std::array<double, 2> point2;
+            std::array<double, 3> point2;
             point2[0] = hatch.m_X2;
             point2[1] = hatch.m_Y2;
+            point2[2] = 0.0;
 
             std::array<double, 1> paraPower1;
             paraPower1[0] = PowerValuesInWatts1.at (nHatchIndex) / m_dMaxPowerInWatts;
@@ -325,13 +331,15 @@ void CSMCJobInstance::drawHatchesExNonLinearPower(const LibMCDriver_ScanLabSMC_u
 
         for (uint64_t nHatchIndex = 0; nHatchIndex < nHatchesBufferSize; nHatchIndex++) {
             auto& hatch = pHatchesBuffer[nHatchIndex];
-            std::array<double, 2> point1;
+            std::array<double, 3> point1;
             point1[0] = hatch.m_X1;
             point1[1] = hatch.m_Y1;
+            point1[2] = 0.0;
 
-            std::array<double, 2> point2;
+            std::array<double, 3> point2;
             point2[0] = hatch.m_X2;
             point2[1] = hatch.m_Y2;
+            point2[2] = 0.0;
 
             double dX = point2[0] - point1[0];
             double dY = point2[1] - point1[1];
