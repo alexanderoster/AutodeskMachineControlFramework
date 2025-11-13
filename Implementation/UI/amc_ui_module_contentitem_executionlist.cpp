@@ -280,7 +280,16 @@ void CUIModule_ContentExecutionList::addLegacyContentToJSON(CJSONWriter& writer,
 		entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONSTARTTIMESTAMP, AMCCommon::CChrono::convertToISO8601TimeUTC (nStartTimeStamp));
 		entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONENDTIMESTAMP, AMCCommon::CChrono::convertToISO8601TimeUTC(nEndTimeStamp));
 		entryObject.addInteger(AMC_API_KEY_UI_ITEMEXECUTIONDURATION, nDurationInSeconds);
-		entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONTHUMBNAIL, m_sDefaultThumbnailResourceUUID);
+
+		// Retrieve the parent build job and check for thumbnail
+		std::string sJobUUID = pExecution->GetJobUUID();
+		auto pBuildJob = pBuildJobHandler->RetrieveJob(sJobUUID);
+
+		if (pBuildJob->HasThumbnailStream())
+			entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONTHUMBNAIL, pBuildJob->GetThumbnailStreamUUID());
+		else
+			entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONTHUMBNAIL, m_sDefaultThumbnailResourceUUID);
+
 		entryObject.addInteger(AMC_API_KEY_UI_ITEMEXECUTIONLAYERCOUNT, pExecution->GetJobLayerCount());
 		entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONSTATUS, sStatusString);
 		entryObject.addString(AMC_API_KEY_UI_ITEMEXECUTIONBUILDSTATUS, pExecution->GetJobStatusString());
