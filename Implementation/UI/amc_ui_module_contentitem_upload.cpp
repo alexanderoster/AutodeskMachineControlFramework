@@ -55,14 +55,15 @@ PUIModule_ContentUpload CUIModule_ContentUpload::makeFromXML(const pugi::xml_nod
 
 	auto successeventAttrib = xmlNode.attribute("successevent");
 	auto failureeventAttrib = xmlNode.attribute("failureevent");
+	auto acceptedtypesAttrib = xmlNode.attribute("acceptedtypes");
 
-	return std::make_shared <CUIModule_ContentUpload> (pUIModuleEnvironment->contentRegistry(), classExpression, captionExpression, successeventAttrib.as_string (), failureeventAttrib.as_string (), sItemName, sModulePath, pUIModuleEnvironment->stateMachineData ());
+	return std::make_shared <CUIModule_ContentUpload> (pUIModuleEnvironment->contentRegistry(), classExpression, captionExpression, successeventAttrib.as_string (), failureeventAttrib.as_string (), acceptedtypesAttrib.as_string (), sItemName, sModulePath, pUIModuleEnvironment->stateMachineData ());
 }
 
 
 
-CUIModule_ContentUpload::CUIModule_ContentUpload(CUIModule_ContentRegistry* pOwner, CUIExpression uploadClass, CUIExpression uploadCaption, const std::string& sSuccessEvent, const std::string& sFailureEvent, const std::string& sItemName, const std::string& sModulePath, PStateMachineData pStateMachineData)
-	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sItemName, sModulePath), m_UploadClass(uploadClass), m_UploadCaption (uploadCaption), m_sSuccessEvent (sSuccessEvent), m_sFailureEvent (sFailureEvent), m_pStateMachineData (pStateMachineData), m_pOwner (pOwner)
+CUIModule_ContentUpload::CUIModule_ContentUpload(CUIModule_ContentRegistry* pOwner, CUIExpression uploadClass, CUIExpression uploadCaption, const std::string& sSuccessEvent, const std::string& sFailureEvent, const std::string& sAcceptedTypes, const std::string& sItemName, const std::string& sModulePath, PStateMachineData pStateMachineData)
+	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sItemName, sModulePath), m_UploadClass(uploadClass), m_UploadCaption (uploadCaption), m_sSuccessEvent (sSuccessEvent), m_sFailureEvent (sFailureEvent), m_sAcceptedTypes (sAcceptedTypes), m_pStateMachineData (pStateMachineData), m_pOwner (pOwner)
 {
 	LibMCAssertNotNull(pStateMachineData);
 	LibMCAssertNotNull(pOwner);
@@ -85,6 +86,7 @@ void CUIModule_ContentUpload::addLegacyContentToJSON(CJSONWriter& writer, CJSONW
 	object.addString(AMC_API_KEY_UI_ITEMUPLOADFILENAME, "");
 	object.addString(AMC_API_KEY_UI_ITEMUPLOADSUCCESSEVENT, m_sSuccessEvent);
 	object.addString(AMC_API_KEY_UI_ITEMUPLOADFAILUREEVENT, m_sFailureEvent);
+	object.addString(AMC_API_KEY_UI_ITEMUPLOADACCEPTEDTYPES, m_sAcceptedTypes);
 }
 
 
