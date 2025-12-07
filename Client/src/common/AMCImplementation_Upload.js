@@ -191,7 +191,12 @@ export default class AMCUpload extends Common.AMCObject {
 	{
 		return this.sha256sum;		
 	}
-	
+
+	getMimeType ()
+	{
+		return this.itemState.getMimeType();
+	}
+
 	checkIfUploadIsActive ()
 	{
 		if (this.itemState) {

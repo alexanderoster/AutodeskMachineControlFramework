@@ -561,7 +561,7 @@ export default class AMCApplication extends Common.AMCObject {
 		formData.append("size", chunkData.byteLength);
 		formData.append("offset", uploadOffset);
 		formData.append("data", new Blob([chunkData], {
-                        type: "application/3mf"
+                        type: uploadObject.getMimeType ()
                     }), uploadObject.getFileName ());
 
 		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData)
@@ -689,7 +689,7 @@ export default class AMCApplication extends Common.AMCObject {
 		formData.append("size", chunkData.byteLength);
 		formData.append("offset", uploadOffset);
 		formData.append("data", new Blob([chunkData], {
-                        type: "application/3mf"
+                        type: uploadObject.getMimeType ()
                     }), uploadObject.getFileName ());
 
 		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData)
