@@ -348,13 +348,19 @@ In short, AMCF’s plugin mechanism depends on ACT as the interface definition a
 
 ### 1.5. The Hourglass pattern and Stable ABIs
 
-The hourglass model means that the widest parts of the system exist at the top and bottom (many different clients and many different hardware integrations), while the middle stays minimal and stable. In practice this means:
+The hourglass model in AMCF is realized through ACT’s ABI strategy. At the top, you can have a rich, high-level class architecture: interfaces, inheritance, and structured types that make sense to an SDK user or driver author. At the bottom, you can have many different consumers and host environments that each want a simple, stable way to call into that architecture. The narrow middle is a plain C ABI that acts as the stable contract between them.
 
-- A small set of carefully designed core interfaces.
-- Versioned, stable ABIs for plugins and drivers.
-- Strict input/output contracts across the API boundary.
+ACT takes the declarative interface definition and generates a flat C DLL surface. Each class instance becomes a handle, and each method becomes a function that takes that handle plus serialized parameters. The C ABI uses standard error codes for all calls, which ensures a consistent failure model regardless of language or runtime. This layer is intentionally minimal: no C++ name mangling, no exceptions, no STL types, and no compiler-specific ABI details. The result is a binary interface that remains stable across compiler versions and across languages.
 
-This keeps the core consistent while allowing aggressive innovation in UI and hardware adapters.
+On the consumer side, ACT-generated bindings reconstruct the richer class model. The C ABI functions are wrapped into language-native classes or interfaces, exposing idiomatic method calls, typed parameters, and resource lifetimes. From the point of view of a client, it feels like using a normal SDK. Under the hood, each call is routed through the C ABI, with error codes translated into language-native exceptions or return types. This "expand again" step is what preserves developer ergonomics while keeping the ABI compatible and predictable.
+
+The benefit of this pattern is that the complex class hierarchy is not the ABI; the ABI is the thin C layer. That means new languages can be supported by generating new wrappers without changing the core, and drivers or plugins compiled with older toolchains can keep working against newer servers as long as the C layer remains compatible. It also means that runtime loading becomes simple and uniform: every plugin is just a DLL with a defined set of exported C functions, and every consumer speaks the same function-level contract.
+
+This model also makes it straightforward to integrate proprietary third-party code. A plugin or driver can link against vendor SDKs, hardware libraries, or closed-source toolkits internally while exposing only the stable C ABI to the outside. The proprietary dependency stays encapsulated behind the handle-based interface, so the rest of the system does not have to understand or adapt to vendor-specific binaries, compilers, or error models. As long as the plugin respects the ABI contract, the core remains unaffected and stability is preserved.
+
+The hourglass approach helps manage change at different speeds. Vendor SDKs may update frequently, operating systems may add new requirements, and clients may demand new UX capabilities. Those changes can be absorbed at the edges without forcing a ripple through the system, because the middle remains narrow and stable. ACT’s generated C ABI becomes the governance point for compatibility, allowing the framework to enforce versioning, detect mismatches early, and keep older components operational during a transition.
+
+In practice, this means API boundaries are strict. Input and output types are explicit, error codes are formalized, and versioning is part of the design, not an afterthought. The narrow middle becomes a safe place to stand: a known set of behaviors that clients and drivers can trust. The wide edges remain free to innovate, but they do so by speaking the same stable language. Over time, this approach protects the system from fragmentation, keeps long-lived deployments supportable, and allows AMCF to grow in capability without sacrificing reliability.
 
 ### 1.6. API First Design guidelines and best practices
 
