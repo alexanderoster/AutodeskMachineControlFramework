@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_unittests_signalslot.hpp"
 #include "amc_unittests_chrono.hpp"
+#include "amc_unittests_statejournal.hpp"
 
 
 using namespace AMCUnitTest;
@@ -62,4 +63,5 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 
 	registerTestGroup(std::make_shared <CUnitTestGroup_SignalSlot>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Chrono>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_StateJournal>());
 }
