@@ -62,15 +62,40 @@ namespace AMC {
 		m_StateMachineStates.insert(std::make_pair(sInstanceName, ""));
 	}
 
-	PParameterHandler CStateMachineData::getParameterHandler(const std::string& sInstanceName)
+	void CStateMachineData::registerParameterUpdateCallback(const std::string& sInstanceName, std::function<void()> callback)
 	{
-		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		if (callback == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 		auto iter = m_StateMachineParameters.find(sInstanceName);
-		if(iter == m_StateMachineParameters.end ())
+		if (iter == m_StateMachineParameters.end())
 			throw ELibMCCustomException(LIBMC_ERROR_STATEMACHINENOTFOUND, sInstanceName);
 
-		return iter->second;
+		m_ParameterUpdateCallbacks[sInstanceName] = callback;
+	}
+
+	PParameterHandler CStateMachineData::getParameterHandler(const std::string& sInstanceName)
+	{
+		PParameterHandler pHandler;
+		std::function<void()> callback;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+			auto iter = m_StateMachineParameters.find(sInstanceName);
+			if (iter == m_StateMachineParameters.end())
+				throw ELibMCCustomException(LIBMC_ERROR_STATEMACHINENOTFOUND, sInstanceName);
+
+			pHandler = iter->second;
+			auto callbackIter = m_ParameterUpdateCallbacks.find(sInstanceName);
+			if (callbackIter != m_ParameterUpdateCallbacks.end())
+				callback = callbackIter->second;
+		}
+
+		if (callback)
+			callback();
+
+		return pHandler;
 	}
 
 
@@ -161,5 +186,4 @@ namespace AMC {
 
 
 }
-
 

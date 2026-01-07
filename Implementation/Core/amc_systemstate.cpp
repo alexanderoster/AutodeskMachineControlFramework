@@ -51,6 +51,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common_chrono.hpp"
 
+#include <exception>
+
 #define __STRINGIZE(x) #x
 #define __STRINGIZE_VALUE_OF(x) __STRINGIZE(x)
 
@@ -89,15 +91,44 @@ namespace AMC {
 		auto pUISystemState = std::make_shared<CUISystemState>(m_pStateMachineData, m_pToolpathHandler, m_pSignalHandler, m_pLogger, m_pStateJournal, getTestEnvironmentPath(), m_pAccessControl, m_pLanguageHandler, m_pMeshHandler, m_pDataSeriesHandler, m_pGlobalChrono, m_pAlertHandler, m_pDataModel);
 		m_pUIHandler = std::make_shared<CUIHandler>(pEnvWrapper, pUISystemState);
 
-		auto pSystemParameterHandler = std::make_shared<CParameterHandler>("System", m_pGlobalChrono);
+		m_pSystemParameterHandler = std::make_shared<CParameterHandler>("System", m_pGlobalChrono);
 		auto pSystemInformationGroup = std::make_shared<CParameterGroup>("information", "Information", m_pGlobalChrono);
 		pSystemInformationGroup->addNewStringParameter("githash", "Git Hash", getGitHash ());
 		pSystemInformationGroup->addNewStringParameter("clienthash", "Client Hash", getClientHash());
 		pSystemInformationGroup->addNewStringParameter("compile_time", "Compile time", std::string (__DATE__) + " " + std::string (__TIME__));
 		pSystemInformationGroup->addNewStringParameter("installation_uuid", "Installation", getInstallationUUID ());
-		pSystemParameterHandler->addGroup(pSystemInformationGroup);
+		m_pSystemParameterHandler->addGroup(pSystemInformationGroup);
 
-		m_pStateMachineData->registerParameterHandler("system", pSystemParameterHandler, m_pGlobalChrono);
+		m_pSystemMemoryGroup = std::make_shared<CParameterGroup>("memory", "Memory usage", m_pGlobalChrono);
+		m_pSystemParameterHandler->addGroup(m_pSystemMemoryGroup);
+
+		registerMemoryUsageProvider("journal_cache_bytes", "Journal cache memory usage (bytes)", [this]() {
+			if (m_pStateJournal.get() == nullptr)
+				return (uint64_t)0;
+			return m_pStateJournal->getMemoryUsageInBytes();
+		});
+		registerMemoryUsageProvider("mesh_entities_bytes", "Mesh entity memory usage (bytes)", [this]() {
+			if (m_pMeshHandler.get() == nullptr)
+				return (uint64_t)0;
+			return m_pMeshHandler->getMeshEntityMemoryUsageInBytes();
+		});
+		registerMemoryUsageProvider("mesh_scenes_bytes", "Mesh scene memory usage (bytes)", [this]() {
+			if (m_pMeshHandler.get() == nullptr)
+				return (uint64_t)0;
+			return m_pMeshHandler->getSceneMemoryUsageInBytes();
+		});
+		registerMemoryUsageProvider("data_series_bytes", "Data series memory usage (bytes)", [this]() {
+			if (m_pDataSeriesHandler.get() == nullptr)
+				return (uint64_t)0;
+			return m_pDataSeriesHandler->getMemoryUsageInBytes();
+		});
+		registerMemoryUsageProvider("known_total_bytes", "Total known memory usage (bytes)", [this]() {
+			return (uint64_t)0;
+		});
+
+		m_pStateMachineData->registerParameterHandler("system", m_pSystemParameterHandler, m_pGlobalChrono);
+		m_pStateMachineData->registerParameterUpdateCallback("system", std::bind(&CSystemState::updateMemoryUsageParameters, this));
+		updateMemoryUsageParameters();
 
 	}
 
@@ -290,6 +321,61 @@ namespace AMC {
 	uint64_t CSystemState::getAbsoluteTimeStamp()
 	{
 		return m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
+	}
+
+	void CSystemState::registerMemoryUsageProvider(const std::string& sParameterName, const std::string& sDescription, std::function<uint64_t()> callback)
+	{
+		if (callback == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		std::lock_guard<std::mutex> lockGuard(m_MemoryUsageMutex);
+		if (m_MemoryUsageProviders.find(sParameterName) != m_MemoryUsageProviders.end())
+			throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEPARAMETERNAME, sParameterName);
+
+		sMemoryUsageProvider provider;
+		provider.m_sParameterName = sParameterName;
+		provider.m_sDescription = sDescription;
+		provider.m_Callback = callback;
+		m_MemoryUsageProviders.insert(std::make_pair(sParameterName, provider));
+
+		if (m_pSystemMemoryGroup.get() != nullptr)
+			m_pSystemMemoryGroup->addNewIntParameter(sParameterName, sDescription, 0);
+	}
+
+	void CSystemState::updateMemoryUsageParameters()
+	{
+		std::map<std::string, sMemoryUsageProvider> providers;
+		PParameterGroup pMemoryGroup;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_MemoryUsageMutex);
+			providers = m_MemoryUsageProviders;
+			pMemoryGroup = m_pSystemMemoryGroup;
+		}
+
+		if (pMemoryGroup.get() == nullptr)
+			return;
+
+		uint64_t nKnownTotal = 0;
+		for (auto& providerPair : providers) {
+			auto& provider = providerPair.second;
+			if (provider.m_sParameterName == "known_total_bytes")
+				continue;
+
+			uint64_t nUsage = 0;
+			try {
+				if (provider.m_Callback)
+					nUsage = provider.m_Callback();
+			}
+			catch (std::exception&) {
+				nUsage = 0;
+			}
+
+			nKnownTotal += nUsage;
+			pMemoryGroup->setIntParameterValueByName(provider.m_sParameterName, (int64_t)nUsage);
+		}
+
+		if (providers.find("known_total_bytes") != providers.end())
+			pMemoryGroup->setIntParameterValueByName("known_total_bytes", (int64_t)nKnownTotal);
 	}
 
 }
