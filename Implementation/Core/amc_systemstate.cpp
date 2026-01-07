@@ -102,11 +102,7 @@ namespace AMC {
 		m_pSystemMemoryGroup = std::make_shared<CParameterGroup>("memory", "Memory usage", m_pGlobalChrono);
 		m_pSystemParameterHandler->addGroup(m_pSystemMemoryGroup);
 
-		registerMemoryUsageProvider("journal_cache_bytes", "Journal cache memory usage (bytes)", [this]() {
-			if (m_pStateJournal.get() == nullptr)
-				return (uint64_t)0;
-			return m_pStateJournal->getMemoryUsageInBytes();
-		});
+
 		registerMemoryUsageProvider("mesh_entities_bytes", "Mesh entity memory usage (bytes)", [this]() {
 			if (m_pMeshHandler.get() == nullptr)
 				return (uint64_t)0;
@@ -366,7 +362,7 @@ namespace AMC {
 				if (provider.m_Callback)
 					nUsage = provider.m_Callback();
 			}
-			catch (std::exception&) {
+			catch (std::exception &) {
 				nUsage = 0;
 			}
 
