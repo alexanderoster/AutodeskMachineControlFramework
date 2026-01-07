@@ -284,14 +284,101 @@ As those are many configurations, in order to balance complexity with the need o
 
 ### 1.3. Modular Architecture and the need for a Client-Server system
 
-There are a lot of ways and opinions how one could define a modular architecture. 
+There are many interpretations of "modular architecture", but in AMCF the meaning is deliberately practical: each part of the system should be replaceable or extensible without rewriting the entire stack. A machine builder should be able to swap a driver, add a new build strategy, or customize the operator workflow while keeping the safety logic, scheduling, and API contract unchanged. In other words, the architecture is modular only if the separation of concerns is enforced by clear boundaries, stable interfaces, and explicit data ownership. This principle is not theoretical; it directly reduces integration risk, accelerates vendor onboarding, and prevents long-term drift between the UI and the machine behavior.
+
+At the highest level, AMCF is organized into three layers:
+
+- A deterministic core server that owns machine state, scheduling, and safety-relevant decisions.
+- A client layer that renders UI, handles user interaction, and communicates over a stable API.
+- A plugin and driver layer that integrates hardware, sensors, and process logic.
+
+Each layer is designed to be independently replaceable as long as its interface contract is respected. This is the foundation that enables a client-server architecture rather than a monolithic application. The server is the single source of truth for state and control, while the client is a consumer and an operator interface. The plugin and driver layer is the only place that should know about proprietary device details. These boundaries enable the system to support multiple machine variants and long-lived deployments without architectural churn.
+
+The need for a client-server architecture in an industrial control context is often underestimated, especially by teams used to desktop applications or embedded controllers. In a machine control system, the user interface is only one of several consumers of machine state and services. Other consumers include automated test harnesses, remote service tools, analytics pipelines, and manufacturing execution systems (MES). A client-server design does not just allow a UI to exist separately; it formalizes that all machine functionality is exposed as a service, which can be used by any authorized client. This is critical for integration with factory ecosystems and for supporting multiple clients simultaneously.
+
+In AMCF, the server is designed to run headless with the same behavior as when a UI is attached. It can live on an industrial PC, a rack-mounted server, or a virtualized environment used for simulation and testing. The client can be local (for an HMI panel), remote (for a service engineer), or distributed (several clients in different locations). Because the server owns state, any client can connect, observe the current machine state, and issue allowed commands under the same safety and scheduling constraints. The system does not become inconsistent just because multiple clients exist; the server arbitrates and validates all actions.
+
+The modular architecture also mitigates the "tight coupling trap" that arises when UI logic and machine logic are intertwined. In tightly coupled systems, UI features become de facto control logic and are hard to test or reuse. AMCF avoids that by enforcing that all control actions are implemented in the server and exposed via API endpoints. The UI does not "own" functionality; it only presents it. This means that features can be tested with an automated client or scripted test harness without needing a GUI. It also means that a UI redesign does not carry the risk of changing core machine behavior.
+
+Another key reason for the client-server split is determinism and safety. Machine control systems must manage timing, state transitions, and interlocks predictably. The server is the only component that can safely enforce these constraints, because it has the full context of the machine and can make decisions without being blocked by UI latency. User interfaces are inherently non-deterministic due to rendering, input devices, and network variability. By isolating real-time sensitive logic in the server, AMCF ensures that UI responsiveness does not affect machine timing, and that safety-critical transitions are executed under controlled conditions. This separation of timing domains is essential for certification and for consistent behavior across hardware platforms.
+
+Modularity further allows a clear partition of responsibilities for compliance and validation. In regulated industries, it is not enough for a system to work; it must be traceable and verifiable. When the server owns state transitions and safety checks, it can log, audit, and replay actions in a consistent way. When the client only reflects state and submits commands, it can be updated or replaced without revalidating the entire control logic. This is especially valuable for field upgrades, where a UI might be refreshed to improve usability without touching the core server or drivers. Modular architecture thus reduces the surface area that needs formal validation.
+
+The plugin and driver layer is another essential aspect of modularity. Machines differ not only in their UI requirements but in their physical components: sensors, actuators, motion controllers, scanners, cameras, and safety devices. By isolating hardware integration into drivers and plugin interfaces, AMCF allows machine builders to tailor their hardware stack without modifying the core. This is also the only layer that should require vendor-specific SDKs or device protocols. When a new hardware vendor is introduced, the change is localized to a driver plugin that implements the required interface. The server remains stable, which dramatically lowers integration complexity.
+
+Because the plugin layer is modular, it is also testable in isolation. Drivers can be replaced by simulation drivers that provide deterministic responses for testing, and process logic can be exercised without actual hardware. This makes it possible to run unit tests and integration tests in CI environments, and to reproduce field issues by replaying recorded sensor streams. The client-server design supports this because the same API surface is used in tests as in production. If a simulated server provides a consistent API, a UI can be tested without being connected to a real machine.
+
+From a deployment and operations perspective, the client-server model addresses another key need: separation of update cycles. UI features often evolve faster than core machine logic. A new workflow, training overlay, or dashboard might be added quarterly, while the server remains stable for years. When the UI is decoupled, it can be upgraded independently, and it can even be customized for specific customers or machine variants. Conversely, a critical server security or safety fix can be deployed without requiring a full UI rebuild. This reduces downtime and makes the system more maintainable in the field.
+
+There is also a scalability dimension. As machines become more connected, the number of clients can grow. Operators, maintenance engineers, process engineers, and remote support teams may all require visibility into the machine. A client-server architecture allows the server to maintain a single authoritative state and serve it to multiple clients with controlled permissions. This avoids the complex synchronization logic that would be necessary if each client attempted to manage part of the machine state. It also enables read-only clients, which can observe machine status without being able to issue commands, supporting transparent monitoring and audit requirements.
+
+Networking requirements further reinforce the client-server split. Machines are increasingly connected to enterprise networks, and data is often collected for traceability and analytics. If the core logic were embedded in a UI, a network outage or browser crash could impact machine operation. AMCF ensures that the server is resilient and can continue operating in a safe mode even if the client disconnects. The client can reconnect and recover state through the API, without requiring manual synchronization. This network-resilient behavior is a direct result of having a distinct server with persistent state.
+
+Another practical benefit of modularity is the ability to support multiple UI technologies. Over a machine's lifetime, UI frameworks may change. A machine built a decade ago might have a native desktop UI, while a newer variant uses a web-based client. If the server exposes a stable API, the UI can evolve without altering the core logic. This is not hypothetical: software stacks change quickly, and long-term support is an explicit requirement in industrial environments. The client-server architecture allows AMCF to bridge technology generations without rewriting the machine control logic.
+
+Security considerations also favor a client-server model. The server can enforce authentication and authorization, log access attempts, and restrict commands to allowed roles. Clients are treated as untrusted in terms of safety, and their commands are validated by the server. This reduces the risk of accidental or malicious UI behavior causing unsafe machine actions. In addition, because the client is separate, security updates and hardening can be applied to the UI layer without touching the core server. It also allows deployment in segmented networks, where the server is on a protected subnet and clients use controlled gateways.
+
+Modularity also clarifies responsibility for data integrity. In AMCF, the server owns the authoritative process state and stores it in a reliable, versioned format. The client may cache or display state, but it should never be the source of truth. This avoids scenarios where the UI becomes inconsistent or outdated, leading to operator errors. It also ensures that machine state can be recovered after restarts or crashes. The server can restore state from persistent storage and re-enter a known, safe mode, which is essential for industrial systems with long run times.
+
+The architecture also supports a clear layering of timing-critical logic. The server can host a scheduler, manage finite state machines, and coordinate real-time tasks. Drivers can run in their own threads or processes with predictable timing, while the client remains asynchronous and non-blocking. If a UI action is slow or a network link is congested, the server remains deterministic. This is not just a performance benefit; it is a safety requirement. Modular architecture is what makes it possible to design and test these timing guarantees.
+
+The separation between server and client also creates a clean boundary for testing and simulation. A simulated server can be used in development to provide realistic responses to the UI, enabling faster iteration and reducing the need for hardware access. A test harness can drive the server directly to validate state transitions, resource handling, and error recovery. Because the API is stable and designed to be a primary interface, tests are representative of real-world usage. This is another practical advantage of the client-server model: it reduces the amount of custom test infrastructure needed for each UI or machine variant.
+
+From a business and ecosystem perspective, the modular approach enables vendor partnerships and third-party extensions. If the core server is stable and well-documented, external partners can develop plugins or drivers without requiring access to internal code. This fosters a marketplace of integrations and reduces the cost of adopting new hardware. It also means that a machine builder can deliver a custom solution by combining existing modules rather than rewriting core functionality. The client-server split is a prerequisite for such an ecosystem because it defines a clear contract for how components interact.
+
+It is also worth noting that modular architecture has a direct impact on maintainability. A monolithic system tends to accumulate technical debt because changes in one part can have unforeseen consequences elsewhere. With clear boundaries, changes are localized. When a new UI feature is added, it should not modify server scheduling logic. When a new driver is added, it should not require a UI change unless new operator controls are needed. This reduces regression risk and improves the ability to reason about the system. Over the life of a machine, this can be the difference between a sustainable platform and a fragile one.
+
+Another aspect of modularity is the ability to handle versioning and compatibility. When interfaces are stable and versioned, newer clients can talk to older servers and vice versa within defined constraints. This is essential for staged rollouts and for supporting mixed fleets of machines. A factory might have multiple machines at different software revisions, but a single monitoring client or dashboard should be able to talk to all of them. AMCF’s modular architecture supports this by keeping the API stable and by decoupling UI and server releases.
+
+The client-server system also enables richer diagnostics and telemetry. Because all actions are mediated by the server, it can log state transitions, timing, and errors in a consistent format. This data can be analyzed for performance optimization, failure analysis, and predictive maintenance. The client can display this data but does not need to generate it. This design makes it easier to build diagnostic tools and to integrate with external analytics platforms, without compromising the core control logic.
+
+In practice, the architecture supports three main deployment patterns:
+
+- Local HMI with server on the same machine, providing low-latency operator control.
+- Remote UI clients connecting over a network for monitoring and service.
+- Headless server operation with automated clients or scripts for testing and integration.
+
+All three patterns are supported without special cases because the client-server contract is consistent. This is important in environments where network availability is variable or where multiple control stations may be needed. The server is the stable anchor, and clients can be added or removed without altering core behavior.
+
+When evaluating modularity, it is also useful to consider failure modes. In a client-server system, a client can crash or disconnect without affecting the server. The server can continue running or enter a safe hold state. When the client reconnects, it reads state and resumes interaction. This is significantly more robust than a monolithic application where UI failure might terminate the control logic. The separation thus improves fault tolerance and safety.
+
+Another reason for the client-server split is to enable clear responsibility for resource access. The server can act as the gatekeeper for files, resources, and hardware access, ensuring that clients do not directly manipulate resources in an unsafe way. This is especially important when multiple clients exist, or when the client runs on a different machine with a different security context. The server can enforce access control, provide sanitized data, and prevent resource conflicts, which would be difficult in a monolithic UI-driven architecture.
+
+Modular architecture also helps with internationalization and customer-specific customization. A client can be localized, branded, or customized without affecting server behavior. This is valuable when machines are deployed globally or sold under different OEM branding. The server exposes a consistent API, and the client can be adapted to local requirements, language, or UI conventions. The result is a flexible product offering without compromising the safety or stability of the underlying control system.
+
+Finally, modularity is essential for long-term evolution. Machine control systems often live for decades, while software frameworks, UI technologies, and hardware components evolve much more quickly. A modular architecture ensures that the core server can remain stable and supported, while plugins, drivers, and clients can evolve at their own pace. The client-server model is not just a technical choice; it is a strategy for managing change over the lifetime of a machine.
+
+In summary, AMCF’s modular architecture is designed to provide strong boundaries between control logic, hardware integration, and user interaction. The client-server split enables determinism, safety, multi-client support, independent updates, robust testing, and long-term maintainability. It is the architectural foundation that allows AMCF to serve as a platform rather than a single-purpose application, supporting diverse machines, workflows, and environments while keeping the core stable and reliable.
 
 ### 1.4. Plugin mechanism and choice of programming language
 
+Every machine is a specialized system. The framework therefore exposes extension points for:
+
+- Drivers (hardware connectivity)
+- Process logic (build strategies, motion sequences)
+- UI modules (custom operator workflows)
+
+Plugins are written in C++ for performance and control, but the framework is designed to allow additional languages where appropriate. The interface is versioned and strict, so that a plugin can be built independently and deployed without rebuilding the core.
+
 ### 1.5. The Hourglass pattern and Stable ABIs
+
+The hourglass model means that the widest parts of the system exist at the top and bottom (many different clients and many different hardware integrations), while the middle stays minimal and stable. In practice this means:
+
+- A small set of carefully designed core interfaces.
+- Versioned, stable ABIs for plugins and drivers.
+- Strict input/output contracts across the API boundary.
+
+This keeps the core consistent while allowing aggressive innovation in UI and hardware adapters.
 
 ### 1.6. API First Design guidelines and best practices
 
+All functionality that is relevant to operators or integrations should be reachable through documented APIs. The framework follows a few concrete rules:
+
+- Core services must be callable through the API (no UI-only logic).
+- API endpoints return explicit error codes and structured responses.
+- API changes must be versioned to keep older clients functional.
+
+This keeps automation and UI development aligned and reduces hidden state.
 ### 1.7. Serialization principles, XML, JSON and binary storage
 
 ### 1.8. Resource handling and file access
@@ -304,6 +391,14 @@ There are a lot of ways and opinions how one could define a modular architecture
 
 ### 2.2. Using of git hashes in the core code
 
+The framework embeds git hashes into build artifacts to track provenance. This allows the machine operator and developer to identify the exact source revision of a running system, which is critical for:
+
+- Debugging field issues
+- Reproducing test results
+- Verifying compatibility of plugins and packages
+
+Build scripts store hashes in `build_<platform>/githash.txt` and package metadata, and the server exposes this information in its output folder and logs.
+
 ### 2.3. Stable APIs, Backwards compatibility and Data migration
 
 ### 2.4. Separation of Data and Logic and forward compatibilty.
@@ -311,6 +406,8 @@ There are a lot of ways and opinions how one could define a modular architecture
 ### 2.5. Package management, CI/CD and proper build pipelines.
 
 ### 2.6. Testing Framework
+
+Testing is integrated into the CMake build and includes both unit tests and system tests. The unit test framework in `Implementation/UnitTest` is built into the `amc_unittest` binary, while driver tests live under `Tests/<DriverName>Test`. Tests are expected to run against deterministic inputs and use simulation drivers where possible.
 
 ## 3. General Backend Architecture
 
@@ -485,4 +582,3 @@ There are a lot of ways and opinions how one could define a modular architecture
 # VII Tutorials
 
 # VIII AMCF REST API Documentation
-
