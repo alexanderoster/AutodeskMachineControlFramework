@@ -113,8 +113,8 @@ namespace AMC {
 		std::string m_sInstanceName;
 		std::string m_sName;
 
-		std::list <CStateSignalParameter> m_ParameterDefinitions;
-		std::list <CStateSignalParameter> m_ResultDefinitions;
+		std::vector <CStateSignalParameter> m_ParameterDefinitions;
+		std::vector <CStateSignalParameter> m_ResultDefinitions;
 
 		uint32_t m_nSignalDefaultReactionTimeOutInMS;
 		uint32_t m_nSignalQueueSize;
@@ -155,7 +155,7 @@ namespace AMC {
 
 	public:
 
-		CStateSignalSlot(const std::string & sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
+		CStateSignalSlot(const std::string & sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
 		virtual ~CStateSignalSlot();
 
 		std::string getNameInternal() const;
@@ -165,7 +165,7 @@ namespace AMC {
 		size_t clearQueueInternal(std::vector<std::string>& clearedUUIDs, uint64_t nTimeStamp);
 		bool eraseMessage(const std::string& sUUID);
 
-		bool addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp);
+		PStateSignalMessage addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp);
 		bool changeSignalPhaseToHandledInternal(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimeStamp);
 		bool changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp);
 		bool changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID, uint64_t nTimeStamp);

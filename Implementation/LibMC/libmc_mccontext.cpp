@@ -468,8 +468,8 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
         if (signalNameAttrib.empty())
             throw ELibMCCustomException(LIBMC_ERROR_MISSINGSIGNALNAME, "statemachine " + sName);
 
-        std::list<CStateSignalParameter> SignalParameters;
-        std::list<CStateSignalParameter> SignalResults;
+        std::vector<CStateSignalParameter> SignalParameters;
+        std::vector<CStateSignalParameter> SignalResults;
         uint32_t nSignalReactionTimeOut = 0;
         uint32_t nSignalQueueSize = 0;
 
@@ -614,7 +614,7 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 }
 
 
-void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::list<AMC::CStateSignalParameter>& Parameters, std::list<AMC::CStateSignalParameter>& Results, uint32_t & nSignalReactionTimeOut, uint32_t& nSignalQueueSize)
+void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::vector<AMC::CStateSignalParameter>& Parameters, std::vector<AMC::CStateSignalParameter>& Results, uint32_t & nSignalReactionTimeOut, uint32_t& nSignalQueueSize)
 {
 
     auto reactionTimeOutAttrib = xmlNode.attribute("reactiontimeout");

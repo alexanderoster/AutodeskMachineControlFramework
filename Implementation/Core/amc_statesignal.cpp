@@ -138,7 +138,7 @@ namespace AMC {
 	}
 
 
-	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup)
+	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup)
 		: m_sInstanceName (sInstanceName), 
 		m_sName (sName),  
 		m_ParameterDefinitions(Parameters), 
@@ -297,7 +297,7 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp)
+	PStateSignalMessage CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -322,7 +322,7 @@ namespace AMC {
 
 		pMessage->setParameterDataJSON(sParameterData);
 
-		return true;
+		return pMessage;
 	}
 
 	bool CStateSignalSlot::changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID, uint64_t nTimeStamp)

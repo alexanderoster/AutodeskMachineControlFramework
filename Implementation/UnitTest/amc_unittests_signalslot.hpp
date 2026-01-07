@@ -81,8 +81,8 @@ public:
 private:
 
     void test_CreateSignalSlotBasic() {
-        std::list<AMC::CStateSignalParameter> params;
-        std::list<AMC::CStateSignalParameter> results;
+        std::vector<AMC::CStateSignalParameter> params;
+        std::vector<AMC::CStateSignalParameter> results;
         params.emplace_back("p1", "string", true);
         results.emplace_back("r1", "int", true);
 
@@ -102,7 +102,7 @@ private:
 
         chrono.sleepMicroseconds(500);
 
-        bool added = slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"value\"}", 500, chrono.getElapsedMicroseconds ());
+        bool added = slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"value\"}", 500, chrono.getElapsedMicroseconds ()) != nullptr;
         assertTrue(added);
 
         assertIntegerRange(slot.getAvailableSignalQueueEntriesInternal(), 0, 4);
@@ -117,7 +117,8 @@ private:
 
         chrono.sleepMicroseconds(500);
 
-        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds()));
+        auto pMessage = slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds());
+        assertTrue(pMessage != nullptr);
         chrono.sleepMicroseconds(500);
 
         assertTrue(slot.changeSignalPhaseToInProcessInternal(uuid, chrono.getElapsedMicroseconds()));
@@ -138,7 +139,8 @@ private:
         AMCCommon::CChrono chrono;
         chrono.sleepMicroseconds(500);
 
-        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds()));
+        auto pMessage = slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds());
+        assertTrue(pMessage != nullptr);
 
         chrono.sleepMicroseconds(500);
         assertTrue(slot.changeSignalPhaseToInFailedInternal(uuid, "{\"ok\":false}", "error", chrono.getElapsedMicroseconds()));
@@ -151,10 +153,12 @@ private:
         chrono.sleepMicroseconds(500);
 
         AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 1, nullptr);
-        assertTrue(slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds()));
+        auto pMessage1 = slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds());
+        assertTrue(pMessage1 != nullptr);
         chrono.sleepMicroseconds(500);
 
-        assertFalse(slot.addNewInQueueSignalInternal("00000002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds())); // queue full
+        auto pMessage2 = slot.addNewInQueueSignalInternal("00000002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds());
+        assertFalse(pMessage2 != nullptr); // queue full
     }
 
     void test_PeekQueue() {
@@ -230,7 +234,8 @@ private:
             ss << "f10" << std::setfill('0') << std::setw(5) << i << "-0000-0000-0000-000000000000";
             std::string uuid = ss.str();
 
-            bool ok = slot.addNewInQueueSignalInternal(uuid, "{}", 50, chrono.getElapsedMicroseconds());
+            auto pMessage = slot.addNewInQueueSignalInternal(uuid, "{}", 50, chrono.getElapsedMicroseconds());
+			bool ok = pMessage != nullptr;
             if (ok) accepted.push_back(uuid);
             else rejected.push_back(uuid);
         }

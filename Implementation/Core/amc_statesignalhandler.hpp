@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef __AMC_STATESIGNALHANDLER
-#define __AMC_STATESIGNALHANDLER
+#ifndef AMC_STATESIGNALHANDLER
+#define AMC_STATESIGNALHANDLER
 
 #include <memory>
 #include <string>
@@ -49,7 +49,7 @@ namespace AMC {
 	class CStateSignalHandler;
 	typedef std::shared_ptr<CStateSignalHandler> PStateSignalHandler;
 
-	// Do not include StateSignal.hpp anywhere for threadsafety!
+	// Do not include StateSignal.hpp outside of amc_statesignalhandler.cpp for threadsafety!
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
@@ -66,9 +66,9 @@ namespace AMC {
 	public:
 
 		CStateSignalHandler();
-		virtual ~CStateSignalHandler();
+		virtual ~CStateSignalHandler() noexcept;
 
-		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::list<CStateSignalParameter> & Parameters, const std::list<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
+		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::vector<CStateSignalParameter> & Parameters, const std::vector<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
 
 		void clearUnhandledSignals(const std::string& sInstanceName, uint64_t nTimestamp);
 
@@ -116,5 +116,5 @@ namespace AMC {
 }
 
 
-#endif //__AMC_STATESIGNALHANDLER
+#endif //AMC_STATESIGNALHANDLER
 
