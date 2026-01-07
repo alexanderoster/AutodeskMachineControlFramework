@@ -64,7 +64,7 @@ CSignalHandler::CSignalHandler(AMC::PStateSignalHandler pSignalHandler, std::str
 
 void CSignalHandler::SignalHandled()
 {
-	m_pSignalHandler->changeSignalPhaseToHandled (m_sSignalUUID, m_pResultGroup->serializeToJSON ());
+	m_pSignalHandler->changeSignalPhaseToHandled (m_sSignalUUID, m_pResultGroup->serializeToJSON (), m_pGlobalChrono->getElapsedMicroseconds());
 }
 
 LibMCEnv::eSignalPhase CSignalHandler::GetSignalPhase()
@@ -100,13 +100,13 @@ LibMCEnv::eSignalPhase CSignalHandler::GetSignalPhase()
 
 
 void CSignalHandler::SignalInProcess()
-{
-	m_pSignalHandler->changeSignalPhaseToInProcess (m_sSignalUUID);
+{	
+	m_pSignalHandler->changeSignalPhaseToInProcess (m_sSignalUUID, m_pGlobalChrono->getElapsedMicroseconds());
 }
 
 void CSignalHandler::SignalFailed(const std::string& sErrorMessage)
 {
-	m_pSignalHandler->changeSignalPhaseToFailed(m_sSignalUUID, m_pResultGroup->serializeToJSON(), sErrorMessage);
+	m_pSignalHandler->changeSignalPhaseToFailed(m_sSignalUUID, m_pResultGroup->serializeToJSON(), sErrorMessage, m_pGlobalChrono->getElapsedMicroseconds());
 }
 
 

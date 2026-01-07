@@ -156,7 +156,7 @@ void CSignalTrigger::Trigger()
 
 bool CSignalTrigger::TryTrigger()
 {
-	bool bSuccess = m_pSignalHandler->addNewInQueueSignal(m_sInstanceName, m_sSignalName, m_sSignalUUID, m_pParameterGroup->serializeToJSON(), m_nReactionTimeOutInMs);
+	bool bSuccess = m_pSignalHandler->addNewInQueueSignal(m_sInstanceName, m_sSignalName, m_sSignalUUID, m_pParameterGroup->serializeToJSON(), m_nReactionTimeOutInMs, m_pGlobalChrono->getElapsedMicroseconds());
 	if (bSuccess ) {
 		m_bIsPreparing = false;
 		return true;

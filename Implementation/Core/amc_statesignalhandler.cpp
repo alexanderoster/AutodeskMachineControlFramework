@@ -49,23 +49,22 @@ namespace AMC {
 	{
 	}
 	
-	void CStateSignalHandler::addSignalDefinition(const std::string& sInstanceName, const std::string& sSignalName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize)
+	void CStateSignalHandler::addSignalDefinition(const std::string& sInstanceName, const std::string& sSignalName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_SignalMapMutex);
 
 		if (sSignalName.empty ())
-			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALNAME, sInstanceName);
-
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALNAME, sSignalName);
 
 		auto iter = m_SignalMap.find(std::make_pair (sInstanceName, sSignalName));
 		if (iter != m_SignalMap.end())
 			throw ELibMCCustomException(LIBMC_ERROR_DUPLICATESIGNAL, sInstanceName + "/" + sSignalName);
 
-		auto pSignal = std::make_shared<CStateSignalSlot>(sInstanceName, sSignalName, Parameters, Results, nSignalReactionTimeOutInMS, nSignalQueueSize);
+		auto pSignal = std::make_shared<CStateSignalSlot>(sInstanceName, sSignalName, Parameters, Results, nSignalReactionTimeOutInMS, nSignalQueueSize, pSignalInformationGroup);
 		m_SignalMap.insert(std::make_pair(std::make_pair (sInstanceName, sSignalName), pSignal));
 	}
 
-	bool CStateSignalHandler::addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS)
+	bool CStateSignalHandler::addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS, uint64_t nTimestamp)
 	{		
 
 		AMC::PStateSignalSlot pSlot;
@@ -87,7 +86,7 @@ namespace AMC {
 			throw ELibMCCustomException(LIBMC_ERROR_SIGNALALREADYTRIGGERED, sNormalizedUUID);
 
 
-		if (pSlot->addNewInQueueSignalInternal (sNormalizedUUID, sParameterData, nResponseTimeOutInMS)) {
+		if (pSlot->addNewInQueueSignalInternal (sNormalizedUUID, sParameterData, nResponseTimeOutInMS, nTimestamp)) {
 			m_SignalUUIDLookupMap.insert(std::make_pair(sNormalizedUUID, pSlot));
 			return true;
 		}
@@ -105,7 +104,7 @@ namespace AMC {
 
 
 
-	void CStateSignalHandler::clearUnhandledSignals(const std::string& sInstanceName)
+	void CStateSignalHandler::clearUnhandledSignals(const std::string& sInstanceName, uint64_t nTimestamp)
 	{
 		std::vector<AMC::PStateSignalSlot> slotList;
 		{
@@ -122,7 +121,7 @@ namespace AMC {
 
 		std::vector<std::string> clearedUUIDs;
 		for (auto pSlot : slotList) {
-			pSlot->clearQueueInternal(clearedUUIDs);
+			pSlot->clearQueueInternal(clearedUUIDs, nTimestamp);
 		}
 
 		if (!clearedUUIDs.empty ())
@@ -135,7 +134,7 @@ namespace AMC {
 
 	}
 
-	void CStateSignalHandler::clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName)
+	void CStateSignalHandler::clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName, uint64_t nTimestamp)
 	{
 
 		std::vector<AMC::PStateSignalSlot> slotList;
@@ -154,7 +153,7 @@ namespace AMC {
 		std::vector<std::string> clearedUUIDs;
 
 		for (auto pSlot : slotList) {
-			pSlot->clearQueueInternal(clearedUUIDs);
+			pSlot->clearQueueInternal(clearedUUIDs, nTimestamp);
 		}
 
 		if (!clearedUUIDs.empty())
@@ -202,7 +201,7 @@ namespace AMC {
 	}
 
 
-	void CStateSignalHandler::changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData)
+	void CStateSignalHandler::changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimestamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_SignalUUIDMapMutex);
 
@@ -212,10 +211,10 @@ namespace AMC {
 		if (iter == m_SignalUUIDLookupMap.end())
 			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "signal not found while changing phase to handled (" + sNormalizedUUID + ")");
 
-		iter->second->changeSignalPhaseToHandledInternal(sNormalizedUUID, sResultData);
+		iter->second->changeSignalPhaseToHandledInternal(sNormalizedUUID, sResultData, nTimestamp);
 	}
 
-	void CStateSignalHandler::changeSignalPhaseToInProcess(const std::string& sSignalUUID)
+	void CStateSignalHandler::changeSignalPhaseToInProcess(const std::string& sSignalUUID, uint64_t nTimestamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_SignalUUIDMapMutex);
 
@@ -225,10 +224,10 @@ namespace AMC {
 		if (iter == m_SignalUUIDLookupMap.end())
 			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "signal not found while changing phase to inprocess (" + sNormalizedUUID + ")");
 
-		iter->second->changeSignalPhaseToInProcessInternal (sNormalizedUUID);
+		iter->second->changeSignalPhaseToInProcessInternal (sNormalizedUUID, nTimestamp);
 	}
 
-	void CStateSignalHandler::changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage)
+	void CStateSignalHandler::changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimestamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_SignalUUIDMapMutex);
 
@@ -238,7 +237,7 @@ namespace AMC {
 		if (iter == m_SignalUUIDLookupMap.end())
 			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "signal not found while changing phase to failed (" + sNormalizedUUID + ")");
 
-		iter->second->changeSignalPhaseToInFailedInternal(sNormalizedUUID, sResultData, sErrorMessage);
+		iter->second->changeSignalPhaseToInFailedInternal(sNormalizedUUID, sResultData, sErrorMessage, nTimestamp);
 	}
 
 	AMC::eAMCSignalPhase CStateSignalHandler::getSignalPhase(const std::string& sSignalUUID)
@@ -254,7 +253,7 @@ namespace AMC {
 		return iter->second->getSignalPhaseInternal (sNormalizedUUID);
 	}
 
-	std::string CStateSignalHandler::peekSignalMessageFromQueue(const std::string& sInstanceName, const std::string& sSignalName)
+	std::string CStateSignalHandler::peekSignalMessageFromQueue(const std::string& sInstanceName, const std::string& sSignalName, bool bCheckForTimeouts, uint64_t nGlobalTimestamp)
 	{
 		AMC::PStateSignalSlot pSlot;
 		{
@@ -267,10 +266,26 @@ namespace AMC {
 			pSlot = iter->second;
 		}
 
-		return pSlot->peekMessageFromQueueInternal();
+
+
+		return pSlot->peekMessageFromQueueInternal(bCheckForTimeouts, nGlobalTimestamp);
 
 	}
 
+
+	void CStateSignalHandler::checkForReactionTimeouts(uint64_t nGlobalTimestamp)
+	{
+		std::list<AMC::PStateSignalSlot> slots;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_SignalMapMutex);
+			for (auto iIter : m_SignalMap)
+				slots.push_back(iIter.second);
+		}
+
+		for (auto pSlot : slots) {
+			pSlot->checkForReactionTimeouts(nGlobalTimestamp);
+		}
+	}
 
 	uint32_t CStateSignalHandler::getAvailableSignalQueueEntryCount(const std::string& sInstanceName, const std::string& sSignalName)
 	{
@@ -431,8 +446,7 @@ namespace AMC {
 		pSlot->populateResultGroup(pResultGroup);
 	}
 
-
-
 }
+
 
 

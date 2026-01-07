@@ -61,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MACHINEDEFINITION_XMLSCHEMA "http://schemas.autodesk.com/amc/machinedefinitions/2020/02"
 #define MACHINEDEFINITIONTEST_XMLSCHEMA "http://schemas.autodesk.com/amc/testdefinitions/2020/02"
 
+#define LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS 1000
 
 using namespace LibMC::Impl;
 using namespace AMC;
@@ -458,6 +459,9 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
     m_pSystemState->logger()->logMessage("Creating state machine \"" + sName + "\"", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
     pInstance = std::make_shared<CStateMachineInstance> (sName, sDescription, m_pEnvironmentWrapper, m_pSystemState, m_pStateJournal);
 
+    auto pSystemParameterHandler = m_pSystemState->stateMachineData()->getParameterHandler("system");
+    auto pSignalInformationGroup = pSystemParameterHandler->addGroup("signals_" + sName, sName + " Signals");
+
     auto signalNodes = xmlNode.children("signaldefinition");
     for (pugi::xml_node signalNode : signalNodes) {
         auto signalNameAttrib = signalNode.attribute("name");
@@ -469,12 +473,16 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
         uint32_t nSignalReactionTimeOut = 0;
         uint32_t nSignalQueueSize = 0;
 
-        readSignalParameters(signalNameAttrib.as_string(), signalNode, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
+        std::string sSignalName = signalNameAttrib.as_string();
+        readSignalParameters(sSignalName, signalNode, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
 
         auto pStateSignalHandler = m_pSystemState->stateSignalHandler();
-        pStateSignalHandler->addSignalDefinition(sName, signalNameAttrib.as_string(), SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
+        pStateSignalHandler->addSignalDefinition(sName, sSignalName, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize, pSignalInformationGroup);
 
     }
+
+
+
 
 
     auto pParameterHandler = pInstance->getParameterHandler();
@@ -918,8 +926,72 @@ LibMCPlugin::PWrapper CMCContext::loadPlugin(std::string sPluginName)
 }
 
 
+void CMCContext::executeSystemThread()
+{
+    while (!systemThreadShallTerminate()) {
+
+        uint32_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
+        m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
+        std::this_thread::sleep_for(std::chrono::milliseconds(LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS));
+
+    }
+}
+
+
+void CMCContext::startSystemThread()
+{
+
+    if (systemThreadIsRunning())
+        throw ELibMCCustomException(LIBMC_ERROR_THREADISRUNNING, "system");
+
+    // Initialise signals
+    m_SystemTerminateSignal = std::promise<void>();
+    m_SystemTerminateFuture = m_SystemTerminateSignal.get_future();
+
+    // Start Thread
+    m_SystemThread = std::thread(&CMCContext::executeSystemThread, this);
+
+}
+
+bool CMCContext::systemThreadIsRunning()
+{
+    return m_SystemTerminateFuture.valid();
+}
+
+bool CMCContext::systemThreadShallTerminate()
+{
+    if (m_SystemTerminateFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+        return false;
+
+    return true;
+}
+
+void CMCContext::terminateSystemThread()
+{
+    m_pSystemState->logger()->logMessage("terminating system thread...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
+
+    if (!systemThreadIsRunning())
+        throw ELibMCCustomException(LIBMC_ERROR_THREADISNOTRUNNING, "system");
+
+    // Set termination flag
+    m_SystemTerminateSignal.set_value();
+
+    // Wait for thread to finish
+    m_SystemThread.join();
+
+    m_pSystemState->logger()->logMessage("system thread terminated", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
+
+    // Clean up signals
+    m_SystemTerminateFuture = std::future<void>();
+    m_SystemTerminateSignal = std::promise<void>();
+}
+
 void CMCContext::StartAllThreads()
 {
+
+    m_pSystemState->logger()->logMessage("starting system thread...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
+    startSystemThread();
+
     m_pSystemState->logger()->logMessage("starting threads...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
     for (auto instance : m_InstanceList)
         instance->startThread();

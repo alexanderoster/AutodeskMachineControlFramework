@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 #include <mutex>
 #include "common_utils.hpp"
+#include "common_chrono.hpp"
 
 
 namespace AMCUnitTest {
@@ -85,7 +86,7 @@ private:
         params.emplace_back("p1", "string", true);
         results.emplace_back("r1", "int", true);
 
-        AMC::CStateSignalSlot slot("instance", "signal", params, results, 500, 10);
+        AMC::CStateSignalSlot slot("instance", "signal", params, results, 500, 10, nullptr);
 
         assertTrue(slot.getNameInternal() == "signal");
         assertTrue(slot.getInstanceNameInternal() == "instance");
@@ -94,10 +95,14 @@ private:
     }
 
     void test_AddSignalToQueue() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5, nullptr);
         std::string uuid = "11111111-2222-3333-4444-555555555555";
 
-        bool added = slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"value\"}", 500);
+        AMCCommon::CChrono chrono;
+
+        chrono.sleepMicroseconds(500);
+
+        bool added = slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"value\"}", 500, chrono.getElapsedMicroseconds ());
         assertTrue(added);
 
         assertIntegerRange(slot.getAvailableSignalQueueEntriesInternal(), 0, 4);
@@ -105,65 +110,118 @@ private:
     }
 
     void test_SignalPhaseTransition() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3, nullptr);
         std::string uuid = "77777777-8888-9999-aaaa-bbbbbbbbbbbb";
 
-        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500));
-        assertTrue(slot.changeSignalPhaseToInProcessInternal(uuid));
+        AMCCommon::CChrono chrono;
+
+        chrono.sleepMicroseconds(500);
+
+        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds()));
+        chrono.sleepMicroseconds(500);
+
+        assertTrue(slot.changeSignalPhaseToInProcessInternal(uuid, chrono.getElapsedMicroseconds()));
         assertTrue(slot.getSignalPhaseInternal(uuid) == AMC::eAMCSignalPhase::InProcess);
 
-        assertTrue(slot.changeSignalPhaseToHandledInternal(uuid, "{\"result\":true}"));
+        chrono.sleepMicroseconds(1000);
+
+        assertTrue(slot.changeSignalPhaseToHandledInternal(uuid, "{\"result\":true}", chrono.getElapsedMicroseconds()));
         assertTrue(slot.getSignalPhaseInternal(uuid) == AMC::eAMCSignalPhase::Handled);
 
         assertTrue(slot.getResultDataJSONInternal(uuid) == "{\"result\":true}");
     }
 
     void test_SignalFailureTransition() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
         std::string uuid = "deadbeef-dead-beef-dead-beefdeadbeef";
 
-        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500));
-        assertTrue(slot.changeSignalPhaseToInFailedInternal(uuid, "{\"ok\":false}", "error"));
+        AMCCommon::CChrono chrono;
+        chrono.sleepMicroseconds(500);
+
+        assertTrue(slot.addNewInQueueSignalInternal(uuid, "{}", 500, chrono.getElapsedMicroseconds()));
+
+        chrono.sleepMicroseconds(500);
+        assertTrue(slot.changeSignalPhaseToInFailedInternal(uuid, "{\"ok\":false}", "error", chrono.getElapsedMicroseconds()));
         assertTrue(slot.getSignalPhaseInternal(uuid) == AMC::eAMCSignalPhase::Failed);
     }
 
     void test_QueueOverflow() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 1);
-        assertTrue(slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500));
-        assertFalse(slot.addNewInQueueSignalInternal("00000002-0000-0000-0000-000000000002", "{}", 500)); // queue full
+
+        AMCCommon::CChrono chrono;
+        chrono.sleepMicroseconds(500);
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 1, nullptr);
+        assertTrue(slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds()));
+        chrono.sleepMicroseconds(500);
+
+        assertFalse(slot.addNewInQueueSignalInternal("00000002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds())); // queue full
     }
 
     void test_PeekQueue() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3);
-        slot.addNewInQueueSignalInternal("aaaaaaaa-0000-0000-0000-000000000001", "{\"a\":1}", 400);
-        slot.addNewInQueueSignalInternal("bbbbbbbb-0000-0000-0000-000000000002", "{\"b\":2}", 400);
-        assertTrue(slot.peekMessageFromQueueInternal() == AMCCommon::CUtils::normalizeUUIDString("aaaaaaaa-0000-0000-0000-000000000001"));
+
+        AMCCommon::CChrono chrono;
+        chrono.sleepMicroseconds(500);
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3, nullptr);
+
+        chrono.sleepMicroseconds(500);
+        slot.addNewInQueueSignalInternal("aaaaaaaa-0000-0000-0000-000000000001", "{\"a\":1}", 400, chrono.getElapsedMicroseconds());
+
+        chrono.sleepMicroseconds(500);
+        slot.addNewInQueueSignalInternal("bbbbbbbb-0000-0000-0000-000000000002", "{\"b\":2}", 400, chrono.getElapsedMicroseconds());
+
+        chrono.sleepMicroseconds(500);
+        assertTrue(slot.peekMessageFromQueueInternal(true, chrono.getElapsedMicroseconds ()) == AMCCommon::CUtils::normalizeUUIDString("aaaaaaaa-0000-0000-0000-000000000001"));
     }
 
     void test_ParameterResultAccess() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2);
+
+        AMCCommon::CChrono chrono;
+        chrono.sleepMicroseconds(500);
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
         std::string uuid = "e5e57000-0000-0000-0000-000000000001";
-        slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"abc\"}", 1000);
+
+        chrono.sleepMicroseconds(500);
+        slot.addNewInQueueSignalInternal(uuid, "{\"param\":\"abc\"}", 1000, chrono.getElapsedMicroseconds());
+
+        chrono.sleepMicroseconds(500);
         assertTrue(slot.getParameterDataJSONInternal(uuid) == "{\"param\":\"abc\"}");
-        slot.changeSignalPhaseToHandledInternal(uuid, "{\"result\":123}");
+
+        chrono.sleepMicroseconds(500);
+        slot.changeSignalPhaseToHandledInternal(uuid, "{\"result\":123}", chrono.getElapsedMicroseconds());
         assertTrue(slot.getResultDataJSONInternal(uuid) == "{\"result\":123}");
     }
 
     void test_ClearQueueWorks() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2);
-        slot.addNewInQueueSignalInternal("11110001-0000-0000-0000-000000000001", "{}", 500);
-        slot.addNewInQueueSignalInternal("22220002-0000-0000-0000-000000000002", "{}", 500);
 
+        AMCCommon::CChrono chrono;
+        chrono.sleepMicroseconds(500);
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
+
+        chrono.sleepMicroseconds(500);
+        slot.addNewInQueueSignalInternal("11110001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds());
+
+        chrono.sleepMicroseconds(500);
+        slot.addNewInQueueSignalInternal("22220002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds());
+
+        chrono.sleepMicroseconds(500);
         std::vector<std::string> clearedUUIDs;
-        slot.clearQueueInternal(clearedUUIDs);
+        slot.clearQueueInternal(clearedUUIDs, chrono.getElapsedMicroseconds());
         assertTrue(slot.getAvailableSignalQueueEntriesInternal() == 2);
     }
 
 
     void test_TimeoutAndOverflowTest() {
+
+        AMCCommon::CChrono chrono;
+
+        chrono.sleepMicroseconds(500);
+
         const int capacity = 10;
         const int total = 15;
-        AMC::CStateSignalSlot slot("overflowInstance", "overflowSignal", {}, {}, 50, capacity);
+        AMC::CStateSignalSlot slot("overflowInstance", "overflowSignal", {}, {}, 50, capacity, nullptr);
 
         std::vector<std::string> accepted, rejected;
 
@@ -172,12 +230,12 @@ private:
             ss << "f10" << std::setfill('0') << std::setw(5) << i << "-0000-0000-0000-000000000000";
             std::string uuid = ss.str();
 
-            bool ok = slot.addNewInQueueSignalInternal(uuid, "{}", 50);
+            bool ok = slot.addNewInQueueSignalInternal(uuid, "{}", 50, chrono.getElapsedMicroseconds());
             if (ok) accepted.push_back(uuid);
             else rejected.push_back(uuid);
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        chrono.sleepMilliseconds(200);
 
         int timedOut = 0;
         for (const auto& uuid : accepted) {

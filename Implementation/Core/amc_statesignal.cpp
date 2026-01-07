@@ -38,10 +38,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace AMC {
 	
 
-	CStateSignalMessage::CStateSignalMessage(const std::string& sUUID, uint32_t nReactionTimeoutInMS, AMC::eAMCSignalPhase initialPhase)
+	CStateSignalMessage::CStateSignalMessage(const std::string& sUUID, uint32_t nReactionTimeoutInMS, AMC::eAMCSignalPhase initialPhase, uint64_t nCreationTimestamp)
 		: m_sUUID(AMCCommon::CUtils::normalizeUUIDString(sUUID)),
 		m_nReactionTimeoutInMS(nReactionTimeoutInMS),
-		m_MessagePhase (initialPhase)
+		m_MessagePhase (initialPhase),
+		m_nCreationTimestamp (nCreationTimestamp),
+		m_nMicrosecondsUntilInProcess (0),
+		m_nMicrosecondsUntilHandledOrFailed (0),
+		m_nMicrosecondsUntilCleared (0)
+
 	{
 
 	}
@@ -56,8 +61,32 @@ namespace AMC {
 		return m_sUUID;
 	}
 
-	void CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase)
+	void CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp)
 	{
+		if (nGlobalTimeStamp < m_nCreationTimestamp)
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDTIMESTAMP, "setPhase: Global timestamp is earlier than creation timestamp");
+
+		uint64_t nElapsedMicroseconds = (nGlobalTimeStamp - m_nCreationTimestamp);
+		if (nElapsedMicroseconds > UINT32_MAX)
+			nElapsedMicroseconds = UINT32_MAX;
+
+		switch (messagePhase) {
+			case AMC::eAMCSignalPhase::InProcess:
+				m_nMicrosecondsUntilInProcess = (uint32_t)nElapsedMicroseconds;
+				break;
+
+			case AMC::eAMCSignalPhase::Handled:
+			case AMC::eAMCSignalPhase::Failed:
+			case AMC::eAMCSignalPhase::TimedOut:
+				m_nMicrosecondsUntilHandledOrFailed = (uint32_t)nElapsedMicroseconds;
+				break;
+
+			case AMC::eAMCSignalPhase::Cleared:
+				m_nMicrosecondsUntilCleared = (uint32_t)nElapsedMicroseconds;
+				break;
+		}
+
+
 		m_MessagePhase = messagePhase;
 	}
 
@@ -69,6 +98,12 @@ namespace AMC {
 	uint32_t CStateSignalMessage::getReactionTimeoutInMS() const
 	{
 		return m_nReactionTimeoutInMS;
+	}
+
+	bool CStateSignalMessage::hadReactionTimeout(uint64_t nGlobalTimestamp)
+	{
+		uint64_t nTimeoutTimestamp = m_nCreationTimestamp + m_nReactionTimeoutInMS * 1000;
+		return (nGlobalTimestamp >= nTimeoutTimestamp);
 	}
 
 	std::string CStateSignalMessage::getResultDataJSON() const
@@ -103,14 +138,32 @@ namespace AMC {
 	}
 
 
-	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize)
+	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::list<CStateSignalParameter>& Parameters, const std::list<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup)
 		: m_sInstanceName (sInstanceName), 
 		m_sName (sName),  
 		m_ParameterDefinitions(Parameters), 
 		m_ResultDefinitions(Results),
 		m_nSignalDefaultReactionTimeOutInMS(nSignalDefaultReactionTimeOutInMS),
-		m_nSignalQueueSize (nSignalQueueSize)
+		m_nSignalQueueSize (nSignalQueueSize),
+		m_pSignalInformationGroup (pSignalInformationGroup),
+		m_nTriggerCount (0),
+		m_nHandledCount (0),
+		m_nFailedCount (0),
+		m_nTimedOutCount (0),
+		m_nMaxReactionTime (0),
+		m_nMaxSuccessTime (0)
+
 	{
+
+		if (pSignalInformationGroup.get() != nullptr) {
+			pSignalInformationGroup->addNewIntParameter("triggered_" + m_sName, m_sName + " was triggered", 0);
+			pSignalInformationGroup->addNewIntParameter("handled_" + m_sName, m_sName + " was handled", 0);
+			pSignalInformationGroup->addNewIntParameter("failed_" + m_sName, m_sName + " has failed", 0);
+			pSignalInformationGroup->addNewIntParameter("timeout_" + m_sName, m_sName + " timed out", 0);
+			pSignalInformationGroup->addNewIntParameter("reactiontime_" + m_sName, m_sName + " max reaction time (microseconds)", 0);
+			pSignalInformationGroup->addNewIntParameter("successtime_" + m_sName, m_sName + " max success time (microseconds)", 0);
+		}
+
 	}
 	
 	CStateSignalSlot::~CStateSignalSlot()
@@ -136,6 +189,42 @@ namespace AMC {
 			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "getMessageByUUIDNoMutex: Signal UUID not found: " + sNormalizedUUID);
 		
 		return it->second.get ();
+	}
+
+	void CStateSignalSlot::increaseTriggerCount()
+	{
+		m_nTriggerCount++;
+		if (m_pSignalInformationGroup.get() != nullptr) {
+			m_pSignalInformationGroup->setIntParameterValueByName("triggered_" + m_sName, (int64_t)m_nTriggerCount);
+		}
+
+	}
+
+	void CStateSignalSlot::increaseHandledCount()
+	{
+		m_nHandledCount++;
+		if (m_pSignalInformationGroup.get() != nullptr) {
+			m_pSignalInformationGroup->setIntParameterValueByName("handled_" + m_sName, (int64_t)m_nHandledCount);
+		}
+
+	}
+
+	void CStateSignalSlot::increaseFailedCount()
+	{
+		m_nFailedCount++;
+		if (m_pSignalInformationGroup.get() != nullptr) {
+			m_pSignalInformationGroup->setIntParameterValueByName("failed_" + m_sName, (int64_t)m_nFailedCount);
+		}
+
+	}
+
+	void CStateSignalSlot::increaseTimeoutCount()
+	{
+		m_nTimedOutCount++;
+		if (m_pSignalInformationGroup.get() != nullptr) {
+			m_pSignalInformationGroup->setIntParameterValueByName("timeout_" + m_sName, (int64_t)m_nTimedOutCount);
+		}
+
 	}
 
 
@@ -183,7 +272,7 @@ namespace AMC {
 
 	}
 
-	size_t CStateSignalSlot::clearQueueInternal(std::vector<std::string>& clearedUUIDs)
+	size_t CStateSignalSlot::clearQueueInternal(std::vector<std::string>& clearedUUIDs, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -195,7 +284,7 @@ namespace AMC {
 			m_Queue.pop_front();
 			m_QueueMap.erase(sUUID);
 
-			pMessage->setPhase(AMC::eAMCSignalPhase::Cleared);
+			pMessage->setPhase(AMC::eAMCSignalPhase::Cleared, nTimeStamp);
 			m_Cleared.insert(sUUID);
 
 			m_MessageMap.erase(sUUID);
@@ -208,7 +297,7 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS)
+	bool CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -224,17 +313,19 @@ namespace AMC {
 			return false;
 		}
 
-		auto pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, eAMCSignalPhase::InQueue);
+		auto pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, eAMCSignalPhase::InQueue, nTimeStamp);
 		m_Queue.push_back(pMessage);
 		m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
 		m_MessageMap.insert(std::make_pair (sNormalizedUUID, pMessage));
+
+		increaseTriggerCount();
 
 		pMessage->setParameterDataJSON(sParameterData);
 
 		return true;
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID)
+	bool CStateSignalSlot::changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -244,7 +335,7 @@ namespace AMC {
 
 		if (messagePhase == eAMCSignalPhase::InQueue) {
 
-			pMessage->setPhase(eAMCSignalPhase::InProcess);
+			pMessage->setPhase(eAMCSignalPhase::InProcess, nTimeStamp);
 			m_InProcess.insert(sUUID);
 
 			auto iQueueIter = m_QueueMap.find(sUUID);
@@ -260,7 +351,7 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToHandledInternal(const std::string & sSignalUUID, const std::string& sResultData)
+	bool CStateSignalSlot::changeSignalPhaseToHandledInternal(const std::string & sSignalUUID, const std::string& sResultData, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -277,17 +368,22 @@ namespace AMC {
 			m_QueueMap.erase(iQueueIter);
 
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Handled);
+			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
 			m_Handled.insert(sUUID);
+
+			increaseHandledCount();
 
 			return true;
 		}
 
 		if (messagePhase == eAMCSignalPhase::InProcess) {
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Handled);
+			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
 			m_Handled.insert(sUUID);
 			m_InProcess.erase(sUUID);
+
+			increaseHandledCount();
+
 			return true;
 		}
 
@@ -295,7 +391,7 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage)
+	bool CStateSignalSlot::changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -311,19 +407,24 @@ namespace AMC {
 			m_QueueMap.erase(iQueueIter);
 			
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Failed);
+			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
 			pMessage->setErrorMessage(sErrorMessage);
 			m_Failed.insert(sUUID);
+
+			increaseFailedCount();
 
 			return true;
 		}
 
 		if (messagePhase == eAMCSignalPhase::InProcess) {
-			pMessage->setPhase(eAMCSignalPhase::Failed);
+			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setErrorMessage(sErrorMessage);
 			m_Failed.insert(sUUID);
 			m_InProcess.erase(sUUID);
+
+			increaseFailedCount();
+
 			return true;
 		}
 
@@ -356,9 +457,46 @@ namespace AMC {
 
 	}
 
-	std::string CStateSignalSlot::peekMessageFromQueueInternal()
+	void CStateSignalSlot::checkForReactionTimeoutsNoMutex(uint64_t nGlobalTimestamp)
+	{
+		auto it = m_Queue.begin();
+		while (it != m_Queue.end()) {
+			auto pMessage = (*it);
+			if (pMessage->hadReactionTimeout(nGlobalTimestamp)) {
+				// Signal has timed out
+				std::string sUUID = pMessage->getUUID();
+				pMessage->setPhase(eAMCSignalPhase::TimedOut, nGlobalTimestamp);
+				m_TimedOut.insert(sUUID);
+
+				it = m_Queue.erase(it);
+				m_QueueMap.erase(sUUID);
+				m_MessageMap.erase(sUUID);
+
+				increaseTimeoutCount();
+
+			}
+			else {
+				++it;
+			}
+		}
+
+
+	}
+
+	void CStateSignalSlot::checkForReactionTimeouts(uint64_t nGlobalTimestamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		checkForReactionTimeoutsNoMutex(nGlobalTimestamp);
+	}
+
+
+	std::string CStateSignalSlot::peekMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+		if (bCheckForReactionTimeout) {
+			checkForReactionTimeoutsNoMutex(nGlobalTimestamp);
+		}
 
 		if (m_Queue.empty())
 			return "";

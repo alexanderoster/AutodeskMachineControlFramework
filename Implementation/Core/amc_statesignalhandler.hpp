@@ -53,6 +53,7 @@ namespace AMC {
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
+
 	class CStateSignalHandler {
 	private:
 		
@@ -61,16 +62,17 @@ namespace AMC {
 		std::mutex m_SignalMapMutex;
 		std::mutex m_SignalUUIDMapMutex;
 
+
 	public:
 
 		CStateSignalHandler();
 		virtual ~CStateSignalHandler();
 
-		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::list<CStateSignalParameter> & Parameters, const std::list<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize);
+		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::list<CStateSignalParameter> & Parameters, const std::list<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
 
-		void clearUnhandledSignals(const std::string& sInstanceName);
+		void clearUnhandledSignals(const std::string& sInstanceName, uint64_t nTimestamp);
 
-		void clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName);
+		void clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName, uint64_t nTimestamp);
 
 		bool finalizeSignal(const std::string& sUUID);
 
@@ -82,15 +84,17 @@ namespace AMC {
 
 		AMC::eAMCSignalPhase getSignalPhase (const std::string& sSignalUUID);
 
-		std::string peekSignalMessageFromQueue (const std::string& sInstanceName, const std::string& sSignalName);
+		std::string peekSignalMessageFromQueue(const std::string& sInstanceName, const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
 
-		bool addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS);
+		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
 
-		void changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData);
+		bool addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS, uint64_t nTimestamp);
 
-		void changeSignalPhaseToInProcess(const std::string& sSignalUUID);
+		void changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimestamp);
+
+		void changeSignalPhaseToInProcess(const std::string& sSignalUUID, uint64_t nTimestamp);
 		
-		void changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string & sErrorMessage);
+		void changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string & sErrorMessage, uint64_t nTimestamp);
 
 		uint32_t getAvailableSignalQueueEntryCount(const std::string& sInstanceName, const std::string& sSignalName);
 
@@ -105,7 +109,6 @@ namespace AMC {
 		void populateParameterGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup * pParameterGroup);
 
 		void populateResultGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup* pResultGroup);
-
 
 	};
 

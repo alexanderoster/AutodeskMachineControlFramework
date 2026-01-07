@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_interfaces.hpp"
 #include "amc_statemachineinstance.hpp"
 #include "amc_logger_multi.hpp"
+#include "amc_logger.hpp"
 
 #include "amc_statesignalhandler.hpp"
 #include "amc_resourcepackage.hpp"
@@ -95,6 +96,18 @@ private:
 	AMC::PAPIHandler_APIDocs m_pAPIDocumentationHandler;
 
 	AMC::PResourcePackage m_pCoreResourcePackage;
+
+	// System thread (executes repetitive maintenance tasks)
+	std::thread m_SystemThread;
+	std::promise<void> m_SystemTerminateSignal;
+	std::future<void> m_SystemTerminateFuture;
+
+	void startSystemThread();
+	void terminateSystemThread();
+	void executeSystemThread();
+	bool systemThreadIsRunning();
+	bool systemThreadShallTerminate();
+
 
 	void loadParameterGroup (const pugi::xml_node& xmlNode, AMC::PParameterGroup pGroup);
 	void loadParameterGroupDerives (const pugi::xml_node& xmlNode, AMC::PParameterGroup pGroup, const std::string & sStateMachineInstance);

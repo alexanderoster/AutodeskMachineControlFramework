@@ -120,13 +120,18 @@ ISignalTrigger* CStateEnvironment::PrepareSignal(const std::string& sMachineInst
 
 bool CStateEnvironment::WaitForSignal(const std::string& sSignalName, const LibMCEnv_uint32 nTimeOut, ISignalHandler*& pHandlerInstance)
 {
-	auto startTime = std::chrono::high_resolution_clock::now();
-	auto endTime = startTime + std::chrono::milliseconds(nTimeOut);
+
+	auto pChronoInstance = m_pSystemState->getGlobalChronoInstance();
+
+	uint64_t nStartTime = pChronoInstance->getElapsedMicroseconds();
+	uint64_t nEndTime = nStartTime + (static_cast<uint64_t>(nTimeOut) * 1000);
 
 	bool bIsTimeOut = false;
 	while (!bIsTimeOut) {
 
-		std::string sUnhandledSignalUUID = m_pSystemState->stateSignalHandler()->peekSignalMessageFromQueue(m_sInstanceName, sSignalName);
+		uint64_t nCurrentTime = pChronoInstance->getElapsedMicroseconds();
+
+		std::string sUnhandledSignalUUID = m_pSystemState->stateSignalHandler()->peekSignalMessageFromQueue(m_sInstanceName, sSignalName, true, nCurrentTime);
 
 		if (!sUnhandledSignalUUID.empty ()) {
 			pHandlerInstance = new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), sUnhandledSignalUUID, m_pSystemState->getGlobalChronoInstance());
@@ -134,7 +139,7 @@ bool CStateEnvironment::WaitForSignal(const std::string& sSignalName, const LibM
 			return true;
 		}
 
-		bIsTimeOut = std::chrono::high_resolution_clock::now() >= endTime;
+		bIsTimeOut = nCurrentTime >= nEndTime;
 
 		if (!bIsTimeOut) {
 			if (CheckForTermination())
@@ -150,10 +155,12 @@ bool CStateEnvironment::WaitForSignal(const std::string& sSignalName, const LibM
 
 ISignalHandler* CStateEnvironment::GetUnhandledSignal(const std::string& sSignalTypeName)
 {
-	std::string sUnhandledSignalUUID = m_pSystemState->stateSignalHandler()->peekSignalMessageFromQueue(m_sInstanceName, sSignalTypeName);
+	auto pChronoInstance = m_pSystemState->getGlobalChronoInstance();
+
+	std::string sUnhandledSignalUUID = m_pSystemState->stateSignalHandler()->peekSignalMessageFromQueue(m_sInstanceName, sSignalTypeName, true, pChronoInstance->getElapsedMicroseconds ());
 
 	if (!sUnhandledSignalUUID.empty ()) {
-		return new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), sUnhandledSignalUUID, m_pSystemState->getGlobalChronoInstance());
+		return new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), sUnhandledSignalUUID, pChronoInstance);
 	}
 
 	return nullptr;
@@ -161,12 +168,14 @@ ISignalHandler* CStateEnvironment::GetUnhandledSignal(const std::string& sSignal
 
 void CStateEnvironment::ClearAllUnhandledSignals()
 {
-	m_pSystemState->stateSignalHandler()->clearUnhandledSignals(m_sInstanceName);
+	auto pChrono = m_pSystemState->globalChrono();
+	m_pSystemState->stateSignalHandler()->clearUnhandledSignals(m_sInstanceName, pChrono->getElapsedMicroseconds ());
 }
 
 void CStateEnvironment::ClearUnhandledSignalsOfType(const std::string& sSignalTypeName)
 {
-	m_pSystemState->stateSignalHandler()->clearUnhandledSignalsOfType(m_sInstanceName, sSignalTypeName);
+	auto pChrono = m_pSystemState->globalChrono();	
+	m_pSystemState->stateSignalHandler()->clearUnhandledSignalsOfType(m_sInstanceName, sSignalTypeName, pChrono->getElapsedMicroseconds ());
 }
 
 ISignalHandler* CStateEnvironment::GetUnhandledSignalByUUID(const std::string& sUUID, const bool bMustExist)
