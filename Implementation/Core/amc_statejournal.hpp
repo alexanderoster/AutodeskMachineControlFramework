@@ -102,6 +102,7 @@ namespace AMC {
 		std::string getStartTimeAsUTC();
 
 		uint64_t getLifeTimeInMicroseconds();
+		uint64_t getMemoryUsageInBytes();
 
 	};
 
@@ -110,4 +111,3 @@ namespace AMC {
 
 
 #endif //__AMC_STATEJOURNAL
-

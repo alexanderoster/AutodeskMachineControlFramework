@@ -336,6 +336,7 @@ namespace AMC {
 		std::string getStartTimeAsUTC();
 
 		uint64_t getLifeTimeInMicroseconds();
+		uint64_t getMemoryUsageInBytes();
 
 	};
 
@@ -666,6 +667,15 @@ namespace AMC {
 		return m_nLifetimeInMicroseconds;
 	}
 
+	uint64_t CStateJournalImpl::getMemoryUsageInBytes()
+	{
+		auto pCache = m_pStream->getCache();
+		if (pCache.get() == nullptr)
+			return 0;
+
+		return pCache->getCurrentMemoryUsage();
+	}
+
 
 	uint64_t CStateJournalImpl::retrieveTimeStamp_MicroSecond()
 	{
@@ -794,7 +804,11 @@ namespace AMC {
 		return m_pImpl->getLifeTimeInMicroseconds();
 	}
 
+	uint64_t CStateJournal::getMemoryUsageInBytes()
+	{
+		return m_pImpl->getMemoryUsageInBytes();
+	}
+
 
 }
-
 

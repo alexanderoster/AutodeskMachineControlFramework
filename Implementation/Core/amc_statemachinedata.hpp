@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <map>
 #include <string>
+#include <functional>
 #include <mutex>
 
 namespace AMC {
@@ -51,6 +52,7 @@ namespace AMC {
 		std::map <std::string, PParameterHandler> m_StateMachineParameters;
 		std::map <std::string, PParameterGroup> m_StateMachineDataStores;
 		std::map <std::string, std::string> m_StateMachineStates;
+		std::map <std::string, std::function<void()>> m_ParameterUpdateCallbacks;
 
 		std::mutex m_Mutex;
 		
@@ -60,6 +62,7 @@ namespace AMC {
 		virtual ~CStateMachineData();
 
 		void registerParameterHandler (const std::string & sInstanceName, PParameterHandler pParameterHandler, AMCCommon::PChrono pChrono);
+		void registerParameterUpdateCallback(const std::string& sInstanceName, std::function<void()> callback);
 		PParameterHandler getParameterHandler (const std::string& sInstanceName);
 
 		CParameterGroup* getDataStore(const std::string& sInstanceName);
@@ -75,4 +78,3 @@ namespace AMC {
 
 
 #endif //__AMC_PARAMETERHANDLER
-

@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <mutex>
 #include <string>
+#include <functional>
 
 namespace LibMCData {
 	class CDataModel;
@@ -63,6 +64,7 @@ namespace AMC {
 	class CStateJournal;
 	class CUIHandler;
 	class CParameterHandler;
+	class CParameterGroup;
 	class CStateMachineData;
 	class CAccessControl;
 	class CStringResourceHandler;
@@ -78,6 +80,7 @@ namespace AMC {
 	typedef std::shared_ptr<CUIHandler> PUIHandler;
 	typedef std::shared_ptr<CStateJournal> PStateJournal;
 	typedef std::shared_ptr<CParameterHandler> PParameterHandler;
+	typedef std::shared_ptr<CParameterGroup> PParameterGroup;
 	typedef std::shared_ptr<CStateMachineData> PStateMachineData;
 	typedef std::shared_ptr<CAccessControl> PAccessControl;
 	typedef std::shared_ptr<CStringResourceHandler> PStringResourceHandler;
@@ -88,6 +91,12 @@ namespace AMC {
 
 	class CSystemState {
 	private:
+		typedef struct _sMemoryUsageProvider {
+			std::string m_sParameterName;
+			std::string m_sDescription;
+			std::function<uint64_t()> m_Callback;
+		} sMemoryUsageProvider;
+
 		AMC::PLogger m_pLogger;
 		AMC::PStateSignalHandler m_pSignalHandler;
 		AMC::PDriverHandler m_pDriverHandler;
@@ -101,6 +110,8 @@ namespace AMC {
 		AMC::PMeshHandler m_pMeshHandler;
 		AMC::PAlertHandler m_pAlertHandler;
 		AMC::PDataSeriesHandler m_pDataSeriesHandler;
+		AMC::PParameterHandler m_pSystemParameterHandler;
+		AMC::PParameterGroup m_pSystemMemoryGroup;
 
 		AMCCommon::PChrono m_pGlobalChrono;
 
@@ -111,6 +122,8 @@ namespace AMC {
 		std::string m_sInstallationUUID;
 		std::string m_sInstallationSecret;		
 		std::string m_sTestEnvironmentPath;
+		std::map<std::string, sMemoryUsageProvider> m_MemoryUsageProviders;
+		std::mutex m_MemoryUsageMutex;
 
 
 	public:
@@ -159,6 +172,9 @@ namespace AMC {
 
 		uint64_t getAbsoluteTimeStamp();
 
+		void registerMemoryUsageProvider(const std::string& sParameterName, const std::string& sDescription, std::function<uint64_t()> callback);
+		void updateMemoryUsageParameters();
+
 
 
 	};
@@ -169,4 +185,3 @@ namespace AMC {
 
 
 #endif //__AMC_SYSTEMSTATE
-
