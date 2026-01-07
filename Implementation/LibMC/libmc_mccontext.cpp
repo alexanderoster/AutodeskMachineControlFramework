@@ -930,8 +930,10 @@ void CMCContext::executeSystemThread()
 {
     while (!systemThreadShallTerminate()) {
 
-        uint32_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
+        uint64_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
         m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
+        m_pSystemState->updateMemoryUsageParameters();
+
         std::this_thread::sleep_for(std::chrono::milliseconds(LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS));
 
     }

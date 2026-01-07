@@ -123,7 +123,6 @@ namespace AMC {
 		});
 
 		m_pStateMachineData->registerParameterHandler("system", m_pSystemParameterHandler, m_pGlobalChrono);
-		m_pStateMachineData->registerParameterUpdateCallback("system", std::bind(&CSystemState::updateMemoryUsageParameters, this));
 		updateMemoryUsageParameters();
 
 	}
