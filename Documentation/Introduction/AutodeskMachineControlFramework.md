@@ -284,14 +284,43 @@ As those are many configurations, in order to balance complexity with the need o
 
 ### 1.3. Modular Architecture and the need for a Client-Server system
 
-There are a lot of ways and opinions how one could define a modular architecture. 
+There are a lot of ways and opinions how one could define a modular architecture. In AMCF, the core goal is to separate concerns clearly so that a machine builder can replace or extend one layer without reworking the entire stack. The framework therefore splits into:
+
+- A deterministic core server that owns state, scheduling, and safety relevant decisions.
+- A client layer that renders UI, handles user interaction, and communicates over a stable API.
+- A plugin and driver layer that integrates hardware, sensors, and process logic.
+
+The client-server split is required to allow multiple frontends (HMI panel, desktop browser, remote client), while keeping the real-time sensitive logic isolated. It also makes it feasible to run the server headless, run multiple clients concurrently, or swap UI technology without breaking the core.
 
 ### 1.4. Plugin mechanism and choice of programming language
 
+Every machine is a specialized system. The framework therefore exposes extension points for:
+
+- Drivers (hardware connectivity)
+- Process logic (build strategies, motion sequences)
+- UI modules (custom operator workflows)
+
+Plugins are written in C++ for performance and control, but the framework is designed to allow additional languages where appropriate. The interface is versioned and strict, so that a plugin can be built independently and deployed without rebuilding the core.
+
 ### 1.5. The Hourglass pattern and Stable ABIs
+
+The hourglass model means that the widest parts of the system exist at the top and bottom (many different clients and many different hardware integrations), while the middle stays minimal and stable. In practice this means:
+
+- A small set of carefully designed core interfaces.
+- Versioned, stable ABIs for plugins and drivers.
+- Strict input/output contracts across the API boundary.
+
+This keeps the core consistent while allowing aggressive innovation in UI and hardware adapters.
 
 ### 1.6. API First Design guidelines and best practices
 
+All functionality that is relevant to operators or integrations should be reachable through documented APIs. The framework follows a few concrete rules:
+
+- Core services must be callable through the API (no UI-only logic).
+- API endpoints return explicit error codes and structured responses.
+- API changes must be versioned to keep older clients functional.
+
+This keeps automation and UI development aligned and reduces hidden state.
 ### 1.7. Serialization principles, XML, JSON and binary storage
 
 ### 1.8. Resource handling and file access
@@ -304,6 +333,14 @@ There are a lot of ways and opinions how one could define a modular architecture
 
 ### 2.2. Using of git hashes in the core code
 
+The framework embeds git hashes into build artifacts to track provenance. This allows the machine operator and developer to identify the exact source revision of a running system, which is critical for:
+
+- Debugging field issues
+- Reproducing test results
+- Verifying compatibility of plugins and packages
+
+Build scripts store hashes in `build_<platform>/githash.txt` and package metadata, and the server exposes this information in its output folder and logs.
+
 ### 2.3. Stable APIs, Backwards compatibility and Data migration
 
 ### 2.4. Separation of Data and Logic and forward compatibilty.
@@ -311,6 +348,8 @@ There are a lot of ways and opinions how one could define a modular architecture
 ### 2.5. Package management, CI/CD and proper build pipelines.
 
 ### 2.6. Testing Framework
+
+Testing is integrated into the CMake build and includes both unit tests and system tests. The unit test framework in `Implementation/UnitTest` is built into the `amc_unittest` binary, while driver tests live under `Tests/<DriverName>Test`. Tests are expected to run against deterministic inputs and use simulation drivers where possible.
 
 ## 3. General Backend Architecture
 
@@ -485,4 +524,3 @@ There are a lot of ways and opinions how one could define a modular architecture
 # VII Tutorials
 
 # VIII AMCF REST API Documentation
-
