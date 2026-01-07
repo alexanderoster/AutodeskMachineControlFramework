@@ -112,7 +112,7 @@
 			<parameter name="simulateplc" description="Simulate PLC behaviour" default="1" type="bool" persistent="d1e8e7d2-8d77-4206-b390-b999300ca8a9" />
 		</parametergroup>
 
-		<signaldefinition name="signal_initjob">
+		<signaldefinition name="signal_initjob" reactiontimeout="1000">
 			<parameter name="jobuuid" type="string"/>
 		</signaldefinition>
 
@@ -589,14 +589,15 @@
 
         <content name="currentbuild" title="Current System Status" columnstart="1" rowstart="1" columnend="1" rowend="1"  scrollbars="1">
           <parameterlist loadingtext="Loading parameters">
-            <entry statemachine="main" group="jobinfo"/>
+			  <entry statemachine="system" />
+			  <entry statemachine="main" group="jobinfo"/>
             <entry statemachine="main" group="ui"/>
             <entry statemachine="plc" group="plcconfig"/>
             <entry statemachine="plc" group="plcstate"/>
 
             <entry statemachine="laser" group="sdkstate"/>
 
-          </parameterlist>
+		  </parameterlist>
 
         </content>
 
