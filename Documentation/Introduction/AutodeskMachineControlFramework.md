@@ -364,13 +364,60 @@ In practice, this means API boundaries are strict. Input and output types are ex
 
 ### 1.6. API First Design guidelines and best practices
 
-All functionality that is relevant to operators or integrations should be reachable through documented APIs. The framework follows a few concrete rules:
+API-first means the server API is the primary product surface, and everything else
+(UI, scripts, automation, and integrations) is a client of that API. If a feature
+is important for operators or external systems, it must be reachable through a
+documented endpoint. This keeps the behavior consistent across clients, reduces
+hidden state, and makes integration predictable. It also forces the team to think
+about stability and supportability before a feature ships.
 
-- Core services must be callable through the API (no UI-only logic).
-- API endpoints return explicit error codes and structured responses.
-- API changes must be versioned to keep older clients functional.
+API-first has a few core implications for the framework. The server owns the
+domain model and state transitions; the UI only visualizes and orchestrates.
+Business rules live in the server API layer so that a button click and a remote
+integration call have the same effect. Features must be implemented as API
+capabilities first, then consumed by UI or plugins. This prevents UI-only logic,
+ensures testability, and avoids subtle discrepancies between local and remote
+operation.
 
-This keeps automation and UI development aligned and reduces hidden state.
+To keep the API reliable and evolvable, design endpoints as explicit contracts.
+Every request should return structured data and explicit error codes, never rely
+on ad-hoc text or ambiguous HTTP status mapping. Favor clear, typed payloads over
+deeply nested or under-specified blobs. When a request changes server state,
+make the operation explicit and document the required preconditions (e.g.,
+machine state, permissions, or resource locks). Where possible, design actions
+to be idempotent so clients can retry safely. Use pagination for lists, stable
+identifiers for resources, and consistent naming across endpoints.
+
+Versioning is non-negotiable. Any breaking change must be introduced as a new
+API version, with existing versions kept operational for a defined period. Add
+new fields in a backward-compatible way and avoid changing semantics of existing
+fields. Deprecate with a clear migration path, and document the planned removal
+window. This approach protects older UI packages and external integrations while
+allowing forward progress. In practice, API versioning should be reflected in
+endpoint paths and in the generated client bindings where applicable.
+
+Security and permissions must be enforced at the API boundary. Do not depend on
+UI behavior for access control. Every endpoint should validate permissions based
+on roles and session context, and return clear errors when access is denied. If
+an action has safety implications, the API should require explicit confirmation
+or a stronger permission scope, and that requirement should be documented.
+
+Observability is part of the contract. API calls should generate structured
+logs, meaningful error codes, and correlate with build/job identifiers when
+relevant. This makes it possible to trace behavior in the field and tie a
+failure to a specific build, configuration, or machine state. For long-running
+operations, provide status or progress endpoints and consistent polling or event
+mechanisms. Avoid hidden background tasks that cannot be queried or cancelled.
+
+Finally, design the API so it is pleasant to consume. Documentation should
+describe the purpose of each endpoint, the request and response models, and
+example payloads. Keep names consistent, provide clear field descriptions, and
+call out invariants. A simple rule is to treat the API docs as a first-class
+deliverable that changes in lockstep with the code. Tests should validate both
+success and failure cases, and new features should add API-level tests alongside
+implementation changes. When in doubt, ask: could a third-party integration
+reliably use this endpoint without reading the server code? If the answer is
+no, the API is not yet first-class.
 ### 1.7. Serialization principles, XML, JSON and binary storage
 
 ### 1.8. Resource handling and file access
