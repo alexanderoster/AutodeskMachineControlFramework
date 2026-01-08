@@ -514,7 +514,7 @@
 		<option name="Failed" value="50" description="Signal is has not been handled to its specification. An error message is available." />
 		<option name="TimedOut" value="60" description="The signal timed out before being processed." />
 		<option name="Cleared" value="70" description="The signal queue has been cleared and the signal will not be processed anymore." />
-		<option name="Retracted" value="80" description="The sender has retracted the signal before it was processed." />
+		<option name="Retracted" value="80" description="NOT IMPLEMENTED: The sender has retracted the signal before it was processed." />
 		<option name="Archived" value="90" description="The signal has been archived." />
 	</enum>	
 

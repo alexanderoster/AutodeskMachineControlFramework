@@ -29,11 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef __AMC_STATESIGNAL
-#define __AMC_STATESIGNAL
+#ifndef AMC_STATESIGNAL
+#define AMC_STATESIGNAL
 
 #include "amc_statesignalparameter.hpp"
 #include "amc_statesignaltypes.hpp"
+#include "amc_statesignalregistry.hpp"
 #include "amc_parametergroup.hpp"
 
 #include <memory>
@@ -41,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <unordered_map>
 #include <deque>
-#include <set>
+#include <unordered_set>
 #include <vector>
 #include <list>
 
@@ -55,6 +56,18 @@ namespace AMC {
 
 	class CStateSignalMessage;
 	typedef std::shared_ptr<CStateSignalMessage> PStateSignalMessage;
+
+	class CStateSignalArchiveWriter {
+	public:
+
+		virtual ~CStateSignalArchiveWriter() 
+		{
+		}
+
+		virtual void writeSignalMessageToArchive(const std::string& sInstanceName, const std::string& sSignalName, const CStateSignalMessage* pMessage) = 0;
+
+	};
+
 
 	class CStateSignalMessage
 	{
@@ -72,10 +85,9 @@ namespace AMC {
 
 			std::string m_sErrorMessage;
 
-			uint64_t m_nCreationTimestamp;
-			uint32_t m_nMicrosecondsUntilInProcess; 
-			uint32_t m_nMicrosecondsUntilHandledOrFailed;
-			uint32_t m_nMicrosecondsUntilCleared;
+			uint64_t m_nCreationTimestamp; // Creation timestamp in microseconds
+			uint64_t m_nHandlingTimestamp; // Timestamp until the signal reached InProcess state, or 0 if it was never processed.
+			uint64_t m_nTerminalTimestamp; // Timestamp until the signal reached a terminal state (Handled, Failed, TimedOut, Cleared), or 0 if it is not in a terminal state yet.
 
 		public:
 
@@ -84,6 +96,10 @@ namespace AMC {
 			virtual ~CStateSignalMessage();
 
 			std::string getUUID() const;
+
+			uint64_t getCreationTimestamp() const;
+
+			uint64_t getTerminalTimestamp() const;
 
 			void setPhase (AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp);
 
@@ -116,20 +132,23 @@ namespace AMC {
 		std::vector <CStateSignalParameter> m_ParameterDefinitions;
 		std::vector <CStateSignalParameter> m_ResultDefinitions;
 
-		uint32_t m_nSignalDefaultReactionTimeOutInMS;
+		uint32_t m_nSignalDefaultReactionTimeOutInMS; // Time until a handler needs to pick up the signal until it times out
+		uint32_t m_nSignalAutomaticArchiveTimeInMS; // Time until a handled/failed signal is automatically archived
 		uint32_t m_nSignalQueueSize;
 
-		std::map<std::string, PStateSignalMessage> m_MessageMap;
+		std::unordered_map<std::string, PStateSignalMessage> m_MessageMap;
+
+		CStateSignalRegistry* m_pRegistry;
 
 		std::list<PStateSignalMessage> m_Queue;
 		std::unordered_map<std::string, std::list<PStateSignalMessage>::iterator> m_QueueMap;
 
-		std::set<std::string> m_InProcess;
-		std::set<std::string> m_Handled;
-		std::set<std::string> m_Failed;
-		std::set<std::string> m_TimedOut;
-		std::set<std::string> m_Cleared;
-		std::deque<std::string> m_Archived;
+		std::unordered_set<std::string> m_InProcess;
+		std::unordered_set<std::string> m_Handled;
+		std::unordered_set<std::string> m_Failed;
+		std::unordered_set<std::string> m_TimedOut;
+		std::unordered_set<std::string> m_Cleared;
+		std::deque<PStateSignalMessage> m_MessagesToArchive;
 
 		uint64_t m_nTriggerCount;
 		uint64_t m_nHandledCount;
@@ -147,7 +166,7 @@ namespace AMC {
 
 		std::mutex m_Mutex;
 
-		CStateSignalMessage* getMessageByUUIDNoMutex (const std::string& sSignalUUID);
+		CStateSignalMessage* getMessageByUUIDNoMutex (const std::string& sMessageUUIDNormalized);
 		bool queueIsFullNoMutex();
 
 
@@ -155,21 +174,22 @@ namespace AMC {
 
 	public:
 
-		CStateSignalSlot(const std::string & sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
+		CStateSignalSlot(const std::string & sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalAutomaticArchiveTimeInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup, CStateSignalRegistry* pRegistry);
 		virtual ~CStateSignalSlot();
 
 		std::string getNameInternal() const;
 		std::string getInstanceNameInternal() const;
 
 		bool queueIsFull();
-		size_t clearQueueInternal(std::vector<std::string>& clearedUUIDs, uint64_t nTimeStamp);
+		size_t clearQueueInternal(uint64_t nTimeStamp);
 		bool eraseMessage(const std::string& sUUID);
 
-		PStateSignalMessage addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp);
-		bool changeSignalPhaseToHandledInternal(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimeStamp);
-		bool changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp);
-		bool changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID, uint64_t nTimeStamp);
-		AMC::eAMCSignalPhase getSignalPhaseInternal(const std::string& sSignalUUID);
+		PStateSignalMessage addNewInQueueSignalInternal(const std::string& sMessageUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp);
+		bool changeSignalPhaseToHandledInternal(const std::string& sMessageUUID, const std::string& sResultData, uint64_t nTimeStamp);
+		bool changeSignalPhaseToInFailedInternal(const std::string& sMessageUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp);
+		bool changeSignalPhaseToInProcessInternal(const std::string& sMessageUUID, uint64_t nTimeStamp);
+		bool changeSignalPhaseToArchivedInternal(const std::string& sMessageUUID, uint64_t nTimeStamp, bool bFailIfNotExisting);
+		AMC::eAMCSignalPhase getSignalPhaseInternal(const std::string& sMessageUUID);
 
 		uint32_t getAvailableSignalQueueEntriesInternal ();
 
@@ -177,14 +197,20 @@ namespace AMC {
 
 		uint32_t getDefaultReactionTimeoutInternal();
 
-		uint32_t getReactionTimeoutInternal(const std::string& sSignalUUID);
+		uint32_t getReactionTimeoutInternal(const std::string& sMessageUUID);
 
 		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
 
+		void autoArchiveMessages (uint64_t nGlobalTimestamp);
+
+		void writeMessagesToArchive (CStateSignalArchiveWriter * pArchiveWriter);
+
 		std::string peekMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
 		
-		std::string getResultDataJSONInternal(const std::string& sSignalUUID);
-		std::string getParameterDataJSONInternal(const std::string& sSignalUUID);
+		std::string getResultDataJSONInternal(const std::string& sMessageUUID);
+		std::string getParameterDataJSONInternal(const std::string& sMessageUUID);
+
+		bool getParameterPropertiesInternal(const std::string& sMessageUUID, std::string & sInstanceName, std::string & sSignalName, std::string & sParameterDataJSON);
 
 		void populateParameterGroup(CParameterGroup* pParameterGroup);
 		void populateResultGroup(CParameterGroup* pResultGroup);
@@ -195,5 +221,5 @@ namespace AMC {
 }
 
 
-#endif //__AMC_STATESIGNAL
+#endif // AMC_STATESIGNAL
 

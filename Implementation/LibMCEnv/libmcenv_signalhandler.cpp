@@ -55,8 +55,10 @@ CSignalHandler::CSignalHandler(AMC::PStateSignalHandler pSignalHandler, std::str
 	if (!m_pSignalHandler->findSignalPropertiesByUUID(m_sSignalUUID, m_sInstanceName, m_sSignalName, sParameterData))
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_SIGNALNOTFOUND, "findSignalPropertiesByUUID: " + m_sSignalUUID + " (" + m_sInstanceName + "/" + m_sSignalName + ")");
 
-	m_pSignalHandler->populateParameterGroup(m_sInstanceName, m_sSignalName, m_pParameterGroup.get());
-	m_pSignalHandler->populateResultGroup(m_sInstanceName, m_sSignalName, m_pResultGroup.get());
+	auto pSignalInstance = m_pSignalHandler->getInstance(m_sInstanceName);
+
+	pSignalInstance->populateParameterGroup(m_sSignalName, m_pParameterGroup.get());
+	pSignalInstance->populateResultGroup(m_sSignalName, m_pResultGroup.get());
 
 	m_pParameterGroup->deserializeJSON(sParameterData, m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970());
 
@@ -88,8 +90,8 @@ LibMCEnv::eSignalPhase CSignalHandler::GetSignalPhase()
 			return LibMCEnv::eSignalPhase::TimedOut;
 		case AMC::eAMCSignalPhase::Cleared:
 			return LibMCEnv::eSignalPhase::Cleared;
-		case AMC::eAMCSignalPhase::Retracted:
-			return LibMCEnv::eSignalPhase::Retracted;
+		case AMC::eAMCSignalPhase::Archived:
+			return LibMCEnv::eSignalPhase::Archived;
 
 		default:
 			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_UNDEFINEDINTERNALSIGNALPHASE);

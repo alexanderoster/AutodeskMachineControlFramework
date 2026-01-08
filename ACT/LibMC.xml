@@ -708,9 +708,14 @@
 		<error name="NONLINEAROVERRIDEPARAMETERNOTINCREASING" code="683" description="Nonlinear override parameter not increasing" />
 		<error name="NONLINEAROVERRIDEPARAMETEROUTOFRANGE" code="684" description="Nonlinear override parameter out of range" />
 		<error name="NONLINEAROVERRIDEFACTOROUTOFRANGE" code="685" description="Nonlinear override factor out of range" />
+		<error name="EMPTYSIGNALINSTANCENAME" code="686" description="Empty signal instance name" />
+		<error name="INVALIDSIGNALINSTANCENAME" code="687" description="Invalid signal instance name" />
+		<error name="COULDNOTFINDSIGNAL" code="688" description="Could not find signal" />
+		<error name="DUPLICATESIGNALINSTANCENAME" code="689" description="Duplicate signal instance name" />
+		<error name="SIGNALINSTANCENOTFOUND" code="690" description="Signal instance not found" />
+		<error name="INVALIDSIGNALARCHIVETIMEOUT" code="691" description="Invalid signal archive timeout" />
 		
-		
-		
+						
 						
 	</errors>
 	

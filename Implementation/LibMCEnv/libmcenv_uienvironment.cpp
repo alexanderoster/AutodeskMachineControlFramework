@@ -214,8 +214,10 @@ std::string CUIEnvironment::RetrieveEventSenderUUID()
 
 ISignalTrigger * CUIEnvironment::PrepareSignal(const std::string & sMachineInstance, const std::string & sSignalName)
 {
-    if (!m_pUISystemState->getSignalHandler()->hasSignalDefinition(sMachineInstance, sSignalName))
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTFINDSIGNALDEFINITON);
+    auto pSignalInstance = m_pUISystemState->getSignalHandler()->getInstance(sMachineInstance);
+
+    if (!pSignalInstance->hasSignalDefinition(sSignalName))
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNOTFINDSIGNALDEFINITON, "could not find signal definition: " + sMachineInstance + "/" + sSignalName);
 
     return new CSignalTrigger(m_pUISystemState->getSignalHandler(), sMachineInstance, sSignalName, m_pUISystemState->getGlobalChronoInstance ());
 }

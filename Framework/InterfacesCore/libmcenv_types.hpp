@@ -848,7 +848,7 @@ namespace LibMCEnv {
     Failed = 50, /** Signal is has not been handled to its specification. An error message is available. */
     TimedOut = 60, /** The signal timed out before being processed. */
     Cleared = 70, /** The signal queue has been cleared and the signal will not be processed anymore. */
-    Retracted = 80, /** The sender has retracted the signal before it was processed. */
+    Retracted = 80, /** NOT IMPLEMENTED: The sender has retracted the signal before it was processed. */
     Archived = 90 /** The signal has been archived. */
   };
   

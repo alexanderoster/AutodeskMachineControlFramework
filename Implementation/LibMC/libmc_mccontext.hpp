@@ -115,7 +115,7 @@ private:
 	void loadAccessControl(const pugi::xml_node& xmlNode);
 	void loadAlertDefinitions(const pugi::xml_node& xmlNode);
 
-	void readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::vector<AMC::CStateSignalParameter>& Parameters, std::vector<AMC::CStateSignalParameter>& Results, uint32_t& nSignalReactionTimeOut, uint32_t& nSignalQueueSize);
+	void readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::vector<AMC::CStateSignalParameter>& Parameters, std::vector<AMC::CStateSignalParameter>& Results, uint32_t& nSignalReactionTimeOut, uint32_t & nAutomaticArchiveTimeInMS, uint32_t& nSignalQueueSize);
 
 
 protected:

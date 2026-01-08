@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_statesignalparameter.hpp"
 #include "amc_statesignaltypes.hpp"
+#include "amc_statesignalregistry.hpp"
 #include "amc_parametergroup.hpp"
 
 
@@ -53,42 +54,95 @@ namespace AMC {
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
+	class CStateSignalInstance {
+	private:
+		std::string m_sInstanceName;
 
-	class CStateSignalHandler {
+		std::mutex m_SlotMutex;
+
+		CStateSignalRegistry* m_pRegistry;
+
+		std::unordered_map<std::string, PStateSignalSlot> m_Slots;
+
+	public:
+
+		CStateSignalInstance (const std::string & sInstanceName, CStateSignalRegistry* pRegistry);
+
+		virtual ~CStateSignalInstance();
+
+		std::string getInstanceName () const;
+
+		PStateSignalSlot getSignalSlot (const std::string& sSignalName);
+
+		PStateSignalSlot getSignalSlotOrNull (const std::string& sSignalName);
+
+		PStateSignalSlot addSignalDefinition(const std::string& sSignalName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nAutomaticArchiveTimeInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
+
+		void clearUnhandledSignals(uint64_t nTimestamp);
+
+		void clearUnhandledSignalsOfType(const std::string& sSignalTypeName, uint64_t nTimestamp);
+
+		bool canTrigger(const std::string& sSignalName);
+
+		bool hasSignalDefinition(const std::string& sSignalName);
+
+		std::string peekSignalMessageFromQueue(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
+
+		bool addNewInQueueSignal(const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS, uint64_t nTimestamp);
+
+		uint32_t getAvailableSignalQueueEntryCount(const std::string& sSignalName);
+
+		uint32_t getTotalSignalQueueSize(const std::string& sSignalName);
+
+		uint32_t getDefaultReactionTimeout(const std::string& sSignalName);
+
+		void populateParameterGroup(const std::string& sSignalName, CParameterGroup* pParameterGroup);
+
+		void populateResultGroup(const std::string& sSignalName, CParameterGroup* pResultGroup);
+
+		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
+
+	};
+
+	typedef std::shared_ptr<CStateSignalInstance> PStateSignalInstance;
+
+	class CStateSignalHandler : public CStateSignalRegistry {
 	private:
 		
-		std::map<std::pair <std::string, std::string>, PStateSignalSlot> m_SignalMap;
-		std::unordered_map<std::string, PStateSignalSlot> m_SignalUUIDLookupMap;
-		std::mutex m_SignalMapMutex;
-		std::mutex m_SignalUUIDMapMutex;
+		std::unordered_map<std::string, PStateSignalInstance> m_Instances;
+
+		std::mutex m_SignalInstanceMutex;
+
+
+		std::unordered_map<std::string, std::weak_ptr<CStateSignalSlot>> m_MessageSlotMap;
+
+		std::mutex m_MessageMapMutex;
+
 
 
 	public:
 
 		CStateSignalHandler();
-		virtual ~CStateSignalHandler() noexcept;
 
-		void addSignalDefinition(const std::string & sInstanceName, const std::string & sSignalName, const std::vector<CStateSignalParameter> & Parameters, const std::vector<CStateSignalParameter> & Results, uint32_t nSignalReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup);
+		virtual ~CStateSignalHandler();
 
-		void clearUnhandledSignals(const std::string& sInstanceName, uint64_t nTimestamp);
+		PStateSignalInstance registerInstance (const std::string& sInstanceName);
 
-		void clearUnhandledSignalsOfType(const std::string& sInstanceName, const std::string& sSignalTypeName, uint64_t nTimestamp);
+		PStateSignalInstance getInstance (const std::string & sInstanceName);
+
+		void registerMessage(const std::string& sMessageUUID, CStateSignalSlot* pSignalSlot) override;
+
+		void unregisterMessage(const std::string& sMessageUUID) override;
+
+		PStateSignalSlot findSignalSlotOfMessage(const std::string& sMessageUUID) override;
 
 		bool finalizeSignal(const std::string& sUUID);
-
-		bool canTrigger(const std::string& sInstanceName, const std::string& sSignalName);
-
-		bool hasSignalDefinition(const std::string& sInstanceName, const std::string& sSignalName);
 
 		bool findSignalPropertiesByUUID(const std::string& sSignalUUID, std::string & sInstanceName, std::string& sSignalName, std::string& sParameterData);
 
 		AMC::eAMCSignalPhase getSignalPhase (const std::string& sSignalUUID);
 
-		std::string peekSignalMessageFromQueue(const std::string& sInstanceName, const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
-
 		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
-
-		bool addNewInQueueSignal(const std::string& sInstanceName, const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS, uint64_t nTimestamp);
 
 		void changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimestamp);
 
@@ -96,19 +150,9 @@ namespace AMC {
 		
 		void changeSignalPhaseToFailed(const std::string& sSignalUUID, const std::string& sResultData, const std::string & sErrorMessage, uint64_t nTimestamp);
 
-		uint32_t getAvailableSignalQueueEntryCount(const std::string& sInstanceName, const std::string& sSignalName);
-
-		uint32_t getTotalSignalQueueSize(const std::string& sInstanceName, const std::string& sSignalName);
-
-		uint32_t getDefaultReactionTimeout(const std::string& sInstanceName, const std::string& sSignalName);
-
 		uint32_t getReactionTimeout(const std::string& sSignalUUID);
 
 		std::string getResultDataJSON(const std::string& sSignalUUID);
-
-		void populateParameterGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup * pParameterGroup);
-
-		void populateResultGroup(const std::string& sInstanceName, const std::string& sSignalName, CParameterGroup* pResultGroup);
 
 	};
 

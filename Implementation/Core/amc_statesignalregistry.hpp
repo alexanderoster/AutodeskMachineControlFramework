@@ -29,39 +29,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef __AMC_STATESIGNALTYPES
-#define __AMC_STATESIGNALTYPES
+#ifndef AMC_STATESIGNALREGISTRY
+#define AMC_STATESIGNALREGISTRY
+
+#include "amc_statesignaltypes.hpp"
 
 #include <memory>
 #include <string>
+#include <map>
 
-#define AMC_SIGNAL_DEFAULT_WAITFOR_SLEEP_MS 1
-
-#define AMC_SIGNAL_MINQUEUESIZE 1
-#define AMC_SIGNAL_MAXQUEUESIZE 1024
-
-#define AMC_SIGNAL_MINREACTIONTIMEINMS 1
-#define AMC_SIGNAL_MAXREACTIONTIMEINMS 3600000 // 1 hour reaction timeout is maximum
-
-#define AMC_SIGNAL_MINARCHIVETIMEINMS 1
-#define AMC_SIGNAL_MAXARCHIVETIMEINMS (3600000 * 24 * 14) // 14 days to stay within Uint32 range
+#include <queue>
+#include <thread>
 
 namespace AMC {
 
-	enum class eAMCSignalPhase : int32_t {
-		Invalid = 0, 
-		InPreparation = 10,
-		InQueue = 20, 
-		InProcess = 30, 
-		Handled = 40, 
-		Failed = 50, 
-		TimedOut = 60, 
-		Cleared = 70, 
-		Archived = 80 
-	};
+	class CStateSignalSlot;
+	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
+	class CStateSignalRegistry {
+	public:
+
+		virtual void registerMessage(const std::string& sMessageUUID, CStateSignalSlot* pSignalSlot) = 0;
+
+		virtual void unregisterMessage(const std::string& sMessageUUID) = 0;
+
+		virtual PStateSignalSlot findSignalSlotOfMessage(const std::string& sMessageUUID) = 0;
+
+	};
+	
 }
 
 
-#endif //__AMC_STATESIGNALTYPES
+#endif // AMC_STATESIGNALREGISTRY
 

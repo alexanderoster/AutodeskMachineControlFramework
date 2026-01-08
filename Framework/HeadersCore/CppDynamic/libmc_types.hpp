@@ -699,6 +699,12 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING 683 /** Nonlinear override parameter not increasing */
 #define LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE 684 /** Nonlinear override parameter out of range */
 #define LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE 685 /** Nonlinear override factor out of range */
+#define LIBMC_ERROR_EMPTYSIGNALINSTANCENAME 686 /** Empty signal instance name */
+#define LIBMC_ERROR_INVALIDSIGNALINSTANCENAME 687 /** Invalid signal instance name */
+#define LIBMC_ERROR_COULDNOTFINDSIGNAL 688 /** Could not find signal */
+#define LIBMC_ERROR_DUPLICATESIGNALINSTANCENAME 689 /** Duplicate signal instance name */
+#define LIBMC_ERROR_SIGNALINSTANCENOTFOUND 690 /** Signal instance not found */
+#define LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT 691 /** Invalid signal archive timeout */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1310,6 +1316,12 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING: return "Nonlinear override parameter not increasing";
     case LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE: return "Nonlinear override parameter out of range";
     case LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE: return "Nonlinear override factor out of range";
+    case LIBMC_ERROR_EMPTYSIGNALINSTANCENAME: return "Empty signal instance name";
+    case LIBMC_ERROR_INVALIDSIGNALINSTANCENAME: return "Invalid signal instance name";
+    case LIBMC_ERROR_COULDNOTFINDSIGNAL: return "Could not find signal";
+    case LIBMC_ERROR_DUPLICATESIGNALINSTANCENAME: return "Duplicate signal instance name";
+    case LIBMC_ERROR_SIGNALINSTANCENOTFOUND: return "Signal instance not found";
+    case LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT: return "Invalid signal archive timeout";
     default: return "unknown error";
   }
 }

@@ -462,6 +462,9 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
     auto pSystemParameterHandler = m_pSystemState->stateMachineData()->getParameterHandler("system");
     auto pSignalInformationGroup = pSystemParameterHandler->addGroup("signals_" + sName, sName + " Signals");
 
+    auto pStateSignalHandler = m_pSystemState->stateSignalHandler();
+	auto pStateSignalInstance = pStateSignalHandler->registerInstance(sName);
+
     auto signalNodes = xmlNode.children("signaldefinition");
     for (pugi::xml_node signalNode : signalNodes) {
         auto signalNameAttrib = signalNode.attribute("name");
@@ -471,13 +474,13 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
         std::vector<CStateSignalParameter> SignalParameters;
         std::vector<CStateSignalParameter> SignalResults;
         uint32_t nSignalReactionTimeOut = 0;
+		uint32_t nAutomaticArchiveTimeInMS = 0;
         uint32_t nSignalQueueSize = 0;
 
         std::string sSignalName = signalNameAttrib.as_string();
-        readSignalParameters(sSignalName, signalNode, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize);
+        readSignalParameters(sSignalName, signalNode, SignalParameters, SignalResults, nSignalReactionTimeOut, nAutomaticArchiveTimeInMS, nSignalQueueSize);
 
-        auto pStateSignalHandler = m_pSystemState->stateSignalHandler();
-        pStateSignalHandler->addSignalDefinition(sName, sSignalName, SignalParameters, SignalResults, nSignalReactionTimeOut, nSignalQueueSize, pSignalInformationGroup);
+        pStateSignalInstance->addSignalDefinition(sSignalName, SignalParameters, SignalResults, nSignalReactionTimeOut, nAutomaticArchiveTimeInMS, nSignalQueueSize, pSignalInformationGroup);
 
     }
 
@@ -614,7 +617,7 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 }
 
 
-void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::vector<AMC::CStateSignalParameter>& Parameters, std::vector<AMC::CStateSignalParameter>& Results, uint32_t & nSignalReactionTimeOut, uint32_t& nSignalQueueSize)
+void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi::xml_node& xmlNode, std::vector<AMC::CStateSignalParameter>& Parameters, std::vector<AMC::CStateSignalParameter>& Results, uint32_t & nSignalReactionTimeOut, uint32_t& nAutomaticArchiveTimeInMS, uint32_t& nSignalQueueSize)
 {
 
     auto reactionTimeOutAttrib = xmlNode.attribute("reactiontimeout");
@@ -629,6 +632,19 @@ void CMCContext::readSignalParameters(const std::string& sSignalName, const pugi
 		nSignalReactionTimeOut = 3600000; // Default value is 1 hour
     }
 		
+
+    auto archiveTimeAttrib = xmlNode.attribute("archivetime");
+    if (!archiveTimeAttrib.empty()) {
+        nAutomaticArchiveTimeInMS = archiveTimeAttrib.as_uint();
+        if (nAutomaticArchiveTimeInMS < AMC_SIGNAL_MINARCHIVETIMEINMS)
+            throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT, sSignalName);
+        if (nAutomaticArchiveTimeInMS > AMC_SIGNAL_MAXARCHIVETIMEINMS)
+            throw ELibMCCustomException(LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT, sSignalName);
+    }
+    else {
+        nAutomaticArchiveTimeInMS = 3600000; // Default value is 1 hour
+    }
+    
 
     auto queueSizeAttrib = xmlNode.attribute("queuesize");
     if (!queueSizeAttrib.empty()) {

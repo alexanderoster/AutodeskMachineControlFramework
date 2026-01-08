@@ -43,9 +43,8 @@ namespace AMC {
 		m_nReactionTimeoutInMS(nReactionTimeoutInMS),
 		m_MessagePhase (initialPhase),
 		m_nCreationTimestamp (nCreationTimestamp),
-		m_nMicrosecondsUntilInProcess (0),
-		m_nMicrosecondsUntilHandledOrFailed (0),
-		m_nMicrosecondsUntilCleared (0)
+		m_nHandlingTimestamp (0),
+		m_nTerminalTimestamp (0)
 
 	{
 
@@ -61,29 +60,36 @@ namespace AMC {
 		return m_sUUID;
 	}
 
+	uint64_t CStateSignalMessage::getCreationTimestamp() const
+	{
+		return m_nCreationTimestamp;
+	}
+
+	uint64_t CStateSignalMessage::getTerminalTimestamp() const
+	{
+		return m_nTerminalTimestamp;
+	}
+
 	void CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp)
 	{
 		if (nGlobalTimeStamp < m_nCreationTimestamp)
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDTIMESTAMP, "setPhase: Global timestamp is earlier than creation timestamp");
 
-		uint64_t nElapsedMicroseconds = (nGlobalTimeStamp - m_nCreationTimestamp);
-		if (nElapsedMicroseconds > UINT32_MAX)
-			nElapsedMicroseconds = UINT32_MAX;
-
 		switch (messagePhase) {
 			case AMC::eAMCSignalPhase::InProcess:
-				m_nMicrosecondsUntilInProcess = (uint32_t)nElapsedMicroseconds;
+				m_nHandlingTimestamp = nGlobalTimeStamp;
 				break;
 
 			case AMC::eAMCSignalPhase::Handled:
 			case AMC::eAMCSignalPhase::Failed:
 			case AMC::eAMCSignalPhase::TimedOut:
-				m_nMicrosecondsUntilHandledOrFailed = (uint32_t)nElapsedMicroseconds;
+			case AMC::eAMCSignalPhase::Cleared:
+				m_nTerminalTimestamp = nGlobalTimeStamp;
 				break;
 
-			case AMC::eAMCSignalPhase::Cleared:
-				m_nMicrosecondsUntilCleared = (uint32_t)nElapsedMicroseconds;
+			case AMC::eAMCSignalPhase::Archived:
 				break;
+
 		}
 
 
@@ -102,7 +108,7 @@ namespace AMC {
 
 	bool CStateSignalMessage::hadReactionTimeout(uint64_t nGlobalTimestamp)
 	{
-		uint64_t nTimeoutTimestamp = m_nCreationTimestamp + m_nReactionTimeoutInMS * 1000;
+		uint64_t nTimeoutTimestamp = m_nCreationTimestamp + (uint64_t)m_nReactionTimeoutInMS * 1000;
 		return (nGlobalTimestamp >= nTimeoutTimestamp);
 	}
 
@@ -138,12 +144,13 @@ namespace AMC {
 	}
 
 
-	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup)
+	CStateSignalSlot::CStateSignalSlot(const std::string& sInstanceName, const std::string& sName, const std::vector<CStateSignalParameter>& Parameters, const std::vector<CStateSignalParameter>& Results, uint32_t nSignalDefaultReactionTimeOutInMS, uint32_t nSignalAutomaticArchiveTimeInMS, uint32_t nSignalQueueSize, PParameterGroup pSignalInformationGroup, CStateSignalRegistry* pRegistry)
 		: m_sInstanceName (sInstanceName), 
 		m_sName (sName),  
 		m_ParameterDefinitions(Parameters), 
 		m_ResultDefinitions(Results),
 		m_nSignalDefaultReactionTimeOutInMS(nSignalDefaultReactionTimeOutInMS),
+		m_nSignalAutomaticArchiveTimeInMS (nSignalAutomaticArchiveTimeInMS),
 		m_nSignalQueueSize (nSignalQueueSize),
 		m_pSignalInformationGroup (pSignalInformationGroup),
 		m_nTriggerCount (0),
@@ -151,9 +158,13 @@ namespace AMC {
 		m_nFailedCount (0),
 		m_nTimedOutCount (0),
 		m_nMaxReactionTime (0),
-		m_nMaxSuccessTime (0)
+		m_nMaxSuccessTime (0),
+		m_pRegistry (pRegistry)
 
 	{
+
+		if (pRegistry == nullptr)
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDPARAM, "invalid signal registry parameter");
 
 		if (pSignalInformationGroup.get() != nullptr) {
 			pSignalInformationGroup->addNewIntParameter("triggered_" + m_sName, m_sName + " was triggered", 0);
@@ -180,13 +191,12 @@ namespace AMC {
 		return m_sInstanceName;
 	}
 
-	CStateSignalMessage *CStateSignalSlot::getMessageByUUIDNoMutex(const std::string& sSignalUUID)
+	CStateSignalMessage *CStateSignalSlot::getMessageByUUIDNoMutex(const std::string& sMessageUUIDNormalized)
 	{
 
-		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sSignalUUID);
-		auto it = m_MessageMap.find(sNormalizedUUID);
+		auto it = m_MessageMap.find(sMessageUUIDNormalized);
 		if (it == m_MessageMap.end()) 
-			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "getMessageByUUIDNoMutex: Signal UUID not found: " + sNormalizedUUID);
+			throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "getMessageByUUIDNoMutex: Signal UUID not found: " + sMessageUUIDNormalized);
 		
 		return it->second.get ();
 	}
@@ -256,27 +266,36 @@ namespace AMC {
 
 	bool CStateSignalSlot::eraseMessage(const std::string& sUUID)
 	{
-		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
 
-		if (auto iQueueIterator = m_QueueMap.find(sUUID); iQueueIterator != m_QueueMap.end()) {
-			m_Queue.erase(iQueueIterator->second);
-			m_QueueMap.erase(iQueueIterator);
+		bool bErased = false;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+			if (auto iQueueIterator = m_QueueMap.find(sNormalizedUUID); iQueueIterator != m_QueueMap.end()) {
+				m_Queue.erase(iQueueIterator->second);
+				m_QueueMap.erase(iQueueIterator);
+			}
+			m_InProcess.erase(sNormalizedUUID);
+			m_Handled.erase(sNormalizedUUID);
+			m_Failed.erase(sNormalizedUUID);
+			m_TimedOut.erase(sNormalizedUUID);
+			m_Cleared.erase(sNormalizedUUID);
+
+			bErased = m_MessageMap.erase(sNormalizedUUID) > 0;
 		}
-		m_InProcess.erase(sUUID);
-		m_Handled.erase(sUUID);
-		m_Failed.erase(sUUID);
-		m_TimedOut.erase(sUUID);
-		m_Cleared.erase(sUUID);
 
-		return m_MessageMap.erase(sUUID) > 0;
+		m_pRegistry->unregisterMessage(sNormalizedUUID);
+
+		return bErased;
 
 	}
 
-	size_t CStateSignalSlot::clearQueueInternal(std::vector<std::string>& clearedUUIDs, uint64_t nTimeStamp)
+	size_t CStateSignalSlot::clearQueueInternal(uint64_t nTimeStamp)
 	{
-		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
 		size_t nCount = 0;
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
 		while (m_Queue.size() > 0) {
 			auto pMessage = m_Queue.front();
@@ -287,62 +306,77 @@ namespace AMC {
 			pMessage->setPhase(AMC::eAMCSignalPhase::Cleared, nTimeStamp);
 			m_Cleared.insert(sUUID);
 
-			m_MessageMap.erase(sUUID);
-			clearedUUIDs.push_back(sUUID);
-
 			nCount++;
+			
+
 		}
 
 		return nCount;
 
 	}
 
-	PStateSignalMessage CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp)
+	PStateSignalMessage CStateSignalSlot::addNewInQueueSignalInternal(const std::string& sMessageUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp)
 	{
-		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+		PStateSignalMessage pMessage;
 
-		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sSignalUUID);
-		if (queueIsFullNoMutex()) {
-			// Queue is full, cannot add new signal
-			return false;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+			if (queueIsFullNoMutex()) {
+				// Queue is full, cannot add new signal
+				return nullptr;
+			}
+
+			auto iIterator = m_MessageMap.find(sNormalizedUUID);
+			if (iIterator != m_MessageMap.end()) {
+				// Signal already exists, cannot add again
+				return nullptr;
+			}
+
+			pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, eAMCSignalPhase::InQueue, nTimeStamp);
+			m_Queue.push_back(pMessage);
+			m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
+			m_MessageMap.insert(std::make_pair(sNormalizedUUID, pMessage));
+
+			increaseTriggerCount();
+
+			pMessage->setParameterDataJSON(sParameterData);
 		}
 
-		auto iIterator = m_MessageMap.find(sNormalizedUUID);
-		if (iIterator != m_MessageMap.end()) {
-			// Signal already exists, cannot add again
-			return false;
+		// needs to be outside lock
+		try {
+			m_pRegistry->registerMessage(sNormalizedUUID, this);
 		}
-
-		auto pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, eAMCSignalPhase::InQueue, nTimeStamp);
-		m_Queue.push_back(pMessage);
-		m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
-		m_MessageMap.insert(std::make_pair (sNormalizedUUID, pMessage));
-
-		increaseTriggerCount();
-
-		pMessage->setParameterDataJSON(sParameterData);
+		catch (...) {
+			eraseMessage(sNormalizedUUID);
+			throw;
+		};
 
 		return pMessage;
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToInProcessInternal(const std::string& sSignalUUID, uint64_t nTimeStamp)
+	bool CStateSignalSlot::changeSignalPhaseToInProcessInternal(const std::string& sMessageUUID, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 		AMC::eAMCSignalPhase messagePhase = pMessage->getPhase();
-		std::string sUUID = pMessage->getUUID();
 
 		if (messagePhase == eAMCSignalPhase::InQueue) {
 
-			pMessage->setPhase(eAMCSignalPhase::InProcess, nTimeStamp);
-			m_InProcess.insert(sUUID);
-
-			auto iQueueIter = m_QueueMap.find(sUUID);
-			if (iQueueIter == m_QueueMap.end()) 
+			auto iQueueIter = m_QueueMap.find(sNormalizedUUID);
+			if (iQueueIter == m_QueueMap.end())
 				return false;
+
 			m_Queue.erase(iQueueIter->second);
 			m_QueueMap.erase(iQueueIter);
+
+			pMessage->setPhase(eAMCSignalPhase::InProcess, nTimeStamp);
+			m_InProcess.insert(sNormalizedUUID);
+
 			
 			return true;
 		}
@@ -351,25 +385,27 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToHandledInternal(const std::string & sSignalUUID, const std::string& sResultData, uint64_t nTimeStamp)
+	bool CStateSignalSlot::changeSignalPhaseToHandledInternal(const std::string & sMessageUUID, const std::string& sResultData, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 		AMC::eAMCSignalPhase messagePhase = pMessage->getPhase();
-		std::string sUUID = pMessage->getUUID();
 
 		if (messagePhase == eAMCSignalPhase::InQueue) {
 
-			auto iQueueIter = m_QueueMap.find(sUUID);
+			auto iQueueIter = m_QueueMap.find(sNormalizedUUID);
 			if (iQueueIter == m_QueueMap.end())
 				return false;
+
 			m_Queue.erase(iQueueIter->second);
 			m_QueueMap.erase(iQueueIter);
 
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
-			m_Handled.insert(sUUID);
+			m_Handled.insert(sNormalizedUUID);
 
 			increaseHandledCount();
 
@@ -379,8 +415,8 @@ namespace AMC {
 		if (messagePhase == eAMCSignalPhase::InProcess) {
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
-			m_Handled.insert(sUUID);
-			m_InProcess.erase(sUUID);
+			m_Handled.insert(sNormalizedUUID);
+			m_InProcess.erase(sNormalizedUUID);
 
 			increaseHandledCount();
 
@@ -391,16 +427,75 @@ namespace AMC {
 
 	}
 
-	bool CStateSignalSlot::changeSignalPhaseToInFailedInternal(const std::string& sSignalUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp)
+	bool CStateSignalSlot::changeSignalPhaseToArchivedInternal(const std::string& sMessageUUID, uint64_t nTimeStamp, bool bFailIfNotExisting)
+	{
+
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+		bool bFound = false;
+
+		{
+
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+			auto iMessageIter = m_MessageMap.find(sNormalizedUUID);
+			if (iMessageIter == m_MessageMap.end()) {
+				if (bFailIfNotExisting)
+					throw ELibMCCustomException(LIBMC_ERROR_SIGNALNOTFOUND, "getMessageByUUIDNoMutex: Signal UUID not found: " + sNormalizedUUID);
+
+				return false;
+			}
+
+			auto pMessage = iMessageIter->second;
+			AMC::eAMCSignalPhase messagePhase = pMessage->getPhase();
+
+
+			// Only failed, handled, cleared and timedout signals can be archived
+			if (messagePhase == eAMCSignalPhase::Failed) {
+				m_Failed.erase(sNormalizedUUID);
+				bFound = true;
+			}
+
+			if (messagePhase == eAMCSignalPhase::Handled) {
+				m_Handled.erase(sNormalizedUUID);
+				bFound = true;
+			}
+
+			if (messagePhase == eAMCSignalPhase::TimedOut) {
+				m_TimedOut.erase(sNormalizedUUID);
+				bFound = true;
+			}
+
+			if (messagePhase == eAMCSignalPhase::Cleared) {
+				m_Cleared.erase(sNormalizedUUID);
+				bFound = true;
+			}
+
+			if (bFound) {
+				pMessage->setPhase(eAMCSignalPhase::Archived, nTimeStamp);
+				m_MessagesToArchive.push_back(pMessage);
+				m_MessageMap.erase(iMessageIter);
+			}
+
+		}
+
+		if (bFound) {
+			m_pRegistry->unregisterMessage(sNormalizedUUID);
+		}
+
+		return bFound;
+
+	}
+
+	bool CStateSignalSlot::changeSignalPhaseToInFailedInternal(const std::string& sMessageUUID, const std::string& sResultData, const std::string& sErrorMessage, uint64_t nTimeStamp)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 		AMC::eAMCSignalPhase messagePhase = pMessage->getPhase();
-		std::string sUUID = pMessage->getUUID();
 
 		if (messagePhase == eAMCSignalPhase::InQueue) {
-			auto iQueueIter = m_QueueMap.find(sUUID);
+			auto iQueueIter = m_QueueMap.find(sNormalizedUUID);
 			if (iQueueIter == m_QueueMap.end())
 				return false;
 			m_Queue.erase(iQueueIter->second);
@@ -409,7 +504,7 @@ namespace AMC {
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
 			pMessage->setErrorMessage(sErrorMessage);
-			m_Failed.insert(sUUID);
+			m_Failed.insert(sNormalizedUUID);
 
 			increaseFailedCount();
 
@@ -420,8 +515,8 @@ namespace AMC {
 			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setErrorMessage(sErrorMessage);
-			m_Failed.insert(sUUID);
-			m_InProcess.erase(sUUID);
+			m_Failed.insert(sNormalizedUUID);
+			m_InProcess.erase(sNormalizedUUID);
 
 			increaseFailedCount();
 
@@ -432,11 +527,13 @@ namespace AMC {
 
 	}
 
-	AMC::eAMCSignalPhase CStateSignalSlot::getSignalPhaseInternal(const std::string& sSignalUUID)
+	AMC::eAMCSignalPhase CStateSignalSlot::getSignalPhaseInternal(const std::string& sMessageUUID)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 		return pMessage->getPhase();
 	}
 
@@ -447,11 +544,13 @@ namespace AMC {
 		return m_nSignalDefaultReactionTimeOutInMS;
 	}
 
-	uint32_t CStateSignalSlot::getReactionTimeoutInternal(const std::string& sSignalUUID)
+	uint32_t CStateSignalSlot::getReactionTimeoutInternal(const std::string& sMessageUUID)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 
 		return pMessage->getReactionTimeoutInMS();
 
@@ -470,7 +569,6 @@ namespace AMC {
 
 				it = m_Queue.erase(it);
 				m_QueueMap.erase(sUUID);
-				m_MessageMap.erase(sUUID);
 
 				increaseTimeoutCount();
 
@@ -489,6 +587,56 @@ namespace AMC {
 		checkForReactionTimeoutsNoMutex(nGlobalTimestamp);
 	}
 
+	void CStateSignalSlot::autoArchiveMessages(uint64_t nGlobalTimestamp)
+	{
+		std::deque <std::string> messagesToArchive;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			for (auto& it : m_MessageMap) {
+				auto pMessage = it.second;
+				AMC::eAMCSignalPhase messagePhase = pMessage->getPhase();
+
+				if ((messagePhase == eAMCSignalPhase::Handled) ||
+					(messagePhase == eAMCSignalPhase::Failed) ||
+					(messagePhase == eAMCSignalPhase::TimedOut) ||
+					(messagePhase == eAMCSignalPhase::Cleared)) {
+					uint64_t nMessageTerminalTimestamp = pMessage->getTerminalTimestamp();
+					if (nMessageTerminalTimestamp == 0) {
+						// This should never happen, but as a fallback, we archive it immediately
+						messagesToArchive.push_back(it.first);
+					}
+					else {
+						uint64_t nArchiveTimestamp = nMessageTerminalTimestamp + (uint64_t)m_nSignalAutomaticArchiveTimeInMS * 1000;
+						if (nGlobalTimestamp >= nArchiveTimestamp) {
+							messagesToArchive.push_back(it.first);
+						}
+					}
+				}
+			}
+		}
+		for (auto& sUUID : messagesToArchive) {
+			changeSignalPhaseToArchivedInternal(sUUID, nGlobalTimestamp, false);
+		}
+	}
+
+
+	void CStateSignalSlot::writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter)
+	{
+		if (pArchiveWriter == nullptr)
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDPARAM, "writeMessagesToArchive: Archive writer is null");
+
+		std::deque <PStateSignalMessage> messagesToArchive;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			messagesToArchive.swap (m_MessagesToArchive);
+		}
+
+		for (auto pMessage : messagesToArchive) {
+			pArchiveWriter->writeSignalMessageToArchive (m_sInstanceName, m_sName, pMessage.get ());
+		}
+
+	}
+
 
 	std::string CStateSignalSlot::peekMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp)
 	{
@@ -505,28 +653,45 @@ namespace AMC {
 	}
 
 
-	std::string CStateSignalSlot::getResultDataJSONInternal(const std::string& sSignalUUID)
+	std::string CStateSignalSlot::getResultDataJSONInternal(const std::string& sMessageUUID)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+		
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 
 		return pMessage->getResultDataJSON();
 
 	}
 
-	std::string CStateSignalSlot::getParameterDataJSONInternal(const std::string& sSignalUUID)
+	std::string CStateSignalSlot::getParameterDataJSONInternal(const std::string& sMessageUUID)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
-		auto pMessage = getMessageByUUIDNoMutex(sSignalUUID);
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
+
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
 
 		return pMessage->getParameterDataJSON();
 
 	}
 
+	bool CStateSignalSlot::getParameterPropertiesInternal(const std::string& sMessageUUID, std::string& sInstanceName, std::string& sSignalName, std::string& sParameterDataJSON)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
+		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
 
+		auto pMessage = getMessageByUUIDNoMutex(sNormalizedUUID);
+
+		sInstanceName = m_sInstanceName;
+		sSignalName = m_sName;
+		sParameterDataJSON = pMessage->getParameterDataJSON();
+
+		return true;
+
+	}
 
 
 	void CStateSignalSlot::populateParameterGroup(CParameterGroup* pParameterGroup)

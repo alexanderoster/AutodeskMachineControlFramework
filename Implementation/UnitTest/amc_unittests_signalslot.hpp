@@ -50,7 +50,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace AMCUnitTest {
 
+    class CDummyRegistry : public AMC::CStateSignalRegistry {
 
+    public:
+
+        void registerMessage(const std::string& sMessageUUID, AMC::CStateSignalSlot* pSignalSlot) override
+        {
+
+        }
+
+        void unregisterMessage(const std::string& sMessageUUID) override
+        {
+
+        }
+
+        AMC::PStateSignalSlot findSignalSlotOfMessage(const std::string& sMessageUUID)
+        {
+            return nullptr;
+        }
+
+    };
 
 
 class CUnitTestGroup_SignalSlot : public CUnitTestGroup {
@@ -86,7 +105,9 @@ private:
         params.emplace_back("p1", "string", true);
         results.emplace_back("r1", "int", true);
 
-        AMC::CStateSignalSlot slot("instance", "signal", params, results, 500, 10, nullptr);
+        CDummyRegistry registry;
+
+        AMC::CStateSignalSlot slot("instance", "signal", params, results, 500, 5000, 10, nullptr, &registry);
 
         assertTrue(slot.getNameInternal() == "signal");
         assertTrue(slot.getInstanceNameInternal() == "instance");
@@ -95,9 +116,12 @@ private:
     }
 
     void test_AddSignalToQueue() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5, nullptr);
+        CDummyRegistry registry;
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 5, nullptr, &registry);
         std::string uuid = "11111111-2222-3333-4444-555555555555";
 
+       
         AMCCommon::CChrono chrono;
 
         chrono.sleepMicroseconds(500);
@@ -110,7 +134,10 @@ private:
     }
 
     void test_SignalPhaseTransition() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3, nullptr);
+
+        CDummyRegistry registry;
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 3, nullptr, &registry);
         std::string uuid = "77777777-8888-9999-aaaa-bbbbbbbbbbbb";
 
         AMCCommon::CChrono chrono;
@@ -133,7 +160,10 @@ private:
     }
 
     void test_SignalFailureTransition() {
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
+
+        CDummyRegistry registry;
+
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 2, nullptr, &registry);
         std::string uuid = "deadbeef-dead-beef-dead-beefdeadbeef";
 
         AMCCommon::CChrono chrono;
@@ -149,10 +179,13 @@ private:
 
     void test_QueueOverflow() {
 
+        CDummyRegistry registry;
+
         AMCCommon::CChrono chrono;
         chrono.sleepMicroseconds(500);
 
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 1, nullptr);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 1, nullptr, &registry);
+
         auto pMessage1 = slot.addNewInQueueSignalInternal("00000001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds());
         assertTrue(pMessage1 != nullptr);
         chrono.sleepMicroseconds(500);
@@ -163,10 +196,12 @@ private:
 
     void test_PeekQueue() {
 
+        CDummyRegistry registry;
+
         AMCCommon::CChrono chrono;
         chrono.sleepMicroseconds(500);
 
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 3, nullptr);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 3, nullptr, &registry);
 
         chrono.sleepMicroseconds(500);
         slot.addNewInQueueSignalInternal("aaaaaaaa-0000-0000-0000-000000000001", "{\"a\":1}", 400, chrono.getElapsedMicroseconds());
@@ -180,10 +215,12 @@ private:
 
     void test_ParameterResultAccess() {
 
+        CDummyRegistry registry;
+
         AMCCommon::CChrono chrono;
         chrono.sleepMicroseconds(500);
 
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 2, nullptr, &registry);
         std::string uuid = "e5e57000-0000-0000-0000-000000000001";
 
         chrono.sleepMicroseconds(500);
@@ -199,10 +236,12 @@ private:
 
     void test_ClearQueueWorks() {
 
+        CDummyRegistry registry;
+
         AMCCommon::CChrono chrono;
         chrono.sleepMicroseconds(500);
 
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 2, nullptr);
+        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 2, nullptr, &registry);
 
         chrono.sleepMicroseconds(500);
         slot.addNewInQueueSignalInternal("11110001-0000-0000-0000-000000000001", "{}", 500, chrono.getElapsedMicroseconds());
@@ -211,13 +250,14 @@ private:
         slot.addNewInQueueSignalInternal("22220002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds());
 
         chrono.sleepMicroseconds(500);
-        std::vector<std::string> clearedUUIDs;
-        slot.clearQueueInternal(clearedUUIDs, chrono.getElapsedMicroseconds());
+        slot.clearQueueInternal(chrono.getElapsedMicroseconds());
         assertTrue(slot.getAvailableSignalQueueEntriesInternal() == 2);
     }
 
 
     void test_TimeoutAndOverflowTest() {
+
+        CDummyRegistry registry;
 
         AMCCommon::CChrono chrono;
 
@@ -225,7 +265,7 @@ private:
 
         const int capacity = 10;
         const int total = 15;
-        AMC::CStateSignalSlot slot("overflowInstance", "overflowSignal", {}, {}, 50, capacity, nullptr);
+        AMC::CStateSignalSlot slot("overflowInstance", "overflowSignal", {}, {}, 50, 5000, capacity, nullptr, &registry);
 
         std::vector<std::string> accepted, rejected;
 
