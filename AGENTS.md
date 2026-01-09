@@ -12,6 +12,7 @@
 - `./build_clean_linux64.sh` builds Linux x64 binaries and dev packages into `build_linux64/Output`.
 - `./build_clean_rpi.sh` builds for Raspberry Pi (ARM) using `build_rpi/Output`.
 - `./build_clean_win64.bat` builds Windows artifacts into `build_win64/Output`.
+- A complete clean build is only necessary for major structural changes or the initial clean build; otherwise run `cmake --build .` from the build directory.
 - After a build, run the server from the output folder, e.g. `./build_linux64/Output/amc_server`.
 
 ## Coding Style & Naming Conventions
@@ -22,6 +23,7 @@
 ## Testing Guidelines
 - Unit tests live in `Implementation/UnitTest` and build into `amc_unittest`.
 - Driver/system tests are grouped under `Tests/<DriverName>Test`.
+- Run unit tests from the build directory (for example `cd build_linux64 && ./Output/amc_unittest`) to ensure runtime libraries are found.
 - After building, run executables from `build_<platform>/Output` (for example `./build_linux64/Output/amc_unittest`).
 - Add tests alongside the module you changed and mirror existing test naming.
 
