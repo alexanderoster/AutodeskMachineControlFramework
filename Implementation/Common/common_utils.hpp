@@ -106,6 +106,7 @@ namespace AMCCommon {
 
 		static bool stringIsValidAlphanumericNameString(const std::string& sString); // Only alphanumeric characters and underscore, underscore not as first character!
 		static bool stringIsValidAlphanumericPathString(const std::string& sString); // Only alphanumeric name strings separated by dots
+		static bool stringIsValidFileName(const std::string& sFileName); // No path delimiters or reserved characters
 
 		static std::string getCurrentUserHomeDirectory();
 		static std::string getTempFolder();

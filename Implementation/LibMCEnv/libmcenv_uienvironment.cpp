@@ -50,6 +50,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_zipstreamwriter.hpp"
 #include "libmcenv_imageloader.hpp"
 #include "libmcenv_machineconfigurationhandler.hpp"
+#include "libmcdata_interfaceexception.hpp"
 
 #include "amc_systemstate.hpp"
 #include "amc_accesscontrol.hpp"
@@ -174,6 +175,9 @@ void CUIEnvironment::StartStreamDownload(const std::string& sUUID, const std::st
     if (sFilename.size () > DOWNLOADFILENAME_MAXLENGTH)
         throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME);
 
+    if (!AMCCommon::CUtils::stringIsValidFileName(sFilename))
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME, "invalid download stream filename: " + sFilename);
+
     if (!m_pAPIAuth->userIsAuthorized ())
         throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_USERISNOTAUTHORIZED);
 
@@ -182,7 +186,14 @@ void CUIEnvironment::StartStreamDownload(const std::string& sUUID, const std::st
     auto pGlobalChrono = m_pUISystemState->getGlobalChronoInstance();
 
     std::string sTicketUUID = m_pAPIAuth->createStreamDownloadTicket (sNormalizedUUID, sFilename);
-    pStorage->CreateDownloadTicket (sTicketUUID, sNormalizedUUID, sFilename, m_pAPIAuth->getSessionUUID (), sUserUUID, pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970 ());
+    try {
+        pStorage->CreateDownloadTicket (sTicketUUID, sNormalizedUUID, sFilename, m_pAPIAuth->getSessionUUID (), sUserUUID, pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970 ());
+    }
+    catch (ELibMCDataInterfaceException & E) {
+        if (E.getErrorCode() == LIBMCDATA_ERROR_INVALIDCLIENTFILENAME)
+            throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME, E.what());
+        throw;
+    }
 
     m_ClientActions.push_back(std::make_shared<AMC::CUIClientAction_StreamDownload>(sTicketUUID, sFilename));
 }
