@@ -63,6 +63,14 @@ static std::string formatVersionString(const uint32_t nMajor, const uint32_t nMi
 	return std::to_string(nMajor) + "." + std::to_string(nMinor) + "." + std::to_string(nMicro);
 }
 
+static std::string formatVersionWithHash(const uint32_t nMajor, const uint32_t nMinor, const uint32_t nMicro, const std::string& sBuild)
+{
+	std::string sVersion = formatVersionString(nMajor, nMinor, nMicro);
+	if (sBuild.empty())
+		return sVersion;
+	return sVersion + "." + sBuild;
+}
+
 namespace AMC {
 
 	CSystemState::CSystemState(AMC::PLogger pLogger, LibMCData::PDataModel pDataModel, LibMCEnv::PWrapper pEnvWrapper, AMC::PStateJournal pStateJournal, const std::string& sTestEnvironmentPath, AMCCommon::PChrono pGlobalChrono)
@@ -101,10 +109,8 @@ namespace AMC {
 		auto pSystemInformationGroup = std::make_shared<CParameterGroup>("information", "Information", m_pGlobalChrono);
 		pSystemInformationGroup->addNewStringParameter("githash", "Git Hash", getGitHash ());
 		pSystemInformationGroup->addNewStringParameter("clienthash", "Client Hash", getClientHash());
-		pSystemInformationGroup->addNewStringParameter("libmc_version", "LibMC Core Version", formatVersionString(LIBMC_VERSION_MAJOR, LIBMC_VERSION_MINOR, LIBMC_VERSION_MICRO));
-		pSystemInformationGroup->addNewStringParameter("libmc_build_hash", "LibMC Core Build Hash", getGitHash());
-		pSystemInformationGroup->addNewStringParameter("libmcdata_version", "LibMCData Version", formatVersionString(LIBMCDATA_VERSION_MAJOR, LIBMCDATA_VERSION_MINOR, LIBMCDATA_VERSION_MICRO));
-		pSystemInformationGroup->addNewStringParameter("libmcdata_build_hash", "LibMCData Build Hash", getGitHash());
+		pSystemInformationGroup->addNewStringParameter("libmc_version", "LibMC Core Version", formatVersionWithHash(LIBMC_VERSION_MAJOR, LIBMC_VERSION_MINOR, LIBMC_VERSION_MICRO, getGitHash()));
+		pSystemInformationGroup->addNewStringParameter("libmcdata_version", "LibMCData Version", formatVersionWithHash(LIBMCDATA_VERSION_MAJOR, LIBMCDATA_VERSION_MINOR, LIBMCDATA_VERSION_MICRO, getGitHash()));
 		pSystemInformationGroup->addNewStringParameter("compile_time", "Compile time", std::string (__DATE__) + " " + std::string (__TIME__));
 		pSystemInformationGroup->addNewStringParameter("installation_uuid", "Installation", getInstallationUUID ());
 		m_pSystemParameterHandler->addGroup(pSystemInformationGroup);
@@ -389,6 +395,8 @@ namespace AMC {
 			return;
 		if (m_pSystemParameterHandler.get() == nullptr)
 			return;
+		if (!m_pSystemParameterHandler->hasGroup("information"))
+			return;
 
 		std::string sDriverType;
 		HSymbolLookupHandle pSymbolLookup = nullptr;
@@ -401,32 +409,18 @@ namespace AMC {
 		std::string sBuild;
 		m_pDriverHandler->GetDriverVersionInfo(sDriverName, nMajor, nMinor, nMicro, sBuild);
 
-		std::string sGroupName = "driver_" + sDriverName;
 		std::string sGroupDescription = "Driver " + sDriverName;
 		if (!sDriverType.empty())
 			sGroupDescription += " (" + sDriverType + ")";
 
-		PParameterGroup pDriverGroup;
-		if (m_pSystemParameterHandler->hasGroup(sGroupName)) {
-			pDriverGroup = m_pSystemParameterHandler->findGroup(sGroupName, true);
+		PParameterGroup pInformationGroup = m_pSystemParameterHandler->findGroup("information", true);
+		std::string sParameterName = "driver_" + sDriverName;
+		std::string sVersion = formatVersionWithHash(nMajor, nMinor, nMicro, sBuild);
+		if (pInformationGroup->hasParameter(sParameterName)) {
+			pInformationGroup->setParameterValueByName(sParameterName, sVersion);
 		}
 		else {
-			pDriverGroup = m_pSystemParameterHandler->addGroup(sGroupName, sGroupDescription);
-		}
-
-		std::string sVersion = formatVersionString(nMajor, nMinor, nMicro);
-		if (pDriverGroup->hasParameter("version")) {
-			pDriverGroup->setParameterValueByName("version", sVersion);
-		}
-		else {
-			pDriverGroup->addNewStringParameter("version", "Version", sVersion);
-		}
-
-		if (pDriverGroup->hasParameter("build_hash")) {
-			pDriverGroup->setParameterValueByName("build_hash", sBuild);
-		}
-		else {
-			pDriverGroup->addNewStringParameter("build_hash", "Build hash", sBuild);
+			pInformationGroup->addNewStringParameter(sParameterName, sGroupDescription, sVersion);
 		}
 	}
 
