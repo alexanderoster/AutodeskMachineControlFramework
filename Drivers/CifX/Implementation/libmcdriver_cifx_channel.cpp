@@ -42,6 +42,8 @@ Abstract: This is a stub class definition of CChannelInformation
 #define CIFX_DEFAULT_HOSTSTATETIMEOUT 5000
 #define CIFX_DEFAULT_BUSSTATETIMEOUT 2000
 #define CIFX_DEFAULT_SYNCDELAY 10
+#define CIFX_DEFAULT_READTIMEOUT 1000
+#define CIFX_DEFAULT_WRITETIMEOUT 1000
 
 using namespace LibMCDriver_CifX::Impl;
 
@@ -325,7 +327,7 @@ std::vector<uint8_t>& CDriver_CifXChannelBuffer::getBuffer()
 
 
 CDriver_CifXChannelThreadState::CDriver_CifXChannelThreadState(PCifXSDK pCifXSDK, uint32_t nInputSize, uint32_t nOutputSize, cifxHandle hChannel)
-	: m_pCifXSDK(pCifXSDK), m_hChannel(hChannel), m_bDebugMode(true), m_InputBuffer(nInputSize), m_OutputBuffer(nOutputSize), m_bThreadIsRunning (false)
+	: m_pCifXSDK(pCifXSDK), m_hChannel(hChannel), m_bCancelFlag(false), m_bThreadIsRunning(false), m_bDebugMode(true), m_InputBuffer(nInputSize), m_OutputBuffer(nOutputSize)
 {
 	if (pCifXSDK.get() == nullptr)
 		throw ELibMCDriver_CifXInterfaceException(LIBMCDRIVER_CIFX_ERROR_INVALIDPARAM);
@@ -576,7 +578,8 @@ void CDriver_CifXChannelThreadState::writeOutputParameter(CDriver_CifXParameter*
 
 
 CDriver_CifXChannel::CDriver_CifXChannel(pugi::xml_node& channelNode)
-	: m_nChannelIndex(0), m_nInputSize(0), m_nOutputSize(0), m_nHostStateTimeOut(CIFX_DEFAULT_HOSTSTATETIMEOUT), m_nBusStateTimeOut(CIFX_DEFAULT_BUSSTATETIMEOUT), m_SyncDelay (CIFX_DEFAULT_SYNCDELAY)
+	: m_nChannelIndex(0), m_nInputSize(0), m_nOutputSize(0), m_nHostStateTimeOut(CIFX_DEFAULT_HOSTSTATETIMEOUT), m_nBusStateTimeOut(CIFX_DEFAULT_BUSSTATETIMEOUT), m_SyncDelay(CIFX_DEFAULT_SYNCDELAY),
+	m_nReadTimeout(CIFX_DEFAULT_READTIMEOUT), m_nWriteTimeout(CIFX_DEFAULT_WRITETIMEOUT)
 
 {
 	auto boardAttrib = channelNode.attribute("board");
@@ -624,6 +627,30 @@ CDriver_CifXChannel::CDriver_CifXChannel(pugi::xml_node& channelNode)
 		if (nBusStateTimeout <= 0)
 			throw ELibMCDriver_CifXInterfaceException(LIBMCDRIVER_CIFX_ERROR_INVALIDBUSSTATETIMEOUT);
 		m_nBusStateTimeOut = nBusStateTimeout;
+	}
+
+	auto syncDelayAttrib = channelNode.attribute("syncdelay");
+	if (!syncDelayAttrib.empty()) {
+		int nSyncDelay = syncDelayAttrib.as_int(0);
+		if (nSyncDelay <= 0)
+			throw ELibMCDriver_CifXInterfaceException(LIBMCDRIVER_CIFX_ERROR_INVALIDPARAM, "invalid syncdelay attribute");
+		m_SyncDelay = nSyncDelay;
+	}
+
+	auto readTimeoutAttrib = channelNode.attribute("readtimeout");
+	if (!readTimeoutAttrib.empty()) {
+		int nReadTimeout = readTimeoutAttrib.as_int(0);
+		if (nReadTimeout <= 0)
+			throw ELibMCDriver_CifXInterfaceException(LIBMCDRIVER_CIFX_ERROR_INVALIDPARAM, "invalid readtimeout attribute");
+		m_nReadTimeout = nReadTimeout;
+	}
+
+	auto writeTimeoutAttrib = channelNode.attribute("writetimeout");
+	if (!writeTimeoutAttrib.empty()) {
+		int nWriteTimeout = writeTimeoutAttrib.as_int(0);
+		if (nWriteTimeout <= 0)
+			throw ELibMCDriver_CifXInterfaceException(LIBMCDRIVER_CIFX_ERROR_INVALIDPARAM, "invalid writetimeout attribute");
+		m_nWriteTimeout = nWriteTimeout;
 	}
 
 	auto inputIONode = channelNode.child("input_io");
@@ -804,8 +831,8 @@ void CDriver_CifXChannel::startSyncThread(PCifXSDK pCifXSDK, cifxHandle hDriverH
 	uint32_t nBusState = 0;
 	pCifXSDK->checkError(pCifXSDK->xChannelBusState(hChannel, CIFX_BUS_STATE_ON, &nBusState, m_nBusStateTimeOut));
 
-	uint32_t nReadTimeout = 1000;
-	uint32_t nWriteTimeout = 1000;
+	uint32_t nReadTimeout = m_nReadTimeout;
+	uint32_t nWriteTimeout = m_nWriteTimeout;
 	uint32_t nSyncDelay = m_SyncDelay;
 
 	auto pInputs = m_Inputs;
