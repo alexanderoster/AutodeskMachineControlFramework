@@ -50,7 +50,6 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_zipstreamwriter.hpp"
 #include "libmcenv_imageloader.hpp"
 #include "libmcenv_machineconfigurationhandler.hpp"
-#include "libmcdata_interfaceexception.hpp"
 
 #include "amc_systemstate.hpp"
 #include "amc_accesscontrol.hpp"
@@ -189,7 +188,7 @@ void CUIEnvironment::StartStreamDownload(const std::string& sUUID, const std::st
     try {
         pStorage->CreateDownloadTicket (sTicketUUID, sNormalizedUUID, sFilename, m_pAPIAuth->getSessionUUID (), sUserUUID, pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970 ());
     }
-    catch (ELibMCDataInterfaceException & E) {
+    catch (LibMCData::ELibMCDataException & E) {
         if (E.getErrorCode() == LIBMCDATA_ERROR_INVALIDCLIENTFILENAME)
             throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME, E.what());
         throw;
