@@ -616,6 +616,35 @@ namespace AMCCommon {
 		return true;
 	}
 
+	bool CUtils::stringIsValidFileName(const std::string& sFileName)
+	{
+		if (sFileName.empty())
+			return false;
+
+		if (sFileName.find(":") != std::string::npos)
+			return false;
+		if (sFileName.find(">") != std::string::npos)
+			return false;
+		if (sFileName.find("<") != std::string::npos)
+			return false;
+		if (sFileName.find("\"") != std::string::npos)
+			return false;
+		if (sFileName.find("/") != std::string::npos)
+			return false;
+		if (sFileName.find("\\") != std::string::npos)
+			return false;
+		if (sFileName.find("|") != std::string::npos)
+			return false;
+		if (sFileName.find("?") != std::string::npos)
+			return false;
+		if (sFileName.find("*") != std::string::npos)
+			return false;
+		if (sFileName.find("..") != std::string::npos)
+			return false;
+
+		return true;
+	}
+
 	bool CUtils::stringIsUUIDString(const std::string& sRawString)
 	{
 		std::string sTrimmedString = trimString(sRawString);
