@@ -109,6 +109,8 @@ namespace AMCCommon {
 
 		static std::string getCurrentUserHomeDirectory();
 		static std::string getTempFolder();
+		static std::string getOperatingSystemIdentifier();
+		static std::string getMachineIdentifier();
 
 	};
 
@@ -117,4 +119,3 @@ namespace AMCCommon {
 
 
 #endif //__AMC_UTILS
-
