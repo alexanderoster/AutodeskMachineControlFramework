@@ -78,13 +78,19 @@ namespace AMCUnitTest {
 
 		std::string getDataModelLibraryName() {
 			std::string sBaseName = std::string(__STRINGIZE_VALUE_OF(__GITHASH)) + "_core_libmcdata";
+			std::string sLibraryName;
 #ifdef _WIN32
-			return "./Output/" + sBaseName + ".dll";
+			sLibraryName = sBaseName + ".dll";
 #elif defined(__APPLE__)
-			return "./Output/" + sBaseName + ".dylib";
+			sLibraryName = sBaseName + ".dylib";
 #else
-			return "./Output/" + sBaseName + ".so";
+			sLibraryName = sBaseName + ".so";
 #endif
+			std::string sLocalPath = "./" + sLibraryName;
+			if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sLocalPath))
+				return sLocalPath;
+
+			return "./Output/" + sLibraryName;
 		}
 
 		sStateJournalFixture createFixture(const std::string& sSuffix) {
