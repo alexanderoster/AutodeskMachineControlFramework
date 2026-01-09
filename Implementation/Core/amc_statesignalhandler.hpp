@@ -54,6 +54,8 @@ namespace AMC {
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
 
+	class CStateSignalArchiveWriter;
+
 	class CStateSignalInstance {
 	private:
 		std::string m_sInstanceName;
@@ -102,6 +104,10 @@ namespace AMC {
 
 		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
 
+		void autoArchiveMessages(uint64_t nGlobalTimestamp);
+
+		void writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter);
+
 	};
 
 	typedef std::shared_ptr<CStateSignalInstance> PStateSignalInstance;
@@ -143,6 +149,10 @@ namespace AMC {
 		AMC::eAMCSignalPhase getSignalPhase (const std::string& sSignalUUID);
 
 		void checkForReactionTimeouts(uint64_t nGlobalTimestamp);
+
+		void autoArchiveMessages(uint64_t nGlobalTimestamp);
+
+		void writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter);
 
 		void changeSignalPhaseToHandled(const std::string& sSignalUUID, const std::string& sResultData, uint64_t nTimestamp);
 

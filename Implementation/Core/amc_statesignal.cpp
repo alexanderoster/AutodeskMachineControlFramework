@@ -70,30 +70,38 @@ namespace AMC {
 		return m_nTerminalTimestamp;
 	}
 
-	void CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp)
+	bool CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp)
 	{
 		if (nGlobalTimeStamp < m_nCreationTimestamp)
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDTIMESTAMP, "setPhase: Global timestamp is earlier than creation timestamp");
 
 		switch (messagePhase) {
 			case AMC::eAMCSignalPhase::InProcess:
-				m_nHandlingTimestamp = nGlobalTimeStamp;
-				break;
+				if (m_nHandlingTimestamp == 0)
+					m_nHandlingTimestamp = nGlobalTimeStamp;
+				m_MessagePhase = messagePhase;
+				return true;
 
 			case AMC::eAMCSignalPhase::Handled:
 			case AMC::eAMCSignalPhase::Failed:
 			case AMC::eAMCSignalPhase::TimedOut:
 			case AMC::eAMCSignalPhase::Cleared:
-				m_nTerminalTimestamp = nGlobalTimeStamp;
-				break;
+				if (m_nTerminalTimestamp == 0)
+					m_nTerminalTimestamp = nGlobalTimeStamp;
+				m_MessagePhase = messagePhase;
+				return true;
 
 			case AMC::eAMCSignalPhase::Archived:
-				break;
+				m_MessagePhase = messagePhase;
+				return true;
+
+			default:
+				return false;
 
 		}
 
 
-		m_MessagePhase = messagePhase;
+		
 	}
 
 	AMC::eAMCSignalPhase CStateSignalMessage::getPhase() const
@@ -158,7 +166,6 @@ namespace AMC {
 		m_nFailedCount (0),
 		m_nTimedOutCount (0),
 		m_nMaxReactionTime (0),
-		m_nMaxSuccessTime (0),
 		m_pRegistry (pRegistry)
 
 	{
@@ -431,7 +438,7 @@ namespace AMC {
 	{
 
 		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
-		bool bFound = false;
+		bool bToArchive = false;
 
 		{
 
@@ -452,25 +459,25 @@ namespace AMC {
 			// Only failed, handled, cleared and timedout signals can be archived
 			if (messagePhase == eAMCSignalPhase::Failed) {
 				m_Failed.erase(sNormalizedUUID);
-				bFound = true;
+				bToArchive = true;
 			}
 
 			if (messagePhase == eAMCSignalPhase::Handled) {
 				m_Handled.erase(sNormalizedUUID);
-				bFound = true;
+				bToArchive = true;
 			}
 
 			if (messagePhase == eAMCSignalPhase::TimedOut) {
 				m_TimedOut.erase(sNormalizedUUID);
-				bFound = true;
+				bToArchive = true;
 			}
 
 			if (messagePhase == eAMCSignalPhase::Cleared) {
 				m_Cleared.erase(sNormalizedUUID);
-				bFound = true;
+				bToArchive = true;
 			}
 
-			if (bFound) {
+			if (bToArchive) {
 				pMessage->setPhase(eAMCSignalPhase::Archived, nTimeStamp);
 				m_MessagesToArchive.push_back(pMessage);
 				m_MessageMap.erase(iMessageIter);
@@ -478,11 +485,11 @@ namespace AMC {
 
 		}
 
-		if (bFound) {
+		if (bToArchive) {
 			m_pRegistry->unregisterMessage(sNormalizedUUID);
 		}
 
-		return bFound;
+		return bToArchive;
 
 	}
 
@@ -600,16 +607,19 @@ namespace AMC {
 					(messagePhase == eAMCSignalPhase::Failed) ||
 					(messagePhase == eAMCSignalPhase::TimedOut) ||
 					(messagePhase == eAMCSignalPhase::Cleared)) {
+					uint64_t nArchiveTimestamp = 0;
 					uint64_t nMessageTerminalTimestamp = pMessage->getTerminalTimestamp();
-					if (nMessageTerminalTimestamp == 0) {
-						// This should never happen, but as a fallback, we archive it immediately
-						messagesToArchive.push_back(it.first);
+
+					if (nMessageTerminalTimestamp > 0) {
+						nArchiveTimestamp = nMessageTerminalTimestamp + (uint64_t)m_nSignalAutomaticArchiveTimeInMS * 1000;
 					}
 					else {
-						uint64_t nArchiveTimestamp = nMessageTerminalTimestamp + (uint64_t)m_nSignalAutomaticArchiveTimeInMS * 1000;
-						if (nGlobalTimestamp >= nArchiveTimestamp) {
-							messagesToArchive.push_back(it.first);
-						}
+						// This should never happen, but as a fallback, we use the creation timestamp
+						nArchiveTimestamp = pMessage->getCreationTimestamp() + (uint64_t)m_nSignalAutomaticArchiveTimeInMS * 1000;
+					}
+
+					if (nGlobalTimestamp >= nArchiveTimestamp) {
+						messagesToArchive.push_back(it.first);
 					}
 				}
 			}

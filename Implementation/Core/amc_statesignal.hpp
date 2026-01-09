@@ -86,8 +86,8 @@ namespace AMC {
 			std::string m_sErrorMessage;
 
 			uint64_t m_nCreationTimestamp; // Creation timestamp in microseconds
-			uint64_t m_nHandlingTimestamp; // Timestamp until the signal reached InProcess state, or 0 if it was never processed.
-			uint64_t m_nTerminalTimestamp; // Timestamp until the signal reached a terminal state (Handled, Failed, TimedOut, Cleared), or 0 if it is not in a terminal state yet.
+			uint64_t m_nHandlingTimestamp; // Timestamp when the signal reached InProcess state, or 0 if it was never processed. (in microseconds)
+			uint64_t m_nTerminalTimestamp; // Timestamp when the signal reached a terminal state (Handled, Failed, TimedOut, Cleared), or 0 if it is not in a terminal state yet. (in microseconds)
 
 		public:
 
@@ -101,7 +101,7 @@ namespace AMC {
 
 			uint64_t getTerminalTimestamp() const;
 
-			void setPhase (AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp);
+			bool setPhase (AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp);
 
 			AMC::eAMCSignalPhase getPhase() const;
 
@@ -133,7 +133,7 @@ namespace AMC {
 		std::vector <CStateSignalParameter> m_ResultDefinitions;
 
 		uint32_t m_nSignalDefaultReactionTimeOutInMS; // Time until a handler needs to pick up the signal until it times out
-		uint32_t m_nSignalAutomaticArchiveTimeInMS; // Time until a handled/failed signal is automatically archived
+		uint32_t m_nSignalAutomaticArchiveTimeInMS; // Time until a handled/failed/cleared/timedout signal is automatically archived
 		uint32_t m_nSignalQueueSize;
 
 		std::unordered_map<std::string, PStateSignalMessage> m_MessageMap;
@@ -155,7 +155,6 @@ namespace AMC {
 		uint64_t m_nFailedCount;
 		uint64_t m_nTimedOutCount;
 		uint64_t m_nMaxReactionTime;
-		uint64_t m_nMaxSuccessTime;
 
 		void increaseTriggerCount();
 		void increaseHandledCount();

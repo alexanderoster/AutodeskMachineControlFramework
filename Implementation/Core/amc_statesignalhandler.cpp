@@ -228,6 +228,37 @@ namespace AMC {
 		}
 	}
 
+	void CStateSignalInstance::autoArchiveMessages(uint64_t nGlobalTimestamp)
+	{
+		std::vector<PStateSignalSlot> slots;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_SlotMutex);
+			for (auto iIterator : m_Slots) {
+				slots.push_back(iIterator.second);
+			}
+		}
+
+		for (auto pSlot : slots) {
+			pSlot->autoArchiveMessages(nGlobalTimestamp);
+		}
+
+	}
+
+	void CStateSignalInstance::writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter)
+	{
+		std::vector<PStateSignalSlot> slots;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_SlotMutex);
+			for (auto iIterator : m_Slots) {
+				slots.push_back(iIterator.second);
+			}
+		}
+
+		for (auto pSlot : slots) {
+			pSlot->writeMessagesToArchive(pArchiveWriter);
+		}
+
+	}
 
 	
 	CStateSignalHandler::CStateSignalHandler()
@@ -280,7 +311,9 @@ namespace AMC {
 		auto pSlot = pInstance->getSignalSlot(sSignalName);
 		{
 			std::lock_guard<std::mutex> lockGuard(m_MessageMapMutex);
-			m_MessageSlotMap.emplace(sNormalizedUUID, pSlot);
+			auto insertResult = m_MessageSlotMap.emplace(sNormalizedUUID, pSlot);
+			if (!insertResult.second)
+				throw ELibMCCustomException(LIBMC_ERROR_SIGNALALREADYTRIGGERED, sNormalizedUUID);
 		}
 
 	}
@@ -300,17 +333,21 @@ namespace AMC {
 		std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sMessageUUID);
 		std::weak_ptr<CStateSignalSlot> pwSlot;
 
-		{
-			std::lock_guard<std::mutex> lockGuard(m_MessageMapMutex);
+		std::lock_guard<std::mutex> lockGuard(m_MessageMapMutex);
 
-			auto iMessageIter = m_MessageSlotMap.find(sNormalizedUUID);
-			if (iMessageIter == m_MessageSlotMap.end())
-				return nullptr;
+		auto iMessageIter = m_MessageSlotMap.find(sNormalizedUUID);
+		if (iMessageIter == m_MessageSlotMap.end())
+			return nullptr;
 
-			pwSlot = iMessageIter->second;
+		pwSlot = iMessageIter->second;
+
+		auto pSlot = pwSlot.lock();
+		if (pSlot.get() == nullptr) {
+			// Slot has been deleted, prune dead entry
+			m_MessageSlotMap.erase(iMessageIter);
 		}
 
-		return pwSlot.lock();		
+		return pSlot;
 
 	}
 
@@ -388,6 +425,41 @@ namespace AMC {
 			pInstance->checkForReactionTimeouts(nGlobalTimestamp);
 		}
 	}
+
+	void CStateSignalHandler::autoArchiveMessages(uint64_t nGlobalTimestamp)
+	{
+
+		std::vector<AMC::PStateSignalInstance> instances;
+		{
+			instances.reserve(m_Instances.size());
+
+			std::lock_guard<std::mutex> lockGuard(m_SignalInstanceMutex);
+			for (auto iIter : m_Instances)
+				instances.push_back(iIter.second);
+		}
+
+		for (auto pInstance : instances) {
+			pInstance->autoArchiveMessages(nGlobalTimestamp);
+		}
+	}
+
+	void CStateSignalHandler::writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter)
+	{
+		std::vector<AMC::PStateSignalInstance> instances;
+		{
+			instances.reserve(m_Instances.size());
+
+			std::lock_guard<std::mutex> lockGuard(m_SignalInstanceMutex);
+			for (auto iIter : m_Instances)
+				instances.push_back(iIter.second);
+		}
+
+		for (auto pInstance : instances) {
+			pInstance->writeMessagesToArchive(pArchiveWriter);
+		}
+
+	}
+
 
 
 	uint32_t CStateSignalHandler::getReactionTimeout(const std::string& sSignalUUID)
