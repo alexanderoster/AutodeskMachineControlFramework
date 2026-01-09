@@ -139,6 +139,8 @@ namespace Impl {
 		uint32_t m_nHostStateTimeOut;
 		uint32_t m_nBusStateTimeOut;
 		uint32_t m_SyncDelay;
+		uint32_t m_nReadTimeout;
+		uint32_t m_nWriteTimeout;
 
 		std::shared_ptr<CDriver_CifXChannelThreadState> m_pThreadState;
 
@@ -182,5 +184,4 @@ namespace Impl {
 } // namespace LibMCDriver_CifX
 
 #endif // __LIBMCDRIVER_CIFX_CHANNEL
-
 
