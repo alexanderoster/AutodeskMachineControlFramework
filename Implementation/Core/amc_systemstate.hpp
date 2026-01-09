@@ -175,6 +175,7 @@ namespace AMC {
 		void registerMemoryUsageProvider(const std::string& sParameterName, const std::string& sDescription, std::function<uint64_t()> callback);
 		void updateMemoryUsageParameters();
 
+		void addDriverVersionInfo(const std::string& sDriverName);
 
 
 	};

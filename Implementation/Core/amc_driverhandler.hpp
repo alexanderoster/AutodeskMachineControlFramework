@@ -105,6 +105,7 @@ namespace AMC {
 		void registerDriver(const std::string& sName, const std::string& sType, const std::string & sLibraryName, const std::string& sLibraryPath, const std::string & sResourcePath, const std::string & sDriverConfigurationData, AMC::PResourcePackage pMachineResourcePackage);
 
 		void GetDriverInformation (const std::string& sName, std::string& sType, HSymbolLookupHandle & pSymbolLookup);
+		void GetDriverVersionInfo(const std::string& sName, uint32_t& nMajor, uint32_t& nMinor, uint32_t& nMicro, std::string& sBuild);
 
 		HDriverHandle acquireDriver (const std::string& sName, const std::string& sInstanceName);
 
@@ -123,4 +124,3 @@ namespace AMC {
 
 
 #endif //__AMC_DRIVERHANDLER
-

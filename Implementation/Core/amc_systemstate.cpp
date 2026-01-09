@@ -48,6 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_meshhandler.hpp"
 
 #include "libmcdata_dynamic.hpp"
+#include "libmc_types.hpp"
+#include "libmcdata_types.hpp"
 
 #include "common_chrono.hpp"
 
@@ -56,6 +58,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __STRINGIZE(x) #x
 #define __STRINGIZE_VALUE_OF(x) __STRINGIZE(x)
 
+static std::string formatVersionString(const uint32_t nMajor, const uint32_t nMinor, const uint32_t nMicro)
+{
+	return std::to_string(nMajor) + "." + std::to_string(nMinor) + "." + std::to_string(nMicro);
+}
 
 namespace AMC {
 
@@ -95,6 +101,10 @@ namespace AMC {
 		auto pSystemInformationGroup = std::make_shared<CParameterGroup>("information", "Information", m_pGlobalChrono);
 		pSystemInformationGroup->addNewStringParameter("githash", "Git Hash", getGitHash ());
 		pSystemInformationGroup->addNewStringParameter("clienthash", "Client Hash", getClientHash());
+		pSystemInformationGroup->addNewStringParameter("libmc_version", "LibMC Core Version", formatVersionString(LIBMC_VERSION_MAJOR, LIBMC_VERSION_MINOR, LIBMC_VERSION_MICRO));
+		pSystemInformationGroup->addNewStringParameter("libmc_build_hash", "LibMC Core Build Hash", getGitHash());
+		pSystemInformationGroup->addNewStringParameter("libmcdata_version", "LibMCData Version", formatVersionString(LIBMCDATA_VERSION_MAJOR, LIBMCDATA_VERSION_MINOR, LIBMCDATA_VERSION_MICRO));
+		pSystemInformationGroup->addNewStringParameter("libmcdata_build_hash", "LibMCData Build Hash", getGitHash());
 		pSystemInformationGroup->addNewStringParameter("compile_time", "Compile time", std::string (__DATE__) + " " + std::string (__TIME__));
 		pSystemInformationGroup->addNewStringParameter("installation_uuid", "Installation", getInstallationUUID ());
 		m_pSystemParameterHandler->addGroup(pSystemInformationGroup);
@@ -371,6 +381,53 @@ namespace AMC {
 
 		if (providers.find("known_total_bytes") != providers.end())
 			pMemoryGroup->setIntParameterValueByName("known_total_bytes", (int64_t)nKnownTotal);
+	}
+
+	void CSystemState::addDriverVersionInfo(const std::string& sDriverName)
+	{
+		if (m_pDriverHandler.get() == nullptr)
+			return;
+		if (m_pSystemParameterHandler.get() == nullptr)
+			return;
+
+		std::string sDriverType;
+		HSymbolLookupHandle pSymbolLookup = nullptr;
+		m_pDriverHandler->GetDriverInformation(sDriverName, sDriverType, pSymbolLookup);
+		(void)pSymbolLookup;
+
+		uint32_t nMajor = 0;
+		uint32_t nMinor = 0;
+		uint32_t nMicro = 0;
+		std::string sBuild;
+		m_pDriverHandler->GetDriverVersionInfo(sDriverName, nMajor, nMinor, nMicro, sBuild);
+
+		std::string sGroupName = "driver_" + sDriverName;
+		std::string sGroupDescription = "Driver " + sDriverName;
+		if (!sDriverType.empty())
+			sGroupDescription += " (" + sDriverType + ")";
+
+		PParameterGroup pDriverGroup;
+		if (m_pSystemParameterHandler->hasGroup(sGroupName)) {
+			pDriverGroup = m_pSystemParameterHandler->findGroup(sGroupName, true);
+		}
+		else {
+			pDriverGroup = m_pSystemParameterHandler->addGroup(sGroupName, sGroupDescription);
+		}
+
+		std::string sVersion = formatVersionString(nMajor, nMinor, nMicro);
+		if (pDriverGroup->hasParameter("version")) {
+			pDriverGroup->setParameterValueByName("version", sVersion);
+		}
+		else {
+			pDriverGroup->addNewStringParameter("version", "Version", sVersion);
+		}
+
+		if (pDriverGroup->hasParameter("build_hash")) {
+			pDriverGroup->setParameterValueByName("build_hash", sBuild);
+		}
+		else {
+			pDriverGroup->addNewStringParameter("build_hash", "Build hash", sBuild);
+		}
 	}
 
 }

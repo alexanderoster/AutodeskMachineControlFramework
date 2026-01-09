@@ -185,6 +185,14 @@ void CDriverHandler::GetDriverInformation(const std::string& sName, std::string&
 	pSymbolLookup = pDriver->getSymbolLookup();
 }
 
+void CDriverHandler::GetDriverVersionInfo(const std::string& sName, uint32_t& nMajor, uint32_t& nMinor, uint32_t& nMicro, std::string& sBuild)
+{
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+	auto pDriver = findDriver(sName, true);
+
+	pDriver->getVersionInfo(nMajor, nMinor, nMicro, sBuild);
+}
+
 
 void CDriverHandler::setTempBasePath(const std::string& sTempBasePath)
 {
