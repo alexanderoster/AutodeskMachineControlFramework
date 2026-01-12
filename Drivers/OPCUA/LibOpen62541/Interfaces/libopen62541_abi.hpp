@@ -184,47 +184,6 @@ LIBOPEN62541_DECLSPEC LibOpen62541Result libopen62541_opcclient_writedouble(LibO
 */
 LIBOPEN62541_DECLSPEC LibOpen62541Result libopen62541_opcclient_writestring(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nNameSpace, const char * pNodeName, const char * pValue);
 
-/**
-* Creates an event subscription for an event notifier node.
-*
-* @param[in] pOPCClient - OPCClient instance.
-* @param[in] nNameSpace - Namespace ID
-* @param[in] pNodeName - Event notifier node.
-* @param[in] pSelectFields - Comma-separated event field names. Empty uses the default field list.
-* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
-* @param[in] nQueueSize - Monitored item queue size.
-* @param[in] bDiscardOldest - Discard oldest queued events if full.
-* @param[out] pSubscriptionID - Created subscription id.
-* @param[out] pMonitoredItemID - Created monitored item id.
-* @return error code or 0 (success)
-*/
-LIBOPEN62541_DECLSPEC LibOpen62541Result libopen62541_opcclient_createeventsubscription(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nNameSpace, const char * pNodeName, const char * pSelectFields, LibOpen62541_double dPublishingInterval, LibOpen62541_uint32 nQueueSize, bool bDiscardOldest, LibOpen62541_uint32 * pSubscriptionID, LibOpen62541_uint32 * pMonitoredItemID);
-
-/**
-* Deletes an event subscription and its monitored item.
-*
-* @param[in] pOPCClient - OPCClient instance.
-* @param[in] nSubscriptionID - Subscription id.
-* @param[in] nMonitoredItemID - Monitored item id.
-* @return error code or 0 (success)
-*/
-LIBOPEN62541_DECLSPEC LibOpen62541Result libopen62541_opcclient_deleteeventsubscription(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nSubscriptionID, LibOpen62541_uint32 nMonitoredItemID);
-
-/**
-* Processes incoming notifications and returns the next queued event.
-*
-* @param[in] pOPCClient - OPCClient instance.
-* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
-* @param[out] pHasEvent - True if an event was returned.
-* @param[out] pSubscriptionID - Subscription id of the event.
-* @param[out] pMonitoredItemID - Monitored item id of the event.
-* @param[in] nEventJSONBufferSize - size of the buffer (including trailing 0)
-* @param[out] pEventJSONNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pEventJSONBuffer -  buffer of Event fields encoded as JSON object., may be NULL
-* @return error code or 0 (success)
-*/
-LIBOPEN62541_DECLSPEC LibOpen62541Result libopen62541_opcclient_pollevent(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nTimeoutMS, bool * pHasEvent, LibOpen62541_uint32 * pSubscriptionID, LibOpen62541_uint32 * pMonitoredItemID, const LibOpen62541_uint32 nEventJSONBufferSize, LibOpen62541_uint32* pEventJSONNeededChars, char * pEventJSONBuffer);
-
 /*************************************************************************************************************************
  Global functions
 **************************************************************************************************************************/

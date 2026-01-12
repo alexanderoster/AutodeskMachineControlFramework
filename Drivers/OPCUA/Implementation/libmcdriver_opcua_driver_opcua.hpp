@@ -120,12 +120,6 @@ public:
 
 	void WriteString(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string& sNodeName, const std::string& sValue) override;
 
-	void CreateEventSubscription(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string& sNodeName, const std::string& sSelectFields, const LibMCDriver_OPCUA_double dPublishingInterval, const LibMCDriver_OPCUA_uint32 nQueueSize, const bool bDiscardOldest, LibMCDriver_OPCUA_uint32& nSubscriptionID, LibMCDriver_OPCUA_uint32& nMonitoredItemID) override;
-
-	void DeleteEventSubscription(const LibMCDriver_OPCUA_uint32 nSubscriptionID, const LibMCDriver_OPCUA_uint32 nMonitoredItemID) override;
-
-	void PollEvent(const LibMCDriver_OPCUA_uint32 nTimeoutMS, bool& bHasEvent, LibMCDriver_OPCUA_uint32& nSubscriptionID, LibMCDriver_OPCUA_uint32& nMonitoredItemID, std::string& sEventJSON) override;
-
 };
 
 } // namespace Impl

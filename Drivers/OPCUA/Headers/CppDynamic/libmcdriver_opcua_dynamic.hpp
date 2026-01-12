@@ -571,9 +571,6 @@ public:
 	inline void WriteInteger(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const eUAIntegerType eNodeType, const LibMCDriver_OPCUA_int64 nValue);
 	inline void WriteDouble(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const eUADoubleType eNodeType, const LibMCDriver_OPCUA_double dValue);
 	inline void WriteString(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue);
-	inline void CreateEventSubscription(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibMCDriver_OPCUA_double dPublishingInterval, const LibMCDriver_OPCUA_uint32 nQueueSize, const bool bDiscardOldest, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID);
-	inline void DeleteEventSubscription(const LibMCDriver_OPCUA_uint32 nSubscriptionID, const LibMCDriver_OPCUA_uint32 nMonitoredItemID);
-	inline void PollEvent(const LibMCDriver_OPCUA_uint32 nTimeoutMS, bool & bHasEvent, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID, std::string & sEventJSON);
 };
 	
 	/**
@@ -717,9 +714,6 @@ public:
 		pWrapperTable->m_Driver_OPCUA_WriteInteger = nullptr;
 		pWrapperTable->m_Driver_OPCUA_WriteDouble = nullptr;
 		pWrapperTable->m_Driver_OPCUA_WriteString = nullptr;
-		pWrapperTable->m_Driver_OPCUA_CreateEventSubscription = nullptr;
-		pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription = nullptr;
-		pWrapperTable->m_Driver_OPCUA_PollEvent = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
 		pWrapperTable->m_ReleaseInstance = nullptr;
@@ -949,33 +943,6 @@ public:
 			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_Driver_OPCUA_CreateEventSubscription = (PLibMCDriver_OPCUADriver_OPCUA_CreateEventSubscriptionPtr) GetProcAddress(hLibrary, "libmcdriver_opcua_driver_opcua_createeventsubscription");
-		#else // _WIN32
-		pWrapperTable->m_Driver_OPCUA_CreateEventSubscription = (PLibMCDriver_OPCUADriver_OPCUA_CreateEventSubscriptionPtr) dlsym(hLibrary, "libmcdriver_opcua_driver_opcua_createeventsubscription");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_Driver_OPCUA_CreateEventSubscription == nullptr)
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription = (PLibMCDriver_OPCUADriver_OPCUA_DeleteEventSubscriptionPtr) GetProcAddress(hLibrary, "libmcdriver_opcua_driver_opcua_deleteeventsubscription");
-		#else // _WIN32
-		pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription = (PLibMCDriver_OPCUADriver_OPCUA_DeleteEventSubscriptionPtr) dlsym(hLibrary, "libmcdriver_opcua_driver_opcua_deleteeventsubscription");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription == nullptr)
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_Driver_OPCUA_PollEvent = (PLibMCDriver_OPCUADriver_OPCUA_PollEventPtr) GetProcAddress(hLibrary, "libmcdriver_opcua_driver_opcua_pollevent");
-		#else // _WIN32
-		pWrapperTable->m_Driver_OPCUA_PollEvent = (PLibMCDriver_OPCUADriver_OPCUA_PollEventPtr) dlsym(hLibrary, "libmcdriver_opcua_driver_opcua_pollevent");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_Driver_OPCUA_PollEvent == nullptr)
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
 		pWrapperTable->m_GetVersion = (PLibMCDriver_OPCUAGetVersionPtr) GetProcAddress(hLibrary, "libmcdriver_opcua_getversion");
 		#else // _WIN32
 		pWrapperTable->m_GetVersion = (PLibMCDriver_OPCUAGetVersionPtr) dlsym(hLibrary, "libmcdriver_opcua_getversion");
@@ -1128,18 +1095,6 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_opcua_driver_opcua_writestring", (void**)&(pWrapperTable->m_Driver_OPCUA_WriteString));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_OPCUA_WriteString == nullptr) )
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcdriver_opcua_driver_opcua_createeventsubscription", (void**)&(pWrapperTable->m_Driver_OPCUA_CreateEventSubscription));
-		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_OPCUA_CreateEventSubscription == nullptr) )
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcdriver_opcua_driver_opcua_deleteeventsubscription", (void**)&(pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription));
-		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_OPCUA_DeleteEventSubscription == nullptr) )
-			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcdriver_opcua_driver_opcua_pollevent", (void**)&(pWrapperTable->m_Driver_OPCUA_PollEvent));
-		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_OPCUA_PollEvent == nullptr) )
 			return LIBMCDRIVER_OPCUA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_opcua_getversion", (void**)&(pWrapperTable->m_GetVersion));
@@ -1412,50 +1367,6 @@ public:
 	void CDriver_OPCUA::WriteString(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_OPCUA_WriteString(m_pHandle, nNameSpace, sNodeName.c_str(), sValue.c_str()));
-	}
-	
-	/**
-	* CDriver_OPCUA::CreateEventSubscription - Creates an event subscription for an event notifier node.
-	* @param[in] nNameSpace - Namespace ID
-	* @param[in] sNodeName - Event notifier node.
-	* @param[in] sSelectFields - Comma-separated event field names. Empty uses the default field list.
-	* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
-	* @param[in] nQueueSize - Monitored item queue size.
-	* @param[in] bDiscardOldest - Discard oldest queued events if full.
-	* @param[out] nSubscriptionID - Created subscription id.
-	* @param[out] nMonitoredItemID - Created monitored item id.
-	*/
-	void CDriver_OPCUA::CreateEventSubscription(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibMCDriver_OPCUA_double dPublishingInterval, const LibMCDriver_OPCUA_uint32 nQueueSize, const bool bDiscardOldest, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_OPCUA_CreateEventSubscription(m_pHandle, nNameSpace, sNodeName.c_str(), sSelectFields.c_str(), dPublishingInterval, nQueueSize, bDiscardOldest, &nSubscriptionID, &nMonitoredItemID));
-	}
-	
-	/**
-	* CDriver_OPCUA::DeleteEventSubscription - Deletes an event subscription and its monitored item.
-	* @param[in] nSubscriptionID - Subscription id.
-	* @param[in] nMonitoredItemID - Monitored item id.
-	*/
-	void CDriver_OPCUA::DeleteEventSubscription(const LibMCDriver_OPCUA_uint32 nSubscriptionID, const LibMCDriver_OPCUA_uint32 nMonitoredItemID)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_OPCUA_DeleteEventSubscription(m_pHandle, nSubscriptionID, nMonitoredItemID));
-	}
-	
-	/**
-	* CDriver_OPCUA::PollEvent - Processes incoming notifications and returns the next queued event.
-	* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
-	* @param[out] bHasEvent - True if an event was returned.
-	* @param[out] nSubscriptionID - Subscription id of the event.
-	* @param[out] nMonitoredItemID - Monitored item id of the event.
-	* @param[out] sEventJSON - Event fields encoded as JSON object.
-	*/
-	void CDriver_OPCUA::PollEvent(const LibMCDriver_OPCUA_uint32 nTimeoutMS, bool & bHasEvent, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID, std::string & sEventJSON)
-	{
-		LibMCDriver_OPCUA_uint32 bytesNeededEventJSON = 0;
-		LibMCDriver_OPCUA_uint32 bytesWrittenEventJSON = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_OPCUA_PollEvent(m_pHandle, nTimeoutMS, &bHasEvent, &nSubscriptionID, &nMonitoredItemID, 0, &bytesNeededEventJSON, nullptr));
-		std::vector<char> bufferEventJSON(bytesNeededEventJSON);
-		CheckError(m_pWrapper->m_WrapperTable.m_Driver_OPCUA_PollEvent(m_pHandle, nTimeoutMS, &bHasEvent, &nSubscriptionID, &nMonitoredItemID, bytesNeededEventJSON, &bytesWrittenEventJSON, &bufferEventJSON[0]));
-		sEventJSON = std::string(&bufferEventJSON[0]);
 	}
 
 } // namespace LibMCDriver_OPCUA

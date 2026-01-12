@@ -159,30 +159,6 @@
 			<param name="Value" type="string" pass="in" description="Node Value to write" />
 		</method>
 
-		<method name="CreateEventSubscription" description="Creates an event subscription for an event notifier node.">
-			<param name="NameSpace" type="uint32" pass="in" description="Namespace ID" />
-			<param name="NodeName" type="string" pass="in" description="Event notifier node." />
-			<param name="SelectFields" type="string" pass="in" description="Comma-separated event field names. Empty uses the default field list." />
-			<param name="PublishingInterval" type="double" pass="in" description="Requested publishing interval in milliseconds." />
-			<param name="QueueSize" type="uint32" pass="in" description="Monitored item queue size." />
-			<param name="DiscardOldest" type="bool" pass="in" description="Discard oldest queued events if full." />
-			<param name="SubscriptionID" type="uint32" pass="out" description="Created subscription id." />
-			<param name="MonitoredItemID" type="uint32" pass="out" description="Created monitored item id." />
-		</method>
-
-		<method name="DeleteEventSubscription" description="Deletes an event subscription and its monitored item.">
-			<param name="SubscriptionID" type="uint32" pass="in" description="Subscription id." />
-			<param name="MonitoredItemID" type="uint32" pass="in" description="Monitored item id." />
-		</method>
-
-		<method name="PollEvent" description="Processes incoming notifications and returns the next queued event.">
-			<param name="TimeoutMS" type="uint32" pass="in" description="Maximum time to wait for events. 0 for no wait." />
-			<param name="HasEvent" type="bool" pass="out" description="True if an event was returned." />
-			<param name="SubscriptionID" type="uint32" pass="out" description="Subscription id of the event." />
-			<param name="MonitoredItemID" type="uint32" pass="out" description="Monitored item id of the event." />
-			<param name="EventJSON" type="string" pass="out" description="Event fields encoded as JSON object." />
-		</method>
-
 	
 	</class>
 	

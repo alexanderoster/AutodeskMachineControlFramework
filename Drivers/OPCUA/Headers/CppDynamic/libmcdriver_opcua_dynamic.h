@@ -255,47 +255,6 @@ typedef LibMCDriver_OPCUAResult (*PLibMCDriver_OPCUADriver_OPCUA_WriteDoublePtr)
 */
 typedef LibMCDriver_OPCUAResult (*PLibMCDriver_OPCUADriver_OPCUA_WriteStringPtr) (LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nNameSpace, const char * pNodeName, const char * pValue);
 
-/**
-* Creates an event subscription for an event notifier node.
-*
-* @param[in] pDriver_OPCUA - Driver_OPCUA instance.
-* @param[in] nNameSpace - Namespace ID
-* @param[in] pNodeName - Event notifier node.
-* @param[in] pSelectFields - Comma-separated event field names. Empty uses the default field list.
-* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
-* @param[in] nQueueSize - Monitored item queue size.
-* @param[in] bDiscardOldest - Discard oldest queued events if full.
-* @param[out] pSubscriptionID - Created subscription id.
-* @param[out] pMonitoredItemID - Created monitored item id.
-* @return error code or 0 (success)
-*/
-typedef LibMCDriver_OPCUAResult (*PLibMCDriver_OPCUADriver_OPCUA_CreateEventSubscriptionPtr) (LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nNameSpace, const char * pNodeName, const char * pSelectFields, LibMCDriver_OPCUA_double dPublishingInterval, LibMCDriver_OPCUA_uint32 nQueueSize, bool bDiscardOldest, LibMCDriver_OPCUA_uint32 * pSubscriptionID, LibMCDriver_OPCUA_uint32 * pMonitoredItemID);
-
-/**
-* Deletes an event subscription and its monitored item.
-*
-* @param[in] pDriver_OPCUA - Driver_OPCUA instance.
-* @param[in] nSubscriptionID - Subscription id.
-* @param[in] nMonitoredItemID - Monitored item id.
-* @return error code or 0 (success)
-*/
-typedef LibMCDriver_OPCUAResult (*PLibMCDriver_OPCUADriver_OPCUA_DeleteEventSubscriptionPtr) (LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nSubscriptionID, LibMCDriver_OPCUA_uint32 nMonitoredItemID);
-
-/**
-* Processes incoming notifications and returns the next queued event.
-*
-* @param[in] pDriver_OPCUA - Driver_OPCUA instance.
-* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
-* @param[out] pHasEvent - True if an event was returned.
-* @param[out] pSubscriptionID - Subscription id of the event.
-* @param[out] pMonitoredItemID - Monitored item id of the event.
-* @param[in] nEventJSONBufferSize - size of the buffer (including trailing 0)
-* @param[out] pEventJSONNeededChars - will be filled with the count of the written bytes, or needed buffer size.
-* @param[out] pEventJSONBuffer -  buffer of Event fields encoded as JSON object., may be NULL
-* @return error code or 0 (success)
-*/
-typedef LibMCDriver_OPCUAResult (*PLibMCDriver_OPCUADriver_OPCUA_PollEventPtr) (LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nTimeoutMS, bool * pHasEvent, LibMCDriver_OPCUA_uint32 * pSubscriptionID, LibMCDriver_OPCUA_uint32 * pMonitoredItemID, const LibMCDriver_OPCUA_uint32 nEventJSONBufferSize, LibMCDriver_OPCUA_uint32* pEventJSONNeededChars, char * pEventJSONBuffer);
-
 /*************************************************************************************************************************
  Global functions
 **************************************************************************************************************************/
@@ -391,9 +350,6 @@ typedef struct {
 	PLibMCDriver_OPCUADriver_OPCUA_WriteIntegerPtr m_Driver_OPCUA_WriteInteger;
 	PLibMCDriver_OPCUADriver_OPCUA_WriteDoublePtr m_Driver_OPCUA_WriteDouble;
 	PLibMCDriver_OPCUADriver_OPCUA_WriteStringPtr m_Driver_OPCUA_WriteString;
-	PLibMCDriver_OPCUADriver_OPCUA_CreateEventSubscriptionPtr m_Driver_OPCUA_CreateEventSubscription;
-	PLibMCDriver_OPCUADriver_OPCUA_DeleteEventSubscriptionPtr m_Driver_OPCUA_DeleteEventSubscription;
-	PLibMCDriver_OPCUADriver_OPCUA_PollEventPtr m_Driver_OPCUA_PollEvent;
 	PLibMCDriver_OPCUAGetVersionPtr m_GetVersion;
 	PLibMCDriver_OPCUAGetLastErrorPtr m_GetLastError;
 	PLibMCDriver_OPCUAReleaseInstancePtr m_ReleaseInstance;
