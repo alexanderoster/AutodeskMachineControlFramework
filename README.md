@@ -35,9 +35,10 @@ TODO
 * Get and install node binaries from https://nodejs.org/en/download/ 
 * On x64 Debian, the following packages should be sufficient: 
     - build-essential
-	- cmake
-	- git
-	- uuid-dev
+    - cmake
+    - git
+    - uuid-dev
+    - libssl-dev
 * build_clean_linux64.sh should build the binaries and dev packages on Linux. The results are located in "build_linux64/Output".
 
 ## Dependencies / Prerequisites (on ARM Linux)
