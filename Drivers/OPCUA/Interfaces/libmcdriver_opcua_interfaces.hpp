@@ -410,6 +410,36 @@ public:
 	*/
 	virtual void WriteString(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue) = 0;
 
+	/**
+	* IDriver_OPCUA::CreateEventSubscription - Creates an event subscription for an event notifier node.
+	* @param[in] nNameSpace - Namespace ID
+	* @param[in] sNodeName - Event notifier node.
+	* @param[in] sSelectFields - Comma-separated event field names. Empty uses the default field list.
+	* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
+	* @param[in] nQueueSize - Monitored item queue size.
+	* @param[in] bDiscardOldest - Discard oldest queued events if full.
+	* @param[out] nSubscriptionID - Created subscription id.
+	* @param[out] nMonitoredItemID - Created monitored item id.
+	*/
+	virtual void CreateEventSubscription(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibMCDriver_OPCUA_double dPublishingInterval, const LibMCDriver_OPCUA_uint32 nQueueSize, const bool bDiscardOldest, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID) = 0;
+
+	/**
+	* IDriver_OPCUA::DeleteEventSubscription - Deletes an event subscription and its monitored item.
+	* @param[in] nSubscriptionID - Subscription id.
+	* @param[in] nMonitoredItemID - Monitored item id.
+	*/
+	virtual void DeleteEventSubscription(const LibMCDriver_OPCUA_uint32 nSubscriptionID, const LibMCDriver_OPCUA_uint32 nMonitoredItemID) = 0;
+
+	/**
+	* IDriver_OPCUA::PollEvent - Processes incoming notifications and returns the next queued event.
+	* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
+	* @param[out] bHasEvent - True if an event was returned.
+	* @param[out] nSubscriptionID - Subscription id of the event.
+	* @param[out] nMonitoredItemID - Monitored item id of the event.
+	* @param[out] sEventJSON - Event fields encoded as JSON object.
+	*/
+	virtual void PollEvent(const LibMCDriver_OPCUA_uint32 nTimeoutMS, bool & bHasEvent, LibMCDriver_OPCUA_uint32 & nSubscriptionID, LibMCDriver_OPCUA_uint32 & nMonitoredItemID, std::string & sEventJSON) = 0;
+
 };
 
 typedef IBaseSharedPtr<IDriver_OPCUA> PIDriver_OPCUA;

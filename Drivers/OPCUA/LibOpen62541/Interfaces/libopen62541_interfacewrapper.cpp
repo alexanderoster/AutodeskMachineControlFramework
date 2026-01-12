@@ -535,6 +535,154 @@ LibOpen62541Result libopen62541_opcclient_writestring(LibOpen62541_OPCClient pOP
 	}
 }
 
+LibOpen62541Result libopen62541_opcclient_createeventsubscription(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nNameSpace, const char * pNodeName, const char * pSelectFields, LibOpen62541_double dPublishingInterval, LibOpen62541_uint32 nQueueSize, bool bDiscardOldest, LibOpen62541_uint32 * pSubscriptionID, LibOpen62541_uint32 * pMonitoredItemID)
+{
+	IBase* pIBaseClass = (IBase *)pOPCClient;
+
+	PLibOpen62541InterfaceJournalEntry pJournalEntry;
+	try {
+		if (m_GlobalJournal.get() != nullptr)  {
+			pJournalEntry = m_GlobalJournal->beginClassMethod(pOPCClient, "OPCClient", "CreateEventSubscription");
+			pJournalEntry->addUInt32Parameter("NameSpace", nNameSpace);
+			pJournalEntry->addStringParameter("NodeName", pNodeName);
+			pJournalEntry->addStringParameter("SelectFields", pSelectFields);
+			pJournalEntry->addDoubleParameter("PublishingInterval", dPublishingInterval);
+			pJournalEntry->addUInt32Parameter("QueueSize", nQueueSize);
+			pJournalEntry->addBooleanParameter("DiscardOldest", bDiscardOldest);
+		}
+		if (pNodeName == nullptr)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if (pSelectFields == nullptr)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if (!pSubscriptionID)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if (!pMonitoredItemID)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		std::string sNodeName(pNodeName);
+		std::string sSelectFields(pSelectFields);
+		IOPCClient* pIOPCClient = dynamic_cast<IOPCClient*>(pIBaseClass);
+		if (!pIOPCClient)
+			throw ELibOpen62541InterfaceException(LIBOPEN62541_ERROR_INVALIDCAST);
+		
+		pIOPCClient->CreateEventSubscription(nNameSpace, sNodeName, sSelectFields, dPublishingInterval, nQueueSize, bDiscardOldest, *pSubscriptionID, *pMonitoredItemID);
+
+		if (pJournalEntry.get() != nullptr) {
+			pJournalEntry->addUInt32Result("SubscriptionID", *pSubscriptionID);
+			pJournalEntry->addUInt32Result("MonitoredItemID", *pMonitoredItemID);
+			pJournalEntry->writeSuccess();
+		}
+		return LIBOPEN62541_SUCCESS;
+	}
+	catch (ELibOpen62541InterfaceException & Exception) {
+		return handleLibOpen62541Exception(pIBaseClass, Exception, pJournalEntry.get());
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException, pJournalEntry.get());
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass, pJournalEntry.get());
+	}
+}
+
+LibOpen62541Result libopen62541_opcclient_deleteeventsubscription(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nSubscriptionID, LibOpen62541_uint32 nMonitoredItemID)
+{
+	IBase* pIBaseClass = (IBase *)pOPCClient;
+
+	PLibOpen62541InterfaceJournalEntry pJournalEntry;
+	try {
+		if (m_GlobalJournal.get() != nullptr)  {
+			pJournalEntry = m_GlobalJournal->beginClassMethod(pOPCClient, "OPCClient", "DeleteEventSubscription");
+			pJournalEntry->addUInt32Parameter("SubscriptionID", nSubscriptionID);
+			pJournalEntry->addUInt32Parameter("MonitoredItemID", nMonitoredItemID);
+		}
+		IOPCClient* pIOPCClient = dynamic_cast<IOPCClient*>(pIBaseClass);
+		if (!pIOPCClient)
+			throw ELibOpen62541InterfaceException(LIBOPEN62541_ERROR_INVALIDCAST);
+		
+		pIOPCClient->DeleteEventSubscription(nSubscriptionID, nMonitoredItemID);
+
+		if (pJournalEntry.get() != nullptr) {
+			pJournalEntry->writeSuccess();
+		}
+		return LIBOPEN62541_SUCCESS;
+	}
+	catch (ELibOpen62541InterfaceException & Exception) {
+		return handleLibOpen62541Exception(pIBaseClass, Exception, pJournalEntry.get());
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException, pJournalEntry.get());
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass, pJournalEntry.get());
+	}
+}
+
+LibOpen62541Result libopen62541_opcclient_pollevent(LibOpen62541_OPCClient pOPCClient, LibOpen62541_uint32 nTimeoutMS, bool * pHasEvent, LibOpen62541_uint32 * pSubscriptionID, LibOpen62541_uint32 * pMonitoredItemID, const LibOpen62541_uint32 nEventJSONBufferSize, LibOpen62541_uint32* pEventJSONNeededChars, char * pEventJSONBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOPCClient;
+
+	PLibOpen62541InterfaceJournalEntry pJournalEntry;
+	try {
+		if (m_GlobalJournal.get() != nullptr)  {
+			pJournalEntry = m_GlobalJournal->beginClassMethod(pOPCClient, "OPCClient", "PollEvent");
+			pJournalEntry->addUInt32Parameter("TimeoutMS", nTimeoutMS);
+		}
+		if (!pHasEvent)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if (!pSubscriptionID)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if (!pMonitoredItemID)
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		if ( (!pEventJSONBuffer) && !(pEventJSONNeededChars) )
+			throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_INVALIDPARAM);
+		std::string sEventJSON("");
+		IOPCClient* pIOPCClient = dynamic_cast<IOPCClient*>(pIBaseClass);
+		if (!pIOPCClient)
+			throw ELibOpen62541InterfaceException(LIBOPEN62541_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pEventJSONBuffer == nullptr);
+		if (isCacheCall) {
+			pIOPCClient->PollEvent(nTimeoutMS, *pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON);
+
+			pIOPCClient->_setCache (new ParameterCache_4<bool, LibOpen62541_uint32, LibOpen62541_uint32, std::string> (*pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_4<bool, LibOpen62541_uint32, LibOpen62541_uint32, std::string>*> (pIOPCClient->_getCache ());
+			if (cache == nullptr)
+				throw ELibOpen62541InterfaceException(LIBOPEN62541_ERROR_INVALIDCAST);
+			cache->retrieveData (*pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON);
+			pIOPCClient->_setCache (nullptr);
+		}
+		
+		if (pEventJSONNeededChars)
+			*pEventJSONNeededChars = (LibOpen62541_uint32) (sEventJSON.size()+1);
+		if (pEventJSONBuffer) {
+			if (sEventJSON.size() >= nEventJSONBufferSize)
+				throw ELibOpen62541InterfaceException (LIBOPEN62541_ERROR_BUFFERTOOSMALL);
+			for (size_t iEventJSON = 0; iEventJSON < sEventJSON.size(); iEventJSON++)
+				pEventJSONBuffer[iEventJSON] = sEventJSON[iEventJSON];
+			pEventJSONBuffer[sEventJSON.size()] = 0;
+		}
+		if (pJournalEntry.get() != nullptr) {
+			pJournalEntry->addBooleanResult("HasEvent", *pHasEvent);
+			pJournalEntry->addUInt32Result("SubscriptionID", *pSubscriptionID);
+			pJournalEntry->addUInt32Result("MonitoredItemID", *pMonitoredItemID);
+			pJournalEntry->addStringResult("EventJSON", sEventJSON.c_str());
+			pJournalEntry->writeSuccess();
+		}
+		return LIBOPEN62541_SUCCESS;
+	}
+	catch (ELibOpen62541InterfaceException & Exception) {
+		return handleLibOpen62541Exception(pIBaseClass, Exception, pJournalEntry.get());
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException, pJournalEntry.get());
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass, pJournalEntry.get());
+	}
+}
+
 
 
 /*************************************************************************************************************************
@@ -572,6 +720,12 @@ LibOpen62541Result LibOpen62541::Impl::LibOpen62541_GetProcAddress (const char *
 		*ppProcAddress = (void*) &libopen62541_opcclient_writedouble;
 	if (sProcName == "libopen62541_opcclient_writestring") 
 		*ppProcAddress = (void*) &libopen62541_opcclient_writestring;
+	if (sProcName == "libopen62541_opcclient_createeventsubscription") 
+		*ppProcAddress = (void*) &libopen62541_opcclient_createeventsubscription;
+	if (sProcName == "libopen62541_opcclient_deleteeventsubscription") 
+		*ppProcAddress = (void*) &libopen62541_opcclient_deleteeventsubscription;
+	if (sProcName == "libopen62541_opcclient_pollevent") 
+		*ppProcAddress = (void*) &libopen62541_opcclient_pollevent;
 	if (sProcName == "libopen62541_getversion") 
 		*ppProcAddress = (void*) &libopen62541_getversion;
 	if (sProcName == "libopen62541_getlasterror") 

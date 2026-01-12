@@ -323,4 +323,18 @@ void CDriver_OPCUA::WriteString(const LibMCDriver_OPCUA_uint32 nNameSpace, const
     m_pClient->WriteString(nNameSpace, sNodeName, sValue);
 }
 
+void CDriver_OPCUA::CreateEventSubscription(const LibMCDriver_OPCUA_uint32 nNameSpace, const std::string& sNodeName, const std::string& sSelectFields, const LibMCDriver_OPCUA_double dPublishingInterval, const LibMCDriver_OPCUA_uint32 nQueueSize, const bool bDiscardOldest, LibMCDriver_OPCUA_uint32& nSubscriptionID, LibMCDriver_OPCUA_uint32& nMonitoredItemID)
+{
+	m_pClient->CreateEventSubscription(nNameSpace, sNodeName, sSelectFields, dPublishingInterval, nQueueSize, bDiscardOldest, nSubscriptionID, nMonitoredItemID);
+}
+
+void CDriver_OPCUA::DeleteEventSubscription(const LibMCDriver_OPCUA_uint32 nSubscriptionID, const LibMCDriver_OPCUA_uint32 nMonitoredItemID)
+{
+	m_pClient->DeleteEventSubscription(nSubscriptionID, nMonitoredItemID);
+}
+
+void CDriver_OPCUA::PollEvent(const LibMCDriver_OPCUA_uint32 nTimeoutMS, bool& bHasEvent, LibMCDriver_OPCUA_uint32& nSubscriptionID, LibMCDriver_OPCUA_uint32& nMonitoredItemID, std::string& sEventJSON)
+{
+	m_pClient->PollEvent(nTimeoutMS, bHasEvent, nSubscriptionID, nMonitoredItemID, sEventJSON);
+}
 

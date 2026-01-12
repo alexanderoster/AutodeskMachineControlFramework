@@ -415,6 +415,9 @@ public:
 	inline void WriteInteger(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const eUAIntegerType eNodeType, const LibOpen62541_int64 nValue);
 	inline void WriteDouble(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const eUADoubleType eNodeType, const LibOpen62541_double dValue);
 	inline void WriteString(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue);
+	inline void CreateEventSubscription(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibOpen62541_double dPublishingInterval, const LibOpen62541_uint32 nQueueSize, const bool bDiscardOldest, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID);
+	inline void DeleteEventSubscription(const LibOpen62541_uint32 nSubscriptionID, const LibOpen62541_uint32 nMonitoredItemID);
+	inline void PollEvent(const LibOpen62541_uint32 nTimeoutMS, bool & bHasEvent, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID, std::string & sEventJSON);
 };
 	
 	/**
@@ -524,6 +527,9 @@ public:
 		pWrapperTable->m_OPCClient_WriteInteger = nullptr;
 		pWrapperTable->m_OPCClient_WriteDouble = nullptr;
 		pWrapperTable->m_OPCClient_WriteString = nullptr;
+		pWrapperTable->m_OPCClient_CreateEventSubscription = nullptr;
+		pWrapperTable->m_OPCClient_DeleteEventSubscription = nullptr;
+		pWrapperTable->m_OPCClient_PollEvent = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
 		pWrapperTable->m_AcquireInstance = nullptr;
@@ -680,6 +686,33 @@ public:
 			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_OPCClient_CreateEventSubscription = (PLibOpen62541OPCClient_CreateEventSubscriptionPtr) GetProcAddress(hLibrary, "libopen62541_opcclient_createeventsubscription");
+		#else // _WIN32
+		pWrapperTable->m_OPCClient_CreateEventSubscription = (PLibOpen62541OPCClient_CreateEventSubscriptionPtr) dlsym(hLibrary, "libopen62541_opcclient_createeventsubscription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OPCClient_CreateEventSubscription == nullptr)
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OPCClient_DeleteEventSubscription = (PLibOpen62541OPCClient_DeleteEventSubscriptionPtr) GetProcAddress(hLibrary, "libopen62541_opcclient_deleteeventsubscription");
+		#else // _WIN32
+		pWrapperTable->m_OPCClient_DeleteEventSubscription = (PLibOpen62541OPCClient_DeleteEventSubscriptionPtr) dlsym(hLibrary, "libopen62541_opcclient_deleteeventsubscription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OPCClient_DeleteEventSubscription == nullptr)
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OPCClient_PollEvent = (PLibOpen62541OPCClient_PollEventPtr) GetProcAddress(hLibrary, "libopen62541_opcclient_pollevent");
+		#else // _WIN32
+		pWrapperTable->m_OPCClient_PollEvent = (PLibOpen62541OPCClient_PollEventPtr) dlsym(hLibrary, "libopen62541_opcclient_pollevent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OPCClient_PollEvent == nullptr)
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_GetVersion = (PLibOpen62541GetVersionPtr) GetProcAddress(hLibrary, "libopen62541_getversion");
 		#else // _WIN32
 		pWrapperTable->m_GetVersion = (PLibOpen62541GetVersionPtr) dlsym(hLibrary, "libopen62541_getversion");
@@ -791,6 +824,18 @@ public:
 		
 		eLookupError = (*pLookup)("libopen62541_opcclient_writestring", (void**)&(pWrapperTable->m_OPCClient_WriteString));
 		if ( (eLookupError != 0) || (pWrapperTable->m_OPCClient_WriteString == nullptr) )
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libopen62541_opcclient_createeventsubscription", (void**)&(pWrapperTable->m_OPCClient_CreateEventSubscription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OPCClient_CreateEventSubscription == nullptr) )
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libopen62541_opcclient_deleteeventsubscription", (void**)&(pWrapperTable->m_OPCClient_DeleteEventSubscription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OPCClient_DeleteEventSubscription == nullptr) )
+			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libopen62541_opcclient_pollevent", (void**)&(pWrapperTable->m_OPCClient_PollEvent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OPCClient_PollEvent == nullptr) )
 			return LIBOPEN62541_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libopen62541_getversion", (void**)&(pWrapperTable->m_GetVersion));
@@ -961,6 +1006,50 @@ public:
 	void COPCClient::WriteString(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_OPCClient_WriteString(m_pHandle, nNameSpace, sNodeName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* COPCClient::CreateEventSubscription - Creates an event subscription for an event notifier node.
+	* @param[in] nNameSpace - Namespace ID
+	* @param[in] sNodeName - Event notifier node.
+	* @param[in] sSelectFields - Comma-separated event field names. Empty uses the default field list.
+	* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
+	* @param[in] nQueueSize - Monitored item queue size.
+	* @param[in] bDiscardOldest - Discard oldest queued events if full.
+	* @param[out] nSubscriptionID - Created subscription id.
+	* @param[out] nMonitoredItemID - Created monitored item id.
+	*/
+	void COPCClient::CreateEventSubscription(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibOpen62541_double dPublishingInterval, const LibOpen62541_uint32 nQueueSize, const bool bDiscardOldest, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OPCClient_CreateEventSubscription(m_pHandle, nNameSpace, sNodeName.c_str(), sSelectFields.c_str(), dPublishingInterval, nQueueSize, bDiscardOldest, &nSubscriptionID, &nMonitoredItemID));
+	}
+	
+	/**
+	* COPCClient::DeleteEventSubscription - Deletes an event subscription and its monitored item.
+	* @param[in] nSubscriptionID - Subscription id.
+	* @param[in] nMonitoredItemID - Monitored item id.
+	*/
+	void COPCClient::DeleteEventSubscription(const LibOpen62541_uint32 nSubscriptionID, const LibOpen62541_uint32 nMonitoredItemID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OPCClient_DeleteEventSubscription(m_pHandle, nSubscriptionID, nMonitoredItemID));
+	}
+	
+	/**
+	* COPCClient::PollEvent - Processes incoming notifications and returns the next queued event.
+	* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
+	* @param[out] bHasEvent - True if an event was returned.
+	* @param[out] nSubscriptionID - Subscription id of the event.
+	* @param[out] nMonitoredItemID - Monitored item id of the event.
+	* @param[out] sEventJSON - Event fields encoded as JSON object.
+	*/
+	void COPCClient::PollEvent(const LibOpen62541_uint32 nTimeoutMS, bool & bHasEvent, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID, std::string & sEventJSON)
+	{
+		LibOpen62541_uint32 bytesNeededEventJSON = 0;
+		LibOpen62541_uint32 bytesWrittenEventJSON = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OPCClient_PollEvent(m_pHandle, nTimeoutMS, &bHasEvent, &nSubscriptionID, &nMonitoredItemID, 0, &bytesNeededEventJSON, nullptr));
+		std::vector<char> bufferEventJSON(bytesNeededEventJSON);
+		CheckError(m_pWrapper->m_WrapperTable.m_OPCClient_PollEvent(m_pHandle, nTimeoutMS, &bHasEvent, &nSubscriptionID, &nMonitoredItemID, bytesNeededEventJSON, &bytesWrittenEventJSON, &bufferEventJSON[0]));
+		sEventJSON = std::string(&bufferEventJSON[0]);
 	}
 
 } // namespace LibOpen62541

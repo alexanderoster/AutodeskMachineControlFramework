@@ -47,8 +47,13 @@ Abstract: This is the class declaration of COPCClient
 // Include custom headers here.
 #include <open62541/client_config_default.h>
 #include <open62541/client_highlevel.h>
+#include <open62541/client_subscriptions.h>
 #include <open62541/plugin/log_stdout.h>
 #include <open62541/plugin/securitypolicy.h>
+#include <deque>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 namespace LibOpen62541 {
 namespace Impl {
@@ -66,6 +71,23 @@ private:
 	std::string m_sCertificate;
 	std::string m_sPrivateKey;
 	LibOpen62541::eUASecurityMode m_SecurityMode;
+
+	struct sEventEntry {
+		LibOpen62541_uint32 m_nSubscriptionID;
+		LibOpen62541_uint32 m_nMonitoredItemID;
+		std::string m_sEventJSON;
+	};
+
+	struct sMonitoredItemContext {
+		COPCClient* m_pClient;
+		std::vector<std::string> m_FieldNames;
+	};
+
+	std::mutex m_EventMutex;
+	std::deque<sEventEntry> m_EventQueue;
+	std::unordered_map<LibOpen62541_uint32, std::shared_ptr<sMonitoredItemContext>> m_MonitoredItemContexts;
+
+	static void EventNotificationCallback(UA_Client* pClient, UA_UInt32 nSubscriptionID, void* pSubscriptionContext, UA_UInt32 nMonitoredItemID, void* pMonitoredItemContext, size_t nEventFields, UA_Variant* pEventFields);
 
 public:
 
@@ -94,6 +116,12 @@ public:
 	void WriteDouble(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const LibOpen62541::eUADoubleType eNodeType, const LibOpen62541_double dValue) override;
 
 	void WriteString(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue) override;
+
+	void CreateEventSubscription(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibOpen62541_double dPublishingInterval, const LibOpen62541_uint32 nQueueSize, const bool bDiscardOldest, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID) override;
+
+	void DeleteEventSubscription(const LibOpen62541_uint32 nSubscriptionID, const LibOpen62541_uint32 nMonitoredItemID) override;
+
+	void PollEvent(const LibOpen62541_uint32 nTimeoutMS, bool & bHasEvent, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID, std::string & sEventJSON) override;
 
 };
 

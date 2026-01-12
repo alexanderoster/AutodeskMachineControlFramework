@@ -119,6 +119,27 @@ template <class T1, class T2, class T3> class ParameterCache_3 : public Paramete
 		}
 };
 
+template <class T1, class T2, class T3, class T4> class ParameterCache_4 : public ParameterCache {
+	private:
+		T1 m_param1;
+		T2 m_param2;
+		T3 m_param3;
+		T4 m_param4;
+	public:
+		ParameterCache_4 (const T1 & param1, const T2 & param2, const T3 & param3, const T4 & param4)
+			: m_param1 (param1), m_param2 (param2), m_param3 (param3), m_param4 (param4)
+		{
+		}
+
+		void retrieveData (T1 & param1, T2 & param2, T3 & param3, T4 & param4)
+		{
+			param1 = m_param1;
+			param2 = m_param2;
+			param3 = m_param3;
+			param4 = m_param4;
+		}
+};
+
 
 /*************************************************************************************************************************
  Class interface for Base 
@@ -326,6 +347,36 @@ public:
 	* @param[in] sValue - Node Value to write
 	*/
 	virtual void WriteString(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sValue) = 0;
+
+	/**
+	* IOPCClient::CreateEventSubscription - Creates an event subscription for an event notifier node.
+	* @param[in] nNameSpace - Namespace ID
+	* @param[in] sNodeName - Event notifier node.
+	* @param[in] sSelectFields - Comma-separated event field names. Empty uses the default field list.
+	* @param[in] dPublishingInterval - Requested publishing interval in milliseconds.
+	* @param[in] nQueueSize - Monitored item queue size.
+	* @param[in] bDiscardOldest - Discard oldest queued events if full.
+	* @param[out] nSubscriptionID - Created subscription id.
+	* @param[out] nMonitoredItemID - Created monitored item id.
+	*/
+	virtual void CreateEventSubscription(const LibOpen62541_uint32 nNameSpace, const std::string & sNodeName, const std::string & sSelectFields, const LibOpen62541_double dPublishingInterval, const LibOpen62541_uint32 nQueueSize, const bool bDiscardOldest, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID) = 0;
+
+	/**
+	* IOPCClient::DeleteEventSubscription - Deletes an event subscription and its monitored item.
+	* @param[in] nSubscriptionID - Subscription id.
+	* @param[in] nMonitoredItemID - Monitored item id.
+	*/
+	virtual void DeleteEventSubscription(const LibOpen62541_uint32 nSubscriptionID, const LibOpen62541_uint32 nMonitoredItemID) = 0;
+
+	/**
+	* IOPCClient::PollEvent - Processes incoming notifications and returns the next queued event.
+	* @param[in] nTimeoutMS - Maximum time to wait for events. 0 for no wait.
+	* @param[out] bHasEvent - True if an event was returned.
+	* @param[out] nSubscriptionID - Subscription id of the event.
+	* @param[out] nMonitoredItemID - Monitored item id of the event.
+	* @param[out] sEventJSON - Event fields encoded as JSON object.
+	*/
+	virtual void PollEvent(const LibOpen62541_uint32 nTimeoutMS, bool & bHasEvent, LibOpen62541_uint32 & nSubscriptionID, LibOpen62541_uint32 & nMonitoredItemID, std::string & sEventJSON) = 0;
 
 };
 

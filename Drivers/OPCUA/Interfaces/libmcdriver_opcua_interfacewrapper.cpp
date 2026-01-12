@@ -700,6 +700,118 @@ LibMCDriver_OPCUAResult libmcdriver_opcua_driver_opcua_writestring(LibMCDriver_O
 	}
 }
 
+LibMCDriver_OPCUAResult libmcdriver_opcua_driver_opcua_createeventsubscription(LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nNameSpace, const char * pNodeName, const char * pSelectFields, LibMCDriver_OPCUA_double dPublishingInterval, LibMCDriver_OPCUA_uint32 nQueueSize, bool bDiscardOldest, LibMCDriver_OPCUA_uint32 * pSubscriptionID, LibMCDriver_OPCUA_uint32 * pMonitoredItemID)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_OPCUA;
+
+	try {
+		if (pNodeName == nullptr)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if (pSelectFields == nullptr)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if (!pSubscriptionID)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if (!pMonitoredItemID)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		std::string sNodeName(pNodeName);
+		std::string sSelectFields(pSelectFields);
+		IDriver_OPCUA* pIDriver_OPCUA = dynamic_cast<IDriver_OPCUA*>(pIBaseClass);
+		if (!pIDriver_OPCUA)
+			throw ELibMCDriver_OPCUAInterfaceException(LIBMCDRIVER_OPCUA_ERROR_INVALIDCAST);
+		
+		pIDriver_OPCUA->CreateEventSubscription(nNameSpace, sNodeName, sSelectFields, dPublishingInterval, nQueueSize, bDiscardOldest, *pSubscriptionID, *pMonitoredItemID);
+
+		return LIBMCDRIVER_OPCUA_SUCCESS;
+	}
+	catch (ELibMCDriver_OPCUAInterfaceException & Exception) {
+		return handleLibMCDriver_OPCUAException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_OPCUAResult libmcdriver_opcua_driver_opcua_deleteeventsubscription(LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nSubscriptionID, LibMCDriver_OPCUA_uint32 nMonitoredItemID)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_OPCUA;
+
+	try {
+		IDriver_OPCUA* pIDriver_OPCUA = dynamic_cast<IDriver_OPCUA*>(pIBaseClass);
+		if (!pIDriver_OPCUA)
+			throw ELibMCDriver_OPCUAInterfaceException(LIBMCDRIVER_OPCUA_ERROR_INVALIDCAST);
+		
+		pIDriver_OPCUA->DeleteEventSubscription(nSubscriptionID, nMonitoredItemID);
+
+		return LIBMCDRIVER_OPCUA_SUCCESS;
+	}
+	catch (ELibMCDriver_OPCUAInterfaceException & Exception) {
+		return handleLibMCDriver_OPCUAException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_OPCUAResult libmcdriver_opcua_driver_opcua_pollevent(LibMCDriver_OPCUA_Driver_OPCUA pDriver_OPCUA, LibMCDriver_OPCUA_uint32 nTimeoutMS, bool * pHasEvent, LibMCDriver_OPCUA_uint32 * pSubscriptionID, LibMCDriver_OPCUA_uint32 * pMonitoredItemID, const LibMCDriver_OPCUA_uint32 nEventJSONBufferSize, LibMCDriver_OPCUA_uint32* pEventJSONNeededChars, char * pEventJSONBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pDriver_OPCUA;
+
+	try {
+		if (!pHasEvent)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if (!pSubscriptionID)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if (!pMonitoredItemID)
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		if ( (!pEventJSONBuffer) && !(pEventJSONNeededChars) )
+			throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_INVALIDPARAM);
+		std::string sEventJSON("");
+		IDriver_OPCUA* pIDriver_OPCUA = dynamic_cast<IDriver_OPCUA*>(pIBaseClass);
+		if (!pIDriver_OPCUA)
+			throw ELibMCDriver_OPCUAInterfaceException(LIBMCDRIVER_OPCUA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pEventJSONBuffer == nullptr);
+		if (isCacheCall) {
+			pIDriver_OPCUA->PollEvent(nTimeoutMS, *pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON);
+
+			pIDriver_OPCUA->_setCache (new ParameterCache_4<bool, LibMCDriver_OPCUA_uint32, LibMCDriver_OPCUA_uint32, std::string> (*pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_4<bool, LibMCDriver_OPCUA_uint32, LibMCDriver_OPCUA_uint32, std::string>*> (pIDriver_OPCUA->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDriver_OPCUAInterfaceException(LIBMCDRIVER_OPCUA_ERROR_INVALIDCAST);
+			cache->retrieveData (*pHasEvent, *pSubscriptionID, *pMonitoredItemID, sEventJSON);
+			pIDriver_OPCUA->_setCache (nullptr);
+		}
+		
+		if (pEventJSONNeededChars)
+			*pEventJSONNeededChars = (LibMCDriver_OPCUA_uint32) (sEventJSON.size()+1);
+		if (pEventJSONBuffer) {
+			if (sEventJSON.size() >= nEventJSONBufferSize)
+				throw ELibMCDriver_OPCUAInterfaceException (LIBMCDRIVER_OPCUA_ERROR_BUFFERTOOSMALL);
+			for (size_t iEventJSON = 0; iEventJSON < sEventJSON.size(); iEventJSON++)
+				pEventJSONBuffer[iEventJSON] = sEventJSON[iEventJSON];
+			pEventJSONBuffer[sEventJSON.size()] = 0;
+		}
+		return LIBMCDRIVER_OPCUA_SUCCESS;
+	}
+	catch (ELibMCDriver_OPCUAInterfaceException & Exception) {
+		return handleLibMCDriver_OPCUAException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 
 /*************************************************************************************************************************
@@ -753,6 +865,12 @@ LibMCDriver_OPCUAResult LibMCDriver_OPCUA::Impl::LibMCDriver_OPCUA_GetProcAddres
 		*ppProcAddress = (void*) &libmcdriver_opcua_driver_opcua_writedouble;
 	if (sProcName == "libmcdriver_opcua_driver_opcua_writestring") 
 		*ppProcAddress = (void*) &libmcdriver_opcua_driver_opcua_writestring;
+	if (sProcName == "libmcdriver_opcua_driver_opcua_createeventsubscription") 
+		*ppProcAddress = (void*) &libmcdriver_opcua_driver_opcua_createeventsubscription;
+	if (sProcName == "libmcdriver_opcua_driver_opcua_deleteeventsubscription") 
+		*ppProcAddress = (void*) &libmcdriver_opcua_driver_opcua_deleteeventsubscription;
+	if (sProcName == "libmcdriver_opcua_driver_opcua_pollevent") 
+		*ppProcAddress = (void*) &libmcdriver_opcua_driver_opcua_pollevent;
 	if (sProcName == "libmcdriver_opcua_getversion") 
 		*ppProcAddress = (void*) &libmcdriver_opcua_getversion;
 	if (sProcName == "libmcdriver_opcua_getlasterror") 
