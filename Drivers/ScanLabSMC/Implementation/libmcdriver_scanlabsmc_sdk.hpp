@@ -260,6 +260,11 @@ namespace LibMCDriver_ScanLabSMC {
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_write_digital_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Value, double TimeDelay);
 		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_write_digital_mask_x) (size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value, double TimeDelay);
 
+		typedef void (*slsc_JobCallback)(size_t JobID, void* Context);
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_cfg_register_callback_job_calculated) (size_t Handle, slsc_JobCallback Callback, void* Context);
+
+		typedef slscReturnValue(SCANLABSMC_CALLINGCONVENTION* PScanLabSMCPtr_slsc_job_begin_module) (size_t Handle, size_t* JobID, const double* StartPosition, const char* ModuleFileName);
+				
 		class CScanLabSMCSDKJournal {
 		private:
 			std::map<std::string, uint32_t> m_DefinedVariables;
@@ -298,6 +303,8 @@ namespace LibMCDriver_ScanLabSMC {
 		};
 
 		typedef std::shared_ptr<CScanLabSMCSDK_DLLDirectoryCache> PScanLabSMCSDK_DLLDirectoryCache;
+		//typedef void (*slsc_ExecTimeCallback)(size_t JobID, double ExecTime, void* Context);
+		typedef void (*slsc_JobCallback)(size_t JobID, void* Context);
 
 		class CScanLabSMCSDK {
 		private:
@@ -350,6 +357,8 @@ namespace LibMCDriver_ScanLabSMC {
 			PScanLabSMCPtr_slsc_ctrl_write_digital_mask_x ptr_slsc_ctrl_write_digital_mask_x = nullptr;
 			PScanLabSMCPtr_slsc_job_write_digital_x ptr_slsc_job_write_digital_x = nullptr;
 			PScanLabSMCPtr_slsc_job_write_digital_mask_x ptr_slsc_job_write_digital_mask_x = nullptr;
+			PScanLabSMCPtr_slsc_cfg_register_callback_job_calculated ptr_slsc_cfg_register_callback_job_calculated = nullptr;
+			PScanLabSMCPtr_slsc_job_begin_module ptr_slsc_job_begin_module = nullptr;
 
 		public:
 
@@ -413,6 +422,8 @@ namespace LibMCDriver_ScanLabSMC {
 			slscReturnValue slsc_job_write_digital_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Value, double TimeDelay);
 			slscReturnValue slsc_job_write_digital_mask_x(size_t Handle, slsc_DigitalOutput Channel, uint16_t Mask, uint16_t Value, double TimeDelay);
 
+			slscReturnValue slsc_cfg_register_callback_job_calculated(size_t Handle, slsc_JobCallback Callback, void* Context);
+			slscReturnValue slsc_job_begin_module(size_t Handle, size_t* JobID, const double* StartPosition, const char* ModuleFileName);
 		};
 
 
