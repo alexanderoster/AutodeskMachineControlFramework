@@ -565,6 +565,7 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 					sslsvr.listen(sHostName.c_str(), nPort);
 					m_pListeningServerInstance = nullptr;
 
+					this->log("Terminating all threads...");
 					m_pContext->TerminateAllThreads();
 
 				}
@@ -572,6 +573,7 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 					m_pListeningServerInstance = nullptr;
 					this->log("Fatal error: " + std::string(E.what()));
 
+					this->log("Terminating all threads...");
 					m_pContext->TerminateAllThreads();
 					throw;
 				}
@@ -582,20 +584,33 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 			}
 			else {
 
-				httplib::Server svr;
-				svr.Get("^/stream/.*", streamHandler);
-				svr.Get("(.*?)", requestHandler);
-				svr.Post("(.*?)", requestHandler);
-				svr.Put("(.*?)", requestHandler);
-				svr.Options("(.*?)", requestHandler);
-				m_pListeningServerInstance = &svr;
+				try {
 
-				m_bServiceHasBeenStarted = true;
+					httplib::Server svr;
+					svr.Get("^/stream/.*", streamHandler);
+					svr.Get("(.*?)", requestHandler);
+					svr.Post("(.*?)", requestHandler);
+					svr.Put("(.*?)", requestHandler);
+					svr.Options("(.*?)", requestHandler);
+					m_pListeningServerInstance = &svr;
 
-				svr.listen(sHostName.c_str(), nPort);
-				m_pListeningServerInstance = nullptr;
+					m_bServiceHasBeenStarted = true;
 
-				m_pContext->TerminateAllThreads();
+					svr.listen(sHostName.c_str(), nPort);
+					m_pListeningServerInstance = nullptr;
+
+					this->log("Terminating all threads...");
+					m_pContext->TerminateAllThreads();
+
+				}
+				catch (std::exception& E) {
+					m_pListeningServerInstance = nullptr;
+					this->log("Fatal error: " + std::string(E.what()));
+
+					this->log("Terminating all threads...");
+					m_pContext->TerminateAllThreads();
+					throw;
+				}
 			}
 
 			

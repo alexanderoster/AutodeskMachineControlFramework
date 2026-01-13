@@ -945,15 +945,37 @@ LibMCPlugin::PWrapper CMCContext::loadPlugin(std::string sPluginName)
 
 void CMCContext::executeSystemThread()
 {
-    while (!systemThreadShallTerminate()) {
+    auto pLogger = m_pSystemState->getLoggerInstance();
 
-        uint64_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
-        m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
-        m_pSystemState->updateMemoryUsageParameters();
+    try {
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS));
+        while (!systemThreadShallTerminate()) {
 
+            uint64_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
+            m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
+            m_pSystemState->updateMemoryUsageParameters();            
+
+        }
     }
+    catch (std::exception & E)
+    {
+        try {
+            std::string sErrorMessage(E.what());
+            pLogger->logMessage("Fatal system thread error: " + sErrorMessage, "system", AMC::eLogLevel::FatalError);
+        } 
+        catch (...) {
+        }
+    }
+    catch (...)
+    {
+        try {
+            pLogger->logMessage("Untyped fatal system thread error", "system", AMC::eLogLevel::FatalError);
+        }
+        catch (...) {
+        }
+    }
+
+
 }
 
 
@@ -979,7 +1001,7 @@ bool CMCContext::systemThreadIsRunning()
 
 bool CMCContext::systemThreadShallTerminate()
 {
-    if (m_SystemTerminateFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+    if (m_SystemTerminateFuture.wait_for(std::chrono::milliseconds(LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS)) == std::future_status::timeout)
         return false;
 
     return true;
@@ -1018,9 +1040,32 @@ void CMCContext::StartAllThreads()
 
 void CMCContext::TerminateAllThreads()
 {
-    m_pSystemState->logger()->logMessage("terminating threads...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
-    for (auto instance : m_InstanceList)
-        instance->terminateThread();
+	auto pLogger = m_pSystemState->getLoggerInstance();
+    pLogger->logMessage("terminating threads...", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Message);
+
+    for (auto instance : m_InstanceList) {
+		std::string sInstanceName = instance->getName();
+        try {
+            instance->terminateThread();
+        } catch (std::exception & E) {
+            pLogger->logMessage(std::string("could not terminate thread of instance '") + sInstanceName + "': " + E.what(), LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+		}
+        catch (...) {
+            pLogger->logMessage(std::string("could not terminate thread of instance '") + sInstanceName + "': unknown error", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+		}
+    }
+        
+
+    try {
+        terminateSystemThread();
+    }
+    catch (std::exception & E) {
+		pLogger->logMessage(std::string("could not terminate system thread: ") + E.what(), LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+    }
+    catch (...) {
+		pLogger->logMessage("could not terminate system thread: unknown error", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+    }
+
 
 }
 

@@ -407,7 +407,9 @@ namespace AMC {
 
 	CTelemetryHandler::~CTelemetryHandler()
 	{
-
+		m_ChannelsByUUID.clear();
+		m_ChannelsByIdentifier.clear();
+		m_pTelemetryWriter = nullptr;
 	}
 
 	PTelemetryChannel CTelemetryHandler::registerChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType)

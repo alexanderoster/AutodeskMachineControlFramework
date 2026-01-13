@@ -323,7 +323,7 @@ namespace AMC {
 
 	void CStateMachineInstance::terminateThread()
 	{
-		m_pSystemState->logger()->logMessage("terminating instance thread ", m_sName, eLogLevel::Message);
+		m_pSystemState->logger()->logMessage("terminating " + m_sName + " instance thread", m_sName, eLogLevel::Message);
 
 		if (!threadIsRunning())
 			throw ELibMCCustomException(LIBMC_ERROR_THREADISNOTRUNNING, m_sName);
