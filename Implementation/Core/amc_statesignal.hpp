@@ -57,6 +57,12 @@ namespace AMC {
 	class CStateSignalMessage;
 	typedef std::shared_ptr<CStateSignalMessage> PStateSignalMessage;
 
+	class CTelemetryChannel;
+	typedef std::shared_ptr<CTelemetryChannel> PTelemetryChannel;
+
+	class CTelemetryMarker;
+	typedef std::shared_ptr<CTelemetryMarker> PTelemetryMarker;
+
 	class CStateSignalArchiveWriter {
 	public:
 
@@ -83,15 +89,18 @@ namespace AMC {
 
 			std::string m_sParameterDataJSON;
 
-			std::string m_sErrorMessage;
+			std::string m_sErrorMessage;	
 
-			uint64_t m_nCreationTimestamp; // Creation timestamp in microseconds
-			uint64_t m_nHandlingTimestamp; // Timestamp when the signal reached InProcess state, or 0 if it was never processed. (in microseconds)
-			uint64_t m_nTerminalTimestamp; // Timestamp when the signal reached a terminal state (Handled, Failed, TimedOut, Cleared), or 0 if it is not in a terminal state yet. (in microseconds)
+			AMC::PTelemetryMarker m_pTelemetryInQueueMarker;
+			AMC::PTelemetryMarker m_pTelemetryInProcessMarker;
+			AMC::PTelemetryMarker m_pTelemetryAcknowledgedMarker;
+
+			PTelemetryChannel m_pInProcessTelemetryChannel;
+			PTelemetryChannel m_pAcknowledgeTelemetryChannel;
 
 		public:
 
-			CStateSignalMessage(const std::string & sUUID, uint32_t nReactionTimeoutInMS, AMC::eAMCSignalPhase initialPhase, uint64_t nCreationTimestamp);
+			CStateSignalMessage(const std::string & sUUID, uint32_t nReactionTimeoutInMS, PTelemetryChannel pQueueTelemetryChannel, PTelemetryChannel pInProcessTelemetryChannel, PTelemetryChannel pAcknowledgeTelemetryChannel);
 
 			virtual ~CStateSignalMessage();
 
@@ -99,9 +108,10 @@ namespace AMC {
 
 			uint64_t getCreationTimestamp() const;
 
+			// Returns terminal timestamp (handled/failed/timedout/cleared), 0 if not in terminal state
 			uint64_t getTerminalTimestamp() const;
 
-			bool setPhase (AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp);
+			bool setPhase (AMC::eAMCSignalPhase messagePhase);
 
 			AMC::eAMCSignalPhase getPhase() const;
 
@@ -156,6 +166,10 @@ namespace AMC {
 		uint64_t m_nTimedOutCount;
 		uint64_t m_nMaxReactionTime;
 
+		PTelemetryChannel m_pQueueTelemetryChannel;
+		PTelemetryChannel m_pProcessingTelemetryChannel;
+		PTelemetryChannel m_pAcknowledgementTelemetryChannel;
+
 		void increaseTriggerCount();
 		void increaseHandledCount();
 		void increaseFailedCount();
@@ -179,8 +193,12 @@ namespace AMC {
 		std::string getNameInternal() const;
 		std::string getInstanceNameInternal() const;
 
+		std::string getSignalTelemetryQueueIdentifier() const;
+		std::string getSignalTelemetryProcessingIdentifier() const;
+		std::string getSignalTelemetryAcknowledgementIdentifier() const;
+
 		bool queueIsFull();
-		size_t clearQueueInternal(uint64_t nTimeStamp);
+		size_t clearQueueInternal();
 		bool eraseMessage(const std::string& sUUID);
 
 		PStateSignalMessage addNewInQueueSignalInternal(const std::string& sMessageUUID, const std::string& sParameterData, uint32_t nReactionTimeoutInMS, uint64_t nTimeStamp);

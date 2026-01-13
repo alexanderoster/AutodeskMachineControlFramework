@@ -95,8 +95,6 @@ namespace AMC {
 
 		double computeSample(const std::string& sName, const uint64_t nTimeStamp);
 		
-		void retrieveRecentInterval (uint64_t nLastMicroSeconds, sStateJournalInterval& interval);
-
 		void registerAlias (const std::string& sName, const std::string& sSourceName);
 
 		std::string getStartTimeAsUTC();

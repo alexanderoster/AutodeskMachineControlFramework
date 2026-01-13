@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_statesignalhandler.hpp"
 #include "amc_driverhandler.hpp"
 #include "amc_alerthandler.hpp"
+#include "amc_telemetry.hpp"
 #include "amc_dataserieshandler.hpp"
 #include "amc_toolpathhandler.hpp"
 #include "amc_ui_handler.hpp"
@@ -93,10 +94,13 @@ namespace AMC {
 		m_pAccessControl = std::make_shared<CAccessControl> ();
 		m_pStringResourceHandler = std::make_shared<CStringResourceHandler> ();
 
+		auto pTelemetryWriter = std::make_shared<CTelemetryWriter> (m_pDataModel->CreateTelemetrySession (), m_pGlobalChrono);
+		m_pTelemetryHandler = std::make_shared<CTelemetryHandler> (pTelemetryWriter);
+
 		m_pMeshHandler = std::make_shared<CMeshHandler>();
 		m_pToolpathHandler = std::make_shared<CToolpathHandler>(m_pDataModel);
 		m_pDriverHandler = std::make_shared<CDriverHandler>(pEnvWrapper, m_pToolpathHandler, m_pMeshHandler, m_pLogger, m_pDataModel, m_pGlobalChrono, m_pStateJournal);
-		m_pSignalHandler = std::make_shared<CStateSignalHandler>();
+		m_pSignalHandler = std::make_shared<CStateSignalHandler>(m_pTelemetryHandler);
 		m_pStateMachineData = std::make_shared<CStateMachineData>();
 		m_pLanguageHandler = std::make_shared<CLanguageHandler>();
 		m_pDataSeriesHandler = std::make_shared<CDataSeriesHandler>();
@@ -203,6 +207,15 @@ namespace AMC {
 		return m_pStringResourceHandler.get();
 	}
 
+	CTelemetryHandler* CSystemState::telemetryHandler()
+	{
+		return m_pTelemetryHandler.get();
+	}
+
+	PTelemetryHandler CSystemState::getTelemetryHandlerInstance()
+	{
+		return m_pTelemetryHandler;
+	}
 
 	PLogger CSystemState::getLoggerInstance()
 	{

@@ -50,6 +50,9 @@ namespace AMC {
 	class CStateSignalHandler;
 	typedef std::shared_ptr<CStateSignalHandler> PStateSignalHandler;
 
+	class CTelemetryHandler;
+	typedef std::shared_ptr<CTelemetryHandler> PTelemetryHandler;
+
 	// Do not include StateSignal.hpp outside of amc_statesignalhandler.cpp for threadsafety!
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
@@ -124,11 +127,11 @@ namespace AMC {
 
 		std::mutex m_MessageMapMutex;
 
-
+		PTelemetryHandler m_pTelemetryHandler;
 
 	public:
 
-		CStateSignalHandler();
+		CStateSignalHandler(PTelemetryHandler pTelemetryHandler);
 
 		virtual ~CStateSignalHandler();
 
@@ -141,6 +144,8 @@ namespace AMC {
 		void unregisterMessage(const std::string& sMessageUUID) override;
 
 		PStateSignalSlot findSignalSlotOfMessage(const std::string& sMessageUUID) override;
+
+		PTelemetryChannel registerTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType) override;
 
 		bool finalizeSignal(const std::string& sUUID);
 

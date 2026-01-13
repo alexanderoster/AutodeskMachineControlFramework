@@ -37,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common_utils.hpp"
 
+#include "amc_telemetry.hpp"
+
 namespace AMC {
 	
 
@@ -146,7 +148,7 @@ namespace AMC {
 
 
 		for (auto pSlot : slotList) {
-			pSlot->clearQueueInternal(nTimestamp);
+			pSlot->clearQueueInternal();
 		}
 
 
@@ -155,7 +157,7 @@ namespace AMC {
 	void CStateSignalInstance::clearUnhandledSignalsOfType(const std::string& sSignalTypeName, uint64_t nTimestamp)
 	{
 		AMC::PStateSignalSlot pSlot = getSignalSlot(sSignalTypeName);
-		pSlot->clearQueueInternal(nTimestamp);
+		pSlot->clearQueueInternal();
 	}
 
 	bool CStateSignalInstance::canTrigger(const std::string& sSignalName)
@@ -261,8 +263,11 @@ namespace AMC {
 	}
 
 	
-	CStateSignalHandler::CStateSignalHandler()
+	CStateSignalHandler::CStateSignalHandler(PTelemetryHandler pTelemetryHandler)
+		: m_pTelemetryHandler(pTelemetryHandler)
 	{
+		if (pTelemetryHandler.get () == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 	}
 	
 
@@ -349,6 +354,11 @@ namespace AMC {
 
 		return pSlot;
 
+	}
+
+	PTelemetryChannel CStateSignalHandler::registerTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType)
+	{
+		return m_pTelemetryHandler->registerChannel(sChannelIdentifier, sChannelDescription, channelType);
 	}
 
 

@@ -41,10 +41,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <queue>
 #include <thread>
 
+#include "libmcdata_types.hpp"
+
 namespace AMC {
 
 	class CStateSignalSlot;
 	typedef std::shared_ptr<CStateSignalSlot> PStateSignalSlot;
+
+	class CTelemetryChannel;
+	typedef std::shared_ptr<CTelemetryChannel> PTelemetryChannel;
 
 	class CStateSignalRegistry {
 	public:
@@ -55,6 +60,7 @@ namespace AMC {
 
 		virtual PStateSignalSlot findSignalSlotOfMessage(const std::string& sMessageUUID) = 0;
 
+		virtual PTelemetryChannel registerTelemetryChannel (const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType) = 0;
 	};
 	
 }

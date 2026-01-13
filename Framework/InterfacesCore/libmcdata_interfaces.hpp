@@ -61,6 +61,7 @@ class ILogSession;
 class IAlert;
 class IAlertIterator;
 class IAlertSession;
+class ITelemetrySession;
 class IJournalChunkIntegerData;
 class IJournalSession;
 class IJournalReader;
@@ -606,6 +607,33 @@ public:
 };
 
 typedef IBaseSharedPtr<IAlertSession> PIAlertSession;
+
+
+/*************************************************************************************************************************
+ Class interface for TelemetrySession 
+**************************************************************************************************************************/
+
+class ITelemetrySession : public virtual IBase {
+public:
+	/**
+	* ITelemetrySession::GetSessionUUID - retrieves the session UUID.
+	* @return Session UUID
+	*/
+	virtual std::string GetSessionUUID() = 0;
+
+	/**
+	* ITelemetrySession::CreateChannelInDB - creates channel in journal DB.
+	* @param[in] sUUID - Channel UUID
+	* @param[in] eChannelType - Telemetry Channel Type
+	* @param[in] nChannelIndex - Channel Index
+	* @param[in] sChannelIdentifier - Channel Identifier
+	* @param[in] sChannelDescription - Channel Identifier
+	*/
+	virtual void CreateChannelInDB(const std::string & sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
+
+};
+
+typedef IBaseSharedPtr<ITelemetrySession> PITelemetrySession;
 
 
 /*************************************************************************************************************************
@@ -2525,6 +2553,12 @@ public:
 	* @return LoginHandler instance.
 	*/
 	virtual ILoginHandler * CreateLoginHandler() = 0;
+
+	/**
+	* IDataModel::CreateTelemetrySession - creates a global telemetry session access class.
+	* @return Telemetry class instance.
+	*/
+	virtual ITelemetrySession * CreateTelemetrySession() = 0;
 
 	/**
 	* IDataModel::CreatePersistencyHandler - creates a persistency handler instance.

@@ -705,6 +705,14 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_DUPLICATESIGNALINSTANCENAME 689 /** Duplicate signal instance name */
 #define LIBMC_ERROR_SIGNALINSTANCENOTFOUND 690 /** Signal instance not found */
 #define LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT 691 /** Invalid signal archive timeout */
+#define LIBMC_ERROR_UNKNOWNTELEMETRYCHANNELTYPE 692 /** Unknown telemetry channel type. */
+#define LIBMC_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER 693 /** Invalid telemetry channel identifier. */
+#define LIBMC_ERROR_TELEMETRYCHANNELALREADYEXISTS 694 /** Telemetry channel already exists. */
+#define LIBMC_ERROR_TELEMETRYCHANNELNOTFOUND 695 /** Telemetry channel not found. */
+#define LIBMC_ERROR_TELEMETRYMARKERHASALREADYBEENFINISHED 696 /** Telemetry marker has already been finished. */
+#define LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP 697 /** Invalid telemetry marker finish timestamp. */
+#define LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION 698 /** Unfinished telemetry marker have no duration. */
+#define LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED 699 /** Telemetry Marker has been already registered. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1322,6 +1330,14 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_DUPLICATESIGNALINSTANCENAME: return "Duplicate signal instance name";
     case LIBMC_ERROR_SIGNALINSTANCENOTFOUND: return "Signal instance not found";
     case LIBMC_ERROR_INVALIDSIGNALARCHIVETIMEOUT: return "Invalid signal archive timeout";
+    case LIBMC_ERROR_UNKNOWNTELEMETRYCHANNELTYPE: return "Unknown telemetry channel type.";
+    case LIBMC_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER: return "Invalid telemetry channel identifier.";
+    case LIBMC_ERROR_TELEMETRYCHANNELALREADYEXISTS: return "Telemetry channel already exists.";
+    case LIBMC_ERROR_TELEMETRYCHANNELNOTFOUND: return "Telemetry channel not found.";
+    case LIBMC_ERROR_TELEMETRYMARKERHASALREADYBEENFINISHED: return "Telemetry marker has already been finished.";
+    case LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP: return "Invalid telemetry marker finish timestamp.";
+    case LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION: return "Unfinished telemetry marker have no duration.";
+    case LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED: return "Telemetry Marker has been already registered.";
     default: return "unknown error";
   }
 }

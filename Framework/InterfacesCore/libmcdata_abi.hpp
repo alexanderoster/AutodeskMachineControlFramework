@@ -448,6 +448,34 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_alertsession_retrievealerts(LibMCDa
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_alertsession_retrievealertsbytype(LibMCData_AlertSession pAlertSession, const char * pIdentifier, bool bOnlyActive, LibMCData_AlertIterator * pIteratorInstance);
 
 /*************************************************************************************************************************
+ Class definition for TelemetrySession
+**************************************************************************************************************************/
+
+/**
+* retrieves the session UUID.
+*
+* @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] nSessionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSessionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSessionUUIDBuffer -  buffer of Session UUID, may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_telemetrysession_getsessionuuid(LibMCData_TelemetrySession pTelemetrySession, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer);
+
+/**
+* creates channel in journal DB.
+*
+* @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] pUUID - Channel UUID
+* @param[in] eChannelType - Telemetry Channel Type
+* @param[in] nChannelIndex - Channel Index
+* @param[in] pChannelIdentifier - Channel Identifier
+* @param[in] pChannelDescription - Channel Identifier
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_telemetrysession_createchannelindb(LibMCData_TelemetrySession pTelemetrySession, const char * pUUID, LibMCData::eTelemetryChannelType eChannelType, LibMCData_uint32 nChannelIndex, const char * pChannelIdentifier, const char * pChannelDescription);
+
+/*************************************************************************************************************************
  Class definition for JournalChunkIntegerData
 **************************************************************************************************************************/
 
@@ -3073,6 +3101,15 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createalertsession(LibMCD
 * @return error code or 0 (success)
 */
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createloginhandler(LibMCData_DataModel pDataModel, LibMCData_LoginHandler * pLoginHandler);
+
+/**
+* creates a global telemetry session access class.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[out] pTelemetrySessionInstance - Telemetry class instance.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createtelemetrysession(LibMCData_DataModel pDataModel, LibMCData_TelemetrySession * pTelemetrySessionInstance);
 
 /**
 * creates a persistency handler instance.

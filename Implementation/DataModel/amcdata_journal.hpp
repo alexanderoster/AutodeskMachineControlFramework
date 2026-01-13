@@ -159,6 +159,12 @@ namespace AMCData {
 
 		static LibMCData::eParameterDataType convertStringToDataType(const std::string & sValue);
 
+		static std::string convertTelemetryTypeToString(LibMCData::eTelemetryChannelType telemetryType);
+
+		static LibMCData::eTelemetryChannelType convertStringToTelemetryType(const std::string& sValue);
+
+		void createTelemetryChannelInDB(const std::string& sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string& sChannelIdentifier, const std::string& sChannelDescription);
+
 	};
 
 	typedef std::shared_ptr<CJournal> PJournal;

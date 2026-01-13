@@ -471,6 +471,10 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID 444 /** Could not find latest machine configuration XSD by UUID. */
 #define LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID 445 /** Could not find latest machine configuration version by UUID. */
 #define LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH 446 /** Machine configuration mismatch. */
+#define LIBMCDATA_ERROR_UNKNOWNTELEMETRYCHANNELTYPE 447 /** Unknown telemetry channel type. */
+#define LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER 448 /** Invalid telemetry channel identifier. */
+#define LIBMCDATA_ERROR_TELEMETRYCHANNELALREADYEXISTS 449 /** Telemetry channel already exists. */
+#define LIBMCDATA_ERROR_TELEMETRYCHANNELNOTFOUND 450 /** Telemetry channel not found. */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -854,6 +858,10 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID: return "Could not find latest machine configuration XSD by UUID.";
     case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID: return "Could not find latest machine configuration version by UUID.";
     case LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH: return "Machine configuration mismatch.";
+    case LIBMCDATA_ERROR_UNKNOWNTELEMETRYCHANNELTYPE: return "Unknown telemetry channel type.";
+    case LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER: return "Invalid telemetry channel identifier.";
+    case LIBMCDATA_ERROR_TELEMETRYCHANNELALREADYEXISTS: return "Telemetry channel already exists.";
+    case LIBMCDATA_ERROR_TELEMETRYCHANNELNOTFOUND: return "Telemetry channel not found.";
     default: return "unknown error";
   }
 }
@@ -869,6 +877,7 @@ typedef LibMCDataHandle LibMCData_LogSession;
 typedef LibMCDataHandle LibMCData_Alert;
 typedef LibMCDataHandle LibMCData_AlertIterator;
 typedef LibMCDataHandle LibMCData_AlertSession;
+typedef LibMCDataHandle LibMCData_TelemetrySession;
 typedef LibMCDataHandle LibMCData_JournalChunkIntegerData;
 typedef LibMCDataHandle LibMCData_JournalSession;
 typedef LibMCDataHandle LibMCData_JournalReader;
@@ -954,6 +963,17 @@ namespace LibMCData {
     CustomBinaryData = 100
   };
   
+  enum class eTelemetryChannelType : LibMCData_int32 {
+    Unknown = 0,
+    CustomMarker = 1,
+    RemoteQuery = 2,
+    StateExecution = 3,
+    StateRepeatDelay = 4,
+    SignalQueue = 5,
+    SignalProcessing = 6,
+    SignalAcknowledgement = 7
+  };
+  
   enum class eBuildJobExecutionStatus : LibMCData_int32 {
     Unknown = 0,
     InProcess = 1,
@@ -1019,6 +1039,7 @@ typedef LibMCData::eDataBaseType eLibMCDataDataBaseType;
 typedef LibMCData::eParameterDataType eLibMCDataParameterDataType;
 typedef LibMCData::eBuildJobStatus eLibMCDataBuildJobStatus;
 typedef LibMCData::eCustomDataType eLibMCDataCustomDataType;
+typedef LibMCData::eTelemetryChannelType eLibMCDataTelemetryChannelType;
 typedef LibMCData::eBuildJobExecutionStatus eLibMCDataBuildJobExecutionStatus;
 typedef LibMCData::sJournalChunkVariableInfo sLibMCDataJournalChunkVariableInfo;
 typedef LibMCData::LogCallback LibMCDataLogCallback;

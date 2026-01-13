@@ -235,6 +235,18 @@ namespace AMCData {
 		pAlertAckStatement->execute();
 		pAlertAckStatement = nullptr; 
 
+		std::string sTelemetryChannelQuery = "CREATE TABLE `telemetry_channels` (";
+		sTelemetryChannelQuery += "`uuid` varchar(64) UNIQUE NOT NULL, ";
+		sTelemetryChannelQuery += "`channeltype` varchar(64) NOT NULL, ";
+		sTelemetryChannelQuery += "`channelindex` int NOT NULL, ";
+		sTelemetryChannelQuery += "`identifier` text NOT NULL, ";
+		sTelemetryChannelQuery += "`description` text NOT NULL)";
+
+		auto pTelemetryChannelStatement = m_pSQLHandler->prepareStatement(sTelemetryChannelQuery);
+		pTelemetryChannelStatement->execute();
+		pTelemetryChannelStatement = nullptr;
+
+
 		m_pCurrentJournalFile = createJournalFile();
 
 	}
@@ -824,6 +836,70 @@ namespace AMCData {
 		return (512ULL * 1024ULL * 1024ULL); // create many 512MB files on disk
 	}
 
+	std::string CJournal::convertTelemetryTypeToString(LibMCData::eTelemetryChannelType telemetryType)
+	{
+
+
+		switch (telemetryType)
+		{
+			case LibMCData::eTelemetryChannelType::CustomMarker:
+				return "custommarker";
+			case LibMCData::eTelemetryChannelType::RemoteQuery:
+				return "remotequery";
+			case LibMCData::eTelemetryChannelType::StateExecution:
+				return "stateexecution";
+			case LibMCData::eTelemetryChannelType::StateRepeatDelay:
+				return "staterepeatdelay";
+			case LibMCData::eTelemetryChannelType::SignalQueue:
+				return "signalqueue";
+			case LibMCData::eTelemetryChannelType::SignalProcessing:
+				return "signalprocessing";
+			case LibMCData::eTelemetryChannelType::SignalAcknowledgement:
+				return "signalacknowledgement";
+
+		default:
+			return "unknown";
+		}
+
+	}
+
+	LibMCData::eTelemetryChannelType CJournal::convertStringToTelemetryType(const std::string& sValue)
+	{
+		if (sValue == "custommarker")
+			return LibMCData::eTelemetryChannelType::CustomMarker;
+		if (sValue == "remotequery")
+			return LibMCData::eTelemetryChannelType::RemoteQuery;
+		if (sValue == "stateexecution")
+			return LibMCData::eTelemetryChannelType::StateExecution;
+		if (sValue == "staterepeatdelay")
+			return LibMCData::eTelemetryChannelType::StateRepeatDelay;
+		if (sValue == "signalqueue")
+			return LibMCData::eTelemetryChannelType::SignalQueue;
+		if (sValue == "signalprocessing")
+			return LibMCData::eTelemetryChannelType::SignalProcessing;
+		if (sValue == "signalacknowledgement")
+			return LibMCData::eTelemetryChannelType::SignalAcknowledgement;
+
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_UNKNOWNTELEMETRYCHANNELTYPE, "Unknown telemetry channel type: " + sValue);
+	}
+
+	void CJournal::createTelemetryChannelInDB(const std::string& sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string& sChannelIdentifier, const std::string& sChannelDescription)
+	{
+
+		if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString (sChannelIdentifier))
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER, "invalid telemetry channel identifier: " + sChannelIdentifier);
+
+		std::string sQuery = "INSERT INTO telemetry_channels (uuid, channeltype, channelindex, identifier, description) VALUES (?, ?, ?, ?, ?)";
+		auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
+		pStatement->setString(1, AMCCommon::CUtils::normalizeUUIDString (sUUID));
+		pStatement->setString(2, convertTelemetryTypeToString (eChannelType));
+		pStatement->setInt64(3, nChannelIndex);
+		pStatement->setString(4, sChannelIdentifier);
+		pStatement->setString(5, sChannelDescription);
+		pStatement->execute();
+		pStatement = nullptr;
+
+	}
 
 
 }

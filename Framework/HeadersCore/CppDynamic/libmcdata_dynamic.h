@@ -435,6 +435,34 @@ typedef LibMCDataResult (*PLibMCDataAlertSession_RetrieveAlertsPtr) (LibMCData_A
 typedef LibMCDataResult (*PLibMCDataAlertSession_RetrieveAlertsByTypePtr) (LibMCData_AlertSession pAlertSession, const char * pIdentifier, bool bOnlyActive, LibMCData_AlertIterator * pIteratorInstance);
 
 /*************************************************************************************************************************
+ Class definition for TelemetrySession
+**************************************************************************************************************************/
+
+/**
+* retrieves the session UUID.
+*
+* @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] nSessionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSessionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSessionUUIDBuffer -  buffer of Session UUID, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataTelemetrySession_GetSessionUUIDPtr) (LibMCData_TelemetrySession pTelemetrySession, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer);
+
+/**
+* creates channel in journal DB.
+*
+* @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] pUUID - Channel UUID
+* @param[in] eChannelType - Telemetry Channel Type
+* @param[in] nChannelIndex - Channel Index
+* @param[in] pChannelIdentifier - Channel Identifier
+* @param[in] pChannelDescription - Channel Identifier
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataTelemetrySession_CreateChannelInDBPtr) (LibMCData_TelemetrySession pTelemetrySession, const char * pUUID, LibMCData::eTelemetryChannelType eChannelType, LibMCData_uint32 nChannelIndex, const char * pChannelIdentifier, const char * pChannelDescription);
+
+/*************************************************************************************************************************
  Class definition for JournalChunkIntegerData
 **************************************************************************************************************************/
 
@@ -3062,6 +3090,15 @@ typedef LibMCDataResult (*PLibMCDataDataModel_CreateAlertSessionPtr) (LibMCData_
 typedef LibMCDataResult (*PLibMCDataDataModel_CreateLoginHandlerPtr) (LibMCData_DataModel pDataModel, LibMCData_LoginHandler * pLoginHandler);
 
 /**
+* creates a global telemetry session access class.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[out] pTelemetrySessionInstance - Telemetry class instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataModel_CreateTelemetrySessionPtr) (LibMCData_DataModel pDataModel, LibMCData_TelemetrySession * pTelemetrySessionInstance);
+
+/**
 * creates a persistency handler instance.
 *
 * @param[in] pDataModel - DataModel instance.
@@ -3266,6 +3303,8 @@ typedef struct {
 	PLibMCDataAlertSession_GetAlertByUUIDPtr m_AlertSession_GetAlertByUUID;
 	PLibMCDataAlertSession_RetrieveAlertsPtr m_AlertSession_RetrieveAlerts;
 	PLibMCDataAlertSession_RetrieveAlertsByTypePtr m_AlertSession_RetrieveAlertsByType;
+	PLibMCDataTelemetrySession_GetSessionUUIDPtr m_TelemetrySession_GetSessionUUID;
+	PLibMCDataTelemetrySession_CreateChannelInDBPtr m_TelemetrySession_CreateChannelInDB;
 	PLibMCDataJournalChunkIntegerData_GetChunkIndexPtr m_JournalChunkIntegerData_GetChunkIndex;
 	PLibMCDataJournalChunkIntegerData_GetStartTimeStampPtr m_JournalChunkIntegerData_GetStartTimeStamp;
 	PLibMCDataJournalChunkIntegerData_GetEndTimeStampPtr m_JournalChunkIntegerData_GetEndTimeStamp;
@@ -3501,6 +3540,7 @@ typedef struct {
 	PLibMCDataDataModel_CreateJournalReaderPtr m_DataModel_CreateJournalReader;
 	PLibMCDataDataModel_CreateAlertSessionPtr m_DataModel_CreateAlertSession;
 	PLibMCDataDataModel_CreateLoginHandlerPtr m_DataModel_CreateLoginHandler;
+	PLibMCDataDataModel_CreateTelemetrySessionPtr m_DataModel_CreateTelemetrySession;
 	PLibMCDataDataModel_CreatePersistencyHandlerPtr m_DataModel_CreatePersistencyHandler;
 	PLibMCDataDataModel_SetBaseTempDirectoryPtr m_DataModel_SetBaseTempDirectory;
 	PLibMCDataDataModel_GetBaseTempDirectoryPtr m_DataModel_GetBaseTempDirectory;

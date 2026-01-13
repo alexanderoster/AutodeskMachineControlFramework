@@ -31,27 +31,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_statesignal.hpp"
 #include "common_utils.hpp"
+#include "amc_telemetry.hpp"
 #include "libmc_exceptiontypes.hpp"
 
 #include <iterator>
 
 namespace AMC {
 	
-
-	CStateSignalMessage::CStateSignalMessage(const std::string& sUUID, uint32_t nReactionTimeoutInMS, AMC::eAMCSignalPhase initialPhase, uint64_t nCreationTimestamp)
+	CStateSignalMessage::CStateSignalMessage(const std::string& sUUID, uint32_t nReactionTimeoutInMS, PTelemetryChannel pQueueTelemetryChannel, PTelemetryChannel pInProcessTelemetryChannel, PTelemetryChannel pAcknowledgeTelemetryChannel)
 		: m_sUUID(AMCCommon::CUtils::normalizeUUIDString(sUUID)),
 		m_nReactionTimeoutInMS(nReactionTimeoutInMS),
-		m_MessagePhase (initialPhase),
-		m_nCreationTimestamp (nCreationTimestamp),
-		m_nHandlingTimestamp (0),
-		m_nTerminalTimestamp (0)
+		m_MessagePhase (eAMCSignalPhase::InQueue),
+		m_pInProcessTelemetryChannel (pInProcessTelemetryChannel),
+		m_pAcknowledgeTelemetryChannel (pAcknowledgeTelemetryChannel)
 
 	{
+		if (pQueueTelemetryChannel.get () == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+		if (pInProcessTelemetryChannel.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+		if (pAcknowledgeTelemetryChannel.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+		m_pTelemetryInQueueMarker = pQueueTelemetryChannel->startIntervalMarker(0);
 	}
 
 	CStateSignalMessage::~CStateSignalMessage()
 	{
+		m_pTelemetryInQueueMarker = nullptr;
+		m_pTelemetryInProcessMarker = nullptr;
+		m_pTelemetryAcknowledgedMarker = nullptr;
 
 	}
 
@@ -62,23 +71,40 @@ namespace AMC {
 
 	uint64_t CStateSignalMessage::getCreationTimestamp() const
 	{
-		return m_nCreationTimestamp;
+		return m_pTelemetryInQueueMarker->getStartTimestamp ();
 	}
 
 	uint64_t CStateSignalMessage::getTerminalTimestamp() const
 	{
-		return m_nTerminalTimestamp;
+		if (m_pTelemetryInProcessMarker.get() != nullptr) {
+			if (m_pTelemetryInProcessMarker->isFinished())
+				return m_pTelemetryInProcessMarker->getFinishTimestamp();
+		}
+
+		return 0;
 	}
 
-	bool CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase, uint64_t nGlobalTimeStamp)
+	bool CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase)
 	{
-		if (nGlobalTimeStamp < m_nCreationTimestamp)
-			throw ELibMCCustomException(LIBMC_ERROR_INVALIDTIMESTAMP, "setPhase: Global timestamp is earlier than creation timestamp");
+		if (m_pTelemetryInQueueMarker.get() != nullptr) {
+			m_pTelemetryInQueueMarker->finishMarker();
+			m_pTelemetryInQueueMarker = nullptr;
+		}
+		
+		if (m_pTelemetryInProcessMarker.get () != nullptr) {
+			m_pTelemetryInProcessMarker->finishMarker();
+			m_pTelemetryInProcessMarker = nullptr;
+		}
+
+		if (m_pTelemetryAcknowledgedMarker.get() != nullptr) {
+			m_pTelemetryAcknowledgedMarker->finishMarker();
+			m_pTelemetryAcknowledgedMarker = nullptr;
+		}
+
 
 		switch (messagePhase) {
 			case AMC::eAMCSignalPhase::InProcess:
-				if (m_nHandlingTimestamp == 0)
-					m_nHandlingTimestamp = nGlobalTimeStamp;
+				m_pTelemetryInProcessMarker = m_pInProcessTelemetryChannel->startIntervalMarker(0);
 				m_MessagePhase = messagePhase;
 				return true;
 
@@ -86,8 +112,7 @@ namespace AMC {
 			case AMC::eAMCSignalPhase::Failed:
 			case AMC::eAMCSignalPhase::TimedOut:
 			case AMC::eAMCSignalPhase::Cleared:
-				if (m_nTerminalTimestamp == 0)
-					m_nTerminalTimestamp = nGlobalTimeStamp;
+				m_pTelemetryAcknowledgedMarker = m_pAcknowledgeTelemetryChannel->startIntervalMarker(0);
 				m_MessagePhase = messagePhase;
 				return true;
 
@@ -116,7 +141,9 @@ namespace AMC {
 
 	bool CStateSignalMessage::hadReactionTimeout(uint64_t nGlobalTimestamp)
 	{
-		uint64_t nTimeoutTimestamp = m_nCreationTimestamp + (uint64_t)m_nReactionTimeoutInMS * 1000;
+		uint64_t nInQueueTimestamp = m_pTelemetryInQueueMarker->getStartTimestamp();
+
+		uint64_t nTimeoutTimestamp = nInQueueTimestamp + (uint64_t)m_nReactionTimeoutInMS * 1000;
 		return (nGlobalTimestamp >= nTimeoutTimestamp);
 	}
 
@@ -182,6 +209,11 @@ namespace AMC {
 			pSignalInformationGroup->addNewIntParameter("successtime_" + m_sName, m_sName + " max success time (microseconds)", 0);
 		}
 
+		m_pQueueTelemetryChannel = m_pRegistry->registerTelemetryChannel (getSignalTelemetryQueueIdentifier (), "Signal Telemetry for " + m_sInstanceName + "." + m_sName + " (in queue)", LibMCData::eTelemetryChannelType::SignalQueue);
+		m_pProcessingTelemetryChannel = m_pRegistry->registerTelemetryChannel(getSignalTelemetryProcessingIdentifier(), "Signal Telemetry for " + m_sInstanceName + "." + m_sName + " (processing)", LibMCData::eTelemetryChannelType::SignalProcessing);
+		m_pAcknowledgementTelemetryChannel = m_pRegistry->registerTelemetryChannel(getSignalTelemetryAcknowledgementIdentifier(), "Signal Telemetry for " + m_sInstanceName + "." + m_sName + " (acknowledgement)", LibMCData::eTelemetryChannelType::SignalAcknowledgement);
+
+
 	}
 	
 	CStateSignalSlot::~CStateSignalSlot()
@@ -196,6 +228,20 @@ namespace AMC {
 	std::string CStateSignalSlot::getInstanceNameInternal() const
 	{
 		return m_sInstanceName;
+	}
+
+	std::string CStateSignalSlot::getSignalTelemetryQueueIdentifier() const
+	{
+		return m_sInstanceName + "." + m_sName + ".queue";
+	}
+	std::string CStateSignalSlot::getSignalTelemetryProcessingIdentifier() const
+	{
+		return m_sInstanceName + "." + m_sName + ".processing";
+	}
+
+	std::string CStateSignalSlot::getSignalTelemetryAcknowledgementIdentifier() const
+	{
+		return m_sInstanceName + "." + m_sName + ".acknowledgement";
 	}
 
 	CStateSignalMessage *CStateSignalSlot::getMessageByUUIDNoMutex(const std::string& sMessageUUIDNormalized)
@@ -298,7 +344,7 @@ namespace AMC {
 
 	}
 
-	size_t CStateSignalSlot::clearQueueInternal(uint64_t nTimeStamp)
+	size_t CStateSignalSlot::clearQueueInternal()
 	{
 
 		size_t nCount = 0;
@@ -310,7 +356,7 @@ namespace AMC {
 			m_Queue.pop_front();
 			m_QueueMap.erase(sUUID);
 
-			pMessage->setPhase(AMC::eAMCSignalPhase::Cleared, nTimeStamp);
+			pMessage->setPhase(AMC::eAMCSignalPhase::Cleared);
 			m_Cleared.insert(sUUID);
 
 			nCount++;
@@ -341,7 +387,7 @@ namespace AMC {
 				return nullptr;
 			}
 
-			pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, eAMCSignalPhase::InQueue, nTimeStamp);
+			pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, m_pQueueTelemetryChannel, m_pProcessingTelemetryChannel, m_pAcknowledgementTelemetryChannel);
 			m_Queue.push_back(pMessage);
 			m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
 			m_MessageMap.insert(std::make_pair(sNormalizedUUID, pMessage));
@@ -381,7 +427,7 @@ namespace AMC {
 			m_Queue.erase(iQueueIter->second);
 			m_QueueMap.erase(iQueueIter);
 
-			pMessage->setPhase(eAMCSignalPhase::InProcess, nTimeStamp);
+			pMessage->setPhase(eAMCSignalPhase::InProcess);
 			m_InProcess.insert(sNormalizedUUID);
 
 			
@@ -411,7 +457,7 @@ namespace AMC {
 			m_QueueMap.erase(iQueueIter);
 
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
+			pMessage->setPhase(eAMCSignalPhase::Handled);
 			m_Handled.insert(sNormalizedUUID);
 
 			increaseHandledCount();
@@ -421,7 +467,7 @@ namespace AMC {
 
 		if (messagePhase == eAMCSignalPhase::InProcess) {
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Handled, nTimeStamp);
+			pMessage->setPhase(eAMCSignalPhase::Handled);
 			m_Handled.insert(sNormalizedUUID);
 			m_InProcess.erase(sNormalizedUUID);
 
@@ -478,7 +524,7 @@ namespace AMC {
 			}
 
 			if (bToArchive) {
-				pMessage->setPhase(eAMCSignalPhase::Archived, nTimeStamp);
+				pMessage->setPhase(eAMCSignalPhase::Archived);
 				m_MessagesToArchive.push_back(pMessage);
 				m_MessageMap.erase(iMessageIter);
 			}
@@ -509,7 +555,7 @@ namespace AMC {
 			m_QueueMap.erase(iQueueIter);
 			
 			pMessage->setResultDataJSON(sResultData);
-			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
+			pMessage->setPhase(eAMCSignalPhase::Failed);
 			pMessage->setErrorMessage(sErrorMessage);
 			m_Failed.insert(sNormalizedUUID);
 
@@ -519,7 +565,7 @@ namespace AMC {
 		}
 
 		if (messagePhase == eAMCSignalPhase::InProcess) {
-			pMessage->setPhase(eAMCSignalPhase::Failed, nTimeStamp);
+			pMessage->setPhase(eAMCSignalPhase::Failed);
 			pMessage->setResultDataJSON(sResultData);
 			pMessage->setErrorMessage(sErrorMessage);
 			m_Failed.insert(sNormalizedUUID);
@@ -571,7 +617,7 @@ namespace AMC {
 			if (pMessage->hadReactionTimeout(nGlobalTimestamp)) {
 				// Signal has timed out
 				std::string sUUID = pMessage->getUUID();
-				pMessage->setPhase(eAMCSignalPhase::TimedOut, nGlobalTimestamp);
+				pMessage->setPhase(eAMCSignalPhase::TimedOut);
 				m_TimedOut.insert(sUUID);
 
 				it = m_Queue.erase(it);

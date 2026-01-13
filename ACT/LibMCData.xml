@@ -445,6 +445,10 @@
 		<error name="COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID" code="444" description="Could not find latest machine configuration XSD by UUID." />
 		<error name="COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID" code="445" description="Could not find latest machine configuration version by UUID." />
 		<error name="MACHINECONFIGURATIONTYPEMISMATCH" code="446" description="Machine configuration mismatch." />
+		<error name="UNKNOWNTELEMETRYCHANNELTYPE" code="447" description="Unknown telemetry channel type." />
+		<error name="INVALIDTELEMETRYCHANNELIDENTIFIER" code="448" description="Invalid telemetry channel identifier." />
+		<error name="TELEMETRYCHANNELALREADYEXISTS" code="449" description="Telemetry channel already exists." />
+		<error name="TELEMETRYCHANNELNOTFOUND" code="450" description="Telemetry channel not found." />					
 
 	</errors>
 	
@@ -515,6 +519,18 @@
 		<option name="SVGImage" value="6"/>
 		<option name="CustomBinaryData" value="100"/>
 	</enum>		
+	
+	<enum name="TelemetryChannelType">
+		<option name="Unknown" value="0"/>
+		<option name="CustomMarker" value="1"/>
+		<option name="RemoteQuery" value="2"/>
+		<option name="StateExecution" value="3"/>
+		<option name="StateRepeatDelay" value="4"/>		
+		<option name="SignalQueue" value="5"/>
+		<option name="SignalProcessing" value="6"/>
+		<option name="SignalAcknowledgement" value="7"/>
+	</enum>		
+	
 	
 	<enum name="BuildJobExecutionStatus">
 		<option name="Unknown" value="0" />
@@ -732,6 +748,24 @@
 	</class>
 
 
+    <!-- The TelemetrySession class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="TelemetrySession" parent="Base" description="Journaling Instance">
+
+		<method name="GetSessionUUID" description="retrieves the session UUID.">
+			<param name="SessionUUID" type="string" pass="return" description="Session UUID" />	
+		</method>
+		
+		<method name="CreateChannelInDB" description="creates channel in journal DB.">
+			<param name="UUID" type="string" pass="in" description="Channel UUID" />	
+			<param name="ChannelType" type="enum" class="TelemetryChannelType" pass="in" description="Telemetry Channel Type" />	
+			<param name="ChannelIndex" type="uint32" pass="in" description="Channel Index" />	
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier" />	
+			<param name="ChannelDescription" type="string" pass="in" description="Channel Identifier" />	
+		</method>
+						
+	</class>
+
+
     <!-- The JournalChunkIntegerData class is not thread safe and MUST ONLY be used in a single thread context... -->
 	<class name="JournalChunkIntegerData" parent="Base" description="Class containing the read out value of a journal chunk">
 
@@ -762,6 +796,7 @@
 	</class>
 
 
+
     <!-- The JournalSession class is not thread safe and MUST ONLY be used in a single thread context... -->
 	<class name="JournalSession" parent="Base" description="Journaling Instance">
 
@@ -783,8 +818,7 @@
 		</method>
 
 		
-		
-
+	
 		<method name="WriteJournalChunkIntegerData" description="writes detailed journal state data to disk.">
 			<param name="ChunkIndex" type="uint32" pass="in" description="Index of the Chunk to write" />	
 			<param name="StartTimeStamp" type="uint64" pass="in" description="Start Timestamp of the chunk (in microseconds)" />	
@@ -2043,7 +2077,11 @@
 		<method name="CreateLoginHandler" description="creates a login handler instance.">
 			<param name="LoginHandler" type="class" class="LoginHandler" pass="return" description="LoginHandler instance." />	
 		</method>
-		
+
+		<method name="CreateTelemetrySession" description="creates a global telemetry session access class.">
+			<param name="TelemetrySessionInstance" type="class" class="TelemetrySession" pass="return" description="Telemetry class instance." />	
+		</method>
+
 		<method name="CreatePersistencyHandler" description="creates a persistency handler instance.">
 			<param name="PersistencyHandler" type="class" class="PersistencyHandler" pass="return" description="PersistencyHandler instance." />	
 		</method>

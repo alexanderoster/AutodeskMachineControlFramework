@@ -101,6 +101,8 @@ public:
 
 	IAlertSession* CreateAlertSession() override;
 
+	ITelemetrySession* CreateTelemetrySession() override;
+
 	IBuildJobHandler* CreateBuildJobHandler() override;
 
 	ILoginHandler* CreateLoginHandler() override;

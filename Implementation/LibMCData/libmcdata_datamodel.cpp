@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcdata_journalsession.hpp"
 #include "libmcdata_journalreader.hpp"
 #include "libmcdata_alertsession.hpp"
+#include "libmcdata_telemetrysession.hpp"
 #include "libmcdata_buildjobhandler.hpp"
 #include "libmcdata_loginhandler.hpp"
 #include "libmcdata_persistencyhandler.hpp"
@@ -224,6 +225,16 @@ IAlertSession* CDataModel::CreateAlertSession()
     return new CAlertSession(m_pJournal);
 
 }
+
+ITelemetrySession* CDataModel::CreateTelemetrySession()
+{
+    if (m_pJournal.get() == nullptr)
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDJOURNAL);
+
+    return new CTelemetrySession(m_pJournal);
+
+}
+
 
 
 IBuildJobHandler* CDataModel::CreateBuildJobHandler()

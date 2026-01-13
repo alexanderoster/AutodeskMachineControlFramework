@@ -66,6 +66,7 @@ class CLogSession;
 class CAlert;
 class CAlertIterator;
 class CAlertSession;
+class CTelemetrySession;
 class CJournalChunkIntegerData;
 class CJournalSession;
 class CJournalReader;
@@ -105,6 +106,7 @@ typedef CLogSession CLibMCDataLogSession;
 typedef CAlert CLibMCDataAlert;
 typedef CAlertIterator CLibMCDataAlertIterator;
 typedef CAlertSession CLibMCDataAlertSession;
+typedef CTelemetrySession CLibMCDataTelemetrySession;
 typedef CJournalChunkIntegerData CLibMCDataJournalChunkIntegerData;
 typedef CJournalSession CLibMCDataJournalSession;
 typedef CJournalReader CLibMCDataJournalReader;
@@ -144,6 +146,7 @@ typedef std::shared_ptr<CLogSession> PLogSession;
 typedef std::shared_ptr<CAlert> PAlert;
 typedef std::shared_ptr<CAlertIterator> PAlertIterator;
 typedef std::shared_ptr<CAlertSession> PAlertSession;
+typedef std::shared_ptr<CTelemetrySession> PTelemetrySession;
 typedef std::shared_ptr<CJournalChunkIntegerData> PJournalChunkIntegerData;
 typedef std::shared_ptr<CJournalSession> PJournalSession;
 typedef std::shared_ptr<CJournalReader> PJournalReader;
@@ -183,6 +186,7 @@ typedef PLogSession PLibMCDataLogSession;
 typedef PAlert PLibMCDataAlert;
 typedef PAlertIterator PLibMCDataAlertIterator;
 typedef PAlertSession PLibMCDataAlertSession;
+typedef PTelemetrySession PLibMCDataTelemetrySession;
 typedef PJournalChunkIntegerData PLibMCDataJournalChunkIntegerData;
 typedef PJournalSession PLibMCDataJournalSession;
 typedef PJournalReader PLibMCDataJournalReader;
@@ -664,6 +668,10 @@ public:
 			case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID: return "COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID";
 			case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID: return "COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID";
 			case LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH: return "MACHINECONFIGURATIONTYPEMISMATCH";
+			case LIBMCDATA_ERROR_UNKNOWNTELEMETRYCHANNELTYPE: return "UNKNOWNTELEMETRYCHANNELTYPE";
+			case LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER: return "INVALIDTELEMETRYCHANNELIDENTIFIER";
+			case LIBMCDATA_ERROR_TELEMETRYCHANNELALREADYEXISTS: return "TELEMETRYCHANNELALREADYEXISTS";
+			case LIBMCDATA_ERROR_TELEMETRYCHANNELNOTFOUND: return "TELEMETRYCHANNELNOTFOUND";
 		}
 		return "UNKNOWN";
 	}
@@ -1047,6 +1055,10 @@ public:
 			case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONXSDBYUUID: return "Could not find latest machine configuration XSD by UUID.";
 			case LIBMCDATA_ERROR_COULDNOTFINDMACHINECONFIGURATIONVERSIONBYUUID: return "Could not find latest machine configuration version by UUID.";
 			case LIBMCDATA_ERROR_MACHINECONFIGURATIONTYPEMISMATCH: return "Machine configuration mismatch.";
+			case LIBMCDATA_ERROR_UNKNOWNTELEMETRYCHANNELTYPE: return "Unknown telemetry channel type.";
+			case LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER: return "Invalid telemetry channel identifier.";
+			case LIBMCDATA_ERROR_TELEMETRYCHANNELALREADYEXISTS: return "Telemetry channel already exists.";
+			case LIBMCDATA_ERROR_TELEMETRYCHANNELNOTFOUND: return "Telemetry channel not found.";
 		}
 		return "unknown error";
 	}
@@ -1171,6 +1183,7 @@ private:
 	friend class CAlert;
 	friend class CAlertIterator;
 	friend class CAlertSession;
+	friend class CTelemetrySession;
 	friend class CJournalChunkIntegerData;
 	friend class CJournalSession;
 	friend class CJournalReader;
@@ -1385,6 +1398,24 @@ public:
 	inline PAlert GetAlertByUUID(const std::string & sUUID);
 	inline PAlertIterator RetrieveAlerts(const bool bOnlyActive);
 	inline PAlertIterator RetrieveAlertsByType(const std::string & sIdentifier, const bool bOnlyActive);
+};
+	
+/*************************************************************************************************************************
+ Class CTelemetrySession 
+**************************************************************************************************************************/
+class CTelemetrySession : public CBase {
+public:
+	
+	/**
+	* CTelemetrySession::CTelemetrySession - Constructor for TelemetrySession class.
+	*/
+	CTelemetrySession(CWrapper* pWrapper, LibMCDataHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetSessionUUID();
+	inline void CreateChannelInDB(const std::string & sUUID, const eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription);
 };
 	
 /*************************************************************************************************************************
@@ -2052,6 +2083,7 @@ public:
 	inline PJournalReader CreateJournalReader(const std::string & sJournalUUID);
 	inline PAlertSession CreateAlertSession();
 	inline PLoginHandler CreateLoginHandler();
+	inline PTelemetrySession CreateTelemetrySession();
 	inline PPersistencyHandler CreatePersistencyHandler();
 	inline void SetBaseTempDirectory(const std::string & sTempDirectory);
 	inline std::string GetBaseTempDirectory();
@@ -2194,6 +2226,8 @@ public:
 		pWrapperTable->m_AlertSession_GetAlertByUUID = nullptr;
 		pWrapperTable->m_AlertSession_RetrieveAlerts = nullptr;
 		pWrapperTable->m_AlertSession_RetrieveAlertsByType = nullptr;
+		pWrapperTable->m_TelemetrySession_GetSessionUUID = nullptr;
+		pWrapperTable->m_TelemetrySession_CreateChannelInDB = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetChunkIndex = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetStartTimeStamp = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetEndTimeStamp = nullptr;
@@ -2429,6 +2463,7 @@ public:
 		pWrapperTable->m_DataModel_CreateJournalReader = nullptr;
 		pWrapperTable->m_DataModel_CreateAlertSession = nullptr;
 		pWrapperTable->m_DataModel_CreateLoginHandler = nullptr;
+		pWrapperTable->m_DataModel_CreateTelemetrySession = nullptr;
 		pWrapperTable->m_DataModel_CreatePersistencyHandler = nullptr;
 		pWrapperTable->m_DataModel_SetBaseTempDirectory = nullptr;
 		pWrapperTable->m_DataModel_GetBaseTempDirectory = nullptr;
@@ -2791,6 +2826,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_AlertSession_RetrieveAlertsByType == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetrySession_GetSessionUUID = (PLibMCDataTelemetrySession_GetSessionUUIDPtr) GetProcAddress(hLibrary, "libmcdata_telemetrysession_getsessionuuid");
+		#else // _WIN32
+		pWrapperTable->m_TelemetrySession_GetSessionUUID = (PLibMCDataTelemetrySession_GetSessionUUIDPtr) dlsym(hLibrary, "libmcdata_telemetrysession_getsessionuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetrySession_GetSessionUUID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetrySession_CreateChannelInDB = (PLibMCDataTelemetrySession_CreateChannelInDBPtr) GetProcAddress(hLibrary, "libmcdata_telemetrysession_createchannelindb");
+		#else // _WIN32
+		pWrapperTable->m_TelemetrySession_CreateChannelInDB = (PLibMCDataTelemetrySession_CreateChannelInDBPtr) dlsym(hLibrary, "libmcdata_telemetrysession_createchannelindb");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetrySession_CreateChannelInDB == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4909,6 +4962,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_DataModel_CreateTelemetrySession = (PLibMCDataDataModel_CreateTelemetrySessionPtr) GetProcAddress(hLibrary, "libmcdata_datamodel_createtelemetrysession");
+		#else // _WIN32
+		pWrapperTable->m_DataModel_CreateTelemetrySession = (PLibMCDataDataModel_CreateTelemetrySessionPtr) dlsym(hLibrary, "libmcdata_datamodel_createtelemetrysession");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataModel_CreateTelemetrySession == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_DataModel_CreatePersistencyHandler = (PLibMCDataDataModel_CreatePersistencyHandlerPtr) GetProcAddress(hLibrary, "libmcdata_datamodel_createpersistencyhandler");
 		#else // _WIN32
 		pWrapperTable->m_DataModel_CreatePersistencyHandler = (PLibMCDataDataModel_CreatePersistencyHandlerPtr) dlsym(hLibrary, "libmcdata_datamodel_createpersistencyhandler");
@@ -5207,6 +5269,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_alertsession_retrievealertsbytype", (void**)&(pWrapperTable->m_AlertSession_RetrieveAlertsByType));
 		if ( (eLookupError != 0) || (pWrapperTable->m_AlertSession_RetrieveAlertsByType == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_telemetrysession_getsessionuuid", (void**)&(pWrapperTable->m_TelemetrySession_GetSessionUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetrySession_GetSessionUUID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_telemetrysession_createchannelindb", (void**)&(pWrapperTable->m_TelemetrySession_CreateChannelInDB));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetrySession_CreateChannelInDB == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_journalchunkintegerdata_getchunkindex", (void**)&(pWrapperTable->m_JournalChunkIntegerData_GetChunkIndex));
@@ -6149,6 +6219,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataModel_CreateLoginHandler == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_datamodel_createtelemetrysession", (void**)&(pWrapperTable->m_DataModel_CreateTelemetrySession));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataModel_CreateTelemetrySession == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_datamodel_createpersistencyhandler", (void**)&(pWrapperTable->m_DataModel_CreatePersistencyHandler));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataModel_CreatePersistencyHandler == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6745,6 +6819,38 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CAlertIterator>(m_pWrapper, hIteratorInstance);
+	}
+	
+	/**
+	 * Method definitions for class CTelemetrySession
+	 */
+	
+	/**
+	* CTelemetrySession::GetSessionUUID - retrieves the session UUID.
+	* @return Session UUID
+	*/
+	std::string CTelemetrySession::GetSessionUUID()
+	{
+		LibMCData_uint32 bytesNeededSessionUUID = 0;
+		LibMCData_uint32 bytesWrittenSessionUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_GetSessionUUID(m_pHandle, 0, &bytesNeededSessionUUID, nullptr));
+		std::vector<char> bufferSessionUUID(bytesNeededSessionUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_GetSessionUUID(m_pHandle, bytesNeededSessionUUID, &bytesWrittenSessionUUID, &bufferSessionUUID[0]));
+		
+		return std::string(&bufferSessionUUID[0]);
+	}
+	
+	/**
+	* CTelemetrySession::CreateChannelInDB - creates channel in journal DB.
+	* @param[in] sUUID - Channel UUID
+	* @param[in] eChannelType - Telemetry Channel Type
+	* @param[in] nChannelIndex - Channel Index
+	* @param[in] sChannelIdentifier - Channel Identifier
+	* @param[in] sChannelDescription - Channel Identifier
+	*/
+	void CTelemetrySession::CreateChannelInDB(const std::string & sUUID, const eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_CreateChannelInDB(m_pHandle, sUUID.c_str(), eChannelType, nChannelIndex, sChannelIdentifier.c_str(), sChannelDescription.c_str()));
 	}
 	
 	/**
@@ -10196,6 +10302,21 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CLoginHandler>(m_pWrapper, hLoginHandler);
+	}
+	
+	/**
+	* CDataModel::CreateTelemetrySession - creates a global telemetry session access class.
+	* @return Telemetry class instance.
+	*/
+	PTelemetrySession CDataModel::CreateTelemetrySession()
+	{
+		LibMCDataHandle hTelemetrySessionInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataModel_CreateTelemetrySession(m_pHandle, &hTelemetrySessionInstance));
+		
+		if (!hTelemetrySessionInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CTelemetrySession>(m_pWrapper, hTelemetrySessionInstance);
 	}
 	
 	/**

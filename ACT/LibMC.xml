@@ -714,9 +714,16 @@
 		<error name="DUPLICATESIGNALINSTANCENAME" code="689" description="Duplicate signal instance name" />
 		<error name="SIGNALINSTANCENOTFOUND" code="690" description="Signal instance not found" />
 		<error name="INVALIDSIGNALARCHIVETIMEOUT" code="691" description="Invalid signal archive timeout" />
+		<error name="UNKNOWNTELEMETRYCHANNELTYPE" code="692" description="Unknown telemetry channel type." />
+		<error name="INVALIDTELEMETRYCHANNELIDENTIFIER" code="693" description="Invalid telemetry channel identifier." />
+		<error name="TELEMETRYCHANNELALREADYEXISTS" code="694" description="Telemetry channel already exists." />
+		<error name="TELEMETRYCHANNELNOTFOUND" code="695" description="Telemetry channel not found." />					
+		<error name="TELEMETRYMARKERHASALREADYBEENFINISHED" code="696" description="Telemetry marker has already been finished." />
+		<error name="INVALIDTELEMETRYMARKERFINISHTIMESTAMP" code="697" description="Invalid telemetry marker finish timestamp." />
+		<error name="UNFINISHEDTELEMETRYMARKERSHAVENODURATION" code="698" description="Unfinished telemetry marker have no duration." />					
+		<error name="TELEMETRYMARKERALREADYREGISTERED" code="699" description="Telemetry Marker has been already registered." />					
 		
-						
-						
+														
 	</errors>
 	
 	

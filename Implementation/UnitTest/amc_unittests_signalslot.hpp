@@ -69,6 +69,11 @@ namespace AMCUnitTest {
             return nullptr;
         }
 
+        AMC::PTelemetryChannel registerTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType) override
+        {
+            return nullptr;
+        }
+
     };
 
 
@@ -250,7 +255,7 @@ private:
         slot.addNewInQueueSignalInternal("22220002-0000-0000-0000-000000000002", "{}", 500, chrono.getElapsedMicroseconds());
 
         chrono.sleepMicroseconds(500);
-        slot.clearQueueInternal(chrono.getElapsedMicroseconds());
+        slot.clearQueueInternal();
         assertTrue(slot.getAvailableSignalQueueEntriesInternal() == 2);
     }
 
