@@ -713,20 +713,6 @@ namespace AMC {
 	}
 
 
-	std::string CStateSignalSlot::peekMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp)
-	{
-		std::lock_guard<std::mutex> lockGuard(m_Mutex);
-
-		if (bCheckForReactionTimeout) {
-			checkForReactionTimeoutsNoMutex(nGlobalTimestamp);
-		}
-
-		if (m_Queue.empty())
-			return "";
-
-		return m_Queue.front()->getUUID();
-	}
-
 	PStateSignalMessage CStateSignalSlot::claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp)
 	{
 		(void)nTimeStamp;

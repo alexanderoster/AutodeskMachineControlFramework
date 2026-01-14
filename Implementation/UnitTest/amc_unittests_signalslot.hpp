@@ -162,7 +162,6 @@ public:
         registerTest("SignalPhaseTransition", "Tests InQueue → InProcess → Handled", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_SignalPhaseTransition, this));
         registerTest("SignalFailureTransition", "Tests InQueue → Failed", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_SignalFailureTransition, this));
         registerTest("QueueOverflow", "Tests rejection of signal if queue is full", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_QueueOverflow, this));
-        registerTest("PeekQueue", "Tests peeking the front UUID in the queue", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_PeekQueue, this));
         registerTest("ParameterResultAccess", "Tests getting parameter and result JSON", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_ParameterResultAccess, this));
         registerTest("ClearQueueWorks", "Clears the queue and marks signals as cleared", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_SignalSlot::test_ClearQueueWorks, this));
         registerTest("TimeoutAndOverflowTest", "Simulates queue overflow and timeout scenarios", eUnitTestCategory::utOptionalPass, std::bind(&CUnitTestGroup_SignalSlot::test_TimeoutAndOverflowTest, this));
@@ -265,24 +264,6 @@ private:
         assertFalse(pMessage2 != nullptr); // queue full
     }
 
-    void test_PeekQueue() {
-
-        CDummyRegistry registry;
-
-        AMCCommon::CChrono chrono;
-        chrono.sleepMicroseconds(500);
-
-        AMC::CStateSignalSlot slot("instance", "signal", {}, {}, 1000, 5000, 3, nullptr, &registry);
-
-        chrono.sleepMicroseconds(500);
-        slot.addNewInQueueSignalInternal("aaaaaaaa-0000-0000-0000-000000000001", "{\"a\":1}", 400, chrono.getElapsedMicroseconds());
-
-        chrono.sleepMicroseconds(500);
-        slot.addNewInQueueSignalInternal("bbbbbbbb-0000-0000-0000-000000000002", "{\"b\":2}", 400, chrono.getElapsedMicroseconds());
-
-        chrono.sleepMicroseconds(500);
-        assertTrue(slot.peekMessageFromQueueInternal(true, chrono.getElapsedMicroseconds ()) == AMCCommon::CUtils::normalizeUUIDString("aaaaaaaa-0000-0000-0000-000000000001"));
-    }
 
     void test_ParameterResultAccess() {
 

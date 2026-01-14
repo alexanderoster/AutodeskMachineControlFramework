@@ -91,8 +91,6 @@ namespace AMC {
 
 		bool hasSignalDefinition(const std::string& sSignalName);
 
-		std::string peekSignalMessageFromQueue(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
-
 		bool claimSignalMessage(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, std::string& sSignalUUID, std::string& sParameterDataJSON);
 
 		bool addNewInQueueSignal(const std::string& sSignalName, const std::string& sSignalUUID, const std::string& sParameterData, uint32_t nResponseTimeOutInMS, uint64_t nTimestamp);

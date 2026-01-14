@@ -167,14 +167,6 @@ namespace AMC {
 	}
 
 
-	std::string CStateSignalInstance::peekSignalMessageFromQueue(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp)
-	{
-		AMC::PStateSignalSlot pSlot = getSignalSlot (sSignalName);
-
-		return pSlot->peekMessageFromQueueInternal(bCheckForReactionTimeout, nGlobalTimestamp);
-
-	}
-
 	bool CStateSignalInstance::claimSignalMessage(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, std::string& sSignalUUID, std::string& sParameterDataJSON)
 	{
 		AMC::PStateSignalSlot pSlot = getSignalSlot(sSignalName);
