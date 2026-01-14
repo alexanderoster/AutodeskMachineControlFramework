@@ -132,10 +132,12 @@ bool CStateEnvironment::WaitForSignal(const std::string& sSignalName, const LibM
 
 		uint64_t nCurrentTime = pChronoInstance->getElapsedMicroseconds();
 
-		std::string sUnhandledSignalUUID = pSignalInstance->peekSignalMessageFromQueue(sSignalName, true, nCurrentTime);
+		std::string sUnhandledSignalUUID;
+		std::string sParameterDataJSON;
+		bool bHasSignal = pSignalInstance->claimSignalMessage(sSignalName, true, nCurrentTime, nCurrentTime, sUnhandledSignalUUID, sParameterDataJSON);
 
-		if (!sUnhandledSignalUUID.empty ()) {
-			pHandlerInstance = new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), sUnhandledSignalUUID, m_pSystemState->getGlobalChronoInstance());
+		if (bHasSignal) {
+			pHandlerInstance = new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), m_sInstanceName, sSignalName, sUnhandledSignalUUID, sParameterDataJSON, m_pSystemState->getGlobalChronoInstance());
 
 			return true;
 		}
@@ -159,10 +161,12 @@ ISignalHandler* CStateEnvironment::GetUnhandledSignal(const std::string& sSignal
 	auto pChronoInstance = m_pSystemState->getGlobalChronoInstance();
 	auto pSignalInstance = m_pSystemState->stateSignalHandler()->getInstance(m_sInstanceName);
 
-	std::string sUnhandledSignalUUID = pSignalInstance->peekSignalMessageFromQueue(sSignalTypeName, true, pChronoInstance->getElapsedMicroseconds ());
-
-	if (!sUnhandledSignalUUID.empty ()) {
-		return new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), sUnhandledSignalUUID, pChronoInstance);
+	std::string sUnhandledSignalUUID;
+	std::string sParameterDataJSON;
+	uint64_t nCurrentTime = pChronoInstance->getElapsedMicroseconds();
+	bool bHasSignal = pSignalInstance->claimSignalMessage(sSignalTypeName, true, nCurrentTime, nCurrentTime, sUnhandledSignalUUID, sParameterDataJSON);
+	if (bHasSignal) {
+		return new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), m_sInstanceName, sSignalTypeName, sUnhandledSignalUUID, sParameterDataJSON, pChronoInstance);
 	}
 
 	return nullptr;
@@ -1041,4 +1045,3 @@ IDateTime* CStateEnvironment::GetStartDateTime()
 	auto pGlobalChrono = m_pSystemState->getGlobalChronoInstance();
 	return new CDateTime(pGlobalChrono->getStartTimeStampInMicrosecondsSince1970 ());
 }
-

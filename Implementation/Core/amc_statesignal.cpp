@@ -727,6 +727,32 @@ namespace AMC {
 		return m_Queue.front()->getUUID();
 	}
 
+	PStateSignalMessage CStateSignalSlot::claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp)
+	{
+		(void)nTimeStamp;
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+		if (bCheckForReactionTimeout) {
+			checkForReactionTimeoutsNoMutex(nGlobalTimestamp);
+		}
+
+		if (m_Queue.empty())
+			return nullptr;
+
+		auto pMessage = m_Queue.front();
+		std::string sUUID = pMessage->getUUID();
+
+		m_Queue.pop_front();
+		m_QueueMap.erase(sUUID);
+
+		pMessage->setPhase(eAMCSignalPhase::InProcess);
+		m_InProcess.insert(sUUID);
+
+		updateTimingStatistics();
+
+		return pMessage;
+	}
+
 
 	std::string CStateSignalSlot::getResultDataJSONInternal(const std::string& sMessageUUID)
 	{
@@ -796,5 +822,3 @@ namespace AMC {
 
 
 }
-
-

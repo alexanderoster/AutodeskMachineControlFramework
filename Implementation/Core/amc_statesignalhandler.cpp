@@ -175,6 +175,19 @@ namespace AMC {
 
 	}
 
+	bool CStateSignalInstance::claimSignalMessage(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, std::string& sSignalUUID, std::string& sParameterDataJSON)
+	{
+		AMC::PStateSignalSlot pSlot = getSignalSlot(sSignalName);
+
+		auto pMessage = pSlot->claimMessageFromQueueInternal(bCheckForReactionTimeout, nGlobalTimestamp, nTimeStamp);
+		if (pMessage.get() == nullptr)
+			return false;
+
+		sSignalUUID = pMessage->getUUID();
+		sParameterDataJSON = pMessage->getParameterDataJSON();
+		return true;
+	}
+
 
 	uint32_t CStateSignalInstance::getAvailableSignalQueueEntryCount(const std::string& sSignalName)
 	{
@@ -511,6 +524,5 @@ namespace AMC {
 
 
 }
-
 
 
