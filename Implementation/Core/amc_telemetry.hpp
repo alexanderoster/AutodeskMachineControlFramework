@@ -87,7 +87,7 @@ namespace AMC {
 
 		std::vector<sTelemetryChunkEntry> m_Entries;
 
-		std::mutex m_ChunkMutex;
+		mutable std::mutex m_ChunkMutex;
 
 	public:
 
@@ -95,7 +95,7 @@ namespace AMC {
 
 		virtual ~CTelemetryDataChunk();
 
-		bool isEmpty();
+		bool isEmpty() const;
 
 		void writeEntry(const sTelemetryChunkEntry& entry);
 
@@ -221,6 +221,8 @@ namespace AMC {
 
 		std::mutex m_MarkerMutex;
 		std::unordered_map<uint64_t, PTelemetryMarker> m_Markers;
+		uint64_t m_nTotalMarkersCreated;
+		uint64_t m_nMaxDurationInMicroseconds;
 
 		PTelemetryWriter m_pTelemetryWriter;
 
@@ -248,9 +250,15 @@ namespace AMC {
 
 		PTelemetryMarker startIntervalMarker(uint64_t nContextData);
 
-		void unregisterMarker(uint64_t markerID);
+		void unregisterMarker(uint64_t markerID, uint64_t nDurationInMicroseconds);
 
 		uint64_t getCurrentTimestamp();	
+
+		uint64_t getTotalMarkersCreated();
+
+		uint64_t getMaxDurationInMicroseconds();
+
+		void getStatistics(uint64_t& nTotalMarkersCreated, uint64_t& nMaxDurationInMicroseconds);
 
 		PTelemetryWriter getWriter() const;		
 
@@ -278,10 +286,6 @@ namespace AMC {
 		PTelemetryChannel findChannelByUUID(const std::string& sChannelUUID);
 
 		PTelemetryChannel findChannelByIdentifier(const std::string& sChannelIdentifier, bool bFailIfNotExisting);
-
-		void createInstantMarker(const std::string& sChannelIdentifier, uint64_t nContextData);
-
-		CTelemetryScope startIntervalMarker(const std::string& sChannelIdentifier, uint64_t nContextData);
 
 
 	};

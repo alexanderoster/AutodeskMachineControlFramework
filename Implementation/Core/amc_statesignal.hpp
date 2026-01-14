@@ -174,6 +174,7 @@ namespace AMC {
 		void increaseHandledCount();
 		void increaseFailedCount();
 		void increaseTimeoutCount();
+		void updateTimingStatistics();
 
 		PParameterGroup m_pSignalInformationGroup;
 

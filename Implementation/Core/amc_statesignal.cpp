@@ -206,7 +206,8 @@ namespace AMC {
 			pSignalInformationGroup->addNewIntParameter("failed_" + m_sName, m_sName + " has failed", 0);
 			pSignalInformationGroup->addNewIntParameter("timeout_" + m_sName, m_sName + " timed out", 0);
 			pSignalInformationGroup->addNewIntParameter("reactiontime_" + m_sName, m_sName + " max reaction time (microseconds)", 0);
-			pSignalInformationGroup->addNewIntParameter("successtime_" + m_sName, m_sName + " max success time (microseconds)", 0);
+			pSignalInformationGroup->addNewIntParameter("finishtime_" + m_sName, m_sName + " max finish time (microseconds)", 0);
+			pSignalInformationGroup->addNewIntParameter("acknowledgetime_" + m_sName, m_sName + " max acknowledge time (microseconds)", 0);
 		}
 
 		m_pQueueTelemetryChannel = m_pRegistry->registerTelemetryChannel (getSignalTelemetryQueueIdentifier (), "Signal Telemetry for " + m_sInstanceName + "." + m_sName + " (in queue)", LibMCData::eTelemetryChannelType::SignalQueue);
@@ -254,6 +255,18 @@ namespace AMC {
 		return it->second.get ();
 	}
 
+	void CStateSignalSlot::updateTimingStatistics()
+	{
+		if (m_pSignalInformationGroup.get() != nullptr) {
+
+			m_pSignalInformationGroup->setIntParameterValueByName("reactiontime_" + m_sName, (int64_t)m_pQueueTelemetryChannel->getMaxDurationInMicroseconds());
+			m_pSignalInformationGroup->setIntParameterValueByName("finishtime_" + m_sName, (int64_t)m_pProcessingTelemetryChannel->getMaxDurationInMicroseconds());
+			m_pSignalInformationGroup->setIntParameterValueByName("acknowledgetime_" + m_sName, (int64_t)m_pAcknowledgementTelemetryChannel->getMaxDurationInMicroseconds());
+		}
+
+	}
+
+
 	void CStateSignalSlot::increaseTriggerCount()
 	{
 		m_nTriggerCount++;
@@ -261,6 +274,7 @@ namespace AMC {
 			m_pSignalInformationGroup->setIntParameterValueByName("triggered_" + m_sName, (int64_t)m_nTriggerCount);
 		}
 
+		updateTimingStatistics();
 	}
 
 	void CStateSignalSlot::increaseHandledCount()
@@ -270,6 +284,7 @@ namespace AMC {
 			m_pSignalInformationGroup->setIntParameterValueByName("handled_" + m_sName, (int64_t)m_nHandledCount);
 		}
 
+		updateTimingStatistics();
 	}
 
 	void CStateSignalSlot::increaseFailedCount()
@@ -279,6 +294,7 @@ namespace AMC {
 			m_pSignalInformationGroup->setIntParameterValueByName("failed_" + m_sName, (int64_t)m_nFailedCount);
 		}
 
+		updateTimingStatistics();
 	}
 
 	void CStateSignalSlot::increaseTimeoutCount()
@@ -288,6 +304,7 @@ namespace AMC {
 			m_pSignalInformationGroup->setIntParameterValueByName("timeout_" + m_sName, (int64_t)m_nTimedOutCount);
 		}
 
+		updateTimingStatistics();
 	}
 
 
@@ -430,7 +447,8 @@ namespace AMC {
 			pMessage->setPhase(eAMCSignalPhase::InProcess);
 			m_InProcess.insert(sNormalizedUUID);
 
-			
+			updateTimingStatistics();
+
 			return true;
 		}
 
@@ -529,6 +547,7 @@ namespace AMC {
 				m_MessageMap.erase(iMessageIter);
 			}
 
+			updateTimingStatistics();
 		}
 
 		if (bToArchive) {

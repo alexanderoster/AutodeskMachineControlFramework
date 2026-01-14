@@ -52,7 +52,7 @@ namespace AMC {
 
 	}
 
-	bool CTelemetryDataChunk::isEmpty() 
+	bool CTelemetryDataChunk::isEmpty() const
 	{
 		std::lock_guard<std::mutex> lock(m_ChunkMutex);
 
@@ -237,7 +237,8 @@ namespace AMC {
 
 		pWriter->writeEntry({ eTelemetryChunkEntryType::IntervalEndMarker, nChannelIndex, m_nMarkerID, nTimestamp, m_nContextData });
 
-		pLockedChannel->unregisterMarker(m_nMarkerID);
+		uint64_t nDuration = nTimestamp - m_nStartTimestamp;
+		pLockedChannel->unregisterMarker(m_nMarkerID, nDuration);
 	}
 
 
@@ -279,7 +280,14 @@ namespace AMC {
 	}
 
 	CTelemetryChannel::CTelemetryChannel(const std::string& sChannelUUID, uint32_t nChannelIndex, const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType, PTelemetryWriter pTelemetryWriter)
-		: m_sChannelUUID(sChannelUUID), m_nChannelIndex(nChannelIndex), m_sChannelIdentifier(sChannelIdentifier), m_sChannelDescription(sChannelDescription), m_eChannelType(channelType), m_pTelemetryWriter (pTelemetryWriter)
+		: m_sChannelUUID(sChannelUUID), 
+		m_nChannelIndex(nChannelIndex), 
+		m_sChannelIdentifier(sChannelIdentifier), 
+		m_sChannelDescription(sChannelDescription), 
+		m_eChannelType(channelType), 
+		m_pTelemetryWriter (pTelemetryWriter),
+		m_nTotalMarkersCreated (0),
+		m_nMaxDurationInMicroseconds (0)
 	{
 
 		if (pTelemetryWriter.get () == nullptr)
@@ -330,17 +338,42 @@ namespace AMC {
 		{
 			std::lock_guard<std::mutex> lockGuard(m_MarkerMutex);
 			m_Markers.emplace(nMarkerID, pMarker);
+			m_nTotalMarkersCreated++;
+		}
+		else {
+			std::lock_guard<std::mutex> lockGuard(m_MarkerMutex);
+			m_nTotalMarkersCreated++;
 		}
 
 		return pMarker;
 
 	}
 
+	uint64_t CTelemetryChannel::getTotalMarkersCreated()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_MarkerMutex);
+		return m_nTotalMarkersCreated;
+
+	}
+
+	uint64_t CTelemetryChannel::getMaxDurationInMicroseconds()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_MarkerMutex);
+		return m_nMaxDurationInMicroseconds;
+	}
+
+	void CTelemetryChannel::getStatistics(uint64_t& nTotalMarkersCreated, uint64_t& nMaxDurationInMicroseconds)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_MarkerMutex);
+		nTotalMarkersCreated = m_nTotalMarkersCreated;
+		nMaxDurationInMicroseconds = m_nMaxDurationInMicroseconds;
+	}
 
 	void CTelemetryChannel::createInstantMarker(uint64_t nContextData)
 	{
 		createMarkerEx(true, nContextData);
 	}
+
 
 	CTelemetryScope CTelemetryChannel::startIntervalScope(uint64_t nContextData)
 	{
@@ -363,10 +396,13 @@ namespace AMC {
 		return nTimestamp;
 	}
 
-	void CTelemetryChannel::unregisterMarker(uint64_t markerID)
+	void CTelemetryChannel::unregisterMarker(uint64_t markerID, uint64_t nDurationInMicroseconds)
 	{
 		std::lock_guard<std::mutex> lock(m_MarkerMutex);
 		m_Markers.erase(markerID);
+
+		if (nDurationInMicroseconds > m_nMaxDurationInMicroseconds)
+			m_nMaxDurationInMicroseconds = nDurationInMicroseconds;
 	}
 
 	PTelemetryWriter CTelemetryChannel::getWriter() const
@@ -407,9 +443,6 @@ namespace AMC {
 
 	CTelemetryHandler::~CTelemetryHandler()
 	{
-		m_ChannelsByUUID.clear();
-		m_ChannelsByIdentifier.clear();
-		m_pTelemetryWriter = nullptr;
 	}
 
 	PTelemetryChannel CTelemetryHandler::registerChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType)
@@ -473,19 +506,6 @@ namespace AMC {
 			return nullptr;
 		}
 		return iIdentifierIter->second;
-	}
-
-	void CTelemetryHandler::createInstantMarker(const std::string& sChannelIdentifier, uint64_t nContextData)
-	{
-		auto pChannel = findChannelByIdentifier(sChannelIdentifier, true);
-		pChannel->createInstantMarker(nContextData);
-
-	}
-
-	CTelemetryScope CTelemetryHandler::startIntervalMarker(const std::string& sChannelIdentifier, uint64_t nContextData)
-	{
-		auto pChannel = findChannelByIdentifier(sChannelIdentifier, true);
-		return pChannel->startIntervalMarker(nContextData);
 	}
 
 
