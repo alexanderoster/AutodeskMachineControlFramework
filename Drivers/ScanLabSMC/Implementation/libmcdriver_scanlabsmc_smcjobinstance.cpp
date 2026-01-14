@@ -46,6 +46,7 @@ Abstract: This is a stub class definition of CSMCJob
 #include <thread>
 #include <cmath>
 #include <iostream>
+#include <cstring>
 #include <chrono>
 
 using namespace LibMCDriver_ScanLabSMC::Impl;
@@ -1073,13 +1074,18 @@ void CSMCJobInstance::LoadRawSimulationData(LibMCDriver_ScanLabSMC_uint64 nDataB
     if (m_tmpSimulationFile.get() == nullptr)
 		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED);
 
-    *pDataNeededCount = m_tmpSimulationFile->GetSize();
+    size_t nDataSize = m_tmpSimulationFile->GetSize();
+    *pDataNeededCount = nDataSize;
 
     if (pDataBuffer)
     {		
         std::vector<LibMCEnv_uint8> tmpFileContentBuffer;
-		tmpFileContentBuffer.resize((size_t)nDataBufferSize);
         m_tmpSimulationFile->ReadContent(tmpFileContentBuffer);
-        memcpy(pDataBuffer, tmpFileContentBuffer.data(), tmpFileContentBuffer.size());
+
+        if (nDataSize != tmpFileContentBuffer.size ())
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILESIZEMISMATCH);
+
+        if (tmpFileContentBuffer.size () > 0)
+            memcpy(pDataBuffer, tmpFileContentBuffer.data(), tmpFileContentBuffer.size());
     }
 }

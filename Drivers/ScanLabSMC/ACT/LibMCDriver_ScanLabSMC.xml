@@ -109,6 +109,8 @@
 		<error name="CSVPARSERINTERPOLATEINDEXOUTOFRANGE" code="1055" description="Index out of range in Interpolate." />
 		<error name="INVALIDMAXPOWERVALUE" code="1056" description="Invalid max power value." />
 		<error name="SIMULATIONWORKINGFILEISNOTINITIALIZED" code="1057" description="Simulation working file is not initialized." />
+		<error name="SIMULATIONWORKINGFILESIZEMISMATCH" code="1058" description="Simulation working file size mismatch." />
+		
 	</errors>
 
 	<struct name="Point2D">
