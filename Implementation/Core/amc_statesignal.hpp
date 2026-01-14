@@ -224,6 +224,7 @@ namespace AMC {
 		void writeMessagesToArchive (CStateSignalArchiveWriter * pArchiveWriter);
 
 		std::string peekMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp);
+		PStateSignalMessage claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp);
 		
 		std::string getResultDataJSONInternal(const std::string& sMessageUUID);
 		std::string getParameterDataJSONInternal(const std::string& sMessageUUID);
@@ -240,4 +241,3 @@ namespace AMC {
 
 
 #endif // AMC_STATESIGNAL
-
