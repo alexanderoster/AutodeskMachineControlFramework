@@ -45,7 +45,7 @@ Abstract: This is a stub class definition of CSMCJob
 #include <array>
 #include <thread>
 #include <cmath>
-//#include <iostream>
+#include <iostream>
 #include <chrono>
 
 using namespace LibMCDriver_ScanLabSMC::Impl;
@@ -65,32 +65,45 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
     m_bSendToHardware (bSendToHardware),
     m_dMaxPowerInWatts (dMaxPowerInWatts)
 {
-
-
-
-
     if (m_pWorkingDirectory.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
     if (m_pContextHandle.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
-    m_pSDK = m_pContextHandle->getSDK();
+    m_pSDK = m_pContextHandle->getSDK();    
 
     auto contextHandle = m_pContextHandle->getHandle();
 
-	// Initialize digital output to 0
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1, 0));
-	
-    // Begin job
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_begin(contextHandle, &m_JobID));
-    
-	// Set digital output to 1
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1,  1, 0 ) );
+    if (m_bSendToHardware) {
 
-    slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
-    slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
+        // Initialize digital output to 0
+        m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1, 0));
 
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
+        // Begin job
+        m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_begin(contextHandle, &m_JobID));
+
+        // Set digital output to 1
+        m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_write_digital_x(contextHandle, slsc_DigitalOutput::slsc_DigitalOutput_1, 1, 0));
+
+        slsc_RecordSet eRecordSetA = slsc_RecordSet::slsc_RecordSet_SetPositions;
+        slsc_RecordSet eRecordSetB = slsc_RecordSet::slsc_RecordSet_LaserSwitches;
+
+        m_pSDK->checkError(contextHandle, m_pSDK->slsc_job_start_record(contextHandle, eRecordSetA, eRecordSetB));
+    }
+    else
+    {
+        // To start Module recording at start position (0,0).
+        size_t JobID = 0;
+        double StartPosition[2] = { 0.0, 0.0 };
+            
+        m_tmpSimulationFile = m_pWorkingDirectory->AddManagedTempFile("slm");
+
+		auto sSimulationFileName = m_tmpSimulationFile->GetAbsoluteFileName();
+
+        std::cout << "Starting planning layer : module file name : " << sSimulationFileName << std::endl;
+        m_pSDK->slsc_job_begin_module(contextHandle, &JobID, StartPosition, sSimulationFileName.c_str());
+    }
+
 
     if (dMaxPowerInWatts < SCANLABSMC_MIN_MAXPOWERINWATTS || dMaxPowerInWatts > SCANLABSMC_MAX_MAXPOWERINWATTS)
 		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE);
@@ -402,7 +415,7 @@ void CSMCJobInstance::Execute(const bool bBlocking)
 {
     auto contextHandle = m_pContextHandle->getHandle();
 
-    //std::cout << "Waiting for execution" << std::endl;
+    std::cout << "Waiting for execution" << std::endl;
 
     slsc_ExecState execState1 = slsc_ExecState::slsc_ExecState_NotInitOrError;
     while (execState1 != slsc_ExecState::slsc_ExecState_ReadyForExecution) {
@@ -410,11 +423,11 @@ void CSMCJobInstance::Execute(const bool bBlocking)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     } 
 
-    //std::cout << "Starting execution" << std::endl;
+    std::cout << "Starting execution" << std::endl;
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_start_execution(contextHandle));
 
-    //std::cout << "Waiting for execution finished" << std::endl;
+    std::cout << "Waiting for execution finished" << std::endl;
 
     slsc_ExecState execState2 = slsc_ExecState::slsc_ExecState_Executing;
     while (execState2 == slsc_ExecState::slsc_ExecState_Executing) {
@@ -422,16 +435,16 @@ void CSMCJobInstance::Execute(const bool bBlocking)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } 
 
-
+    std::cout << "Execution is finished" << std::endl;
 }
 
 bool CSMCJobInstance::IsExecuting()
-{
-    return false;
+{	
+	return false;
 }
 
 void CSMCJobInstance::WaitForExecution(const LibMCDriver_ScanLabSMC_uint32 nTimeOutInMilliseconds)
-{
+{    
 
 }
 
@@ -1052,3 +1065,21 @@ void CSMCJobInstance::AddLayerToList(LibMCEnv::PToolpathLayer pLayer)
 
 }
 
+void CSMCJobInstance::LoadRawSimulationData(LibMCDriver_ScanLabSMC_uint64 nDataBufferSize, LibMCDriver_ScanLabSMC_uint64* pDataNeededCount, LibMCDriver_ScanLabSMC_uint8* pDataBuffer)
+{   
+    if(pDataNeededCount == nullptr)
+		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+
+    if (m_tmpSimulationFile.get() == nullptr)
+		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED);
+
+    *pDataNeededCount = m_tmpSimulationFile->GetSize();
+
+    if (pDataBuffer)
+    {		
+        std::vector<LibMCEnv_uint8> tmpFileContentBuffer;
+		tmpFileContentBuffer.resize((size_t)nDataBufferSize);
+        m_tmpSimulationFile->ReadContent(tmpFileContentBuffer);
+        memcpy(pDataBuffer, tmpFileContentBuffer.data(), tmpFileContentBuffer.size());
+    }
+}
