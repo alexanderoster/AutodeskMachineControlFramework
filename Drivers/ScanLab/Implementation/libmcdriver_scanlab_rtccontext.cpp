@@ -1132,8 +1132,8 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 			int32_t intX = (int32_t)dX;
 			int32_t intY = (int32_t)dY;
 
-			int32_t intDelayLaserOn = pMicroVector->m_LaserOnDelay == -1.0 ? -1 : round( pMicroVector->m_LaserOnDelay * 100000);
-			int32_t intDelayLaserOff = pMicroVector->m_LaserOffDelay == -1.0 ? -1 : round(pMicroVector->m_LaserOffDelay * 100000);
+			int32_t intDelayLaserOn = (pMicroVector->m_LaserOnDelay < 0.0) ? -1 : round(pMicroVector->m_LaserOnDelay * 100000);
+			int32_t intDelayLaserOff = (pMicroVector->m_LaserOffDelay < 0.0) ? -1 : round(pMicroVector->m_LaserOffDelay * 100000);
 
 			m_pScanLabSDK->n_micro_vector_abs(m_CardNo, intX, intY, intDelayLaserOn, intDelayLaserOff);
 
