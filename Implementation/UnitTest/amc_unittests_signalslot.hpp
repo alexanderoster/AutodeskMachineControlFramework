@@ -46,6 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mutex>
 #include "common_utils.hpp"
 #include "common_chrono.hpp"
+#include "amc_telemetry.hpp"
+#include "libmcdata_dynamic.hpp"
 
 
 namespace AMCUnitTest {
@@ -53,6 +55,11 @@ namespace AMCUnitTest {
     class CDummyRegistry : public AMC::CStateSignalRegistry {
 
     public:
+
+        CDummyRegistry()
+        {
+            initializeTelemetry();
+        }
 
         void registerMessage(const std::string& sMessageUUID, AMC::CStateSignalSlot* pSignalSlot) override
         {
@@ -71,8 +78,59 @@ namespace AMCUnitTest {
 
         AMC::PTelemetryChannel registerTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, LibMCData::eTelemetryChannelType channelType) override
         {
-            return nullptr;
+            return m_pTelemetryHandler->registerChannel(sChannelIdentifier, sChannelDescription, channelType);
         }
+
+    private:
+#define __STRINGIZE(x) #x
+#define __STRINGIZE_VALUE_OF(x) __STRINGIZE(x)
+
+        std::string getDataModelLibraryName()
+        {
+            std::string sBaseName = std::string(__STRINGIZE_VALUE_OF(__GITHASH)) + "_core_libmcdata";
+            std::string sLibraryName;
+#ifdef _WIN32
+            sLibraryName = sBaseName + ".dll";
+#elif defined(__APPLE__)
+            sLibraryName = sBaseName + ".dylib";
+#else
+            sLibraryName = sBaseName + ".so";
+#endif
+            std::string sLocalPath = "./" + sLibraryName;
+            if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sLocalPath))
+                return sLocalPath;
+
+            return "./Output/" + sLibraryName;
+        }
+
+        void initializeTelemetry()
+        {
+            std::string sRootPath = "testoutput";
+            if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sRootPath))
+                AMCCommon::CUtils::createDirectoryOnDisk(sRootPath);
+
+            std::string sBasePath = sRootPath + "/signalslot_" + AMCCommon::CUtils::createUUID();
+            if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sBasePath))
+                AMCCommon::CUtils::createDirectoryOnDisk(sBasePath);
+
+            std::string sDatabaseFile = sBasePath + "/signalslot.db";
+
+            m_pDataWrapper = LibMCData::CWrapper::loadLibrary(getDataModelLibraryName());
+            m_pDataModel = m_pDataWrapper->CreateDataModelInstance();
+            m_pDataModel->InitialiseDatabase(sBasePath, LibMCData::eDataBaseType::SqLite, sDatabaseFile);
+            m_pTelemetrySession = m_pDataModel->CreateTelemetrySession();
+
+            m_pChrono = std::make_shared<AMCCommon::CChrono>();
+            m_pTelemetryWriter = std::make_shared<AMC::CTelemetryWriter>(m_pTelemetrySession, m_pChrono);
+            m_pTelemetryHandler = std::make_shared<AMC::CTelemetryHandler>(m_pTelemetryWriter);
+        }
+
+        LibMCData::PWrapper m_pDataWrapper;
+        LibMCData::PDataModel m_pDataModel;
+        LibMCData::PTelemetrySession m_pTelemetrySession;
+        AMCCommon::PChrono m_pChrono;
+        AMC::PTelemetryWriter m_pTelemetryWriter;
+        std::shared_ptr<AMC::CTelemetryHandler> m_pTelemetryHandler;
 
     };
 
