@@ -96,9 +96,17 @@ namespace AMCUnitTest {
 #else
             sLibraryName = sBaseName + ".so";
 #endif
-            std::string sLocalPath = "./" + sLibraryName;
-            if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sLocalPath))
-                return sLocalPath;
+            std::vector<std::string> searchPaths = {
+                "./" + sLibraryName,
+                "./Output/" + sLibraryName,
+                "../Output/" + sLibraryName,
+                "build_linux64/Output/" + sLibraryName
+            };
+
+            for (const auto& sPath : searchPaths) {
+                if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sPath))
+                    return sPath;
+            }
 
             return "./Output/" + sLibraryName;
         }
