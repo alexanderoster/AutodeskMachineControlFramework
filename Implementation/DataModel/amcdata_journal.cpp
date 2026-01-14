@@ -246,6 +246,26 @@ namespace AMCData {
 		pTelemetryChannelStatement->execute();
 		pTelemetryChannelStatement = nullptr;
 
+		std::string sTelemetryDataQuery = "CREATE TABLE `telemetry_datafiles` (";
+		sTelemetryDataQuery += "`fileindex` int UNIQUE NOT NULL, ";
+		sTelemetryDataQuery += "`filename` text NOT NULL)";
+
+		auto pTelemetryDataStatement = m_pSQLHandler->prepareStatement(sTelemetryDataQuery);
+		pTelemetryDataStatement->execute();
+		pTelemetryDataStatement = nullptr;
+
+		std::string sTelemetryChunkQuery = "CREATE TABLE `telemetry_chunks` (";
+		sTelemetryChunkQuery += "`chunkindex` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`fileindex` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`starttimestamp` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`endtimestamp` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`entrycount` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`dataoffset` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`datalength` int DEFAULT 0) ";
+
+		auto pTelemetryChunkStatement = m_pSQLHandler->prepareStatement(sTelemetryChunkQuery);
+		pTelemetryChunkStatement->execute();
+		pTelemetryChunkStatement = nullptr;
 
 		m_pCurrentJournalFile = createJournalFile();
 
@@ -885,6 +905,7 @@ namespace AMCData {
 
 	void CJournal::createTelemetryChannelInDB(const std::string& sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string& sChannelIdentifier, const std::string& sChannelDescription)
 	{
+		std::lock_guard<std::mutex> lockGuard(m_JournalMutex);
 
 		if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString (sChannelIdentifier))
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER, "invalid telemetry channel identifier: " + sChannelIdentifier);
@@ -898,6 +919,29 @@ namespace AMCData {
 		pStatement->setString(5, sChannelDescription);
 		pStatement->execute();
 		pStatement = nullptr;
+
+	}
+
+	void CJournal::writeTelemetryChunk(uint64_t nStartTimeStamp, uint64_t nEndTimeStamp, uint64_t nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_JournalMutex);
+
+		uint32_t nChunkIndex = 0;
+		uint32_t nFileIndex = 0;
+		uint32_t nDataOffset = 0;
+		uint32_t nDataLength = 0;
+
+		std::string sQuery = "INSERT INTO telemetry_chunks (chunkindex, fileindex, starttimestamp, endtimestamp, entrycount, dataoffset, datalength) VALUES (?, ?, ?, ?, ?)";
+		auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
+		pStatement->setInt64(1, nChunkIndex);
+		pStatement->setInt64(2, nFileIndex);
+		pStatement->setInt64(3, (int64_t)nStartTimeStamp);
+		pStatement->setInt64(4, (int64_t)nEndTimeStamp);
+		pStatement->setInt64(5, (int64_t) nTelemetryEntriesBufferSize);
+		pStatement->setInt64(6, (int64_t)nDataOffset);
+		pStatement->setInt64(7, (int64_t)nDataLength);
+		pStatement->execute();
+		pStatement = nullptr; 
 
 	}
 

@@ -631,6 +631,15 @@ public:
 	*/
 	virtual void CreateChannelInDB(const std::string & sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
 
+	/**
+	* ITelemetrySession::WriteTelemetryChunk - Writes a telemetry chunk to the current telemetry file.
+	* @param[in] nStartTimeStamp - Start time stamp of chunk.
+	* @param[in] nEndTimeStamp - End time stamp of chunk.
+	* @param[in] nTelemetryEntriesBufferSize - Number of elements in buffer
+	* @param[in] pTelemetryEntriesBuffer - Telemetry entries to write.
+	*/
+	virtual void WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer) = 0;
+
 };
 
 typedef IBaseSharedPtr<ITelemetrySession> PITelemetrySession;

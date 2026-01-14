@@ -974,6 +974,12 @@ namespace LibMCData {
     SignalAcknowledgement = 7
   };
   
+  enum class eTelemetryChunkEntryType : LibMCData_int32 {
+    InstantMarker = 1,
+    IntervalStartMarker = 2,
+    IntervalEndMarker = 3
+  };
+  
   enum class eBuildJobExecutionStatus : LibMCData_int32 {
     Unknown = 0,
     InProcess = 1,
@@ -993,6 +999,14 @@ namespace LibMCData {
       LibMCData_uint32 m_EntryStartIndex;
       LibMCData_uint32 m_EntryCount;
   } sJournalChunkVariableInfo;
+  
+  typedef struct sTelemetryChunkEntry {
+      eTelemetryChunkEntryType m_EntryType;
+      LibMCData_uint32 m_ChannelIndex;
+      LibMCData_uint64 m_MarkerID;
+      LibMCData_uint64 m_TimeStamp;
+      LibMCData_uint64 m_ContextData;
+  } sTelemetryChunkEntry;
   
   #pragma pack ()
   
@@ -1040,8 +1054,10 @@ typedef LibMCData::eParameterDataType eLibMCDataParameterDataType;
 typedef LibMCData::eBuildJobStatus eLibMCDataBuildJobStatus;
 typedef LibMCData::eCustomDataType eLibMCDataCustomDataType;
 typedef LibMCData::eTelemetryChannelType eLibMCDataTelemetryChannelType;
+typedef LibMCData::eTelemetryChunkEntryType eLibMCDataTelemetryChunkEntryType;
 typedef LibMCData::eBuildJobExecutionStatus eLibMCDataBuildJobExecutionStatus;
 typedef LibMCData::sJournalChunkVariableInfo sLibMCDataJournalChunkVariableInfo;
+typedef LibMCData::sTelemetryChunkEntry sLibMCDataTelemetryChunkEntry;
 typedef LibMCData::LogCallback LibMCDataLogCallback;
 typedef LibMCData::StreamReadCallback LibMCDataStreamReadCallback;
 typedef LibMCData::StreamSeekCallback LibMCDataStreamSeekCallback;

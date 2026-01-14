@@ -1421,6 +1421,32 @@ LibMCDataResult libmcdata_telemetrysession_createchannelindb(LibMCData_Telemetry
 	}
 }
 
+LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const sLibMCDataTelemetryChunkEntry * pTelemetryEntriesBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetrySession;
+
+	try {
+		if ( (!pTelemetryEntriesBuffer) && (nTelemetryEntriesBufferSize>0))
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		ITelemetrySession* pITelemetrySession = dynamic_cast<ITelemetrySession*>(pIBaseClass);
+		if (!pITelemetrySession)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pITelemetrySession->WriteTelemetryChunk(nStartTimeStamp, nEndTimeStamp, nTelemetryEntriesBufferSize, pTelemetryEntriesBuffer);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for JournalChunkIntegerData
@@ -10523,6 +10549,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_telemetrysession_getsessionuuid;
 	if (sProcName == "libmcdata_telemetrysession_createchannelindb") 
 		*ppProcAddress = (void*) &libmcdata_telemetrysession_createchannelindb;
+	if (sProcName == "libmcdata_telemetrysession_writetelemetrychunk") 
+		*ppProcAddress = (void*) &libmcdata_telemetrysession_writetelemetrychunk;
 	if (sProcName == "libmcdata_journalchunkintegerdata_getchunkindex") 
 		*ppProcAddress = (void*) &libmcdata_journalchunkintegerdata_getchunkindex;
 	if (sProcName == "libmcdata_journalchunkintegerdata_getstarttimestamp") 

@@ -165,6 +165,8 @@ namespace AMCData {
 
 		void createTelemetryChannelInDB(const std::string& sUUID, const LibMCData::eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string& sChannelIdentifier, const std::string& sChannelDescription);
 
+		void writeTelemetryChunk(uint64_t nStartTimeStamp, uint64_t nEndTimeStamp, uint64_t nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer);
+
 	};
 
 	typedef std::shared_ptr<CJournal> PJournal;

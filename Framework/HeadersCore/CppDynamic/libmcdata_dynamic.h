@@ -462,6 +462,18 @@ typedef LibMCDataResult (*PLibMCDataTelemetrySession_GetSessionUUIDPtr) (LibMCDa
 */
 typedef LibMCDataResult (*PLibMCDataTelemetrySession_CreateChannelInDBPtr) (LibMCData_TelemetrySession pTelemetrySession, const char * pUUID, LibMCData::eTelemetryChannelType eChannelType, LibMCData_uint32 nChannelIndex, const char * pChannelIdentifier, const char * pChannelDescription);
 
+/**
+* Writes a telemetry chunk to the current telemetry file.
+*
+* @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] nStartTimeStamp - Start time stamp of chunk.
+* @param[in] nEndTimeStamp - End time stamp of chunk.
+* @param[in] nTelemetryEntriesBufferSize - Number of elements in buffer
+* @param[in] pTelemetryEntriesBuffer - TelemetryChunkEntry buffer of Telemetry entries to write.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataTelemetrySession_WriteTelemetryChunkPtr) (LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer);
+
 /*************************************************************************************************************************
  Class definition for JournalChunkIntegerData
 **************************************************************************************************************************/
@@ -3305,6 +3317,7 @@ typedef struct {
 	PLibMCDataAlertSession_RetrieveAlertsByTypePtr m_AlertSession_RetrieveAlertsByType;
 	PLibMCDataTelemetrySession_GetSessionUUIDPtr m_TelemetrySession_GetSessionUUID;
 	PLibMCDataTelemetrySession_CreateChannelInDBPtr m_TelemetrySession_CreateChannelInDB;
+	PLibMCDataTelemetrySession_WriteTelemetryChunkPtr m_TelemetrySession_WriteTelemetryChunk;
 	PLibMCDataJournalChunkIntegerData_GetChunkIndexPtr m_JournalChunkIntegerData_GetChunkIndex;
 	PLibMCDataJournalChunkIntegerData_GetStartTimeStampPtr m_JournalChunkIntegerData_GetStartTimeStamp;
 	PLibMCDataJournalChunkIntegerData_GetEndTimeStampPtr m_JournalChunkIntegerData_GetEndTimeStamp;

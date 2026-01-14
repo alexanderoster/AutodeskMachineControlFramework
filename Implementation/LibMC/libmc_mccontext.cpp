@@ -61,7 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MACHINEDEFINITION_XMLSCHEMA "http://schemas.autodesk.com/amc/machinedefinitions/2020/02"
 #define MACHINEDEFINITIONTEST_XMLSCHEMA "http://schemas.autodesk.com/amc/testdefinitions/2020/02"
 
-#define LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS 1000
+#define LIBMC_SYSTEMTHREAD_INTERVAL_MILLISECONDS 10
 
 using namespace LibMC::Impl;
 using namespace AMC;

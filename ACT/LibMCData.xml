@@ -453,12 +453,7 @@
 	</errors>
 	
 		
-	<struct name="JournalChunkVariableInfo">
-		<member name="VariableIndex" type="uint32" />
-		<member name="StorageType" type="uint32" />
-		<member name="EntryStartIndex" type="uint32" />
-		<member name="EntryCount" type="uint32" />
-	</struct>
+
 
 	<enum name="AlertLevel">
 		<option name="FatalError" value="1"/>
@@ -531,6 +526,11 @@
 		<option name="SignalAcknowledgement" value="7"/>
 	</enum>		
 	
+	<enum name="TelemetryChunkEntryType">
+		<option name="InstantMarker" value="1"/>
+		<option name="IntervalStartMarker" value="2"/>
+		<option name="IntervalEndMarker" value="3"/>
+	</enum>		
 	
 	<enum name="BuildJobExecutionStatus">
 		<option name="Unknown" value="0" />
@@ -538,6 +538,21 @@
 		<option name="Finished" value="2" />
 		<option name="Failed" value="3" />
 	</enum>
+	
+	<struct name="JournalChunkVariableInfo">
+		<member name="VariableIndex" type="uint32" />
+		<member name="StorageType" type="uint32" />
+		<member name="EntryStartIndex" type="uint32" />
+		<member name="EntryCount" type="uint32" />
+	</struct>
+
+	<struct name="TelemetryChunkEntry">
+		<member name="EntryType" type="enum" class="TelemetryChunkEntryType" />
+		<member name="ChannelIndex" type="uint32" />
+		<member name="MarkerID" type="uint64" />
+		<member name="TimeStamp" type="uint64" />
+		<member name="ContextData" type="uint64" />
+	</struct>
 
 	<functiontype name="StreamReadCallback" description="Callback to call for reading a data chunk">
 		<param name="ByteData" type="pointer" pass="in" description="Pointer to a buffer to read data into"/>
@@ -761,6 +776,12 @@
 			<param name="ChannelIndex" type="uint32" pass="in" description="Channel Index" />	
 			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier" />	
 			<param name="ChannelDescription" type="string" pass="in" description="Channel Identifier" />	
+		</method>
+
+		<method name="WriteTelemetryChunk" description="Writes a telemetry chunk to the current telemetry file.">
+			<param name="StartTimeStamp" type="uint64" pass="in" description="Start time stamp of chunk." />	
+			<param name="EndTimeStamp" type="uint64" pass="in" description="End time stamp of chunk." />	
+			<param name="TelemetryEntries" type="structarray" class="TelemetryChunkEntry" pass="in" description="Telemetry entries to write." />	
 		</method>
 						
 	</class>

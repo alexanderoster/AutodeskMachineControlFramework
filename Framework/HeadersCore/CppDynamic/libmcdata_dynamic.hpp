@@ -1416,6 +1416,7 @@ public:
 	
 	inline std::string GetSessionUUID();
 	inline void CreateChannelInDB(const std::string & sUUID, const eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+	inline void WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer);
 };
 	
 /*************************************************************************************************************************
@@ -2228,6 +2229,7 @@ public:
 		pWrapperTable->m_AlertSession_RetrieveAlertsByType = nullptr;
 		pWrapperTable->m_TelemetrySession_GetSessionUUID = nullptr;
 		pWrapperTable->m_TelemetrySession_CreateChannelInDB = nullptr;
+		pWrapperTable->m_TelemetrySession_WriteTelemetryChunk = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetChunkIndex = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetStartTimeStamp = nullptr;
 		pWrapperTable->m_JournalChunkIntegerData_GetEndTimeStamp = nullptr;
@@ -2844,6 +2846,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_TelemetrySession_CreateChannelInDB == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetrySession_WriteTelemetryChunk = (PLibMCDataTelemetrySession_WriteTelemetryChunkPtr) GetProcAddress(hLibrary, "libmcdata_telemetrysession_writetelemetrychunk");
+		#else // _WIN32
+		pWrapperTable->m_TelemetrySession_WriteTelemetryChunk = (PLibMCDataTelemetrySession_WriteTelemetryChunkPtr) dlsym(hLibrary, "libmcdata_telemetrysession_writetelemetrychunk");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetrySession_WriteTelemetryChunk == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -5279,6 +5290,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetrySession_CreateChannelInDB == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_telemetrysession_writetelemetrychunk", (void**)&(pWrapperTable->m_TelemetrySession_WriteTelemetryChunk));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetrySession_WriteTelemetryChunk == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_journalchunkintegerdata_getchunkindex", (void**)&(pWrapperTable->m_JournalChunkIntegerData_GetChunkIndex));
 		if ( (eLookupError != 0) || (pWrapperTable->m_JournalChunkIntegerData_GetChunkIndex == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6851,6 +6866,17 @@ public:
 	void CTelemetrySession::CreateChannelInDB(const std::string & sUUID, const eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_CreateChannelInDB(m_pHandle, sUUID.c_str(), eChannelType, nChannelIndex, sChannelIdentifier.c_str(), sChannelDescription.c_str()));
+	}
+	
+	/**
+	* CTelemetrySession::WriteTelemetryChunk - Writes a telemetry chunk to the current telemetry file.
+	* @param[in] nStartTimeStamp - Start time stamp of chunk.
+	* @param[in] nEndTimeStamp - End time stamp of chunk.
+	* @param[in] TelemetryEntriesBuffer - Telemetry entries to write.
+	*/
+	void CTelemetrySession::WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_WriteTelemetryChunk(m_pHandle, nStartTimeStamp, nEndTimeStamp, (LibMCData_uint64)TelemetryEntriesBuffer.size(), TelemetryEntriesBuffer.data()));
 	}
 	
 	/**
