@@ -405,23 +405,26 @@ namespace AMC {
 			}
 
 			pMessage = std::make_shared<CStateSignalMessage>(sNormalizedUUID, nReactionTimeoutInMS, m_pQueueTelemetryChannel, m_pProcessingTelemetryChannel, m_pAcknowledgementTelemetryChannel);
-			m_Queue.push_back(pMessage);
-			m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
-			m_MessageMap.insert(std::make_pair(sNormalizedUUID, pMessage));
+			pMessage->setParameterDataJSON(sParameterData);
+
+			// should be outside the lock, but we need to make sure that registration and addition are atomic
+			try {
+				m_pRegistry->registerMessage(sNormalizedUUID, this);
+			}
+			catch (...) {
+				eraseMessage(sNormalizedUUID);
+				throw;
+			};
 
 			increaseTriggerCount();
+			m_MessageMap.insert(std::make_pair(sNormalizedUUID, pMessage));
 
-			pMessage->setParameterDataJSON(sParameterData);
-		}
+			// Adding to queue will start the signal processing
+			m_Queue.push_back(pMessage);
+			m_QueueMap.insert(std::make_pair(sNormalizedUUID, std::prev(m_Queue.end())));
 
-		// needs to be outside lock
-		try {
-			m_pRegistry->registerMessage(sNormalizedUUID, this);
+			
 		}
-		catch (...) {
-			eraseMessage(sNormalizedUUID);
-			throw;
-		};
 
 		return pMessage;
 	}
