@@ -713,6 +713,7 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP 697 /** Invalid telemetry marker finish timestamp. */
 #define LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION 698 /** Unfinished telemetry marker have no duration. */
 #define LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED 699 /** Telemetry Marker has been already registered. */
+#define LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND 700 /** Telemetry Chunk Start timestamp is after end timestamp. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1338,6 +1339,7 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP: return "Invalid telemetry marker finish timestamp.";
     case LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION: return "Unfinished telemetry marker have no duration.";
     case LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED: return "Telemetry Marker has been already registered.";
+    case LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND: return "Telemetry Chunk Start timestamp is after end timestamp.";
     default: return "unknown error";
   }
 }

@@ -722,6 +722,7 @@
 		<error name="INVALIDTELEMETRYMARKERFINISHTIMESTAMP" code="697" description="Invalid telemetry marker finish timestamp." />
 		<error name="UNFINISHEDTELEMETRYMARKERSHAVENODURATION" code="698" description="Unfinished telemetry marker have no duration." />					
 		<error name="TELEMETRYMARKERALREADYREGISTERED" code="699" description="Telemetry Marker has been already registered." />					
+		<error name="TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND" code="700" description="Telemetry Chunk Start timestamp is after end timestamp." />					
 		
 														
 	</errors>

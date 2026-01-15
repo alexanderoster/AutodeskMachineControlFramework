@@ -36,14 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "libmcdata_dynamic.hpp"
 
+#define TELEMETRY_DEFAULT_CHUNKINTERVAL_MICROSECONDS 60000000 // 60 seconds
+
 namespace AMC {
 
-	CTelemetryDataChunk::CTelemetryDataChunk(CTelemetryWriter* pWriter, uint32_t nChunkID)	
+	CTelemetryDataChunk::CTelemetryDataChunk(CTelemetryWriter* pWriter, uint32_t nChunkID, uint64_t nChunkStartTimestamp, uint64_t nChunkEndTimestamp)
 		: m_nTelemetryChunkID(nChunkID), m_nMinTimestamp(0), m_nMaxTimestamp(0), m_nMinMarkerID(0), m_nMaxMarkerID(0),
-		m_pWriter(pWriter)
+		m_pWriter(pWriter), m_nChunkStartTimestamp(nChunkStartTimestamp), m_nChunkEndTimestamp(nChunkEndTimestamp)
 	{
 		if (pWriter == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		if (nChunkStartTimestamp >= nChunkEndTimestamp)
+			throw ELibMCInterfaceException(LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND);
 
 	}
 
@@ -103,7 +108,8 @@ namespace AMC {
 
 
 	CTelemetryWriter::CTelemetryWriter(LibMCData::PTelemetrySession pTelemetrySession, AMCCommon::PChrono pGlobalChrono)
-		: m_nNextChunkIndex(1), m_pTelemetrySession(pTelemetrySession), m_nNextMarkerID(1), m_pGlobalChrono (pGlobalChrono)
+		: m_nNextChunkIndex(1), m_pTelemetrySession(pTelemetrySession), m_nNextMarkerID(1), m_pGlobalChrono (pGlobalChrono),
+		m_nChunkIntervalInMicroseconds (TELEMETRY_DEFAULT_CHUNKINTERVAL_MICROSECONDS), m_nNextChunkStartTimestamp (0)
 	{
 		if (pGlobalChrono.get () == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -118,26 +124,38 @@ namespace AMC {
 
 	}
 
-	PTelemetryDataChunk CTelemetryWriter::getCurrentChunk()
+	PTelemetryDataChunk CTelemetryWriter::getCurrentChunk(uint64_t nTimestamp)
 	{
 		std::lock_guard<std::mutex> lock(m_ChunkMutex);
+		if (nTimestamp >= m_nNextChunkStartTimestamp)
+			createNewChunkNoMutex();
+
 		return m_pCurrentChunk;
 	}
 
 	PTelemetryDataChunk CTelemetryWriter::createNewChunk()
 	{
 		std::lock_guard<std::mutex> lock(m_ChunkMutex);
-		auto pChunk = std::make_shared<CTelemetryDataChunk> (this, m_nNextChunkIndex);
+		return createNewChunkNoMutex();
+	}
+
+	PTelemetryDataChunk CTelemetryWriter::createNewChunkNoMutex()
+	{ 
+		uint64_t nChunkEndTimestamp = m_nNextChunkStartTimestamp + m_nChunkIntervalInMicroseconds - 1;
+
+		auto pChunk = std::make_shared<CTelemetryDataChunk> (this, m_nNextChunkIndex, m_nNextChunkStartTimestamp, nChunkEndTimestamp);
 		m_nNextChunkIndex++;
 		m_Chunks.emplace_back(pChunk);
 		m_pCurrentChunk = pChunk;
+
+		m_nNextChunkStartTimestamp = nChunkEndTimestamp + 1;
 
 		return pChunk;
 	}
 
 	void CTelemetryWriter::writeEntry(const sTelemetryChunkEntry& entry)
 	{
-		auto pChunk = getCurrentChunk();
+		auto pChunk = getCurrentChunk(entry.m_nTimestamp);
 		pChunk->writeEntry(entry);
 
 	}

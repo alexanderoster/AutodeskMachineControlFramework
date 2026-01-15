@@ -78,8 +78,11 @@ namespace AMC {
 	private:
 		CTelemetryWriter* m_pWriter;
 
-		uint64_t m_nMinTimestamp;
-		uint64_t m_nMaxTimestamp;
+		uint64_t m_nChunkStartTimestamp;
+		uint64_t m_nChunkEndTimestamp;
+
+		uint64_t m_nMinTimestamp; // Should be within chunk time interval
+		uint64_t m_nMaxTimestamp; // Should be within chunk time interval
 		uint64_t m_nMinMarkerID;
 		uint64_t m_nMaxMarkerID;
 
@@ -91,7 +94,7 @@ namespace AMC {
 
 	public:
 
-		CTelemetryDataChunk (CTelemetryWriter* pWriter, uint32_t nChunkID);
+		CTelemetryDataChunk (CTelemetryWriter* pWriter, uint32_t nChunkID, uint64_t nChunkStartTimestamp, uint64_t nChunkEndTimestamp);
 
 		virtual ~CTelemetryDataChunk();
 
@@ -108,8 +111,11 @@ namespace AMC {
 		private:
 			std::mutex m_ChunkMutex;
 			std::deque<PTelemetryDataChunk> m_Chunks;
+
 			uint32_t m_nNextChunkIndex;
 			PTelemetryDataChunk m_pCurrentChunk;
+			uint64_t m_nNextChunkStartTimestamp;
+			uint64_t m_nChunkIntervalInMicroseconds;
 
 			std::mutex m_OpenIntervalMutex;
 			std::unordered_map<uint64_t, sTelemetryOpenIntervalMarker> m_OpenIntervalMarkers;
@@ -121,13 +127,15 @@ namespace AMC {
 
 			std::atomic<uint64_t> m_nNextMarkerID;
 
+			PTelemetryDataChunk createNewChunkNoMutex();
+
 		public:
 
 			CTelemetryWriter(LibMCData::PTelemetrySession pTelemetrySession, AMCCommon::PChrono pGlobalChrono);
 
 			virtual ~CTelemetryWriter();
 
-			PTelemetryDataChunk getCurrentChunk();
+			PTelemetryDataChunk getCurrentChunk(uint64_t nTimestamp);
 
 			PTelemetryDataChunk createNewChunk();
 
