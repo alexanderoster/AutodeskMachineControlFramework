@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc g++ cmake golang uuid-dev libssl-dev
+        sudo apt-get install -y gcc g++ cmake golang uuid-dev libssl-dev lcov
 
     - name: Run pre-build script
       run: |

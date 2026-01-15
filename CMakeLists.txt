@@ -35,6 +35,7 @@ project(LibMC)
 
 option(INCLUDE_DRIVERS "Include the drivers in the build" ON)
 option(INCLUDE_TESTS "Include the test system in the build" OFF)
+option(ENABLE_COVERAGE "Enable coverage instrumentation (GCC/Clang)" OFF)
 
 set(CMAKE_AMCF_PLUGINNAME Examples/LPBFSystem)
 
@@ -46,6 +47,26 @@ set(CMAKE_CURRENT_PLUGINS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_AMCF_PLUGINNAM
 if(INCLUDE_TESTS)
 message(STATUS "Including Tests in build")
 add_subdirectory(Tests)
+endif()
+
+if(ENABLE_COVERAGE)
+	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+		message(STATUS "Coverage enabled")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g --coverage")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -g --coverage")
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
+		if(UNIX AND NOT APPLE)
+			add_custom_target(coverage
+				COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/DevTools/coverage_linux.sh --unittest
+				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+				COMMENT "Running unit test coverage (Linux)"
+				VERBATIM
+			)
+		endif()
+	else()
+		message(WARNING "Coverage enabled but compiler is not supported for --coverage")
+	endif()
 endif()
 
 set (CMAKE_CXX_STANDARD 17)
@@ -974,5 +995,3 @@ if(UNIX AND NOT APPLE)
 	endif()
 	target_link_libraries(package_manager ${LIBUUID_PATH} OpenSSL::SSL OpenSSL::Crypto Threads::Threads)
 endif()
-
-
