@@ -47,6 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_resourcepackage.hpp"
 #include "amc_unittests_jpeg.hpp"
 #include "amc_unittests_streams.hpp"
+#include "amc_unittests_alerts.hpp"
+#include "amc_unittests_dataseries.hpp"
+#include "amc_unittests_discretefielddata2d.hpp"
 
 
 using namespace AMCUnitTest;
@@ -72,4 +75,7 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_ResourcePackage>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_JPEG>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Streams>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Alerts>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_DataSeries>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_DiscreteFieldData2D>());
 }
