@@ -172,6 +172,29 @@ ISignalHandler* CStateEnvironment::GetUnhandledSignal(const std::string& sSignal
 	return nullptr;
 }
 
+ISignalHandler* CStateEnvironment::ClaimSignalFromQueue(const std::string& sSignalTypeName) 
+{
+	auto pChronoInstance = m_pSystemState->getGlobalChronoInstance();
+	auto pSignalInstance = m_pSystemState->stateSignalHandler()->getInstance(m_sInstanceName);
+
+	std::string sUnhandledSignalUUID;
+	std::string sParameterDataJSON;
+	uint64_t nCurrentTime = pChronoInstance->getElapsedMicroseconds();
+	bool bHasSignal = pSignalInstance->claimSignalMessage(sSignalTypeName, true, nCurrentTime, nCurrentTime, sUnhandledSignalUUID, sParameterDataJSON, true);
+	if (bHasSignal) {
+		return new CSignalHandler(m_pSystemState->getStateSignalHandlerInstance(), m_sInstanceName, sSignalTypeName, sUnhandledSignalUUID, sParameterDataJSON, pChronoInstance);
+	}
+
+	return nullptr;
+}
+
+bool CStateEnvironment::SignalQueueIsEmpty(const std::string& sSignalTypeName)
+{
+	auto pSignalInstance = m_pSystemState->stateSignalHandler()->getInstance(m_sInstanceName);
+	return pSignalInstance->queueIsEmpty(sSignalTypeName);
+}
+
+
 void CStateEnvironment::ClearAllUnhandledSignals()
 {
 	auto pChrono = m_pSystemState->globalChrono();

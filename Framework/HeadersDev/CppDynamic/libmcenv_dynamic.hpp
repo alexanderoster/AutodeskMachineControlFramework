@@ -3349,8 +3349,8 @@ public:
 	inline std::string GetMachineState(const std::string & sMachineInstance);
 	inline std::string GetPreviousState();
 	inline PSignalTrigger PrepareSignal(const std::string & sMachineInstance, const std::string & sSignalName);
-	inline bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance);
-	inline PSignalHandler GetUnhandledSignal(const std::string & sSignalTypeName);
+	inline PSignalHandler ClaimSignalFromQueue(const std::string & sSignalTypeName);
+	inline bool SignalQueueIsEmpty(const std::string & sSignalTypeName);
 	inline void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName);
 	inline void ClearAllUnhandledSignals();
 	inline PSignalHandler GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist);
@@ -3361,15 +3361,17 @@ public:
 	inline bool HasBuildExecution(const std::string & sExecutionUUID);
 	inline PBuildExecution GetBuildExecution(const std::string & sExecutionUUID);
 	inline void UnloadAllToolpathes();
+	inline bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance);
+	inline PSignalHandler GetUnhandledSignal(const std::string & sSignalTypeName);
+	inline void StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler);
+	inline PSignalHandler RetrieveSignal(const std::string & sName);
+	inline void ClearStoredValue(const std::string & sName);
 	inline void SetNextState(const std::string & sStateName);
 	inline void LogMessage(const std::string & sLogString);
 	inline void LogWarning(const std::string & sLogString);
 	inline void LogInfo(const std::string & sLogString);
 	inline void Sleep(const LibMCEnv_uint32 nDelay);
 	inline bool CheckForTermination();
-	inline void StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler);
-	inline PSignalHandler RetrieveSignal(const std::string & sName);
-	inline void ClearStoredValue(const std::string & sName);
 	inline void SetStringParameter(const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue);
 	inline void SetUUIDParameter(const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue);
 	inline void SetDoubleParameter(const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_double dValue);
@@ -4484,8 +4486,8 @@ public:
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_WaitForSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = nullptr;
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals = nullptr;
 		pWrapperTable->m_StateEnvironment_GetUnhandledSignalByUUID = nullptr;
@@ -4496,15 +4498,17 @@ public:
 		pWrapperTable->m_StateEnvironment_HasBuildExecution = nullptr;
 		pWrapperTable->m_StateEnvironment_GetBuildExecution = nullptr;
 		pWrapperTable->m_StateEnvironment_UnloadAllToolpathes = nullptr;
+		pWrapperTable->m_StateEnvironment_WaitForSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_StoreSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = nullptr;
 		pWrapperTable->m_StateEnvironment_SetNextState = nullptr;
 		pWrapperTable->m_StateEnvironment_LogMessage = nullptr;
 		pWrapperTable->m_StateEnvironment_LogWarning = nullptr;
 		pWrapperTable->m_StateEnvironment_LogInfo = nullptr;
 		pWrapperTable->m_StateEnvironment_Sleep = nullptr;
 		pWrapperTable->m_StateEnvironment_CheckForTermination = nullptr;
-		pWrapperTable->m_StateEnvironment_StoreSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = nullptr;
 		pWrapperTable->m_StateEnvironment_SetStringParameter = nullptr;
 		pWrapperTable->m_StateEnvironment_SetUUIDParameter = nullptr;
 		pWrapperTable->m_StateEnvironment_SetDoubleParameter = nullptr;
@@ -12400,21 +12404,21 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = (PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_claimsignalfromqueue");
 		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = (PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_claimsignalfromqueue");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr)
+		if (pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = (PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_signalqueueisempty");
 		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = (PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr) dlsym(hLibrary, "libmcenv_stateenvironment_signalqueueisempty");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr)
+		if (pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -12508,6 +12512,51 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_storesignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_storesignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_retrievesignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_retrievesignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_SetNextState = (PLibMCEnvStateEnvironment_SetNextStatePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setnextstate");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_SetNextState = (PLibMCEnvStateEnvironment_SetNextStatePtr) dlsym(hLibrary, "libmcenv_stateenvironment_setnextstate");
@@ -12559,33 +12608,6 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_StateEnvironment_CheckForTermination == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_storesignal");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_storesignal");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_retrievesignal");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_retrievesignal");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -17365,12 +17387,12 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_PrepareSignal == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_waitforsignal", (void**)&(pWrapperTable->m_StateEnvironment_WaitForSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_claimsignalfromqueue", (void**)&(pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_getunhandledsignal", (void**)&(pWrapperTable->m_StateEnvironment_GetUnhandledSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_signalqueueisempty", (void**)&(pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearunhandledsignalsoftype", (void**)&(pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType));
@@ -17413,6 +17435,26 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_UnloadAllToolpathes == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_waitforsignal", (void**)&(pWrapperTable->m_StateEnvironment_WaitForSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_getunhandledsignal", (void**)&(pWrapperTable->m_StateEnvironment_GetUnhandledSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_storesignal", (void**)&(pWrapperTable->m_StateEnvironment_StoreSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_retrievesignal", (void**)&(pWrapperTable->m_StateEnvironment_RetrieveSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearstoredvalue", (void**)&(pWrapperTable->m_StateEnvironment_ClearStoredValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_setnextstate", (void**)&(pWrapperTable->m_StateEnvironment_SetNextState));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetNextState == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -17435,18 +17477,6 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_checkfortermination", (void**)&(pWrapperTable->m_StateEnvironment_CheckForTermination));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_CheckForTermination == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_storesignal", (void**)&(pWrapperTable->m_StateEnvironment_StoreSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_retrievesignal", (void**)&(pWrapperTable->m_StateEnvironment_RetrieveSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearstoredvalue", (void**)&(pWrapperTable->m_StateEnvironment_ClearStoredValue));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_setstringparameter", (void**)&(pWrapperTable->m_StateEnvironment_SetStringParameter));
@@ -29813,35 +29843,14 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::WaitForSignal - Waits for a signal for a certain amount of time.
-	* @param[in] sSignalName - Name Of Signal
-	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
-	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
-	* @return Signal has been triggered
-	*/
-	bool CStateEnvironment::WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance)
-	{
-		LibMCEnvHandle hHandlerInstance = nullptr;
-		bool resultSuccess = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_WaitForSignal(m_pHandle, sSignalName.c_str(), nTimeOut, &hHandlerInstance, &resultSuccess));
-		if (hHandlerInstance) {
-			pHandlerInstance = std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
-		} else {
-			pHandlerInstance = nullptr;
-		}
-		
-		return resultSuccess;
-	}
-	
-	/**
-	* CStateEnvironment::GetUnhandledSignal - Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.
+	* CStateEnvironment::ClaimSignalFromQueue - Retrieves an InQueue signal by type and changes its phase to InProcess. Recommended to use as it is robust against signal timeouts...
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
-	* @return Signal object. If no signal has been found the signal handler object will be null.
+	* @return Signal object. If no signal is InQueue the signal handler object will be null.
 	*/
-	PSignalHandler CStateEnvironment::GetUnhandledSignal(const std::string & sSignalTypeName)
+	PSignalHandler CStateEnvironment::ClaimSignalFromQueue(const std::string & sSignalTypeName)
 	{
 		LibMCEnvHandle hHandlerInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetUnhandledSignal(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClaimSignalFromQueue(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
 		
 		if (hHandlerInstance) {
 			return std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
@@ -29851,7 +29860,20 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::ClearUnhandledSignalsOfType - Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.
+	* CStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type...
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+	*/
+	bool CStateEnvironment::SignalQueueIsEmpty(const std::string & sSignalTypeName)
+	{
+		bool resultIsEmpty = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SignalQueueIsEmpty(m_pHandle, sSignalTypeName.c_str(), &resultIsEmpty));
+		
+		return resultIsEmpty;
+	}
+	
+	/**
+	* CStateEnvironment::ClearUnhandledSignalsOfType - Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
 	* @param[in] sSignalTypeName - Name Of Signal to be cleared.
 	*/
 	void CStateEnvironment::ClearUnhandledSignalsOfType(const std::string & sSignalTypeName)
@@ -29860,7 +29882,7 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::ClearAllUnhandledSignals - Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.
+	* CStateEnvironment::ClearAllUnhandledSignals - Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected
 	*/
 	void CStateEnvironment::ClearAllUnhandledSignals()
 	{
@@ -29868,9 +29890,9 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::GetUnhandledSignalByUUID - retrieves an unhandled signal from the current state machine by UUID.
+	* CStateEnvironment::GetUnhandledSignalByUUID - Retrieves an InQueue or InProcess signal from the current state machine by UUID.
 	* @param[in] sUUID - Name
-	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled already.
+	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already.
 	* @return Signal handler instance. Returns null, if signal does not exist.
 	*/
 	PSignalHandler CStateEnvironment::GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist)
@@ -29978,6 +30000,80 @@ public:
 	}
 	
 	/**
+	* CStateEnvironment::WaitForSignal - DEPRECIATED: Waits for an InQueue signal to exist for a certain amount of time. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE claim signal instead.
+	* @param[in] sSignalName - Name Of Signal
+	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
+	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
+	* @return Signal has been triggered
+	*/
+	bool CStateEnvironment::WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance)
+	{
+		LibMCEnvHandle hHandlerInstance = nullptr;
+		bool resultSuccess = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_WaitForSignal(m_pHandle, sSignalName.c_str(), nTimeOut, &hHandlerInstance, &resultSuccess));
+		if (hHandlerInstance) {
+			pHandlerInstance = std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
+		} else {
+			pHandlerInstance = nullptr;
+		}
+		
+		return resultSuccess;
+	}
+	
+	/**
+	* CStateEnvironment::GetUnhandledSignal - DEPRECIATED: Retrieves am InQueue signal by type. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE ClaimSignalFromQueue instead.
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Signal object. If no signal has been found the signal handler object will be null.
+	*/
+	PSignalHandler CStateEnvironment::GetUnhandledSignal(const std::string & sSignalTypeName)
+	{
+		LibMCEnvHandle hHandlerInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetUnhandledSignal(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
+		
+		if (hHandlerInstance) {
+			return std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
+	* @param[in] sName - Name
+	* @param[in] pHandler - Signal handler to store.
+	*/
+	void CStateEnvironment::StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler)
+	{
+		LibMCEnvHandle hHandler = pHandler.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StoreSignal(m_pHandle, sName.c_str(), hHandler));
+	}
+	
+	/**
+	* CStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
+	* @param[in] sName - Name
+	* @return Signal handler instance.
+	*/
+	PSignalHandler CStateEnvironment::RetrieveSignal(const std::string & sName)
+	{
+		LibMCEnvHandle hHandler = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RetrieveSignal(m_pHandle, sName.c_str(), &hHandler));
+		
+		if (!hHandler) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CSignalHandler>(m_pWrapper, hHandler);
+	}
+	
+	/**
+	* CStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
+	* @param[in] sName - Name
+	*/
+	void CStateEnvironment::ClearStoredValue(const std::string & sName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClearStoredValue(m_pHandle, sName.c_str()));
+	}
+	
+	/**
 	* CStateEnvironment::SetNextState - sets the next state
 	* @param[in] sStateName - Name of next state
 	*/
@@ -30032,42 +30128,6 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_CheckForTermination(m_pHandle, &resultShallTerminate));
 		
 		return resultShallTerminate;
-	}
-	
-	/**
-	* CStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
-	* @param[in] sName - Name
-	* @param[in] pHandler - Signal handler to store.
-	*/
-	void CStateEnvironment::StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler)
-	{
-		LibMCEnvHandle hHandler = pHandler.GetHandle();
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StoreSignal(m_pHandle, sName.c_str(), hHandler));
-	}
-	
-	/**
-	* CStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
-	* @param[in] sName - Name
-	* @return Signal handler instance.
-	*/
-	PSignalHandler CStateEnvironment::RetrieveSignal(const std::string & sName)
-	{
-		LibMCEnvHandle hHandler = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RetrieveSignal(m_pHandle, sName.c_str(), &hHandler));
-		
-		if (!hHandler) {
-			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
-		}
-		return std::make_shared<CSignalHandler>(m_pWrapper, hHandler);
-	}
-	
-	/**
-	* CStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
-	* @param[in] sName - Name
-	*/
-	void CStateEnvironment::ClearStoredValue(const std::string & sName)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClearStoredValue(m_pHandle, sName.c_str()));
 	}
 	
 	/**

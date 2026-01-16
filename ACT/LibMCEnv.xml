@@ -5040,28 +5040,26 @@
 			<param name="SignalInstance" type="class" class="SignalTrigger" pass="return" description="Signal trigger object." />
 		</method>
 	  
-		<method name="WaitForSignal" description="Waits for a signal for a certain amount of time.">
-			<param name="SignalName" type="string" pass="in" description="Name Of Signal" />
-			<param name="TimeOut" type="uint32" pass="in" description="Timeout in Milliseconds. 0 for Immediate return." />			
-			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="out" description="Signal object. If Success is false, the Signal Handler Object will be null." />
-			<param name="Success" type="bool" pass="return" description="Signal has been triggered" />
-		</method>		
-
-		<method name="GetUnhandledSignal" description="Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.">
+		<method name="ClaimSignalFromQueue" description="Retrieves an InQueue signal by type and changes its phase to InProcess. Recommended to use as it is robust against signal timeouts...">
 			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
-			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="return" description="Signal object. If no signal has been found the signal handler object will be null." />
-		</method>		
-		
-		<method name="ClearUnhandledSignalsOfType" description="Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.">
+			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="return" description="Signal object. If no signal is InQueue the signal handler object will be null." />
+		</method>
+
+		<method name="SignalQueueIsEmpty" description="Returns if a signal queue is empty for a specific type...">
+			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
+			<param name="IsEmpty" type="bool" pass="return" description="Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value." />
+		</method>
+
+		<method name="ClearUnhandledSignalsOfType" description="Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected">
 			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be cleared." />
 		</method>		
 
-		<method name="ClearAllUnhandledSignals" description="Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.">
+		<method name="ClearAllUnhandledSignals" description="Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected">
 		</method>		
 
-		<method name="GetUnhandledSignalByUUID" description="retrieves an unhandled signal from the current state machine by UUID.">
+		<method name="GetUnhandledSignalByUUID" description="Retrieves an InQueue or InProcess signal from the current state machine by UUID.">
 			<param name="UUID" type="string" pass="in" description="Name" />
-			<param name="MustExist" type="bool" pass="in" description="The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled already." />
+			<param name="MustExist" type="bool" pass="in" description="The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already." />
 			<param name="Handler" type="optionalclass" class="SignalHandler" pass="return" description="Signal handler instance. Returns null, if signal does not exist." />
 		</method>
 		
@@ -5098,7 +5096,37 @@
 
 		<method name="UnloadAllToolpathes" description="unloads all toolpath in memory to clean up">
 		</method>
+		
+		
+		<!-- DEPRECIATED METHODS - MIGHT BE REMOVED IN FUTURE VERSIONS -->
+		
+		<method name="WaitForSignal" description="DEPRECIATED: Waits for an InQueue signal to exist for a certain amount of time. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE claim signal instead.">
+			<param name="SignalName" type="string" pass="in" description="Name Of Signal" />
+			<param name="TimeOut" type="uint32" pass="in" description="Timeout in Milliseconds. 0 for Immediate return." />			
+			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="out" description="Signal object. If Success is false, the Signal Handler Object will be null." />
+			<param name="Success" type="bool" pass="return" description="Signal has been triggered" />
+		</method>		
 
+		<method name="GetUnhandledSignal" description="DEPRECIATED: Retrieves am InQueue signal by type. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE ClaimSignalFromQueue instead.">
+			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
+			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="return" description="Signal object. If no signal has been found the signal handler object will be null." />
+		</method>		
+
+		<method name="StoreSignal" description="DEPRECIATED: stores a signal handler in the current state machine">
+			<param name="Name" type="string" pass="in" description="Name" />
+			<param name="Handler" type="class" class="SignalHandler" pass="in" description="Signal handler to store." />
+		</method>
+
+		<method name="RetrieveSignal" description="DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.">
+			<param name="Name" type="string" pass="in" description="Name" />
+			<param name="Handler" type="class" class="SignalHandler" pass="return" description="Signal handler instance." />
+		</method>
+
+		<method name="ClearStoredValue" description="DEPRECIATED: deletes a value from the data store.">
+			<param name="Name" type="string" pass="in" description="Name" />
+		</method>
+		
+		<!-- /DEPRECIATED -->
 
 		<method name="SetNextState" description="sets the next state">
 			<param name="StateName" type="string" pass="in" description="Name of next state" />
@@ -5124,21 +5152,6 @@
 			<param name="ShallTerminate" type="bool" pass="return" description="Returns if termination shall appear" />
 		</method>
 
-
-
-		<method name="StoreSignal" description="DEPRECIATED: stores a signal handler in the current state machine">
-			<param name="Name" type="string" pass="in" description="Name" />
-			<param name="Handler" type="class" class="SignalHandler" pass="in" description="Signal handler to store." />
-		</method>
-
-		<method name="RetrieveSignal" description="DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.">
-			<param name="Name" type="string" pass="in" description="Name" />
-			<param name="Handler" type="class" class="SignalHandler" pass="return" description="Signal handler instance." />
-		</method>
-
-		<method name="ClearStoredValue" description="DEPRECIATED: deletes a value from the data store.">
-			<param name="Name" type="string" pass="in" description="Name" />
-		</method>
 		
 		
 		<method name="SetStringParameter" description="sets a string parameter">

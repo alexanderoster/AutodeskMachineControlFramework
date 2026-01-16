@@ -7168,36 +7168,34 @@ public:
 	virtual ISignalTrigger * PrepareSignal(const std::string & sMachineInstance, const std::string & sSignalName) = 0;
 
 	/**
-	* IStateEnvironment::WaitForSignal - Waits for a signal for a certain amount of time.
-	* @param[in] sSignalName - Name Of Signal
-	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
-	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
-	* @return Signal has been triggered
-	*/
-	virtual bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, ISignalHandler*& pHandlerInstance) = 0;
-
-	/**
-	* IStateEnvironment::GetUnhandledSignal - Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.
+	* IStateEnvironment::ClaimSignalFromQueue - Retrieves an InQueue signal by type and changes its phase to InProcess. Recommended to use as it is robust against signal timeouts...
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
-	* @return Signal object. If no signal has been found the signal handler object will be null.
+	* @return Signal object. If no signal is InQueue the signal handler object will be null.
 	*/
-	virtual ISignalHandler * GetUnhandledSignal(const std::string & sSignalTypeName) = 0;
+	virtual ISignalHandler * ClaimSignalFromQueue(const std::string & sSignalTypeName) = 0;
 
 	/**
-	* IStateEnvironment::ClearUnhandledSignalsOfType - Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.
+	* IStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type...
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+	*/
+	virtual bool SignalQueueIsEmpty(const std::string & sSignalTypeName) = 0;
+
+	/**
+	* IStateEnvironment::ClearUnhandledSignalsOfType - Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
 	* @param[in] sSignalTypeName - Name Of Signal to be cleared.
 	*/
 	virtual void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName) = 0;
 
 	/**
-	* IStateEnvironment::ClearAllUnhandledSignals - Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.
+	* IStateEnvironment::ClearAllUnhandledSignals - Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected
 	*/
 	virtual void ClearAllUnhandledSignals() = 0;
 
 	/**
-	* IStateEnvironment::GetUnhandledSignalByUUID - retrieves an unhandled signal from the current state machine by UUID.
+	* IStateEnvironment::GetUnhandledSignalByUUID - Retrieves an InQueue or InProcess signal from the current state machine by UUID.
 	* @param[in] sUUID - Name
-	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled already.
+	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already.
 	* @return Signal handler instance. Returns null, if signal does not exist.
 	*/
 	virtual ISignalHandler * GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist) = 0;
@@ -7251,6 +7249,42 @@ public:
 	virtual void UnloadAllToolpathes() = 0;
 
 	/**
+	* IStateEnvironment::WaitForSignal - DEPRECIATED: Waits for an InQueue signal to exist for a certain amount of time. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE claim signal instead.
+	* @param[in] sSignalName - Name Of Signal
+	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
+	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
+	* @return Signal has been triggered
+	*/
+	virtual bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, ISignalHandler*& pHandlerInstance) = 0;
+
+	/**
+	* IStateEnvironment::GetUnhandledSignal - DEPRECIATED: Retrieves am InQueue signal by type. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE ClaimSignalFromQueue instead.
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Signal object. If no signal has been found the signal handler object will be null.
+	*/
+	virtual ISignalHandler * GetUnhandledSignal(const std::string & sSignalTypeName) = 0;
+
+	/**
+	* IStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
+	* @param[in] sName - Name
+	* @param[in] pHandler - Signal handler to store.
+	*/
+	virtual void StoreSignal(const std::string & sName, ISignalHandler* pHandler) = 0;
+
+	/**
+	* IStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
+	* @param[in] sName - Name
+	* @return Signal handler instance.
+	*/
+	virtual ISignalHandler * RetrieveSignal(const std::string & sName) = 0;
+
+	/**
+	* IStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
+	* @param[in] sName - Name
+	*/
+	virtual void ClearStoredValue(const std::string & sName) = 0;
+
+	/**
 	* IStateEnvironment::SetNextState - sets the next state
 	* @param[in] sStateName - Name of next state
 	*/
@@ -7285,26 +7319,6 @@ public:
 	* @return Returns if termination shall appear
 	*/
 	virtual bool CheckForTermination() = 0;
-
-	/**
-	* IStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
-	* @param[in] sName - Name
-	* @param[in] pHandler - Signal handler to store.
-	*/
-	virtual void StoreSignal(const std::string & sName, ISignalHandler* pHandler) = 0;
-
-	/**
-	* IStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
-	* @param[in] sName - Name
-	* @return Signal handler instance.
-	*/
-	virtual ISignalHandler * RetrieveSignal(const std::string & sName) = 0;
-
-	/**
-	* IStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
-	* @param[in] sName - Name
-	*/
-	virtual void ClearStoredValue(const std::string & sName) = 0;
 
 	/**
 	* IStateEnvironment::SetStringParameter - sets a string parameter

@@ -327,6 +327,12 @@ namespace AMC {
 		return queueIsFullNoMutex();
 	}
 
+	bool CStateSignalSlot::queueIsEmpty()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		return m_Queue.size() == 0;
+	}
+
 	uint32_t CStateSignalSlot::getAvailableSignalQueueEntriesInternal()
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);

@@ -204,6 +204,7 @@ namespace AMC {
 		std::string getSignalTelemetryAcknowledgementIdentifier() const;
 
 		bool queueIsFull();
+		bool queueIsEmpty();
 		size_t clearQueueInternal();
 		bool eraseMessage(const std::string& sUUID);
 

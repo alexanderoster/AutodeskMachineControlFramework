@@ -85,6 +85,10 @@ public:
 
 	ISignalHandler* GetUnhandledSignal(const std::string& sSignalTypeName) override;
 
+	ISignalHandler* ClaimSignalFromQueue(const std::string& sSignalTypeName) override;
+
+	bool SignalQueueIsEmpty(const std::string& sSignalTypeName) override;
+
 	ISignalHandler* GetUnhandledSignalByUUID(const std::string& sUUID, const bool bMustExist) override;
 
 	void ClearUnhandledSignalsOfType(const std::string& sSignalTypeName) override;
