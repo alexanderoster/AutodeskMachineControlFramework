@@ -56,6 +56,7 @@ namespace AMCUnitTest {
 			registerTest("FilePathFunctions", "Path handling and file/directory helpers", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_CommonUtils::testFilePathFunctions, this));
 			registerTest("TempAndDirectoryFunctions", "Temporary paths, directory content, and OS helpers", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_CommonUtils::testTempAndDirectoryFunctions, this));
 			registerTest("AlphanumericValidation", "Alphanumeric name and path validation", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_CommonUtils::testAlphanumericValidation, this));
+			registerTest("FileNameValidation", "Filename validation for invalid characters and dot-dot", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_CommonUtils::testFileNameValidation, this));
 		}
 
 		void initializeTests() override {
@@ -116,6 +117,14 @@ namespace AMCUnitTest {
 			assertTrue(AMCCommon::CUtils::stringIsUUIDString(uuid));
 			assertTrue(AMCCommon::CUtils::stringIsNonEmptyUUIDString(uuid));
 			assertTrue(AMCCommon::CUtils::normalizeUUIDString(uuid) == uuid);
+			assertTrue(AMCCommon::CUtils::stringIsUUIDString("  " + uuid + "  "));
+
+			std::string uuidV4 = AMCCommon::CUtils::createUUIDV4();
+			assertTrue(AMCCommon::CUtils::stringIsUUIDString(uuidV4));
+			assertTrue(AMCCommon::CUtils::stringIsNonEmptyUUIDString(uuidV4));
+			assertTrue(AMCCommon::CUtils::normalizeUUIDString(uuidV4) == uuidV4);
+			assertTrue(uuidV4.at(14) == '4');
+			assertTrue((uuidV4.at(19) == '8') || (uuidV4.at(19) == '9') || (uuidV4.at(19) == 'a') || (uuidV4.at(19) == 'b'));
 
 			std::string emptyUUID = AMCCommon::CUtils::createEmptyUUID();
 			assertTrue(AMCCommon::CUtils::stringIsUUIDString(emptyUUID));
@@ -126,6 +135,13 @@ namespace AMCUnitTest {
 			assertTrue(normalizedUUID == "a1b2c3d4-1111-2222-3333-444455556666");
 
 			assertFalse(AMCCommon::CUtils::stringIsUUIDString("not-a-uuid"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4-1111-2222-3333-44445555666"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4-1111-2222-3333-4444555566667"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4-1111-2222-3333444455556666"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4-1111-2222-3333-44445555666x"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4-1111-2222-3333_444455556666"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("A1B2C3D4-1111-2222-3333-44445555666G"));
+			assertFalse(AMCCommon::CUtils::stringIsUUIDString("a1b2c3d4111122223333444455556666"));
 
 			bool thrown = false;
 			try {
@@ -135,6 +151,15 @@ namespace AMCUnitTest {
 				thrown = true;
 			}
 			assertTrue(thrown, "Expected normalizeUUIDString to throw on invalid input");
+
+			thrown = false;
+			try {
+				AMCCommon::CUtils::normalizeUUIDString("a1b2c3d4111122223333444455556666ff");
+			}
+			catch (...) {
+				thrown = true;
+			}
+			assertTrue(thrown, "Expected normalizeUUIDString to throw on oversized input");
 		}
 
 		void testUTF8Conversions()
@@ -292,6 +317,24 @@ namespace AMCUnitTest {
 
 			thrown = false;
 			try {
+				AMCCommon::CUtils::normalizeSHA256String("abc");
+			}
+			catch (...) {
+				thrown = true;
+			}
+			assertTrue(thrown, "Expected normalizeSHA256String to throw on invalid length");
+
+			thrown = false;
+			try {
+				AMCCommon::CUtils::normalizeSHA256String(expectedHash + "0");
+			}
+			catch (...) {
+				thrown = true;
+			}
+			assertTrue(thrown, "Expected normalizeSHA256String to throw on oversized input");
+
+			thrown = false;
+			try {
 				AMCCommon::CUtils::calculateRandomSHA256String(0);
 			}
 			catch (...) {
@@ -396,6 +439,7 @@ namespace AMCUnitTest {
 			std::string fullPath = AMCCommon::CUtils::getFullPathName(nonExistingPath, false);
 			assertTrue(!fullPath.empty());
 			assertFalse(AMCCommon::CUtils::fileOrPathExistsOnDisk(nonExistingPath));
+			assertFalse(AMCCommon::CUtils::pathIsDirectory(nonExistingPath));
 
 			char delimiter = AMCCommon::CUtils::getPathDelimiter();
 #ifdef _WIN32
@@ -406,6 +450,9 @@ namespace AMCUnitTest {
 			std::string withDelimiter = AMCCommon::CUtils::includeTrailingPathDelimiter("path");
 			assertTrue(withDelimiter.back() == '/' || withDelimiter.back() == '\\');
 			assertTrue(AMCCommon::CUtils::includeTrailingPathDelimiter(withDelimiter) == withDelimiter);
+			std::string emptyWithDelimiter = AMCCommon::CUtils::includeTrailingPathDelimiter("");
+			assertTrue(emptyWithDelimiter.size() == 1);
+			assertTrue(emptyWithDelimiter.at(0) == delimiter);
 			assertTrue(AMCCommon::CUtils::removeLeadingPathDelimiter("///path") == "path");
 		}
 
@@ -472,6 +519,25 @@ namespace AMCUnitTest {
 			assertFalse(AMCCommon::CUtils::stringIsValidAlphanumericPathString("abc..def"));
 			assertFalse(AMCCommon::CUtils::stringIsValidAlphanumericPathString(".abc"));
 			assertFalse(AMCCommon::CUtils::stringIsValidAlphanumericPathString("abc."));
+		}
+
+		void testFileNameValidation()
+		{
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName(""));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file:name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file>name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file<name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file\"name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file/name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file\\name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file|name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file?name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file*name.txt"));
+			assertFalse(AMCCommon::CUtils::stringIsValidFileName("file..name.txt"));
+
+			assertTrue(AMCCommon::CUtils::stringIsValidFileName("file.name.txt"));
+			assertTrue(AMCCommon::CUtils::stringIsValidFileName(".hidden"));
+			assertTrue(AMCCommon::CUtils::stringIsValidFileName("file_name-123.txt"));
 		}
 	};
 
