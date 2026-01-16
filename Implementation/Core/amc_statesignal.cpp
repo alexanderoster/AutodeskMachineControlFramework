@@ -86,6 +86,7 @@ namespace AMC {
 	{
 		if (m_pTelemetryInQueueMarker.get() != nullptr) {
 			m_pTelemetryInQueueMarker->finishMarker();
+			m_pTelemetryInQueueMarker = nullptr;
 		}
 		
 		if (m_pTelemetryInProcessMarker.get () != nullptr) {
@@ -139,9 +140,7 @@ namespace AMC {
 
 	bool CStateSignalMessage::hadReactionTimeout(uint64_t nGlobalTimestamp)
 	{
-		uint64_t nInQueueTimestamp = m_pTelemetryInQueueMarker->getStartTimestamp();
-
-		uint64_t nTimeoutTimestamp = nInQueueTimestamp + (uint64_t)m_nReactionTimeoutInMS * 1000;
+		uint64_t nTimeoutTimestamp = m_nCreationTimestamp + (uint64_t)m_nReactionTimeoutInMS * 1000;
 		return (nGlobalTimestamp >= nTimeoutTimestamp);
 	}
 
