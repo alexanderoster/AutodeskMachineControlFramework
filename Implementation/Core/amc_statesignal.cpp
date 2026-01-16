@@ -41,9 +41,11 @@ namespace AMC {
 	CStateSignalMessage::CStateSignalMessage(const std::string& sUUID, uint32_t nReactionTimeoutInMS, PTelemetryChannel pQueueTelemetryChannel, PTelemetryChannel pInProcessTelemetryChannel, PTelemetryChannel pAcknowledgeTelemetryChannel)
 		: m_sUUID(AMCCommon::CUtils::normalizeUUIDString(sUUID)),
 		m_nReactionTimeoutInMS(nReactionTimeoutInMS),
-		m_MessagePhase (eAMCSignalPhase::InQueue),
-		m_pInProcessTelemetryChannel (pInProcessTelemetryChannel),
-		m_pAcknowledgeTelemetryChannel (pAcknowledgeTelemetryChannel)
+		m_MessagePhase(eAMCSignalPhase::InQueue),
+		m_pInProcessTelemetryChannel(pInProcessTelemetryChannel),
+		m_pAcknowledgeTelemetryChannel(pAcknowledgeTelemetryChannel),
+		m_nCreationTimestamp(0),
+		m_nTerminalTimestamp(0)
 
 	{
 		if (pQueueTelemetryChannel.get () == nullptr)
@@ -54,6 +56,7 @@ namespace AMC {
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
 		m_pTelemetryInQueueMarker = pQueueTelemetryChannel->startIntervalMarker(0);
+		m_nCreationTimestamp = m_pTelemetryInQueueMarker->getStartTimestamp();
 	}
 
 	CStateSignalMessage::~CStateSignalMessage()
@@ -71,28 +74,23 @@ namespace AMC {
 
 	uint64_t CStateSignalMessage::getCreationTimestamp() const
 	{
-		return m_pTelemetryInQueueMarker->getStartTimestamp ();
+		return m_nCreationTimestamp;
 	}
 
 	uint64_t CStateSignalMessage::getTerminalTimestamp() const
-	{
-		if (m_pTelemetryInProcessMarker.get() != nullptr) {
-			if (m_pTelemetryInProcessMarker->isFinished())
-				return m_pTelemetryInProcessMarker->getFinishTimestamp();
-		}
-
-		return 0;
+	{		
+		return m_nTerminalTimestamp;
 	}
 
 	bool CStateSignalMessage::setPhase(AMC::eAMCSignalPhase messagePhase)
 	{
 		if (m_pTelemetryInQueueMarker.get() != nullptr) {
 			m_pTelemetryInQueueMarker->finishMarker();
-			m_pTelemetryInQueueMarker = nullptr;
 		}
 		
 		if (m_pTelemetryInProcessMarker.get () != nullptr) {
 			m_pTelemetryInProcessMarker->finishMarker();
+			m_nTerminalTimestamp = m_pTelemetryInProcessMarker->getFinishTimestamp();
 			m_pTelemetryInProcessMarker = nullptr;
 		}
 
@@ -192,6 +190,7 @@ namespace AMC {
 		m_nHandledCount (0),
 		m_nFailedCount (0),
 		m_nTimedOutCount (0),
+		m_nArchivedCount (0),
 		m_nMaxReactionTime (0),
 		m_pRegistry (pRegistry)
 
@@ -205,6 +204,7 @@ namespace AMC {
 			pSignalInformationGroup->addNewIntParameter("handled_" + m_sName, m_sName + " was handled", 0);
 			pSignalInformationGroup->addNewIntParameter("failed_" + m_sName, m_sName + " has failed", 0);
 			pSignalInformationGroup->addNewIntParameter("timeout_" + m_sName, m_sName + " timed out", 0);
+			pSignalInformationGroup->addNewIntParameter("archived_" + m_sName, m_sName + " archived", 0);
 			pSignalInformationGroup->addNewIntParameter("reactiontime_" + m_sName, m_sName + " max reaction time (microseconds)", 0);
 			pSignalInformationGroup->addNewIntParameter("finishtime_" + m_sName, m_sName + " max finish time (microseconds)", 0);
 			pSignalInformationGroup->addNewIntParameter("acknowledgetime_" + m_sName, m_sName + " max acknowledge time (microseconds)", 0);
@@ -305,6 +305,15 @@ namespace AMC {
 		}
 
 		updateTimingStatistics();
+	}
+
+	void CStateSignalSlot::increaseArchivedCount()
+	{
+		m_nArchivedCount++;
+		if (m_pSignalInformationGroup.get() != nullptr) {
+			m_pSignalInformationGroup->setIntParameterValueByName("archived_" + m_sName, (int64_t)m_nArchivedCount);
+		}
+
 	}
 
 
@@ -545,6 +554,9 @@ namespace AMC {
 			}
 
 			if (bToArchive) {
+
+				increaseArchivedCount();
+
 				pMessage->setPhase(eAMCSignalPhase::Archived);
 				m_MessagesToArchive.push_back(pMessage);
 				m_MessageMap.erase(iMessageIter);
@@ -687,6 +699,7 @@ namespace AMC {
 					}
 
 					if (nGlobalTimestamp >= nArchiveTimestamp) {
+						increaseArchivedCount();
 						messagesToArchive.push_back(it.first);
 					}
 				}
@@ -700,8 +713,6 @@ namespace AMC {
 
 	void CStateSignalSlot::writeMessagesToArchive(CStateSignalArchiveWriter* pArchiveWriter)
 	{
-		if (pArchiveWriter == nullptr)
-			throw ELibMCCustomException(LIBMC_ERROR_INVALIDPARAM, "writeMessagesToArchive: Archive writer is null");
 
 		std::deque <PStateSignalMessage> messagesToArchive;
 		{
@@ -709,14 +720,19 @@ namespace AMC {
 			messagesToArchive.swap (m_MessagesToArchive);
 		}
 
-		for (auto pMessage : messagesToArchive) {
-			pArchiveWriter->writeSignalMessageToArchive (m_sInstanceName, m_sName, pMessage.get ());
+		if (pArchiveWriter != nullptr) {
+			// If Archive Writer is null, we just clear the archive queue
+
+			for (auto pMessage : messagesToArchive) {
+				pArchiveWriter->writeSignalMessageToArchive(m_sInstanceName, m_sName, pMessage.get());
+			}
+
 		}
 
 	}
 
 
-	PStateSignalMessage CStateSignalSlot::claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp)
+	PStateSignalMessage CStateSignalSlot::claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, bool bChangePhaseToInprocess)
 	{
 		(void)nTimeStamp;
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);
@@ -731,13 +747,18 @@ namespace AMC {
 		auto pMessage = m_Queue.front();
 		std::string sUUID = pMessage->getUUID();
 
-		m_Queue.pop_front();
-		m_QueueMap.erase(sUUID);
+		if (bChangePhaseToInprocess) {
 
-		pMessage->setPhase(eAMCSignalPhase::InProcess);
-		m_InProcess.insert(sUUID);
+			// Change the phase to Inprocess in an atomic way
+			m_Queue.pop_front();
+			m_QueueMap.erase(sUUID);
 
-		updateTimingStatistics();
+			pMessage->setPhase(eAMCSignalPhase::InProcess);
+			m_InProcess.insert(sUUID);
+
+			updateTimingStatistics();
+
+		}
 
 		return pMessage;
 	}

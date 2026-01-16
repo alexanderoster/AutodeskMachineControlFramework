@@ -951,8 +951,11 @@ void CMCContext::executeSystemThread()
 
         while (!systemThreadShallTerminate()) {
 
-            uint64_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
-            m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
+
+            auto pSignalHandler = m_pSystemState->getStateSignalHandlerInstance();
+            pSignalHandler->checkForReactionTimeouts(m_pSystemState->globalChrono()->getElapsedMicroseconds());
+            pSignalHandler->autoArchiveMessages(m_pSystemState->globalChrono()->getElapsedMicroseconds());            
+            pSignalHandler->writeMessagesToArchive(nullptr);
             m_pSystemState->updateMemoryUsageParameters();            
 
         }

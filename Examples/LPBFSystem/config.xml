@@ -112,7 +112,7 @@
 			<parameter name="simulateplc" description="Simulate PLC behaviour" default="1" type="bool" persistent="d1e8e7d2-8d77-4206-b390-b999300ca8a9" />
 		</parametergroup>
 
-		<signaldefinition name="signal_initjob" reactiontimeout="1000">
+		<signaldefinition name="signal_initjob" reactiontimeout="1000" archivetime="10000">
 			<parameter name="jobuuid" type="string"/>
 		</signaldefinition>
 
