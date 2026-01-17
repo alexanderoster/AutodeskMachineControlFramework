@@ -55,20 +55,6 @@ namespace AMC {
 
 	class CTelemetryWriter;
 
-	enum class eTelemetryChunkEntryType : uint32_t {
-		InstantMarker = 1,
-		IntervalStartMarker = 2,
-		IntervalEndMarker = 3
-	};
-
-	struct sTelemetryChunkEntry {
-		eTelemetryChunkEntryType m_EntryType;
-		uint32_t m_nChannelIndex;
-		uint64_t m_nMarkerID;
-		uint64_t m_nTimestamp;
-		uint64_t m_nContextData;
-	};
-
 	struct sTelemetryOpenIntervalMarker {
 		uint32_t m_nChunkID;
 		uint32_t m_nEntryIndex;
@@ -86,21 +72,35 @@ namespace AMC {
 		uint64_t m_nMinMarkerID;
 		uint64_t m_nMaxMarkerID;
 
-		uint32_t m_nTelemetryChunkID;
+		uint64_t m_nTelemetryChunkID;
 
-		std::vector<sTelemetryChunkEntry> m_Entries;
+		std::vector<LibMCData::sTelemetryChunkEntry> m_Entries;
+
+		bool m_bChunkIsReadonly;
+
+		bool m_bChunkHasBeenArchived;
 
 		mutable std::mutex m_ChunkMutex;
 
 	public:
 
-		CTelemetryDataChunk (CTelemetryWriter* pWriter, uint32_t nChunkID, uint64_t nChunkStartTimestamp, uint64_t nChunkEndTimestamp);
+		CTelemetryDataChunk (CTelemetryWriter* pWriter, uint64_t nTelemetryChunkID, uint64_t nChunkStartTimestamp, uint64_t nChunkEndTimestamp);
 
 		virtual ~CTelemetryDataChunk();
 
+		uint64_t getChunkID() const;
+
 		bool isEmpty() const;
 
-		void writeEntry(const sTelemetryChunkEntry& entry);
+		void writeEntry(const LibMCData::sTelemetryChunkEntry& entry);
+
+		void makeReadOnly();
+
+		bool isReadOnly() const;
+
+		bool hasBeenArchived() const;
+
+		void writeToArchive(LibMCData::PTelemetrySession pTelemetrySession);
 
 	};
 
@@ -110,11 +110,11 @@ namespace AMC {
 	{
 		private:
 			std::mutex m_ChunkMutex;
-			std::deque<PTelemetryDataChunk> m_Chunks;
+			std::vector<PTelemetryDataChunk> m_Chunks;
 
-			uint32_t m_nNextChunkIndex;
-			PTelemetryDataChunk m_pCurrentChunk;
-			uint64_t m_nNextChunkStartTimestamp;
+			std::mutex m_ArchiveQueueMutex;
+			std::queue<PTelemetryDataChunk> m_ArchiveQueue;
+
 			uint64_t m_nChunkIntervalInMicroseconds;
 
 			std::mutex m_OpenIntervalMutex;
@@ -127,7 +127,7 @@ namespace AMC {
 
 			std::atomic<uint64_t> m_nNextMarkerID;
 
-			PTelemetryDataChunk createNewChunkNoMutex();
+			void extendChunksUntil(uint64_t nMaxChunkIndexOneBased);
 
 		public:
 
@@ -135,17 +135,17 @@ namespace AMC {
 
 			virtual ~CTelemetryWriter();
 
-			PTelemetryDataChunk getCurrentChunk(uint64_t nTimestamp);
+			PTelemetryDataChunk getOrCreateChunkByTimestamp(uint64_t nTimestamp);
 
-			PTelemetryDataChunk createNewChunk();
-
-			void writeEntry(const sTelemetryChunkEntry& entry);
+			void writeEntry(const LibMCData::sTelemetryChunkEntry& entry);
 
 			void registerOpenInterval (uint64_t nMarkerID, uint32_t nChunkID, uint32_t nChunkEntryIndex);
 
 			void eraseOpenInterval (uint64_t nMarkerID);
 
 			void createChannelInDB(const std::string & sUUID, LibMCData::eTelemetryChannelType channelType, uint32_t nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+
+			void archiveOldChunksToDB();
 
 			uint64_t createMarkerID();
 
@@ -294,6 +294,8 @@ namespace AMC {
 		PTelemetryChannel findChannelByUUID(const std::string& sChannelUUID);
 
 		PTelemetryChannel findChannelByIdentifier(const std::string& sChannelIdentifier, bool bFailIfNotExisting);
+
+		void archiveOldChunksToDB();
 
 
 	};
