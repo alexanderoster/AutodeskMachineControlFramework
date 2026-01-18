@@ -91,12 +91,21 @@ namespace AMCData {
 
 		std::string m_sJournalBasePath;
 		std::string m_sChunkBaseName;
+		std::string m_sTelemetryChunkBaseName;
 		
 		std::vector<PActiveJournalFile> m_JournalFiles;
 
 		PActiveJournalFile m_pCurrentJournalFile;
 
 		PActiveJournalFile createJournalFile();
+
+		std::vector<PActiveJournalFile> m_TelemetryFiles;
+
+		PActiveJournalFile m_pCurrentTelemetryFile;
+
+		std::atomic<uint32_t> m_TelemetryChunkID;
+
+		PActiveJournalFile createTelemetryFile();
 
 	public:
 
@@ -175,4 +184,3 @@ namespace AMCData {
 
 
 #endif //__AMCDATA_JOURNAL
-
