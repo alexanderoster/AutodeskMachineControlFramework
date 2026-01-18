@@ -105,7 +105,7 @@ namespace AMC {
 		}
 
 		if (entry.m_EntryType == LibMCData::eTelemetryChunkEntryType::IntervalStartMarker) {
-			m_pWriter->registerOpenInterval (entry.m_MarkerID, m_nTelemetryChunkID, nEntryIndex);
+			m_pWriter->registerOpenInterval (entry.m_MarkerID, (uint32_t)m_nTelemetryChunkID, nEntryIndex);
 		}
 		else if (entry.m_EntryType == LibMCData::eTelemetryChunkEntryType::IntervalEndMarker) {
 			m_pWriter->eraseOpenInterval(entry.m_MarkerID);
@@ -139,6 +139,7 @@ namespace AMC {
 		std::vector<LibMCData::sTelemetryChunkEntry> chunkEntries;
 		uint64_t nChunkStartTimestamp;
 		uint64_t nChunkEndTimestamp;
+		uint64_t nChunkID;
 
 		{
 			std::lock_guard<std::mutex> lock(m_ChunkMutex);
@@ -152,11 +153,12 @@ namespace AMC {
 
 			nChunkStartTimestamp = m_nChunkStartTimestamp;
 			nChunkEndTimestamp = m_nChunkEndTimestamp;
+			nChunkID = m_nTelemetryChunkID;
 			m_bChunkHasBeenArchived = true;
 		}
 
 		try {
-			pTelemetrySession->WriteTelemetryChunk(nChunkStartTimestamp, nChunkEndTimestamp, chunkEntries);
+			pTelemetrySession->WriteTelemetryChunk(nChunkID, nChunkStartTimestamp, nChunkEndTimestamp, chunkEntries);
 		}
 		catch (...) {
 			// Restore entries on failure

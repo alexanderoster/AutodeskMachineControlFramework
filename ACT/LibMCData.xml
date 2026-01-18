@@ -779,6 +779,7 @@
 		</method>
 
 		<method name="WriteTelemetryChunk" description="Writes a telemetry chunk to the current telemetry file.">
+			<param name="ChunkID" type="uint64" pass="in" description="ID of chunk in session (1-based)." />	
 			<param name="StartTimeStamp" type="uint64" pass="in" description="Start time stamp of chunk." />	
 			<param name="EndTimeStamp" type="uint64" pass="in" description="End time stamp of chunk." />	
 			<param name="TelemetryEntries" type="structarray" class="TelemetryChunkEntry" pass="in" description="Telemetry entries to write." />	

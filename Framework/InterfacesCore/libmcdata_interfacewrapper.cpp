@@ -1421,7 +1421,7 @@ LibMCDataResult libmcdata_telemetrysession_createchannelindb(LibMCData_Telemetry
 	}
 }
 
-LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const sLibMCDataTelemetryChunkEntry * pTelemetryEntriesBuffer)
+LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nChunkID, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const sLibMCDataTelemetryChunkEntry * pTelemetryEntriesBuffer)
 {
 	IBase* pIBaseClass = (IBase *)pTelemetrySession;
 
@@ -1432,7 +1432,7 @@ LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_Telemet
 		if (!pITelemetrySession)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
 		
-		pITelemetrySession->WriteTelemetryChunk(nStartTimeStamp, nEndTimeStamp, nTelemetryEntriesBufferSize, pTelemetryEntriesBuffer);
+		pITelemetrySession->WriteTelemetryChunk(nChunkID, nStartTimeStamp, nEndTimeStamp, nTelemetryEntriesBufferSize, pTelemetryEntriesBuffer);
 
 		return LIBMCDATA_SUCCESS;
 	}

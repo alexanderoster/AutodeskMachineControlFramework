@@ -65,7 +65,7 @@ void CTelemetrySession::CreateChannelInDB(const std::string & sUUID, const LibMC
 	m_pJournal->createTelemetryChannelInDB(sUUID, eChannelType, nChannelIndex, sChannelIdentifier, sChannelDescription);
 }
 
-void CTelemetrySession::WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer)
+void CTelemetrySession::WriteTelemetryChunk(const LibMCData_uint64 nChunkID, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer)
 {
-	m_pJournal->writeTelemetryChunk(nStartTimeStamp, nEndTimeStamp, nTelemetryEntriesBufferSize, pTelemetryEntriesBuffer);
+	m_pJournal->writeTelemetryChunk(nChunkID, nStartTimeStamp, nEndTimeStamp, nTelemetryEntriesBufferSize, pTelemetryEntriesBuffer);
 }

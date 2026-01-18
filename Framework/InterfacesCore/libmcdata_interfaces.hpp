@@ -633,12 +633,13 @@ public:
 
 	/**
 	* ITelemetrySession::WriteTelemetryChunk - Writes a telemetry chunk to the current telemetry file.
+	* @param[in] nChunkID - ID of chunk in session (1-based).
 	* @param[in] nStartTimeStamp - Start time stamp of chunk.
 	* @param[in] nEndTimeStamp - End time stamp of chunk.
 	* @param[in] nTelemetryEntriesBufferSize - Number of elements in buffer
 	* @param[in] pTelemetryEntriesBuffer - Telemetry entries to write.
 	*/
-	virtual void WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer) = 0;
+	virtual void WriteTelemetryChunk(const LibMCData_uint64 nChunkID, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer) = 0;
 
 };
 

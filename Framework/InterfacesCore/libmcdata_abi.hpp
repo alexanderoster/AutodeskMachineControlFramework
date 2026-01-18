@@ -479,13 +479,14 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_telemetrysession_createchannelindb(
 * Writes a telemetry chunk to the current telemetry file.
 *
 * @param[in] pTelemetrySession - TelemetrySession instance.
+* @param[in] nChunkID - ID of chunk in session (1-based).
 * @param[in] nStartTimeStamp - Start time stamp of chunk.
 * @param[in] nEndTimeStamp - End time stamp of chunk.
 * @param[in] nTelemetryEntriesBufferSize - Number of elements in buffer
 * @param[in] pTelemetryEntriesBuffer - TelemetryChunkEntry buffer of Telemetry entries to write.
 * @return error code or 0 (success)
 */
-LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer);
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_telemetrysession_writetelemetrychunk(LibMCData_TelemetrySession pTelemetrySession, LibMCData_uint64 nChunkID, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp, LibMCData_uint64 nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry * pTelemetryEntriesBuffer);
 
 /*************************************************************************************************************************
  Class definition for JournalChunkIntegerData

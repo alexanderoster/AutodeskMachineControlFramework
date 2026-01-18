@@ -144,19 +144,20 @@ void CDataModel::InitialiseDatabase(const std::string & sDataDirectory, const Li
     auto sJournalBasePath = m_pStorageState->getJournalBasePath(m_sTimeFileName);
     auto sJournalName = m_pStorageState->getJournalFileName(m_sTimeFileName);
     auto sJournalChunkBaseName = m_pStorageState->getJournalChunkBaseName(m_sTimeFileName);
-    auto sTelemetryChunkBaseName = "telemetry_" + m_sTimeFileName + "_chunk";
+    auto sTelemetryChunkBaseName = m_pStorageState->getTelemetryChunkBaseName(m_sTimeFileName);;
 
     m_pJournal = std::make_shared<AMCData::CJournal> (sJournalBasePath, sJournalName, sJournalChunkBaseName, sTelemetryChunkBaseName, m_sSessionUUID);
 
-    auto pStatement = m_pSQLHandler->prepareStatement("INSERT INTO journals (uuid, starttime, logfilename, journalfilename, logfilepath, journalfilepath, schemaversion, githash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    auto pStatement = m_pSQLHandler->prepareStatement("INSERT INTO journals (uuid, starttime, logfilename, journalfilename, telemetryfilename, logfilepath, journalfilepath, schemaversion, githash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     pStatement->setString(1, m_sSessionUUID);
     pStatement->setString(2, m_sStartTime);
     pStatement->setString(3, sJournalName);
     pStatement->setString(4, sJournalChunkBaseName);
-    pStatement->setString(5, "");
+    pStatement->setString(5, sTelemetryChunkBaseName);
     pStatement->setString(6, "");
-    pStatement->setInt(7, m_pJournal->getSchemaVersion ());
-    pStatement->setString(8, __STRINGIZE_VALUE_OF(__GITHASH));
+    pStatement->setString(7, "");
+    pStatement->setInt(8, m_pJournal->getSchemaVersion ());
+    pStatement->setString(9, __STRINGIZE_VALUE_OF(__GITHASH));
     pStatement->execute();
 
 }

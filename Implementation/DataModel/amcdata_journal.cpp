@@ -153,24 +153,13 @@ namespace AMCData {
 
 	CJournal::CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sTelemetryChunkBaseName, const std::string& sSessionUUID)
 		: m_LogID(1), m_AlertID(1), m_sSessionUUID(AMCCommon::CUtils::normalizeUUIDString(sSessionUUID)),
-		m_sJournalBasePath(sJournalBasePath), m_sChunkBaseName (sJournalChunkBaseName),
-		m_TelemetryChunkID (1)
+		m_sJournalBasePath(sJournalBasePath), m_sChunkBaseName (sJournalChunkBaseName), m_sTelemetryChunkBaseName(sTelemetryChunkBaseName)
 	{
-		if (!sTelemetryChunkBaseName.empty()) {
-			m_sTelemetryChunkBaseName = sTelemetryChunkBaseName;
-		}
-		else {
-			m_sTelemetryChunkBaseName = m_sChunkBaseName;
-			const std::string sJournalPrefix = "journal_";
-			const std::string sTelemetryPrefix = "telemetry_";
-			if (m_sTelemetryChunkBaseName.rfind(sJournalPrefix, 0) == 0) {
-				m_sTelemetryChunkBaseName.replace(0, sJournalPrefix.size(), sTelemetryPrefix);
-			}
-			else {
-				m_sTelemetryChunkBaseName = sTelemetryPrefix + m_sTelemetryChunkBaseName;
-			}
-		}
-		
+		if (sJournalChunkBaseName.empty())
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM, "Journal chunk base name is empty");
+		if (sTelemetryChunkBaseName.empty())
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM, "Telemetry chunk base name is empty");
+
 		m_pSQLHandler = std::make_shared<AMCData::CSQLHandler_SQLite>(m_sJournalBasePath + sJournalName);
 
 		std::string sQuery = "CREATE TABLE `logs` (";
@@ -212,7 +201,7 @@ namespace AMCData {
 		pJournalVariableAliasesStatement = nullptr;
 
 		std::string sJournalQuery = "CREATE TABLE `journal_chunks` (";
-		sJournalQuery += "`chunkindex` int DEFAULT 0, ";
+		sJournalQuery += "`chunkindex` int UNIQUE NOT NULL, ";
 		sJournalQuery += "`fileindex` int DEFAULT 0, ";
 		sJournalQuery += "`starttimestamp` int DEFAULT 0, ";
 		sJournalQuery += "`endtimestamp` int DEFAULT 0, ";
@@ -270,7 +259,7 @@ namespace AMCData {
 		pTelemetryDataStatement = nullptr;
 
 		std::string sTelemetryChunkQuery = "CREATE TABLE `telemetry_chunks` (";
-		sTelemetryChunkQuery += "`chunkindex` int DEFAULT 0, ";
+		sTelemetryChunkQuery += "`chunkindex` int UNIQUE NOT NULL, ";
 		sTelemetryChunkQuery += "`fileindex` int DEFAULT 0, ";
 		sTelemetryChunkQuery += "`starttimestamp` int DEFAULT 0, ";
 		sTelemetryChunkQuery += "`endtimestamp` int DEFAULT 0, ";
@@ -962,7 +951,7 @@ namespace AMCData {
 
 	}
 
-	void CJournal::writeTelemetryChunk(uint64_t nStartTimeStamp, uint64_t nEndTimeStamp, uint64_t nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer)
+	void CJournal::writeTelemetryChunk(uint64_t nChunkID, uint64_t nStartTimeStamp, uint64_t nEndTimeStamp, uint64_t nTelemetryEntriesBufferSize, const LibMCData::sTelemetryChunkEntry* pTelemetryEntriesBuffer)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_JournalMutex);
 
@@ -981,11 +970,9 @@ namespace AMCData {
 		m_pCurrentTelemetryFile->writeBuffer(pTelemetryEntriesBuffer, nDataLength);
 		m_pCurrentTelemetryFile->flushBuffers();
 
-		uint32_t nChunkIndex = m_TelemetryChunkID.fetch_add(1, std::memory_order_relaxed);
-
 		std::string sQuery = "INSERT INTO telemetry_chunks (chunkindex, fileindex, starttimestamp, endtimestamp, entrycount, dataoffset, datalength) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
-		pStatement->setInt64(1, nChunkIndex);
+		pStatement->setInt64(1, (int64_t)nChunkID);
 		pStatement->setInt64(2, m_pCurrentTelemetryFile->getFileIndex());
 		pStatement->setInt64(3, (int64_t)nStartTimeStamp);
 		pStatement->setInt64(4, (int64_t)nEndTimeStamp);

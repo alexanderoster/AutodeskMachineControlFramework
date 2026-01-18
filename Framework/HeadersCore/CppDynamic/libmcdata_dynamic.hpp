@@ -1416,7 +1416,7 @@ public:
 	
 	inline std::string GetSessionUUID();
 	inline void CreateChannelInDB(const std::string & sUUID, const eTelemetryChannelType eChannelType, const LibMCData_uint32 nChannelIndex, const std::string & sChannelIdentifier, const std::string & sChannelDescription);
-	inline void WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer);
+	inline void WriteTelemetryChunk(const LibMCData_uint64 nChunkID, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer);
 };
 	
 /*************************************************************************************************************************
@@ -6870,13 +6870,14 @@ public:
 	
 	/**
 	* CTelemetrySession::WriteTelemetryChunk - Writes a telemetry chunk to the current telemetry file.
+	* @param[in] nChunkID - ID of chunk in session (1-based).
 	* @param[in] nStartTimeStamp - Start time stamp of chunk.
 	* @param[in] nEndTimeStamp - End time stamp of chunk.
 	* @param[in] TelemetryEntriesBuffer - Telemetry entries to write.
 	*/
-	void CTelemetrySession::WriteTelemetryChunk(const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer)
+	void CTelemetrySession::WriteTelemetryChunk(const LibMCData_uint64 nChunkID, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp, const CInputVector<sTelemetryChunkEntry> & TelemetryEntriesBuffer)
 	{
-		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_WriteTelemetryChunk(m_pHandle, nStartTimeStamp, nEndTimeStamp, (LibMCData_uint64)TelemetryEntriesBuffer.size(), TelemetryEntriesBuffer.data()));
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetrySession_WriteTelemetryChunk(m_pHandle, nChunkID, nStartTimeStamp, nEndTimeStamp, (LibMCData_uint64)TelemetryEntriesBuffer.size(), TelemetryEntriesBuffer.data()));
 	}
 	
 	/**
