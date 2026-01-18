@@ -91,6 +91,9 @@ namespace AMC {
 
 			std::string m_sErrorMessage;	
 
+			uint64_t m_nCreationTimestamp;
+			uint64_t m_nTerminalTimestamp;
+
 			AMC::PTelemetryMarker m_pTelemetryInQueueMarker;
 			AMC::PTelemetryMarker m_pTelemetryInProcessMarker;
 			AMC::PTelemetryMarker m_pTelemetryAcknowledgedMarker;
@@ -164,6 +167,7 @@ namespace AMC {
 		uint64_t m_nHandledCount;
 		uint64_t m_nFailedCount;
 		uint64_t m_nTimedOutCount;
+		uint64_t m_nArchivedCount;
 		uint64_t m_nMaxReactionTime;
 
 		PTelemetryChannel m_pQueueTelemetryChannel;
@@ -174,6 +178,7 @@ namespace AMC {
 		void increaseHandledCount();
 		void increaseFailedCount();
 		void increaseTimeoutCount();
+		void increaseArchivedCount();
 		void updateTimingStatistics();
 
 		PParameterGroup m_pSignalInformationGroup;
@@ -199,6 +204,7 @@ namespace AMC {
 		std::string getSignalTelemetryAcknowledgementIdentifier() const;
 
 		bool queueIsFull();
+		bool queueIsEmpty();
 		size_t clearQueueInternal();
 		bool eraseMessage(const std::string& sUUID);
 
@@ -223,7 +229,7 @@ namespace AMC {
 
 		void writeMessagesToArchive (CStateSignalArchiveWriter * pArchiveWriter);
 
-		PStateSignalMessage claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp);
+		PStateSignalMessage claimMessageFromQueueInternal(bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, bool bChangePhaseToInprocess);
 		
 		std::string getResultDataJSONInternal(const std::string& sMessageUUID);
 		std::string getParameterDataJSONInternal(const std::string& sMessageUUID);

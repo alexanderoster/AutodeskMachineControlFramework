@@ -36,20 +36,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "libmcdata_dynamic.hpp"
 
+#define TELEMETRY_DEFAULT_CHUNKINTERVAL_MICROSECONDS 60000000 // 60 seconds
+#define TELEMETRY_ONEHOURINMICROSECONDS 3600000000ULL
+
 namespace AMC {
 
-	CTelemetryDataChunk::CTelemetryDataChunk(CTelemetryWriter* pWriter, uint32_t nChunkID)	
+	CTelemetryDataChunk::CTelemetryDataChunk(CTelemetryWriter* pWriter, uint64_t nChunkID, uint64_t nChunkStartTimestamp, uint64_t nChunkEndTimestamp)
 		: m_nTelemetryChunkID(nChunkID), m_nMinTimestamp(0), m_nMaxTimestamp(0), m_nMinMarkerID(0), m_nMaxMarkerID(0),
-		m_pWriter(pWriter)
+		m_pWriter(pWriter), m_nChunkStartTimestamp(nChunkStartTimestamp), m_nChunkEndTimestamp(nChunkEndTimestamp), m_bChunkIsReadonly (false), m_bChunkHasBeenArchived (false)
 	{
 		if (pWriter == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		if (nChunkStartTimestamp >= nChunkEndTimestamp)
+			throw ELibMCInterfaceException(LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND);
 
 	}
 
 	CTelemetryDataChunk::~CTelemetryDataChunk()
 	{
 
+	}
+
+	uint64_t CTelemetryDataChunk::getChunkID() const
+	{
+		return m_nTelemetryChunkID;
 	}
 
 	bool CTelemetryDataChunk::isEmpty() const
@@ -59,58 +70,120 @@ namespace AMC {
 		return m_Entries.empty();
 	}
 
-	void CTelemetryDataChunk::writeEntry(const sTelemetryChunkEntry& entry)
+	void CTelemetryDataChunk::writeEntry(const LibMCData::sTelemetryChunkEntry& entry)
 	{
 		uint32_t nEntryIndex;
 
 		{
 			std::lock_guard<std::mutex> lock(m_ChunkMutex);
 
+			if (m_bChunkIsReadonly)
+				throw ELibMCCustomException(LIBMC_ERROR_TELEMETRYCHUNKISREADONLY, std::to_string(m_nTelemetryChunkID));
+
 			m_Entries.emplace_back(entry);
 			// entry index shall be one-based
 			nEntryIndex = static_cast<uint32_t> (m_Entries.size());
 
 			if (nEntryIndex == 1) {
-				m_nMinMarkerID = entry.m_nMarkerID;
-				m_nMaxMarkerID = entry.m_nMarkerID;
-				m_nMinTimestamp = entry.m_nTimestamp;
-				m_nMaxTimestamp = entry.m_nTimestamp;
+				m_nMinMarkerID = entry.m_MarkerID;
+				m_nMaxMarkerID = entry.m_MarkerID;
+				m_nMinTimestamp = entry.m_TimeStamp;
+				m_nMaxTimestamp = entry.m_TimeStamp;
 			}
 			else {
-				if (entry.m_nMarkerID < m_nMinMarkerID)
-					m_nMinMarkerID = entry.m_nMarkerID;
-				if (entry.m_nMarkerID > m_nMaxMarkerID)
-					m_nMaxMarkerID = entry.m_nMarkerID;
-				if (entry.m_nTimestamp < m_nMinTimestamp)
-					m_nMinTimestamp = entry.m_nTimestamp;
-				if (entry.m_nTimestamp > m_nMaxTimestamp)
-					m_nMaxTimestamp = entry.m_nTimestamp;
+				if (entry.m_MarkerID < m_nMinMarkerID)
+					m_nMinMarkerID = entry.m_MarkerID;
+				if (entry.m_MarkerID > m_nMaxMarkerID)
+					m_nMaxMarkerID = entry.m_MarkerID;
+				if (entry.m_TimeStamp < m_nMinTimestamp)
+					m_nMinTimestamp = entry.m_TimeStamp;
+				if (entry.m_TimeStamp > m_nMaxTimestamp)
+					m_nMaxTimestamp = entry.m_TimeStamp;
 
 			}
 
 		}
 
-		if (entry.m_EntryType == eTelemetryChunkEntryType::IntervalStartMarker) {
-			m_pWriter->registerOpenInterval (entry.m_nMarkerID, m_nTelemetryChunkID, nEntryIndex);
+		if (entry.m_EntryType == LibMCData::eTelemetryChunkEntryType::IntervalStartMarker) {
+			m_pWriter->registerOpenInterval (entry.m_MarkerID, m_nTelemetryChunkID, nEntryIndex);
 		}
-		else if (entry.m_EntryType == eTelemetryChunkEntryType::IntervalEndMarker) {
-			m_pWriter->eraseOpenInterval(entry.m_nMarkerID);
+		else if (entry.m_EntryType == LibMCData::eTelemetryChunkEntryType::IntervalEndMarker) {
+			m_pWriter->eraseOpenInterval(entry.m_MarkerID);
 		}
+
+	}
+
+	void CTelemetryDataChunk::makeReadOnly()
+	{
+		std::lock_guard<std::mutex> lock(m_ChunkMutex);
+		m_bChunkIsReadonly = true;
+	}
+
+	bool CTelemetryDataChunk::isReadOnly() const
+	{
+		std::lock_guard<std::mutex> lock(m_ChunkMutex);
+		return m_bChunkIsReadonly;
+	}
+
+	bool CTelemetryDataChunk::hasBeenArchived() const
+	{
+		std::lock_guard<std::mutex> lock(m_ChunkMutex);
+		return m_bChunkHasBeenArchived;
+	}
+
+	void CTelemetryDataChunk::writeToArchive(LibMCData::PTelemetrySession pTelemetrySession)
+	{
+		if (pTelemetrySession.get() == nullptr)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+		std::vector<LibMCData::sTelemetryChunkEntry> chunkEntries;
+		uint64_t nChunkStartTimestamp;
+		uint64_t nChunkEndTimestamp;
+
+		{
+			std::lock_guard<std::mutex> lock(m_ChunkMutex);
+			if (!m_bChunkIsReadonly)
+				throw ELibMCCustomException(LIBMC_ERROR_TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY, std::to_string(m_nTelemetryChunkID));
+
+			if (m_bChunkHasBeenArchived)
+				return;
+
+			chunkEntries.swap(m_Entries);
+
+			nChunkStartTimestamp = m_nChunkStartTimestamp;
+			nChunkEndTimestamp = m_nChunkEndTimestamp;
+			m_bChunkHasBeenArchived = true;
+		}
+
+		try {
+			pTelemetrySession->WriteTelemetryChunk(nChunkStartTimestamp, nChunkEndTimestamp, chunkEntries);
+		}
+		catch (...) {
+			// Restore entries on failure
+			std::lock_guard<std::mutex> lock(m_ChunkMutex);
+			chunkEntries.swap(m_Entries);
+			m_bChunkHasBeenArchived = false;
+
+			// Propagate exception to archiving routine
+			throw;
+		}
+
+
 
 	}
 
 
 
-
 	CTelemetryWriter::CTelemetryWriter(LibMCData::PTelemetrySession pTelemetrySession, AMCCommon::PChrono pGlobalChrono)
-		: m_nNextChunkIndex(1), m_pTelemetrySession(pTelemetrySession), m_nNextMarkerID(1), m_pGlobalChrono (pGlobalChrono)
+		: m_pTelemetrySession(pTelemetrySession), m_nNextMarkerID(1), m_pGlobalChrono (pGlobalChrono),
+		m_nChunkIntervalInMicroseconds (TELEMETRY_DEFAULT_CHUNKINTERVAL_MICROSECONDS)
 	{
 		if (pGlobalChrono.get () == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 		if (pTelemetrySession.get() == nullptr)
 			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
-		createNewChunk();
+		extendChunksUntil(1);
 	}
 
 	CTelemetryWriter::~CTelemetryWriter()
@@ -118,26 +191,61 @@ namespace AMC {
 
 	}
 
-	PTelemetryDataChunk CTelemetryWriter::getCurrentChunk()
+	PTelemetryDataChunk CTelemetryWriter::getOrCreateChunkByTimestamp(uint64_t nTimestamp)
 	{
-		std::lock_guard<std::mutex> lock(m_ChunkMutex);
-		return m_pCurrentChunk;
-	}
 
-	PTelemetryDataChunk CTelemetryWriter::createNewChunk()
-	{
+		uint64_t nChunkIndexZeroBased = nTimestamp / m_nChunkIntervalInMicroseconds;
+		uint64_t nChunkIndexOneBased = nChunkIndexZeroBased + 1;
+
+		// Telemetry chunk IDs are one-based
+		// telemetry session is per-process-lifetime, and
+		// the DB schema expects chunk ranges per session
+		extendChunksUntil(nChunkIndexOneBased);
+
 		std::lock_guard<std::mutex> lock(m_ChunkMutex);
-		auto pChunk = std::make_shared<CTelemetryDataChunk> (this, m_nNextChunkIndex);
-		m_nNextChunkIndex++;
-		m_Chunks.emplace_back(pChunk);
-		m_pCurrentChunk = pChunk;
+
+		// Telemetry array is zero-based
+		auto pChunk = m_Chunks.at (nChunkIndexZeroBased);
+
+		if (pChunk->getChunkID() != nChunkIndexOneBased)
+			throw ELibMCCustomException(LIBMC_ERROR_TELEMETRYCHUNKIDMISMATCH, std::to_string (pChunk->getChunkID()) + " != " + std::to_string (nChunkIndexOneBased));
 
 		return pChunk;
+
 	}
 
-	void CTelemetryWriter::writeEntry(const sTelemetryChunkEntry& entry)
+	void CTelemetryWriter::extendChunksUntil(uint64_t nMaxChunkIndexOneBased)
 	{
-		auto pChunk = getCurrentChunk();
+		// Reasonable max chunk index based on current time is maximum an hour in the future!
+		uint64_t nReasonableMaxChunkIndex = ((m_pGlobalChrono->getElapsedMicroseconds() + TELEMETRY_ONEHOURINMICROSECONDS) / m_nChunkIntervalInMicroseconds) + 1;
+		if (nMaxChunkIndexOneBased > nReasonableMaxChunkIndex)
+			throw ELibMCCustomException(LIBMC_ERROR_TELEMETRYCHUNKINDEXOUTOFRANGE, std::to_string(nMaxChunkIndexOneBased));
+
+		std::lock_guard<std::mutex> lock(m_ChunkMutex);		
+		for (uint64_t nZeroBasedIndexToAdd = m_Chunks.size(); nZeroBasedIndexToAdd < nMaxChunkIndexOneBased; nZeroBasedIndexToAdd++) {
+			uint64_t nChunkStartTimestamp = nZeroBasedIndexToAdd * m_nChunkIntervalInMicroseconds;
+			uint64_t nChunkEndTimestamp = nChunkStartTimestamp + m_nChunkIntervalInMicroseconds - 1;
+
+			uint64_t nOneBasedChunkIndex = nZeroBasedIndexToAdd + 1;
+
+			auto pChunk = std::make_shared<CTelemetryDataChunk>(this, nOneBasedChunkIndex, nChunkStartTimestamp, nChunkEndTimestamp);
+			m_Chunks.emplace_back(pChunk);
+
+			// We make all chunks read-only except for the last two chunks (which might get some writing due to timing race conditions)
+			if (nZeroBasedIndexToAdd >= 2) {
+				uint64_t nZeroBasedMakeReadonly = nZeroBasedIndexToAdd - 2;
+				auto pChunkToMakeReadonly = m_Chunks.at(nZeroBasedMakeReadonly);
+				pChunkToMakeReadonly->makeReadOnly();
+
+				std::lock_guard<std::mutex> archiveLock(m_ArchiveQueueMutex);
+				m_ArchiveQueue.push (pChunkToMakeReadonly);
+			}
+		}
+	}
+
+	void CTelemetryWriter::writeEntry(const LibMCData::sTelemetryChunkEntry& entry)
+	{
+		auto pChunk = getOrCreateChunkByTimestamp(entry.m_TimeStamp);
 		pChunk->writeEntry(entry);
 
 	}
@@ -166,6 +274,32 @@ namespace AMC {
 		m_pTelemetrySession->CreateChannelInDB (sUUID, channelType, nChannelIndex, sChannelIdentifier, sChannelDescription);
 	}
 
+	void CTelemetryWriter::archiveOldChunksToDB()
+	{
+
+		bool bIsEmpty = false;
+		while (!bIsEmpty) {
+
+			PTelemetryDataChunk pChunkToArchive;
+			{
+				std::lock_guard<std::mutex> archiveLock(m_ArchiveQueueMutex);
+				bIsEmpty = m_ArchiveQueue.empty ();
+				if (bIsEmpty)
+					break;
+
+				pChunkToArchive = m_ArchiveQueue.front();
+				m_ArchiveQueue.pop();
+			}
+
+			{
+				std::lock_guard<std::mutex> lock(m_DataMutex);
+				pChunkToArchive->writeToArchive(m_pTelemetrySession);
+			}
+		}
+
+	}
+
+
 	uint64_t CTelemetryWriter::createMarkerID()
 	{
 		return m_nNextMarkerID.fetch_add(1, std::memory_order_relaxed);
@@ -191,10 +325,10 @@ namespace AMC {
 
 		if (bMarkInstant) {
 			m_nFinishTimestamp = m_nStartTimestamp;
-			pWriter->writeEntry({ eTelemetryChunkEntryType::InstantMarker, nChannelIndex, m_nMarkerID, m_nStartTimestamp, m_nContextData });
+			pWriter->writeEntry({ LibMCData::eTelemetryChunkEntryType::InstantMarker, nChannelIndex, m_nMarkerID, m_nStartTimestamp, m_nContextData });
 		}
 		else {
-			pWriter->writeEntry({ eTelemetryChunkEntryType::IntervalStartMarker, nChannelIndex, m_nMarkerID, m_nStartTimestamp, m_nContextData });
+			pWriter->writeEntry({ LibMCData::eTelemetryChunkEntryType::IntervalStartMarker, nChannelIndex, m_nMarkerID, m_nStartTimestamp, m_nContextData });
 
 		}
 
@@ -235,7 +369,7 @@ namespace AMC {
 				pLockedChannel->getChannelIdentifier() + " / " + std::to_string(m_nMarkerID));
 		}
 
-		pWriter->writeEntry({ eTelemetryChunkEntryType::IntervalEndMarker, nChannelIndex, m_nMarkerID, nTimestamp, m_nContextData });
+		pWriter->writeEntry({ LibMCData::eTelemetryChunkEntryType::IntervalEndMarker, nChannelIndex, m_nMarkerID, nTimestamp, m_nContextData });
 
 		uint64_t nDuration = nTimestamp - m_nStartTimestamp;
 		pLockedChannel->unregisterMarker(m_nMarkerID, nDuration);
@@ -509,6 +643,10 @@ namespace AMC {
 	}
 
 
+	void CTelemetryHandler::archiveOldChunksToDB()
+	{
+		m_pTelemetryWriter->archiveOldChunksToDB();
+	}
 
 }
 

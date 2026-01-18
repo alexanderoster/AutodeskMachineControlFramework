@@ -97,6 +97,7 @@ class CToolpathLayer;
 class CToolpathAccessor;
 class CBuildExecution;
 class CBuildExecutionIterator;
+class CBuildIterator;
 class CBuild;
 class CWorkingFileProcess;
 class CWorkingFile;
@@ -183,6 +184,7 @@ typedef CToolpathLayer CLibMCEnvToolpathLayer;
 typedef CToolpathAccessor CLibMCEnvToolpathAccessor;
 typedef CBuildExecution CLibMCEnvBuildExecution;
 typedef CBuildExecutionIterator CLibMCEnvBuildExecutionIterator;
+typedef CBuildIterator CLibMCEnvBuildIterator;
 typedef CBuild CLibMCEnvBuild;
 typedef CWorkingFileProcess CLibMCEnvWorkingFileProcess;
 typedef CWorkingFile CLibMCEnvWorkingFile;
@@ -269,6 +271,7 @@ typedef std::shared_ptr<CToolpathLayer> PToolpathLayer;
 typedef std::shared_ptr<CToolpathAccessor> PToolpathAccessor;
 typedef std::shared_ptr<CBuildExecution> PBuildExecution;
 typedef std::shared_ptr<CBuildExecutionIterator> PBuildExecutionIterator;
+typedef std::shared_ptr<CBuildIterator> PBuildIterator;
 typedef std::shared_ptr<CBuild> PBuild;
 typedef std::shared_ptr<CWorkingFileProcess> PWorkingFileProcess;
 typedef std::shared_ptr<CWorkingFile> PWorkingFile;
@@ -355,6 +358,7 @@ typedef PToolpathLayer PLibMCEnvToolpathLayer;
 typedef PToolpathAccessor PLibMCEnvToolpathAccessor;
 typedef PBuildExecution PLibMCEnvBuildExecution;
 typedef PBuildExecutionIterator PLibMCEnvBuildExecutionIterator;
+typedef PBuildIterator PLibMCEnvBuildIterator;
 typedef PBuild PLibMCEnvBuild;
 typedef PWorkingFileProcess PLibMCEnvWorkingFileProcess;
 typedef PWorkingFile PLibMCEnvWorkingFile;
@@ -1145,6 +1149,7 @@ private:
 	friend class CToolpathAccessor;
 	friend class CBuildExecution;
 	friend class CBuildExecutionIterator;
+	friend class CBuildIterator;
 	friend class CBuild;
 	friend class CWorkingFileProcess;
 	friend class CWorkingFile;
@@ -2233,6 +2238,23 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CBuildIterator 
+**************************************************************************************************************************/
+class CBuildIterator : public CIterator {
+public:
+	
+	/**
+	* CBuildIterator::CBuildIterator - Constructor for BuildIterator class.
+	*/
+	CBuildIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PBuild GetCurrentBuild();
+};
+	
+/*************************************************************************************************************************
  Class CBuild 
 **************************************************************************************************************************/
 class CBuild : public CBase {
@@ -2248,6 +2270,8 @@ public:
 	
 	inline std::string GetName();
 	inline std::string GetBuildUUID();
+	inline std::string GetCreatedTimestamp();
+	inline std::string GetLastExecutionTimestamp();
 	inline std::string GetStorageUUID();
 	inline std::string GetStorageSHA256();
 	inline void EnsureStorageSHA256IsValid();
@@ -3349,8 +3373,8 @@ public:
 	inline std::string GetMachineState(const std::string & sMachineInstance);
 	inline std::string GetPreviousState();
 	inline PSignalTrigger PrepareSignal(const std::string & sMachineInstance, const std::string & sSignalName);
-	inline bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance);
-	inline PSignalHandler GetUnhandledSignal(const std::string & sSignalTypeName);
+	inline PSignalHandler ClaimSignalFromQueue(const std::string & sSignalTypeName);
+	inline bool SignalQueueIsEmpty(const std::string & sSignalTypeName);
 	inline void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName);
 	inline void ClearAllUnhandledSignals();
 	inline PSignalHandler GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist);
@@ -3361,15 +3385,17 @@ public:
 	inline bool HasBuildExecution(const std::string & sExecutionUUID);
 	inline PBuildExecution GetBuildExecution(const std::string & sExecutionUUID);
 	inline void UnloadAllToolpathes();
+	inline bool WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance);
+	inline PSignalHandler GetUnhandledSignal(const std::string & sSignalTypeName);
+	inline void StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler);
+	inline PSignalHandler RetrieveSignal(const std::string & sName);
+	inline void ClearStoredValue(const std::string & sName);
 	inline void SetNextState(const std::string & sStateName);
 	inline void LogMessage(const std::string & sLogString);
 	inline void LogWarning(const std::string & sLogString);
 	inline void LogInfo(const std::string & sLogString);
 	inline void Sleep(const LibMCEnv_uint32 nDelay);
 	inline bool CheckForTermination();
-	inline void StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler);
-	inline PSignalHandler RetrieveSignal(const std::string & sName);
-	inline void ClearStoredValue(const std::string & sName);
 	inline void SetStringParameter(const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue);
 	inline void SetUUIDParameter(const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue);
 	inline void SetDoubleParameter(const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_double dValue);
@@ -3511,6 +3537,7 @@ public:
 	inline PBuild GetBuildJob(const std::string & sBuildUUID);
 	inline bool HasBuildExecution(const std::string & sExecutionUUID);
 	inline PBuildExecution GetBuildExecution(const std::string & sExecutionUUID);
+	inline PBuildIterator GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount);
 	inline PDiscreteFieldData2D CreateDiscreteField2D(const LibMCEnv_uint32 nPixelCountX, const LibMCEnv_uint32 nPixelCountY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue);
 	inline PDiscreteFieldData2D CreateDiscreteField2DFromImage(classParam<CImageData> pImageDataInstance, const LibMCEnv_double dBlackValue, const LibMCEnv_double dWhiteValue, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY);
 	inline bool CheckPermission(const std::string & sPermissionIdentifier);
@@ -3543,6 +3570,10 @@ public:
 	inline bool HasExternalEventParameter(const std::string & sParameterName);
 	inline std::string GetExternalEventParameter(const std::string & sParameterName);
 	inline void AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue);
+	inline void SetStringResult(const std::string & sReturnValueName, const std::string & sReturnValue);
+	inline void SetIntegerResult(const std::string & sReturnValueName, const LibMCEnv_int64 nReturnValue);
+	inline void SetBoolResult(const std::string & sReturnValueName, const bool bReturnValue);
+	inline void SetDoubleResult(const std::string & sReturnValueName, const LibMCEnv_double dReturnValue);
 	inline PJSONObject GetExternalEventParameters();
 	inline PJSONObject GetExternalEventResults();
 	inline PMachineConfigurationHandler CreateMachineConfigurationHandler();
@@ -4021,8 +4052,11 @@ public:
 		pWrapperTable->m_BuildExecution_GetMetaDataString = nullptr;
 		pWrapperTable->m_BuildExecution_LoadAttachedJournal = nullptr;
 		pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution = nullptr;
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = nullptr;
 		pWrapperTable->m_Build_GetName = nullptr;
 		pWrapperTable->m_Build_GetBuildUUID = nullptr;
+		pWrapperTable->m_Build_GetCreatedTimestamp = nullptr;
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = nullptr;
 		pWrapperTable->m_Build_GetStorageUUID = nullptr;
 		pWrapperTable->m_Build_GetStorageSHA256 = nullptr;
 		pWrapperTable->m_Build_EnsureStorageSHA256IsValid = nullptr;
@@ -4484,8 +4518,8 @@ public:
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_WaitForSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = nullptr;
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals = nullptr;
 		pWrapperTable->m_StateEnvironment_GetUnhandledSignalByUUID = nullptr;
@@ -4496,15 +4530,17 @@ public:
 		pWrapperTable->m_StateEnvironment_HasBuildExecution = nullptr;
 		pWrapperTable->m_StateEnvironment_GetBuildExecution = nullptr;
 		pWrapperTable->m_StateEnvironment_UnloadAllToolpathes = nullptr;
+		pWrapperTable->m_StateEnvironment_WaitForSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_StoreSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = nullptr;
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = nullptr;
 		pWrapperTable->m_StateEnvironment_SetNextState = nullptr;
 		pWrapperTable->m_StateEnvironment_LogMessage = nullptr;
 		pWrapperTable->m_StateEnvironment_LogWarning = nullptr;
 		pWrapperTable->m_StateEnvironment_LogInfo = nullptr;
 		pWrapperTable->m_StateEnvironment_Sleep = nullptr;
 		pWrapperTable->m_StateEnvironment_CheckForTermination = nullptr;
-		pWrapperTable->m_StateEnvironment_StoreSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = nullptr;
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = nullptr;
 		pWrapperTable->m_StateEnvironment_SetStringParameter = nullptr;
 		pWrapperTable->m_StateEnvironment_SetUUIDParameter = nullptr;
 		pWrapperTable->m_StateEnvironment_SetDoubleParameter = nullptr;
@@ -4614,6 +4650,7 @@ public:
 		pWrapperTable->m_UIEnvironment_GetBuildJob = nullptr;
 		pWrapperTable->m_UIEnvironment_HasBuildExecution = nullptr;
 		pWrapperTable->m_UIEnvironment_GetBuildExecution = nullptr;
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2DFromImage = nullptr;
 		pWrapperTable->m_UIEnvironment_CheckPermission = nullptr;
@@ -4646,6 +4683,10 @@ public:
 		pWrapperTable->m_UIEnvironment_HasExternalEventParameter = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameter = nullptr;
 		pWrapperTable->m_UIEnvironment_AddExternalEventResultValue = nullptr;
+		pWrapperTable->m_UIEnvironment_SetStringResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetBoolResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameters = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventResults = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = nullptr;
@@ -8233,6 +8274,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = (PLibMCEnvBuildIterator_GetCurrentBuildPtr) GetProcAddress(hLibrary, "libmcenv_builditerator_getcurrentbuild");
+		#else // _WIN32
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = (PLibMCEnvBuildIterator_GetCurrentBuildPtr) dlsym(hLibrary, "libmcenv_builditerator_getcurrentbuild");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildIterator_GetCurrentBuild == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Build_GetName = (PLibMCEnvBuild_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_build_getname");
 		#else // _WIN32
 		pWrapperTable->m_Build_GetName = (PLibMCEnvBuild_GetNamePtr) dlsym(hLibrary, "libmcenv_build_getname");
@@ -8248,6 +8298,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Build_GetBuildUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) dlsym(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) dlsym(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -12400,21 +12468,21 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = (PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_claimsignalfromqueue");
 		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = (PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_claimsignalfromqueue");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr)
+		if (pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = (PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_signalqueueisempty");
 		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = (PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr) dlsym(hLibrary, "libmcenv_stateenvironment_signalqueueisempty");
 		dlerror();
 		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr)
+		if (pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -12508,6 +12576,51 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_WaitForSignal = (PLibMCEnvStateEnvironment_WaitForSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_waitforsignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_GetUnhandledSignal = (PLibMCEnvStateEnvironment_GetUnhandledSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getunhandledsignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_storesignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_storesignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_retrievesignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_retrievesignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_SetNextState = (PLibMCEnvStateEnvironment_SetNextStatePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setnextstate");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_SetNextState = (PLibMCEnvStateEnvironment_SetNextStatePtr) dlsym(hLibrary, "libmcenv_stateenvironment_setnextstate");
@@ -12559,33 +12672,6 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_StateEnvironment_CheckForTermination == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_storesignal");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_StoreSignal = (PLibMCEnvStateEnvironment_StoreSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_storesignal");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_retrievesignal");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_RetrieveSignal = (PLibMCEnvStateEnvironment_RetrieveSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_retrievesignal");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr)
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		#ifdef _WIN32
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
-		#else // _WIN32
-		pWrapperTable->m_StateEnvironment_ClearStoredValue = (PLibMCEnvStateEnvironment_ClearStoredValuePtr) dlsym(hLibrary, "libmcenv_stateenvironment_clearstoredvalue");
-		dlerror();
-		#endif // _WIN32
-		if (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -13570,6 +13656,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = (PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getrecentbuildjobs");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = (PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr) dlsym(hLibrary, "libmcenv_uienvironment_getrecentbuildjobs");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetRecentBuildJobs == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = (PLibMCEnvUIEnvironment_CreateDiscreteField2DPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_creatediscretefield2d");
 		#else // _WIN32
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = (PLibMCEnvUIEnvironment_CreateDiscreteField2DPtr) dlsym(hLibrary, "libmcenv_uienvironment_creatediscretefield2d");
@@ -13855,6 +13950,42 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_AddExternalEventResultValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetStringResult = (PLibMCEnvUIEnvironment_SetStringResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setstringresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetStringResult = (PLibMCEnvUIEnvironment_SetStringResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setstringresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetStringResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = (PLibMCEnvUIEnvironment_SetIntegerResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setintegerresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = (PLibMCEnvUIEnvironment_SetIntegerResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setintegerresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetIntegerResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetBoolResult = (PLibMCEnvUIEnvironment_SetBoolResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setboolresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetBoolResult = (PLibMCEnvUIEnvironment_SetBoolResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setboolresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetBoolResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = (PLibMCEnvUIEnvironment_SetDoubleResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setdoubleresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = (PLibMCEnvUIEnvironment_SetDoubleResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setdoubleresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetDoubleResult == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -15513,12 +15644,24 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_builditerator_getcurrentbuild", (void**)&(pWrapperTable->m_BuildIterator_GetCurrentBuild));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildIterator_GetCurrentBuild == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_build_getname", (void**)&(pWrapperTable->m_Build_GetName));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetName == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_getbuilduuid", (void**)&(pWrapperTable->m_Build_GetBuildUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetBuildUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getcreatedtimestamp", (void**)&(pWrapperTable->m_Build_GetCreatedTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getlastexecutiontimestamp", (void**)&(pWrapperTable->m_Build_GetLastExecutionTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_getstorageuuid", (void**)&(pWrapperTable->m_Build_GetStorageUUID));
@@ -17365,12 +17508,12 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_PrepareSignal == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_waitforsignal", (void**)&(pWrapperTable->m_StateEnvironment_WaitForSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_claimsignalfromqueue", (void**)&(pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_getunhandledsignal", (void**)&(pWrapperTable->m_StateEnvironment_GetUnhandledSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr) )
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_signalqueueisempty", (void**)&(pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearunhandledsignalsoftype", (void**)&(pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType));
@@ -17413,6 +17556,26 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_UnloadAllToolpathes == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_waitforsignal", (void**)&(pWrapperTable->m_StateEnvironment_WaitForSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_WaitForSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_getunhandledsignal", (void**)&(pWrapperTable->m_StateEnvironment_GetUnhandledSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetUnhandledSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_storesignal", (void**)&(pWrapperTable->m_StateEnvironment_StoreSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_retrievesignal", (void**)&(pWrapperTable->m_StateEnvironment_RetrieveSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearstoredvalue", (void**)&(pWrapperTable->m_StateEnvironment_ClearStoredValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_setnextstate", (void**)&(pWrapperTable->m_StateEnvironment_SetNextState));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetNextState == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -17435,18 +17598,6 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_checkfortermination", (void**)&(pWrapperTable->m_StateEnvironment_CheckForTermination));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_CheckForTermination == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_storesignal", (void**)&(pWrapperTable->m_StateEnvironment_StoreSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StoreSignal == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_retrievesignal", (void**)&(pWrapperTable->m_StateEnvironment_RetrieveSignal));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_RetrieveSignal == nullptr) )
-			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
-		
-		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearstoredvalue", (void**)&(pWrapperTable->m_StateEnvironment_ClearStoredValue));
-		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClearStoredValue == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_setstringparameter", (void**)&(pWrapperTable->m_StateEnvironment_SetStringParameter));
@@ -17885,6 +18036,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetBuildExecution == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getrecentbuildjobs", (void**)&(pWrapperTable->m_UIEnvironment_GetRecentBuildJobs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetRecentBuildJobs == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_creatediscretefield2d", (void**)&(pWrapperTable->m_UIEnvironment_CreateDiscreteField2D));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_CreateDiscreteField2D == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -18011,6 +18166,22 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_addexternaleventresultvalue", (void**)&(pWrapperTable->m_UIEnvironment_AddExternalEventResultValue));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_AddExternalEventResultValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setstringresult", (void**)&(pWrapperTable->m_UIEnvironment_SetStringResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetStringResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setintegerresult", (void**)&(pWrapperTable->m_UIEnvironment_SetIntegerResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetIntegerResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setboolresult", (void**)&(pWrapperTable->m_UIEnvironment_SetBoolResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetBoolResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setdoubleresult", (void**)&(pWrapperTable->m_UIEnvironment_SetDoubleResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetDoubleResult == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_getexternaleventparameters", (void**)&(pWrapperTable->m_UIEnvironment_GetExternalEventParameters));
@@ -23314,6 +23485,25 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CBuildIterator
+	 */
+	
+	/**
+	* CBuildIterator::GetCurrentBuild - Returns the build the iterator points at.
+	* @return returns the Build instance.
+	*/
+	PBuild CBuildIterator::GetCurrentBuild()
+	{
+		LibMCEnvHandle hBuildInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildIterator_GetCurrentBuild(m_pHandle, &hBuildInstance));
+		
+		if (!hBuildInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CBuild>(m_pWrapper, hBuildInstance);
+	}
+	
+	/**
 	 * Method definitions for class CBuild
 	 */
 	
@@ -23345,6 +23535,36 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetBuildUUID(m_pHandle, bytesNeededBuildUUID, &bytesWrittenBuildUUID, &bufferBuildUUID[0]));
 		
 		return std::string(&bufferBuildUUID[0]);
+	}
+	
+	/**
+	* CBuild::GetCreatedTimestamp - Returns creation timestamp of the build in ISO-8601 format.
+	* @return Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z).
+	*/
+	std::string CBuild::GetCreatedTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
+	}
+	
+	/**
+	* CBuild::GetLastExecutionTimestamp - Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+	* @return Most recent execution timestamp in ISO-8601 format. Empty string if never executed.
+	*/
+	std::string CBuild::GetLastExecutionTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
 	}
 	
 	/**
@@ -29813,35 +30033,14 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::WaitForSignal - Waits for a signal for a certain amount of time.
-	* @param[in] sSignalName - Name Of Signal
-	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
-	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
-	* @return Signal has been triggered
-	*/
-	bool CStateEnvironment::WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance)
-	{
-		LibMCEnvHandle hHandlerInstance = nullptr;
-		bool resultSuccess = 0;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_WaitForSignal(m_pHandle, sSignalName.c_str(), nTimeOut, &hHandlerInstance, &resultSuccess));
-		if (hHandlerInstance) {
-			pHandlerInstance = std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
-		} else {
-			pHandlerInstance = nullptr;
-		}
-		
-		return resultSuccess;
-	}
-	
-	/**
-	* CStateEnvironment::GetUnhandledSignal - Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.
+	* CStateEnvironment::ClaimSignalFromQueue - Retrieves an InQueue signal by type and changes its phase to InProcess. Recommended to use as it is robust against signal timeouts...
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
-	* @return Signal object. If no signal has been found the signal handler object will be null.
+	* @return Signal object. If no signal is InQueue the signal handler object will be null.
 	*/
-	PSignalHandler CStateEnvironment::GetUnhandledSignal(const std::string & sSignalTypeName)
+	PSignalHandler CStateEnvironment::ClaimSignalFromQueue(const std::string & sSignalTypeName)
 	{
 		LibMCEnvHandle hHandlerInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetUnhandledSignal(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClaimSignalFromQueue(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
 		
 		if (hHandlerInstance) {
 			return std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
@@ -29851,7 +30050,20 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::ClearUnhandledSignalsOfType - Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.
+	* CStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type...
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+	*/
+	bool CStateEnvironment::SignalQueueIsEmpty(const std::string & sSignalTypeName)
+	{
+		bool resultIsEmpty = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SignalQueueIsEmpty(m_pHandle, sSignalTypeName.c_str(), &resultIsEmpty));
+		
+		return resultIsEmpty;
+	}
+	
+	/**
+	* CStateEnvironment::ClearUnhandledSignalsOfType - Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
 	* @param[in] sSignalTypeName - Name Of Signal to be cleared.
 	*/
 	void CStateEnvironment::ClearUnhandledSignalsOfType(const std::string & sSignalTypeName)
@@ -29860,7 +30072,7 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::ClearAllUnhandledSignals - Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.
+	* CStateEnvironment::ClearAllUnhandledSignals - Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected
 	*/
 	void CStateEnvironment::ClearAllUnhandledSignals()
 	{
@@ -29868,9 +30080,9 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::GetUnhandledSignalByUUID - retrieves an unhandled signal from the current state machine by UUID.
+	* CStateEnvironment::GetUnhandledSignalByUUID - Retrieves an InQueue or InProcess signal from the current state machine by UUID.
 	* @param[in] sUUID - Name
-	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled already.
+	* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already.
 	* @return Signal handler instance. Returns null, if signal does not exist.
 	*/
 	PSignalHandler CStateEnvironment::GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist)
@@ -29978,6 +30190,80 @@ public:
 	}
 	
 	/**
+	* CStateEnvironment::WaitForSignal - DEPRECIATED: Waits for an InQueue signal to exist for a certain amount of time. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE claim signal instead.
+	* @param[in] sSignalName - Name Of Signal
+	* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
+	* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
+	* @return Signal has been triggered
+	*/
+	bool CStateEnvironment::WaitForSignal(const std::string & sSignalName, const LibMCEnv_uint32 nTimeOut, PSignalHandler & pHandlerInstance)
+	{
+		LibMCEnvHandle hHandlerInstance = nullptr;
+		bool resultSuccess = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_WaitForSignal(m_pHandle, sSignalName.c_str(), nTimeOut, &hHandlerInstance, &resultSuccess));
+		if (hHandlerInstance) {
+			pHandlerInstance = std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
+		} else {
+			pHandlerInstance = nullptr;
+		}
+		
+		return resultSuccess;
+	}
+	
+	/**
+	* CStateEnvironment::GetUnhandledSignal - DEPRECIATED: Retrieves am InQueue signal by type. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE ClaimSignalFromQueue instead.
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Signal object. If no signal has been found the signal handler object will be null.
+	*/
+	PSignalHandler CStateEnvironment::GetUnhandledSignal(const std::string & sSignalTypeName)
+	{
+		LibMCEnvHandle hHandlerInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetUnhandledSignal(m_pHandle, sSignalTypeName.c_str(), &hHandlerInstance));
+		
+		if (hHandlerInstance) {
+			return std::make_shared<CSignalHandler>(m_pWrapper, hHandlerInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
+	* @param[in] sName - Name
+	* @param[in] pHandler - Signal handler to store.
+	*/
+	void CStateEnvironment::StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler)
+	{
+		LibMCEnvHandle hHandler = pHandler.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StoreSignal(m_pHandle, sName.c_str(), hHandler));
+	}
+	
+	/**
+	* CStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
+	* @param[in] sName - Name
+	* @return Signal handler instance.
+	*/
+	PSignalHandler CStateEnvironment::RetrieveSignal(const std::string & sName)
+	{
+		LibMCEnvHandle hHandler = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RetrieveSignal(m_pHandle, sName.c_str(), &hHandler));
+		
+		if (!hHandler) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CSignalHandler>(m_pWrapper, hHandler);
+	}
+	
+	/**
+	* CStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
+	* @param[in] sName - Name
+	*/
+	void CStateEnvironment::ClearStoredValue(const std::string & sName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClearStoredValue(m_pHandle, sName.c_str()));
+	}
+	
+	/**
 	* CStateEnvironment::SetNextState - sets the next state
 	* @param[in] sStateName - Name of next state
 	*/
@@ -30032,42 +30318,6 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_CheckForTermination(m_pHandle, &resultShallTerminate));
 		
 		return resultShallTerminate;
-	}
-	
-	/**
-	* CStateEnvironment::StoreSignal - DEPRECIATED: stores a signal handler in the current state machine
-	* @param[in] sName - Name
-	* @param[in] pHandler - Signal handler to store.
-	*/
-	void CStateEnvironment::StoreSignal(const std::string & sName, classParam<CSignalHandler> pHandler)
-	{
-		LibMCEnvHandle hHandler = pHandler.GetHandle();
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StoreSignal(m_pHandle, sName.c_str(), hHandler));
-	}
-	
-	/**
-	* CStateEnvironment::RetrieveSignal - DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
-	* @param[in] sName - Name
-	* @return Signal handler instance.
-	*/
-	PSignalHandler CStateEnvironment::RetrieveSignal(const std::string & sName)
-	{
-		LibMCEnvHandle hHandler = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RetrieveSignal(m_pHandle, sName.c_str(), &hHandler));
-		
-		if (!hHandler) {
-			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
-		}
-		return std::make_shared<CSignalHandler>(m_pWrapper, hHandler);
-	}
-	
-	/**
-	* CStateEnvironment::ClearStoredValue - DEPRECIATED: deletes a value from the data store.
-	* @param[in] sName - Name
-	*/
-	void CStateEnvironment::ClearStoredValue(const std::string & sName)
-	{
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClearStoredValue(m_pHandle, sName.c_str()));
 	}
 	
 	/**
@@ -31636,6 +31886,22 @@ public:
 	}
 	
 	/**
+	* CUIEnvironment::GetRecentBuildJobs - Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+	* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+	* @return Iterator for build jobs, ordered newest first.
+	*/
+	PBuildIterator CUIEnvironment::GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount)
+	{
+		LibMCEnvHandle hBuildIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetRecentBuildJobs(m_pHandle, nMaxCount, &hBuildIterator));
+		
+		if (!hBuildIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CBuildIterator>(m_pWrapper, hBuildIterator);
+	}
+	
+	/**
 	* CUIEnvironment::CreateDiscreteField2D - Creates an empty discrete field.
 	* @param[in] nPixelCountX - Pixel count in X. MUST be positive.
 	* @param[in] nPixelCountY - Pixel count in Y. MUST be positive.
@@ -32124,6 +32390,46 @@ public:
 	void CUIEnvironment::AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_AddExternalEventResultValue(m_pHandle, sReturnValueName.c_str(), sReturnValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetStringResult - Sets a string result value for external event return (typed convenience wrapper).
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] sReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetStringResult(const std::string & sReturnValueName, const std::string & sReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetStringResult(m_pHandle, sReturnValueName.c_str(), sReturnValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetIntegerResult - Sets an integer result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] nReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetIntegerResult(const std::string & sReturnValueName, const LibMCEnv_int64 nReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetIntegerResult(m_pHandle, sReturnValueName.c_str(), nReturnValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetBoolResult - Sets a boolean result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] bReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetBoolResult(const std::string & sReturnValueName, const bool bReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetBoolResult(m_pHandle, sReturnValueName.c_str(), bReturnValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetDoubleResult - Sets a double result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] dReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetDoubleResult(const std::string & sReturnValueName, const LibMCEnv_double dReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetDoubleResult(m_pHandle, sReturnValueName.c_str(), dReturnValue));
 	}
 	
 	/**

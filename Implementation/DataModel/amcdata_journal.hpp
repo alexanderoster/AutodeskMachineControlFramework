@@ -91,6 +91,7 @@ namespace AMCData {
 
 		std::string m_sJournalBasePath;
 		std::string m_sChunkBaseName;
+		std::string m_sTelemetryChunkBaseName;
 		
 		std::vector<PActiveJournalFile> m_JournalFiles;
 
@@ -98,13 +99,21 @@ namespace AMCData {
 
 		PActiveJournalFile createJournalFile();
 
+		std::vector<PActiveJournalFile> m_TelemetryFiles;
+
+		PActiveJournalFile m_pCurrentTelemetryFile;
+
+		std::atomic<uint32_t> m_TelemetryChunkID;
+
+		PActiveJournalFile createTelemetryFile();
+
 	public:
 
 		static std::string convertAlertLevelToString(const LibMCData::eAlertLevel eLevel);
 		
 		static LibMCData::eAlertLevel convertStringToAlertLevel(const std::string & sValue, bool bFailIfUnknown);
 
-		CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string & sSessionUUID);
+		CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sTelemetryChunkBaseName, const std::string & sSessionUUID);
 
 		virtual ~CJournal();
 
@@ -175,4 +184,3 @@ namespace AMCData {
 
 
 #endif //__AMCDATA_JOURNAL
-

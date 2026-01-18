@@ -4248,6 +4248,19 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_loadattachedjournal(Lib
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecutioniterator_getcurrentexecution(LibMCEnv_BuildExecutionIterator pBuildExecutionIterator, LibMCEnv_BuildExecution * pBuildExecutionInstance);
 
 /*************************************************************************************************************************
+ Class definition for BuildIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the build the iterator points at.
+*
+* @param[in] pBuildIterator - BuildIterator instance.
+* @param[out] pBuildInstance - returns the Build instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_builditerator_getcurrentbuild(LibMCEnv_BuildIterator pBuildIterator, LibMCEnv_Build * pBuildInstance);
+
+/*************************************************************************************************************************
  Class definition for Build
 **************************************************************************************************************************/
 
@@ -4272,6 +4285,28 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getname(LibMCEnv_Build pBuild, c
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getbuilduuid(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nBuildUUIDBufferSize, LibMCEnv_uint32* pBuildUUIDNeededChars, char * pBuildUUIDBuffer);
+
+/**
+* Returns creation timestamp of the build in ISO-8601 format.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getcreatedtimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
+* Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Most recent execution timestamp in ISO-8601 format. Empty string if never executed., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_getlastexecutiontimestamp(LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
 
 /**
 * Returns storage uuid of the build stream.
@@ -9231,29 +9266,27 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getpreviousstate(LibM
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_preparesignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pMachineInstance, const char * pSignalName, LibMCEnv_SignalTrigger * pSignalInstance);
 
 /**
-* Waits for a signal for a certain amount of time.
-*
-* @param[in] pStateEnvironment - StateEnvironment instance.
-* @param[in] pSignalName - Name Of Signal
-* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
-* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
-* @param[out] pSuccess - Signal has been triggered
-* @return error code or 0 (success)
-*/
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_waitforsignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalName, LibMCEnv_uint32 nTimeOut, LibMCEnv_SignalHandler * pHandlerInstance, bool * pSuccess);
-
-/**
-* Retrieves an unhandled signal By signal type name. Only affects signals with Phase InQueue.
+* Retrieves an InQueue signal by type and changes its phase to InProcess. Recommended to use as it is robust against signal timeouts...
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pSignalTypeName - Name Of Signal to be returned
-* @param[out] pHandlerInstance - Signal object. If no signal has been found the signal handler object will be null.
+* @param[out] pHandlerInstance - Signal object. If no signal is InQueue the signal handler object will be null.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getunhandledsignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, LibMCEnv_SignalHandler * pHandlerInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_claimsignalfromqueue(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, LibMCEnv_SignalHandler * pHandlerInstance);
 
 /**
-* Clears all unhandled signals of a certain type and marks them as Cleared. Only affects signals with Phase InQueue.
+* Returns if a signal queue is empty for a specific type...
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pSignalTypeName - Name Of Signal to be returned
+* @param[out] pIsEmpty - Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_signalqueueisempty(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, bool * pIsEmpty);
+
+/**
+* Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pSignalTypeName - Name Of Signal to be cleared.
@@ -9262,7 +9295,7 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getunhandledsignal(Li
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearunhandledsignalsoftype(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName);
 
 /**
-* Clears all unhandled signals and marks them Cleared. Only affects signals in the specific queue (as well as with Phase InQueue.
+* Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @return error code or 0 (success)
@@ -9270,11 +9303,11 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearunhandledsignals
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearallunhandledsignals(LibMCEnv_StateEnvironment pStateEnvironment);
 
 /**
-* retrieves an unhandled signal from the current state machine by UUID.
+* Retrieves an InQueue or InProcess signal from the current state machine by UUID.
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pUUID - Name
-* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled already.
+* @param[in] bMustExist - The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already.
 * @param[out] pHandler - Signal handler instance. Returns null, if signal does not exist.
 * @return error code or 0 (success)
 */
@@ -9352,6 +9385,57 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getbuildexecution(Lib
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_unloadalltoolpathes(LibMCEnv_StateEnvironment pStateEnvironment);
 
 /**
+* DEPRECIATED: Waits for an InQueue signal to exist for a certain amount of time. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE claim signal instead.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pSignalName - Name Of Signal
+* @param[in] nTimeOut - Timeout in Milliseconds. 0 for Immediate return.
+* @param[out] pHandlerInstance - Signal object. If Success is false, the Signal Handler Object will be null.
+* @param[out] pSuccess - Signal has been triggered
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_waitforsignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalName, LibMCEnv_uint32 nTimeOut, LibMCEnv_SignalHandler * pHandlerInstance, bool * pSuccess);
+
+/**
+* DEPRECIATED: Retrieves am InQueue signal by type. DOES NOT change signal phase to InProcess, and is not atomic. And so NOT robust against signal timeouts. USE ClaimSignalFromQueue instead.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pSignalTypeName - Name Of Signal to be returned
+* @param[out] pHandlerInstance - Signal object. If no signal has been found the signal handler object will be null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getunhandledsignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, LibMCEnv_SignalHandler * pHandlerInstance);
+
+/**
+* DEPRECIATED: stores a signal handler in the current state machine
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pName - Name
+* @param[in] pHandler - Signal handler to store.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_storesignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_SignalHandler pHandler);
+
+/**
+* DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pName - Name
+* @param[out] pHandler - Signal handler instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_retrievesignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_SignalHandler * pHandler);
+
+/**
+* DEPRECIATED: deletes a value from the data store.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pName - Name
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearstoredvalue(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName);
+
+/**
 * sets the next state
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
@@ -9404,35 +9488,6 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_sleep(LibMCEnv_StateE
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_checkfortermination(LibMCEnv_StateEnvironment pStateEnvironment, bool * pShallTerminate);
-
-/**
-* DEPRECIATED: stores a signal handler in the current state machine
-*
-* @param[in] pStateEnvironment - StateEnvironment instance.
-* @param[in] pName - Name
-* @param[in] pHandler - Signal handler to store.
-* @return error code or 0 (success)
-*/
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_storesignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_SignalHandler pHandler);
-
-/**
-* DEPRECIATED: retrieves a signal handler from the current state machine. Fails if value has not been stored before or signal has been already handled.
-*
-* @param[in] pStateEnvironment - StateEnvironment instance.
-* @param[in] pName - Name
-* @param[out] pHandler - Signal handler instance.
-* @return error code or 0 (success)
-*/
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_retrievesignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_SignalHandler * pHandler);
-
-/**
-* DEPRECIATED: deletes a value from the data store.
-*
-* @param[in] pStateEnvironment - StateEnvironment instance.
-* @param[in] pName - Name
-* @return error code or 0 (success)
-*/
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearstoredvalue(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName);
 
 /**
 * sets a string parameter
@@ -10601,6 +10656,16 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_hasbuildexecution(LibMCE
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getbuildexecution(LibMCEnv_UIEnvironment pUIEnvironment, const char * pExecutionUUID, LibMCEnv_BuildExecution * pExecutionInstance);
 
 /**
+* Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+* @param[out] pBuildIterator - Iterator for build jobs, ordered newest first.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getrecentbuildjobs(LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_uint32 nMaxCount, LibMCEnv_BuildIterator * pBuildIterator);
+
+/**
 * Creates an empty discrete field.
 *
 * @param[in] pUIEnvironment - UIEnvironment instance.
@@ -10941,6 +11006,46 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getexternaleventparamete
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_addexternaleventresultvalue(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
+
+/**
+* Sets a string result value for external event return (typed convenience wrapper).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] pReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setstringresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
+
+/**
+* Sets an integer result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] nReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setintegerresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_int64 nReturnValue);
+
+/**
+* Sets a boolean result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] bReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setboolresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, bool bReturnValue);
+
+/**
+* Sets a double result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] dReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_setdoubleresult(LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_double dReturnValue);
 
 /**
 * Returns the external event parameters. This JSON Object was passed on from the external API.

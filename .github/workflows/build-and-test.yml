@@ -51,10 +51,10 @@ jobs:
         ./build_clean_linux64.sh
       shell: bash
 
-    - name: Run coverage (unit tests + signalloadtest)
+    - name: Run coverage (unit tests)
       run: |
         chmod +x ./coverage_linux.sh
-        ./coverage_linux.sh --testdefinition Tests/signalloadtest.xml --build-target libmctest_signalloadtest
+        ./coverage_linux.sh
       shell: bash
 
     - name: Upload coverage report

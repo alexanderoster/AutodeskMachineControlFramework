@@ -128,6 +128,10 @@ __DECLARESTATE(idle)
 	auto dCounterTest = pStateEnvironment->GetDoubleParameter("jobinfo", "countertest");
 	auto nTimer = pStateEnvironment->GetGlobalTimerInMilliseconds();
 
+	auto pDummyTrigger = pStateEnvironment->PrepareSignal("plc", "signal_dummy");
+	pDummyTrigger->SetInteger("timer", (int32_t)nTimer);
+	pDummyTrigger->Trigger();
+
 	pStateEnvironment->SetDoubleParameter ("jobinfo", "countertest", dCounterTest + abs (sin (nTimer * 0.001)));
 
 	//pStateEnvironment->LogMessage ("Waiting for user input...");

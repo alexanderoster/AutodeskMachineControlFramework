@@ -112,7 +112,7 @@
 			<parameter name="simulateplc" description="Simulate PLC behaviour" default="1" type="bool" persistent="d1e8e7d2-8d77-4206-b390-b999300ca8a9" />
 		</parametergroup>
 
-		<signaldefinition name="signal_initjob" reactiontimeout="1000">
+		<signaldefinition name="signal_initjob" reactiontimeout="1000" archivetime="10000">
 			<parameter name="jobuuid" type="string"/>
 		</signaldefinition>
 
@@ -134,7 +134,7 @@
 			<outstate target="idle"/>
 		</state>
 
-		<state name="idle" repeatdelay="10">
+		<state name="idle" repeatdelay="500">
 			<outstate target="idle"/>
 			<outstate target="initbuild"/>
 		</state>
@@ -260,6 +260,11 @@
 		<driverparametergroup name="plcstate" description="BuR State" driver="bur"/>
 
 		<signaldefinition name="signal_recoatlayer">
+			<result name="success" type="bool"/>
+		</signaldefinition>
+
+		<signaldefinition name="signal_dummy" queuesize="128">
+			<parameter name="timer" type="int"/>
 			<result name="success" type="bool"/>
 		</signaldefinition>
 

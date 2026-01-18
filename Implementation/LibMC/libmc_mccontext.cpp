@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_statemachineinstance.hpp"
 #include "amc_logger.hpp"
 #include "amc_alerthandler.hpp"
+#include "amc_telemetry.hpp"
 #include "amc_parameterhandler.hpp"
 #include "amc_statemachinedata.hpp"
 #include "amc_logger_multi.hpp"
@@ -951,9 +952,18 @@ void CMCContext::executeSystemThread()
 
         while (!systemThreadShallTerminate()) {
 
-            uint64_t nGlobalTimestamp = m_pSystemState->globalChrono()->getElapsedMicroseconds();
-            m_pSystemState->stateSignalHandler()->checkForReactionTimeouts(nGlobalTimestamp);
+
+            auto pSignalHandler = m_pSystemState->getStateSignalHandlerInstance();
+            pSignalHandler->checkForReactionTimeouts(m_pSystemState->globalChrono()->getElapsedMicroseconds());
+            pSignalHandler->autoArchiveMessages(m_pSystemState->globalChrono()->getElapsedMicroseconds());            
+            pSignalHandler->writeMessagesToArchive(nullptr);
+            
+			auto pTelemetryHandler = m_pSystemState->getTelemetryHandlerInstance();
+            pTelemetryHandler->archiveOldChunksToDB();
+
             m_pSystemState->updateMemoryUsageParameters();            
+
+
 
         }
     }

@@ -166,12 +166,19 @@ namespace AMC {
 		return !pSlot->queueIsFull();
 	}
 
+	bool CStateSignalInstance::queueIsEmpty(const std::string& sSignalName)
+	{
+		AMC::PStateSignalSlot pSlot = getSignalSlot(sSignalName);
+		return pSlot->queueIsEmpty();
+	}
 
-	bool CStateSignalInstance::claimSignalMessage(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, std::string& sSignalUUID, std::string& sParameterDataJSON)
+
+
+	bool CStateSignalInstance::claimSignalMessage(const std::string& sSignalName, bool bCheckForReactionTimeout, uint64_t nGlobalTimestamp, uint64_t nTimeStamp, std::string& sSignalUUID, std::string& sParameterDataJSON, bool bChangePhaseToInprocess)
 	{
 		AMC::PStateSignalSlot pSlot = getSignalSlot(sSignalName);
 
-		auto pMessage = pSlot->claimMessageFromQueueInternal(bCheckForReactionTimeout, nGlobalTimestamp, nTimeStamp);
+		auto pMessage = pSlot->claimMessageFromQueueInternal(bCheckForReactionTimeout, nGlobalTimestamp, nTimeStamp, bChangePhaseToInprocess);
 		if (pMessage.get() == nullptr)
 			return false;
 

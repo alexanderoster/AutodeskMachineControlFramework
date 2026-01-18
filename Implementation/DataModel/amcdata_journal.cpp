@@ -151,10 +151,25 @@ namespace AMCData {
 		return m_nTotalSize;
 	}
 
-	CJournal::CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sSessionUUID)
+	CJournal::CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sTelemetryChunkBaseName, const std::string& sSessionUUID)
 		: m_LogID(1), m_AlertID(1), m_sSessionUUID(AMCCommon::CUtils::normalizeUUIDString(sSessionUUID)),
-		m_sJournalBasePath(sJournalBasePath), m_sChunkBaseName (sJournalChunkBaseName)		
+		m_sJournalBasePath(sJournalBasePath), m_sChunkBaseName (sJournalChunkBaseName),
+		m_TelemetryChunkID (1)
 	{
+		if (!sTelemetryChunkBaseName.empty()) {
+			m_sTelemetryChunkBaseName = sTelemetryChunkBaseName;
+		}
+		else {
+			m_sTelemetryChunkBaseName = m_sChunkBaseName;
+			const std::string sJournalPrefix = "journal_";
+			const std::string sTelemetryPrefix = "telemetry_";
+			if (m_sTelemetryChunkBaseName.rfind(sJournalPrefix, 0) == 0) {
+				m_sTelemetryChunkBaseName.replace(0, sJournalPrefix.size(), sTelemetryPrefix);
+			}
+			else {
+				m_sTelemetryChunkBaseName = sTelemetryPrefix + m_sTelemetryChunkBaseName;
+			}
+		}
 		
 		m_pSQLHandler = std::make_shared<AMCData::CSQLHandler_SQLite>(m_sJournalBasePath + sJournalName);
 
@@ -268,6 +283,7 @@ namespace AMCData {
 		pTelemetryChunkStatement = nullptr;
 
 		m_pCurrentJournalFile = createJournalFile();
+		m_pCurrentTelemetryFile = createTelemetryFile();
 
 	}
 
@@ -298,6 +314,30 @@ namespace AMCData {
 		m_JournalFiles.push_back(pJournalFile);
 
 		return pJournalFile;
+	}
+
+	PActiveJournalFile CJournal::createTelemetryFile()
+	{
+		uint32_t nFileIndex = (uint32_t)m_TelemetryFiles.size();
+		if (nFileIndex > JOURNAL_MAXFILESPERSESSION)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_JOURNALEXCEEDSMAXIMUMFILES);
+
+		std::stringstream sFileNameStream;
+		sFileNameStream << m_sTelemetryChunkBaseName << std::setw(JOURNAL_MAXFILEDIGITS) << std::setfill('0') << nFileIndex << ".data";
+
+		std::string sFileName = sFileNameStream.str();
+
+		std::string sQuery = "INSERT INTO telemetry_datafiles (fileindex, filename) VALUES (?, ?)";
+		auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
+		pStatement->setInt(1, nFileIndex);
+		pStatement->setString(2, sFileName);
+		pStatement->execute();
+		pStatement = nullptr;
+
+		auto pTelemetryFile = std::make_shared<CActiveJournalFile>(m_sJournalBasePath + sFileName, nFileIndex);
+		m_TelemetryFiles.push_back(pTelemetryFile);
+
+		return pTelemetryFile;
 	}
 
 	std::string CJournal::getSessionUUID()
@@ -926,26 +966,36 @@ namespace AMCData {
 	{
 		std::lock_guard<std::mutex> lockGuard(m_JournalMutex);
 
-		uint32_t nChunkIndex = 0;
-		uint32_t nFileIndex = 0;
-		uint32_t nDataOffset = 0;
-		uint32_t nDataLength = 0;
+		if (nTelemetryEntriesBufferSize == 0)
+			return;
+		if (pTelemetryEntriesBuffer == nullptr)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+		if (nStartTimeStamp > nEndTimeStamp)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
 
-		std::string sQuery = "INSERT INTO telemetry_chunks (chunkindex, fileindex, starttimestamp, endtimestamp, entrycount, dataoffset, datalength) VALUES (?, ?, ?, ?, ?)";
+		if (m_pCurrentTelemetryFile->getTotalSize() > getMaxChunkFileSizeQuotaInBytes())
+			m_pCurrentTelemetryFile = createTelemetryFile();
+
+		uint64_t nDataLength = nTelemetryEntriesBufferSize * sizeof(LibMCData::sTelemetryChunkEntry);
+		uint64_t nDataOffset = m_pCurrentTelemetryFile->retrieveWritePosition();
+		m_pCurrentTelemetryFile->writeBuffer(pTelemetryEntriesBuffer, nDataLength);
+		m_pCurrentTelemetryFile->flushBuffers();
+
+		uint32_t nChunkIndex = m_TelemetryChunkID.fetch_add(1, std::memory_order_relaxed);
+
+		std::string sQuery = "INSERT INTO telemetry_chunks (chunkindex, fileindex, starttimestamp, endtimestamp, entrycount, dataoffset, datalength) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
 		pStatement->setInt64(1, nChunkIndex);
-		pStatement->setInt64(2, nFileIndex);
+		pStatement->setInt64(2, m_pCurrentTelemetryFile->getFileIndex());
 		pStatement->setInt64(3, (int64_t)nStartTimeStamp);
 		pStatement->setInt64(4, (int64_t)nEndTimeStamp);
-		pStatement->setInt64(5, (int64_t) nTelemetryEntriesBufferSize);
+		pStatement->setInt64(5, (int64_t)nTelemetryEntriesBufferSize);
 		pStatement->setInt64(6, (int64_t)nDataOffset);
 		pStatement->setInt64(7, (int64_t)nDataLength);
 		pStatement->execute();
-		pStatement = nullptr; 
+		pStatement = nullptr;
 
 	}
 
 
 }
-
-

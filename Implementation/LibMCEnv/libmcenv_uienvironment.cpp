@@ -60,6 +60,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_imagedata.hpp"
 #include "libmcenv_testenvironment.hpp"
 #include "libmcenv_build.hpp"
+#include "libmcenv_builditerator.hpp"
 #include "libmcenv_buildexecution.hpp"
 #include "libmcenv_streamreader.hpp"
 #include "libmcenv_datatable.hpp"
@@ -617,6 +618,32 @@ IBuildExecution* CUIEnvironment::GetBuildExecution(const std::string& sExecution
 
 }
 
+IBuildIterator* CUIEnvironment::GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount)
+{
+    if (nMaxCount == 0)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "MaxCount must be greater than 0");
+
+    auto pDataModel = m_pUISystemState->getDataModel();
+    auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
+    auto pBuildJobIterator = pBuildJobHandler->ListJobsByStatus(LibMCData::eBuildJobStatus::Validated);
+
+    std::unique_ptr<CBuildIterator> pResultIterator(new CBuildIterator());
+
+    uint32_t nCount = 0;
+    while (pBuildJobIterator->MoveNext() && (nCount < nMaxCount)) {
+        auto pBuildJob = pBuildJobIterator->GetCurrentJob();
+        auto pBuild = std::make_shared<CBuild>(pDataModel, pBuildJob->GetUUID(),
+            m_pUISystemState->getToolpathHandler(),
+            m_pUISystemState->getMeshHandler(),
+            m_pUISystemState->getGlobalChronoInstance(),
+            m_pUISystemState->getStateJournal());
+        pResultIterator->AddBuild(pBuild);
+        nCount++;
+    }
+
+    return pResultIterator.release();
+}
+
 
 IDiscreteFieldData2D* CUIEnvironment::CreateDiscreteField2D(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue)
 {
@@ -1022,6 +1049,69 @@ void CUIEnvironment::AddExternalEventResultValue(const std::string& sReturnValue
     jsonName.SetString(sReturnValueName.c_str(), m_ExternalEventReturnValues->GetAllocator());
     jsonValue.SetString(sReturnValue.c_str(), m_ExternalEventReturnValues->GetAllocator());
     m_ExternalEventReturnValues->AddMember(jsonName, jsonValue, m_ExternalEventReturnValues->GetAllocator ());
+}
+
+void CUIEnvironment::SetStringResult(const std::string& sReturnValueName, const std::string& sReturnValue)
+{
+	// Convenience wrapper for AddExternalEventResultValue
+	AddExternalEventResultValue(sReturnValueName, sReturnValue);
+}
+
+void CUIEnvironment::SetIntegerResult(const std::string& sReturnValueName, const LibMCEnv_int64 nReturnValue)
+{
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDEXTERNALEVENTRETURNVALUEKEY, "invalid external return value key: " + sReturnValueName);
+
+	if (AMC::CUIHandleEventResponse::externalValueNameIsReserved(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EXTERNALEVENTRETURNVALUEKEYISRESERVED, "external return value key is reserved: " + sReturnValueName);
+
+	if (m_ExternalEventReturnValues->HasMember(sReturnValueName.c_str()))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DUPLICATEEXTERNALEVENTRETURNKEY, "duplicate external event return key: " + sReturnValueName);
+
+	rapidjson::Value jsonName;
+	rapidjson::Value jsonValue;
+
+	jsonName.SetString(sReturnValueName.c_str(), m_ExternalEventReturnValues->GetAllocator());
+	jsonValue.SetInt64(nReturnValue);
+	m_ExternalEventReturnValues->AddMember(jsonName, jsonValue, m_ExternalEventReturnValues->GetAllocator());
+}
+
+void CUIEnvironment::SetBoolResult(const std::string& sReturnValueName, const bool bReturnValue)
+{
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDEXTERNALEVENTRETURNVALUEKEY, "invalid external return value key: " + sReturnValueName);
+
+	if (AMC::CUIHandleEventResponse::externalValueNameIsReserved(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EXTERNALEVENTRETURNVALUEKEYISRESERVED, "external return value key is reserved: " + sReturnValueName);
+
+	if (m_ExternalEventReturnValues->HasMember(sReturnValueName.c_str()))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DUPLICATEEXTERNALEVENTRETURNKEY, "duplicate external event return key: " + sReturnValueName);
+
+	rapidjson::Value jsonName;
+	rapidjson::Value jsonValue;
+
+	jsonName.SetString(sReturnValueName.c_str(), m_ExternalEventReturnValues->GetAllocator());
+	jsonValue.SetBool(bReturnValue);
+	m_ExternalEventReturnValues->AddMember(jsonName, jsonValue, m_ExternalEventReturnValues->GetAllocator());
+}
+
+void CUIEnvironment::SetDoubleResult(const std::string& sReturnValueName, const LibMCEnv_double dReturnValue)
+{
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDEXTERNALEVENTRETURNVALUEKEY, "invalid external return value key: " + sReturnValueName);
+
+	if (AMC::CUIHandleEventResponse::externalValueNameIsReserved(sReturnValueName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EXTERNALEVENTRETURNVALUEKEYISRESERVED, "external return value key is reserved: " + sReturnValueName);
+
+	if (m_ExternalEventReturnValues->HasMember(sReturnValueName.c_str()))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DUPLICATEEXTERNALEVENTRETURNKEY, "duplicate external event return key: " + sReturnValueName);
+
+	rapidjson::Value jsonName;
+	rapidjson::Value jsonValue;
+
+	jsonName.SetString(sReturnValueName.c_str(), m_ExternalEventReturnValues->GetAllocator());
+	jsonValue.SetDouble(dReturnValue);
+	m_ExternalEventReturnValues->AddMember(jsonName, jsonValue, m_ExternalEventReturnValues->GetAllocator());
 }
 
 IJSONObject* CUIEnvironment::GetExternalEventParameters()

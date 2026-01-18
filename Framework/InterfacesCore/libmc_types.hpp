@@ -713,6 +713,11 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP 697 /** Invalid telemetry marker finish timestamp. */
 #define LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION 698 /** Unfinished telemetry marker have no duration. */
 #define LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED 699 /** Telemetry Marker has been already registered. */
+#define LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND 700 /** Telemetry Chunk Start timestamp is after end timestamp. */
+#define LIBMC_ERROR_TELEMETRYCHUNKINDEXOUTOFRANGE 701 /** Telemetry Chunk index out of range. */
+#define LIBMC_ERROR_TELEMETRYCHUNKIDMISMATCH 702 /** Telemetry Chunk ID mismatch. */
+#define LIBMC_ERROR_TELEMETRYCHUNKISREADONLY 703 /** Telemetry Chunk is readonly. */
+#define LIBMC_ERROR_TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY 704 /** Telemetry Chunks can only be archived if readonly. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1338,6 +1343,11 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDTELEMETRYMARKERFINISHTIMESTAMP: return "Invalid telemetry marker finish timestamp.";
     case LIBMC_ERROR_UNFINISHEDTELEMETRYMARKERSHAVENODURATION: return "Unfinished telemetry marker have no duration.";
     case LIBMC_ERROR_TELEMETRYMARKERALREADYREGISTERED: return "Telemetry Marker has been already registered.";
+    case LIBMC_ERROR_TELEMETRYCHUNKSTARTTIMESTAMPAFTEREND: return "Telemetry Chunk Start timestamp is after end timestamp.";
+    case LIBMC_ERROR_TELEMETRYCHUNKINDEXOUTOFRANGE: return "Telemetry Chunk index out of range.";
+    case LIBMC_ERROR_TELEMETRYCHUNKIDMISMATCH: return "Telemetry Chunk ID mismatch.";
+    case LIBMC_ERROR_TELEMETRYCHUNKISREADONLY: return "Telemetry Chunk is readonly.";
+    case LIBMC_ERROR_TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY: return "Telemetry Chunks can only be archived if readonly.";
     default: return "unknown error";
   }
 }
