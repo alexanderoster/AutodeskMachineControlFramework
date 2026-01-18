@@ -97,6 +97,7 @@ class CToolpathLayer;
 class CToolpathAccessor;
 class CBuildExecution;
 class CBuildExecutionIterator;
+class CBuildIterator;
 class CBuild;
 class CWorkingFileProcess;
 class CWorkingFile;
@@ -183,6 +184,7 @@ typedef CToolpathLayer CLibMCEnvToolpathLayer;
 typedef CToolpathAccessor CLibMCEnvToolpathAccessor;
 typedef CBuildExecution CLibMCEnvBuildExecution;
 typedef CBuildExecutionIterator CLibMCEnvBuildExecutionIterator;
+typedef CBuildIterator CLibMCEnvBuildIterator;
 typedef CBuild CLibMCEnvBuild;
 typedef CWorkingFileProcess CLibMCEnvWorkingFileProcess;
 typedef CWorkingFile CLibMCEnvWorkingFile;
@@ -269,6 +271,7 @@ typedef std::shared_ptr<CToolpathLayer> PToolpathLayer;
 typedef std::shared_ptr<CToolpathAccessor> PToolpathAccessor;
 typedef std::shared_ptr<CBuildExecution> PBuildExecution;
 typedef std::shared_ptr<CBuildExecutionIterator> PBuildExecutionIterator;
+typedef std::shared_ptr<CBuildIterator> PBuildIterator;
 typedef std::shared_ptr<CBuild> PBuild;
 typedef std::shared_ptr<CWorkingFileProcess> PWorkingFileProcess;
 typedef std::shared_ptr<CWorkingFile> PWorkingFile;
@@ -355,6 +358,7 @@ typedef PToolpathLayer PLibMCEnvToolpathLayer;
 typedef PToolpathAccessor PLibMCEnvToolpathAccessor;
 typedef PBuildExecution PLibMCEnvBuildExecution;
 typedef PBuildExecutionIterator PLibMCEnvBuildExecutionIterator;
+typedef PBuildIterator PLibMCEnvBuildIterator;
 typedef PBuild PLibMCEnvBuild;
 typedef PWorkingFileProcess PLibMCEnvWorkingFileProcess;
 typedef PWorkingFile PLibMCEnvWorkingFile;
@@ -1145,6 +1149,7 @@ private:
 	friend class CToolpathAccessor;
 	friend class CBuildExecution;
 	friend class CBuildExecutionIterator;
+	friend class CBuildIterator;
 	friend class CBuild;
 	friend class CWorkingFileProcess;
 	friend class CWorkingFile;
@@ -2233,6 +2238,23 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CBuildIterator 
+**************************************************************************************************************************/
+class CBuildIterator : public CIterator {
+public:
+	
+	/**
+	* CBuildIterator::CBuildIterator - Constructor for BuildIterator class.
+	*/
+	CBuildIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline PBuild GetCurrentBuild();
+};
+	
+/*************************************************************************************************************************
  Class CBuild 
 **************************************************************************************************************************/
 class CBuild : public CBase {
@@ -2248,6 +2270,8 @@ public:
 	
 	inline std::string GetName();
 	inline std::string GetBuildUUID();
+	inline std::string GetCreatedTimestamp();
+	inline std::string GetLastExecutionTimestamp();
 	inline std::string GetStorageUUID();
 	inline std::string GetStorageSHA256();
 	inline void EnsureStorageSHA256IsValid();
@@ -3513,6 +3537,7 @@ public:
 	inline PBuild GetBuildJob(const std::string & sBuildUUID);
 	inline bool HasBuildExecution(const std::string & sExecutionUUID);
 	inline PBuildExecution GetBuildExecution(const std::string & sExecutionUUID);
+	inline PBuildIterator GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount);
 	inline PDiscreteFieldData2D CreateDiscreteField2D(const LibMCEnv_uint32 nPixelCountX, const LibMCEnv_uint32 nPixelCountY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue);
 	inline PDiscreteFieldData2D CreateDiscreteField2DFromImage(classParam<CImageData> pImageDataInstance, const LibMCEnv_double dBlackValue, const LibMCEnv_double dWhiteValue, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY);
 	inline bool CheckPermission(const std::string & sPermissionIdentifier);
@@ -3545,6 +3570,10 @@ public:
 	inline bool HasExternalEventParameter(const std::string & sParameterName);
 	inline std::string GetExternalEventParameter(const std::string & sParameterName);
 	inline void AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue);
+	inline void SetStringResult(const std::string & sReturnValueName, const std::string & sReturnValue);
+	inline void SetIntegerResult(const std::string & sReturnValueName, const LibMCEnv_int64 nReturnValue);
+	inline void SetBoolResult(const std::string & sReturnValueName, const bool bReturnValue);
+	inline void SetDoubleResult(const std::string & sReturnValueName, const LibMCEnv_double dReturnValue);
 	inline PJSONObject GetExternalEventParameters();
 	inline PJSONObject GetExternalEventResults();
 	inline PMachineConfigurationHandler CreateMachineConfigurationHandler();
@@ -4023,8 +4052,11 @@ public:
 		pWrapperTable->m_BuildExecution_GetMetaDataString = nullptr;
 		pWrapperTable->m_BuildExecution_LoadAttachedJournal = nullptr;
 		pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution = nullptr;
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = nullptr;
 		pWrapperTable->m_Build_GetName = nullptr;
 		pWrapperTable->m_Build_GetBuildUUID = nullptr;
+		pWrapperTable->m_Build_GetCreatedTimestamp = nullptr;
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = nullptr;
 		pWrapperTable->m_Build_GetStorageUUID = nullptr;
 		pWrapperTable->m_Build_GetStorageSHA256 = nullptr;
 		pWrapperTable->m_Build_EnsureStorageSHA256IsValid = nullptr;
@@ -4618,6 +4650,7 @@ public:
 		pWrapperTable->m_UIEnvironment_GetBuildJob = nullptr;
 		pWrapperTable->m_UIEnvironment_HasBuildExecution = nullptr;
 		pWrapperTable->m_UIEnvironment_GetBuildExecution = nullptr;
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2DFromImage = nullptr;
 		pWrapperTable->m_UIEnvironment_CheckPermission = nullptr;
@@ -4650,6 +4683,10 @@ public:
 		pWrapperTable->m_UIEnvironment_HasExternalEventParameter = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameter = nullptr;
 		pWrapperTable->m_UIEnvironment_AddExternalEventResultValue = nullptr;
+		pWrapperTable->m_UIEnvironment_SetStringResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetBoolResult = nullptr;
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameters = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventResults = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = nullptr;
@@ -8237,6 +8274,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = (PLibMCEnvBuildIterator_GetCurrentBuildPtr) GetProcAddress(hLibrary, "libmcenv_builditerator_getcurrentbuild");
+		#else // _WIN32
+		pWrapperTable->m_BuildIterator_GetCurrentBuild = (PLibMCEnvBuildIterator_GetCurrentBuildPtr) dlsym(hLibrary, "libmcenv_builditerator_getcurrentbuild");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildIterator_GetCurrentBuild == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Build_GetName = (PLibMCEnvBuild_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_build_getname");
 		#else // _WIN32
 		pWrapperTable->m_Build_GetName = (PLibMCEnvBuild_GetNamePtr) dlsym(hLibrary, "libmcenv_build_getname");
@@ -8252,6 +8298,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Build_GetBuildUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetCreatedTimestamp = (PLibMCEnvBuild_GetCreatedTimestampPtr) dlsym(hLibrary, "libmcenv_build_getcreatedtimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) GetProcAddress(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		#else // _WIN32
+		pWrapperTable->m_Build_GetLastExecutionTimestamp = (PLibMCEnvBuild_GetLastExecutionTimestampPtr) dlsym(hLibrary, "libmcenv_build_getlastexecutiontimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -13592,6 +13656,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = (PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getrecentbuildjobs");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetRecentBuildJobs = (PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr) dlsym(hLibrary, "libmcenv_uienvironment_getrecentbuildjobs");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetRecentBuildJobs == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = (PLibMCEnvUIEnvironment_CreateDiscreteField2DPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_creatediscretefield2d");
 		#else // _WIN32
 		pWrapperTable->m_UIEnvironment_CreateDiscreteField2D = (PLibMCEnvUIEnvironment_CreateDiscreteField2DPtr) dlsym(hLibrary, "libmcenv_uienvironment_creatediscretefield2d");
@@ -13877,6 +13950,42 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_AddExternalEventResultValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetStringResult = (PLibMCEnvUIEnvironment_SetStringResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setstringresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetStringResult = (PLibMCEnvUIEnvironment_SetStringResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setstringresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetStringResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = (PLibMCEnvUIEnvironment_SetIntegerResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setintegerresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetIntegerResult = (PLibMCEnvUIEnvironment_SetIntegerResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setintegerresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetIntegerResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetBoolResult = (PLibMCEnvUIEnvironment_SetBoolResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setboolresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetBoolResult = (PLibMCEnvUIEnvironment_SetBoolResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setboolresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetBoolResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = (PLibMCEnvUIEnvironment_SetDoubleResultPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setdoubleresult");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetDoubleResult = (PLibMCEnvUIEnvironment_SetDoubleResultPtr) dlsym(hLibrary, "libmcenv_uienvironment_setdoubleresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetDoubleResult == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -15535,12 +15644,24 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_builditerator_getcurrentbuild", (void**)&(pWrapperTable->m_BuildIterator_GetCurrentBuild));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildIterator_GetCurrentBuild == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_build_getname", (void**)&(pWrapperTable->m_Build_GetName));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetName == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_getbuilduuid", (void**)&(pWrapperTable->m_Build_GetBuildUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetBuildUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getcreatedtimestamp", (void**)&(pWrapperTable->m_Build_GetCreatedTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetCreatedTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_getlastexecutiontimestamp", (void**)&(pWrapperTable->m_Build_GetLastExecutionTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_GetLastExecutionTimestamp == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_getstorageuuid", (void**)&(pWrapperTable->m_Build_GetStorageUUID));
@@ -17915,6 +18036,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetBuildExecution == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getrecentbuildjobs", (void**)&(pWrapperTable->m_UIEnvironment_GetRecentBuildJobs));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetRecentBuildJobs == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_creatediscretefield2d", (void**)&(pWrapperTable->m_UIEnvironment_CreateDiscreteField2D));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_CreateDiscreteField2D == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -18041,6 +18166,22 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_addexternaleventresultvalue", (void**)&(pWrapperTable->m_UIEnvironment_AddExternalEventResultValue));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_AddExternalEventResultValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setstringresult", (void**)&(pWrapperTable->m_UIEnvironment_SetStringResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetStringResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setintegerresult", (void**)&(pWrapperTable->m_UIEnvironment_SetIntegerResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetIntegerResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setboolresult", (void**)&(pWrapperTable->m_UIEnvironment_SetBoolResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetBoolResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setdoubleresult", (void**)&(pWrapperTable->m_UIEnvironment_SetDoubleResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetDoubleResult == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_getexternaleventparameters", (void**)&(pWrapperTable->m_UIEnvironment_GetExternalEventParameters));
@@ -23344,6 +23485,25 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CBuildIterator
+	 */
+	
+	/**
+	* CBuildIterator::GetCurrentBuild - Returns the build the iterator points at.
+	* @return returns the Build instance.
+	*/
+	PBuild CBuildIterator::GetCurrentBuild()
+	{
+		LibMCEnvHandle hBuildInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildIterator_GetCurrentBuild(m_pHandle, &hBuildInstance));
+		
+		if (!hBuildInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CBuild>(m_pWrapper, hBuildInstance);
+	}
+	
+	/**
 	 * Method definitions for class CBuild
 	 */
 	
@@ -23375,6 +23535,36 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetBuildUUID(m_pHandle, bytesNeededBuildUUID, &bytesWrittenBuildUUID, &bufferBuildUUID[0]));
 		
 		return std::string(&bufferBuildUUID[0]);
+	}
+	
+	/**
+	* CBuild::GetCreatedTimestamp - Returns creation timestamp of the build in ISO-8601 format.
+	* @return Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z).
+	*/
+	std::string CBuild::GetCreatedTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetCreatedTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
+	}
+	
+	/**
+	* CBuild::GetLastExecutionTimestamp - Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+	* @return Most recent execution timestamp in ISO-8601 format. Empty string if never executed.
+	*/
+	std::string CBuild::GetLastExecutionTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestamp = 0;
+		LibMCEnv_uint32 bytesWrittenTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, 0, &bytesNeededTimestamp, nullptr));
+		std::vector<char> bufferTimestamp(bytesNeededTimestamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_GetLastExecutionTimestamp(m_pHandle, bytesNeededTimestamp, &bytesWrittenTimestamp, &bufferTimestamp[0]));
+		
+		return std::string(&bufferTimestamp[0]);
 	}
 	
 	/**
@@ -31696,6 +31886,22 @@ public:
 	}
 	
 	/**
+	* CUIEnvironment::GetRecentBuildJobs - Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+	* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+	* @return Iterator for build jobs, ordered newest first.
+	*/
+	PBuildIterator CUIEnvironment::GetRecentBuildJobs(const LibMCEnv_uint32 nMaxCount)
+	{
+		LibMCEnvHandle hBuildIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetRecentBuildJobs(m_pHandle, nMaxCount, &hBuildIterator));
+		
+		if (!hBuildIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CBuildIterator>(m_pWrapper, hBuildIterator);
+	}
+	
+	/**
 	* CUIEnvironment::CreateDiscreteField2D - Creates an empty discrete field.
 	* @param[in] nPixelCountX - Pixel count in X. MUST be positive.
 	* @param[in] nPixelCountY - Pixel count in Y. MUST be positive.
@@ -32184,6 +32390,46 @@ public:
 	void CUIEnvironment::AddExternalEventResultValue(const std::string & sReturnValueName, const std::string & sReturnValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_AddExternalEventResultValue(m_pHandle, sReturnValueName.c_str(), sReturnValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetStringResult - Sets a string result value for external event return (typed convenience wrapper).
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] sReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetStringResult(const std::string & sReturnValueName, const std::string & sReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetStringResult(m_pHandle, sReturnValueName.c_str(), sReturnValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetIntegerResult - Sets an integer result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] nReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetIntegerResult(const std::string & sReturnValueName, const LibMCEnv_int64 nReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetIntegerResult(m_pHandle, sReturnValueName.c_str(), nReturnValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetBoolResult - Sets a boolean result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] bReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetBoolResult(const std::string & sReturnValueName, const bool bReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetBoolResult(m_pHandle, sReturnValueName.c_str(), bReturnValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetDoubleResult - Sets a double result value for external event return.
+	* @param[in] sReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+	* @param[in] dReturnValue - Return value.
+	*/
+	void CUIEnvironment::SetDoubleResult(const std::string & sReturnValueName, const LibMCEnv_double dReturnValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetDoubleResult(m_pHandle, sReturnValueName.c_str(), dReturnValue));
 	}
 	
 	/**

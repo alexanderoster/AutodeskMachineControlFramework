@@ -4235,6 +4235,19 @@ typedef LibMCEnvResult (*PLibMCEnvBuildExecution_LoadAttachedJournalPtr) (LibMCE
 typedef LibMCEnvResult (*PLibMCEnvBuildExecutionIterator_GetCurrentExecutionPtr) (LibMCEnv_BuildExecutionIterator pBuildExecutionIterator, LibMCEnv_BuildExecution * pBuildExecutionInstance);
 
 /*************************************************************************************************************************
+ Class definition for BuildIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the build the iterator points at.
+*
+* @param[in] pBuildIterator - BuildIterator instance.
+* @param[out] pBuildInstance - returns the Build instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuildIterator_GetCurrentBuildPtr) (LibMCEnv_BuildIterator pBuildIterator, LibMCEnv_Build * pBuildInstance);
+
+/*************************************************************************************************************************
  Class definition for Build
 **************************************************************************************************************************/
 
@@ -4259,6 +4272,28 @@ typedef LibMCEnvResult (*PLibMCEnvBuild_GetNamePtr) (LibMCEnv_Build pBuild, cons
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvBuild_GetBuildUUIDPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nBuildUUIDBufferSize, LibMCEnv_uint32* pBuildUUIDNeededChars, char * pBuildUUIDBuffer);
+
+/**
+* Returns creation timestamp of the build in ISO-8601 format.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_GetCreatedTimestampPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
+
+/**
+* Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] nTimestampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampBuffer -  buffer of Most recent execution timestamp in ISO-8601 format. Empty string if never executed., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_GetLastExecutionTimestampPtr) (LibMCEnv_Build pBuild, const LibMCEnv_uint32 nTimestampBufferSize, LibMCEnv_uint32* pTimestampNeededChars, char * pTimestampBuffer);
 
 /**
 * Returns storage uuid of the build stream.
@@ -10608,6 +10643,16 @@ typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_HasBuildExecutionPtr) (LibMCEnv_
 typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetBuildExecutionPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pExecutionUUID, LibMCEnv_BuildExecution * pExecutionInstance);
 
 /**
+* Returns an iterator for recent build jobs, ordered by timestamp (newest first).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] nMaxCount - Maximum number of jobs to return. Must be greater than 0.
+* @param[out] pBuildIterator - Iterator for build jobs, ordered newest first.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr) (LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_uint32 nMaxCount, LibMCEnv_BuildIterator * pBuildIterator);
+
+/**
 * Creates an empty discrete field.
 *
 * @param[in] pUIEnvironment - UIEnvironment instance.
@@ -10948,6 +10993,46 @@ typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetExternalEventParameterPtr) (L
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_AddExternalEventResultValuePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
+
+/**
+* Sets a string result value for external event return (typed convenience wrapper).
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] pReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetStringResultPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, const char * pReturnValue);
+
+/**
+* Sets an integer result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] nReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetIntegerResultPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_int64 nReturnValue);
+
+/**
+* Sets a boolean result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] bReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetBoolResultPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, bool bReturnValue);
+
+/**
+* Sets a double result value for external event return.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pReturnValueName - The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)
+* @param[in] dReturnValue - Return value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetDoubleResultPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pReturnValueName, LibMCEnv_double dReturnValue);
 
 /**
 * Returns the external event parameters. This JSON Object was passed on from the external API.
@@ -11424,8 +11509,11 @@ typedef struct {
 	PLibMCEnvBuildExecution_GetMetaDataStringPtr m_BuildExecution_GetMetaDataString;
 	PLibMCEnvBuildExecution_LoadAttachedJournalPtr m_BuildExecution_LoadAttachedJournal;
 	PLibMCEnvBuildExecutionIterator_GetCurrentExecutionPtr m_BuildExecutionIterator_GetCurrentExecution;
+	PLibMCEnvBuildIterator_GetCurrentBuildPtr m_BuildIterator_GetCurrentBuild;
 	PLibMCEnvBuild_GetNamePtr m_Build_GetName;
 	PLibMCEnvBuild_GetBuildUUIDPtr m_Build_GetBuildUUID;
+	PLibMCEnvBuild_GetCreatedTimestampPtr m_Build_GetCreatedTimestamp;
+	PLibMCEnvBuild_GetLastExecutionTimestampPtr m_Build_GetLastExecutionTimestamp;
 	PLibMCEnvBuild_GetStorageUUIDPtr m_Build_GetStorageUUID;
 	PLibMCEnvBuild_GetStorageSHA256Ptr m_Build_GetStorageSHA256;
 	PLibMCEnvBuild_EnsureStorageSHA256IsValidPtr m_Build_EnsureStorageSHA256IsValid;
@@ -12019,6 +12107,7 @@ typedef struct {
 	PLibMCEnvUIEnvironment_GetBuildJobPtr m_UIEnvironment_GetBuildJob;
 	PLibMCEnvUIEnvironment_HasBuildExecutionPtr m_UIEnvironment_HasBuildExecution;
 	PLibMCEnvUIEnvironment_GetBuildExecutionPtr m_UIEnvironment_GetBuildExecution;
+	PLibMCEnvUIEnvironment_GetRecentBuildJobsPtr m_UIEnvironment_GetRecentBuildJobs;
 	PLibMCEnvUIEnvironment_CreateDiscreteField2DPtr m_UIEnvironment_CreateDiscreteField2D;
 	PLibMCEnvUIEnvironment_CreateDiscreteField2DFromImagePtr m_UIEnvironment_CreateDiscreteField2DFromImage;
 	PLibMCEnvUIEnvironment_CheckPermissionPtr m_UIEnvironment_CheckPermission;
@@ -12051,6 +12140,10 @@ typedef struct {
 	PLibMCEnvUIEnvironment_HasExternalEventParameterPtr m_UIEnvironment_HasExternalEventParameter;
 	PLibMCEnvUIEnvironment_GetExternalEventParameterPtr m_UIEnvironment_GetExternalEventParameter;
 	PLibMCEnvUIEnvironment_AddExternalEventResultValuePtr m_UIEnvironment_AddExternalEventResultValue;
+	PLibMCEnvUIEnvironment_SetStringResultPtr m_UIEnvironment_SetStringResult;
+	PLibMCEnvUIEnvironment_SetIntegerResultPtr m_UIEnvironment_SetIntegerResult;
+	PLibMCEnvUIEnvironment_SetBoolResultPtr m_UIEnvironment_SetBoolResult;
+	PLibMCEnvUIEnvironment_SetDoubleResultPtr m_UIEnvironment_SetDoubleResult;
 	PLibMCEnvUIEnvironment_GetExternalEventParametersPtr m_UIEnvironment_GetExternalEventParameters;
 	PLibMCEnvUIEnvironment_GetExternalEventResultsPtr m_UIEnvironment_GetExternalEventResults;
 	PLibMCEnvUIEnvironment_CreateMachineConfigurationHandlerPtr m_UIEnvironment_CreateMachineConfigurationHandler;

@@ -656,6 +656,7 @@ typedef LibMCEnvHandle LibMCEnv_ToolpathLayer;
 typedef LibMCEnvHandle LibMCEnv_ToolpathAccessor;
 typedef LibMCEnvHandle LibMCEnv_BuildExecution;
 typedef LibMCEnvHandle LibMCEnv_BuildExecutionIterator;
+typedef LibMCEnvHandle LibMCEnv_BuildIterator;
 typedef LibMCEnvHandle LibMCEnv_Build;
 typedef LibMCEnvHandle LibMCEnv_WorkingFileProcess;
 typedef LibMCEnvHandle LibMCEnv_WorkingFile;

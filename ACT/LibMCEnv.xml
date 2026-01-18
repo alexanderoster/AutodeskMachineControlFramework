@@ -2591,6 +2591,12 @@
 		</method>
 	</class>
 
+	<class name="BuildIterator" parent="Iterator">
+		<method name="GetCurrentBuild" description="Returns the build the iterator points at.">
+			<param name="BuildInstance" type="handle" class="Build" pass="return" description="returns the Build instance."/>
+		</method>
+	</class>
+
 
 	<class name="Build" parent="Base" description="Build instance to access build files">
 
@@ -2600,6 +2606,14 @@
 
 		<method name="GetBuildUUID" description="Returns uuid of the build.">
 			<param name="BuildUUID" type="string" pass="return" description="UUID of the build." />
+		</method>
+
+		<method name="GetCreatedTimestamp" description="Returns creation timestamp of the build in ISO-8601 format.">
+			<param name="Timestamp" type="string" pass="return" description="Creation timestamp in ISO-8601 format (e.g., 2025-10-23T14:30:00.000Z)." />
+		</method>
+
+		<method name="GetLastExecutionTimestamp" description="Returns the most recent execution timestamp in ISO-8601 format. Returns empty string if build has never been executed.">
+			<param name="Timestamp" type="string" pass="return" description="Most recent execution timestamp in ISO-8601 format. Empty string if never executed." />
 		</method>
 
 		<method name="GetStorageUUID" description="Returns storage uuid of the build stream.">
@@ -5742,6 +5756,10 @@
 			<param name="ExecutionUUID" type="string" pass="in" description="UUID of the execution entity." />
 			<param name="ExecutionInstance" type="class" class="BuildExecution" pass="return" description="Build execution instance" />
 		</method>
+	<method name="GetRecentBuildJobs" description="Returns an iterator for recent build jobs, ordered by timestamp (newest first).">
+		<param name="MaxCount" type="uint32" pass="in" description="Maximum number of jobs to return. Must be greater than 0." />
+		<param name="BuildIterator" type="class" class="BuildIterator" pass="return" description="Iterator for build jobs, ordered newest first." />
+	</method>
 
 		<method name="CreateDiscreteField2D" description="Creates an empty discrete field.">
 			<param name="PixelCountX" type="uint32" pass="in" description="Pixel count in X. MUST be positive." />
@@ -5913,6 +5931,26 @@
 			<param name="ReturnValueName" type="string" pass="in" description="The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)" />
 			<param name="ReturnValue" type="string" pass="in" description="Return value." />
 		</method>
+
+	<method name="SetStringResult" description="Sets a string result value for external event return (typed convenience wrapper).">
+		<param name="ReturnValueName" type="string" pass="in" description="The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)" />
+		<param name="ReturnValue" type="string" pass="in" description="Return value." />
+	</method>
+
+	<method name="SetIntegerResult" description="Sets an integer result value for external event return.">
+		<param name="ReturnValueName" type="string" pass="in" description="The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)" />
+		<param name="ReturnValue" type="int64" pass="in" description="Return value." />
+	</method>
+
+	<method name="SetBoolResult" description="Sets a boolean result value for external event return.">
+		<param name="ReturnValueName" type="string" pass="in" description="The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)" />
+		<param name="ReturnValue" type="bool" pass="in" description="Return value." />
+	</method>
+
+	<method name="SetDoubleResult" description="Sets a double result value for external event return.">
+		<param name="ReturnValueName" type="string" pass="in" description="The name of the return parameter. MUST be an alphanumeric ASCII string (with optional _ and -)" />
+		<param name="ReturnValue" type="double" pass="in" description="Return value." />
+	</method>
 		
 		<method name="GetExternalEventParameters" description="Returns the external event parameters. This JSON Object was passed on from the external API.">
 			<param name="ParameterValue" type="class" class="JSONObject" pass="return" description="Parameter value." />
