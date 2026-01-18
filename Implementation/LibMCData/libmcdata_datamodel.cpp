@@ -144,8 +144,9 @@ void CDataModel::InitialiseDatabase(const std::string & sDataDirectory, const Li
     auto sJournalBasePath = m_pStorageState->getJournalBasePath(m_sTimeFileName);
     auto sJournalName = m_pStorageState->getJournalFileName(m_sTimeFileName);
     auto sJournalChunkBaseName = m_pStorageState->getJournalChunkBaseName(m_sTimeFileName);
+    auto sTelemetryChunkBaseName = "telemetry_" + m_sTimeFileName + "_chunk";
 
-    m_pJournal = std::make_shared<AMCData::CJournal> (sJournalBasePath, sJournalName, sJournalChunkBaseName, m_sSessionUUID);
+    m_pJournal = std::make_shared<AMCData::CJournal> (sJournalBasePath, sJournalName, sJournalChunkBaseName, sTelemetryChunkBaseName, m_sSessionUUID);
 
     auto pStatement = m_pSQLHandler->prepareStatement("INSERT INTO journals (uuid, starttime, logfilename, journalfilename, logfilepath, journalfilepath, schemaversion, githash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     pStatement->setString(1, m_sSessionUUID);

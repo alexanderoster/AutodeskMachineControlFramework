@@ -151,19 +151,24 @@ namespace AMCData {
 		return m_nTotalSize;
 	}
 
-	CJournal::CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sSessionUUID)
+	CJournal::CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sTelemetryChunkBaseName, const std::string& sSessionUUID)
 		: m_LogID(1), m_AlertID(1), m_sSessionUUID(AMCCommon::CUtils::normalizeUUIDString(sSessionUUID)),
 		m_sJournalBasePath(sJournalBasePath), m_sChunkBaseName (sJournalChunkBaseName),
 		m_TelemetryChunkID (1)
 	{
-		m_sTelemetryChunkBaseName = m_sChunkBaseName;
-		const std::string sJournalPrefix = "journal_";
-		const std::string sTelemetryPrefix = "telemetry_";
-		if (m_sTelemetryChunkBaseName.rfind(sJournalPrefix, 0) == 0) {
-			m_sTelemetryChunkBaseName.replace(0, sJournalPrefix.size(), sTelemetryPrefix);
+		if (!sTelemetryChunkBaseName.empty()) {
+			m_sTelemetryChunkBaseName = sTelemetryChunkBaseName;
 		}
 		else {
-			m_sTelemetryChunkBaseName = sTelemetryPrefix + m_sTelemetryChunkBaseName;
+			m_sTelemetryChunkBaseName = m_sChunkBaseName;
+			const std::string sJournalPrefix = "journal_";
+			const std::string sTelemetryPrefix = "telemetry_";
+			if (m_sTelemetryChunkBaseName.rfind(sJournalPrefix, 0) == 0) {
+				m_sTelemetryChunkBaseName.replace(0, sJournalPrefix.size(), sTelemetryPrefix);
+			}
+			else {
+				m_sTelemetryChunkBaseName = sTelemetryPrefix + m_sTelemetryChunkBaseName;
+			}
 		}
 		
 		m_pSQLHandler = std::make_shared<AMCData::CSQLHandler_SQLite>(m_sJournalBasePath + sJournalName);

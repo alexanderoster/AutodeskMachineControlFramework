@@ -113,7 +113,7 @@ namespace AMCData {
 		
 		static LibMCData::eAlertLevel convertStringToAlertLevel(const std::string & sValue, bool bFailIfUnknown);
 
-		CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string & sSessionUUID);
+		CJournal(const std::string& sJournalBasePath, const std::string& sJournalName, const std::string& sJournalChunkBaseName, const std::string& sTelemetryChunkBaseName, const std::string & sSessionUUID);
 
 		virtual ~CJournal();
 
