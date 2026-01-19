@@ -100,6 +100,7 @@ namespace Impl {
 
 		std::atomic<bool> m_bCancelFlag;
 		std::atomic<bool> m_bThreadIsRunning;
+		uint64_t m_nThreadExecutionCounter;
 
 		bool m_bDebugMode;
 		std::vector<std::pair<uint32_t, std::string>> m_Exceptions;
@@ -111,7 +112,7 @@ namespace Impl {
 
 		virtual ~CDriver_CifXChannelThreadState();
 
-		void executeThread(uint32_t nReadTimeOut, uint32_t nWriteTimeOut);
+		void executeThread(uint32_t nReadTimeOut, uint32_t nWriteTimeOut, LibMCEnv::PTelemetryChannel readTelemetryChannel, LibMCEnv::PTelemetryChannel writeTelemetryChannel);
 
 		void handleException(uint32_t nErrorCode, const std::string& sMessage);
 
@@ -156,7 +157,14 @@ namespace Impl {
 		CDriver_CifXChannel(pugi::xml_node& channelNode);
 		virtual ~CDriver_CifXChannel();
 
-		std::string getBoardName();
+		std::string getBoardName() const;
+
+		std::string getTelemetryUpdateName() const;
+
+		std::string getTelemetryIOReadName() const;
+
+		std::string getTelemetryIOWriteName() const;
+
 		uint32_t getChannelIndex();
 
 		void RegisterVariables(LibMCEnv::PDriverEnvironment pDriverEnvironment);
@@ -167,7 +175,7 @@ namespace Impl {
 		PDriver_CifXParameter getOutputByIndex(uint32_t nIndex);
 
 		void stopSyncThread();
-		void startSyncThread(PCifXSDK pCifXSDK, cifxHandle hDriverHandle);
+		void startSyncThread(PCifXSDK pCifXSDK, cifxHandle hDriverHandle, LibMCEnv::PDriverStatusUpdateSession pDriverUpdateSession);
 
 		bool isConnected();
 
