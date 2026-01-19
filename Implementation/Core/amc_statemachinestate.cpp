@@ -55,7 +55,7 @@ namespace AMC {
 		updateExecutionTime();
 
 		m_pTelemetryExecutionChannel = pTelemetryHandler->registerChannel(getTelemetryExecutionName(), "Execution of State " + m_sInstanceName + "." + m_sName, LibMCData::eTelemetryChannelType::StateExecution);
-		m_pTelemetryRepeatDelayChannel = pTelemetryHandler->registerChannel(getTelemetryRepeatDelayName() + ".repeatdelay", "Repeat Delay of State " + m_sInstanceName + "." + m_sName, LibMCData::eTelemetryChannelType::StateRepeatDelay);
+		m_pTelemetryRepeatDelayChannel = pTelemetryHandler->registerChannel(getTelemetryRepeatDelayName(), "Repeat Delay of State " + m_sInstanceName + "." + m_sName, LibMCData::eTelemetryChannelType::StateRepeatDelay);
 
 	}
 

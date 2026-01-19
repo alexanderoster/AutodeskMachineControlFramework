@@ -2796,6 +2796,7 @@ public:
 	inline LibMCEnv_double GetDoubleParameter(const std::string & sParameterName);
 	inline LibMCEnv_int64 GetIntegerParameter(const std::string & sParameterName);
 	inline bool GetBoolParameter(const std::string & sParameterName);
+	inline PTelemetryChannel FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting);
 };
 	
 /*************************************************************************************************************************
@@ -2847,7 +2848,7 @@ public:
 	inline void LogMessage(const std::string & sLogString);
 	inline void LogWarning(const std::string & sLogString);
 	inline void LogInfo(const std::string & sLogString);
-	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const eTelemetryChannelType eChannelType);
 	inline PTelemetryChannel FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting);
 	inline PImageData CreateEmptyImage(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageLoader CreateImageLoader();
@@ -3431,7 +3432,7 @@ public:
 	inline bool SignalQueueIsEmpty(const std::string & sSignalTypeName);
 	inline void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName);
 	inline void ClearAllUnhandledSignals();
-	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const eTelemetryChannelType eChannelType);
 	inline PTelemetryChannel FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting);
 	inline PSignalHandler GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist);
 	inline void GetDriverLibrary(const std::string & sDriverName, std::string & sDriverType, LibMCEnv_pvoid & pDriverLookup);
@@ -4355,6 +4356,7 @@ public:
 		pWrapperTable->m_DriverStatusUpdateSession_GetDoubleParameter = nullptr;
 		pWrapperTable->m_DriverStatusUpdateSession_GetIntegerParameter = nullptr;
 		pWrapperTable->m_DriverStatusUpdateSession_GetBoolParameter = nullptr;
+		pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateStatusUpdateSession = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateWorkingDirectory = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateTCPIPConnection = nullptr;
@@ -10564,6 +10566,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_DriverStatusUpdateSession_GetBoolParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel = (PLibMCEnvDriverStatusUpdateSession_FindTelemetryChannelPtr) GetProcAddress(hLibrary, "libmcenv_driverstatusupdatesession_findtelemetrychannel");
+		#else // _WIN32
+		pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel = (PLibMCEnvDriverStatusUpdateSession_FindTelemetryChannelPtr) dlsym(hLibrary, "libmcenv_driverstatusupdatesession_findtelemetrychannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16826,6 +16837,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_driverstatusupdatesession_getboolparameter", (void**)&(pWrapperTable->m_DriverStatusUpdateSession_GetBoolParameter));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DriverStatusUpdateSession_GetBoolParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_driverstatusupdatesession_findtelemetrychannel", (void**)&(pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DriverStatusUpdateSession_FindTelemetryChannel == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_driverenvironment_createstatusupdatesession", (void**)&(pWrapperTable->m_DriverEnvironment_CreateStatusUpdateSession));
@@ -27132,6 +27147,24 @@ public:
 	}
 	
 	/**
+	* CDriverStatusUpdateSession::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	PTelemetryChannel CDriverStatusUpdateSession::FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DriverStatusUpdateSession_FindTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), bFailIfNotExisting, &hChannelInstance));
+		
+		if (hChannelInstance) {
+			return std::make_shared<CTelemetryChannel>(m_pWrapper, hChannelInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
 	 * Method definitions for class CDriverEnvironment
 	 */
 	
@@ -27590,12 +27623,13 @@ public:
 	* CDriverEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
 	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @param[in] eChannelType - Type of Channel.
 	* @return Channel instance.
 	*/
-	PTelemetryChannel CDriverEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription)
+	PTelemetryChannel CDriverEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const eTelemetryChannelType eChannelType)
 	{
 		LibMCEnvHandle hChannelInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_DriverEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), &hChannelInstance));
+		CheckError(m_pWrapper->m_WrapperTable.m_DriverEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), eChannelType, &hChannelInstance));
 		
 		if (!hChannelInstance) {
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
@@ -30521,12 +30555,13 @@ public:
 	* CStateEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
 	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @param[in] eChannelType - Type of Channel.
 	* @return Channel instance.
 	*/
-	PTelemetryChannel CStateEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription)
+	PTelemetryChannel CStateEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const eTelemetryChannelType eChannelType)
 	{
 		LibMCEnvHandle hChannelInstance = nullptr;
-		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), &hChannelInstance));
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), eChannelType, &hChannelInstance));
 		
 		if (!hChannelInstance) {
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);

@@ -72,6 +72,9 @@ namespace AMC {
 	class CMeshHandler;
 	typedef std::shared_ptr<CMeshHandler> PMeshHandler;
 
+	class CTelemetryHandler;
+	typedef std::shared_ptr<CTelemetryHandler> PTelemetryHandler;
+
 	class CDriverHandler {
 	private:
 
@@ -83,6 +86,7 @@ namespace AMC {
 		LibMCData::PDataModel m_pDataModel;
 		AMCCommon::PChrono m_pGlobalChrono;
 		PStateJournal m_pStateJournal;
+		AMC::PTelemetryHandler m_pTelemetryHandler;
 
 		// List and Map of registered drivers
 		std::list<PDriver> m_DriverList;
@@ -98,7 +102,7 @@ namespace AMC {
 
 	public:
 
-		CDriverHandler(LibMCEnv::PWrapper pEnvironmentWrapper, PToolpathHandler pToolpathHandler, PMeshHandler pMeshHandler, PLogger pLogger, LibMCData::PDataModel pDataModel, AMCCommon::PChrono pGlobalChrono, PStateJournal pStateJournal);
+		CDriverHandler(LibMCEnv::PWrapper pEnvironmentWrapper, PToolpathHandler pToolpathHandler, PMeshHandler pMeshHandler, PLogger pLogger, LibMCData::PDataModel pDataModel, AMCCommon::PChrono pGlobalChrono, PStateJournal pStateJournal, AMC::PTelemetryHandler pTelemetryHandler);
 
 		virtual ~CDriverHandler();
 

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_interfaceexception.hpp"
 #include "libmc_apirequesthandler.hpp"
 #include "libmc_streamconnection.hpp"
+
 #include "pugixml.hpp"
 
 #include "amc_statemachineinstance.hpp"
@@ -589,6 +590,39 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 
 
     }
+
+    // Load all telemetry channels for the state machine
+    auto pTelemetryHandler = m_pSystemState->getTelemetryHandlerInstance();
+
+	auto telemetryNode = xmlNode.child("telemetry");
+    if (!telemetryNode.empty()) {
+        auto telemetryNodes = telemetryNode.children("channel");
+        for (pugi::xml_node telemetryChannelNode : telemetryNodes) {
+            auto channelIdentifierAttrib = telemetryChannelNode.attribute("identifier");
+            auto channelDescriptionAttrib = telemetryChannelNode.attribute("description");
+            auto channelTypeAttrib = telemetryChannelNode.attribute("type");
+
+            std::string sChannelIdentifier = channelIdentifierAttrib.as_string();
+            std::string sChannelDescription = channelDescriptionAttrib.as_string();
+            std::string sChannelType = channelTypeAttrib.as_string();
+
+            if (sChannelIdentifier.empty())
+                throw ELibMCCustomException(LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER, "state machine " + sName);
+            if (sChannelDescription.empty())
+                throw ELibMCCustomException(LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION, "state machine " + sName);
+            if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString(sChannelIdentifier))
+                throw ELibMCCustomException(LIBMC_ERROR_INVALIDTELEMETRYCHANNELIDENTIFIER, sChannelIdentifier + " (state machine " + sName + ")");
+
+            LibMCData::eTelemetryChannelType eChannelType = LibMCData::eTelemetryChannelType::CustomMarker;
+            if (!sChannelType.empty())
+                eChannelType = CTelemetryChannel::mapChannelTypeStringToDataChannelType(sChannelType);
+
+            std::string sGlobalChannelIdentifier = sName + "." + sChannelIdentifier;
+            pTelemetryHandler->registerChannel(sGlobalChannelIdentifier, sChannelDescription, eChannelType);
+
+        }
+    }
+
 
 
     pInstance->setInitState(sInitState);

@@ -842,6 +842,17 @@ namespace LibMCEnv {
     Uint64Column = 5
   };
   
+  enum class eTelemetryChannelType : LibMCEnv_int32 {
+    Unknown = 0,
+    CustomMarker = 1,
+    RemoteQuery = 2,
+    StateExecution = 3,
+    StateRepeatDelay = 4,
+    SignalQueue = 5,
+    SignalProcessing = 6,
+    SignalAcknowledgement = 7
+  };
+  
   enum class eSignalPhase : LibMCEnv_int32 {
     Invalid = 0, /** Invalid phase. Should not happen. */
     InPreparation = 10, /** Signal has not been triggered yet. Parameters can change. */
@@ -948,6 +959,7 @@ typedef LibMCEnv::eMessageDialogType eLibMCEnvMessageDialogType;
 typedef LibMCEnv::eWorkingFileProcessStatus eLibMCEnvWorkingFileProcessStatus;
 typedef LibMCEnv::eBuildExecutionStatus eLibMCEnvBuildExecutionStatus;
 typedef LibMCEnv::eDataTableColumnType eLibMCEnvDataTableColumnType;
+typedef LibMCEnv::eTelemetryChannelType eLibMCEnvTelemetryChannelType;
 typedef LibMCEnv::eSignalPhase eLibMCEnvSignalPhase;
 typedef LibMCEnv::sPosition2D sLibMCEnvPosition2D;
 typedef LibMCEnv::sHatch2D sLibMCEnvHatch2D;

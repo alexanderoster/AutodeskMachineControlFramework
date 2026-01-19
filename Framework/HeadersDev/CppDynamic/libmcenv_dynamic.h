@@ -6861,6 +6861,17 @@ typedef LibMCEnvResult (*PLibMCEnvDriverStatusUpdateSession_GetIntegerParameterP
 */
 typedef LibMCEnvResult (*PLibMCEnvDriverStatusUpdateSession_GetBoolParameterPtr) (LibMCEnv_DriverStatusUpdateSession pDriverStatusUpdateSession, const char * pParameterName, bool * pValue);
 
+/**
+* Returns a telemetry channel from the current state machine.
+*
+* @param[in] pDriverStatusUpdateSession - DriverStatusUpdateSession instance.
+* @param[in] pChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+* @param[out] pChannelInstance - Channel instance. NULL if Channel does not exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvDriverStatusUpdateSession_FindTelemetryChannelPtr) (LibMCEnv_DriverStatusUpdateSession pDriverStatusUpdateSession, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance);
+
 /*************************************************************************************************************************
  Class definition for DriverEnvironment
 **************************************************************************************************************************/
@@ -7231,10 +7242,11 @@ typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_LogInfoPtr) (LibMCEnv_Driver
 * @param[in] pDriverEnvironment - DriverEnvironment instance.
 * @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 * @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[in] eChannelType - Type of Channel.
 * @param[out] pChannelInstance - Channel instance.
 * @return error code or 0 (success)
 */
-typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv::eTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance);
 
 /**
 * Returns a telemetry channel from the current state machine.
@@ -9429,10 +9441,11 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_ClearAllUnhandledSignalsPtr) 
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 * @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[in] eChannelType - Type of Channel.
 * @param[out] pChannelInstance - Channel instance.
 * @return error code or 0 (success)
 */
-typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv::eTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance);
 
 /**
 * Returns a telemetry channel from the current state machine.
@@ -11912,6 +11925,7 @@ typedef struct {
 	PLibMCEnvDriverStatusUpdateSession_GetDoubleParameterPtr m_DriverStatusUpdateSession_GetDoubleParameter;
 	PLibMCEnvDriverStatusUpdateSession_GetIntegerParameterPtr m_DriverStatusUpdateSession_GetIntegerParameter;
 	PLibMCEnvDriverStatusUpdateSession_GetBoolParameterPtr m_DriverStatusUpdateSession_GetBoolParameter;
+	PLibMCEnvDriverStatusUpdateSession_FindTelemetryChannelPtr m_DriverStatusUpdateSession_FindTelemetryChannel;
 	PLibMCEnvDriverEnvironment_CreateStatusUpdateSessionPtr m_DriverEnvironment_CreateStatusUpdateSession;
 	PLibMCEnvDriverEnvironment_CreateWorkingDirectoryPtr m_DriverEnvironment_CreateWorkingDirectory;
 	PLibMCEnvDriverEnvironment_CreateTCPIPConnectionPtr m_DriverEnvironment_CreateTCPIPConnection;

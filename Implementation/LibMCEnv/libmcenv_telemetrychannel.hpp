@@ -27,13 +27,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CDriverStatusUpdateSession
+Abstract: This is the class declaration of CTelemetryChannel
 
 */
 
 
-#ifndef __LIBMCENV_DRIVERSTATUSUPDATESESSION
-#define __LIBMCENV_DRIVERSTATUSUPDATESESSION
+#ifndef __LIBMCENV_TELEMETRYCHANNEL
+#define __LIBMCENV_TELEMETRYCHANNEL
 
 #include "libmcenv_interfaces.hpp"
 
@@ -45,9 +45,6 @@ Abstract: This is the class declaration of CDriverStatusUpdateSession
 #endif
 
 // Include custom headers here.
-#include "amc_parametergroup.hpp"
-#include "amc_logger.hpp"
-#include "common_chrono.hpp"
 #include "amc_telemetry.hpp"
 
 namespace LibMCEnv {
@@ -55,54 +52,44 @@ namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CDriverStatusUpdateSession 
+ Class declaration of CTelemetryChannel 
 **************************************************************************************************************************/
 
-class CDriverStatusUpdateSession : public virtual IDriverStatusUpdateSession, public virtual CBase {
+class CTelemetryChannel : public virtual ITelemetryChannel, public virtual CBase {
 private:
-	AMC::PParameterGroup m_pParameterGroup;
-	AMC::PLogger m_pLogger;
-	std::string m_sDriverName;
-	AMCCommon::PChrono m_pGlobalChrono;
+
 	AMC::PTelemetryHandler m_pTelemetryHandler;
 
-	AMCCommon::CChrono m_Chrono;
+    std::string m_sParentName;
+
+    std::string m_sIdentifier;
 
 public:
 
-	CDriverStatusUpdateSession(AMC::PParameterGroup pParameterGroup, AMC::PLogger pLogger, std::string sDriverName, AMCCommon::PChrono pGlobalChrono, AMC::PTelemetryHandler pTelemetryHandler);
-	
-	virtual ~CDriverStatusUpdateSession();
+    CTelemetryChannel (AMC::PTelemetryHandler pTelemetryHandler, const std::string& sParentName, const std::string& sIdentifier);
 
-	void SetStringParameter(const std::string & sParameterName, const std::string & sValue) override;
+	virtual ~CTelemetryChannel();
 
-	void SetUUIDParameter(const std::string & sParameterName, const std::string & sValue) override;
+	std::string GetParent() override;
 
-	void SetDoubleParameter(const std::string & sParameterName, const LibMCEnv_double dValue) override;
+	std::string GetIdentifier() override;
 
-	void SetIntegerParameter(const std::string & sParameterName, const LibMCEnv_int64 nValue) override;
+	std::string GetGlobalIdentifier() override;
 
-	void SetBoolParameter(const std::string & sParameterName, const bool bValue) override;
+	ITelemetryMarkerScope * StartMarkerScope(const LibMCEnv_uint64 nUserContextData) override;
 
-	void LogMessage(const std::string & sLogString) override;
+	LibMCEnv_uint64 CreateInstantMarker(const LibMCEnv_uint64 nUserContextData) override;
 
-	void LogWarning(const std::string & sLogString) override;
 
-	void LogInfo(const std::string & sLogString) override;
+    static std::string mapEnvChannelTypeToTypeString(LibMCEnv::eTelemetryChannelType envChannelType);
 
-	void Sleep(const LibMCEnv_uint32 nDelay) override;
+    static LibMCEnv::eTelemetryChannelType mapChannelTypeStringToEnvChannelType(const std::string& sTypeString);
 
-	std::string GetStringParameter(const std::string& sParameterName) override;
+    static LibMCData::eTelemetryChannelType mapEnvChannelTypeToDataChannelType (LibMCEnv::eTelemetryChannelType envChannelType);
 
-	std::string GetUUIDParameter(const std::string& sParameterName) override;
+    static LibMCEnv::eTelemetryChannelType mapDataChannelTypeToEnvChannelType(LibMCData::eTelemetryChannelType dataChannelType);
 
-	LibMCEnv_double GetDoubleParameter(const std::string& sParameterName) override;
 
-	LibMCEnv_int64 GetIntegerParameter(const std::string& sParameterName) override;
-
-	bool GetBoolParameter(const std::string& sParameterName) override;
-
-	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;
 
 };
 
@@ -112,4 +99,4 @@ public:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCENV_DRIVERSTATUSUPDATESESSION
+#endif // __LIBMCENV_TELEMETRYCHANNEL

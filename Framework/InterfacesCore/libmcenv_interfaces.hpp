@@ -5442,6 +5442,14 @@ public:
 	*/
 	virtual bool GetBoolParameter(const std::string & sParameterName) = 0;
 
+	/**
+	* IDriverStatusUpdateSession::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	virtual ITelemetryChannel * FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting) = 0;
+
 };
 
 typedef IBaseSharedPtr<IDriverStatusUpdateSession> PIDriverStatusUpdateSession;
@@ -5712,9 +5720,10 @@ public:
 	* IDriverEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
 	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @param[in] eChannelType - Type of Channel.
 	* @return Channel instance.
 	*/
-	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
+	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const LibMCEnv::eTelemetryChannelType eChannelType) = 0;
 
 	/**
 	* IDriverEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
@@ -7328,9 +7337,10 @@ public:
 	* IStateEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
 	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @param[in] eChannelType - Type of Channel.
 	* @return Channel instance.
 	*/
-	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
+	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const LibMCEnv::eTelemetryChannelType eChannelType) = 0;
 
 	/**
 	* IStateEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.

@@ -718,6 +718,9 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_TELEMETRYCHUNKIDMISMATCH 702 /** Telemetry Chunk ID mismatch. */
 #define LIBMC_ERROR_TELEMETRYCHUNKISREADONLY 703 /** Telemetry Chunk is readonly. */
 #define LIBMC_ERROR_TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY 704 /** Telemetry Chunks can only be archived if readonly. */
+#define LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE 705 /** Invalid telemetry channel type. */
+#define LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER 706 /** Missing telemetry channel identifier. */
+#define LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION 707 /** Missing telemetry channel description. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1348,6 +1351,9 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_TELEMETRYCHUNKIDMISMATCH: return "Telemetry Chunk ID mismatch.";
     case LIBMC_ERROR_TELEMETRYCHUNKISREADONLY: return "Telemetry Chunk is readonly.";
     case LIBMC_ERROR_TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY: return "Telemetry Chunks can only be archived if readonly.";
+    case LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE: return "Invalid telemetry channel type.";
+    case LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER: return "Missing telemetry channel identifier.";
+    case LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION: return "Missing telemetry channel description.";
     default: return "unknown error";
   }
 }

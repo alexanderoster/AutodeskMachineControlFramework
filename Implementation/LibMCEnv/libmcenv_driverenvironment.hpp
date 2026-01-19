@@ -42,6 +42,7 @@ Abstract: This is the class declaration of CDriverEnvironment
 #include "amc_toolpathhandler.hpp"
 #include "amc_meshhandler.hpp"
 #include "common_chrono.hpp"
+#include "amc_telemetry.hpp"
 #include "amc_logger.hpp"
 #include "amc_statejournal.hpp"
 
@@ -82,12 +83,13 @@ protected:
 	LibMCData::PDataModel m_pDataModel;
 	AMC::PLogger m_pLogger;
 	AMC::PStateJournal m_pStateJournal;
+	AMC::PTelemetryHandler m_pTelemetryHandler;
 
 	AMCCommon::PChrono m_pGlobalChrono;
 
 public:
 
-	CDriverEnvironment(AMC::PParameterGroup pParameterGroup, AMC::PResourcePackage pDriverResourcePackage, AMC::PResourcePackage pMachineResourcePackage, AMC::PToolpathHandler pToolpathHandler, AMC::PMeshHandler pMeshHandler, const std::string& sBaseTempPath, AMC::PLogger pLogger, LibMCData::PDataModel pDataModel, AMCCommon::PChrono pGlobalChrono, const std::string& sDriverName, AMC::PStateJournal pStateJournal);
+	CDriverEnvironment(AMC::PParameterGroup pParameterGroup, AMC::PResourcePackage pDriverResourcePackage, AMC::PResourcePackage pMachineResourcePackage, AMC::PToolpathHandler pToolpathHandler, AMC::PMeshHandler pMeshHandler, const std::string& sBaseTempPath, AMC::PLogger pLogger, LibMCData::PDataModel pDataModel, AMCCommon::PChrono pGlobalChrono, const std::string& sDriverName, AMC::PStateJournal pStateJournal, AMC::PTelemetryHandler pTelemetryHandler);
 
 	virtual ~CDriverEnvironment();
 
@@ -111,7 +113,7 @@ public:
 
 	void RetrieveMachineResourceData(const std::string& sIdentifier, LibMCEnv_uint64 nDataBufferBufferSize, LibMCEnv_uint64* pDataBufferNeededCount, LibMCEnv_uint8* pDataBufferBuffer) override;
 
-	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription) override;
+	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, const LibMCEnv::eTelemetryChannelType eChannelType)  override;
 
 	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;
 

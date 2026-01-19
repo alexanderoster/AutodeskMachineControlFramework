@@ -435,8 +435,17 @@
 		<option name="Uint64Column" value="5" />
 	</enum>
 	
-		
-	
+	<enum name="TelemetryChannelType">
+		<option name="Unknown" value="0"/>
+		<option name="CustomMarker" value="1"/>
+		<option name="RemoteQuery" value="2"/>
+		<option name="StateExecution" value="3"/>
+		<option name="StateRepeatDelay" value="4"/>		
+		<option name="SignalQueue" value="5"/>
+		<option name="SignalProcessing" value="6"/>
+		<option name="SignalAcknowledgement" value="7"/>
+	</enum>		
+
 	<struct name="Position2D">
 		<member name="Coordinates" type="int32" rows="2"/>
 	</struct>
@@ -3889,6 +3898,13 @@
 			<param name="Value" type="bool" pass="return" description="Value of parameter" />
 		</method>
 
+		<method name="FindTelemetryChannel" description="Returns a telemetry channel from the current state machine.">
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier to return. Must be a alphanumerical path string." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist.." />
+			<param name="ChannelInstance" type="optionalclass" class="TelemetryChannel" pass="return" description="Channel instance. NULL if Channel does not exist." />
+		</method>		
+
+
 	</class>
 
 
@@ -4074,6 +4090,7 @@
 		<method name="RegisterTelemetryChannel" description="Registers a telemetry channel for the current state machine. Fails if identifier already exists.">
 			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier. Must be a alphanumerical path string." />
 			<param name="ChannelDescription" type="string" pass="in" description="Description of Channel. MUST NOT be empty." />
+			<param name="ChannelType" type="enum" class="TelemetryChannelType" pass="in" description="Type of Channel." />			
 			<param name="ChannelInstance" type="class" class="TelemetryChannel" pass="return" description="Channel instance." />
 		</method>
 
@@ -5137,6 +5154,7 @@
 		<method name="RegisterTelemetryChannel" description="Registers a telemetry channel for the current state machine. Fails if identifier already exists.">
 			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier. Must be a alphanumerical path string." />
 			<param name="ChannelDescription" type="string" pass="in" description="Description of Channel. MUST NOT be empty." />
+			<param name="ChannelType" type="enum" class="TelemetryChannelType" pass="in" description="Type of Channel." />			
 			<param name="ChannelInstance" type="class" class="TelemetryChannel" pass="return" description="Channel instance." />
 		</method>
 

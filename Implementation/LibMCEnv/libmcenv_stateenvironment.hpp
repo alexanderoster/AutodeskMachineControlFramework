@@ -95,7 +95,7 @@ public:
 
 	void ClearAllUnhandledSignals() override;
 
-	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription) override;
+	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, const LibMCEnv::eTelemetryChannelType eChannelType) override;
 
 	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;	
 

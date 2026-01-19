@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcenv_datetime.hpp"
 #include "libmcenv_imagedata.hpp"
 #include "libmcenv_testenvironment.hpp"
+#include "libmcenv_telemetrychannel.hpp"
 #include "libmcenv_xmldocument.hpp"
 #include "libmcenv_discretefielddata2d.hpp"
 #include "libmcenv_journalhandler_current.hpp"
@@ -60,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcenv_imageloader.hpp"
 #include "libmcenv_jsonobject.hpp"
 
+#include "amc_telemetry.hpp"
 #include "amc_logger.hpp"
 #include "amc_driverhandler.hpp"
 #include "amc_parameterhandler.hpp"
@@ -1070,13 +1072,30 @@ IDateTime* CStateEnvironment::GetStartDateTime()
 }
 
 
-ITelemetryChannel* CStateEnvironment::RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription)
+ITelemetryChannel* CStateEnvironment::RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription, const LibMCEnv::eTelemetryChannelType eChannelType)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString (sChannelIdentifier))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "invalid state machine telemetry channel identifier: " + sChannelIdentifier + " (state machine " + m_sInstanceName + ")");
+	
+	std::string sIdentifier = m_sInstanceName + "." + sChannelIdentifier;
+
+	auto pTelemetryHandler = m_pSystemState->getTelemetryHandlerInstance();
+	pTelemetryHandler->registerChannel(sIdentifier, sChannelDescription, CTelemetryChannel::mapEnvChannelTypeToDataChannelType (eChannelType));
+
+	return new CTelemetryChannel(pTelemetryHandler, m_sInstanceName, sChannelIdentifier);
 }
 
 ITelemetryChannel* CStateEnvironment::FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting)
 {
-	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericPathString(sChannelIdentifier))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "invalid state machine telemetry channel identifier: " + sChannelIdentifier + " (state machine " + m_sInstanceName + ")");
+
+	std::string sIdentifier = m_sInstanceName + "." + sChannelIdentifier;
+
+	auto pTelemetryHandler = m_pSystemState->getTelemetryHandlerInstance();
+	pTelemetryHandler->findChannelByIdentifier(sIdentifier, true);
+
+	return new CTelemetryChannel(pTelemetryHandler, m_sInstanceName, sChannelIdentifier);
+
 }
 

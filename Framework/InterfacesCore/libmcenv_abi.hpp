@@ -6874,6 +6874,17 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverstatusupdatesession_getintegerpa
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverstatusupdatesession_getboolparameter(LibMCEnv_DriverStatusUpdateSession pDriverStatusUpdateSession, const char * pParameterName, bool * pValue);
 
+/**
+* Returns a telemetry channel from the current state machine.
+*
+* @param[in] pDriverStatusUpdateSession - DriverStatusUpdateSession instance.
+* @param[in] pChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+* @param[out] pChannelInstance - Channel instance. NULL if Channel does not exist.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverstatusupdatesession_findtelemetrychannel(LibMCEnv_DriverStatusUpdateSession pDriverStatusUpdateSession, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance);
+
 /*************************************************************************************************************************
  Class definition for DriverEnvironment
 **************************************************************************************************************************/
@@ -7244,10 +7255,11 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverenvironment_loginfo(LibMCEnv_Dri
 * @param[in] pDriverEnvironment - DriverEnvironment instance.
 * @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 * @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[in] eChannelType - Type of Channel.
 * @param[out] pChannelInstance - Channel instance.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv::eTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance);
 
 /**
 * Returns a telemetry channel from the current state machine.
@@ -9442,10 +9454,11 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_clearallunhandledsign
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
 * @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[in] eChannelType - Type of Channel.
 * @param[out] pChannelInstance - Channel instance.
 * @return error code or 0 (success)
 */
-LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv::eTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance);
 
 /**
 * Returns a telemetry channel from the current state machine.

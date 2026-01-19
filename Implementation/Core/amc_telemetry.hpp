@@ -217,6 +217,10 @@ namespace AMC {
 
 			virtual ~CTelemetryScope();
 
+			uint64_t getMarkerID() const; 
+
+			uint64_t getStartTimeStamp() const;
+
 	};
 
 	class CTelemetryChannel : public std::enable_shared_from_this<CTelemetryChannel> {
@@ -252,7 +256,7 @@ namespace AMC {
 
 		LibMCData::eTelemetryChannelType getChannelType () const;
 
-		void createInstantMarker (uint64_t nContextData);
+		uint64_t createInstantMarker (uint64_t nContextData);
 
 		[[nodiscard]] CTelemetryScope startIntervalScope(uint64_t nContextData);
 
@@ -269,6 +273,11 @@ namespace AMC {
 		void getStatistics(uint64_t& nTotalMarkersCreated, uint64_t& nMaxDurationInMicroseconds);
 
 		PTelemetryWriter getWriter() const;		
+
+		static std::string mapDataChannelTypeToTypeString(LibMCData::eTelemetryChannelType dataChannelType);
+
+		static LibMCData::eTelemetryChannelType mapChannelTypeStringToDataChannelType(const std::string& sTypeString);
+
 
 	};
 	
@@ -300,7 +309,8 @@ namespace AMC {
 
 	};
 
-	
+	typedef std::shared_ptr<CTelemetryHandler> PTelemetryHandler;
+
 }
 
 

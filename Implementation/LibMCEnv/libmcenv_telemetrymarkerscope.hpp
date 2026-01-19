@@ -27,13 +27,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Abstract: This is the class declaration of CDriverStatusUpdateSession
+Abstract: This is the class declaration of CTelemetryMarkerScope
 
 */
 
 
-#ifndef __LIBMCENV_DRIVERSTATUSUPDATESESSION
-#define __LIBMCENV_DRIVERSTATUSUPDATESESSION
+#ifndef __LIBMCENV_TELEMETRYMARKERSCOPE
+#define __LIBMCENV_TELEMETRYMARKERSCOPE
 
 #include "libmcenv_interfaces.hpp"
 
@@ -45,9 +45,6 @@ Abstract: This is the class declaration of CDriverStatusUpdateSession
 #endif
 
 // Include custom headers here.
-#include "amc_parametergroup.hpp"
-#include "amc_logger.hpp"
-#include "common_chrono.hpp"
 #include "amc_telemetry.hpp"
 
 namespace LibMCEnv {
@@ -55,54 +52,30 @@ namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CDriverStatusUpdateSession 
+ Class declaration of CTelemetryMarkerScope 
 **************************************************************************************************************************/
 
-class CDriverStatusUpdateSession : public virtual IDriverStatusUpdateSession, public virtual CBase {
+class CTelemetryMarkerScope : public virtual ITelemetryMarkerScope, public virtual CBase {
 private:
-	AMC::PParameterGroup m_pParameterGroup;
-	AMC::PLogger m_pLogger;
-	std::string m_sDriverName;
-	AMCCommon::PChrono m_pGlobalChrono;
-	AMC::PTelemetryHandler m_pTelemetryHandler;
-
-	AMCCommon::CChrono m_Chrono;
+	AMC::CTelemetryScope m_TelemetryScope;
+	std::string m_sParentIdentifier;
+	std::string m_sChannelIdentifier;
 
 public:
 
-	CDriverStatusUpdateSession(AMC::PParameterGroup pParameterGroup, AMC::PLogger pLogger, std::string sDriverName, AMCCommon::PChrono pGlobalChrono, AMC::PTelemetryHandler pTelemetryHandler);
-	
-	virtual ~CDriverStatusUpdateSession();
+    CTelemetryMarkerScope(AMC::CTelemetryScope telemetryScope, const std::string & sParentIdentifier, const std::string & sChannelIdentifier);
 
-	void SetStringParameter(const std::string & sParameterName, const std::string & sValue) override;
+    virtual ~CTelemetryMarkerScope();
 
-	void SetUUIDParameter(const std::string & sParameterName, const std::string & sValue) override;
+	LibMCEnv_uint64 GetMarkerID() override;
 
-	void SetDoubleParameter(const std::string & sParameterName, const LibMCEnv_double dValue) override;
+	std::string GetParent() override;
 
-	void SetIntegerParameter(const std::string & sParameterName, const LibMCEnv_int64 nValue) override;
+	std::string GetIdentifier() override;
 
-	void SetBoolParameter(const std::string & sParameterName, const bool bValue) override;
+	std::string GetGlobalIdentifier() override;
 
-	void LogMessage(const std::string & sLogString) override;
-
-	void LogWarning(const std::string & sLogString) override;
-
-	void LogInfo(const std::string & sLogString) override;
-
-	void Sleep(const LibMCEnv_uint32 nDelay) override;
-
-	std::string GetStringParameter(const std::string& sParameterName) override;
-
-	std::string GetUUIDParameter(const std::string& sParameterName) override;
-
-	LibMCEnv_double GetDoubleParameter(const std::string& sParameterName) override;
-
-	LibMCEnv_int64 GetIntegerParameter(const std::string& sParameterName) override;
-
-	bool GetBoolParameter(const std::string& sParameterName) override;
-
-	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;
+	LibMCEnv_uint64 GetStartTimestamp() override;
 
 };
 
@@ -112,4 +85,4 @@ public:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif // __LIBMCENV_DRIVERSTATUSUPDATESESSION
+#endif // __LIBMCENV_TELEMETRYMARKERSCOPE

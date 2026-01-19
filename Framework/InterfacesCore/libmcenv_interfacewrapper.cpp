@@ -20236,6 +20236,37 @@ LibMCEnvResult libmcenv_driverstatusupdatesession_getboolparameter(LibMCEnv_Driv
 	}
 }
 
+LibMCEnvResult libmcenv_driverstatusupdatesession_findtelemetrychannel(LibMCEnv_DriverStatusUpdateSession pDriverStatusUpdateSession, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pDriverStatusUpdateSession;
+
+	try {
+		if (pChannelIdentifier == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier(pChannelIdentifier);
+		IBase* pBaseChannelInstance(nullptr);
+		IDriverStatusUpdateSession* pIDriverStatusUpdateSession = dynamic_cast<IDriverStatusUpdateSession*>(pIBaseClass);
+		if (!pIDriverStatusUpdateSession)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseChannelInstance = pIDriverStatusUpdateSession->FindTelemetryChannel(sChannelIdentifier, bFailIfNotExisting);
+
+		*pChannelInstance = (IBase*)(pBaseChannelInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for DriverEnvironment
@@ -21259,7 +21290,7 @@ LibMCEnvResult libmcenv_driverenvironment_loginfo(LibMCEnv_DriverEnvironment pDr
 	}
 }
 
-LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance)
+LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, eLibMCEnvTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance)
 {
 	IBase* pIBaseClass = (IBase *)pDriverEnvironment;
 
@@ -21277,7 +21308,7 @@ LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_Driv
 		if (!pIDriverEnvironment)
 			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
 		
-		pBaseChannelInstance = pIDriverEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription);
+		pBaseChannelInstance = pIDriverEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription, eChannelType);
 
 		*pChannelInstance = (IBase*)(pBaseChannelInstance);
 		return LIBMCENV_SUCCESS;
@@ -28437,7 +28468,7 @@ LibMCEnvResult libmcenv_stateenvironment_clearallunhandledsignals(LibMCEnv_State
 	}
 }
 
-LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance)
+LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, eLibMCEnvTelemetryChannelType eChannelType, LibMCEnv_TelemetryChannel * pChannelInstance)
 {
 	IBase* pIBaseClass = (IBase *)pStateEnvironment;
 
@@ -28455,7 +28486,7 @@ LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_State
 		if (!pIStateEnvironment)
 			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
 		
-		pBaseChannelInstance = pIStateEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription);
+		pBaseChannelInstance = pIStateEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription, eChannelType);
 
 		*pChannelInstance = (IBase*)(pBaseChannelInstance);
 		return LIBMCENV_SUCCESS;
@@ -35220,6 +35251,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_driverstatusupdatesession_getintegerparameter;
 	if (sProcName == "libmcenv_driverstatusupdatesession_getboolparameter") 
 		*ppProcAddress = (void*) &libmcenv_driverstatusupdatesession_getboolparameter;
+	if (sProcName == "libmcenv_driverstatusupdatesession_findtelemetrychannel") 
+		*ppProcAddress = (void*) &libmcenv_driverstatusupdatesession_findtelemetrychannel;
 	if (sProcName == "libmcenv_driverenvironment_createstatusupdatesession") 
 		*ppProcAddress = (void*) &libmcenv_driverenvironment_createstatusupdatesession;
 	if (sProcName == "libmcenv_driverenvironment_createworkingdirectory") 

@@ -505,9 +505,10 @@ namespace AMC {
 		nMaxDurationInMicroseconds = m_nMaxDurationInMicroseconds;
 	}
 
-	void CTelemetryChannel::createInstantMarker(uint64_t nContextData)
+	uint64_t CTelemetryChannel::createInstantMarker(uint64_t nContextData)
 	{
-		createMarkerEx(true, nContextData);
+		auto pMarker = createMarkerEx(true, nContextData);
+		return pMarker->getMarkerID();
 	}
 
 
@@ -547,6 +548,48 @@ namespace AMC {
 	}
 
 
+	std::string CTelemetryChannel::mapDataChannelTypeToTypeString(LibMCData::eTelemetryChannelType dataChannelType)
+	{
+		switch (dataChannelType) {
+		case LibMCData::eTelemetryChannelType::CustomMarker:
+			return "custommarker";
+		case LibMCData::eTelemetryChannelType::RemoteQuery:
+			return "remotequery";
+		case LibMCData::eTelemetryChannelType::StateExecution:
+			return "stateexecution";
+		case LibMCData::eTelemetryChannelType::StateRepeatDelay:
+			return "staterepeatdelay";
+		case LibMCData::eTelemetryChannelType::SignalQueue:
+			return "signalqueue";
+		case LibMCData::eTelemetryChannelType::SignalProcessing:
+			return "signalprocessing";
+		case LibMCData::eTelemetryChannelType::SignalAcknowledgement:
+			return "signalacknowledgement";
+		default:
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE, "invalid telemetry channel type");
+		}
+	}
+
+	LibMCData::eTelemetryChannelType CTelemetryChannel::mapChannelTypeStringToDataChannelType(const std::string& sTypeString)
+	{
+		if (sTypeString == "custommarker")
+			return LibMCData::eTelemetryChannelType::CustomMarker;
+		if (sTypeString == "remotequery")
+			return LibMCData::eTelemetryChannelType::RemoteQuery;
+		if (sTypeString == "stateexecution")
+			return LibMCData::eTelemetryChannelType::StateExecution;
+		if (sTypeString == "staterepeatdelay")
+			return LibMCData::eTelemetryChannelType::StateRepeatDelay;
+		if (sTypeString == "signalqueue")
+			return LibMCData::eTelemetryChannelType::SignalQueue;
+		if (sTypeString == "signalprocessing")
+			return LibMCData::eTelemetryChannelType::SignalProcessing;
+		if (sTypeString == "signalacknowledgement")
+			return LibMCData::eTelemetryChannelType::SignalAcknowledgement;
+
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE, "invalid telemetry channel type string: " + sTypeString);
+	}
+
 	
 
 	CTelemetryScope::CTelemetryScope(PTelemetryMarker pMarker)
@@ -566,6 +609,16 @@ namespace AMC {
 				// ignore in destructor
 			}
 		}
+	}
+
+	uint64_t CTelemetryScope::getMarkerID() const
+	{
+		return m_pMarker->getMarkerID();
+	}
+
+	uint64_t CTelemetryScope::getStartTimeStamp() const
+	{
+		return m_pMarker->getStartTimestamp();
 	}
 
 

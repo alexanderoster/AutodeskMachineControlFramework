@@ -726,7 +726,10 @@
 		<error name="TELEMETRYCHUNKINDEXOUTOFRANGE" code="701" description="Telemetry Chunk index out of range." />	
 		<error name="TELEMETRYCHUNKIDMISMATCH" code="702" description="Telemetry Chunk ID mismatch." />	
 		<error name="TELEMETRYCHUNKISREADONLY" code="703" description="Telemetry Chunk is readonly." />	
-		<error name="TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY" code="704" description="Telemetry Chunks can only be archived if readonly." />	
+		<error name="TELEMETRYCHUNKSCANONLYBEARCHIVEDIFREADONLY" code="704" description="Telemetry Chunks can only be archived if readonly." />			
+		<error name="INVALIDTELEMETRYCHANNELTYPE" code="705" description="Invalid telemetry channel type." />	
+		<error name="MISSINGTELEMETRYCHANNELIDENTIFIER" code="706" description="Missing telemetry channel identifier." />	
+		<error name="MISSINGTELEMETRYCHANNELDESCRIPTION" code="707" description="Missing telemetry channel description." />	
 		
 		
 		
