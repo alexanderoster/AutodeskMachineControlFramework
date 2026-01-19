@@ -7226,6 +7226,28 @@ typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_LogWarningPtr) (LibMCEnv_Dri
 typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_LogInfoPtr) (LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pLogString);
 
 /**
+* Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+*
+* @param[in] pDriverEnvironment - DriverEnvironment instance.
+* @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+* @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[out] pChannelInstance - Channel instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+
+/**
+* Returns a telemetry channel from the current state machine.
+*
+* @param[in] pDriverEnvironment - DriverEnvironment instance.
+* @param[in] pChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+* @param[out] pChannelInstance - Channel instance. NULL if Channel does not exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvDriverEnvironment_FindTelemetryChannelPtr) (LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance);
+
+/**
 * creates an empty image object.
 *
 * @param[in] pDriverEnvironment - DriverEnvironment instance.
@@ -9215,6 +9237,118 @@ typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationHandler_FindConfigurationT
 typedef LibMCEnvResult (*PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeBySchemaPtr) (LibMCEnv_MachineConfigurationHandler pMachineConfigurationHandler, const char * pSchemaType, LibMCEnv_MachineConfigurationType * pTypeInstance);
 
 /*************************************************************************************************************************
+ Class definition for TelemetryMarkerScope
+**************************************************************************************************************************/
+
+/**
+* Returns the global marker ID
+*
+* @param[in] pTelemetryMarkerScope - TelemetryMarkerScope instance.
+* @param[out] pMarkerID - Global marker id.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryMarkerScope_GetMarkerIDPtr) (LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, LibMCEnv_uint64 * pMarkerID);
+
+/**
+* Returns the Identifier of the Parent (State machine or Driver) of the channel.
+*
+* @param[in] pTelemetryMarkerScope - TelemetryMarkerScope instance.
+* @param[in] nParentIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pParentIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pParentIdentifierBuffer -  buffer of Parent Identifier, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryMarkerScope_GetParentPtr) (LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nParentIdentifierBufferSize, LibMCEnv_uint32* pParentIdentifierNeededChars, char * pParentIdentifierBuffer);
+
+/**
+* Returns the Identifier of the Channel.
+*
+* @param[in] pTelemetryMarkerScope - TelemetryMarkerScope instance.
+* @param[in] nChannelIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pChannelIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pChannelIdentifierBuffer -  buffer of Channel Identifier. Will be a alphanumerical path string., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryMarkerScope_GetIdentifierPtr) (LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer);
+
+/**
+* Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+*
+* @param[in] pTelemetryMarkerScope - TelemetryMarkerScope instance.
+* @param[in] nGlobalIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pGlobalIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pGlobalIdentifierBuffer -  buffer of Global Identifier. Will be a alphanumerical path string., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryMarkerScope_GetGlobalIdentifierPtr) (LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nGlobalIdentifierBufferSize, LibMCEnv_uint32* pGlobalIdentifierNeededChars, char * pGlobalIdentifierBuffer);
+
+/**
+* Returns start timestamp of the marker
+*
+* @param[in] pTelemetryMarkerScope - TelemetryMarkerScope instance.
+* @param[out] pStartTimestamp - Start timestamp.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryMarkerScope_GetStartTimestampPtr) (LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, LibMCEnv_uint64 * pStartTimestamp);
+
+/*************************************************************************************************************************
+ Class definition for TelemetryChannel
+**************************************************************************************************************************/
+
+/**
+* Returns the Identifier of the Parent (State machine or Driver) of the channel.
+*
+* @param[in] pTelemetryChannel - TelemetryChannel instance.
+* @param[in] nParentIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pParentIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pParentIdentifierBuffer -  buffer of Parent Identifier, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_GetParentPtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nParentIdentifierBufferSize, LibMCEnv_uint32* pParentIdentifierNeededChars, char * pParentIdentifierBuffer);
+
+/**
+* Returns the Identifier of the Channel.
+*
+* @param[in] pTelemetryChannel - TelemetryChannel instance.
+* @param[in] nChannelIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pChannelIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pChannelIdentifierBuffer -  buffer of Channel Identifier. Will be a alphanumerical path string., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_GetIdentifierPtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer);
+
+/**
+* Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+*
+* @param[in] pTelemetryChannel - TelemetryChannel instance.
+* @param[in] nGlobalIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pGlobalIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pGlobalIdentifierBuffer -  buffer of Global Identifier. Will be a alphanumerical path string., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_GetGlobalIdentifierPtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nGlobalIdentifierBufferSize, LibMCEnv_uint32* pGlobalIdentifierNeededChars, char * pGlobalIdentifierBuffer);
+
+/**
+* Starts a marker scope object.
+*
+* @param[in] pTelemetryChannel - TelemetryChannel instance.
+* @param[in] nUserContextData - User data to be stored with the marker.
+* @param[out] pTelemetryMarkerScopeInstance - Marker scope instance. Will finish when freed.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_StartMarkerScopePtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, LibMCEnv_uint64 nUserContextData, LibMCEnv_TelemetryMarkerScope * pTelemetryMarkerScopeInstance);
+
+/**
+* Creates a marker of length 0.
+*
+* @param[in] pTelemetryChannel - TelemetryChannel instance.
+* @param[in] nUserContextData - User data to be stored with the marker.
+* @param[out] pMarkerID - Global marker ID.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, LibMCEnv_uint64 nUserContextData, LibMCEnv_uint64 * pMarkerID);
+
+/*************************************************************************************************************************
  Class definition for StateEnvironment
 **************************************************************************************************************************/
 
@@ -9288,6 +9422,28 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_ClearUnhandledSignalsOfTypePt
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_ClearAllUnhandledSignalsPtr) (LibMCEnv_StateEnvironment pStateEnvironment);
+
+/**
+* Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+* @param[in] pChannelDescription - Description of Channel. MUST NOT be empty.
+* @param[out] pChannelInstance - Channel instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance);
+
+/**
+* Returns a telemetry channel from the current state machine.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+* @param[out] pChannelInstance - Channel instance. NULL if Channel does not exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_FindTelemetryChannelPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance);
 
 /**
 * Retrieves an InQueue or InProcess signal from the current state machine by UUID.
@@ -11791,6 +11947,8 @@ typedef struct {
 	PLibMCEnvDriverEnvironment_LogMessagePtr m_DriverEnvironment_LogMessage;
 	PLibMCEnvDriverEnvironment_LogWarningPtr m_DriverEnvironment_LogWarning;
 	PLibMCEnvDriverEnvironment_LogInfoPtr m_DriverEnvironment_LogInfo;
+	PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr m_DriverEnvironment_RegisterTelemetryChannel;
+	PLibMCEnvDriverEnvironment_FindTelemetryChannelPtr m_DriverEnvironment_FindTelemetryChannel;
 	PLibMCEnvDriverEnvironment_CreateEmptyImagePtr m_DriverEnvironment_CreateEmptyImage;
 	PLibMCEnvDriverEnvironment_CreateImageLoaderPtr m_DriverEnvironment_CreateImageLoader;
 	PLibMCEnvDriverEnvironment_CreateDiscreteField2DPtr m_DriverEnvironment_CreateDiscreteField2D;
@@ -11972,6 +12130,16 @@ typedef struct {
 	PLibMCEnvMachineConfigurationHandler_ListRegisteredTypesPtr m_MachineConfigurationHandler_ListRegisteredTypes;
 	PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeByUUIDPtr m_MachineConfigurationHandler_FindConfigurationTypeByUUID;
 	PLibMCEnvMachineConfigurationHandler_FindConfigurationTypeBySchemaPtr m_MachineConfigurationHandler_FindConfigurationTypeBySchema;
+	PLibMCEnvTelemetryMarkerScope_GetMarkerIDPtr m_TelemetryMarkerScope_GetMarkerID;
+	PLibMCEnvTelemetryMarkerScope_GetParentPtr m_TelemetryMarkerScope_GetParent;
+	PLibMCEnvTelemetryMarkerScope_GetIdentifierPtr m_TelemetryMarkerScope_GetIdentifier;
+	PLibMCEnvTelemetryMarkerScope_GetGlobalIdentifierPtr m_TelemetryMarkerScope_GetGlobalIdentifier;
+	PLibMCEnvTelemetryMarkerScope_GetStartTimestampPtr m_TelemetryMarkerScope_GetStartTimestamp;
+	PLibMCEnvTelemetryChannel_GetParentPtr m_TelemetryChannel_GetParent;
+	PLibMCEnvTelemetryChannel_GetIdentifierPtr m_TelemetryChannel_GetIdentifier;
+	PLibMCEnvTelemetryChannel_GetGlobalIdentifierPtr m_TelemetryChannel_GetGlobalIdentifier;
+	PLibMCEnvTelemetryChannel_StartMarkerScopePtr m_TelemetryChannel_StartMarkerScope;
+	PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr m_TelemetryChannel_CreateInstantMarker;
 	PLibMCEnvStateEnvironment_GetMachineStatePtr m_StateEnvironment_GetMachineState;
 	PLibMCEnvStateEnvironment_GetPreviousStatePtr m_StateEnvironment_GetPreviousState;
 	PLibMCEnvStateEnvironment_PrepareSignalPtr m_StateEnvironment_PrepareSignal;
@@ -11979,6 +12147,8 @@ typedef struct {
 	PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr m_StateEnvironment_SignalQueueIsEmpty;
 	PLibMCEnvStateEnvironment_ClearUnhandledSignalsOfTypePtr m_StateEnvironment_ClearUnhandledSignalsOfType;
 	PLibMCEnvStateEnvironment_ClearAllUnhandledSignalsPtr m_StateEnvironment_ClearAllUnhandledSignals;
+	PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr m_StateEnvironment_RegisterTelemetryChannel;
+	PLibMCEnvStateEnvironment_FindTelemetryChannelPtr m_StateEnvironment_FindTelemetryChannel;
 	PLibMCEnvStateEnvironment_GetUnhandledSignalByUUIDPtr m_StateEnvironment_GetUnhandledSignalByUUID;
 	PLibMCEnvStateEnvironment_GetDriverLibraryPtr m_StateEnvironment_GetDriverLibrary;
 	PLibMCEnvStateEnvironment_CreateDriverAccessPtr m_StateEnvironment_CreateDriverAccess;

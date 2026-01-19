@@ -21259,6 +21259,71 @@ LibMCEnvResult libmcenv_driverenvironment_loginfo(LibMCEnv_DriverEnvironment pDr
 	}
 }
 
+LibMCEnvResult libmcenv_driverenvironment_registertelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pDriverEnvironment;
+
+	try {
+		if (pChannelIdentifier == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelDescription == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier(pChannelIdentifier);
+		std::string sChannelDescription(pChannelDescription);
+		IBase* pBaseChannelInstance(nullptr);
+		IDriverEnvironment* pIDriverEnvironment = dynamic_cast<IDriverEnvironment*>(pIBaseClass);
+		if (!pIDriverEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseChannelInstance = pIDriverEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription);
+
+		*pChannelInstance = (IBase*)(pBaseChannelInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_driverenvironment_findtelemetrychannel(LibMCEnv_DriverEnvironment pDriverEnvironment, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pDriverEnvironment;
+
+	try {
+		if (pChannelIdentifier == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier(pChannelIdentifier);
+		IBase* pBaseChannelInstance(nullptr);
+		IDriverEnvironment* pIDriverEnvironment = dynamic_cast<IDriverEnvironment*>(pIBaseClass);
+		if (!pIDriverEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseChannelInstance = pIDriverEnvironment->FindTelemetryChannel(sChannelIdentifier, bFailIfNotExisting);
+
+		*pChannelInstance = (IBase*)(pBaseChannelInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_driverenvironment_createemptyimage(LibMCEnv_DriverEnvironment pDriverEnvironment, LibMCEnv_uint32 nPixelSizeX, LibMCEnv_uint32 nPixelSizeY, LibMCEnv_double dDPIValueX, LibMCEnv_double dDPIValueY, eLibMCEnvImagePixelFormat ePixelFormat, LibMCEnv_ImageData * pImageDataInstance)
 {
 	IBase* pIBaseClass = (IBase *)pDriverEnvironment;
@@ -27724,6 +27789,408 @@ LibMCEnvResult libmcenv_machineconfigurationhandler_findconfigurationtypebyschem
 
 
 /*************************************************************************************************************************
+ Class implementation for TelemetryMarkerScope
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_telemetrymarkerscope_getmarkerid(LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, LibMCEnv_uint64 * pMarkerID)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryMarkerScope;
+
+	try {
+		if (pMarkerID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		ITelemetryMarkerScope* pITelemetryMarkerScope = dynamic_cast<ITelemetryMarkerScope*>(pIBaseClass);
+		if (!pITelemetryMarkerScope)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pMarkerID = pITelemetryMarkerScope->GetMarkerID();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrymarkerscope_getparent(LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nParentIdentifierBufferSize, LibMCEnv_uint32* pParentIdentifierNeededChars, char * pParentIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryMarkerScope;
+
+	try {
+		if ( (!pParentIdentifierBuffer) && !(pParentIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sParentIdentifier("");
+		ITelemetryMarkerScope* pITelemetryMarkerScope = dynamic_cast<ITelemetryMarkerScope*>(pIBaseClass);
+		if (!pITelemetryMarkerScope)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pParentIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sParentIdentifier = pITelemetryMarkerScope->GetParent();
+
+			pITelemetryMarkerScope->_setCache (new ParameterCache_1<std::string> (sParentIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryMarkerScope->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sParentIdentifier);
+			pITelemetryMarkerScope->_setCache (nullptr);
+		}
+		
+		if (pParentIdentifierNeededChars)
+			*pParentIdentifierNeededChars = (LibMCEnv_uint32) (sParentIdentifier.size()+1);
+		if (pParentIdentifierBuffer) {
+			if (sParentIdentifier.size() >= nParentIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iParentIdentifier = 0; iParentIdentifier < sParentIdentifier.size(); iParentIdentifier++)
+				pParentIdentifierBuffer[iParentIdentifier] = sParentIdentifier[iParentIdentifier];
+			pParentIdentifierBuffer[sParentIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrymarkerscope_getidentifier(LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryMarkerScope;
+
+	try {
+		if ( (!pChannelIdentifierBuffer) && !(pChannelIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier("");
+		ITelemetryMarkerScope* pITelemetryMarkerScope = dynamic_cast<ITelemetryMarkerScope*>(pIBaseClass);
+		if (!pITelemetryMarkerScope)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pChannelIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sChannelIdentifier = pITelemetryMarkerScope->GetIdentifier();
+
+			pITelemetryMarkerScope->_setCache (new ParameterCache_1<std::string> (sChannelIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryMarkerScope->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sChannelIdentifier);
+			pITelemetryMarkerScope->_setCache (nullptr);
+		}
+		
+		if (pChannelIdentifierNeededChars)
+			*pChannelIdentifierNeededChars = (LibMCEnv_uint32) (sChannelIdentifier.size()+1);
+		if (pChannelIdentifierBuffer) {
+			if (sChannelIdentifier.size() >= nChannelIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iChannelIdentifier = 0; iChannelIdentifier < sChannelIdentifier.size(); iChannelIdentifier++)
+				pChannelIdentifierBuffer[iChannelIdentifier] = sChannelIdentifier[iChannelIdentifier];
+			pChannelIdentifierBuffer[sChannelIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrymarkerscope_getglobalidentifier(LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, const LibMCEnv_uint32 nGlobalIdentifierBufferSize, LibMCEnv_uint32* pGlobalIdentifierNeededChars, char * pGlobalIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryMarkerScope;
+
+	try {
+		if ( (!pGlobalIdentifierBuffer) && !(pGlobalIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sGlobalIdentifier("");
+		ITelemetryMarkerScope* pITelemetryMarkerScope = dynamic_cast<ITelemetryMarkerScope*>(pIBaseClass);
+		if (!pITelemetryMarkerScope)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pGlobalIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sGlobalIdentifier = pITelemetryMarkerScope->GetGlobalIdentifier();
+
+			pITelemetryMarkerScope->_setCache (new ParameterCache_1<std::string> (sGlobalIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryMarkerScope->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sGlobalIdentifier);
+			pITelemetryMarkerScope->_setCache (nullptr);
+		}
+		
+		if (pGlobalIdentifierNeededChars)
+			*pGlobalIdentifierNeededChars = (LibMCEnv_uint32) (sGlobalIdentifier.size()+1);
+		if (pGlobalIdentifierBuffer) {
+			if (sGlobalIdentifier.size() >= nGlobalIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iGlobalIdentifier = 0; iGlobalIdentifier < sGlobalIdentifier.size(); iGlobalIdentifier++)
+				pGlobalIdentifierBuffer[iGlobalIdentifier] = sGlobalIdentifier[iGlobalIdentifier];
+			pGlobalIdentifierBuffer[sGlobalIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrymarkerscope_getstarttimestamp(LibMCEnv_TelemetryMarkerScope pTelemetryMarkerScope, LibMCEnv_uint64 * pStartTimestamp)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryMarkerScope;
+
+	try {
+		if (pStartTimestamp == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		ITelemetryMarkerScope* pITelemetryMarkerScope = dynamic_cast<ITelemetryMarkerScope*>(pIBaseClass);
+		if (!pITelemetryMarkerScope)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pStartTimestamp = pITelemetryMarkerScope->GetStartTimestamp();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for TelemetryChannel
+**************************************************************************************************************************/
+LibMCEnvResult libmcenv_telemetrychannel_getparent(LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nParentIdentifierBufferSize, LibMCEnv_uint32* pParentIdentifierNeededChars, char * pParentIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryChannel;
+
+	try {
+		if ( (!pParentIdentifierBuffer) && !(pParentIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sParentIdentifier("");
+		ITelemetryChannel* pITelemetryChannel = dynamic_cast<ITelemetryChannel*>(pIBaseClass);
+		if (!pITelemetryChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pParentIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sParentIdentifier = pITelemetryChannel->GetParent();
+
+			pITelemetryChannel->_setCache (new ParameterCache_1<std::string> (sParentIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryChannel->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sParentIdentifier);
+			pITelemetryChannel->_setCache (nullptr);
+		}
+		
+		if (pParentIdentifierNeededChars)
+			*pParentIdentifierNeededChars = (LibMCEnv_uint32) (sParentIdentifier.size()+1);
+		if (pParentIdentifierBuffer) {
+			if (sParentIdentifier.size() >= nParentIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iParentIdentifier = 0; iParentIdentifier < sParentIdentifier.size(); iParentIdentifier++)
+				pParentIdentifierBuffer[iParentIdentifier] = sParentIdentifier[iParentIdentifier];
+			pParentIdentifierBuffer[sParentIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrychannel_getidentifier(LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nChannelIdentifierBufferSize, LibMCEnv_uint32* pChannelIdentifierNeededChars, char * pChannelIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryChannel;
+
+	try {
+		if ( (!pChannelIdentifierBuffer) && !(pChannelIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier("");
+		ITelemetryChannel* pITelemetryChannel = dynamic_cast<ITelemetryChannel*>(pIBaseClass);
+		if (!pITelemetryChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pChannelIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sChannelIdentifier = pITelemetryChannel->GetIdentifier();
+
+			pITelemetryChannel->_setCache (new ParameterCache_1<std::string> (sChannelIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryChannel->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sChannelIdentifier);
+			pITelemetryChannel->_setCache (nullptr);
+		}
+		
+		if (pChannelIdentifierNeededChars)
+			*pChannelIdentifierNeededChars = (LibMCEnv_uint32) (sChannelIdentifier.size()+1);
+		if (pChannelIdentifierBuffer) {
+			if (sChannelIdentifier.size() >= nChannelIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iChannelIdentifier = 0; iChannelIdentifier < sChannelIdentifier.size(); iChannelIdentifier++)
+				pChannelIdentifierBuffer[iChannelIdentifier] = sChannelIdentifier[iChannelIdentifier];
+			pChannelIdentifierBuffer[sChannelIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrychannel_getglobalidentifier(LibMCEnv_TelemetryChannel pTelemetryChannel, const LibMCEnv_uint32 nGlobalIdentifierBufferSize, LibMCEnv_uint32* pGlobalIdentifierNeededChars, char * pGlobalIdentifierBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryChannel;
+
+	try {
+		if ( (!pGlobalIdentifierBuffer) && !(pGlobalIdentifierNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sGlobalIdentifier("");
+		ITelemetryChannel* pITelemetryChannel = dynamic_cast<ITelemetryChannel*>(pIBaseClass);
+		if (!pITelemetryChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pGlobalIdentifierBuffer == nullptr);
+		if (isCacheCall) {
+			sGlobalIdentifier = pITelemetryChannel->GetGlobalIdentifier();
+
+			pITelemetryChannel->_setCache (new ParameterCache_1<std::string> (sGlobalIdentifier));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pITelemetryChannel->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sGlobalIdentifier);
+			pITelemetryChannel->_setCache (nullptr);
+		}
+		
+		if (pGlobalIdentifierNeededChars)
+			*pGlobalIdentifierNeededChars = (LibMCEnv_uint32) (sGlobalIdentifier.size()+1);
+		if (pGlobalIdentifierBuffer) {
+			if (sGlobalIdentifier.size() >= nGlobalIdentifierBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iGlobalIdentifier = 0; iGlobalIdentifier < sGlobalIdentifier.size(); iGlobalIdentifier++)
+				pGlobalIdentifierBuffer[iGlobalIdentifier] = sGlobalIdentifier[iGlobalIdentifier];
+			pGlobalIdentifierBuffer[sGlobalIdentifier.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrychannel_startmarkerscope(LibMCEnv_TelemetryChannel pTelemetryChannel, LibMCEnv_uint64 nUserContextData, LibMCEnv_TelemetryMarkerScope * pTelemetryMarkerScopeInstance)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryChannel;
+
+	try {
+		if (pTelemetryMarkerScopeInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IBase* pBaseTelemetryMarkerScopeInstance(nullptr);
+		ITelemetryChannel* pITelemetryChannel = dynamic_cast<ITelemetryChannel*>(pIBaseClass);
+		if (!pITelemetryChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseTelemetryMarkerScopeInstance = pITelemetryChannel->StartMarkerScope(nUserContextData);
+
+		*pTelemetryMarkerScopeInstance = (IBase*)(pBaseTelemetryMarkerScopeInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_telemetrychannel_createinstantmarker(LibMCEnv_TelemetryChannel pTelemetryChannel, LibMCEnv_uint64 nUserContextData, LibMCEnv_uint64 * pMarkerID)
+{
+	IBase* pIBaseClass = (IBase *)pTelemetryChannel;
+
+	try {
+		if (pMarkerID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		ITelemetryChannel* pITelemetryChannel = dynamic_cast<ITelemetryChannel*>(pIBaseClass);
+		if (!pITelemetryChannel)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pMarkerID = pITelemetryChannel->CreateInstantMarker(nUserContextData);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
  Class implementation for StateEnvironment
 **************************************************************************************************************************/
 LibMCEnvResult libmcenv_stateenvironment_getmachinestate(LibMCEnv_StateEnvironment pStateEnvironment, const char * pMachineInstance, const LibMCEnv_uint32 nStateNameBufferSize, LibMCEnv_uint32* pStateNameNeededChars, char * pStateNameBuffer)
@@ -27957,6 +28424,71 @@ LibMCEnvResult libmcenv_stateenvironment_clearallunhandledsignals(LibMCEnv_State
 		
 		pIStateEnvironment->ClearAllUnhandledSignals();
 
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_registertelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, const char * pChannelDescription, LibMCEnv_TelemetryChannel * pChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pChannelIdentifier == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelDescription == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier(pChannelIdentifier);
+		std::string sChannelDescription(pChannelDescription);
+		IBase* pBaseChannelInstance(nullptr);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseChannelInstance = pIStateEnvironment->RegisterTelemetryChannel(sChannelIdentifier, sChannelDescription);
+
+		*pChannelInstance = (IBase*)(pBaseChannelInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_findtelemetrychannel(LibMCEnv_StateEnvironment pStateEnvironment, const char * pChannelIdentifier, bool bFailIfNotExisting, LibMCEnv_TelemetryChannel * pChannelInstance)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pChannelIdentifier == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pChannelInstance == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sChannelIdentifier(pChannelIdentifier);
+		IBase* pBaseChannelInstance(nullptr);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pBaseChannelInstance = pIStateEnvironment->FindTelemetryChannel(sChannelIdentifier, bFailIfNotExisting);
+
+		*pChannelInstance = (IBase*)(pBaseChannelInstance);
 		return LIBMCENV_SUCCESS;
 	}
 	catch (ELibMCEnvInterfaceException & Exception) {
@@ -34758,6 +35290,10 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_driverenvironment_logwarning;
 	if (sProcName == "libmcenv_driverenvironment_loginfo") 
 		*ppProcAddress = (void*) &libmcenv_driverenvironment_loginfo;
+	if (sProcName == "libmcenv_driverenvironment_registertelemetrychannel") 
+		*ppProcAddress = (void*) &libmcenv_driverenvironment_registertelemetrychannel;
+	if (sProcName == "libmcenv_driverenvironment_findtelemetrychannel") 
+		*ppProcAddress = (void*) &libmcenv_driverenvironment_findtelemetrychannel;
 	if (sProcName == "libmcenv_driverenvironment_createemptyimage") 
 		*ppProcAddress = (void*) &libmcenv_driverenvironment_createemptyimage;
 	if (sProcName == "libmcenv_driverenvironment_createimageloader") 
@@ -35120,6 +35656,26 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_machineconfigurationhandler_findconfigurationtypebyuuid;
 	if (sProcName == "libmcenv_machineconfigurationhandler_findconfigurationtypebyschema") 
 		*ppProcAddress = (void*) &libmcenv_machineconfigurationhandler_findconfigurationtypebyschema;
+	if (sProcName == "libmcenv_telemetrymarkerscope_getmarkerid") 
+		*ppProcAddress = (void*) &libmcenv_telemetrymarkerscope_getmarkerid;
+	if (sProcName == "libmcenv_telemetrymarkerscope_getparent") 
+		*ppProcAddress = (void*) &libmcenv_telemetrymarkerscope_getparent;
+	if (sProcName == "libmcenv_telemetrymarkerscope_getidentifier") 
+		*ppProcAddress = (void*) &libmcenv_telemetrymarkerscope_getidentifier;
+	if (sProcName == "libmcenv_telemetrymarkerscope_getglobalidentifier") 
+		*ppProcAddress = (void*) &libmcenv_telemetrymarkerscope_getglobalidentifier;
+	if (sProcName == "libmcenv_telemetrymarkerscope_getstarttimestamp") 
+		*ppProcAddress = (void*) &libmcenv_telemetrymarkerscope_getstarttimestamp;
+	if (sProcName == "libmcenv_telemetrychannel_getparent") 
+		*ppProcAddress = (void*) &libmcenv_telemetrychannel_getparent;
+	if (sProcName == "libmcenv_telemetrychannel_getidentifier") 
+		*ppProcAddress = (void*) &libmcenv_telemetrychannel_getidentifier;
+	if (sProcName == "libmcenv_telemetrychannel_getglobalidentifier") 
+		*ppProcAddress = (void*) &libmcenv_telemetrychannel_getglobalidentifier;
+	if (sProcName == "libmcenv_telemetrychannel_startmarkerscope") 
+		*ppProcAddress = (void*) &libmcenv_telemetrychannel_startmarkerscope;
+	if (sProcName == "libmcenv_telemetrychannel_createinstantmarker") 
+		*ppProcAddress = (void*) &libmcenv_telemetrychannel_createinstantmarker;
 	if (sProcName == "libmcenv_stateenvironment_getmachinestate") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_getmachinestate;
 	if (sProcName == "libmcenv_stateenvironment_getpreviousstate") 
@@ -35134,6 +35690,10 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_clearunhandledsignalsoftype;
 	if (sProcName == "libmcenv_stateenvironment_clearallunhandledsignals") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_clearallunhandledsignals;
+	if (sProcName == "libmcenv_stateenvironment_registertelemetrychannel") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_registertelemetrychannel;
+	if (sProcName == "libmcenv_stateenvironment_findtelemetrychannel") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_findtelemetrychannel;
 	if (sProcName == "libmcenv_stateenvironment_getunhandledsignalbyuuid") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_getunhandledsignalbyuuid;
 	if (sProcName == "libmcenv_stateenvironment_getdriverlibrary") 

@@ -95,6 +95,10 @@ public:
 
 	void ClearAllUnhandledSignals() override;
 
+	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription) override;
+
+	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;	
+
 	bool HasBuildJob(const std::string& sBuildUUID) override;
 
 	IBuild* GetBuildJob(const std::string& sBuildUUID) override;

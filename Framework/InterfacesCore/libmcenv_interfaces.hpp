@@ -133,6 +133,8 @@ class IMachineConfigurationVersionIterator;
 class IMachineConfigurationType;
 class IMachineConfigurationTypeIterator;
 class IMachineConfigurationHandler;
+class ITelemetryMarkerScope;
+class ITelemetryChannel;
 class IStateEnvironment;
 class IUIItem;
 class IUIEnvironment;
@@ -5707,6 +5709,22 @@ public:
 	virtual void LogInfo(const std::string & sLogString) = 0;
 
 	/**
+	* IDriverEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @return Channel instance.
+	*/
+	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
+
+	/**
+	* IDriverEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	virtual ITelemetryChannel * FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting) = 0;
+
+	/**
 	* IDriverEnvironment::CreateEmptyImage - creates an empty image object.
 	* @param[in] nPixelSizeX - Pixel size in X. MUST be positive.
 	* @param[in] nPixelSizeY - Pixel size in Y. MUST be positive.
@@ -7171,6 +7189,90 @@ typedef IBaseSharedPtr<IMachineConfigurationHandler> PIMachineConfigurationHandl
 
 
 /*************************************************************************************************************************
+ Class interface for TelemetryMarkerScope 
+**************************************************************************************************************************/
+
+class ITelemetryMarkerScope : public virtual IBase {
+public:
+	/**
+	* ITelemetryMarkerScope::GetMarkerID - Returns the global marker ID
+	* @return Global marker id.
+	*/
+	virtual LibMCEnv_uint64 GetMarkerID() = 0;
+
+	/**
+	* ITelemetryMarkerScope::GetParent - Returns the Identifier of the Parent (State machine or Driver) of the channel.
+	* @return Parent Identifier
+	*/
+	virtual std::string GetParent() = 0;
+
+	/**
+	* ITelemetryMarkerScope::GetIdentifier - Returns the Identifier of the Channel.
+	* @return Channel Identifier. Will be a alphanumerical path string.
+	*/
+	virtual std::string GetIdentifier() = 0;
+
+	/**
+	* ITelemetryMarkerScope::GetGlobalIdentifier - Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+	* @return Global Identifier. Will be a alphanumerical path string.
+	*/
+	virtual std::string GetGlobalIdentifier() = 0;
+
+	/**
+	* ITelemetryMarkerScope::GetStartTimestamp - Returns start timestamp of the marker
+	* @return Start timestamp.
+	*/
+	virtual LibMCEnv_uint64 GetStartTimestamp() = 0;
+
+};
+
+typedef IBaseSharedPtr<ITelemetryMarkerScope> PITelemetryMarkerScope;
+
+
+/*************************************************************************************************************************
+ Class interface for TelemetryChannel 
+**************************************************************************************************************************/
+
+class ITelemetryChannel : public virtual IBase {
+public:
+	/**
+	* ITelemetryChannel::GetParent - Returns the Identifier of the Parent (State machine or Driver) of the channel.
+	* @return Parent Identifier
+	*/
+	virtual std::string GetParent() = 0;
+
+	/**
+	* ITelemetryChannel::GetIdentifier - Returns the Identifier of the Channel.
+	* @return Channel Identifier. Will be a alphanumerical path string.
+	*/
+	virtual std::string GetIdentifier() = 0;
+
+	/**
+	* ITelemetryChannel::GetGlobalIdentifier - Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+	* @return Global Identifier. Will be a alphanumerical path string.
+	*/
+	virtual std::string GetGlobalIdentifier() = 0;
+
+	/**
+	* ITelemetryChannel::StartMarkerScope - Starts a marker scope object.
+	* @param[in] nUserContextData - User data to be stored with the marker.
+	* @return Marker scope instance. Will finish when freed.
+	*/
+	virtual ITelemetryMarkerScope * StartMarkerScope(const LibMCEnv_uint64 nUserContextData) = 0;
+
+	/**
+	* ITelemetryChannel::CreateInstantMarker - Creates a marker of length 0.
+	* @param[in] nUserContextData - User data to be stored with the marker.
+	* @return Global marker ID.
+	*/
+	virtual LibMCEnv_uint64 CreateInstantMarker(const LibMCEnv_uint64 nUserContextData) = 0;
+
+};
+
+typedef IBaseSharedPtr<ITelemetryChannel> PITelemetryChannel;
+
+
+/*************************************************************************************************************************
  Class interface for StateEnvironment 
 **************************************************************************************************************************/
 
@@ -7221,6 +7323,22 @@ public:
 	* IStateEnvironment::ClearAllUnhandledSignals - Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected
 	*/
 	virtual void ClearAllUnhandledSignals() = 0;
+
+	/**
+	* IStateEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @return Channel instance.
+	*/
+	virtual ITelemetryChannel * RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription) = 0;
+
+	/**
+	* IStateEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	virtual ITelemetryChannel * FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting) = 0;
 
 	/**
 	* IStateEnvironment::GetUnhandledSignalByUUID - Retrieves an InQueue or InProcess signal from the current state machine by UUID.

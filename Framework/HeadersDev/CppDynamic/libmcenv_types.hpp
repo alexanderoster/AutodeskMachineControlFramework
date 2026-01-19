@@ -697,6 +697,8 @@ typedef LibMCEnvHandle LibMCEnv_MachineConfigurationVersionIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationType;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationTypeIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationHandler;
+typedef LibMCEnvHandle LibMCEnv_TelemetryMarkerScope;
+typedef LibMCEnvHandle LibMCEnv_TelemetryChannel;
 typedef LibMCEnvHandle LibMCEnv_StateEnvironment;
 typedef LibMCEnvHandle LibMCEnv_UIItem;
 typedef LibMCEnvHandle LibMCEnv_UIEnvironment;

@@ -111,6 +111,10 @@ public:
 
 	void RetrieveMachineResourceData(const std::string& sIdentifier, LibMCEnv_uint64 nDataBufferBufferSize, LibMCEnv_uint64* pDataBufferNeededCount, LibMCEnv_uint8* pDataBufferBuffer) override;
 
+	ITelemetryChannel* RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription) override;
+
+	ITelemetryChannel* FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting) override;
+
 	IToolpathAccessor* CreateToolpathAccessor(const std::string& sBuildUUID) override;
 
 	bool ParameterNameIsValid(const std::string& sParameterName) override;

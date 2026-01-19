@@ -201,6 +201,16 @@ void CDriverEnvironment::RetrieveMachineResourceData(const std::string& sIdentif
     retrieveDriverDataFromPackage(m_pMachineResourcePackage, sIdentifier, nDataBufferBufferSize, pDataBufferNeededCount, pDataBufferBuffer);
 }
 
+ITelemetryChannel* CDriverEnvironment::RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription)
+{
+    throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+}
+
+ITelemetryChannel* CDriverEnvironment::FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting)
+{
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NOTIMPLEMENTED);
+}
+
 
 IToolpathAccessor* CDriverEnvironment::CreateToolpathAccessor(const std::string& sStreamUUID)
 {

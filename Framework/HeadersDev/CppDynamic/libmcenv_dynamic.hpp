@@ -138,6 +138,8 @@ class CMachineConfigurationVersionIterator;
 class CMachineConfigurationType;
 class CMachineConfigurationTypeIterator;
 class CMachineConfigurationHandler;
+class CTelemetryMarkerScope;
+class CTelemetryChannel;
 class CStateEnvironment;
 class CUIItem;
 class CUIEnvironment;
@@ -225,6 +227,8 @@ typedef CMachineConfigurationVersionIterator CLibMCEnvMachineConfigurationVersio
 typedef CMachineConfigurationType CLibMCEnvMachineConfigurationType;
 typedef CMachineConfigurationTypeIterator CLibMCEnvMachineConfigurationTypeIterator;
 typedef CMachineConfigurationHandler CLibMCEnvMachineConfigurationHandler;
+typedef CTelemetryMarkerScope CLibMCEnvTelemetryMarkerScope;
+typedef CTelemetryChannel CLibMCEnvTelemetryChannel;
 typedef CStateEnvironment CLibMCEnvStateEnvironment;
 typedef CUIItem CLibMCEnvUIItem;
 typedef CUIEnvironment CLibMCEnvUIEnvironment;
@@ -312,6 +316,8 @@ typedef std::shared_ptr<CMachineConfigurationVersionIterator> PMachineConfigurat
 typedef std::shared_ptr<CMachineConfigurationType> PMachineConfigurationType;
 typedef std::shared_ptr<CMachineConfigurationTypeIterator> PMachineConfigurationTypeIterator;
 typedef std::shared_ptr<CMachineConfigurationHandler> PMachineConfigurationHandler;
+typedef std::shared_ptr<CTelemetryMarkerScope> PTelemetryMarkerScope;
+typedef std::shared_ptr<CTelemetryChannel> PTelemetryChannel;
 typedef std::shared_ptr<CStateEnvironment> PStateEnvironment;
 typedef std::shared_ptr<CUIItem> PUIItem;
 typedef std::shared_ptr<CUIEnvironment> PUIEnvironment;
@@ -399,6 +405,8 @@ typedef PMachineConfigurationVersionIterator PLibMCEnvMachineConfigurationVersio
 typedef PMachineConfigurationType PLibMCEnvMachineConfigurationType;
 typedef PMachineConfigurationTypeIterator PLibMCEnvMachineConfigurationTypeIterator;
 typedef PMachineConfigurationHandler PLibMCEnvMachineConfigurationHandler;
+typedef PTelemetryMarkerScope PLibMCEnvTelemetryMarkerScope;
+typedef PTelemetryChannel PLibMCEnvTelemetryChannel;
 typedef PStateEnvironment PLibMCEnvStateEnvironment;
 typedef PUIItem PLibMCEnvUIItem;
 typedef PUIEnvironment PLibMCEnvUIEnvironment;
@@ -1190,6 +1198,8 @@ private:
 	friend class CMachineConfigurationType;
 	friend class CMachineConfigurationTypeIterator;
 	friend class CMachineConfigurationHandler;
+	friend class CTelemetryMarkerScope;
+	friend class CTelemetryChannel;
 	friend class CStateEnvironment;
 	friend class CUIItem;
 	friend class CUIEnvironment;
@@ -2837,6 +2847,8 @@ public:
 	inline void LogMessage(const std::string & sLogString);
 	inline void LogWarning(const std::string & sLogString);
 	inline void LogInfo(const std::string & sLogString);
+	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+	inline PTelemetryChannel FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting);
 	inline PImageData CreateEmptyImage(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageLoader CreateImageLoader();
 	inline PDiscreteFieldData2D CreateDiscreteField2D(const LibMCEnv_uint32 nPixelCountX, const LibMCEnv_uint32 nPixelCountY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv_double dOriginX, const LibMCEnv_double dOriginY, const LibMCEnv_double dDefaultValue);
@@ -3357,6 +3369,48 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CTelemetryMarkerScope 
+**************************************************************************************************************************/
+class CTelemetryMarkerScope : public CBase {
+public:
+	
+	/**
+	* CTelemetryMarkerScope::CTelemetryMarkerScope - Constructor for TelemetryMarkerScope class.
+	*/
+	CTelemetryMarkerScope(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline LibMCEnv_uint64 GetMarkerID();
+	inline std::string GetParent();
+	inline std::string GetIdentifier();
+	inline std::string GetGlobalIdentifier();
+	inline LibMCEnv_uint64 GetStartTimestamp();
+};
+	
+/*************************************************************************************************************************
+ Class CTelemetryChannel 
+**************************************************************************************************************************/
+class CTelemetryChannel : public CBase {
+public:
+	
+	/**
+	* CTelemetryChannel::CTelemetryChannel - Constructor for TelemetryChannel class.
+	*/
+	CTelemetryChannel(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetParent();
+	inline std::string GetIdentifier();
+	inline std::string GetGlobalIdentifier();
+	inline PTelemetryMarkerScope StartMarkerScope(const LibMCEnv_uint64 nUserContextData);
+	inline LibMCEnv_uint64 CreateInstantMarker(const LibMCEnv_uint64 nUserContextData);
+};
+	
+/*************************************************************************************************************************
  Class CStateEnvironment 
 **************************************************************************************************************************/
 class CStateEnvironment : public CBase {
@@ -3377,6 +3431,8 @@ public:
 	inline bool SignalQueueIsEmpty(const std::string & sSignalTypeName);
 	inline void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName);
 	inline void ClearAllUnhandledSignals();
+	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription);
+	inline PTelemetryChannel FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting);
 	inline PSignalHandler GetUnhandledSignalByUUID(const std::string & sUUID, const bool bMustExist);
 	inline void GetDriverLibrary(const std::string & sDriverName, std::string & sDriverType, LibMCEnv_pvoid & pDriverLookup);
 	inline void CreateDriverAccess(const std::string & sDriverName, LibMCEnv_pvoid & pDriverHandle);
@@ -4334,6 +4390,8 @@ public:
 		pWrapperTable->m_DriverEnvironment_LogMessage = nullptr;
 		pWrapperTable->m_DriverEnvironment_LogWarning = nullptr;
 		pWrapperTable->m_DriverEnvironment_LogInfo = nullptr;
+		pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel = nullptr;
+		pWrapperTable->m_DriverEnvironment_FindTelemetryChannel = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateEmptyImage = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateImageLoader = nullptr;
 		pWrapperTable->m_DriverEnvironment_CreateDiscreteField2D = nullptr;
@@ -4515,6 +4573,16 @@ public:
 		pWrapperTable->m_MachineConfigurationHandler_ListRegisteredTypes = nullptr;
 		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeByUUID = nullptr;
 		pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema = nullptr;
+		pWrapperTable->m_TelemetryMarkerScope_GetMarkerID = nullptr;
+		pWrapperTable->m_TelemetryMarkerScope_GetParent = nullptr;
+		pWrapperTable->m_TelemetryMarkerScope_GetIdentifier = nullptr;
+		pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier = nullptr;
+		pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp = nullptr;
+		pWrapperTable->m_TelemetryChannel_GetParent = nullptr;
+		pWrapperTable->m_TelemetryChannel_GetIdentifier = nullptr;
+		pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier = nullptr;
+		pWrapperTable->m_TelemetryChannel_StartMarkerScope = nullptr;
+		pWrapperTable->m_TelemetryChannel_CreateInstantMarker = nullptr;
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
@@ -4522,6 +4590,8 @@ public:
 		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals = nullptr;
+		pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel = nullptr;
+		pWrapperTable->m_StateEnvironment_FindTelemetryChannel = nullptr;
 		pWrapperTable->m_StateEnvironment_GetUnhandledSignalByUUID = nullptr;
 		pWrapperTable->m_StateEnvironment_GetDriverLibrary = nullptr;
 		pWrapperTable->m_StateEnvironment_CreateDriverAccess = nullptr;
@@ -10812,6 +10882,24 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel = (PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr) GetProcAddress(hLibrary, "libmcenv_driverenvironment_registertelemetrychannel");
+		#else // _WIN32
+		pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel = (PLibMCEnvDriverEnvironment_RegisterTelemetryChannelPtr) dlsym(hLibrary, "libmcenv_driverenvironment_registertelemetrychannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DriverEnvironment_FindTelemetryChannel = (PLibMCEnvDriverEnvironment_FindTelemetryChannelPtr) GetProcAddress(hLibrary, "libmcenv_driverenvironment_findtelemetrychannel");
+		#else // _WIN32
+		pWrapperTable->m_DriverEnvironment_FindTelemetryChannel = (PLibMCEnvDriverEnvironment_FindTelemetryChannelPtr) dlsym(hLibrary, "libmcenv_driverenvironment_findtelemetrychannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DriverEnvironment_FindTelemetryChannel == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_DriverEnvironment_CreateEmptyImage = (PLibMCEnvDriverEnvironment_CreateEmptyImagePtr) GetProcAddress(hLibrary, "libmcenv_driverenvironment_createemptyimage");
 		#else // _WIN32
 		pWrapperTable->m_DriverEnvironment_CreateEmptyImage = (PLibMCEnvDriverEnvironment_CreateEmptyImagePtr) dlsym(hLibrary, "libmcenv_driverenvironment_createemptyimage");
@@ -12441,6 +12529,96 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetMarkerID = (PLibMCEnvTelemetryMarkerScope_GetMarkerIDPtr) GetProcAddress(hLibrary, "libmcenv_telemetrymarkerscope_getmarkerid");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetMarkerID = (PLibMCEnvTelemetryMarkerScope_GetMarkerIDPtr) dlsym(hLibrary, "libmcenv_telemetrymarkerscope_getmarkerid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryMarkerScope_GetMarkerID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetParent = (PLibMCEnvTelemetryMarkerScope_GetParentPtr) GetProcAddress(hLibrary, "libmcenv_telemetrymarkerscope_getparent");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetParent = (PLibMCEnvTelemetryMarkerScope_GetParentPtr) dlsym(hLibrary, "libmcenv_telemetrymarkerscope_getparent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryMarkerScope_GetParent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetIdentifier = (PLibMCEnvTelemetryMarkerScope_GetIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_telemetrymarkerscope_getidentifier");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetIdentifier = (PLibMCEnvTelemetryMarkerScope_GetIdentifierPtr) dlsym(hLibrary, "libmcenv_telemetrymarkerscope_getidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryMarkerScope_GetIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier = (PLibMCEnvTelemetryMarkerScope_GetGlobalIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_telemetrymarkerscope_getglobalidentifier");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier = (PLibMCEnvTelemetryMarkerScope_GetGlobalIdentifierPtr) dlsym(hLibrary, "libmcenv_telemetrymarkerscope_getglobalidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp = (PLibMCEnvTelemetryMarkerScope_GetStartTimestampPtr) GetProcAddress(hLibrary, "libmcenv_telemetrymarkerscope_getstarttimestamp");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp = (PLibMCEnvTelemetryMarkerScope_GetStartTimestampPtr) dlsym(hLibrary, "libmcenv_telemetrymarkerscope_getstarttimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryChannel_GetParent = (PLibMCEnvTelemetryChannel_GetParentPtr) GetProcAddress(hLibrary, "libmcenv_telemetrychannel_getparent");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryChannel_GetParent = (PLibMCEnvTelemetryChannel_GetParentPtr) dlsym(hLibrary, "libmcenv_telemetrychannel_getparent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryChannel_GetParent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryChannel_GetIdentifier = (PLibMCEnvTelemetryChannel_GetIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_telemetrychannel_getidentifier");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryChannel_GetIdentifier = (PLibMCEnvTelemetryChannel_GetIdentifierPtr) dlsym(hLibrary, "libmcenv_telemetrychannel_getidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryChannel_GetIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier = (PLibMCEnvTelemetryChannel_GetGlobalIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_telemetrychannel_getglobalidentifier");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier = (PLibMCEnvTelemetryChannel_GetGlobalIdentifierPtr) dlsym(hLibrary, "libmcenv_telemetrychannel_getglobalidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryChannel_StartMarkerScope = (PLibMCEnvTelemetryChannel_StartMarkerScopePtr) GetProcAddress(hLibrary, "libmcenv_telemetrychannel_startmarkerscope");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryChannel_StartMarkerScope = (PLibMCEnvTelemetryChannel_StartMarkerScopePtr) dlsym(hLibrary, "libmcenv_telemetrychannel_startmarkerscope");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryChannel_StartMarkerScope == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_TelemetryChannel_CreateInstantMarker = (PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr) GetProcAddress(hLibrary, "libmcenv_telemetrychannel_createinstantmarker");
+		#else // _WIN32
+		pWrapperTable->m_TelemetryChannel_CreateInstantMarker = (PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr) dlsym(hLibrary, "libmcenv_telemetrychannel_createinstantmarker");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_TelemetryChannel_CreateInstantMarker == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getmachinestate");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) dlsym(hLibrary, "libmcenv_stateenvironment_getmachinestate");
@@ -12501,6 +12679,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel = (PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_registertelemetrychannel");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel = (PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr) dlsym(hLibrary, "libmcenv_stateenvironment_registertelemetrychannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_FindTelemetryChannel = (PLibMCEnvStateEnvironment_FindTelemetryChannelPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_findtelemetrychannel");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_FindTelemetryChannel = (PLibMCEnvStateEnvironment_FindTelemetryChannelPtr) dlsym(hLibrary, "libmcenv_stateenvironment_findtelemetrychannel");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_FindTelemetryChannel == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16772,6 +16968,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_DriverEnvironment_LogInfo == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_driverenvironment_registertelemetrychannel", (void**)&(pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DriverEnvironment_RegisterTelemetryChannel == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_driverenvironment_findtelemetrychannel", (void**)&(pWrapperTable->m_DriverEnvironment_FindTelemetryChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DriverEnvironment_FindTelemetryChannel == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_driverenvironment_createemptyimage", (void**)&(pWrapperTable->m_DriverEnvironment_CreateEmptyImage));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DriverEnvironment_CreateEmptyImage == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -17496,6 +17700,46 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationHandler_FindConfigurationTypeBySchema == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_telemetrymarkerscope_getmarkerid", (void**)&(pWrapperTable->m_TelemetryMarkerScope_GetMarkerID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryMarkerScope_GetMarkerID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrymarkerscope_getparent", (void**)&(pWrapperTable->m_TelemetryMarkerScope_GetParent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryMarkerScope_GetParent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrymarkerscope_getidentifier", (void**)&(pWrapperTable->m_TelemetryMarkerScope_GetIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryMarkerScope_GetIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrymarkerscope_getglobalidentifier", (void**)&(pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryMarkerScope_GetGlobalIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrymarkerscope_getstarttimestamp", (void**)&(pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryMarkerScope_GetStartTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrychannel_getparent", (void**)&(pWrapperTable->m_TelemetryChannel_GetParent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_GetParent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrychannel_getidentifier", (void**)&(pWrapperTable->m_TelemetryChannel_GetIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_GetIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrychannel_getglobalidentifier", (void**)&(pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrychannel_startmarkerscope", (void**)&(pWrapperTable->m_TelemetryChannel_StartMarkerScope));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_StartMarkerScope == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_telemetrychannel_createinstantmarker", (void**)&(pWrapperTable->m_TelemetryChannel_CreateInstantMarker));
+		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_CreateInstantMarker == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_getmachinestate", (void**)&(pWrapperTable->m_StateEnvironment_GetMachineState));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetMachineState == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -17522,6 +17766,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearallunhandledsignals", (void**)&(pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_registertelemetrychannel", (void**)&(pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_findtelemetrychannel", (void**)&(pWrapperTable->m_StateEnvironment_FindTelemetryChannel));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_FindTelemetryChannel == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_getunhandledsignalbyuuid", (void**)&(pWrapperTable->m_StateEnvironment_GetUnhandledSignalByUUID));
@@ -27335,6 +27587,41 @@ public:
 	}
 	
 	/**
+	* CDriverEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @return Channel instance.
+	*/
+	PTelemetryChannel CDriverEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription)
+	{
+		LibMCEnvHandle hChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DriverEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), &hChannelInstance));
+		
+		if (!hChannelInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CTelemetryChannel>(m_pWrapper, hChannelInstance);
+	}
+	
+	/**
+	* CDriverEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	PTelemetryChannel CDriverEnvironment::FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DriverEnvironment_FindTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), bFailIfNotExisting, &hChannelInstance));
+		
+		if (hChannelInstance) {
+			return std::make_shared<CTelemetryChannel>(m_pWrapper, hChannelInstance);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
 	* CDriverEnvironment::CreateEmptyImage - creates an empty image object.
 	* @param[in] nPixelSizeX - Pixel size in X. MUST be positive.
 	* @param[in] nPixelSizeY - Pixel size in Y. MUST be positive.
@@ -29981,6 +30268,157 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CTelemetryMarkerScope
+	 */
+	
+	/**
+	* CTelemetryMarkerScope::GetMarkerID - Returns the global marker ID
+	* @return Global marker id.
+	*/
+	LibMCEnv_uint64 CTelemetryMarkerScope::GetMarkerID()
+	{
+		LibMCEnv_uint64 resultMarkerID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetMarkerID(m_pHandle, &resultMarkerID));
+		
+		return resultMarkerID;
+	}
+	
+	/**
+	* CTelemetryMarkerScope::GetParent - Returns the Identifier of the Parent (State machine or Driver) of the channel.
+	* @return Parent Identifier
+	*/
+	std::string CTelemetryMarkerScope::GetParent()
+	{
+		LibMCEnv_uint32 bytesNeededParentIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenParentIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetParent(m_pHandle, 0, &bytesNeededParentIdentifier, nullptr));
+		std::vector<char> bufferParentIdentifier(bytesNeededParentIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetParent(m_pHandle, bytesNeededParentIdentifier, &bytesWrittenParentIdentifier, &bufferParentIdentifier[0]));
+		
+		return std::string(&bufferParentIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryMarkerScope::GetIdentifier - Returns the Identifier of the Channel.
+	* @return Channel Identifier. Will be a alphanumerical path string.
+	*/
+	std::string CTelemetryMarkerScope::GetIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededChannelIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenChannelIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetIdentifier(m_pHandle, 0, &bytesNeededChannelIdentifier, nullptr));
+		std::vector<char> bufferChannelIdentifier(bytesNeededChannelIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetIdentifier(m_pHandle, bytesNeededChannelIdentifier, &bytesWrittenChannelIdentifier, &bufferChannelIdentifier[0]));
+		
+		return std::string(&bufferChannelIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryMarkerScope::GetGlobalIdentifier - Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+	* @return Global Identifier. Will be a alphanumerical path string.
+	*/
+	std::string CTelemetryMarkerScope::GetGlobalIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededGlobalIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenGlobalIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetGlobalIdentifier(m_pHandle, 0, &bytesNeededGlobalIdentifier, nullptr));
+		std::vector<char> bufferGlobalIdentifier(bytesNeededGlobalIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetGlobalIdentifier(m_pHandle, bytesNeededGlobalIdentifier, &bytesWrittenGlobalIdentifier, &bufferGlobalIdentifier[0]));
+		
+		return std::string(&bufferGlobalIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryMarkerScope::GetStartTimestamp - Returns start timestamp of the marker
+	* @return Start timestamp.
+	*/
+	LibMCEnv_uint64 CTelemetryMarkerScope::GetStartTimestamp()
+	{
+		LibMCEnv_uint64 resultStartTimestamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryMarkerScope_GetStartTimestamp(m_pHandle, &resultStartTimestamp));
+		
+		return resultStartTimestamp;
+	}
+	
+	/**
+	 * Method definitions for class CTelemetryChannel
+	 */
+	
+	/**
+	* CTelemetryChannel::GetParent - Returns the Identifier of the Parent (State machine or Driver) of the channel.
+	* @return Parent Identifier
+	*/
+	std::string CTelemetryChannel::GetParent()
+	{
+		LibMCEnv_uint32 bytesNeededParentIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenParentIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetParent(m_pHandle, 0, &bytesNeededParentIdentifier, nullptr));
+		std::vector<char> bufferParentIdentifier(bytesNeededParentIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetParent(m_pHandle, bytesNeededParentIdentifier, &bytesWrittenParentIdentifier, &bufferParentIdentifier[0]));
+		
+		return std::string(&bufferParentIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryChannel::GetIdentifier - Returns the Identifier of the Channel.
+	* @return Channel Identifier. Will be a alphanumerical path string.
+	*/
+	std::string CTelemetryChannel::GetIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededChannelIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenChannelIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetIdentifier(m_pHandle, 0, &bytesNeededChannelIdentifier, nullptr));
+		std::vector<char> bufferChannelIdentifier(bytesNeededChannelIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetIdentifier(m_pHandle, bytesNeededChannelIdentifier, &bytesWrittenChannelIdentifier, &bufferChannelIdentifier[0]));
+		
+		return std::string(&bufferChannelIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryChannel::GetGlobalIdentifier - Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier
+	* @return Global Identifier. Will be a alphanumerical path string.
+	*/
+	std::string CTelemetryChannel::GetGlobalIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededGlobalIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenGlobalIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetGlobalIdentifier(m_pHandle, 0, &bytesNeededGlobalIdentifier, nullptr));
+		std::vector<char> bufferGlobalIdentifier(bytesNeededGlobalIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_GetGlobalIdentifier(m_pHandle, bytesNeededGlobalIdentifier, &bytesWrittenGlobalIdentifier, &bufferGlobalIdentifier[0]));
+		
+		return std::string(&bufferGlobalIdentifier[0]);
+	}
+	
+	/**
+	* CTelemetryChannel::StartMarkerScope - Starts a marker scope object.
+	* @param[in] nUserContextData - User data to be stored with the marker.
+	* @return Marker scope instance. Will finish when freed.
+	*/
+	PTelemetryMarkerScope CTelemetryChannel::StartMarkerScope(const LibMCEnv_uint64 nUserContextData)
+	{
+		LibMCEnvHandle hTelemetryMarkerScopeInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_StartMarkerScope(m_pHandle, nUserContextData, &hTelemetryMarkerScopeInstance));
+		
+		if (!hTelemetryMarkerScopeInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CTelemetryMarkerScope>(m_pWrapper, hTelemetryMarkerScopeInstance);
+	}
+	
+	/**
+	* CTelemetryChannel::CreateInstantMarker - Creates a marker of length 0.
+	* @param[in] nUserContextData - User data to be stored with the marker.
+	* @return Global marker ID.
+	*/
+	LibMCEnv_uint64 CTelemetryChannel::CreateInstantMarker(const LibMCEnv_uint64 nUserContextData)
+	{
+		LibMCEnv_uint64 resultMarkerID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_TelemetryChannel_CreateInstantMarker(m_pHandle, nUserContextData, &resultMarkerID));
+		
+		return resultMarkerID;
+	}
+	
+	/**
 	 * Method definitions for class CStateEnvironment
 	 */
 	
@@ -30077,6 +30515,41 @@ public:
 	void CStateEnvironment::ClearAllUnhandledSignals()
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_ClearAllUnhandledSignals(m_pHandle));
+	}
+	
+	/**
+	* CStateEnvironment::RegisterTelemetryChannel - Registers a telemetry channel for the current state machine. Fails if identifier already exists.
+	* @param[in] sChannelIdentifier - Channel Identifier. Must be a alphanumerical path string.
+	* @param[in] sChannelDescription - Description of Channel. MUST NOT be empty.
+	* @return Channel instance.
+	*/
+	PTelemetryChannel CStateEnvironment::RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription)
+	{
+		LibMCEnvHandle hChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_RegisterTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), sChannelDescription.c_str(), &hChannelInstance));
+		
+		if (!hChannelInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CTelemetryChannel>(m_pWrapper, hChannelInstance);
+	}
+	
+	/**
+	* CStateEnvironment::FindTelemetryChannel - Returns a telemetry channel from the current state machine.
+	* @param[in] sChannelIdentifier - Channel Identifier to return. Must be a alphanumerical path string.
+	* @param[in] bFailIfNotExisting - If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist..
+	* @return Channel instance. NULL if Channel does not exist.
+	*/
+	PTelemetryChannel CStateEnvironment::FindTelemetryChannel(const std::string & sChannelIdentifier, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hChannelInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_FindTelemetryChannel(m_pHandle, sChannelIdentifier.c_str(), bFailIfNotExisting, &hChannelInstance));
+		
+		if (hChannelInstance) {
+			return std::make_shared<CTelemetryChannel>(m_pWrapper, hChannelInstance);
+		} else {
+			return nullptr;
+		}
 	}
 	
 	/**

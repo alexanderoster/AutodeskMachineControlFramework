@@ -1068,3 +1068,15 @@ IDateTime* CStateEnvironment::GetStartDateTime()
 	auto pGlobalChrono = m_pSystemState->getGlobalChronoInstance();
 	return new CDateTime(pGlobalChrono->getStartTimeStampInMicrosecondsSince1970 ());
 }
+
+
+ITelemetryChannel* CStateEnvironment::RegisterTelemetryChannel(const std::string& sChannelIdentifier, const std::string& sChannelDescription)
+{
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+}
+
+ITelemetryChannel* CStateEnvironment::FindTelemetryChannel(const std::string& sChannelIdentifier, const bool bFailIfNotExisting)
+{
+	throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+}
+

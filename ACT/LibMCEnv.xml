@@ -4071,6 +4071,19 @@
 			<param name="LogString" type="string" pass="in" description="String to Log" />
 		</method>
 		
+		<method name="RegisterTelemetryChannel" description="Registers a telemetry channel for the current state machine. Fails if identifier already exists.">
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier. Must be a alphanumerical path string." />
+			<param name="ChannelDescription" type="string" pass="in" description="Description of Channel. MUST NOT be empty." />
+			<param name="ChannelInstance" type="class" class="TelemetryChannel" pass="return" description="Channel instance." />
+		</method>
+
+		<method name="FindTelemetryChannel" description="Returns a telemetry channel from the current state machine.">
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier to return. Must be a alphanumerical path string." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist.." />
+			<param name="ChannelInstance" type="optionalclass" class="TelemetryChannel" pass="return" description="Channel instance. NULL if Channel does not exist." />
+		</method>		
+		
+		
 		<method name="CreateEmptyImage" description="creates an empty image object.">
 			<param name="PixelSizeX" type="uint32" pass="in" description="Pixel size in X. MUST be positive." />
 			<param name="PixelSizeY" type="uint32" pass="in" description="Pixel size in Y. MUST be positive." />
@@ -5037,6 +5050,56 @@
 	</class>
 
 
+	<class name="TelemetryMarkerScope" parent="Base" description="Telemetry Marker Scope">
+
+		<method name="GetMarkerID" description="Returns the global marker ID">
+			<param name="MarkerID" type="uint64" pass="return" description="Global marker id." />
+		</method>
+
+		<method name="GetParent" description="Returns the Identifier of the Parent (State machine or Driver) of the channel.">
+			<param name="ParentIdentifier" type="string" pass="return" description="Parent Identifier" />
+		</method>
+
+		<method name="GetIdentifier" description="Returns the Identifier of the Channel.">
+			<param name="ChannelIdentifier" type="string" pass="return" description="Channel Identifier. Will be a alphanumerical path string." />
+		</method>
+
+		<method name="GetGlobalIdentifier" description="Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier">
+			<param name="GlobalIdentifier" type="string" pass="return" description="Global Identifier. Will be a alphanumerical path string." />
+		</method>
+
+		<method name="GetStartTimestamp" description="Returns start timestamp of the marker">
+			<param name="StartTimestamp" type="uint64" pass="return" description="Start timestamp." />
+		</method>
+		
+	</class>
+
+	<class name="TelemetryChannel" parent="Base" description="Telemetry Channel accessor">
+
+		<method name="GetParent" description="Returns the Identifier of the Parent (State machine or Driver) of the channel.">
+			<param name="ParentIdentifier" type="string" pass="return" description="Parent Identifier" />
+		</method>
+
+		<method name="GetIdentifier" description="Returns the Identifier of the Channel.">
+			<param name="ChannelIdentifier" type="string" pass="return" description="Channel Identifier. Will be a alphanumerical path string." />
+		</method>
+
+		<method name="GetGlobalIdentifier" description="Returns the global Identifier of the Channel, which is ParentIdentifier.ChannelIdentifier">
+			<param name="GlobalIdentifier" type="string" pass="return" description="Global Identifier. Will be a alphanumerical path string." />
+		</method>
+
+		<method name="StartMarkerScope" description="Starts a marker scope object.">
+			<param name="UserContextData" type="uint64" pass="in" description="User data to be stored with the marker." />
+			<param name="TelemetryMarkerScopeInstance" type="class" class="TelemetryMarkerScope" pass="return" description="Marker scope instance. Will finish when freed." />		
+		</method>
+
+		<method name="CreateInstantMarker" description="Creates a marker of length 0.">
+			<param name="UserContextData" type="uint64" pass="in" description="User data to be stored with the marker." />
+			<param name="MarkerID" type="uint64" pass="return" description="Global marker ID." />
+		</method>
+
+	</class>
+
 	<class name="StateEnvironment" parent="Base" description="Environment of the state">
 
 		<method name="GetMachineState" description="Retrieves the machine state">
@@ -5070,7 +5133,19 @@
 
 		<method name="ClearAllUnhandledSignals" description="Clears all InQueue or InProcess signals of this state machine and marks them Cleared. Handled, failed or timedout signals are unaffected">
 		</method>		
+		
+		<method name="RegisterTelemetryChannel" description="Registers a telemetry channel for the current state machine. Fails if identifier already exists.">
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier. Must be a alphanumerical path string." />
+			<param name="ChannelDescription" type="string" pass="in" description="Description of Channel. MUST NOT be empty." />
+			<param name="ChannelInstance" type="class" class="TelemetryChannel" pass="return" description="Channel instance." />
+		</method>
 
+		<method name="FindTelemetryChannel" description="Returns a telemetry channel from the current state machine.">
+			<param name="ChannelIdentifier" type="string" pass="in" description="Channel Identifier to return. Must be a alphanumerical path string." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, the call will fail if the channel identifier does not exist. If false, the call will return NULL if the channel identifier does not exist.." />
+			<param name="ChannelInstance" type="optionalclass" class="TelemetryChannel" pass="return" description="Channel instance. NULL if Channel does not exist." />
+		</method>		
+		
 		<method name="GetUnhandledSignalByUUID" description="Retrieves an InQueue or InProcess signal from the current state machine by UUID.">
 			<param name="UUID" type="string" pass="in" description="Name" />
 			<param name="MustExist" type="bool" pass="in" description="The call fails if MustExist is true and not signal with UUID does exist or a signal with UUID has been handled, failed, cleared or timedout already." />
