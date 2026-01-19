@@ -90,6 +90,9 @@ namespace AMCUnitTest {
 
             registerTest("LeapYear", "Leap year date should round-trip correctly", eUnitTestCategory::utOptionalPass,
                 std::bind(&CUnitTestGroup_Chrono::testLeapYear, this));
+
+            registerTest("ChronoInstanceAndConversions", "CChrono instance usage and full conversion helpers", eUnitTestCategory::utMandatoryPass,
+                std::bind(&CUnitTestGroup_Chrono::testChronoInstanceAndConversions, this));
         }
 
         virtual void initializeTests() override {
@@ -171,6 +174,73 @@ namespace AMCUnitTest {
             std::string converted = AMCCommon::CChrono::convertToISO8601TimeUTC(microseconds);
 
             assertTrue(original == converted, "Leap year timestamp must round-trip correctly");
+        }
+
+
+        void testChronoInstanceAndConversions() {
+            AMCCommon::CChrono chrono;
+            uint64_t start = chrono.getStartTimeStampInMicrosecondsSince1970();
+            uint64_t current = chrono.getUTCTimeStampInMicrosecondsSince1970();
+            assertTrue(current >= start);
+
+            std::string nowISO = chrono.getUTCTimeInISO8601();
+            uint64_t nowParsed = AMCCommon::CChrono::parseISO8601TimeUTC(nowISO);
+            assertTrue(AMCCommon::CChrono::timeStampIsWithinAMillionYears(nowParsed));
+
+            uint64_t elapsedBefore = chrono.getElapsedMicroseconds();
+            AMCCommon::CChrono::sleepMicroseconds(1000);
+            uint64_t elapsedAfter = chrono.getElapsedMicroseconds();
+            assertTrue(elapsedAfter >= elapsedBefore);
+
+            AMCCommon::CChrono::sleepMilliseconds(1);
+            AMCCommon::CChrono::sleepSeconds(0);
+
+            uint64_t dayStamp = AMCCommon::CChrono::getMicrosecondsSince1970FromDay(2025, 1, 1);
+            uint64_t dateTimeStamp = AMCCommon::CChrono::getMicrosecondsSince1970FromDateTime(2025, 1, 1, 0, 0, 0, 0);
+            assertTrue(dayStamp == dateTimeStamp);
+
+            uint32_t year = 0, month = 0, day = 0, weekday = 0;
+            AMCCommon::CChrono::parseDateFromMicrosecondsSince1970WithWeekday(dayStamp, year, month, day, weekday);
+            assertTrue(year == 2025);
+            assertTrue(month == 1);
+            assertTrue(day == 1);
+            assertTrue((weekday >= 1) && (weekday <= 7));
+
+            uint32_t yearOnly = 0, monthOnly = 0, dayOnly = 0;
+            AMCCommon::CChrono::parseDateFromMicrosecondsSince1970(dayStamp, yearOnly, monthOnly, dayOnly);
+            assertTrue(yearOnly == 2025);
+            assertTrue(monthOnly == 1);
+            assertTrue(dayOnly == 1);
+
+            uint32_t hour = 0, minute = 0, second = 0, microsecond = 0;
+            AMCCommon::CChrono::parseDateTimeFromMicrosecondsSince1970(dayStamp, year, month, day, hour, minute, second, microsecond);
+            assertTrue(hour == 0);
+            assertTrue(minute == 0);
+            assertTrue(second == 0);
+            assertTrue(microsecond == 0);
+
+            uint64_t sampleStamp = AMCCommon::CChrono::getMicrosecondsSince1970FromDateTime(2025, 6, 15, 12, 30, 45, 123000);
+            std::string sampleMicro = AMCCommon::CChrono::convertToISO8601TimeUTC(sampleStamp, AMCCommon::eUTCStringAccuracy::Microseconds);
+            std::string sampleMilli = AMCCommon::CChrono::convertToISO8601TimeUTC(sampleStamp, AMCCommon::eUTCStringAccuracy::Milliseconds);
+            std::string sampleSecond = AMCCommon::CChrono::convertToISO8601TimeUTC(sampleStamp, AMCCommon::eUTCStringAccuracy::Seconds);
+            assertTrue(sampleMicro.find(".") != std::string::npos);
+            assertTrue(sampleMilli.find(".") != std::string::npos);
+            assertTrue(sampleSecond.find(".") == std::string::npos);
+
+            bool thrown = false;
+            try {
+                AMCCommon::CChrono::convertToISO8601TimeUTC(sampleStamp, static_cast<AMCCommon::eUTCStringAccuracy>(0));
+            }
+            catch (...) {
+                thrown = true;
+            }
+            assertTrue(thrown, "Expected convertToISO8601TimeUTC to throw on invalid accuracy");
+
+            assertTrue(AMCCommon::CChrono::yearIsLeapYear(2024));
+            assertFalse(AMCCommon::CChrono::yearIsLeapYear(2100));
+
+            uint64_t tooLarge = 1000000ULL * 3600ULL * 365ULL * 1000000ULL + 1;
+            assertFalse(AMCCommon::CChrono::timeStampIsWithinAMillionYears(tooLarge));
         }
 
     };

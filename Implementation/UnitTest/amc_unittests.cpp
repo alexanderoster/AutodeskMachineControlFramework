@@ -50,6 +50,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_alerts.hpp"
 #include "amc_unittests_dataseries.hpp"
 #include "amc_unittests_discretefielddata2d.hpp"
+#include "amc_unittests_jsonwriter.hpp"
+#include "amc_unittests_geometryutils.hpp"
+#include "amc_unittests_logger.hpp"
+#include "amc_unittests_mesh.hpp"
+#include "amc_unittests_parameters.hpp"
 
 
 using namespace AMCUnitTest;
@@ -78,4 +83,9 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_Alerts>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_DataSeries>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_DiscreteFieldData2D>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_JSONWriter>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_GeometryUtils>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Logger>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Mesh>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Parameters>());
 }
