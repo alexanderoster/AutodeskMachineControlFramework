@@ -132,6 +132,13 @@ __DECLARESTATE(idle)
 	pDummyTrigger->SetInteger("timer", (int32_t)nTimer);
 	pDummyTrigger->Trigger();
 
+	auto pTelemetryChannel = pStateEnvironment->FindTelemetryChannel("gasinitializationtime", true);
+	auto pMarker = pTelemetryChannel->StartMarkerScope(12345);
+
+	// DOSOMETHING
+
+	pMarker = nullptr;
+
 	pStateEnvironment->SetDoubleParameter ("jobinfo", "countertest", dCounterTest + abs (sin (nTimer * 0.001)));
 
 	//pStateEnvironment->LogMessage ("Waiting for user input...");

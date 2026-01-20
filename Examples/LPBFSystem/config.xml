@@ -82,7 +82,7 @@
 
   <driver name="camera" library="driver_camera" type="windowsmf"/>
 
-  <statemachine name="main" description="Main System" initstate="init" failedstate="fatalerror" library="plugin_main">
+	<statemachine name="main" description="Main System" initstate="init" failedstate="fatalerror" library="plugin_main">
 
 		<parametergroup name="jobinfo" description="Job Information">
 			<parameter name="jobname" description="Job Name" default="Job Name" type="string"/>
@@ -111,6 +111,10 @@
 			<parameter name="simulatelaser" description="Simulate laser control" default="0" type="bool" persistent="076c7b5a-7ad7-49bc-9db4-44140402063a" />
 			<parameter name="simulateplc" description="Simulate PLC behaviour" default="1" type="bool" persistent="d1e8e7d2-8d77-4206-b390-b999300ca8a9" />
 		</parametergroup>
+
+	    <telemetry>
+			<channel identifier="gasinitializationtime" description="Time to initialize Gas Flow" />		  
+ 	    </telemetry>
 
 		<signaldefinition name="signal_initjob" reactiontimeout="1000" archivetime="10000">
 			<parameter name="jobuuid" type="string"/>
