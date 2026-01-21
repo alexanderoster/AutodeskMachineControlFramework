@@ -71,14 +71,49 @@ struct SZipEntry
 {
 	std::string m_sZipPath;
 	std::string m_sSourcePath;
+	bool m_bHasSource;
 };
+
+static bool isValidZipPath(const std::string& sZipPath)
+{
+	if (sZipPath.empty())
+		return false;
+	if ((sZipPath[0] == '/') || (sZipPath[0] == '\\'))
+		return false;
+	if (sZipPath.find("\\") != std::string::npos)
+		return false;
+
+	size_t startPos = 0;
+	while (startPos <= sZipPath.size()) {
+		size_t endPos = sZipPath.find('/', startPos);
+		if (endPos == std::string::npos)
+			endPos = sZipPath.size();
+
+		size_t segmentLength = endPos - startPos;
+		if (segmentLength == 0) {
+			if (endPos == sZipPath.size())
+				return true;
+			return false;
+		}
+
+		std::string segment = sZipPath.substr(startPos, segmentLength);
+		if (!AMCCommon::CUtils::stringIsValidFileName(segment))
+			return false;
+		if ((segment == ".") || (segment == ".."))
+			return false;
+
+		startPos = endPos + 1;
+	}
+
+	return true;
+}
 
 static void addEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath, const std::string& sSourcePath, const std::string& sDisplayName)
 {
 	if (sZipPath.empty())
 		throw std::runtime_error("missing " + sDisplayName + " name");
 
-	if (!AMCCommon::CUtils::stringIsValidFileName(sZipPath))
+	if (!isValidZipPath(sZipPath))
 		throw std::runtime_error("invalid " + sDisplayName + " name: " + sZipPath);
 
 	if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sSourcePath))
@@ -90,6 +125,26 @@ static void addEntry(std::vector<SZipEntry>& entries, std::set<std::string>& ent
 	SZipEntry entry;
 	entry.m_sZipPath = sZipPath;
 	entry.m_sSourcePath = sSourcePath;
+	entry.m_bHasSource = true;
+	entries.push_back(entry);
+	entryNames.insert(sZipPath);
+}
+
+static void addEmptyEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath)
+{
+	if (sZipPath.empty())
+		throw std::runtime_error("missing entry name");
+
+	if (!isValidZipPath(sZipPath))
+		throw std::runtime_error("invalid entry name: " + sZipPath);
+
+	if (entryNames.find(sZipPath) != entryNames.end())
+		return;
+
+	SZipEntry entry;
+	entry.m_sZipPath = sZipPath;
+	entry.m_sSourcePath = "";
+	entry.m_bHasSource = false;
 	entries.push_back(entry);
 	entryNames.insert(sZipPath);
 }
@@ -146,6 +201,12 @@ static void addFileToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::st
 		nRemaining -= nReadBytes;
 	}
 
+	zipWriter.closeEntry();
+}
+
+static void addEmptyEntryToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sZipPath)
+{
+	zipWriter.createEntry(sZipPath, 0);
 	zipWriter.closeEntry();
 }
 
@@ -255,6 +316,8 @@ int main(int argc, char* argv[])
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.xml", "server configuration");
 		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.exe");
 		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_win32.exe");
+		addEmptyEntry(entries, entryNames, "data/");
+		addEmptyEntry(entries, entryNames, "temp/");
 
 		std::string sConfigurationName = buildNode.attribute("configuration").as_string();
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, sConfigurationName, "configuration");
@@ -285,7 +348,12 @@ int main(int argc, char* argv[])
 
 		for (auto& entry : entries) {
 			std::cout << "   - adding " << entry.m_sZipPath << std::endl;
-			addFileToZip(zipWriter, entry.m_sSourcePath, entry.m_sZipPath);
+			if (entry.m_bHasSource) {
+				addFileToZip(zipWriter, entry.m_sSourcePath, entry.m_sZipPath);
+			}
+			else {
+				addEmptyEntryToZip(zipWriter, entry.m_sZipPath);
+			}
 		}
 
 		zipWriter.writeDirectory();
