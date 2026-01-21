@@ -59,6 +59,7 @@ dirs_to_make[25]="$builddir/Client/src/plugins"
 dirs_to_make[26]="$builddir/Client/dist"
 dirs_to_make[27]="$builddir/Artifacts"
 dirs_to_make[28]="$outputdir/data"
+dirs_to_make[29]="$builddir/Deployment"
 
 for dir in "${dirs_to_make[@]}"
 do
@@ -150,6 +151,9 @@ cd $builddir
 echo "Building Package XML"
 
 "$builddir/DevPackage/Framework/create_package_xml" --config "$builddir/Output/${GITHASH}_config.xml" --devpackage ${GITHASH} --output "$builddir/Output/${GITHASH}_package.xml" --serveroutput "$builddir/Output/amc_server.xml"
+
+echo "Building Deployment ZIP"
+"$builddir/DevPackage/Framework/create_deployment_zip" --package "$builddir/Output/${GITHASH}_package.xml" --output "$builddir/Deployment/AMCF_Deploy_${GITHASH}.zip"
 
 echo "Building Developer Package"
 cd "$builddir/DevPackage"

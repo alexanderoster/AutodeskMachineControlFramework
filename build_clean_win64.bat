@@ -16,6 +16,7 @@ if not exist "%outputdir%" (mkdir "%outputdir%")
 if not exist "%outputdir%\data" (mkdir "%outputdir%\data")
 if not exist "%outputdir%\temp" (mkdir "%outputdir%\temp")
 if not exist "%builddir%\Artifacts" (mkdir "%builddir%\Artifacts")
+if not exist "%builddir%\Deployment" (mkdir "%builddir%\Deployment")
 if not exist "%builddir%\DevPackage" (mkdir "%builddir%\DevPackage")
 if not exist "%builddir%\DevPackage\Framework" (mkdir "%builddir%\DevPackage\Framework")
 if not exist "%builddir%\DevPackage\Framework\HeadersDev" (mkdir "%builddir%\DevPackage\Framework\HeadersDev")
@@ -102,6 +103,9 @@ if errorlevel 1 goto ERROR
 echo "Building Package XML"
 
 "%builddir%\DevPackage\Framework\create_package_xml.exe" --config "%builddir%\Output\%GITHASH%_config.xml" --devpackage %GITHASH% --output "%builddir%\Output\%GITHASH%_package.xml" --serveroutput "%builddir%\Output\amc_server.xml"
+
+echo "Building Deployment ZIP"
+"%builddir%\DevPackage\Framework\create_deployment_zip.exe" --package "%builddir%\Output\%GITHASH%_package.xml" --output "%builddir%\Deployment\AMCF_Deploy_%GITHASH%.zip"
 
 echo "Building Developer Package"
 cd "%builddir%\DevPackage"
