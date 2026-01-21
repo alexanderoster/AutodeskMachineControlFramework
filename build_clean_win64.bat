@@ -131,7 +131,7 @@ copy ..\..\Framework\PluginCpp\*.* Framework\PluginCpp
 del Framework\Dist\%GITHASH%_core.data
 
 cd %builddir%
-go run "%basepath%/BuildScripts/createDevPackage.go" .\DevPackage\Framework .\DevPackage\ %LONGGITHASH% win64
+"%builddir%\DevPackage\Framework\create_dev_package.exe" .\DevPackage\Framework .\DevPackage\ %LONGGITHASH% win64
 
 copy "%builddir%\DevPackage\amcf_win64_%LONGGITHASH%.zip" "%builddir%\Artifacts\devpackage_win64.zip" /Y
 

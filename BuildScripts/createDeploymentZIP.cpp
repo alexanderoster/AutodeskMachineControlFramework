@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <exception>
 #include <vector>
 #include <algorithm>
+#include <cstdint>
 
 #include "PugiXML/pugixml.hpp"
 #include "common_utils.hpp"
@@ -72,7 +73,20 @@ struct SZipEntry
 	std::string m_sZipPath;
 	std::string m_sSourcePath;
 	bool m_bHasSource;
+	uint32_t m_nExternalAttributes;
 };
+
+static uint32_t makeExternalAttributesForFile(uint32_t nUnixPermissions)
+{
+	uint32_t nMode = 0x8000 | (nUnixPermissions & 0x0FFF);
+	return (nMode << 16);
+}
+
+static uint32_t makeExternalAttributesForDirectory(uint32_t nUnixPermissions)
+{
+	uint32_t nMode = 0x4000 | (nUnixPermissions & 0x0FFF);
+	return (nMode << 16);
+}
 
 static bool isValidZipPath(const std::string& sZipPath)
 {
@@ -108,7 +122,7 @@ static bool isValidZipPath(const std::string& sZipPath)
 	return true;
 }
 
-static void addEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath, const std::string& sSourcePath, const std::string& sDisplayName)
+static void addEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath, const std::string& sSourcePath, const std::string& sDisplayName, uint32_t nExternalAttributes)
 {
 	if (sZipPath.empty())
 		throw std::runtime_error("missing " + sDisplayName + " name");
@@ -126,11 +140,12 @@ static void addEntry(std::vector<SZipEntry>& entries, std::set<std::string>& ent
 	entry.m_sZipPath = sZipPath;
 	entry.m_sSourcePath = sSourcePath;
 	entry.m_bHasSource = true;
+	entry.m_nExternalAttributes = nExternalAttributes;
 	entries.push_back(entry);
 	entryNames.insert(sZipPath);
 }
 
-static void addEmptyEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath)
+static void addEmptyEntry(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sZipPath, uint32_t nExternalAttributes)
 {
 	if (sZipPath.empty())
 		throw std::runtime_error("missing entry name");
@@ -145,17 +160,18 @@ static void addEmptyEntry(std::vector<SZipEntry>& entries, std::set<std::string>
 	entry.m_sZipPath = sZipPath;
 	entry.m_sSourcePath = "";
 	entry.m_bHasSource = false;
+	entry.m_nExternalAttributes = nExternalAttributes;
 	entries.push_back(entry);
 	entryNames.insert(sZipPath);
 }
 
-static void addEntryFromPackage(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sBaseDir, const std::string& sFileName, const std::string& sDisplayName)
+static void addEntryFromPackage(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sBaseDir, const std::string& sFileName, const std::string& sDisplayName, uint32_t nExternalAttributes)
 {
 	if (sFileName.empty())
 		return;
 
 	std::string sSourcePath = sBaseDir + sFileName;
-	addEntry(entries, entryNames, sFileName, sSourcePath, sDisplayName);
+	addEntry(entries, entryNames, sFileName, sSourcePath, sDisplayName, nExternalAttributes);
 }
 
 static void addRequiredEntryFromPackage(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sBaseDir, const std::string& sFileName, const std::string& sDisplayName)
@@ -164,7 +180,7 @@ static void addRequiredEntryFromPackage(std::vector<SZipEntry>& entries, std::se
 		throw std::runtime_error("missing " + sDisplayName + " name");
 
 	std::string sSourcePath = sBaseDir + sFileName;
-	addEntry(entries, entryNames, sFileName, sSourcePath, sDisplayName);
+	addEntry(entries, entryNames, sFileName, sSourcePath, sDisplayName, 0);
 }
 
 static void addOptionalEntryFromPackage(std::vector<SZipEntry>& entries, std::set<std::string>& entryNames, const std::string& sBaseDir, const std::string& sFileName)
@@ -176,13 +192,13 @@ static void addOptionalEntryFromPackage(std::vector<SZipEntry>& entries, std::se
 	if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sSourcePath))
 		return;
 
-	addEntry(entries, entryNames, sFileName, sSourcePath, sFileName);
+	addEntry(entries, entryNames, sFileName, sSourcePath, sFileName, 0);
 }
 
-static void addFileToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sSourcePath, const std::string& sZipPath)
+static void addFileToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sSourcePath, const std::string& sZipPath, uint32_t nExternalAttributes)
 {
 	AMCCommon::CImportStream_Native importStream(sSourcePath);
-	auto pEntryStream = zipWriter.createEntry(sZipPath, 0);
+	auto pEntryStream = zipWriter.createEntryWithExternalAttributes(sZipPath, 0, nExternalAttributes);
 
 	const uint64_t nBufferSize = 1024 * 64;
 	std::vector<uint8_t> buffer;
@@ -204,9 +220,9 @@ static void addFileToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::st
 	zipWriter.closeEntry();
 }
 
-static void addEmptyEntryToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sZipPath)
+static void addEmptyEntryToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sZipPath, uint32_t nExternalAttributes)
 {
-	zipWriter.createEntry(sZipPath, 0);
+	zipWriter.createEntryWithExternalAttributes(sZipPath, 0, nExternalAttributes);
 	zipWriter.closeEntry();
 }
 
@@ -310,14 +326,14 @@ int main(int argc, char* argv[])
 		std::set<std::string> entryNames;
 
 		std::string sPackageFileOnly = getFileNameFromPath(sPackageFileName);
-		addEntry(entries, entryNames, sPackageFileOnly, sPackageFileName, "package xml");
+		addEntry(entries, entryNames, sPackageFileOnly, sPackageFileName, "package xml", 0);
 
-		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, "amc_server", "server binary");
+		addEntry(entries, entryNames, "amc_server", sPackageDir + "amc_server", "server binary", makeExternalAttributesForFile(0755));
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.xml", "server configuration");
 		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.exe");
 		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_win32.exe");
-		addEmptyEntry(entries, entryNames, "data/");
-		addEmptyEntry(entries, entryNames, "temp/");
+		addEmptyEntry(entries, entryNames, "data/", makeExternalAttributesForDirectory(0755));
+		addEmptyEntry(entries, entryNames, "temp/", makeExternalAttributesForDirectory(0755));
 
 		std::string sConfigurationName = buildNode.attribute("configuration").as_string();
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, sConfigurationName, "configuration");
@@ -326,7 +342,7 @@ int main(int argc, char* argv[])
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, sCoreClient, "core client");
 
 		std::string sAPIDocs = buildNode.attribute("apidocs").as_string();
-		addEntryFromPackage(entries, entryNames, sPackageDir, sAPIDocs, "api docs");
+		addEntryFromPackage(entries, entryNames, sPackageDir, sAPIDocs, "api docs", 0);
 
 		auto libraries = buildNode.children("library");
 		for (auto libraryNode : libraries) {
@@ -338,7 +354,7 @@ int main(int argc, char* argv[])
 			addRequiredEntryFromPackage(entries, entryNames, sPackageDir, libraryImport, "library import");
 
 			std::string libraryResources = libraryNode.attribute("resources").as_string();
-			addEntryFromPackage(entries, entryNames, sPackageDir, libraryResources, "library resources");
+			addEntryFromPackage(entries, entryNames, sPackageDir, libraryResources, "library resources", 0);
 		}
 
 		std::cout << "Writing deployment ZIP to " << sOutputFileName << "..." << std::endl;
@@ -349,10 +365,10 @@ int main(int argc, char* argv[])
 		for (auto& entry : entries) {
 			std::cout << "   - adding " << entry.m_sZipPath << std::endl;
 			if (entry.m_bHasSource) {
-				addFileToZip(zipWriter, entry.m_sSourcePath, entry.m_sZipPath);
+				addFileToZip(zipWriter, entry.m_sSourcePath, entry.m_sZipPath, entry.m_nExternalAttributes);
 			}
 			else {
-				addEmptyEntryToZip(zipWriter, entry.m_sZipPath);
+				addEmptyEntryToZip(zipWriter, entry.m_sZipPath, entry.m_nExternalAttributes);
 			}
 		}
 

@@ -135,6 +135,7 @@ add_dependencies(finished_drivers copy_distribution_libraries)
 add_dependencies(finished_drivers create_core_resources)
 add_dependencies(finished_drivers create_package_xml)
 add_dependencies(finished_drivers create_deployment_zip)
+add_dependencies(finished_drivers create_dev_package)
 add_dependencies(finished_drivers build_configuration_xml)
 add_dependencies(finished_drivers libmc)
 
@@ -981,9 +982,63 @@ endif()
 
 #[[++
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++ create_dev_package Target
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+]]
+
+
+file(GLOB CREATE_DEV_PACKAGE_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/createDevPackage.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_zip.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriter.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriterentry.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/crossguid/guid.cpp
+	${LIBMC_SRC_DEP_ZLIB}
+)
+
+add_executable(create_dev_package ${CREATE_DEV_PACKAGE_SRC})
+
+target_include_directories(create_dev_package PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
+target_include_directories(create_dev_package PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
+target_include_directories(create_dev_package PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
+
+set_target_properties(create_dev_package
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	
+	OUTPUT_NAME "create_dev_package"	
+
+	VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/Output"	    
+)
+
+
+if(WIN32)
+	target_link_libraries(create_dev_package shlwapi.lib)
+	target_link_libraries(create_dev_package ws2_32.lib)
+endif(WIN32)
+
+if(UNIX)
+	if(NOT LIBUUID_PATH)
+		message(FATAL_ERROR "libuuid not found")
+	endif()
+	target_link_libraries(create_dev_package ${LIBUUID_PATH})
+endif()
+
+
+
+#[[++ 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ++ packageManager Target
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ]]
 
