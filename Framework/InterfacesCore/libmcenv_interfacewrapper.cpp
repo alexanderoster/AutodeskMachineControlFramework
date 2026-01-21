@@ -28417,6 +28417,35 @@ LibMCEnvResult libmcenv_stateenvironment_signalqueueisempty(LibMCEnv_StateEnviro
 	}
 }
 
+LibMCEnvResult libmcenv_stateenvironment_queuehassignal(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, bool * pHasSignal)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pSignalTypeName == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pHasSignal == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sSignalTypeName(pSignalTypeName);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pHasSignal = pIStateEnvironment->QueueHasSignal(sSignalTypeName);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_stateenvironment_clearunhandledsignalsoftype(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName)
 {
 	IBase* pIBaseClass = (IBase *)pStateEnvironment;
@@ -35719,6 +35748,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_claimsignalfromqueue;
 	if (sProcName == "libmcenv_stateenvironment_signalqueueisempty") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_signalqueueisempty;
+	if (sProcName == "libmcenv_stateenvironment_queuehassignal") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_queuehassignal;
 	if (sProcName == "libmcenv_stateenvironment_clearunhandledsignalsoftype") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_clearunhandledsignalsoftype;
 	if (sProcName == "libmcenv_stateenvironment_clearallunhandledsignals") 

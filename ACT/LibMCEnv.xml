@@ -5139,9 +5139,14 @@
 			<param name="HandlerInstance" type="optionalclass" class="SignalHandler" pass="return" description="Signal object. If no signal is InQueue the signal handler object will be null." />
 		</method>
 
-		<method name="SignalQueueIsEmpty" description="Returns if a signal queue is empty for a specific type...">
+		<method name="SignalQueueIsEmpty" description="Returns if a signal queue is empty for a specific type... Equivalent to NOT QueueHasSignal.">
 			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
 			<param name="IsEmpty" type="bool" pass="return" description="Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value." />
+		</method>
+
+		<method name="QueueHasSignal" description="Returns if a signal queue has a signal of a specific type. Equivalent to NOT SignalQueueIsEmpty ().">
+			<param name="SignalTypeName" type="string" pass="in" description="Name Of Signal to be returned" />
+			<param name="HasSignal" type="bool" pass="return" description="Returns if there is a signal in a signal queue. Please be aware that even a true return value does not guarantee that ClaimSignalFromQueue returns a non-null value." />
 		</method>
 
 		<method name="ClearUnhandledSignalsOfType" description="Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected">

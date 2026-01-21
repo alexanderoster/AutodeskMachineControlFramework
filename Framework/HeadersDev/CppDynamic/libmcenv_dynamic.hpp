@@ -3430,6 +3430,7 @@ public:
 	inline PSignalTrigger PrepareSignal(const std::string & sMachineInstance, const std::string & sSignalName);
 	inline PSignalHandler ClaimSignalFromQueue(const std::string & sSignalTypeName);
 	inline bool SignalQueueIsEmpty(const std::string & sSignalTypeName);
+	inline bool QueueHasSignal(const std::string & sSignalTypeName);
 	inline void ClearUnhandledSignalsOfType(const std::string & sSignalTypeName);
 	inline void ClearAllUnhandledSignals();
 	inline PTelemetryChannel RegisterTelemetryChannel(const std::string & sChannelIdentifier, const std::string & sChannelDescription, const eTelemetryChannelType eChannelType);
@@ -4590,6 +4591,7 @@ public:
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
 		pWrapperTable->m_StateEnvironment_ClaimSignalFromQueue = nullptr;
 		pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty = nullptr;
+		pWrapperTable->m_StateEnvironment_QueueHasSignal = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = nullptr;
 		pWrapperTable->m_StateEnvironment_ClearAllUnhandledSignals = nullptr;
 		pWrapperTable->m_StateEnvironment_RegisterTelemetryChannel = nullptr;
@@ -12675,6 +12677,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_QueueHasSignal = (PLibMCEnvStateEnvironment_QueueHasSignalPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_queuehassignal");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_QueueHasSignal = (PLibMCEnvStateEnvironment_QueueHasSignalPtr) dlsym(hLibrary, "libmcenv_stateenvironment_queuehassignal");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_QueueHasSignal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = (PLibMCEnvStateEnvironment_ClearUnhandledSignalsOfTypePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_clearunhandledsignalsoftype");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType = (PLibMCEnvStateEnvironment_ClearUnhandledSignalsOfTypePtr) dlsym(hLibrary, "libmcenv_stateenvironment_clearunhandledsignalsoftype");
@@ -17773,6 +17784,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_signalqueueisempty", (void**)&(pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SignalQueueIsEmpty == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_queuehassignal", (void**)&(pWrapperTable->m_StateEnvironment_QueueHasSignal));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_QueueHasSignal == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_clearunhandledsignalsoftype", (void**)&(pWrapperTable->m_StateEnvironment_ClearUnhandledSignalsOfType));
@@ -30522,7 +30537,7 @@ public:
 	}
 	
 	/**
-	* CStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type...
+	* CStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type... Equivalent to NOT QueueHasSignal.
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
 	* @return Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
 	*/
@@ -30532,6 +30547,19 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SignalQueueIsEmpty(m_pHandle, sSignalTypeName.c_str(), &resultIsEmpty));
 		
 		return resultIsEmpty;
+	}
+	
+	/**
+	* CStateEnvironment::QueueHasSignal - Returns if a signal queue has a signal of a specific type. Equivalent to NOT SignalQueueIsEmpty ().
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Returns if there is a signal in a signal queue. Please be aware that even a true return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+	*/
+	bool CStateEnvironment::QueueHasSignal(const std::string & sSignalTypeName)
+	{
+		bool resultHasSignal = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_QueueHasSignal(m_pHandle, sSignalTypeName.c_str(), &resultHasSignal));
+		
+		return resultHasSignal;
 	}
 	
 	/**

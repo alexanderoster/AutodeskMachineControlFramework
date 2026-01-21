@@ -9409,7 +9409,7 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_PrepareSignalPtr) (LibMCEnv_S
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, LibMCEnv_SignalHandler * pHandlerInstance);
 
 /**
-* Returns if a signal queue is empty for a specific type...
+* Returns if a signal queue is empty for a specific type... Equivalent to NOT QueueHasSignal.
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
 * @param[in] pSignalTypeName - Name Of Signal to be returned
@@ -9417,6 +9417,16 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr) (Lib
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, bool * pIsEmpty);
+
+/**
+* Returns if a signal queue has a signal of a specific type. Equivalent to NOT SignalQueueIsEmpty ().
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pSignalTypeName - Name Of Signal to be returned
+* @param[out] pHasSignal - Returns if there is a signal in a signal queue. Please be aware that even a true return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_QueueHasSignalPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pSignalTypeName, bool * pHasSignal);
 
 /**
 * Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
@@ -12159,6 +12169,7 @@ typedef struct {
 	PLibMCEnvStateEnvironment_PrepareSignalPtr m_StateEnvironment_PrepareSignal;
 	PLibMCEnvStateEnvironment_ClaimSignalFromQueuePtr m_StateEnvironment_ClaimSignalFromQueue;
 	PLibMCEnvStateEnvironment_SignalQueueIsEmptyPtr m_StateEnvironment_SignalQueueIsEmpty;
+	PLibMCEnvStateEnvironment_QueueHasSignalPtr m_StateEnvironment_QueueHasSignal;
 	PLibMCEnvStateEnvironment_ClearUnhandledSignalsOfTypePtr m_StateEnvironment_ClearUnhandledSignalsOfType;
 	PLibMCEnvStateEnvironment_ClearAllUnhandledSignalsPtr m_StateEnvironment_ClearAllUnhandledSignals;
 	PLibMCEnvStateEnvironment_RegisterTelemetryChannelPtr m_StateEnvironment_RegisterTelemetryChannel;

@@ -196,6 +196,11 @@ bool CStateEnvironment::SignalQueueIsEmpty(const std::string& sSignalTypeName)
 	return pSignalInstance->queueIsEmpty(sSignalTypeName);
 }
 
+bool CStateEnvironment::QueueHasSignal(const std::string& sSignalTypeName)
+{
+	return !SignalQueueIsEmpty(sSignalTypeName);
+}
+
 
 void CStateEnvironment::ClearAllUnhandledSignals()
 {

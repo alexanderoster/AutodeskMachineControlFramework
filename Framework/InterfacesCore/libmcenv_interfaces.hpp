@@ -7316,11 +7316,18 @@ public:
 	virtual ISignalHandler * ClaimSignalFromQueue(const std::string & sSignalTypeName) = 0;
 
 	/**
-	* IStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type...
+	* IStateEnvironment::SignalQueueIsEmpty - Returns if a signal queue is empty for a specific type... Equivalent to NOT QueueHasSignal.
 	* @param[in] sSignalTypeName - Name Of Signal to be returned
 	* @return Returns if the signal queue is empty. Please be aware that even a false return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
 	*/
 	virtual bool SignalQueueIsEmpty(const std::string & sSignalTypeName) = 0;
+
+	/**
+	* IStateEnvironment::QueueHasSignal - Returns if a signal queue has a signal of a specific type. Equivalent to NOT SignalQueueIsEmpty ().
+	* @param[in] sSignalTypeName - Name Of Signal to be returned
+	* @return Returns if there is a signal in a signal queue. Please be aware that even a true return value does not guarantee that ClaimSignalFromQueue returns a non-null value.
+	*/
+	virtual bool QueueHasSignal(const std::string & sSignalTypeName) = 0;
 
 	/**
 	* IStateEnvironment::ClearUnhandledSignalsOfType - Clears all InQueue or InProcess signals of a certain type and marks them as Cleared. Handled, failed or timedout signals are unaffected
