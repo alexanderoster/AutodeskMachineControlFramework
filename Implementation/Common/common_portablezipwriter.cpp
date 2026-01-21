@@ -142,8 +142,17 @@ namespace AMCCommon {
 
 		uint64_t nDataPosition = m_pExportStream->getPosition();
 
-		if (nExternalFileAttributes == 0)
-			nExternalFileAttributes = ZIPFILEEXTERNALFILEATTRIBUTES;
+		if (nExternalFileAttributes == 0) {
+			bool bIsDirectory = false;
+			if (!sUTF8Name.empty()) {
+				char lastChar = *sUTF8Name.rbegin();
+				bIsDirectory = (lastChar == '/') || (lastChar == '\\');
+			}
+			uint32_t nPerms = bIsDirectory ? 0755 : 0644;
+			uint32_t nTypeBits = bIsDirectory ? 0x4000 : 0x8000;
+			uint32_t nMode = nTypeBits | (nPerms & 0x0FFF);
+			nExternalFileAttributes = (nMode << 16);
+		}
 
 		// create list entry
 		m_pCurrentEntry = std::make_shared<CPortableZIPWriterEntry>(sUTF8Name, nLastModTime, nLastModDate, nExternalFileAttributes, nFilePosition, nExtInfoPosition, nDataPosition);
