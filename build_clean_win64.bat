@@ -74,11 +74,6 @@ if "%CLIENTDIRHASH%" neq "%CLIENTDISTHASH%" (
 
 cd /d "%basepath%"
 
-echo "Building Resource builder (Win64)..."
-set GOARCH=amd64
-set GOOS=windows
-go build -o "%builddir%/DevPackage/Framework/buildresources.exe" -ldflags="-s -w" "%basepath%/BuildScripts/buildresources.go"
-
 copy /y "%basepath%Artifacts\clientdist\clientpackage.zip" "%builddir%\Output\%GITHASH%_core.client"
 if "%ERRORLEVEL%" neq "0" (
 	goto ERROR

@@ -99,14 +99,17 @@ endif()
 # Setting platform dependent executables
 if (${TARGETPLATFORM} MATCHES "win64")
 	set(BUILDRESOURCES_EXECUTABLE ${PROJECT_BINARY_DIR}/DevPackage/Framework/buildresources.exe)
+	set(BUILDRESOURCES_OUTPUT_NAME "buildresources")
 	set(DLLEXTENSION "dll")
 	set(LIB3MF_ARTIFACT "lib3mf_win64.dll")
 elseif (${TARGETPLATFORM} MATCHES "linux64")
 	set(BUILDRESOURCES_EXECUTABLE ${PROJECT_BINARY_DIR}/DevPackage/Framework/buildresources.linux64)
+	set(BUILDRESOURCES_OUTPUT_NAME "buildresources.linux64")
 	set(DLLEXTENSION "so")
 	set(LIB3MF_ARTIFACT "lib3mf_linux64.so")
 elseif (${TARGETPLATFORM} MATCHES "rpi")
 	set(BUILDRESOURCES_EXECUTABLE ${PROJECT_BINARY_DIR}/DevPackage/Framework/buildresources.rpi)
+	set(BUILDRESOURCES_OUTPUT_NAME "buildresources.rpi")
 	set(DLLEXTENSION "so")
 	set(LIB3MF_ARTIFACT "lib3mf_rpi.so")
 else ()
@@ -554,6 +557,8 @@ add_custom_command(
 	COMMAND ${BUILDRESOURCES_EXECUTABLE}
 			${CMAKE_CURRENT_PLUGINS_DIR}/Resources/
 			${PROJECT_BINARY_DIR}/Output/${GLOBALGITHASH}_core.data)
+
+add_dependencies(create_core_resources build_resources)
 
 #[[++
 
@@ -1030,6 +1035,62 @@ if(UNIX)
 		message(FATAL_ERROR "libuuid not found")
 	endif()
 	target_link_libraries(create_dev_package ${LIBUUID_PATH})
+endif()
+
+
+
+#[[++
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++ build_resources Target
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+]]
+
+
+file(GLOB BUILD_RESOURCES_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/buildResources.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_zip.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriter.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriterentry.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/crossguid/guid.cpp
+	${LIBMC_SRC_DEP_PUGIXML}
+	${LIBMC_SRC_DEP_ZLIB}
+)
+
+add_executable(build_resources ${BUILD_RESOURCES_SRC})
+
+target_include_directories(build_resources PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
+target_include_directories(build_resources PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
+target_include_directories(build_resources PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML)
+target_include_directories(build_resources PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
+
+set_target_properties(build_resources
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	
+	OUTPUT_NAME "${BUILDRESOURCES_OUTPUT_NAME}"	
+
+	VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/Output"	    
+)
+
+
+if(WIN32)
+	target_link_libraries(build_resources shlwapi.lib)
+	target_link_libraries(build_resources ws2_32.lib)
+endif(WIN32)
+
+if(UNIX)
+	if(NOT LIBUUID_PATH)
+		message(FATAL_ERROR "libuuid not found")
+	endif()
+	target_link_libraries(build_resources ${LIBUUID_PATH})
 endif()
 
 

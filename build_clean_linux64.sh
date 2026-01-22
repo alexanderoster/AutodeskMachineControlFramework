@@ -97,39 +97,6 @@ echo "client dist hash: $CLIENTDISTHASH"
 
 cd "$basepath"
 
-if test $PLATFORMNAME = "rpi"
-then
-
-	echo "Building Resource builder (LinuxARM)..."
-	export GOARCH=arm
-	export GOOS=linux
-	export GOARM=5
-	go build -o "$builddir/DevPackage/Framework/buildresources.rpi" -ldflags="-s -w" "$basepath/BuildScripts/buildResources.go"
-
-else
-
-if test $PLATFORMNAME = "win64"
-then
-
-	echo "Building Resource builder (Win64)..."
-	export GOARCH=amd64
-	export GOOS=windows
-	go build -o "$builddir/DevPackage/Framework/buildresources.exe" -ldflags="-s -w" "$basepath/BuildScripts/buildResources.go"
-
-	echo "Building Resource builder (Linux64)..."
-	export GOARCH=amd64
-	export GOOS=linux
-	go build -o "$builddir/DevPackage/Framework/buildresources.linux64" -ldflags="-s -w" "$basepath/BuildScripts/buildResources.go"
-	
-else
-
-	echo "Building Resource builder (Linux64)..."
-	export GOARCH=amd64
-	export GOOS=linux
-	go build -o "$builddir/DevPackage/Framework/buildresources.linux64" -ldflags="-s -w" "$basepath/BuildScripts/buildResources.go"
-
-fi	
-fi
 
 cp "$basepath/Artifacts/clientdist/clientpackage.zip" "$builddir/Output/${GITHASH}_core.client"
 cp "$basepath/Artifacts/apidocsdist/apidocspackage.zip" "$builddir/Output/${GITHASH}_core.apidocs"
