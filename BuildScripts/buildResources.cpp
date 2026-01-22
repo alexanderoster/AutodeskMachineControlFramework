@@ -101,6 +101,25 @@ struct SResourceEntry
 	std::string m_sSourcePath;
 };
 
+class CStringXMLWriter : public pugi::xml_writer
+{
+private:
+	std::string m_sBuffer;
+public:
+	void write(const void* data, size_t size) override
+	{
+		if (size == 0)
+			return;
+		const char* pChar = reinterpret_cast<const char*>(data);
+		m_sBuffer.append(pChar, pChar + size);
+	}
+
+	const std::string& getBuffer() const
+	{
+		return m_sBuffer;
+	}
+};
+
 static void addFileToZip(AMCCommon::CPortableZIPWriter& zipWriter, const std::string& sSourcePath, const std::string& sZipPath)
 {
 	AMCCommon::CImportStream_Native importStream(sSourcePath);
@@ -187,9 +206,9 @@ int main(int argc, char* argv[])
 			entryNode.append_attribute("contenttype").set_value(resourceEntry.m_sContentType.c_str());
 		}
 
-		std::ostringstream xmlStream;
-		packageDoc.save(xmlStream, "  ", pugi::format_raw | pugi::format_no_declaration, pugi::encoding_utf8);
-		std::string packageXMLString = xmlStream.str();
+		CStringXMLWriter xmlWriter;
+		packageDoc.save(xmlWriter, "  ", pugi::format_raw | pugi::format_no_declaration, pugi::encoding_utf8);
+		std::string packageXMLString = xmlWriter.getBuffer();
 
 		AMCCommon::PExportStream pExportStream = std::make_shared<AMCCommon::CExportStream_Native>(sOutputFileName);
 		AMCCommon::CPortableZIPWriter zipWriter(pExportStream, true);
