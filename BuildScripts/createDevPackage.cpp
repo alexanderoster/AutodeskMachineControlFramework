@@ -162,14 +162,17 @@ int main(int argc, char* argv[])
 		if (sSystemPrefix == "win64") {
 			addFileToZip(zipWriter, sDevPackageDir + "buildresources.exe", "buildresources.exe", 0);
 			addFileToZip(zipWriter, sDevPackageDir + "create_package_xml.exe", "create_package_xml.exe", 0);
+			addFileToZip(zipWriter, sDevPackageDir + "create_deployment_zip.exe", "create_deployment_zip.exe", 0);
 		}
 		else if (sSystemPrefix == "linux64") {
 			addFileToZip(zipWriter, sDevPackageDir + "buildresources.linux64", "buildresources.linux64", getExternalAttributesForFile(sDevPackageDir + "buildresources.linux64"));
 			addFileToZip(zipWriter, sDevPackageDir + "create_package_xml", "create_package_xml", getExternalAttributesForFile(sDevPackageDir + "create_package_xml"));
+			addFileToZip(zipWriter, sDevPackageDir + "create_deployment_zip", "create_deployment_zip", getExternalAttributesForFile(sDevPackageDir + "create_deployment_zip"));
 		}
 		else if (sSystemPrefix == "rpi") {
 			addFileToZip(zipWriter, sDevPackageDir + "buildresources.rpi", "buildresources.rpi", getExternalAttributesForFile(sDevPackageDir + "buildresources.rpi"));
 			addFileToZip(zipWriter, sDevPackageDir + "create_package_xml", "create_package_xml", getExternalAttributesForFile(sDevPackageDir + "create_package_xml"));
+			addFileToZip(zipWriter, sDevPackageDir + "create_deployment_zip", "create_deployment_zip", getExternalAttributesForFile(sDevPackageDir + "create_deployment_zip"));
 		}
 		else {
 			throw std::runtime_error("Invalid system prefix: " + sSystemPrefix);

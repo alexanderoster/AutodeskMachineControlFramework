@@ -328,10 +328,28 @@ int main(int argc, char* argv[])
 		std::string sPackageFileOnly = getFileNameFromPath(sPackageFileName);
 		addEntry(entries, entryNames, sPackageFileOnly, sPackageFileName, "package xml", 0);
 
+		bool bAddedServerBinary = false;
+#ifndef _WIN32
 		addEntry(entries, entryNames, "amc_server", sPackageDir + "amc_server", "server binary", makeExternalAttributesForFile(0755));
+		bAddedServerBinary = true;
+#else
+		if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sPackageDir + "amc_server")) {
+			addEntry(entries, entryNames, "amc_server", sPackageDir + "amc_server", "server binary", makeExternalAttributesForFile(0755));
+			bAddedServerBinary = true;
+		}
+#endif
+
+		if (!bAddedServerBinary) {
+			addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.exe");
+			addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_win32.exe");
+			bAddedServerBinary = AMCCommon::CUtils::fileOrPathExistsOnDisk(sPackageDir + "amc_server.exe") ||
+				AMCCommon::CUtils::fileOrPathExistsOnDisk(sPackageDir + "amc_win32.exe");
+		}
+
+		if (!bAddedServerBinary)
+			throw std::runtime_error("missing server binary file");
+
 		addRequiredEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.xml", "server configuration");
-		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_server.exe");
-		addOptionalEntryFromPackage(entries, entryNames, sPackageDir, "amc_win32.exe");
 		addEmptyEntry(entries, entryNames, "data/", makeExternalAttributesForDirectory(0755));
 		addEmptyEntry(entries, entryNames, "temp/", makeExternalAttributesForDirectory(0755));
 
