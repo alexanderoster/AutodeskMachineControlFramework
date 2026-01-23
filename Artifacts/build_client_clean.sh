@@ -39,7 +39,13 @@ cd ../..
 
 cd build_client/Client
 
-go run ../../BuildScripts/createClientDist.go dist ../../Artifacts/clientdist/clientpackage.zip
+TOOLBUILDDIR="../../build_clientdist_tools"
+mkdir -p "$TOOLBUILDDIR"
+git rev-parse --verify --short HEAD > "$TOOLBUILDDIR/githash.txt"
+git log -n 1 --format="%H" -- "Client" > "$TOOLBUILDDIR/clientdirhash.txt"
+cmake -S ../.. -B "$TOOLBUILDDIR"
+cmake --build "$TOOLBUILDDIR" --target create_client_dist --config Release
+"$TOOLBUILDDIR/DevPackage/Framework/create_client_dist" dist ../../Artifacts/clientdist/clientpackage.zip
 
 go run ../../BuildScripts/createClientSource.go . ../../Artifacts/clientdist/clientsourcepackage.zip
 
