@@ -23,7 +23,6 @@ TODO
 
 ## Dependencies / Prerequisites / Compilation (on Windows)
 * Visual Studio C/C++ (the Community Edition is sufficient technically) TODO
-* Get and install go https://golang.org/doc/install
 * A 64-MinGW compiler for cgo (we recommend TDM-GCC: https://jmeubank.github.io/tdm-gcc/)
 * Get and install cmake https://cmake.org/download/
 * Get and install nodejs: https://nodejs.org/en/download/ with optional chocolatey install (will install Phython as well)
@@ -31,7 +30,6 @@ TODO
 
 
 ## Dependencies / Prerequisites / Compilation (on x64-Linux)
-* Get and install go binaries from https://golang.org/doc/install
 * Get and install node binaries from https://nodejs.org/en/download/ 
 * On x64 Debian, the following packages should be sufficient: 
     - build-essential
@@ -57,4 +55,3 @@ Contributions are welcome and we are looking for people that can improve existin
 ## License and 3rd party acknowledgements
 * Autodesk Machine Control Framework has a [BSD-3-Clause license](LICENSE.md)
 * Autodesk Machine Control Framework uses these [3rd Party components](3RD_PARTY.md)
-

@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# disable go modules
-export GO111MODULE="off" 
-
 basepath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 PLATFORMNAME="linux64"
