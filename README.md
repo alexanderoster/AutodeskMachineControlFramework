@@ -23,29 +23,38 @@ TODO
 
 ## Dependencies / Prerequisites / Compilation (on Windows)
 * Visual Studio C/C++ (the Community Edition is sufficient technically) TODO
-* A 64-MinGW compiler for cgo (we recommend TDM-GCC: https://jmeubank.github.io/tdm-gcc/)
-* Get and install cmake https://cmake.org/download/
-* Get and install nodejs: https://nodejs.org/en/download/ with optional chocolatey install (will install Phython as well)
-* build_clean_win64.bat should build the binaries and dev packages on Windows. The results are located in "build/Output".
+* Get and install CMake: https://cmake.org/download/
+* Get and install Node.js if you plan to rebuild the client: https://nodejs.org/en/download/
+* Run `build_clean_win64.bat` to build the binaries and dev packages. Outputs are in `build_win64/Output`.
 
 
 ## Dependencies / Prerequisites / Compilation (on x64-Linux)
-* Get and install node binaries from https://nodejs.org/en/download/ 
+* Get and install Node.js if you plan to rebuild the client: https://nodejs.org/en/download/
 * On x64 Debian, the following packages should be sufficient: 
     - build-essential
     - cmake
     - git
     - uuid-dev
     - libssl-dev
-* build_clean_linux64.sh should build the binaries and dev packages on Linux. The results are located in "build_linux64/Output".
+* Run `./build_clean_linux64.sh` to build the binaries and dev packages. Outputs are in `build_linux64/Output`.
 
 ## Dependencies / Prerequisites (on ARM Linux)
 TODO
 
 ## Build and first run
 Build as described above.
-* run "amc_server.exe"
+* run `amc_server.exe` on Windows or `./amc_server` on Linux from the output folder
 * connect a web browser to http://[your server name or IP]:[your port number]
+
+## Client and API docs packages
+* To rebuild the client distribution zip:
+  - Windows: run `Artifacts/build_client_clean.bat`
+  - Linux: run `./Artifacts/build_client_clean.sh`
+  - Output: `Artifacts/clientdist/clientpackage.zip` and `Artifacts/clientdist/clientsourcepackage.zip`
+* To rebuild the API docs package:
+  - Windows: run `Artifacts/build_apidocs_clean.bat`
+  - Linux: run `./Artifacts/build_apidocs_clean.sh`
+  - Output: `Artifacts/apidocsdist/apidocspackage.zip`
 
 
 ## Contributing
