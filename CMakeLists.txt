@@ -1119,6 +1119,7 @@ file(GLOB CREATE_CLIENT_DIST_SRC
 )
 
 add_executable(create_client_dist ${CREATE_CLIENT_DIST_SRC})
+target_sources(create_client_dist PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp)
 
 target_include_directories(create_client_dist PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
 target_include_directories(create_client_dist PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
@@ -1174,6 +1175,7 @@ file(GLOB CREATE_CLIENT_SOURCE_SRC
 )
 
 add_executable(create_client_source ${CREATE_CLIENT_SOURCE_SRC})
+target_sources(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp)
 
 target_include_directories(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
 target_include_directories(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
