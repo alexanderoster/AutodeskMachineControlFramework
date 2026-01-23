@@ -1107,6 +1107,7 @@ endif()
 
 file(GLOB CREATE_CLIENT_DIST_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/createClientDist.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_zip.cpp 
@@ -1147,6 +1148,59 @@ if(UNIX)
 		message(FATAL_ERROR "libuuid not found")
 	endif()
 	target_link_libraries(create_client_dist ${LIBUUID_PATH})
+endif()
+
+
+
+#[[++ 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ create_client_source Target
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+]]
+
+
+file(GLOB CREATE_CLIENT_SOURCE_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/createClientSource.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_zip.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriter.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_portablezipwriterentry.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/crossguid/guid.cpp
+	${LIBMC_SRC_DEP_ZLIB}
+)
+
+add_executable(create_client_source ${CREATE_CLIENT_SOURCE_SRC})
+
+target_include_directories(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common)
+target_include_directories(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
+target_include_directories(create_client_source PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
+
+set_target_properties(create_client_source
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/DevPackage/Framework"
+	
+	OUTPUT_NAME "create_client_source"	
+
+	VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/Output"	    
+)
+
+
+if(WIN32)
+	target_link_libraries(create_client_source shlwapi.lib)
+	target_link_libraries(create_client_source ws2_32.lib)
+endif(WIN32)
+
+if(UNIX)
+	if(NOT LIBUUID_PATH)
+		message(FATAL_ERROR "libuuid not found")
+	endif()
+	target_link_libraries(create_client_source ${LIBUUID_PATH})
 endif()
 
 

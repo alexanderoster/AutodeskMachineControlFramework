@@ -48,9 +48,10 @@ git rev-parse --verify --short HEAD >"%TOOLBUILDDIR%\githash.txt"
 git log -n 1 --format="%%H" -- "Client" >"%TOOLBUILDDIR%\clientdirhash.txt"
 cmake -S ..\.. -B "%TOOLBUILDDIR%"
 cmake --build "%TOOLBUILDDIR%" --target create_client_dist --config Release
+cmake --build "%TOOLBUILDDIR%" --target create_client_source --config Release
 "%TOOLBUILDDIR%\DevPackage\Framework\create_client_dist.exe" dist ..\..\Artifacts\clientdist\clientpackage.zip 
 
-go run ..\..\BuildScripts\createClientSource.go . ..\..\Artifacts\clientdist\clientsourcepackage.zip 
+"%TOOLBUILDDIR%\DevPackage\Framework\create_client_source.exe" . ..\..\Artifacts\clientdist\clientsourcepackage.zip 
 
 if "%1" neq "NOPAUSE" (
 	pause
