@@ -30,12 +30,8 @@ export function getClientGitHash ()
 }
 EOF
 
-cd build_client/Client
 
-npm install
-npm run build
 
-cd ../..
 
 cd build_client/Client
 
@@ -46,6 +42,15 @@ git log -n 1 --format="%H" -- "Client" > "$TOOLBUILDDIR/clientdirhash.txt"
 cmake -S ../.. -B "$TOOLBUILDDIR"
 cmake --build "$TOOLBUILDDIR" --target create_client_dist --config Release
 cmake --build "$TOOLBUILDDIR" --target create_client_source --config Release
+
+
+npm install
+npm run build
+
+cd ../..
+
+cd build_client/Client
+
 "$TOOLBUILDDIR/DevPackage/Framework/create_client_dist" dist ../../Artifacts/clientdist/clientpackage.zip
 
 "$TOOLBUILDDIR/DevPackage/Framework/create_client_source" . ../../Artifacts/clientdist/clientsourcepackage.zip

@@ -1163,6 +1163,7 @@ endif()
 
 file(GLOB CREATE_CLIENT_SOURCE_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/BuildScripts/createClientSource.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_zip.cpp 
