@@ -55,6 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_logger.hpp"
 #include "amc_unittests_mesh.hpp"
 #include "amc_unittests_parameters.hpp"
+#include "amc_unittests_telemetry.hpp"
 
 
 using namespace AMCUnitTest;
@@ -88,4 +89,5 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_Logger>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Mesh>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Parameters>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_Telemetry>());
 }
