@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2025 Autodesk Inc.
 
 All rights reserved.
 
@@ -28,42 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Framework/InterfacesCore/libmcdata_abi.hpp"
+#ifndef __AMCTEST_UNITTEST_LIBMCDATA
+#define __AMCTEST_UNITTEST_LIBMCDATA
+
+#include "libmcdata_dynamic.hpp"
 #include "libmcdata_interfaces.hpp"
-#include "libmcdata_interfaceexception.hpp"
-#include "libmcdata_datamodel.hpp"
 
-using namespace LibMCData;
-using namespace LibMCData::Impl;
+namespace AMCUnitTest {
 
-void CWrapper::GetVersion(LibMCData_uint32 & nMajor, LibMCData_uint32 & nMinor, LibMCData_uint32 & nMicro)
-{
-	nMajor = LIBMCDATA_VERSION_MAJOR;
-	nMinor = LIBMCDATA_VERSION_MINOR;
-	nMicro = LIBMCDATA_VERSION_MICRO;
-}
-
-bool CWrapper::GetLastError(IBase* pInstance, std::string & sErrorMessage)
-{
-	if (pInstance) {
-		return pInstance->GetLastErrorMessage (sErrorMessage);
-	} else {
-		return false;
+	inline LibMCData::PWrapper loadLibMCDataInProcess()
+	{
+		void* pLookup = (void*)&LibMCData::Impl::LibMCData_GetProcAddress;
+		return LibMCData::CWrapper::loadLibraryFromSymbolLookupMethod(pLookup);
 	}
+
 }
 
-void CWrapper::ReleaseInstance(IBase* pInstance)
-{
-	IBase::ReleaseBaseClassInterface(pInstance);
-}
-
-void CWrapper::AcquireInstance(IBase* pInstance)
-{
-	IBase::AcquireBaseClassInterface(pInstance);
-}
-
-IDataModel * CWrapper::CreateDataModelInstance()
-{
-	return new CDataModel();
-}
-
+#endif // __AMCTEST_UNITTEST_LIBMCDATA

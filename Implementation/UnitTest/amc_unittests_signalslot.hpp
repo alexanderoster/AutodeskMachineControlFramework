@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common_chrono.hpp"
 #include "amc_telemetry.hpp"
 #include "libmcdata_dynamic.hpp"
+#include "amc_unittests_libmcdata.hpp"
 
 
 namespace AMCUnitTest {
@@ -82,35 +83,6 @@ namespace AMCUnitTest {
         }
 
     private:
-#define __STRINGIZE(x) #x
-#define __STRINGIZE_VALUE_OF(x) __STRINGIZE(x)
-
-        std::string getDataModelLibraryName()
-        {
-            std::string sBaseName = std::string(__STRINGIZE_VALUE_OF(__GITHASH)) + "_core_libmcdata";
-            std::string sLibraryName;
-#ifdef _WIN32
-            sLibraryName = sBaseName + ".dll";
-#elif defined(__APPLE__)
-            sLibraryName = sBaseName + ".dylib";
-#else
-            sLibraryName = sBaseName + ".so";
-#endif
-            std::vector<std::string> searchPaths = {
-                "./" + sLibraryName,
-                "./Output/" + sLibraryName,
-                "../Output/" + sLibraryName,
-                "build_linux64/Output/" + sLibraryName
-            };
-
-            for (const auto& sPath : searchPaths) {
-                if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sPath))
-                    return sPath;
-            }
-
-            return "./Output/" + sLibraryName;
-        }
-
         void initializeTelemetry()
         {
             std::string sRootPath = "testoutput";
@@ -123,7 +95,7 @@ namespace AMCUnitTest {
 
             std::string sDatabaseFile = sBasePath + "/signalslot.db";
 
-            m_pDataWrapper = LibMCData::CWrapper::loadLibrary(getDataModelLibraryName());
+            m_pDataWrapper = AMCUnitTest::loadLibMCDataInProcess();
             m_pDataModel = m_pDataWrapper->CreateDataModelInstance();
             m_pDataModel->InitialiseDatabase(sBasePath, LibMCData::eDataBaseType::SqLite, sDatabaseFile);
             m_pTelemetrySession = m_pDataModel->CreateTelemetrySession();
