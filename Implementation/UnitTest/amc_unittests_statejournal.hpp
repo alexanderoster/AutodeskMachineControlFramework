@@ -80,7 +80,7 @@ namespace AMCUnitTest {
 		sStateJournalFixture createFixture(const std::string& sSuffix) {
 			sStateJournalFixture fixture;
 
-			std::string sRootPath = "testoutput";
+			std::string sRootPath = "Output/temp";
 			if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sRootPath))
 				AMCCommon::CUtils::createDirectoryOnDisk(sRootPath);
 
