@@ -33,10 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_unittests.hpp"
 #include "amc_toolpathlayerdata.hpp"
+#include "amc_toolpathentity.hpp"
+#include "amc_toolpathhandler.hpp"
 #include "amc_toolpathpart.hpp"
+#include "amc_scatterplot.hpp"
+#include "amc_unittests_libmcdata.hpp"
 #include "common_utils.hpp"
 
 #include "lib3mf/lib3mf_dynamic.hpp"
+#include "libmcdata_dynamic.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -232,6 +237,7 @@ namespace AMCUnitTest {
 			registerTest("LayerProfileBasics", "CToolpathLayerProfile value and modifier handling", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Toolpath::testLayerProfileBasics, this));
 			registerTest("LayerDataFromModel", "CToolpathLayerData conversion and accessors", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Toolpath::testLayerDataFromModel, this));
 			registerTest("ToolpathPartBasics", "CToolpathPart wraps build items", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Toolpath::testToolpathPartBasics, this));
+			registerTest("ToolpathEntityHandler", "CToolpathEntity/Handler metadata and load/unload paths", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Toolpath::testToolpathEntityHandler, this));
 		}
 
 		void initializeTests() override
@@ -413,6 +419,95 @@ namespace AMCUnitTest {
 			assertTrue(part.getModel().get() == pModel.get());
 			assertTrue(part.getBuildItem().get() == pBuildItem.get());
 			assertFalse(part.getName().empty());
+		}
+
+		void testToolpathEntityHandler()
+		{
+			std::string toolpathUUID;
+			std::string profileUUID;
+			std::string buildItemUUID;
+			auto buffer = CToolpathTestFixture::buildToolpathBuffer(toolpathUUID, profileUUID, buildItemUUID);
+			static_cast<void>(toolpathUUID);
+			static_cast<void>(profileUUID);
+			static_cast<void>(buildItemUUID);
+
+			std::string sRootPath = "testoutput";
+			if (!AMCCommon::CUtils::fileOrPathExistsOnDisk(sRootPath))
+				AMCCommon::CUtils::createDirectoryOnDisk(sRootPath);
+
+			std::string sBasePath = sRootPath + "/toolpath_" + AMCCommon::CUtils::createUUID();
+			AMCCommon::CUtils::createDirectoryOnDisk(sBasePath);
+			std::string sDatabaseFile = sBasePath + "/toolpath.db";
+
+			auto pDataWrapper = AMCUnitTest::loadLibMCDataInProcess();
+			auto pDataModel = pDataWrapper->CreateDataModelInstance();
+			pDataModel->InitialiseDatabase(sBasePath, LibMCData::eDataBaseType::SqLite, sDatabaseFile);
+
+			auto pStorage = pDataModel->CreateStorage();
+			std::string streamUUID = AMCCommon::CUtils::createUUID();
+			std::vector<LibMCData_uint8> storageBuffer(buffer.begin(), buffer.end());
+			pStorage->StoreNewStream(streamUUID, "toolpath.3mf", "application/3mf", storageBuffer, "", 0);
+
+			AMC::CToolpathHandler handler(pDataModel);
+			handler.setLibraryPath("lib3mf", CToolpathTestFixture::getLib3MFPath());
+
+			assertTrue(handler.findToolpathEntity(streamUUID, false) == nullptr);
+			bool thrown = false;
+			try {
+				handler.findToolpathEntity(streamUUID, true);
+			}
+			catch (...) {
+				thrown = true;
+			}
+			assertTrue(thrown, "Expected missing entity to throw");
+
+			auto* pEntity = handler.loadToolpathEntity(streamUUID);
+			assertTrue(pEntity != nullptr);
+			assertTrue(pEntity->getLayerCount() == 1);
+
+			auto* pEntityAgain = handler.loadToolpathEntity(streamUUID);
+			assertTrue(pEntityAgain == pEntity);
+
+			handler.unloadToolpathEntity(streamUUID);
+			assertTrue(handler.findToolpathEntity(streamUUID, false) != nullptr);
+			handler.unloadToolpathEntity(streamUUID);
+			assertTrue(handler.findToolpathEntity(streamUUID, false) == nullptr);
+
+			pEntity = handler.loadToolpathEntity(streamUUID);
+			assertTrue(pEntity->getMetaDataCount() == 1);
+			std::string sNameSpace;
+			std::string sName;
+			pEntity->getMetaDataInfo(0, sNameSpace, sName);
+			assertTrue(sNameSpace == "amc");
+			assertTrue(sName == "job");
+			assertTrue(pEntity->hasUniqueMetaData("amc", "job"));
+			auto pXML = pEntity->findUniqueMetaData("amc", "job");
+			assertTrue(pXML->GetRootNode()->HasAttribute("name"));
+
+			assertTrue(pEntity->hasBinaryMetaData("/metadata/unique.bin"));
+			std::vector<uint8_t> metaBuffer(4);
+			uint64_t neededCount = 0;
+			pEntity->getBinaryMetaData("/metadata/unique.bin", metaBuffer.size(), &neededCount, metaBuffer.data());
+			assertTrue(neededCount == 4);
+			assertTrue(metaBuffer[0] == 1);
+
+			assertTrue(pEntity->getBinaryMetaDataAsString("/metadata/unique.bin").size() == 4);
+			assertTrue(pEntity->getBinaryMetaDataRelationship("/metadata/unique.bin") == "urn:amc:unique");
+
+			assertTrue(pEntity->hasUniqueBinaryMetaDataSchema("urn:amc:unique"));
+			assertFalse(pEntity->hasUniqueBinaryMetaDataSchema("urn:amc:dup"));
+
+			std::string sBinaryText = pEntity->getBinaryMetaDataAsStringBySchema("urn:amc:unique");
+			assertTrue(sBinaryText.size() == 4);
+
+			std::vector<uint8_t> thumbnail;
+			std::string mimeType;
+			assertTrue(pEntity->readThumbnail(thumbnail, mimeType));
+			assertTrue(mimeType == "image/png");
+
+			auto pScatterplot = std::make_shared<AMC::CScatterplot>(AMCCommon::CUtils::createUUID());
+			handler.storeScatterplot(pScatterplot);
+			assertTrue(handler.restoreScatterplot(pScatterplot->getUUID(), true).get() == pScatterplot.get());
 		}
 
 	};

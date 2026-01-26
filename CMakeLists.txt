@@ -745,6 +745,7 @@ file(GLOB UNITTEST_SRC
   ${LIBMC_SRC_DEP_PUGIXML}
   ${LIBMC_SRC_DEP_CROSSGUID}
   ${LIBMC_SRC_DEP_LODEPNG}
+  ${LIBMCDATA_SRC}
 )
 
 add_executable(amc_unittest ${UNITTEST_SRC})
@@ -766,12 +767,16 @@ target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Impl
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/UI)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/LibMC)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/LibMCEnv)
+target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/LibMCData)
+target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementation/DataModel)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PicoSHA2)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libzip)
+target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/SQLite)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
 target_compile_options(amc_unittest PRIVATE "-D__GITHASH=${GLOBALGITHASH}")
+target_compile_options(amc_unittest PRIVATE "-D__LIBMCDATA_EXPORTS")
 
 if(WIN32)
 	
@@ -779,10 +784,12 @@ if(WIN32)
 		target_link_libraries(amc_unittest Winmm.lib)
 		target_link_libraries(amc_unittest Shlwapi.lib)
 		target_link_libraries(amc_unittest ws2_32.lib)
+		target_link_libraries(amc_unittest ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/SQLite/sqlite3.lib)
 	else()
 		target_link_libraries(amc_unittest winmm.lib)
 		target_link_libraries(amc_unittest shlwapi.lib)
 		target_link_libraries(amc_unittest ws2_32.lib)
+		target_link_libraries(amc_unittest SQLite3)
 		target_link_options(amc_unittest PRIVATE -static-libgcc -static-libstdc++ --static )
 	endif (MSVC)
 else()
@@ -801,6 +808,9 @@ endif(WIN32)
 
 if(UNIX)
 	target_link_libraries(amc_unittest ${LIBUUID_PATH})
+	if (NOT APPLE)
+		target_link_libraries(amc_unittest SQLite3)
+	endif()
 endif()
 
 

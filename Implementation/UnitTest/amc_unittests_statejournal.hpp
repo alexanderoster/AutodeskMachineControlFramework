@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_exceptiontypes.hpp"
 #include "libmc_interfaceexception.hpp"
 #include "libmcdata_dynamic.hpp"
+#include "amc_unittests_libmcdata.hpp"
 
 #include <memory>
 #include <string>
@@ -76,23 +77,6 @@ namespace AMCUnitTest {
 			AMC::PStateJournal m_pJournal;
 		} sStateJournalFixture;
 
-		std::string getDataModelLibraryName() {
-			std::string sBaseName = std::string(__STRINGIZE_VALUE_OF(__GITHASH)) + "_core_libmcdata";
-			std::string sLibraryName;
-#ifdef _WIN32
-			sLibraryName = sBaseName + ".dll";
-#elif defined(__APPLE__)
-			sLibraryName = sBaseName + ".dylib";
-#else
-			sLibraryName = sBaseName + ".so";
-#endif
-			std::string sLocalPath = "./" + sLibraryName;
-			if (AMCCommon::CUtils::fileOrPathExistsOnDisk(sLocalPath))
-				return sLocalPath;
-
-			return "./Output/" + sLibraryName;
-		}
-
 		sStateJournalFixture createFixture(const std::string& sSuffix) {
 			sStateJournalFixture fixture;
 
@@ -106,7 +90,7 @@ namespace AMCUnitTest {
 
 			std::string sDatabaseFile = sBasePath + "/statejournal.db";
 
-			fixture.m_pDataWrapper = LibMCData::CWrapper::loadLibrary(getDataModelLibraryName());
+			fixture.m_pDataWrapper = AMCUnitTest::loadLibMCDataInProcess();
 			fixture.m_pDataModel = fixture.m_pDataWrapper->CreateDataModelInstance();
 			fixture.m_pDataModel->InitialiseDatabase(sBasePath, LibMCData::eDataBaseType::SqLite, sDatabaseFile);
 
