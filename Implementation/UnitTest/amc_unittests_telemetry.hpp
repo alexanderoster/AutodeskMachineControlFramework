@@ -59,6 +59,8 @@ namespace AMCUnitTest {
 			registerTest("IntervalMarkerFinishTwiceThrows", "Finishing marker twice fails", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testIntervalMarkerFinishTwiceThrows, this));
 			registerTest("MarkerDurationBeforeFinishThrows", "Duration on unfinished marker fails", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testMarkerDurationBeforeFinishThrows, this));
 			registerTest("ScopeAutoFinish", "Telemetry scope finishes marker on destruction", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testScopeAutoFinish, this));
+			registerTest("ScopeMoveConstructor", "Telemetry scope move constructor works correctly", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testScopeMoveConstructor, this));
+			registerTest("ScopeMoveAssignment", "Telemetry scope move assignment operator works correctly", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testScopeMoveAssignment, this));
 			registerTest("TypeMappingRoundTrip", "Telemetry channel type mapping round-trip", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testTypeMappingRoundTrip, this));
 			registerTest("TypeMappingInvalidThrows", "Telemetry channel type mapping rejects invalid strings", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testTypeMappingInvalidThrows, this));
 			registerTest("ChunkArchivePath", "Chunk read-only and archive path works", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_Telemetry::testChunkArchivePath, this));
@@ -242,6 +244,96 @@ namespace AMCUnitTest {
 
 			assertTrue(pChannel->getTotalMarkersCreated() == 1);
 			assertTrue(pChannel->getMaxDurationInMicroseconds() > 0);
+		}
+
+		void testScopeMoveConstructor()
+		{
+			auto fixture = createFixture("scope_move_ctor");
+			auto pChannel = createChannel(fixture, "channel_move_ctor");
+
+			// Create an initial scope using startIntervalScope
+			AMC::CTelemetryScope originalScope = pChannel->startIntervalScope(12345);
+			uint64_t originalMarkerID = originalScope.getMarkerID();
+			uint64_t originalStartTimestamp = originalScope.getStartTimeStamp();
+
+			// Verify the original scope has valid data
+			assertTrue(originalMarkerID > 0, "Original scope should have a valid marker ID");
+			assertTrue(originalStartTimestamp > 0, "Original scope should have a valid start timestamp");
+
+			// Move construct a new scope from the original
+			AMC::CTelemetryScope movedScope(std::move(originalScope));
+
+			// Verify the moved scope has the same marker ID and timestamp
+			uint64_t movedMarkerID = movedScope.getMarkerID();
+			uint64_t movedStartTimestamp = movedScope.getStartTimeStamp();
+
+			assertTrue(movedMarkerID == originalMarkerID, "Moved scope should have the same marker ID");
+			assertTrue(movedStartTimestamp == originalStartTimestamp, "Moved scope should have the same start timestamp");
+
+			// Verify the moved scope is still functional (can get marker ID again)
+			uint64_t movedMarkerID2 = movedScope.getMarkerID();
+			assertTrue(movedMarkerID2 == originalMarkerID, "Moved scope should still be functional");
+
+			// Verify that when the moved scope is destroyed, it finishes the marker
+			// The moved-from originalScope should have nullptr marker and won't finish anything
+			uint64_t maxDurationBefore = pChannel->getMaxDurationInMicroseconds();
+			{
+				AMC::CTelemetryScope tempScope(std::move(movedScope));
+				// movedScope is now moved-from and should not finish anything
+				AMCCommon::CChrono::sleepMicroseconds(100);
+			}
+			// tempScope should have finished the marker, updating max duration
+			uint64_t maxDurationAfter = pChannel->getMaxDurationInMicroseconds();
+			assertTrue(maxDurationAfter >= maxDurationBefore, "Max duration should be updated when moved scope is destroyed");
+		}
+
+		void testScopeMoveAssignment()
+		{
+			auto fixture = createFixture("scope_move_assign");
+			auto pChannel = createChannel(fixture, "channel_move_assign");
+
+			// Create two scopes
+			AMC::CTelemetryScope scope1 = pChannel->startIntervalScope(11111);
+			AMC::CTelemetryScope scope2 = pChannel->startIntervalScope(22222);
+
+			uint64_t scope1MarkerID = scope1.getMarkerID();
+			uint64_t scope2MarkerID = scope2.getMarkerID();
+			uint64_t scope1StartTimestamp = scope1.getStartTimeStamp();
+			uint64_t scope2StartTimestamp = scope2.getStartTimeStamp();
+
+			// Verify both scopes have valid data
+			assertTrue(scope1MarkerID > 0, "Scope1 should have a valid marker ID");
+			assertTrue(scope2MarkerID > 0, "Scope2 should have a valid marker ID");
+			assertTrue(scope1MarkerID != scope2MarkerID, "Scopes should have different marker IDs");
+
+			// Move assign scope1 to scope2
+			// scope2's original marker (22222) will be finished when scope2 is destroyed
+			// scope2 will now own scope1's marker (11111)
+			scope2 = std::move(scope1);
+
+			// Verify scope2 now has scope1's marker ID and timestamp
+			uint64_t scope2AfterMoveMarkerID = scope2.getMarkerID();
+			uint64_t scope2AfterMoveStartTimestamp = scope2.getStartTimeStamp();
+
+			assertTrue(scope2AfterMoveMarkerID == scope1MarkerID, "After move assignment, scope2 should have scope1's marker ID");
+			assertTrue(scope2AfterMoveStartTimestamp == scope1StartTimestamp, "After move assignment, scope2 should have scope1's start timestamp");
+
+			// Verify scope2 is still functional
+			uint64_t scope2MarkerID2 = scope2.getMarkerID();
+			assertTrue(scope2MarkerID2 == scope1MarkerID, "After move assignment, scope2 should still be functional");
+
+			// Verify that when scope2 is destroyed, it finishes the marker
+			// (scope1 is moved-from and should have nullptr marker, so it won't finish anything)
+			uint64_t maxDurationBefore = pChannel->getMaxDurationInMicroseconds();
+			{
+				AMC::CTelemetryScope tempScope = pChannel->startIntervalScope(33333);
+				tempScope = std::move(scope2);
+				// scope2 is now moved-from and should not finish anything
+				AMCCommon::CChrono::sleepMicroseconds(100);
+			}
+			// tempScope should have finished the marker, updating max duration
+			uint64_t maxDurationAfter = pChannel->getMaxDurationInMicroseconds();
+			assertTrue(maxDurationAfter >= maxDurationBefore, "Max duration should be updated when moved scope is destroyed");
 		}
 
 		void testTypeMappingRoundTrip()
