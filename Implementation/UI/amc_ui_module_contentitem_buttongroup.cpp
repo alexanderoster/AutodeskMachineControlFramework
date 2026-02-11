@@ -406,3 +406,16 @@ void CUIModule_ContentButtonGroup::populateClientVariables(CParameterHandler* pC
 		pButton->registerClientVariableGroup(pClientVariableHandler);
 	}
 }
+
+std::string CUIModule_ContentButtonGroup::getItemType()
+{
+	return "buttongroup";
+}
+
+void CUIModule_ContentButtonGroup::registerFrontendAttributes()
+{
+	std::string sDistribution = (m_ButtonDistribution == eUIModule_ContentButtonDistribution::cbdEquallyDistributed) ? "equaldistributed" : "rightaligned";
+	CUIExpression expr;
+	expr.setFixedValue(sDistribution);
+	registerItemStringAttribute("buttondistribution", expr);
+}

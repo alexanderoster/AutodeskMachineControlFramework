@@ -47,12 +47,13 @@ using namespace AMC;
 PUIModule_ContentParagraph CUIModule_ContentParagraph::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath)
 {
 	auto textAttrib = xmlNode.attribute("text");
+	CUIExpression textExpression(xmlNode, "text");
 
-	return std::make_shared <CUIModule_ContentParagraph>(textAttrib.as_string(), sItemName, sModulePath);
+	return std::make_shared <CUIModule_ContentParagraph>(textAttrib.as_string(), textExpression, sItemName, sModulePath);
 }
 
-CUIModule_ContentParagraph::CUIModule_ContentParagraph(const std::string& sText, const std::string& sItemName, const std::string& sModulePath)
-	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID (), sItemName, sModulePath), m_sText (sText)
+CUIModule_ContentParagraph::CUIModule_ContentParagraph(const std::string& sText, const CUIExpression& textExpression, const std::string& sItemName, const std::string& sModulePath)
+	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID (), sItemName, sModulePath), m_sText (sText), m_TextExpression(textExpression)
 {
 
 }
@@ -72,6 +73,16 @@ void CUIModule_ContentParagraph::addLegacyContentToJSON(CJSONWriter& writer, CJS
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "paragraph");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
 	object.addString(AMC_API_KEY_UI_ITEMTEXT, m_sText);
+}
+
+std::string CUIModule_ContentParagraph::getItemType()
+{
+	return "paragraph";
+}
+
+void CUIModule_ContentParagraph::registerFrontendAttributes()
+{
+	registerItemStringAttribute("text", m_TextExpression);
 }
 
 

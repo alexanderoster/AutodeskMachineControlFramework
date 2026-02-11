@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMCIMPL_API_CONSTANTS
 
 #include "amc_ui_module_contentitem_parameterlist.hpp"
+#include "amc_ui_expression.hpp"
 #include "libmc_interfaceexception.hpp"
 
 #include "amc_api_constants.hpp"
@@ -301,5 +302,20 @@ void CUIModule_ContentParameterList::loadFromXML(const pugi::xml_node& xmlNode)
 		addEntry(sInstanceName, sGroupName, sParameterName);
 
 	}
+}
+
+std::string CUIModule_ContentParameterList::getItemType()
+{
+	return "parameterlist";
+}
+
+void CUIModule_ContentParameterList::registerFrontendAttributes()
+{
+	CUIExpression loadingTextExpr;
+	loadingTextExpr.setFixedValue(m_sLoadingText);
+	registerItemStringAttribute("loadingtext", loadingTextExpr);
+	CUIExpression entriesExpr;
+	entriesExpr.setFixedValue(std::to_string(m_nEntriesPerPage));
+	registerItemIntegerAttribute("entriesperpage", entriesExpr);
 }
 

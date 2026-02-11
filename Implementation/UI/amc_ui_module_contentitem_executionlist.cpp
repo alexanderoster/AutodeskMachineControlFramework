@@ -385,3 +385,23 @@ void CUIModule_ContentExecutionList::addButton(const std::string& sButtonName, C
 
 
 }
+
+std::string CUIModule_ContentExecutionList::getItemType()
+{
+	return "executionlist";
+}
+
+void CUIModule_ContentExecutionList::registerFrontendAttributes()
+{
+	registerItemStringAttribute("loadingtext", m_LoadingText);
+	{
+		CUIExpression expr;
+		expr.setFixedValue(m_sSelectEvent);
+		registerItemStringAttribute("selectevent", expr);
+	}
+	{
+		CUIExpression expr;
+		expr.setFixedValue(std::to_string(m_nEntriesPerPage));
+		registerItemIntegerAttribute("entriesperpage", expr);
+	}
+}

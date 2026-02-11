@@ -152,3 +152,16 @@ std::string CUIModule_ContentImage::findElementPathByUUID(const std::string& sUU
 
 	return "";
 }
+
+std::string CUIModule_ContentImage::getItemType()
+{
+	return "image";
+}
+
+void CUIModule_ContentImage::registerFrontendAttributes()
+{
+	registerItemStringAttribute("resource", m_ImageResource);
+	registerItemStringAttribute("aspectratio", m_AspectRatio);
+	registerItemStringAttribute("maxwidth", m_MaxWidth);
+	registerItemStringAttribute("maxheight", m_MaxHeight);
+}

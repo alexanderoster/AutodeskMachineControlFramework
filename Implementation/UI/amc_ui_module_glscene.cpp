@@ -400,3 +400,38 @@ void CUIModule_GLScene::populateLegacyClientVariables(CParameterHandler* pParame
 	m_pSceneItem->populateClientVariables(pParameterHandler);
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool CUIModule_GLScene::isVersion2FrontendModule()
+{
+	return true;
+}
+
+void CUIModule_GLScene::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	CUIModule::frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState, pStateMachineData);
+
+	// Write scene instances as submodules
+	CJSONWriterArray submodulesArray(writer);
+
+	for (auto& instancePair : m_InstanceNameMap) {
+		auto pInstance = instancePair.second;
+		auto pModel = pInstance->getModel();
+
+		CJSONWriterObject subModuleObject(writer);
+		subModuleObject.addString("moduletype", "glsceneinstance");
+		subModuleObject.addString("uuid", pInstance->getUUID());
+
+		CJSONWriterObject attributesObject(writer);
+		attributesObject.addString("instancename", pInstance->getName());
+		attributesObject.addString("meshuuid", pModel->getMeshUUID());
+		subModuleObject.addObject("attributes", attributesObject);
+
+		submodulesArray.addObject(subModuleObject);
+	}
+
+	moduleObject.addArray("submodules", submodulesArray);
+}

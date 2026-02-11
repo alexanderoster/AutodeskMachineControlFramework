@@ -126,3 +126,23 @@ std::string CUIModule_ContentUpload::findElementPathByUUID(const std::string& sU
 
 	return "";
 }
+
+std::string CUIModule_ContentUpload::getItemType()
+{
+	return "upload";
+}
+
+void CUIModule_ContentUpload::registerFrontendAttributes()
+{
+	registerItemStringAttribute("uploadclass", m_UploadClass);
+	registerItemStringAttribute("uploadcaption", m_UploadCaption);
+	CUIExpression successEventExpr;
+	successEventExpr.setFixedValue(m_sSuccessEvent);
+	registerItemStringAttribute("successevent", successEventExpr);
+	CUIExpression failureEventExpr;
+	failureEventExpr.setFixedValue(m_sFailureEvent);
+	registerItemStringAttribute("failureevent", failureEventExpr);
+	CUIExpression acceptedTypesExpr;
+	acceptedTypesExpr.setFixedValue(m_sAcceptedTypes);
+	registerItemStringAttribute("acceptedtypes", acceptedTypesExpr);
+}

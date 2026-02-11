@@ -74,6 +74,15 @@ void CUIModule_ContentChart::populateClientVariables(CParameterHandler* pClientV
 	pGroup->addNewStringParameter("dataseries", "data series UUID", AMCCommon::CUtils::createEmptyUUID());
 }
 
+std::string CUIModule_ContentChart::getItemType()
+{
+	return "chart";
+}
+
+void CUIModule_ContentChart::registerFrontendAttributes()
+{
+	// Chart has no expression-based attributes at construction (dataseries is set at runtime)
+}
 
 void CUIModule_ContentChart::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {

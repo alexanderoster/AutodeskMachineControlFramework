@@ -64,6 +64,8 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 {
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
 
+	auto pFrontendDefinition = pUIModuleEnvironment->getFrontendDefinition();
+
 	if (getTypeFromXML(xmlNode) != getStaticType())
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULETYPE, "should be " + getStaticType ());
 
@@ -122,9 +124,32 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 		if (sChildName == "videostream")
 			addItem(CUIModule_ContentVideoStream::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
 
+	}
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// New UI Frontend System - register v2 attributes for this module and all items
+	/////////////////////////////////////////////////////////////////////////////////////
 
+	CUIExpression headlineExpr;
+	headlineExpr.setFixedValue(m_sHeadLine);
+	CUIExpression captionExpr;
+	captionExpr.setFixedValue(m_sCaption);
+	CUIExpression titleExpr;
+	titleExpr.setFixedValue(m_sTitle);
+	CUIExpression subtitleExpr;
+	subtitleExpr.setFixedValue(m_sSubtitle);
+	CUIExpression visibleExpr;
+	visibleExpr.setFixedValue(m_bVisible ? "1" : "0");
 
+	registerStringAttribute("headline", headlineExpr);
+	registerStringAttribute("caption", captionExpr);
+	registerStringAttribute("title", titleExpr);
+	registerStringAttribute("subtitle", subtitleExpr);
+	registerBoolAttribute("visible", visibleExpr);
+
+	// Initialize v2 frontend module stores for all content items
+	for (auto pItem : m_Items) {
+		pItem->initFrontendModuleStore(pFrontendDefinition);
 	}
 
 }
@@ -283,6 +308,34 @@ std::string CUIModule_Content::readItemNameFromXML(const pugi::xml_node& itemNod
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDITEMPATH, m_sModulePath + "." + sItemName);
 
 	return sItemName;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// New UI Frontend System
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool CUIModule_Content::isVersion2FrontendModule()
+{
+	return true;
+}
+
+void CUIModule_Content::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	CUIModule::frontendWriteModuleStatusToJSON(writer, moduleObject, pFrontendState, pStateMachineData);
+
+	CJSONWriterArray submodulesArray(writer);
+
+	for (auto& pItem : m_Items) {
+		std::string sItemType = pItem->getItemType();
+		if (!sItemType.empty()) {
+			CJSONWriterObject subModuleObject(writer);
+			pItem->frontendWriteItemToJSON(writer, subModuleObject, pFrontendState, pStateMachineData);
+			submodulesArray.addObject(subModuleObject);
+		}
+	}
+
+	moduleObject.addArray("submodules", submodulesArray);
 }
 
 

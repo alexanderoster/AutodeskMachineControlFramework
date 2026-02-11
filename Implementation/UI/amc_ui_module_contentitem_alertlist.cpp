@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMCIMPL_API_CONSTANTS
 
 #include "amc_ui_module_contentitem_alertlist.hpp"
+#include "amc_ui_expression.hpp"
 #include "libmc_interfaceexception.hpp"
 
 #include "amc_api_constants.hpp"
@@ -227,4 +228,22 @@ std::list <std::string> CUIModule_ContentAlertList::getReferenceUUIDs()
 	sUUIDList.push_back(getUUID ());
 
 	return sUUIDList;
+}
+
+std::string CUIModule_ContentAlertList::getItemType()
+{
+	return "alertlist";
+}
+
+void CUIModule_ContentAlertList::registerFrontendAttributes()
+{
+	CUIExpression expr;
+	expr.setFixedValue(m_sLoadingText);
+	registerItemStringAttribute("loadingtext", expr);
+
+	expr.setFixedValue(m_sSelectEvent);
+	registerItemStringAttribute("selectevent", expr);
+
+	expr.setFixedValue(std::to_string(m_nEntriesPerPage));
+	registerItemIntegerAttribute("entriesperpage", expr);
 }

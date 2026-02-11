@@ -66,6 +66,10 @@ namespace AMC {
 
 		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler) override;
 
+		// New UI Frontend System
+		virtual std::string getItemType() override;
+		virtual void registerFrontendAttributes() override;
+
 	};
 
 

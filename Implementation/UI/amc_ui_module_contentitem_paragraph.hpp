@@ -51,18 +51,23 @@ namespace AMC {
 	protected:		
 
 		std::string m_sText;
+		CUIExpression m_TextExpression;
 
 	public:
 
 		static PUIModule_ContentParagraph makeFromXML(const pugi::xml_node & xmlNode, const std::string& sItemName, const std::string& sModulePath);
 
-		CUIModule_ContentParagraph(const std::string& sText, const std::string & sItemName, const std::string& sModulePath);
+		CUIModule_ContentParagraph(const std::string& sText, const CUIExpression& textExpression, const std::string & sItemName, const std::string& sModulePath);
 		
 		virtual ~CUIModule_ContentParagraph();
 
 		std::string getText ();
 
 		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
+		// New UI Frontend System
+		virtual std::string getItemType() override;
+		virtual void registerFrontendAttributes() override;
 
 	};
 

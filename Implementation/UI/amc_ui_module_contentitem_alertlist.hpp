@@ -88,6 +88,9 @@ namespace AMC {
 
 		virtual std::list <std::string> getReferenceUUIDs() override;
 
+		// New UI Frontend System
+		virtual std::string getItemType() override;
+		virtual void registerFrontendAttributes() override;
 
 	};
 

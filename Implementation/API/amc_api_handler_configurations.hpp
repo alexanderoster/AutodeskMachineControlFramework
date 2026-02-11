@@ -29,26 +29,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef __AMC_API_HANDLER_LOGS
-#define __AMC_API_HANDLER_LOGS
+#ifndef __AMC_API_HANDLER_CONFIGURATIONS
+#define __AMC_API_HANDLER_CONFIGURATIONS
 
 #include "amc_api_handler.hpp"
-#include "amc_logger.hpp"
 #include "amc_api_response.hpp"
+#include "amc_systemstate.hpp"
 
 namespace AMC {
 
-	class CAPIHandler_Logs : public CAPIHandler {
+	class CAPIHandler_Configurations : public CAPIHandler {
 	private:
-		PLogger m_pLogger;
+		PSystemState m_pSystemState;
 
-		void handleListLogsRequest(CJSONWriter& writer, uint32_t nStartID);
-			
+		void handleListConfigurationsRequest(CJSONWriter& writer, const std::string& sSchema);
+
 	public:
 
-		CAPIHandler_Logs(PLogger pLogger, const std::string & sClientHash);
+		CAPIHandler_Configurations(PSystemState pSystemState);
 
-		virtual ~CAPIHandler_Logs();
+		virtual ~CAPIHandler_Configurations();
 				
 		virtual std::string getBaseURI () override;
 
@@ -60,5 +60,5 @@ namespace AMC {
 }
 
 
-#endif //__AMC_API_HANDLER_LOGS
+#endif //__AMC_API_HANDLER_CONFIGURATIONS
 

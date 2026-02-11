@@ -107,6 +107,10 @@ namespace AMC {
 
 		void loadFromXML(const pugi::xml_node& xmlNode);
 
+		// New UI Frontend System
+		virtual std::string getItemType() override;
+		virtual void registerFrontendAttributes() override;
+
 	};
 
 

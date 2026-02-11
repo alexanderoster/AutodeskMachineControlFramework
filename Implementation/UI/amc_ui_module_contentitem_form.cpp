@@ -615,3 +615,15 @@ std::string CUIModule_ContentForm::findElementPathByUUID(const std::string& sUUI
 	return "";
 }
 
+std::string CUIModule_ContentForm::getItemType()
+{
+	return "form";
+}
+
+void CUIModule_ContentForm::registerFrontendAttributes()
+{
+	CUIExpression visibleExpr;
+	visibleExpr.setFixedValue(m_bVisible ? "1" : "0");
+	registerItemBoolAttribute("visible", visibleExpr);
+}
+
