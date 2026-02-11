@@ -39,6 +39,10 @@
       "description": "Data streaming end points"
     },
     {
+      "name": "data",
+      "description": "Data query end points for logs, executions, alerts, and configurations"
+    },
+    {
       "name": "ext",
       "description": "Application specific end points"
     }
@@ -325,6 +329,215 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BuildDetailsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve log entries",
+        "description": "Returns the latest log entries (up to 128). Supports incremental polling when used with the startID path parameter.",
+        "operationId": "getLogEntries",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogEntriesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs/{startID}": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve log entries after a given ID",
+        "description": "Returns log entries with an ID greater than startID. Use for incremental polling by passing the highest ID received so far.",
+        "operationId": "getLogEntriesIncremental",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startID",
+            "in": "path",
+            "description": "The log entry ID to start from (exclusive). Only entries after this ID are returned.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 42
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogEntriesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/executions": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve job execution list",
+        "description": "Returns all build job executions with their status, timestamps, and duration.",
+        "operationId": "getExecutionList",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve alert list",
+        "description": "Returns all alerts including their level, context, and acknowledgement status.",
+        "operationId": "getAlertList",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/configurations": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve configuration version list",
+        "description": "Returns all configuration versions for a given schema. The schema query parameter is required to identify the configuration type.",
+        "operationId": "getConfigurationList",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "schema",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The configuration schema identifier to query versions for.",
+            "example": "com.scanlab.ocmsmc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationListResponse"
                 }
               }
             }
@@ -1741,6 +1954,299 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BuildJobInstance"
+            }
+          }
+        }
+      },
+      "LogEntry": {
+        "required": [
+          "id",
+          "message",
+          "loglevel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Monotonically increasing log entry ID, used for incremental polling.",
+            "example": 42
+          },
+          "subsystem": {
+            "type": "string",
+            "description": "The subsystem that generated the log entry.",
+            "example": "main"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp of the log entry.",
+            "example": "2025-01-15T10:30:00.000Z"
+          },
+          "message": {
+            "type": "string",
+            "description": "The log message text.",
+            "example": "Build job started"
+          },
+          "loglevel": {
+            "type": "string",
+            "description": "The severity level of the log entry.",
+            "enum": ["FatalError", "CriticalError", "Warning", "Message", "Info", "Debug"],
+            "example": "Message"
+          }
+        }
+      },
+      "LogEntriesResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "logentries"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type identifier.",
+            "example": "com.autodesk.machinecontrol.logs"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "logentries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogEntry"
+            }
+          }
+        }
+      },
+      "ExecutionEntry": {
+        "required": [
+          "executionuuid",
+          "executionname"
+        ],
+        "type": "object",
+        "properties": {
+          "executionuuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UUID of the job execution.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "executionname": {
+            "type": "string",
+            "description": "The name of the executed job.",
+            "example": "test.3mf"
+          },
+          "executiondescription": {
+            "type": "string",
+            "description": "A description of the execution.",
+            "example": "Standard build run"
+          },
+          "executionstarttimestamp": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp when the execution started.",
+            "example": "2025-01-15T10:30:00.000Z"
+          },
+          "executionendtimestamp": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp when the execution ended. Empty if still running.",
+            "example": "2025-01-15T11:45:00.000Z"
+          },
+          "executionduration": {
+            "type": "integer",
+            "description": "Elapsed time in seconds since the execution started.",
+            "example": 4500
+          },
+          "executionstatus": {
+            "type": "string",
+            "description": "Current status of the execution (e.g. InProgress, Finished).",
+            "example": "Finished"
+          },
+          "executionbuildstatus": {
+            "type": "string",
+            "description": "Status of the parent build job.",
+            "example": "validated"
+          },
+          "executionlayercount": {
+            "type": "integer",
+            "description": "The layer count of the executed job.",
+            "example": 120
+          },
+          "jobuuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UUID of the parent build job.",
+            "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
+          },
+          "executionthumbnail": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the thumbnail image for the executed job. May be absent if no thumbnail exists.",
+            "example": "8bf469fa-4c36-474f-8ade-8474a1d621bd"
+          }
+        }
+      },
+      "ExecutionListResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "executions"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type identifier.",
+            "example": "com.autodesk.machinecontrol.build"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "executions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExecutionEntry"
+            }
+          }
+        }
+      },
+      "AlertEntry": {
+        "required": [
+          "alertuuid",
+          "alertidentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "alertuuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UUID of the alert.",
+            "example": "d4e5f6a7-b8c9-0123-4567-89abcdef0123"
+          },
+          "alertidentifier": {
+            "type": "string",
+            "description": "A machine-readable identifier for the alert type.",
+            "example": "LASER_INTERLOCK_OPEN"
+          },
+          "alerttimestamp": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp when the alert was raised.",
+            "example": "2025-01-15T10:30:00.000Z"
+          },
+          "alertcaption": {
+            "type": "string",
+            "description": "Human-readable caption or description of the alert.",
+            "example": "Laser interlock is open"
+          },
+          "alertcontext": {
+            "type": "string",
+            "description": "Readable context information about the alert.",
+            "example": "Driver: ScanLab, State: idle"
+          },
+          "alertlevel": {
+            "type": "string",
+            "description": "The severity level of the alert.",
+            "enum": ["FatalError", "CriticalError", "Warning", "Message"],
+            "example": "Warning"
+          },
+          "alertactive": {
+            "type": "boolean",
+            "description": "Whether the alert is currently active.",
+            "example": true
+          },
+          "alertneedsacknowledge": {
+            "type": "boolean",
+            "description": "Whether the alert requires user acknowledgement to clear.",
+            "example": false
+          }
+        }
+      },
+      "AlertListResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "alerts"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type identifier.",
+            "example": "com.autodesk.machinecontrol.status"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertEntry"
+            }
+          }
+        }
+      },
+      "ConfigurationVersionEntry": {
+        "required": [
+          "configurationuuid",
+          "configurationversion"
+        ],
+        "type": "object",
+        "properties": {
+          "configurationuuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UUID of the configuration version.",
+            "example": "f1e2d3c4-b5a6-9780-1234-567890abcdef"
+          },
+          "configurationversion": {
+            "type": "integer",
+            "description": "The numeric version number of the configuration.",
+            "example": 3
+          },
+          "configurationactive": {
+            "type": "boolean",
+            "description": "Whether this is the currently active configuration version.",
+            "example": true
+          },
+          "configurationtimestamp": {
+            "type": "string",
+            "description": "Timestamp when this configuration version was created.",
+            "example": "2025-01-15T10:30:00.000Z"
+          },
+          "username": {
+            "type": "string",
+            "description": "UUID of the user who created this version.",
+            "example": "bdb3e909-ce8a-4602-910d-f64d60b8b8e3"
+          }
+        }
+      },
+      "ConfigurationListResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "configurations"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type identifier.",
+            "example": "com.autodesk.machinecontrol.status"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "configurations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationVersionEntry"
             }
           }
         }
