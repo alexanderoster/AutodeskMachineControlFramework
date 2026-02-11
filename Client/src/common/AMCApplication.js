@@ -64,6 +64,8 @@ export default class AMCApplication extends Common.AMCObject {
             baseURL: apiBaseURL,
             authToken: Common.nullToken (),
             unsuccessfulUpdateCounter: 0,
+			unsuccessfulFrontendCounter: 0,
+			frontendState: null,
 			userUUID: Common.nullUUID (),
 			userLogin: "",
 			userDescription: "",
@@ -410,6 +412,34 @@ export default class AMCApplication extends Common.AMCObject {
 
    
 	
+	// ====================================================================
+	// Phase 1: Fetch v2 frontend state in parallel with legacy polling.
+	// This is a no-op – the result is stored but not used by any module
+	// yet. It lets us verify the /api/frontend endpoint works and
+	// inspect the response in the browser console.
+	// ====================================================================
+
+	retrieveFrontendState() {
+		if (!this.userIsLoggedIn())
+			return;
+
+		this.axiosGetRequest("/frontend")
+		.then(resultJSON => {
+			this.API.frontendState = resultJSON.data;
+			this.API.unsuccessfulFrontendCounter = 0;
+		})
+		.catch(err => {
+			this.API.unsuccessfulFrontendCounter = (this.API.unsuccessfulFrontendCounter || 0) + 1;
+			if (this.API.unsuccessfulFrontendCounter > 5) {
+				if (err.response) {
+					console.warn("[v2 frontend] repeated failure:", err.response.data.message);
+				} else {
+					console.warn("[v2 frontend] repeated failure:", err.toString());
+				}
+			}
+		});
+	}
+
     updateContentItem(item) {
 		
 		if (!item)

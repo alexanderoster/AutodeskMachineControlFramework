@@ -352,8 +352,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				
 			uiOnTimer() {
 				if (this.Application) {
+					// Legacy polling (unchanged)
 					this.Application.updateModules ();
-					this.Application.updateContentItems ();			
+					this.Application.updateContentItems ();
+					// v2 frontend state (Phase 1: fetch-only, no side effects)
+					this.Application.retrieveFrontendState ();
 				}													
 			},
 			
