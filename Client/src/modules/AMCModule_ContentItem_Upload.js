@@ -61,9 +61,32 @@ export default class AMCApplicationItem_Content_Upload extends Common.AMCApplica
 		}
 				
 		this.state = new AMCUploadState (this.uuid);
+
+		// Phase 2: upload config is fully described by v2 attributes
+		this.usesV2Frontend = true;
 		
 		this.setRefreshFlag ();
 		
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs.uploadclass !== undefined) {
+			this.uploadclass = attrs.uploadclass;
+		}
+		if (attrs.uploadcaption !== undefined) {
+			this.uploadcaption = attrs.uploadcaption;
+		}
+		if (attrs.successevent !== undefined) {
+			this.uploadsuccessevent = attrs.successevent;
+		}
+		if (attrs.failureevent !== undefined) {
+			this.uploadfailureevent = attrs.failureevent;
+		}
+		if (attrs.acceptedtypes !== undefined) {
+			this.acceptedtypes = attrs.acceptedtypes;
+		}
+		return true;
 	}
 		
 }

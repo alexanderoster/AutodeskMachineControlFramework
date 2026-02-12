@@ -57,6 +57,9 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 		
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Content");
+
+		// Phase 2: content module can read from v2 frontend attributes
+		this.usesV2Frontend = true;
 		
 		this.headline = Assert.StringValue (moduleJSON.headline);
 		this.title = Assert.StringValue (moduleJSON.title);
@@ -124,6 +127,20 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 		if(updateJSON.visible !== undefined)
 			this.visible = Assert.BoolValue(updateJSON.visible);
+	}
+
+	updateFromV2Attributes (attrs) {
+		if (attrs.headline !== undefined)
+			this.headline = attrs.headline;
+		if (attrs.title !== undefined)
+			this.title = attrs.title;
+		if (attrs.subtitle !== undefined)
+			this.subtitle = attrs.subtitle;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+		return true;
 	}
 	
 }

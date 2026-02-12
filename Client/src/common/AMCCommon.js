@@ -84,6 +84,8 @@ export class AMCApplicationItem extends AMCObject {
 		this.type = itemtype;
 		this.uuid = uuid;
 		this.refresh = false;
+		// Phase 2: set to true in subclasses that can be fully driven by v2 attributes
+		this.usesV2Frontend = false;
 	}
 	
 	setRefreshFlag ()
@@ -94,6 +96,14 @@ export class AMCApplicationItem extends AMCObject {
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
+	}
+
+	// Phase 2: Override in subclasses to apply v2 frontend attributes.
+	// Return true if the item was fully updated, false to fall back to legacy.
+	updateFromV2Attributes (attrs)
+	{
+		attrs;
+		return false;
 	}
 
 	getApplication ()
@@ -130,6 +140,8 @@ export class AMCApplicationModule extends AMCObject {
 		this.caption = Assert.StringValue (caption);
 		this.onDataHasChanged = null;
 		this.stateid = 0;
+		// Phase 2: set to true in subclasses that can read from v2 frontend
+		this.usesV2Frontend = false;
 	}
 	
 	callDataHasChanged ()
@@ -137,6 +149,14 @@ export class AMCApplicationModule extends AMCObject {
 		if (this.onDataHasChanged) {
 			this.onDataHasChanged (this);
 		}
+	}
+
+	// Phase 2: Override in subclasses to apply v2 frontend attributes.
+	// Return true if the module was fully updated, false to fall back to legacy.
+	updateFromV2Attributes (attrs)
+	{
+		attrs;
+		return false;
 	}
 	
 	isActive ()

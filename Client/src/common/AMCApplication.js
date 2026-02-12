@@ -66,6 +66,7 @@ export default class AMCApplication extends Common.AMCObject {
             unsuccessfulUpdateCounter: 0,
 			unsuccessfulFrontendCounter: 0,
 			frontendState: null,
+			frontendLookup: {},
 			userUUID: Common.nullUUID (),
 			userLogin: "",
 			userDescription: "",
@@ -413,10 +414,9 @@ export default class AMCApplication extends Common.AMCObject {
    
 	
 	// ====================================================================
-	// Phase 1: Fetch v2 frontend state in parallel with legacy polling.
-	// This is a no-op – the result is stored but not used by any module
-	// yet. It lets us verify the /api/frontend endpoint works and
-	// inspect the response in the browser console.
+	// Phase 1+2: Fetch v2 frontend state and build a flat UUID lookup
+	// map so that static items (paragraph, image, upload) can read their
+	// attributes directly from /api/frontend instead of legacy polling.
 	// ====================================================================
 
 	retrieveFrontendState() {
@@ -427,6 +427,18 @@ export default class AMCApplication extends Common.AMCObject {
 		.then(resultJSON => {
 			this.API.frontendState = resultJSON.data;
 			this.API.unsuccessfulFrontendCounter = 0;
+
+			// Build a flat uuid -> { moduletype, attributes, submodules } map
+			this.API.frontendLookup = {};
+			if (resultJSON.data && resultJSON.data.pages) {
+				for (let page of resultJSON.data.pages) {
+					if (page.modules) {
+						for (let mod of page.modules) {
+							this._indexFrontendModule(mod);
+						}
+					}
+				}
+			}
 		})
 		.catch(err => {
 			this.API.unsuccessfulFrontendCounter = (this.API.unsuccessfulFrontendCounter || 0) + 1;
@@ -440,6 +452,28 @@ export default class AMCApplication extends Common.AMCObject {
 		});
 	}
 
+	// Recursively index a v2 module (and its submodules) into frontendLookup by UUID.
+	_indexFrontendModule(mod) {
+		if (!mod || !mod.uuid)
+			return;
+
+		this.API.frontendLookup[mod.uuid] = mod;
+
+		if (mod.submodules) {
+			for (let sub of mod.submodules) {
+				this._indexFrontendModule(sub);
+			}
+		}
+	}
+
+	// Look up a UUID in the v2 frontend map. Returns the entry or null.
+	getV2Entry(uuid) {
+		if (this.API.frontendLookup) {
+			return this.API.frontendLookup[uuid] || null;
+		}
+		return null;
+	}
+
     updateContentItem(item) {
 		
 		if (!item)
@@ -449,6 +483,18 @@ export default class AMCApplication extends Common.AMCObject {
 		
 		if (item.isActive ()) {
 
+			// Phase 2: If item supports v2 and we have v2 data, use it
+			// instead of the legacy /ui/contentitem/ call.
+			if (item.usesV2Frontend) {
+				let v2Entry = this.getV2Entry(item.uuid);
+				if (v2Entry && v2Entry.attributes) {
+					item.updateFromV2Attributes(v2Entry.attributes);
+					item.setRefreshFlag();
+					return;
+				}
+			}
+
+			// Legacy fallback: poll /ui/contentitem/{uuid}
 			let headers = {}
 			let authToken = this.API.authToken;
 
@@ -520,7 +566,17 @@ export default class AMCApplication extends Common.AMCObject {
 
 		if (module.isActive()) {
 
-			// Prepare authorization headers (same policy as for content items)
+			// Phase 2: If module supports v2 and we have v2 data, use it
+			// instead of the legacy /ui/module/ call.
+			if (module.usesV2Frontend) {
+				let v2Entry = this.getV2Entry(module.uuid);
+				if (v2Entry && v2Entry.attributes) {
+					module.updateFromV2Attributes(v2Entry.attributes);
+					return;
+				}
+			}
+
+			// Legacy fallback: poll /ui/module/{uuid}
 			let headers = {};
 			let authToken = this.API.authToken;
 

@@ -44,6 +44,9 @@ export default class AMCApplicationItem_Content_Image extends Common.AMCApplicat
 		
 		this.updateFromJSON (itemJSON);
 		
+		// Phase 2: image is fully described by v2 attributes
+		this.usesV2Frontend = true;
+		
 		this.setRefreshFlag ();		
 	}
 	
@@ -56,6 +59,25 @@ export default class AMCApplicationItem_Content_Image extends Common.AMCApplicat
 		if (updateJSON.maxheight) 
 			this.maxheight = Assert.NumberValue (updateJSON.maxheight);
 		
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		// v2 backend uses "resource", legacy uses "imageresource"
+		let resourceUUID = attrs.resource || attrs.imageresource;
+		if (resourceUUID) {
+			this.imageresource = resourceUUID;
+		}
+		if (attrs.aspectratio !== undefined) {
+			this.aspectratio = parseFloat(attrs.aspectratio) || 1.0;
+		}
+		if (attrs.maxwidth !== undefined) {
+			this.maxwidth = parseFloat(attrs.maxwidth) || 0;
+		}
+		if (attrs.maxheight !== undefined) {
+			this.maxheight = parseFloat(attrs.maxheight) || 0;
+		}
+		return true;
 	}
 		
 }

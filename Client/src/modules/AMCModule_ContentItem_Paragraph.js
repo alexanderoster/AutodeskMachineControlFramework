@@ -42,7 +42,17 @@ export default class AMCApplicationItem_Content_Paragraph extends Common.AMCAppl
 		this.registerClass ("amcItem_Paragraph");
 		
 		this.text = itemJSON.text;
-		
+
+		// Phase 2: paragraph is fully described by v2 attributes
+		this.usesV2Frontend = true;
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs.text !== undefined) {
+			this.text = attrs.text;
+		}
+		return true;
 	}
 		
 }
