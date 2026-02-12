@@ -766,6 +766,57 @@
       }
     },
 
+    "/image/{imageUUID}": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve an image resource by UUID",
+        "description": "Returns the binary image data for a given resource UUID. Looks up the resource in the core resource package first, then falls back to storage. This endpoint does not require authentication because images are typically loaded by HTML img tags that cannot send Bearer tokens.",
+        "operationId": "getImage",
+        "parameters": [
+          {
+            "name": "imageUUID",
+            "in": "path",
+            "description": "UUID of the image resource to retrieve",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The binary image data with the appropriate content type.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Image resource not found"
+          }
+        }
+      }
+    },
+
     "/frontend": {
       "get": {
         "tags": [
