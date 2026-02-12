@@ -91,7 +91,7 @@ namespace AMC {
 		virtual std::string getItemType();
 
 		// Write this item as a submodule in the v2 frontend JSON output.
-		void frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData);
+		virtual void frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData);
 
 		// Helpers for registering v2 attributes
 		PUIFrontendDefinitionAttribute registerItemStringAttribute(const std::string& sName, const CUIExpression& expression);
