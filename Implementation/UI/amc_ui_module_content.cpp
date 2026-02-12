@@ -138,8 +138,10 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	titleExpr.setFixedValue(m_sTitle);
 	CUIExpression subtitleExpr;
 	subtitleExpr.setFixedValue(m_sSubtitle);
-	CUIExpression visibleExpr;
-	visibleExpr.setFixedValue(m_bVisible ? "1" : "0");
+	// "visible" supports both fixed values (visible="true") and dynamic
+	// state-machine expressions (sync:visible="main.jobinfo.isactive").
+	// Default is "1" (visible) when the attribute is absent.
+	CUIExpression visibleExpr(xmlNode, "visible", std::string("1"));
 
 	registerStringAttribute("headline", headlineExpr);
 	registerStringAttribute("caption", captionExpr);

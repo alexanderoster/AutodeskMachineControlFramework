@@ -332,6 +332,12 @@ bool CUIExpression::evaluateBoolValue(CStateMachineData* pStateMachineData)
 			bInvert = false;
 		}
 
+		// Handle "true" / "false" string literals (e.g. from XML boolean attributes)
+		if (sExpression == "true")
+			return !bInvert;
+		if (sExpression == "false")
+			return bInvert;
+
 		std::string::const_iterator it = sExpression.begin();
 		while (it != sExpression.end() && (std::isdigit(*it) || (*it == '+') || (*it == '-'))) ++it;
 		bool bIsNumber = !sExpression.empty() && it == sExpression.end();
