@@ -40,6 +40,7 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Tabs");
+		this.usesV2Frontend = true;
 		
 		this.tabs = [];
 
@@ -73,4 +74,23 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 			}
 		}
 	}
+
+	// Phase 3: v2 frontend – propagate "visible" from v2 submodules to
+	// child tabs, mirroring the legacy updateFromJSON behaviour.
+	updateFromV2Attributes () {
+		let v2Entry = this.page.application.getV2Entry(this.uuid);
+		if (v2Entry && v2Entry.submodules) {
+			for (let submod of v2Entry.submodules) {
+				let tab = this.tabs.find(t => t.uuid === submod.uuid);
+				if (tab && submod.attributes) {
+					if (submod.attributes.visible !== undefined)
+						tab.visible = (submod.attributes.visible === "1" || submod.attributes.visible === true || submod.attributes.visible === "true");
+					if (submod.attributes.caption !== undefined)
+						tab.caption = submod.attributes.caption;
+				}
+			}
+		}
+		return true;
+	}
+
 }

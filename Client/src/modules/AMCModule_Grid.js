@@ -41,6 +41,7 @@ export default class AMCApplicationModule_Grid extends Common.AMCApplicationModu
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Grid");
+		this.usesV2Frontend = true;
 				
 				
 		// TODO: check input
@@ -183,6 +184,13 @@ export default class AMCApplicationModule_Grid extends Common.AMCApplicationModu
 		this.cssstyle = this.cssstyle + "grid-template-areas: " + areaString;
 
 		
+	}
+
+	// Phase 3: v2 frontend – section child modules are independently indexed in
+	// the frontendLookup and updated via their own updateModule() calls.  The
+	// grid layout itself is static, so we just suppress the legacy poll.
+	updateFromV2Attributes () {
+		return true;
 	}
 		
 }
