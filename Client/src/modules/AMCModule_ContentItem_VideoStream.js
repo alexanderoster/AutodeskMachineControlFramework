@@ -41,6 +41,7 @@ export default class AMCApplicationItem_Content_VideoStream extends Common.AMCAp
 		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_VideoStream");
+		this.usesV2Frontend = true;
 		
 		this.updateFromJSON (itemJSON);
 		
@@ -57,6 +58,18 @@ export default class AMCApplicationItem_Content_VideoStream extends Common.AMCAp
 		if (updateJSON.maxheight) 
 			this.maxheight = Assert.NumberValue (updateJSON.maxheight);
 		
+	}
+
+	updateFromV2Attributes (attrs) {
+		if (attrs.streamresource !== undefined)
+			this.streamresource = attrs.streamresource;
+		if (attrs.aspectratio !== undefined)
+			this.aspectratio = parseFloat(attrs.aspectratio);
+		if (attrs.maxwidth !== undefined)
+			this.maxwidth = parseFloat(attrs.maxwidth);
+		if (attrs.maxheight !== undefined)
+			this.maxheight = parseFloat(attrs.maxheight);
+		return true;
 	}
 		
 }

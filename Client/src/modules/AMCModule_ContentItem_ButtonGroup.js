@@ -41,26 +41,27 @@ export default class AMCApplicationItem_Content_ButtonGroup extends Common.AMCAp
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_ButtonGroup");
 		
+		this.usesV2Frontend = true;
+		
 		Assert.ArrayValue (itemJSON.buttons);		
-		// TODO: parse input
 		this.buttons = itemJSON.buttons;
 		
 		this.buttoncssstyle = ""; 
 		this.cssstyle = "";
 		
-		if (itemJSON.buttondistribution == "rightaligned") {
+		if (itemJSON.buttondistribution === "rightaligned") {
 			this.cssstyle = this.cssstyle + "text-align: right;"; 
 		}
 
-		if (itemJSON.buttondistribution == "leftaligned") {
+		if (itemJSON.buttondistribution === "leftaligned") {
 			this.cssstyle = this.cssstyle + "text-align: left;"; 
 		}
 
-		if (itemJSON.buttondistribution == "centered") {
+		if (itemJSON.buttondistribution === "centered") {
 			this.cssstyle = this.cssstyle + "text-align: centered;"; 
 		}
 
-		if (itemJSON.buttondistribution == "equal") {
+		if (itemJSON.buttondistribution === "equal") {
 			
 			let buttoncount = this.buttons.length;
 			if (buttoncount > 0) {
@@ -81,10 +82,35 @@ export default class AMCApplicationItem_Content_ButtonGroup extends Common.AMCAp
 		Assert.ObjectValue (updateJSON);
 		
 		if (updateJSON.buttons) {
-			// TODO: parse input	
 			this.buttons = updateJSON.buttons;
 		}
 		
+	}
+	
+	
+	updateFromV2Attributes (attrs)
+	{
+		let v2Entry = this.getApplication().getV2Entry(this.uuid);
+		if (v2Entry && v2Entry.submodules) {
+			this.buttons = v2Entry.submodules.map(sub => {
+				let a = sub.attributes || {};
+				let formValues = [];
+				if (a.eventformvalues && a.eventformvalues.trim() !== "") {
+					formValues = a.eventformvalues.split(" ");
+				}
+				return {
+					uuid: sub.uuid,
+					name: sub.uuid,
+					caption: a.caption || "",
+					disabled: (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
+					event: a.event || "",
+					targetpage: a.targetpage || "",
+					icon: a.icon || "",
+					eventformvalues: formValues
+				};
+			});
+		}
+		return true;
 	}
 		
 }

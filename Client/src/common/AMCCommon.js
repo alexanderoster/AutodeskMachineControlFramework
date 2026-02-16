@@ -138,6 +138,7 @@ export class AMCApplicationModule extends AMCObject {
 		this.type = Assert.IdentifierString (moduletype);
 		this.name = Assert.IdentifierString (name);
 		this.caption = Assert.StringValue (caption);
+		this.visible = true;
 		this.onDataHasChanged = null;
 		this.stateid = 0;
 		// Phase 2: set to true in subclasses that can read from v2 frontend

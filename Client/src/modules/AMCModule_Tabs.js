@@ -75,8 +75,10 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 		}
 	}
 
-	// Phase 3: v2 frontend – propagate "visible" from v2 submodules to
-	// child tabs, mirroring the legacy updateFromJSON behaviour.
+	// Phase 3: v2 frontend – propagate "visible" and "caption" from v2
+	// submodules to child tabs, mirroring the legacy updateFromJSON behaviour.
+	// Modules that do not register a "visible" attribute on the backend
+	// (e.g. Logs, GLScene) keep the base-class default of true.
 	updateFromV2Attributes () {
 		let v2Entry = this.page.application.getV2Entry(this.uuid);
 		if (v2Entry && v2Entry.submodules) {
