@@ -93,7 +93,7 @@ void CUIModule_ContentItem::populateClientVariables(CParameterHandler* pParamete
 void CUIModule_ContentItem::initFrontendModuleStore(CUIFrontendDefinition* pFrontendDefinition)
 {
 	LibMCAssertNotNull(pFrontendDefinition);
-	m_pItemModuleStore = pFrontendDefinition->registerModuleStore(m_sUUID, getItemPath());
+	m_pItemModuleStore = pFrontendDefinition->registerModuleStore(m_sUUID, getItemPath(), getItemType());
 	registerFrontendAttributes();
 }
 
@@ -112,17 +112,14 @@ void CUIModule_ContentItem::frontendWriteItemToJSON(CJSONWriter& writer, CJSONWr
 	if (pFrontendState == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
-	std::string sItemType = getItemType();
+	if (m_pItemModuleStore == nullptr)
+		return;
+
+	std::string sItemType = m_pItemModuleStore->getModuleType();
 	if (sItemType.empty())
 		return;
 
-	itemObject.addString("moduletype", sItemType);
-	itemObject.addString("uuid", m_sUUID);
-
-	CJSONWriterObject attributesObject(writer);
-	if (m_pItemModuleStore != nullptr)
-		pFrontendState->writeModuleAttributesToJSON(writer, attributesObject, m_pItemModuleStore.get(), pStateMachineData);
-	itemObject.addObject("attributes", attributesObject);
+	pFrontendState->writeModuleStoreToJSON(writer, itemObject, m_pItemModuleStore.get(), pStateMachineData);
 }
 
 PUIFrontendDefinitionAttribute CUIModule_ContentItem::registerItemStringAttribute(const std::string& sName, const CUIExpression& expression)
