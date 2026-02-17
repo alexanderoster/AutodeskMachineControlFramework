@@ -70,6 +70,8 @@ namespace AMC {
 
 		PStateMachineData m_pStateMachineData;
 
+		PUIFrontendDefinitionModuleStore m_pFrontendStore;
+
 		PParameterGroup registerClientVariableGroup(CParameterHandler* pClientVariableHandler);
 
 		PParameterGroup getClientVariableGroup(CParameterHandler* pClientVariableHandler);
@@ -100,6 +102,9 @@ namespace AMC {
 		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler) = 0;
 
 		virtual void syncClientVariables(CParameterHandler* pClientVariableHandler) = 0;
+
+		// v2 frontend: register entity attributes on the given child store
+		virtual void registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore);
 
 	};
 
@@ -134,6 +139,8 @@ namespace AMC {
 
 		virtual void setValidationExpressions(CUIExpression validationExpression, CUIExpression validationMessageExpression, CUIExpression minValueExpression, CUIExpression m_maxValueExpression);
 
+		virtual void registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore) override;
+
 	};
 
 
@@ -158,6 +165,8 @@ namespace AMC {
 
 		virtual void writeVariablesToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler) override;
 
+		virtual void registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore) override;
+
 	};
 	
 	class CUIModule_ContentFormMemo : public CUIModule_ContentFormEntity {
@@ -178,6 +187,8 @@ namespace AMC {
 		virtual void syncClientVariables(CParameterHandler* pClientVariableHandler) override;
 
 		virtual void writeVariablesToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler) override;
+
+		virtual void registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore) override;
 
 	};
 	
@@ -201,6 +212,8 @@ namespace AMC {
 		virtual void syncClientVariables(CParameterHandler* pClientVariableHandler) override;
 
 		virtual void writeVariablesToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler) override;
+
+		virtual void registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore) override;
 
 	};	
 	

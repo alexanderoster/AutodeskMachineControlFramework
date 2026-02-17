@@ -142,6 +142,17 @@ PParameterGroup CUIModule_ContentFormEntity::getClientVariableGroup(CParameterHa
 }
 
 
+void CUIModule_ContentFormEntity::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
+{
+	LibMCAssertNotNull(pStore.get());
+	m_pFrontendStore = pStore;
+
+	pStore->registerValue("caption", eUIFrontendDefinitionAttributeType::atString, m_CaptionExpression);
+	pStore->registerValue("disabled", eUIFrontendDefinitionAttributeType::atBoolean, m_DisabledExpression);
+	pStore->registerValue("readonly", eUIFrontendDefinitionAttributeType::atBoolean, m_ReadOnlyExpression);
+}
+
+
 PUIModule_ContentFormEdit CUIModule_ContentFormEdit::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
 {
 	auto nameAttrib = xmlNode.attribute("name");
@@ -256,6 +267,23 @@ void CUIModule_ContentFormEdit::writeVariablesToJSON(CJSONWriter& writer, CJSONW
 	}
 }
 
+void CUIModule_ContentFormEdit::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
+{
+	CUIModule_ContentFormEntity::registerFrontendAttributes(pStore);
+
+	pStore->registerValue("value", eUIFrontendDefinitionAttributeType::atString, m_ValueExpression);
+	pStore->registerValue("prefix", eUIFrontendDefinitionAttributeType::atString, m_PrefixExpression);
+	pStore->registerValue("suffix", eUIFrontendDefinitionAttributeType::atString, m_SuffixExpression);
+	pStore->registerValue("validation", eUIFrontendDefinitionAttributeType::atString, m_ValidationExpression);
+	pStore->registerValue("validationmessage", eUIFrontendDefinitionAttributeType::atString, m_ValidationMessageExpression);
+	pStore->registerValue("minvalue", eUIFrontendDefinitionAttributeType::atString, m_MinValueExpression);
+	pStore->registerValue("maxvalue", eUIFrontendDefinitionAttributeType::atString, m_MaxValueExpression);
+
+	CUIExpression changeEventExpr;
+	changeEventExpr.setFixedValue(m_sOnChangeEvent);
+	pStore->registerValue("changeevent", eUIFrontendDefinitionAttributeType::atString, changeEventExpr);
+}
+
 
 PUIModule_ContentFormSwitch CUIModule_ContentFormSwitch::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
 {
@@ -314,6 +342,17 @@ void CUIModule_ContentFormSwitch::writeVariablesToJSON(CJSONWriter& writer, CJSO
 		object.addString(AMC_API_KEY_UI_FORMCHANGEEVENT, m_sOnChangeEvent);
 }
 
+void CUIModule_ContentFormSwitch::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
+{
+	CUIModule_ContentFormEntity::registerFrontendAttributes(pStore);
+
+	pStore->registerValue("value", eUIFrontendDefinitionAttributeType::atBoolean, m_ValueExpression);
+
+	CUIExpression changeEventExpr;
+	changeEventExpr.setFixedValue(m_sOnChangeEvent);
+	pStore->registerValue("changeevent", eUIFrontendDefinitionAttributeType::atString, changeEventExpr);
+}
+
 
 PUIModule_ContentFormMemo CUIModule_ContentFormMemo::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
 {
@@ -358,6 +397,11 @@ void CUIModule_ContentFormMemo::syncClientVariables(CParameterHandler* pClientVa
 void CUIModule_ContentFormMemo::writeVariablesToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler)
 {
 	auto pGroup = getClientVariableGroup(pClientVariableHandler);
+}
+
+void CUIModule_ContentFormMemo::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
+{
+	CUIModule_ContentFormEntity::registerFrontendAttributes(pStore);
 }
 
 PUIModule_ContentFormCombobox CUIModule_ContentFormCombobox::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sFormPath, PStateMachineData pStateMachineData)
@@ -432,6 +476,30 @@ void CUIModule_ContentFormCombobox::writeVariablesToJSON(CJSONWriter& writer, CJ
 		itemsArray.addObject(itemObject);
 	}
 	object.addArray("items", itemsArray);
+}
+
+void CUIModule_ContentFormCombobox::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
+{
+	CUIModule_ContentFormEntity::registerFrontendAttributes(pStore);
+
+	pStore->registerValue("value", eUIFrontendDefinitionAttributeType::atInteger, m_ValueExpression);
+
+	CUIExpression changeEventExpr;
+	changeEventExpr.setFixedValue(m_sOnChangeEvent);
+	pStore->registerValue("changeevent", eUIFrontendDefinitionAttributeType::atString, changeEventExpr);
+
+	for (const auto& item : m_Items) {
+		std::string sItemUUID = AMCCommon::CUtils::createUUID();
+		auto pItemStore = pStore->addChildStore(sItemUUID, m_sElementPath + ".item" + std::to_string(item.second), "comboboxitem");
+
+		CUIExpression textExpr;
+		textExpr.setFixedValue(item.first);
+		pItemStore->registerValue("text", eUIFrontendDefinitionAttributeType::atString, textExpr);
+
+		CUIExpression valueExpr;
+		valueExpr.setFixedValue(std::to_string(item.second));
+		pItemStore->registerValue("value", eUIFrontendDefinitionAttributeType::atInteger, valueExpr);
+	}
 }
 
 PUIModule_ContentForm CUIModule_ContentForm::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment)
@@ -625,5 +693,10 @@ void CUIModule_ContentForm::registerFrontendAttributes()
 	CUIExpression visibleExpr;
 	visibleExpr.setFixedValue(m_bVisible ? "1" : "0");
 	registerItemBoolAttribute("visible", visibleExpr);
+
+	for (auto& pEntity : m_Entities) {
+		auto pChildStore = m_pItemModuleStore->addChildStore(pEntity->getUUID(), pEntity->getElementPath(), pEntity->getTypeString());
+		pEntity->registerFrontendAttributes(pChildStore);
+	}
 }
 
