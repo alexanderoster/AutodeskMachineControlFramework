@@ -40,11 +40,12 @@ export default class AMCApplicationItem_Content_Form extends Common.AMCApplicati
 		Assert.ObjectValue (itemJSON);		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_Form");
-				
+		
+		this.usesV2Frontend = true;
+		
 		this.visible = true;
 
 		Assert.ArrayValue (itemJSON.entities);		
-		// TODO: parse input
 		this.entities = itemJSON.entities;
 				
 		for (let entity of this.entities) {
@@ -108,6 +109,58 @@ export default class AMCApplicationItem_Content_Form extends Common.AMCApplicati
 		
 				
 	}
+	
+	
+	updateFromV2Attributes ()
+	{
+		let v2Entry = this.getApplication().getV2Entry(this.uuid);
+		if (!v2Entry)
+			return true;
+		
+		if (v2Entry.attributes) {
+			if (v2Entry.attributes.visible !== undefined)
+				this.setVisible(v2Entry.attributes.visible === true || v2Entry.attributes.visible === "1" || v2Entry.attributes.visible === "true");
+		}
+		
+		if (v2Entry.submodules) {
+			let app = this.getApplication();
+			
+			for (let sub of v2Entry.submodules) {
+				if (!app.AppContent.FormEntityMap.has(sub.uuid))
+					continue;
+				
+				let entity = app.AppContent.FormEntityMap.get(sub.uuid);
+				let dataObject = entity.dataObject;
+				let a = sub.attributes || {};
+				
+				if (a.value !== undefined) {
+					if (dataObject.remotevalue !== a.value) {
+						dataObject.value = a.value;
+						dataObject.isProgrammaticChange = true;
+					} else {
+						dataObject.isProgrammaticChange = false;
+					}
+					dataObject.remotevalue = a.value;
+				}
+				
+				if (a.caption !== undefined)
+					entity.caption = a.caption;
+				if (a.disabled !== undefined)
+					dataObject.disabled = (a.disabled === true || a.disabled === "1" || a.disabled === "true");
+				if (a.readonly !== undefined)
+					dataObject.readonly = (a.readonly === true || a.readonly === "1" || a.readonly === "true");
+				if (a.prefix !== undefined)
+					dataObject.prefix = a.prefix;
+				if (a.suffix !== undefined)
+					dataObject.suffix = a.suffix;
+				if (a.changeevent !== undefined)
+					dataObject.changeevent = a.changeevent;
+			}
+		}
+		
+		return true;
+	}
+
 
 	setVisible(flag) {
 		this.visible = !!flag;

@@ -88,7 +88,7 @@ export default class AMCApplicationItem_Content_ButtonGroup extends Common.AMCAp
 	}
 	
 	
-	updateFromV2Attributes (attrs)
+	updateFromV2Attributes ()
 	{
 		let v2Entry = this.getApplication().getV2Entry(this.uuid);
 		if (v2Entry && v2Entry.submodules) {
