@@ -307,34 +307,192 @@ export default class AMCApplication extends Common.AMCObject {
     }
 	
 	
+	// Detect whether a JSON object uses the v2 frontend format.
+	_isV2Format (json)
+	{
+		return (json.moduletype !== undefined && json.type === undefined);
+	}
+
+	// Normalize a v2 frontend JSON node into the legacy shape that
+	// existing module/item constructors expect.  The conversion is
+	// recursive so that nested submodules (tabs, grid sections) are
+	// also normalized.
+	_normalizeV2ToLegacy (v2)
+	{
+		if (!v2 || !v2.moduletype)
+			return v2;
+
+		let legacy = {};
+		let moduleType = v2.moduletype;
+
+		legacy.type = moduleType;
+		legacy.uuid = v2.uuid || "";
+		legacy.name = (v2.attributes && v2.attributes.name) ? v2.attributes.name : (v2.uuid || "");
+		legacy.caption = (v2.attributes && v2.attributes.caption !== undefined) ? v2.attributes.caption : "";
+
+		if (v2.gridcolumn !== undefined)
+			legacy.gridcolumn = v2.gridcolumn;
+		if (v2.gridrow !== undefined)
+			legacy.gridrow = v2.gridrow;
+		if (v2.gridcolumnspan !== undefined)
+			legacy.gridcolumnspan = v2.gridcolumnspan;
+		if (v2.gridrowspan !== undefined)
+			legacy.gridrowspan = v2.gridrowspan;
+
+		let attrs = v2.attributes || {};
+		let subs = v2.submodules || [];
+
+		if (moduleType === "content") {
+			legacy.headline = attrs.headline || "";
+			legacy.title = attrs.title || "";
+			legacy.subtitle = attrs.subtitle || "";
+			legacy.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+
+		} else if (moduleType === "tabs") {
+			legacy.tabs = subs.map(sub => this._normalizeV2ToLegacy(sub));
+
+		} else if (moduleType === "grid") {
+			let colCount = parseInt(attrs.columncount) || 1;
+			let rowCount = parseInt(attrs.rowcount) || 1;
+
+			legacy.columns = [];
+			for (let i = 0; i < colCount; i++)
+				legacy.columns.push({ width: 1, unit: "free" });
+
+			legacy.rows = [];
+			for (let i = 0; i < rowCount; i++)
+				legacy.rows.push({ height: 1, unit: "free" });
+
+			legacy.sections = subs.map(sub => {
+				let section = this._normalizeV2ToLegacy(sub);
+				let gc = sub.gridcolumn || 1;
+				let gr = sub.gridrow || 1;
+				let gcs = sub.gridcolumnspan || 1;
+				let grs = sub.gridrowspan || 1;
+				section.columnstart = gc;
+				section.columnend = gc + gcs - 1;
+				section.rowstart = gr;
+				section.rowend = gr + grs - 1;
+				if (section.scrollbars === undefined)
+					section.scrollbars = false;
+				if (section.columnposition === undefined)
+					section.columnposition = "stretch";
+				if (section.rowposition === undefined)
+					section.rowposition = "stretch";
+				return section;
+			});
+
+		} else if (moduleType === "glscene") {
+			legacy.scene = {
+				type: "scene",
+				uuid: v2.uuid || "",
+				instances: subs.map(sub => {
+					let inst = Object.assign({}, sub.attributes || {});
+					inst.uuid = sub.uuid || "";
+					inst.type = sub.moduletype || "glsceneinstance";
+					return inst;
+				})
+			};
+
+		} else if (moduleType === "graphic") {
+			legacy.viewminx = parseFloat(attrs.viewminx) || 0;
+			legacy.viewminy = parseFloat(attrs.viewminy) || 0;
+			legacy.viewmaxx = parseFloat(attrs.viewmaxx) || 100;
+			legacy.viewmaxy = parseFloat(attrs.viewmaxy) || 100;
+			legacy.showgrid = (attrs.showgrid === "1" || attrs.showgrid === true || attrs.showgrid === "true");
+			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+
+		} else if (moduleType === "layerview") {
+			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+
+		} else if (moduleType === "logs") {
+			legacy.items = [];
+			legacy.entries = [];
+
+		} else if (moduleType === "custom") {
+			let items = [];
+			let propsItem = { type: "properties", uuid: v2.uuid || "" };
+			for (let key in attrs) {
+				if (key !== "name" && key !== "caption")
+					propsItem[key] = attrs[key];
+			}
+			items.push(propsItem);
+
+			for (let sub of subs) {
+				let eventItem = this._normalizeV2ItemToLegacy(sub);
+				if (eventItem.type === "event") {
+					eventItem.name = (sub.attributes && sub.attributes.eventname) || "";
+					if (eventItem.parameters === undefined)
+						eventItem.parameters = [];
+				}
+				items.push(eventItem);
+			}
+			legacy.items = items;
+
+		} else {
+			for (let key in attrs)
+				legacy[key] = attrs[key];
+			if (subs.length > 0)
+				legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+		}
+
+		return legacy;
+	}
+
+	// Normalize a v2 submodule (content item / graphic item / etc.) into a
+	// flat legacy item object: { type, uuid, ...attributes }.
+	_normalizeV2ItemToLegacy (v2Item)
+	{
+		if (!v2Item)
+			return v2Item;
+
+		let item = {};
+		item.type = v2Item.moduletype || "";
+		item.uuid = v2Item.uuid || "";
+
+		let attrs = v2Item.attributes || {};
+		for (let key in attrs)
+			item[key] = attrs[key];
+
+		if (v2Item.submodules && v2Item.submodules.length > 0)
+			item.submodules = v2Item.submodules;
+
+		return item;
+	}
+
 	createModuleInstance (page, moduleDefinitionJSON)
 	{
 		Assert.ObjectValue (moduleDefinitionJSON);
 		Assert.ObjectInstance (page, "amcPage");
+
+		let def = moduleDefinitionJSON;
+		if (this._isV2Format(def))
+			def = this._normalizeV2ToLegacy(def);
 		
-		if (moduleDefinitionJSON.type === "content") 
-			return new AMCApplicationModule_Content (page, moduleDefinitionJSON);
+		if (def.type === "content") 
+			return new AMCApplicationModule_Content (page, def);
 
-		if (moduleDefinitionJSON.type === "glscene") 
-			return new AMCApplicationModule_GLScene (page, moduleDefinitionJSON);
+		if (def.type === "glscene") 
+			return new AMCApplicationModule_GLScene (page, def);
 
-		if (moduleDefinitionJSON.type === "graphic") 
-			return new AMCApplicationModule_Graphic (page, moduleDefinitionJSON);
+		if (def.type === "graphic") 
+			return new AMCApplicationModule_Graphic (page, def);
 
-		if (moduleDefinitionJSON.type === "grid") 
-			return new AMCApplicationModule_Grid (page, moduleDefinitionJSON);
+		if (def.type === "grid") 
+			return new AMCApplicationModule_Grid (page, def);
 
-		if (moduleDefinitionJSON.type === "tabs") 
-			return new AMCApplicationModule_Tabs (page, moduleDefinitionJSON);
+		if (def.type === "tabs") 
+			return new AMCApplicationModule_Tabs (page, def);
 
-		if (moduleDefinitionJSON.type === "logs") 
-			return new AMCApplicationModule_Logs (page, moduleDefinitionJSON);
+		if (def.type === "logs") 
+			return new AMCApplicationModule_Logs (page, def);
 
-		if (moduleDefinitionJSON.type === "layerview") 
-			return new AMCApplicationModule_LayerView (page, moduleDefinitionJSON);
+		if (def.type === "layerview") 
+			return new AMCApplicationModule_LayerView (page, def);
 
-		if (moduleDefinitionJSON.type === "custom") 
-			return new AMCApplicationModule_Custom (page, moduleDefinitionJSON);
+		if (def.type === "custom") 
+			return new AMCApplicationModule_Custom (page, def);
 		
 		return null;
 		
@@ -631,6 +789,7 @@ export default class AMCApplication extends Common.AMCObject {
 			}
 		}
 	}
+
 
 	onJobUploadChunkSuccess (application, uploadObject, chunkData, uploadOffset) {
 		

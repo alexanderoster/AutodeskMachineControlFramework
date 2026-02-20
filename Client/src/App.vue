@@ -355,7 +355,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					// Legacy polling (unchanged)
 					this.Application.updateModules ();
 					this.Application.updateContentItems ();
-					// v2 frontend state (Phase 1: fetch-only, no side effects)
+					// v2 frontend state
 					this.Application.retrieveFrontendState ();
 				}													
 			},

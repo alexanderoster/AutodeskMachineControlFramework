@@ -40,6 +40,7 @@ class AMCApplicationModule_LogItem extends Common.AMCApplicationItem {
 		super (moduleInstance, itemUUID, "logitem");		
 		this.registerClass ("amcItem_LogItem");
 		this.stateid = 1;
+		this.usesV2Frontend = true;
 		
 		this.updateFromJSON ({});
 		
@@ -71,6 +72,11 @@ class AMCApplicationModule_LogItem extends Common.AMCApplicationItem {
 			}
 		}
 	}
+
+	updateFromV2Attributes ()
+	{
+		return true;
+	}
 	
 }
 
@@ -82,8 +88,11 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Logs");
+		this.usesV2Frontend = true;
 		
-		this.currentReceiveIndex = 0;
+		this.logStartID = 1;
+		this.lastKnownHeadID = 0;
+		this.logFetchInFlight = false;
 		
 		this.items = [];
 				
@@ -97,7 +106,57 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 		
 						
 	}
-		
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs.logheadid === undefined)
+			return true;
+
+		let headID = parseInt (attrs.logheadid);
+		if (headID <= this.lastKnownHeadID)
+			return true;
+
+		this.lastKnownHeadID = headID;
+
+		if (this.logFetchInFlight)
+			return true;
+
+		let app = this.page.application;
+		let url = "/logs";
+		if (this.logStartID > 0)
+			url += "/" + this.logStartID;
+
+		this.logFetchInFlight = true;
+
+		app.axiosGetRequest (url)
+		.then (resultJSON => {
+			this.logFetchInFlight = false;
+
+			if (resultJSON.data && resultJSON.data.logentries) {
+				for (let logentry of resultJSON.data.logentries) {
+
+					let timeStampInput = logentry.timestamp.replace ("Z UTC", "").trim ();
+					let timeStampObject = DateTime.fromISO (timeStampInput, { zone: 'utc' });
+					let timeStampStr = timeStampObject.toFormat ('HH:mm:ss.SSS');
+
+					this.DisplayItems.unshift ({
+						logIndex: logentry.id,
+						logSubsystem: logentry.subsystem,
+						logTime: timeStampStr,
+						logText: logentry.message
+					});
+
+					if (logentry.id >= this.logStartID)
+						this.logStartID = logentry.id + 1;
+				}
+			}
+		})
+		.catch (() => {
+			this.logFetchInFlight = false;
+		});
+
+		return true;
+	}
 		
 	updateFromJSON (updateJSON)
 	{
