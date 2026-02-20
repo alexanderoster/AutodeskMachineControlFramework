@@ -133,7 +133,28 @@ CUIModule_Logs::CUIModule_Logs(pugi::xml_node& xmlNode, const std::string& sPath
 
 	auto captionAttrib = xmlNode.attribute("caption");
 	m_sCaption = captionAttrib.as_string();
-	
+
+	m_nDefaultCount = xmlNode.attribute("defaultcount").as_uint(200);
+	m_bShowToolbar = xmlNode.attribute("showtoolbar").as_bool(true);
+	m_nMaxClientEntries = xmlNode.attribute("maxcliententries").as_uint(2000);
+	m_sDownloadPrefix = xmlNode.attribute("downloadprefix").as_string("log");
+
+	CUIExpression defaultCountExpr;
+	defaultCountExpr.setFixedValue(std::to_string(m_nDefaultCount));
+	registerIntegerAttribute("defaultcount", defaultCountExpr);
+
+	CUIExpression showToolbarExpr;
+	showToolbarExpr.setFixedValue(m_bShowToolbar ? "1" : "0");
+	registerBoolAttribute("showtoolbar", showToolbarExpr);
+
+	CUIExpression maxClientEntriesExpr;
+	maxClientEntriesExpr.setFixedValue(std::to_string(m_nMaxClientEntries));
+	registerIntegerAttribute("maxcliententries", maxClientEntriesExpr);
+
+	CUIExpression downloadPrefixExpr;
+	downloadPrefixExpr.setFixedValue(m_sDownloadPrefix);
+	registerStringAttribute("downloadprefix", downloadPrefixExpr);
+
 	m_LogsItem = std::make_shared<CUIModule_LogsItem>(getModulePath (), pUIModuleEnvironment);
 
 }

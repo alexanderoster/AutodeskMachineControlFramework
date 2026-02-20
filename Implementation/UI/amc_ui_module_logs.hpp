@@ -83,6 +83,11 @@ namespace AMC {
 
 		PUIModuleEnvironment m_pUIModuleEnvironment;
 
+		uint32_t m_nDefaultCount;
+		bool m_bShowToolbar;
+		uint32_t m_nMaxClientEntries;
+		std::string m_sDownloadPrefix;
+
 	public:
 
 		/////////////////////////////////////////////////////////////////////////////////////

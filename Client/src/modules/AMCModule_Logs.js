@@ -58,7 +58,7 @@ class AMCApplicationModule_LogItem extends Common.AMCApplicationItem {
 				let timeStampObject = DateTime.fromISO(timeStampInput, {zone: 'utc'});
 				let timeStampStr = timeStampObject.toFormat('HH:mm:ss.SSS');
 				
-				this.moduleInstance.DisplayItems.unshift ({
+				this.moduleInstance.DisplayItems.push ({
 					logIndex: logentry.id,
 					logSubsystem: logentry.subsystem,
 					logTime: timeStampStr,
@@ -70,6 +70,8 @@ class AMCApplicationModule_LogItem extends Common.AMCApplicationItem {
 				}
 				
 			}
+
+			this.moduleInstance.trimDisplayItems ();
 		}
 	}
 
@@ -93,6 +95,10 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 		this.logStartID = 1;
 		this.lastKnownHeadID = 0;
 		this.logFetchInFlight = false;
+		this.defaultCount = 200;
+		this.showToolbar = true;
+		this.maxDisplayItems = 2000;
+		this.downloadPrefix = "log";
 		
 		this.items = [];
 				
@@ -107,8 +113,24 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 						
 	}
 
+	trimDisplayItems ()
+	{
+		if (this.DisplayItems.length > this.maxDisplayItems) {
+			this.DisplayItems.splice (0, this.DisplayItems.length - this.maxDisplayItems);
+		}
+	}
+
 	updateFromV2Attributes (attrs)
 	{
+		if (attrs.defaultcount !== undefined)
+			this.defaultCount = parseInt (attrs.defaultcount) || 200;
+		if (attrs.showtoolbar !== undefined)
+			this.showToolbar = (attrs.showtoolbar === true || attrs.showtoolbar === "1" || attrs.showtoolbar === "true");
+		if (attrs.maxcliententries !== undefined)
+			this.maxDisplayItems = parseInt (attrs.maxcliententries) || 2000;
+		if (attrs.downloadprefix !== undefined)
+			this.downloadPrefix = attrs.downloadprefix || "log";
+
 		if (attrs.logheadid === undefined)
 			return true;
 
@@ -139,7 +161,7 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 					let timeStampObject = DateTime.fromISO (timeStampInput, { zone: 'utc' });
 					let timeStampStr = timeStampObject.toFormat ('HH:mm:ss.SSS');
 
-					this.DisplayItems.unshift ({
+					this.DisplayItems.push ({
 						logIndex: logentry.id,
 						logSubsystem: logentry.subsystem,
 						logTime: timeStampStr,
@@ -149,6 +171,8 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 					if (logentry.id >= this.logStartID)
 						this.logStartID = logentry.id + 1;
 				}
+
+				this.trimDisplayItems ();
 			}
 		})
 		.catch (() => {
