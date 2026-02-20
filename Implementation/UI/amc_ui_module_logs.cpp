@@ -40,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_api_constants.hpp"
 #include "amc_resourcepackage.hpp"
 #include "amc_parameterhandler.hpp"
+#include "amc_ui_handler.hpp"
+#include "amc_ui_frontendstate.hpp"
 
 #include "common_utils.hpp"
 
@@ -118,7 +120,8 @@ void CUIModule_LogsItem::setEventPayloadValue(const std::string& sEventName, con
 /////////////////////////////////////////////////////////////////////////////////////
 
 CUIModule_Logs::CUIModule_Logs(pugi::xml_node& xmlNode, const std::string& sPath, PUIModuleEnvironment pUIModuleEnvironment)
-: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ())
+: CUIModule (getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ()),
+  m_pUIModuleEnvironment (pUIModuleEnvironment)
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
@@ -205,4 +208,23 @@ void CUIModule_Logs::populateLegacyItemMap(std::map<std::string, PUIModuleItem>&
 bool CUIModule_Logs::isVersion2FrontendModule()
 {
 	return true;
+}
+
+void CUIModule_Logs::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	if (pFrontendState == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	moduleObject.addString("moduletype", getType());
+	moduleObject.addString("uuid", m_sUUID);
+
+	CJSONWriterObject attributesObject(writer);
+	pFrontendState->writeModuleAttributesToJSON(writer, attributesObject, m_pModuleStore.get(), pStateMachineData);
+
+	auto pLogger = m_pUIModuleEnvironment->getLogger();
+	if (pLogger->supportsLogMessagesRetrieval()) {
+		attributesObject.addInteger("logheadid", pLogger->getLogMessageHeadID());
+	}
+
+	moduleObject.addObject("attributes", attributesObject);
 }
