@@ -21,9 +21,9 @@ copy ..\Client\*.js ..\build_client\Client
 copy ..\Client\*.json ..\build_client\Client
 
 cd ..
-git log -n 1 --format="%%H" -- "Client" >"build_client\Client\dist\_githash_client.txt"
-git log -n 1 --format="%%H" -- "Client" >"Artifacts\clientdist\_githash_client.txt"
-SET /p CLIENTDIRHASH=<"build_client\Client\dist\_githash_client.txt"
+git log -n 1 --format="%%H" -- "Client" >"build_client\Client\dist\_githash_client_vue2.txt"
+git log -n 1 --format="%%H" -- "Client" >"Artifacts\clientdist\_githash_client_vue2.txt"
+SET /p CLIENTDIRHASH=<"build_client\Client\dist\_githash_client_vue2.txt"
 
 
 echo export function getClientGitHash ()> build_client\Client\src\AMCGitHash.js
@@ -42,6 +42,12 @@ cmake --build "%TOOLBUILDDIR%" --target create_client_dist --config Release
 cmake --build "%TOOLBUILDDIR%" --target create_client_source --config Release
 
 call npm install
+
+REM Work around node-ipc crashing when os.networkInterfaces fails in sandboxed environments.
+if exist "node_modules\\@achrinza\\node-ipc\\entities\\Defaults.js" (
+	node -e "const fs=require('fs');const path='node_modules/@achrinza/node-ipc/entities/Defaults.js';let data=fs.readFileSync(path,'utf8');const original=data;const needle='const networkInterfaces = os.networkInterfaces();';const broken='let networkInterfaces = null;\\n    try {\\n        networkInterfaces = os.networkInterfaces();\\n    } catch (error) {\\n        networkInterfaces = null;\\n    }';const replacement='let networkInterfaces = null;\n    try {\n        networkInterfaces = os.networkInterfaces();\n    } catch (error) {\n        networkInterfaces = null;\n    }';if(data.includes(needle)){data=data.replace(needle,replacement);}else if(data.includes(broken)){data=data.replace(broken,replacement);}if(data!==original){fs.writeFileSync(path,data,'utf8');}"
+)
+
 call npm run build
 
 cd ..\..\
@@ -50,9 +56,9 @@ cd ..\..\
 
 cd build_client\Client
 
-"%TOOLBUILDDIR%\DevPackage\Framework\create_client_dist.exe" dist ..\..\Artifacts\clientdist\clientpackage.zip 
+"%TOOLBUILDDIR%\DevPackage\Framework\create_client_dist.exe" dist ..\..\Artifacts\clientdist\clientpackage_vue2.zip 
 
-"%TOOLBUILDDIR%\DevPackage\Framework\create_client_source.exe" . ..\..\Artifacts\clientdist\clientsourcepackage.zip 
+"%TOOLBUILDDIR%\DevPackage\Framework\create_client_source.exe" . ..\..\Artifacts\clientdist\clientsourcepackage_vue2.zip 
 
 if "%1" neq "NOPAUSE" (
 	pause
