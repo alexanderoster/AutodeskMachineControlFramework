@@ -1,0 +1,34 @@
+{
+  "name": "AutodeskMachineControlFrameworkClientV3",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "serve": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.1.96",
+    "apexcharts": "^4.0.0",
+    "asmcrypto-lite": "^1.1.0",
+    "axios": "^1.13.5",
+    "luxon": "^3.2.1",
+    "roboto-fontface": "^0.10.0",
+    "three": "^0.156.1",
+    "three-svg-loader": "^0.3.1",
+    "vue": "^3.4.21",
+    "vue3-apexcharts": "^1.4.1",
+    "vuetify": "^3.4.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "sass": "^1.69.5",
+    "vite": "^6.1.6"
+  }
+}
