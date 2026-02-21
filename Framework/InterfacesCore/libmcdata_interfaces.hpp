@@ -1929,6 +1929,12 @@ public:
 	*/
 	virtual IBuildJobExecutionIterator * RetrieveBuildJobExecutionsByStatus(const LibMCData::eBuildJobExecutionStatus eStatusFilter, const std::string & sJournalUUIDFilter) = 0;
 
+	/**
+	* IBuildJob::GetIncrementalID - Returns the monotonically increasing incremental ID of the build job. Used for frontend change detection.
+	* @return Incremental ID of the build job. Increases with every status change.
+	*/
+	virtual LibMCData_uint64 GetIncrementalID() = 0;
+
 };
 
 typedef IBaseSharedPtr<IBuildJob> PIBuildJob;
@@ -2025,6 +2031,12 @@ public:
 	* @return Returns the list of execution instances that are queried. List may be empty.
 	*/
 	virtual IBuildJobExecutionIterator * ListJobExecutions(const std::string & sMinTimestamp, const std::string & sMaxTimestamp, const std::string & sJournalUUIDFilter) = 0;
+
+	/**
+	* IBuildJobHandler::GetBuildListHeadID - Returns the current maximum incremental ID across all build jobs. Used by the frontend to detect when the build list has changed.
+	* @return Maximum incremental ID, or 0 if no jobs exist.
+	*/
+	virtual LibMCData_uint64 GetBuildListHeadID() = 0;
 
 };
 

@@ -1633,6 +1633,10 @@
 			<param name="JournalUUIDFilter" type="string" pass="in" description="UUID of the journal to filter from. Ignored if empty string." />
 			<param name="IteratorInstance" type="class" class="BuildJobExecutionIterator" pass="return" description="Returns the list of execution instances that are queried. List may be empty." />
 		</method>
+
+		<method name="GetIncrementalID" description="Returns the monotonically increasing incremental ID of the build job. Used for frontend change detection.">
+			<param name="IncrementalID" type="uint64" pass="return" description="Incremental ID of the build job. Increases with every status change." />
+		</method>
 		
 	</class>
 
@@ -1696,6 +1700,10 @@
 			<param name="MaxTimestamp" type="string" pass="in" description="Maximum Timestamp in ISO8601 UTC format. May be empty for no filter." />	
 			<param name="JournalUUIDFilter" type="string" pass="in" description="UUID of the journal to filter from. Ignored if empty string." />
 			<param name="IteratorInstance" type="class" class="BuildJobExecutionIterator" pass="return" description="Returns the list of execution instances that are queried. List may be empty." />
+		</method>
+
+		<method name="GetBuildListHeadID" description="Returns the current maximum incremental ID across all build jobs. Used by the frontend to detect when the build list has changed.">
+			<param name="HeadID" type="uint64" pass="return" description="Maximum incremental ID, or 0 if no jobs exist." />
 		</method>
 			
 	</class>

@@ -2196,6 +2196,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJob_RetrieveBuildJobExecutionsPtr) (Lib
 */
 typedef LibMCDataResult (*PLibMCDataBuildJob_RetrieveBuildJobExecutionsByStatusPtr) (LibMCData_BuildJob pBuildJob, LibMCData::eBuildJobExecutionStatus eStatusFilter, const char * pJournalUUIDFilter, LibMCData_BuildJobExecutionIterator * pIteratorInstance);
 
+/**
+* Returns the monotonically increasing incremental ID of the build job. Used for frontend change detection.
+*
+* @param[in] pBuildJob - BuildJob instance.
+* @param[out] pIncrementalID - Incremental ID of the build job. Increases with every status change.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJob_GetIncrementalIDPtr) (LibMCData_BuildJob pBuildJob, LibMCData_uint64 * pIncrementalID);
+
 /*************************************************************************************************************************
  Class definition for BuildJobIterator
 **************************************************************************************************************************/
@@ -2310,6 +2319,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr) (Li
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ListJobExecutionsPtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pMinTimestamp, const char * pMaxTimestamp, const char * pJournalUUIDFilter, LibMCData_BuildJobExecutionIterator * pIteratorInstance);
+
+/**
+* Returns the current maximum incremental ID across all build jobs. Used by the frontend to detect when the build list has changed.
+*
+* @param[in] pBuildJobHandler - BuildJobHandler instance.
+* @param[out] pHeadID - Maximum incremental ID, or 0 if no jobs exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr) (LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 * pHeadID);
 
 /*************************************************************************************************************************
  Class definition for UserList
@@ -3699,6 +3717,7 @@ typedef struct {
 	PLibMCDataBuildJob_RetrieveBuildJobExecutionPtr m_BuildJob_RetrieveBuildJobExecution;
 	PLibMCDataBuildJob_RetrieveBuildJobExecutionsPtr m_BuildJob_RetrieveBuildJobExecutions;
 	PLibMCDataBuildJob_RetrieveBuildJobExecutionsByStatusPtr m_BuildJob_RetrieveBuildJobExecutionsByStatus;
+	PLibMCDataBuildJob_GetIncrementalIDPtr m_BuildJob_GetIncrementalID;
 	PLibMCDataBuildJobIterator_GetCurrentJobPtr m_BuildJobIterator_GetCurrentJob;
 	PLibMCDataBuildJobHandler_CreateJobPtr m_BuildJobHandler_CreateJob;
 	PLibMCDataBuildJobHandler_JobExistsPtr m_BuildJobHandler_JobExists;
@@ -3709,6 +3728,7 @@ typedef struct {
 	PLibMCDataBuildJobHandler_ConvertStringToBuildStatusPtr m_BuildJobHandler_ConvertStringToBuildStatus;
 	PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr m_BuildJobHandler_RetrieveJobExecution;
 	PLibMCDataBuildJobHandler_ListJobExecutionsPtr m_BuildJobHandler_ListJobExecutions;
+	PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr m_BuildJobHandler_GetBuildListHeadID;
 	PLibMCDataUserList_CountPtr m_UserList_Count;
 	PLibMCDataUserList_GetUserPropertiesPtr m_UserList_GetUserProperties;
 	PLibMCDataLoginHandler_UserExistsPtr m_LoginHandler_UserExists;

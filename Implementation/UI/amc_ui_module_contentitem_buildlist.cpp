@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmc_interfaceexception.hpp"
 
 #include "amc_api_constants.hpp"
+#include "amc_ui_frontendstate.hpp"
 #include "Common/common_utils.hpp"
 #include "amc_parameterhandler.hpp"
 #include "amc_statemachinedata.hpp"
@@ -377,4 +378,29 @@ void CUIModule_ContentBuildList::registerFrontendAttributes()
 		expr.setFixedValue(std::to_string(m_nEntriesPerPage));
 		registerItemIntegerAttribute("entriesperpage", expr);
 	}
+}
+
+void CUIModule_ContentBuildList::frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	if (pFrontendState == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	if (m_pItemModuleStore == nullptr)
+		return;
+
+	std::string sItemType = m_pItemModuleStore->getModuleType();
+	if (sItemType.empty())
+		return;
+
+	itemObject.addString("moduletype", sItemType);
+	itemObject.addString("uuid", m_pItemModuleStore->getUUID());
+
+	CJSONWriterObject attributesObject(writer);
+	pFrontendState->writeModuleAttributesToJSON(writer, attributesObject, m_pItemModuleStore.get(), pStateMachineData);
+
+	if (m_pDataModel) {
+		auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+		attributesObject.addInteger("buildlistheadid", (int64_t) pBuildJobHandler->GetBuildListHeadID());
+	}
+
+	itemObject.addObject("attributes", attributesObject);
 }

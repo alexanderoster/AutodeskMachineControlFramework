@@ -6906,6 +6906,32 @@ LibMCDataResult libmcdata_buildjob_retrievebuildjobexecutionsbystatus(LibMCData_
 	}
 }
 
+LibMCDataResult libmcdata_buildjob_getincrementalid(LibMCData_BuildJob pBuildJob, LibMCData_uint64 * pIncrementalID)
+{
+	IBase* pIBaseClass = (IBase *)pBuildJob;
+
+	try {
+		if (pIncrementalID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBuildJob* pIBuildJob = dynamic_cast<IBuildJob*>(pIBaseClass);
+		if (!pIBuildJob)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pIncrementalID = pIBuildJob->GetIncrementalID();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for BuildJobIterator
@@ -7233,6 +7259,32 @@ LibMCDataResult libmcdata_buildjobhandler_listjobexecutions(LibMCData_BuildJobHa
 		pBaseIteratorInstance = pIBuildJobHandler->ListJobExecutions(sMinTimestamp, sMaxTimestamp, sJournalUUIDFilter);
 
 		*pIteratorInstance = (IBase*)(pBaseIteratorInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_buildjobhandler_getbuildlistheadid(LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 * pHeadID)
+{
+	IBase* pIBaseClass = (IBase *)pBuildJobHandler;
+
+	try {
+		if (pHeadID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBuildJobHandler* pIBuildJobHandler = dynamic_cast<IBuildJobHandler*>(pIBaseClass);
+		if (!pIBuildJobHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pHeadID = pIBuildJobHandler->GetBuildListHeadID();
+
 		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException & Exception) {
@@ -11483,6 +11535,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_buildjob_retrievebuildjobexecutions;
 	if (sProcName == "libmcdata_buildjob_retrievebuildjobexecutionsbystatus") 
 		*ppProcAddress = (void*) &libmcdata_buildjob_retrievebuildjobexecutionsbystatus;
+	if (sProcName == "libmcdata_buildjob_getincrementalid") 
+		*ppProcAddress = (void*) &libmcdata_buildjob_getincrementalid;
 	if (sProcName == "libmcdata_buildjobiterator_getcurrentjob") 
 		*ppProcAddress = (void*) &libmcdata_buildjobiterator_getcurrentjob;
 	if (sProcName == "libmcdata_buildjobhandler_createjob") 
@@ -11503,6 +11557,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_buildjobhandler_retrievejobexecution;
 	if (sProcName == "libmcdata_buildjobhandler_listjobexecutions") 
 		*ppProcAddress = (void*) &libmcdata_buildjobhandler_listjobexecutions;
+	if (sProcName == "libmcdata_buildjobhandler_getbuildlistheadid") 
+		*ppProcAddress = (void*) &libmcdata_buildjobhandler_getbuildlistheadid;
 	if (sProcName == "libmcdata_userlist_count") 
 		*ppProcAddress = (void*) &libmcdata_userlist_count;
 	if (sProcName == "libmcdata_userlist_getuserproperties") 

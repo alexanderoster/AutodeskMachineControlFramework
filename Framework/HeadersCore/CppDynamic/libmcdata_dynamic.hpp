@@ -1843,6 +1843,7 @@ public:
 	inline PBuildJobExecution RetrieveBuildJobExecution(const std::string & sExecutionUUID);
 	inline PBuildJobExecutionIterator RetrieveBuildJobExecutions(const std::string & sJournalUUIDFilter);
 	inline PBuildJobExecutionIterator RetrieveBuildJobExecutionsByStatus(const eBuildJobExecutionStatus eStatusFilter, const std::string & sJournalUUIDFilter);
+	inline LibMCData_uint64 GetIncrementalID();
 };
 	
 /*************************************************************************************************************************
@@ -1885,6 +1886,7 @@ public:
 	inline eBuildJobStatus ConvertStringToBuildStatus(const std::string & sString);
 	inline PBuildJobExecution RetrieveJobExecution(const std::string & sExecutionUUID);
 	inline PBuildJobExecutionIterator ListJobExecutions(const std::string & sMinTimestamp, const std::string & sMaxTimestamp, const std::string & sJournalUUIDFilter);
+	inline LibMCData_uint64 GetBuildListHeadID();
 };
 	
 /*************************************************************************************************************************
@@ -2451,6 +2453,7 @@ public:
 		pWrapperTable->m_BuildJob_RetrieveBuildJobExecution = nullptr;
 		pWrapperTable->m_BuildJob_RetrieveBuildJobExecutions = nullptr;
 		pWrapperTable->m_BuildJob_RetrieveBuildJobExecutionsByStatus = nullptr;
+		pWrapperTable->m_BuildJob_GetIncrementalID = nullptr;
 		pWrapperTable->m_BuildJobIterator_GetCurrentJob = nullptr;
 		pWrapperTable->m_BuildJobHandler_CreateJob = nullptr;
 		pWrapperTable->m_BuildJobHandler_JobExists = nullptr;
@@ -2461,6 +2464,7 @@ public:
 		pWrapperTable->m_BuildJobHandler_ConvertStringToBuildStatus = nullptr;
 		pWrapperTable->m_BuildJobHandler_RetrieveJobExecution = nullptr;
 		pWrapperTable->m_BuildJobHandler_ListJobExecutions = nullptr;
+		pWrapperTable->m_BuildJobHandler_GetBuildListHeadID = nullptr;
 		pWrapperTable->m_UserList_Count = nullptr;
 		pWrapperTable->m_UserList_GetUserProperties = nullptr;
 		pWrapperTable->m_LoginHandler_UserExists = nullptr;
@@ -4346,6 +4350,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildJob_GetIncrementalID = (PLibMCDataBuildJob_GetIncrementalIDPtr) GetProcAddress(hLibrary, "libmcdata_buildjob_getincrementalid");
+		#else // _WIN32
+		pWrapperTable->m_BuildJob_GetIncrementalID = (PLibMCDataBuildJob_GetIncrementalIDPtr) dlsym(hLibrary, "libmcdata_buildjob_getincrementalid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJob_GetIncrementalID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_BuildJobIterator_GetCurrentJob = (PLibMCDataBuildJobIterator_GetCurrentJobPtr) GetProcAddress(hLibrary, "libmcdata_buildjobiterator_getcurrentjob");
 		#else // _WIN32
 		pWrapperTable->m_BuildJobIterator_GetCurrentJob = (PLibMCDataBuildJobIterator_GetCurrentJobPtr) dlsym(hLibrary, "libmcdata_buildjobiterator_getcurrentjob");
@@ -4433,6 +4446,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobHandler_ListJobExecutions == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobHandler_GetBuildListHeadID = (PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr) GetProcAddress(hLibrary, "libmcdata_buildjobhandler_getbuildlistheadid");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobHandler_GetBuildListHeadID = (PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr) dlsym(hLibrary, "libmcdata_buildjobhandler_getbuildlistheadid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobHandler_GetBuildListHeadID == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6173,6 +6195,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_RetrieveBuildJobExecutionsByStatus == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_buildjob_getincrementalid", (void**)&(pWrapperTable->m_BuildJob_GetIncrementalID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJob_GetIncrementalID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_buildjobiterator_getcurrentjob", (void**)&(pWrapperTable->m_BuildJobIterator_GetCurrentJob));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobIterator_GetCurrentJob == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6211,6 +6237,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobhandler_listjobexecutions", (void**)&(pWrapperTable->m_BuildJobHandler_ListJobExecutions));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_ListJobExecutions == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobhandler_getbuildlistheadid", (void**)&(pWrapperTable->m_BuildJobHandler_GetBuildListHeadID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_GetBuildListHeadID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_userlist_count", (void**)&(pWrapperTable->m_UserList_Count));
@@ -9413,6 +9443,18 @@ public:
 	}
 	
 	/**
+	* CBuildJob::GetIncrementalID - Returns the monotonically increasing incremental ID of the build job. Used for frontend change detection.
+	* @return Incremental ID of the build job. Increases with every status change.
+	*/
+	LibMCData_uint64 CBuildJob::GetIncrementalID()
+	{
+		LibMCData_uint64 resultIncrementalID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJob_GetIncrementalID(m_pHandle, &resultIncrementalID));
+		
+		return resultIncrementalID;
+	}
+	
+	/**
 	 * Method definitions for class CBuildJobIterator
 	 */
 	
@@ -9578,6 +9620,18 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CBuildJobExecutionIterator>(m_pWrapper, hIteratorInstance);
+	}
+	
+	/**
+	* CBuildJobHandler::GetBuildListHeadID - Returns the current maximum incremental ID across all build jobs. Used by the frontend to detect when the build list has changed.
+	* @return Maximum incremental ID, or 0 if no jobs exist.
+	*/
+	LibMCData_uint64 CBuildJobHandler::GetBuildListHeadID()
+	{
+		LibMCData_uint64 resultHeadID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_GetBuildListHeadID(m_pHandle, &resultHeadID));
+		
+		return resultHeadID;
 	}
 	
 	/**
