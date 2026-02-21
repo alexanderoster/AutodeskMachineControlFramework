@@ -80,6 +80,11 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 		this.thumbnailheight = "150pt";
 		this.thumbnailwidth = "";
 		this.entriesperpage = 25;
+
+		// Phase 2: v2 change-detection via buildlistheadid
+		this.usesV2Frontend = true;
+		this.lastKnownHeadID = 0;
+		this.buildFetchInFlight = false;
 		
 		/*  this.entrybuttons = [
 		{
@@ -111,7 +116,6 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		Assert.ArrayValue (updateJSON.entries);
 		
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
@@ -124,16 +128,78 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 		if (updateJSON.entriesperpage)
 			this.entriesperpage = Assert.IntegerValue (updateJSON.entriesperpage);
 
-		let oldEntryCount = this.entries.length;
-		for (let index = 0; index < oldEntryCount; index++) {
-			this.entries.pop();
-		}
+		if (updateJSON.entries) {
+			let oldEntryCount = this.entries.length;
+			for (let index = 0; index < oldEntryCount; index++) {
+				this.entries.pop();
+			}
 
-		for (let entry of updateJSON.entries) {
-			this.entries.push(entry);
+			for (let entry of updateJSON.entries) {
+				this.entries.push(entry);
+			}
 		}
-		
 	}
-	
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs.loadingtext !== undefined)
+			this.loadingtext = attrs.loadingtext;
+		if (attrs.selectevent !== undefined)
+			this.selectevent = attrs.selectevent;
+		if (attrs.entriesperpage !== undefined)
+			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
+
+		if (attrs.buildlistheadid === undefined)
+			return true;
+
+		let headID = parseInt(attrs.buildlistheadid);
+		if (headID <= this.lastKnownHeadID)
+			return true;
+
+		this.lastKnownHeadID = headID;
+
+		if (this.buildFetchInFlight)
+			return true;
+
+		this.buildFetchInFlight = true;
+
+		let app = this.moduleInstance.page.application;
+
+		app.axiosGetRequest("/build?status=validated")
+		.then(resultJSON => {
+			this.buildFetchInFlight = false;
+
+			if (resultJSON.data && resultJSON.data.buildjobs) {
+				let newEntries = [];
+
+				for (let job of resultJSON.data.buildjobs) {
+					let entry = {
+						buildUUID: job.uuid || "",
+						buildName: job.name || "",
+						buildLayers: job.layercount || 0,
+						buildTimestamp: job.timestamp || "",
+						buildUser: job.user || "",
+						buildExecutionCount: job.executioncount || 0,
+						buildThumbnail: job.thumbnail || "00000000-0000-0000-0000-000000000000"
+					};
+					newEntries.push(entry);
+				}
+
+				let oldCount = this.entries.length;
+				for (let i = 0; i < oldCount; i++) {
+					this.entries.pop();
+				}
+				for (let entry of newEntries) {
+					this.entries.push(entry);
+				}
+			}
+		})
+		.catch(() => {
+			this.buildFetchInFlight = false;
+		});
+
+		return true;
+	}
+
 		
 }
