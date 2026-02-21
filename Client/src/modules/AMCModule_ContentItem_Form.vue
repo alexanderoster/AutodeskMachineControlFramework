@@ -30,154 +30,185 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='form') && visible">  	
-	
-	<v-container dense>				
-		<template v-for="entity in moduleitem.entities">			
-			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='edit')">
-				<v-col cols="12"><v-text-field outlined dense v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" :prefix="entity.prefix" :suffix="entity.suffix" :rules="checkRules (entity)" @blur="uiEditBoxChange(entity)" @keyup.enter="uiEditBoxChange(entity)"/></v-col>
-			</v-row>
+<div v-if="moduleitem.type === 'form'" class="form-root">
+	<template v-for="entity in moduleitem.entities">
 
-			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='switch')">
-				<v-col cols="10"><v-subheader>{{ entity.caption }}</v-subheader></v-col>
-				<v-col cols="2"><v-switch dense hide-details persistent-hint inset v-model="entity.dataObject.value" @change="uiToggleSwitch (entity)" /></v-col>
-			</v-row>
+		<!-- Text input -->
+		<div :key="entity.name + '_edit'" v-if="entity.type === 'edit'" class="form-field">
+			<v-text-field
+				outlined
+				dense
+				v-model="entity.dataObject.value"
+				:label="entity.caption"
+				:disabled="entity.dataObject.disabled"
+				:readonly="entity.dataObject.readonly"
+				:prefix="entity.prefix"
+				:suffix="entity.suffix"
+				:rules="checkRules(entity)"
+				hide-details="auto"
+				class="form-input"
+				@blur="uiEditBoxChange(entity)"
+				@keyup.enter="uiEditBoxChange(entity)"
+			/>
+		</div>
 
-			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='memo')">
-				<v-col cols="12"><v-textarea outlined :label="entity.caption" v-model="entity.dataObject.value"  :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" /></v-col>
-			</v-row>
+		<!-- Toggle switch -->
+		<div :key="entity.name + '_switch'" v-if="entity.type === 'switch'" class="form-field form-field--switch">
+			<span class="form-switch-label">{{ entity.caption }}</span>
+			<v-switch
+				dense
+				hide-details
+				inset
+				v-model="entity.dataObject.value"
+				class="form-switch"
+				@change="uiToggleSwitch(entity)"
+			/>
+		</div>
 
-			<v-row dense no-gutters :key="entity.name" v-if="(entity.type=='combobox')" align="center">
-				<v-col cols="12"><v-select outlined v-model="entity.dataObject.value" :label="entity.caption" :disabled="entity.dataObject.disabled" :readonly="entity.dataObject.readonly" :items="entity.items" @input="uiComboboxChange(entity)"/></v-col>
-			</v-row>							
-		</template>	
-	</v-container>
-	
+		<!-- Memo / textarea -->
+		<div :key="entity.name + '_memo'" v-if="entity.type === 'memo'" class="form-field">
+			<v-textarea
+				outlined
+				dense
+				:label="entity.caption"
+				v-model="entity.dataObject.value"
+				:disabled="entity.dataObject.disabled"
+				:readonly="entity.dataObject.readonly"
+				hide-details="auto"
+				class="form-input"
+			/>
+		</div>
+
+		<!-- Select / combobox -->
+		<div :key="entity.name + '_combo'" v-if="entity.type === 'combobox'" class="form-field">
+			<v-select
+				outlined
+				dense
+				v-model="entity.dataObject.value"
+				:label="entity.caption"
+				:disabled="entity.dataObject.disabled"
+				:readonly="entity.dataObject.readonly"
+				:items="entity.items"
+				hide-details="auto"
+				class="form-input"
+				@input="uiComboboxChange(entity)"
+			/>
+		</div>
+
+	</template>
 </div>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'moduleitem', 'visible'],
 
-	export default {
-	  props: ["Application", "moduleitem", "visible"],
-
-	  methods: {	
-		uiToggleSwitch: function (switchentity) {
-		
-			if (switchentity.dataObject) {
-		
-				console.log ("value has changed!");
-				if (!switchentity.dataObject.isProgrammaticChange) {
-					if (switchentity.changeevent != "") {
-					
-						console.log ("change event!");
-					
-						var formvalues = this.Application.assembleFormValues ([ switchentity.uuid ]);
-						this.Application.triggerUIEvent (switchentity.changeevent, switchentity.uuid, formvalues, () => { 
-						
-							switchentity.dataObject.isProgrammaticChange = true;
-							switchentity.dataObject.value = switchentity.dataObject.remotevalue;
-						
-						} );
-												
-					}
-				} else {
-					switchentity.dataObject.isProgrammaticChange = false;
+	methods: {
+		uiToggleSwitch(switchentity) {
+			if (!switchentity.dataObject) return;
+			if (!switchentity.dataObject.isProgrammaticChange) {
+				if (switchentity.changeevent && switchentity.changeevent !== '') {
+					const formvalues = this.Application.assembleFormValues([switchentity.uuid]);
+					this.Application.triggerUIEvent(switchentity.changeevent, switchentity.uuid, formvalues, () => {
+						switchentity.dataObject.isProgrammaticChange = true;
+						switchentity.dataObject.value = switchentity.dataObject.remotevalue;
+					});
 				}
+			} else {
+				switchentity.dataObject.isProgrammaticChange = false;
 			}
 		},
 
-		uiComboboxChange: function (comboboxEntity) {
-
-			console.log ("value has changed!");
-			
-			if (comboboxEntity.dataObject) {
-				if (!comboboxEntity.dataObject.isProgrammaticChange) {
-				if (comboboxEntity.changeevent && comboboxEntity.changeevent !== "") {
-					console.log ("change event!");
+		uiComboboxChange(comboboxEntity) {
+			if (!comboboxEntity.dataObject) return;
+			if (!comboboxEntity.dataObject.isProgrammaticChange) {
+				if (comboboxEntity.changeevent && comboboxEntity.changeevent !== '') {
 					const formvalues = this.Application.assembleFormValues([comboboxEntity.uuid]);
-					this.Application.triggerUIEvent(
-					comboboxEntity.changeevent,
-					comboboxEntity.uuid,
-					formvalues,
-					() => {
+					this.Application.triggerUIEvent(comboboxEntity.changeevent, comboboxEntity.uuid, formvalues, () => {
 						comboboxEntity.dataObject.isProgrammaticChange = true;
 						comboboxEntity.dataObject.value = comboboxEntity.dataObject.remotevalue;
-					}
-					);
+					});
 				}
-				} else {
+			} else {
 				comboboxEntity.dataObject.isProgrammaticChange = false;
-				}
 			}
 		},
-		
-		
-	  uiEditBoxChange(editentity) {
-	  
-	  
 
-		  if (!editentity || !editentity.dataObject) return;
-		  
-		  // skip if no change event defined
-		  if (!editentity.changeevent || editentity.changeevent === "") return;
-
-		  // don't send updates for read-only or disabled fields
-		  if (editentity.dataObject.readonly || editentity.dataObject.disabled) return;
-
-		  const formvalues = this.Application.assembleFormValues([ editentity.uuid ]);
-		  const senderuuid = editentity.uuid;
-
-
-		  console.log('BLUR EVENT', {
-			event: editentity.changeevent,
-			sender: editentity.uuid,
-			value: editentity.dataObject.value
-		  });
-
-		  this.Application.triggerUIEvent(editentity.changeevent, senderuuid, formvalues);
+		uiEditBoxChange(editentity) {
+			if (!editentity || !editentity.dataObject) return;
+			if (!editentity.changeevent || editentity.changeevent === '') return;
+			if (editentity.dataObject.readonly || editentity.dataObject.disabled) return;
+			const formvalues = this.Application.assembleFormValues([editentity.uuid]);
+			this.Application.triggerUIEvent(editentity.changeevent, editentity.uuid, formvalues);
 		},
-		
-		
-		checkRules (editentity) {
-		
-		
-			const rules = [];		
-			
-			if (editentity) {
-			
-				if (editentity.validation === "double") {
-			
-					rules.push((value) => {
-						return !!value || editentity.validationmessage;
-					});
-													
-					rules.push((value) => {
-						return !isNaN(value) || editentity.validationmessage;
-					});
-								
-					rules.push((value) => {
-						return ((value >= editentity.minvalue) && (value <= editentity.maxvalue)) || editentity.validationmessage;
-					});
-										
-				}
-				
-				if (editentity.validation === "string") {
-			
-					rules.push((value) => {
-						return ((value.length >= editentity.minlength) && (value.length >= editentity.maxlength)) || editentity.validationmessage;
-					});
-																							
-				}
-				
+
+		checkRules(editentity) {
+			const rules = [];
+			if (!editentity) return rules;
+
+			if (editentity.validation === 'double') {
+				rules.push(v => !!v || editentity.validationmessage);
+				rules.push(v => !isNaN(v) || editentity.validationmessage);
+				rules.push(v => (v >= editentity.minvalue && v <= editentity.maxvalue) || editentity.validationmessage);
 			}
-			
+			if (editentity.validation === 'string') {
+				rules.push(v => (v.length >= editentity.minlength && v.length <= editentity.maxlength) || editentity.validationmessage);
+			}
 			return rules;
-		}
-	  
-	  }
-	};
-	
+		},
+	},
+};
 </script>
 
+<style scoped>
+.form-root {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.form-field {
+	width: 100%;
+}
+
+.form-field--switch {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 40px;
+	padding: 0 2px;
+}
+
+.form-switch-label {
+	font-size: 0.875rem;
+	color: rgba(0, 0, 0, 0.87);
+}
+
+.form-switch {
+	flex: 0 0 auto;
+	margin: 0 !important;
+}
+
+/* Tighten up Vuetify outlined inputs to match Svelte h-9 (36px) aesthetic */
+.form-input >>> .v-input__control > .v-input__slot {
+	min-height: 36px !important;
+}
+
+.form-input >>> .v-text-field__slot label,
+.form-input >>> .v-select__slot label {
+	font-size: 0.875rem;
+}
+
+.form-input >>> .v-text-field__slot input,
+.form-input >>> .v-select__slot .v-select__selection {
+	font-size: 0.875rem;
+}
+
+/* Softer border radius */
+.form-input >>> fieldset {
+	border-radius: 6px;
+}
+</style>

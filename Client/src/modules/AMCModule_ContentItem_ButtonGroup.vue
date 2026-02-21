@@ -30,50 +30,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='buttongroup')" v-bind:style="moduleitem.cssstyle" > 
-	<template v-for="button in moduleitem.buttons">
-	
-		<span :key="button.name" v-on:click.stop="uiModuleButtonClick (button);">	
-			<v-btn color="primary" class="ml-1 mr-1" v-bind:style="moduleitem.buttoncssstyle" :disabled="button.disabled" >
-				<v-icon v-if="button.icon">{{ button.icon }}</v-icon>
-				{{ button.caption }}
-			</v-btn>		
-				
-		</span>
-		
-		
-	
-	</template>
-	
+<div v-if="moduleitem.type === 'buttongroup'" class="btngroup-root" :style="moduleitem.cssstyle">
+	<v-btn
+		v-for="button in moduleitem.buttons"
+		:key="button.uuid || button.name"
+		:disabled="button.disabled"
+		:color="button.color || 'primary'"
+		:style="moduleitem.buttoncssstyle"
+		class="btngroup-btn"
+		@click.stop="uiModuleButtonClick(button)"
+	>
+		<v-icon v-if="button.icon" small left>{{ button.icon }}</v-icon>
+		{{ button.caption }}
+	</v-btn>
 </div>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'moduleitem'],
 
-	export default {
-	  props: ["Application", "moduleitem"],
-
-	  methods: {	
-		uiModuleButtonClick: function (button) {
-					
-			var formvalues = this.Application.assembleFormValues (button.eventformvalues);
-			
-			if (button.event != "") {		
-				this.Application.triggerUIEvent (button.event, button.uuid, formvalues);
-			}
-			
-			if (button.targetpage != "") {
-				this.Application.changePage (button.targetpage);
-			}
-		
-		}
-	  },
-	  
-	  created () {
-	  	  
-	  }
-	  
-	};
-	
+	methods: {
+		uiModuleButtonClick(button) {
+			const formvalues = this.Application.assembleFormValues(button.eventformvalues);
+			if (button.event && button.event !== '')
+				this.Application.triggerUIEvent(button.event, button.uuid, formvalues);
+			if (button.targetpage && button.targetpage !== '')
+				this.Application.changePage(button.targetpage);
+		},
+	},
+};
 </script>
+
+<style scoped>
+.btngroup-root {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.btngroup-btn {
+	height: 36px !important;
+	letter-spacing: 0.01em;
+	text-transform: none;
+	font-weight: 500;
+}
+</style>

@@ -30,29 +30,81 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='parameterlist')">  	
-	
+<div v-if="moduleitem.type === 'parameterlist'" class="plist-root">
 	<v-data-table
 		:headers="moduleitem.headers"
 		:items="moduleitem.entries"
-		:items-per-page="moduleitem.entriesperpage"
-		class="elevation-1"
-		search 
+		:items-per-page="moduleitem.entriesperpage || -1"
+		class="plist-table"
 		disable-pagination
 		hide-default-footer
 		width="100%"
-		loadingText="moduleitem.loadingtext">
-	</v-data-table>											
-
+	>
+		<template v-slot:no-data>
+			<div class="plist-empty">No entries available</div>
+		</template>
+	</v-data-table>
 </div>
 
 </template>
 
 <script>
-
-	export default {
-	  props: ["Application", "moduleitem"]
-	 
-	};
-	
+export default {
+	props: ['Application', 'moduleitem'],
+};
 </script>
+
+<style scoped>
+.plist-root {
+	width: 100%;
+}
+
+.plist-table {
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+/* Override Vuetify table header */
+.plist-table >>> thead th {
+	font-size: 0.75rem !important;
+	font-weight: 600 !important;
+	color: rgba(0, 0, 0, 0.55) !important;
+	text-transform: none !important;
+	letter-spacing: 0 !important;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+	padding: 0 16px !important;
+	height: 36px !important;
+	background: #fafafa !important;
+}
+
+/* Body rows */
+.plist-table >>> tbody td {
+	font-size: 0.875rem !important;
+	color: rgba(0, 0, 0, 0.87) !important;
+	padding: 0 16px !important;
+	height: 40px !important;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.plist-table >>> tbody tr:last-child td {
+	border-bottom: none !important;
+}
+
+.plist-table >>> tbody tr:hover {
+	background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* No elevation */
+.plist-table >>> .v-data-table__wrapper {
+	box-shadow: none !important;
+}
+
+.plist-empty {
+	padding: 24px;
+	text-align: center;
+	font-size: 0.875rem;
+	font-style: italic;
+	color: rgba(0, 0, 0, 0.38);
+}
+</style>

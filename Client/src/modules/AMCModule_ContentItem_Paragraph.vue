@@ -30,19 +30,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='paragraph')">  	
-	{{ moduleitem.text }}
+<div v-if="moduleitem.type === 'paragraph'" class="para-root">
+	<p class="para-text" :class="{ 'para-text--headline': moduleitem.headline, 'para-text--muted': moduleitem.muted }">
+		{{ moduleitem.text }}
+	</p>
 </div>
 
 </template>
 
 <script>
-
-	export default {
-
-	  props: ["Application", "moduleitem"]  
-	  	  
-	};
-	
-	
+export default {
+	props: ['Application', 'moduleitem'],
+};
 </script>
+
+<style scoped>
+.para-root {
+	width: 100%;
+}
+
+.para-text {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: rgba(0, 0, 0, 0.87);
+	white-space: pre-wrap;
+}
+
+.para-text--headline {
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.para-text--muted {
+	font-size: 0.75rem;
+	font-style: italic;
+	color: rgba(0, 0, 0, 0.55);
+}
+</style>

@@ -377,14 +377,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 .logs-header {
 	flex: 0 0 auto;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: none;
+	border-radius: 6px 6px 0 0;
+	overflow: hidden;
 }
 
 .logs-scroll {
 	flex: 1 1 0;
 	overflow-y: auto;
 	overflow-x: hidden;
-	border: 1px solid #e0e0e0;
+	border: 1px solid rgba(0, 0, 0, 0.1);
 	border-top: none;
+	border-radius: 0 0 6px 6px;
 }
 
 .logs-table {
@@ -396,40 +401,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .logs-table thead th {
 	position: sticky;
 	top: 0;
-	background: #f5f5f5;
+	background: #fafafa;
 	text-align: left;
 	padding: 4px 8px;
-	font-size: 12px;
+	font-size: 0.75rem;
 	font-weight: 600;
-	border-bottom: 1px solid #e0e0e0;
-	color: rgba(0, 0, 0, 0.6);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	color: rgba(0, 0, 0, 0.55);
+	text-transform: none;
+	letter-spacing: 0;
 }
 
 .logs-table tbody tr:hover {
-	background: #f5f5f5;
+	background: rgba(0, 0, 0, 0.03);
 }
 
 .logs-table td {
 	padding: 2px 8px;
-	font-size: 12px;
+	font-size: 0.75rem;
 	font-family: 'Roboto Mono', monospace;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .logs-cell-time {
-	color: rgba(0, 0, 0, 0.54);
+	color: rgba(0, 0, 0, 0.45);
 }
 
 .logs-cell-subsystem {
-	color: rgba(0, 0, 0, 0.54);
+	color: rgba(0, 0, 0, 0.45);
 }
 
 .logs-cell-text {
 	white-space: normal;
 	word-break: break-word;
+	color: rgba(0, 0, 0, 0.87);
 }
 
 .logs-row-hidden-notice {
@@ -438,12 +446,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 .logs-cell-hidden-notice {
 	padding: 4px 8px;
-	font-size: 11px;
+	font-size: 0.75rem;
 	font-family: 'Roboto', sans-serif;
-	color: rgba(0, 0, 0, 0.38);
+	color: rgba(0, 0, 0, 0.35);
 	text-align: center;
 	font-style: italic;
-	border-bottom: 1px solid #e0e0e0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 	white-space: nowrap;
 }
 </style>
