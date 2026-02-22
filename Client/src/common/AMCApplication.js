@@ -351,16 +351,24 @@ export default class AMCApplication extends Common.AMCObject {
 		let subs = v2.submodules || [];
 
 		if (this._isContentLeafModuleType(moduleType)) {
+			if (subs.length > 0)
+				legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+
 			if (legacy.visible === undefined)
 				legacy.visible = true;
 
+			// Some backends expose leaf attributes on a single submodule.
+			let attrSource = attrs;
+			if ((subs.length > 0) && (Object.keys(attrSource).length === 0) && subs[0].attributes)
+				attrSource = subs[0].attributes;
+
 			// v2 image attributes use "resource", legacy image item expects "imageresource".
-			if ((moduleType === "image") && (legacy.imageresource === undefined) && (attrs.resource !== undefined))
-				legacy.imageresource = attrs.resource;
+			if ((moduleType === "image") && (legacy.imageresource === undefined) && (attrSource.resource !== undefined))
+				legacy.imageresource = attrSource.resource;
 
 			// Keep a compatibility alias if future v2 stream modules expose "resource".
-			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (attrs.resource !== undefined))
-				legacy.streamresource = attrs.resource;
+			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (attrSource.resource !== undefined))
+				legacy.streamresource = attrSource.resource;
 		}
 
 		if (moduleType === "content") {

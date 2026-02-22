@@ -52,9 +52,13 @@ export default class AMCApplicationModule_ContentLeaf extends Common.AMCApplicat
 
 		this.items = [];
 
-		let itemJSON = Object.assign({}, moduleJSON);
+		let itemSourceJSON = moduleJSON;
+		if (moduleJSON.items && (moduleJSON.items.length > 0))
+			itemSourceJSON = moduleJSON.items[0];
+
+		let itemJSON = Object.assign({}, itemSourceJSON);
 		itemJSON.type = moduleJSON.type;
-		itemJSON.uuid = moduleJSON.uuid;
+		itemJSON.uuid = itemSourceJSON.uuid || moduleJSON.uuid;
 
 		// v2 uses "resource" for image modules; legacy image item expects "imageresource".
 		if ((itemJSON.type === "image") && (itemJSON.imageresource === undefined) && (itemJSON.resource !== undefined))
