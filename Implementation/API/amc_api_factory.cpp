@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_build.hpp"
 #include "API/amc_api_handler_root.hpp"
 #include "API/amc_api_handler_frontend.hpp"
-#include "API/amc_api_handler_ui.hpp"
 #include "API/amc_api_handler_external.hpp"
 #include "API/amc_api_handler_auth.hpp"
 #include "API/amc_api_handler_executions.hpp"
@@ -73,7 +72,6 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Status>(MachineInstanceList, pSystemState->getStateMachineData (), pSystemState->getClientHash()));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Upload>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Build>(pSystemState));
-	pAPI->registerHandler(std::make_shared <CAPIHandler_UI>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Frontend>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Version>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_External>(pSystemState));
