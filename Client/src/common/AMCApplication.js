@@ -196,7 +196,7 @@ export default class AMCApplication extends Common.AMCObject {
     }
 
     retrieveConfiguration(vuetifythemes) {
-        this.axiosGetRequest("/ui/config")
+        this.axiosGetRequest("/config")
         .then(resultJSON => {
             this.AppDefinition.TextApplicationName = resultJSON.data.appname;
             this.AppDefinition.TextCopyRight = resultJSON.data.copyright;
@@ -515,7 +515,7 @@ export default class AMCApplication extends Common.AMCObject {
 
     retrieveStateUpdate() {
 
-        this.axiosGetRequest("/ui/state")
+        this.axiosGetRequest("/state")
 
         .then(resultJSON => {
 			
@@ -579,9 +579,9 @@ export default class AMCApplication extends Common.AMCObject {
 
 	retrieveFrontendState() {
 		if (!this.userIsLoggedIn())
-			return;
+			return Promise.resolve();
 
-		this.axiosGetRequest("/frontend")
+		return this.axiosGetRequest("/frontend")
 		.then(resultJSON => {
 			this.API.frontendState = resultJSON.data;
 			this.API.unsuccessfulFrontendCounter = 0;
@@ -607,6 +607,7 @@ export default class AMCApplication extends Common.AMCObject {
 					console.warn("[v2 frontend] repeated failure:", err.toString());
 				}
 			}
+			return null;
 		});
 	}
 
@@ -641,15 +642,16 @@ export default class AMCApplication extends Common.AMCObject {
 		
 		if (item.isActive ()) {
 
-			// Phase 2: If item supports v2 and we have v2 data, use it
-			// instead of the legacy /ui/contentitem/ call.
+			// Phase 2: v2 items are updated exclusively from /api/frontend.
+			// Legacy /ui/contentitem fallback is disabled for v2 widgets.
 			if (item.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(item.uuid);
-				if (v2Entry && v2Entry.attributes) {
-					item.updateFromV2Attributes(v2Entry.attributes);
-					item.setRefreshFlag();
-					return;
-				}
+				let attrs = null;
+				if (v2Entry && (v2Entry.attributes !== undefined))
+					attrs = v2Entry.attributes;
+				item.updateFromV2Attributes(attrs);
+				item.setRefreshFlag();
+				return;
 			}
 
 			// Legacy fallback: poll /ui/contentitem/{uuid}
@@ -724,14 +726,15 @@ export default class AMCApplication extends Common.AMCObject {
 
 		if (module.isActive()) {
 
-			// Phase 2: If module supports v2 and we have v2 data, use it
-			// instead of the legacy /ui/module/ call.
+			// Phase 2: v2 modules are updated exclusively from /api/frontend.
+			// Legacy /ui/module fallback is disabled for v2 widgets.
 			if (module.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(module.uuid);
-				if (v2Entry && v2Entry.attributes) {
-					module.updateFromV2Attributes(v2Entry.attributes);
-					return;
-				}
+				let attrs = null;
+				if (v2Entry && (v2Entry.attributes !== undefined))
+					attrs = v2Entry.attributes;
+				module.updateFromV2Attributes(attrs);
+				return;
 			}
 
 			// Legacy fallback: poll /ui/module/{uuid}

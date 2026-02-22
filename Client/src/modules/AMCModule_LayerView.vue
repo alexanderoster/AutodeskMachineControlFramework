@@ -316,7 +316,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			{
 				this.LayerViewerInstance.clearPoints ();
 			
-				return this.Application.axiosGetArrayBufferRequest("/ui/pointcloud/" + scatterplotuuid)
+				return this.Application.axiosGetArrayBufferRequest("/pointcloud/" + scatterplotuuid)
 				.then(responseData => {
 					let pointcoordinates = new Float32Array(responseData.data);
 					
@@ -340,7 +340,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			{		
 				this.LayerViewerInstance.clearPointsChannelData (pointsChannelName);
 			
-				return this.Application.axiosGetArrayBufferRequest("/ui/pointchanneldata/" + scatterplotuuid + "/" + pointsChannelName)
+				return this.Application.axiosGetArrayBufferRequest("/pointchanneldata/" + scatterplotuuid + "/" + pointsChannelName)
 				.then(responseData => {
 
 					const contentType = responseData.headers['content-type'];

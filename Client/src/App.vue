@@ -352,11 +352,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				
 			uiOnTimer() {
 				if (this.Application) {
-					// Legacy polling (unchanged)
-					this.Application.updateModules ();
-					this.Application.updateContentItems ();
-					// v2 frontend state
-					this.Application.retrieveFrontendState ();
+					// Refresh v2 frontend state first, then update local widgets.
+					this.Application.retrieveFrontendState ()
+					.finally (() => {
+						this.Application.updateModules ();
+						this.Application.updateContentItems ();
+					});
 				}													
 			},
 			

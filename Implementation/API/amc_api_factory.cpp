@@ -47,6 +47,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_alerts.hpp"
 #include "API/amc_api_handler_configurations.hpp"
 #include "API/amc_api_handler_dataseries.hpp"
+#include "API/amc_api_handler_config.hpp"
+#include "API/amc_api_handler_state.hpp"
+#include "API/amc_api_handler_pointcloud.hpp"
+#include "API/amc_api_handler_pointchanneldata.hpp"
 #include "API/amc_api_handler_image.hpp"
 
 using namespace AMC;
@@ -70,6 +74,10 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Alerts>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Configurations>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_DataSeries>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Config>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_State>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_PointCloud>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_PointChannelData>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Image>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Auth>(pAPI->getSessionHandler (), pSystemState->getDataModelInstance(), pSystemState->getInstallationSecret (), pSystemState->getGitHash (), pSystemState->getClientHash (), pSystemState->getAccessControlInstance ()));
 
