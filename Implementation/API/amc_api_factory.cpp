@@ -51,6 +51,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_state.hpp"
 #include "API/amc_api_handler_pointcloud.hpp"
 #include "API/amc_api_handler_pointchanneldata.hpp"
+#include "API/amc_api_handler_download.hpp"
+#include "API/amc_api_handler_meshgeometry.hpp"
+#include "API/amc_api_handler_meshedges.hpp"
+#include "API/amc_api_handler_event.hpp"
+#include "API/amc_api_handler_widget.hpp"
+#include "API/amc_api_handler_module.hpp"
+#include "API/amc_api_handler_contentitem.hpp"
 #include "API/amc_api_handler_image.hpp"
 
 using namespace AMC;
@@ -78,6 +85,13 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_State>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_PointCloud>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_PointChannelData>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Download>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_MeshGeometry>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_MeshEdges>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Event>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Widget>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Module>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_ContentItem>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Image>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Auth>(pAPI->getSessionHandler (), pSystemState->getDataModelInstance(), pSystemState->getInstallationSecret (), pSystemState->getGitHash (), pSystemState->getClientHash (), pSystemState->getAccessControlInstance ()));
 

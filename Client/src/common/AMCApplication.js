@@ -643,7 +643,7 @@ export default class AMCApplication extends Common.AMCObject {
 		if (item.isActive ()) {
 
 			// Phase 2: v2 items are updated exclusively from /api/frontend.
-			// Legacy /ui/contentitem fallback is disabled for v2 widgets.
+			// Legacy contentitem polling fallback is disabled for v2 widgets.
 			if (item.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(item.uuid);
 				let attrs = null;
@@ -654,7 +654,7 @@ export default class AMCApplication extends Common.AMCObject {
 				return;
 			}
 
-			// Legacy fallback: poll /ui/contentitem/{uuid}
+			// Legacy fallback: poll /contentitem/{uuid}
 			let headers = {}
 			let authToken = this.API.authToken;
 
@@ -665,7 +665,7 @@ export default class AMCApplication extends Common.AMCObject {
 			if (item.stateid > 0)
 				stateidstring = "/" + item.stateid;
 			
-			let url = this.API.baseURL + "/ui/contentitem/" + Assert.UUIDValue (item.uuid) + stateidstring;
+			let url = this.API.baseURL + "/contentitem/" + Assert.UUIDValue (item.uuid) + stateidstring;
 			Axios({
 				method: "GET",
 				"headers": headers,
@@ -727,7 +727,7 @@ export default class AMCApplication extends Common.AMCObject {
 		if (module.isActive()) {
 
 			// Phase 2: v2 modules are updated exclusively from /api/frontend.
-			// Legacy /ui/module fallback is disabled for v2 widgets.
+			// Legacy module polling fallback is disabled for v2 widgets.
 			if (module.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(module.uuid);
 				let attrs = null;
@@ -737,7 +737,7 @@ export default class AMCApplication extends Common.AMCObject {
 				return;
 			}
 
-			// Legacy fallback: poll /ui/module/{uuid}
+			// Legacy fallback: poll /module/{uuid}
 			let headers = {};
 			let authToken = this.API.authToken;
 
@@ -750,7 +750,7 @@ export default class AMCApplication extends Common.AMCObject {
 				stateidstring = "/" + module.stateid;
 
 			// Build request URL for modules
-			let url = this.API.baseURL + "/ui/module/" + Assert.UUIDValue(module.uuid) + stateidstring;
+			let url = this.API.baseURL + "/module/" + Assert.UUIDValue(module.uuid) + stateidstring;
 
 			Axios({
 				method: "GET",
@@ -1122,7 +1122,7 @@ export default class AMCApplication extends Common.AMCObject {
     }
 	
     getDownloadURL(uuid) {
-        return this.API.baseURL + '/ui/download/' + uuid;
+        return this.API.baseURL + '/download/' + uuid;
     }
 
     getStreamURL(uuid) {
@@ -1132,7 +1132,7 @@ export default class AMCApplication extends Common.AMCObject {
 
     triggerUIEvent(eventname, senderuuid, eventValues, executionCallback) {
 
-        this.axiosPostRequest("/ui/event", {
+        this.axiosPostRequest("/event", {
             "eventname": eventname,
             "senderuuid": senderuuid,
             "formvalues": eventValues
@@ -1174,7 +1174,7 @@ export default class AMCApplication extends Common.AMCObject {
     triggerWidgetRequest (widgetuuid, requestType, requestJSON, executionCallback) {
 
 		
-        this.axiosPostRequest("/ui/widget/" + Assert.UUIDValue (widgetuuid) + "/" + Assert.StringValue (requestType), Assert.ObjectValue (requestJSON))
+        this.axiosPostRequest("/widget/" + Assert.UUIDValue (widgetuuid) + "/" + Assert.StringValue (requestType), Assert.ObjectValue (requestJSON))
         .then(resultHandleWidgetRequest => {
 			
 			if (resultHandleWidgetRequest.data.actions) {

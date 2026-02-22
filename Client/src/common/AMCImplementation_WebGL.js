@@ -596,7 +596,7 @@ class WebGLMeshElement extends WebGLElement {
 
         this.glelement = group; 
 		
-		applicationInstance.axiosGetArrayBufferRequest("/ui/meshgeometry/" + normalizedUUID)
+		applicationInstance.axiosGetArrayBufferRequest("/meshgeometry/" + normalizedUUID)
 		.then(responseData => {
 			let meshpositions = responseData.data;
 			
@@ -618,7 +618,7 @@ class WebGLMeshElement extends WebGLElement {
 			}
 		});
 				
-		applicationInstance.axiosGetArrayBufferRequest("/ui/meshedges/" + normalizedUUID)
+		applicationInstance.axiosGetArrayBufferRequest("/meshedges/" + normalizedUUID)
 		.then(responseData => {
 			let linepositions = responseData.data;
 			
