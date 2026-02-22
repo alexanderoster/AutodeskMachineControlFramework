@@ -40,11 +40,18 @@ export default class AMCApplicationItem_Content_ParameterList extends Common.AMC
 		Assert.ObjectValue (itemJSON);		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_ParameterList");
+
+		this.usesV2Frontend = true;
 		
 		this.entries = [];
-		
-		// TODO: check validity
-		this.headers = itemJSON.headers;
+
+		// Static column definitions — keys match AMC_API_KEY_UI_ITEMPARAMETER* constants
+		this.headers = [
+			{ text: 'Parameter', value: 'paramDescription' },
+			{ text: 'Value',     value: 'paramValue' },
+			{ text: 'Group',     value: 'paramGroup' },
+			{ text: 'System',    value: 'paramSystem' },
+		];
 		
 		this.stateid = 1;
 		
@@ -57,11 +64,14 @@ export default class AMCApplicationItem_Content_ParameterList extends Common.AMC
 		
 	}
 		
-	
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		Assert.ArrayValue (updateJSON.entries);
+
+		// In v2 mode the legacy polling response is not used; guard gracefully.
+		if (!updateJSON.entries)
+			return;
 		
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
@@ -76,7 +86,23 @@ export default class AMCApplicationItem_Content_ParameterList extends Common.AMC
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
-		
+	}
+
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return;
+
+		if (attrs.loadingtext !== undefined)
+			this.loadingtext = attrs.loadingtext;
+		if (attrs.entriesperpage !== undefined)
+			this.entriesperpage = attrs.entriesperpage;
+
+		// Replace entries in-place so Vue reactivity fires correctly.
+		const incoming = Array.isArray(attrs.entries) ? attrs.entries : [];
+		while (this.entries.length > 0) this.entries.pop();
+		for (let entry of incoming) this.entries.push(entry);
 	}
 	
 }
