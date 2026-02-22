@@ -92,7 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 										
 						<template v-for="uiModule in uiPage.modules">
 							<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
-							<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream')" :module="uiModule" :Application="Application" />
+							<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream') || (uiModule.type == 'upload') || (uiModule.type == 'buildlist') || (uiModule.type == 'executionlist') || (uiModule.type == 'alertlist') || (uiModule.type == 'buttongroup') || (uiModule.type == 'parameterlist') || (uiModule.type == 'configurationlist') || (uiModule.type == 'form')" :module="uiModule" :Application="Application" />
 							<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
 							<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
 							<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							
@@ -133,7 +133,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			
 				<template v-for="uiModule in uiDialog.modules">
 					<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
-					<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream')" :module="uiModule" :Application="Application" />
+					<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream') || (uiModule.type == 'upload') || (uiModule.type == 'buildlist') || (uiModule.type == 'executionlist') || (uiModule.type == 'alertlist') || (uiModule.type == 'buttongroup') || (uiModule.type == 'parameterlist') || (uiModule.type == 'configurationlist') || (uiModule.type == 'form')" :module="uiModule" :Application="Application" />
 					<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
 					<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
 					<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							

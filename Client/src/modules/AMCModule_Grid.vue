@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 				<div :key="moduleSection.uuid" tile flat v-bind:style="moduleSection.cssstyle">
 					<Module_Content :key="moduleSection.name" v-if="(moduleSection.type == 'content')" :module="moduleSection" :Application="Application" />
-					<Module_ContentLeaf :key="moduleSection.name" v-if="(moduleSection.type == 'paragraph') || (moduleSection.type == 'image') || (moduleSection.type == 'chart') || (moduleSection.type == 'videostream')" :module="moduleSection" :Application="Application" />
+					<Module_ContentLeaf :key="moduleSection.name" v-if="(moduleSection.type == 'paragraph') || (moduleSection.type == 'image') || (moduleSection.type == 'chart') || (moduleSection.type == 'videostream') || (moduleSection.type == 'upload') || (moduleSection.type == 'buildlist') || (moduleSection.type == 'executionlist') || (moduleSection.type == 'alertlist') || (moduleSection.type == 'buttongroup') || (moduleSection.type == 'parameterlist') || (moduleSection.type == 'configurationlist') || (moduleSection.type == 'form')" :module="moduleSection" :Application="Application" />
 					<Module_Tabs :key="moduleSection.name" v-if="(moduleSection.type == 'tabs')" :module="moduleSection" :Application="Application" />
 					<Module_GLScene :key="moduleSection.name" v-if="(moduleSection.type == 'glscene')" :module="moduleSection" :Application="Application" />
 					<Module_Graphic :key="moduleSection.name" v-if="(moduleSection.type == 'graphic')" :module="moduleSection" :Application="Application" />

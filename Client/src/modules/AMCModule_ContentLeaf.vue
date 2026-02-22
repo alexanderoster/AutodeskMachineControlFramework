@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-	<div width="100%" height="100%" flat v-if="module.visible && ((module.type == 'paragraph') || (module.type == 'image') || (module.type == 'chart') || (module.type == 'videostream'))">
+	<div width="100%" height="100%" flat v-if="module.visible && ((module.type == 'paragraph') || (module.type == 'image') || (module.type == 'chart') || (module.type == 'videostream') || (module.type == 'upload') || (module.type == 'buildlist') || (module.type == 'executionlist') || (module.type == 'alertlist') || (module.type == 'buttongroup') || (module.type == 'parameterlist') || (module.type == 'configurationlist') || (module.type == 'form'))">
 		<template v-for="moduleitem in module.items">
 
 			<ContentItem_Paragraph :key="moduleitem.uuid" v-if="(moduleitem.type=='paragraph')" :moduleitem="moduleitem" :Application="Application" />
@@ -38,6 +38,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<ContentItem_Image :key="moduleitem.uuid" v-if="(moduleitem.type=='image')" :moduleitem="moduleitem" :Application="Application" />
 
 			<ContentItem_Chart :key="moduleitem.uuid" v-if="(moduleitem.type=='chart')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_Upload :key="moduleitem.uuid" v-if="(moduleitem.type=='upload')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_BuildList :key="moduleitem.uuid" v-if="(moduleitem.type=='buildlist')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_ExecutionList :key="moduleitem.uuid" v-if="(moduleitem.type=='executionlist')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_AlertList :key="moduleitem.uuid" v-if="(moduleitem.type=='alertlist')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_ParameterList :key="moduleitem.uuid" v-if="(moduleitem.type=='parameterlist')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_ButtonGroup :key="moduleitem.uuid" v-if="(moduleitem.type=='buttongroup')" :moduleitem="moduleitem" :Application="Application" />
+
+			<ContentItem_Form :key="moduleitem.uuid" v-if="(moduleitem.type=='form')" :moduleitem="moduleitem" :Application="Application" :visible="moduleitem.visible"/>
+
+			<ContentItem_ConfigurationList :key="moduleitem.uuid" v-if="(moduleitem.type=='configurationlist')" :moduleitem="moduleitem" :Application="Application" />
 
 			<ContentItem_VideoStream :key="moduleitem.uuid" v-if="(moduleitem.type=='videostream')" :moduleitem="moduleitem" :Application="Application" />
 
@@ -51,6 +67,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import ContentItem_Paragraph from '../modules/AMCModule_ContentItem_Paragraph.vue';
 	import ContentItem_Image from '../modules/AMCModule_ContentItem_Image.vue';
 	import ContentItem_Chart from '../modules/AMCModule_ContentItem_Chart.vue';
+	import ContentItem_Upload from '../modules/AMCModule_ContentItem_Upload.vue';
+	import ContentItem_BuildList from '../modules/AMCModule_ContentItem_BuildList.vue';
+	import ContentItem_ExecutionList from '../modules/AMCModule_ContentItem_ExecutionList.vue';
+	import ContentItem_AlertList from '../modules/AMCModule_ContentItem_AlertList.vue';
+	import ContentItem_ParameterList from '../modules/AMCModule_ContentItem_ParameterList.vue';
+	import ContentItem_ButtonGroup from '../modules/AMCModule_ContentItem_ButtonGroup.vue';
+	import ContentItem_Form from '../modules/AMCModule_ContentItem_Form.vue';
+	import ContentItem_ConfigurationList from '../modules/AMCModule_ContentItem_ConfigurationList.vue';
 	import ContentItem_VideoStream from '../modules/AMCModule_ContentItem_VideoStream.vue';
 
 
@@ -61,6 +85,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			ContentItem_Paragraph,
 			ContentItem_Image,
 			ContentItem_Chart,
+			ContentItem_Upload,
+			ContentItem_BuildList,
+			ContentItem_ExecutionList,
+			ContentItem_AlertList,
+			ContentItem_ParameterList,
+			ContentItem_ButtonGroup,
+			ContentItem_Form,
+			ContentItem_ConfigurationList,
 			ContentItem_VideoStream
 		}
 

@@ -32,28 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
-
-import AMCApplicationItem_Content_AlertList from "./AMCModule_ContentItem_AlertList.js"
-import AMCApplicationItem_Content_BuildList from "./AMCModule_ContentItem_BuildList.js"
-import AMCApplicationItem_Content_ButtonGroup from "./AMCModule_ContentItem_ButtonGroup.js"
-import AMCApplicationItem_Content_Chart from "./AMCModule_ContentItem_Chart.js"
-import AMCApplicationItem_Content_ExecutionList from "./AMCModule_ContentItem_ExecutionList.js"
-import AMCApplicationItem_Content_Form from "./AMCModule_ContentItem_Form.js"
-import AMCApplicationItem_Content_Image from "./AMCModule_ContentItem_Image.js"
-import AMCApplicationItem_Content_Paragraph from "./AMCModule_ContentItem_Paragraph.js"
-import AMCApplicationItem_Content_ParameterList from "./AMCModule_ContentItem_ParameterList.js"
-import AMCApplicationItem_Content_Upload from "./AMCModule_ContentItem_Upload.js"
-import AMCApplicationItem_Content_ConfigurationList from "./AMCModule_ContentItem_ConfigurationList.js"
-import AMCApplicationItem_Content_VideoStream from "./AMCModule_ContentItem_VideoStream.js"
-
-
-
 export default class AMCApplicationModule_Content extends Common.AMCApplicationModule {
 	
 	constructor (page, moduleJSON) 
 	{		
-		Assert.ObjectValue (moduleJSON);		
-		Assert.ArrayValue (moduleJSON.items);
+		Assert.ObjectValue (moduleJSON);
 		
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Content");
@@ -67,57 +50,37 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 		this.visible = Assert.BoolValue (moduleJSON.visible);
 
-		this.items = [];
-		
-		
-		for (let itemJSON of moduleJSON.items) {
-			
-			let item = null;
-			
-			if (itemJSON.type === "parameterlist") 
-				item = new AMCApplicationItem_Content_ParameterList (this, itemJSON);
+		this.modules = [];
 
-			if (itemJSON.type === "upload") 
-				item = new AMCApplicationItem_Content_Upload (this, itemJSON);
-			
-			if (itemJSON.type === "buildlist") 
-				item = new AMCApplicationItem_Content_BuildList (this, itemJSON);
-			
-			if (itemJSON.type === "executionlist") 
-				item = new AMCApplicationItem_Content_ExecutionList (this, itemJSON);
-			
-			if (itemJSON.type === "alertlist") 
-				item = new AMCApplicationItem_Content_AlertList (this, itemJSON);
-
-			if (itemJSON.type === "buttongroup") 
-				item = new AMCApplicationItem_Content_ButtonGroup (this, itemJSON);
-			
-			if (itemJSON.type === "paragraph") 
-				item = new AMCApplicationItem_Content_Paragraph (this, itemJSON);
-			
-			if (itemJSON.type === "image") 
-				item = new AMCApplicationItem_Content_Image (this, itemJSON);
-
-			if (itemJSON.type === "chart") 
-				item = new AMCApplicationItem_Content_Chart (this, itemJSON);
-
-			if (itemJSON.type === "form") 
-				item = new AMCApplicationItem_Content_Form (this, itemJSON);
-
-			if (itemJSON.type === "configurationlist") 
-				item = new AMCApplicationItem_Content_ConfigurationList (this, itemJSON);
-
-			if (itemJSON.type === "videostream") 
-				item = new AMCApplicationItem_Content_VideoStream (this, itemJSON);
-			
-			if (item) {
-				this.items.push (item);
-				this.page.addItem (item);
-			} else {
-				throw "Item type not found: " + itemJSON.type;
+		if (moduleJSON.modules && Array.isArray(moduleJSON.modules)) {
+			for (let childModuleJSON of moduleJSON.modules) {
+				let childModule = this.page.application.createModuleInstance(this.page, childModuleJSON);
+				if (!childModule)
+					throw "Submodule type not found: " + childModuleJSON.type;
+				this.modules.push(childModule);
+				this.page.application.addModule(childModule);
 			}
-			
 		}			
+
+		// Backward compatibility: legacy content definitions with "items" are
+		// wrapped into leaf modules on the client.
+		if (moduleJSON.items && Array.isArray(moduleJSON.items)) {
+			for (let itemJSON of moduleJSON.items) {
+				let wrappedModuleJSON = Object.assign({}, itemJSON);
+				wrappedModuleJSON.type = itemJSON.type;
+				wrappedModuleJSON.uuid = itemJSON.uuid;
+				wrappedModuleJSON.name = itemJSON.name || itemJSON.uuid || (this.name + "_" + itemJSON.type);
+				wrappedModuleJSON.caption = itemJSON.caption || "";
+				wrappedModuleJSON.visible = (itemJSON.visible === undefined) ? true : itemJSON.visible;
+				wrappedModuleJSON.items = [ itemJSON ];
+
+				let wrappedModule = this.page.application.createModuleInstance(this.page, wrappedModuleJSON);
+				if (!wrappedModule)
+					throw "Item type not found: " + itemJSON.type;
+				this.modules.push(wrappedModule);
+				this.page.application.addModule(wrappedModule);
+			}
+		}
 				
 	}
 
@@ -144,4 +107,3 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 	}
 	
 }
-

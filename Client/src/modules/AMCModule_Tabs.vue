@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						
 				<v-tab-item v-if="moduleTab.visible" :key="moduleTab.uuid" style="overflow:auto; width:100%; height:100%;">
 						<Module_Content :key="moduleTab.name" v-if="(moduleTab.type == 'content')" :module="moduleTab" :Application="Application" />					
-						<Module_ContentLeaf :key="moduleTab.name" v-if="(moduleTab.type == 'paragraph') || (moduleTab.type == 'image') || (moduleTab.type == 'chart') || (moduleTab.type == 'videostream')" :module="moduleTab" :Application="Application" />
+						<Module_ContentLeaf :key="moduleTab.name" v-if="(moduleTab.type == 'paragraph') || (moduleTab.type == 'image') || (moduleTab.type == 'chart') || (moduleTab.type == 'videostream') || (moduleTab.type == 'upload') || (moduleTab.type == 'buildlist') || (moduleTab.type == 'executionlist') || (moduleTab.type == 'alertlist') || (moduleTab.type == 'buttongroup') || (moduleTab.type == 'parameterlist') || (moduleTab.type == 'configurationlist') || (moduleTab.type == 'form')" :module="moduleTab" :Application="Application" />
 						<Module_GLScene :key="moduleTab.name" v-if="(moduleTab.type == 'glscene')" :module="moduleTab" :Application="Application" />							
 						<Module_Graphic :key="moduleTab.name" v-if="(moduleTab.type == 'graphic')" :module="moduleTab" :Application="Application" />							
 						<Module_LayerView :key="moduleTab.name" v-if="(moduleTab.type == 'layerview')" :module="moduleTab" :Application="Application" />							

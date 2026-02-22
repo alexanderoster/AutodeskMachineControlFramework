@@ -38,6 +38,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_paragraph.hpp"
 #include "amc_ui_module_contentitem_image.hpp"
 #include "amc_ui_module_contentitem_chart.hpp"
+#include "amc_ui_module_contentitem_upload.hpp"
+#include "amc_ui_module_contentitem_buildlist.hpp"
+#include "amc_ui_module_contentitem_executionlist.hpp"
+#include "amc_ui_module_contentitem_alertlist.hpp"
+#include "amc_ui_module_contentitem_buttongroup.hpp"
+#include "amc_ui_module_contentitem_parameterlist.hpp"
+#include "amc_ui_module_contentitem_configurationlist.hpp"
+#include "amc_ui_module_contentitem_form.hpp"
 #include "amc_ui_module_contentitem_videostream.hpp"
 
 #include "amc_api_constants.hpp"
@@ -72,6 +80,22 @@ CUIModule_ContentLeaf::CUIModule_ContentLeaf(pugi::xml_node& xmlNode, const std:
 		m_pItem = CUIModule_ContentImage::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "chart")
 		m_pItem = CUIModule_ContentChart::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "upload")
+		m_pItem = CUIModule_ContentUpload::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "buildlist")
+		m_pItem = CUIModule_ContentBuildList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "executionlist")
+		m_pItem = CUIModule_ContentExecutionList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "alertlist")
+		m_pItem = CUIModule_ContentAlertList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "buttongroup")
+		m_pItem = CUIModule_ContentButtonGroup::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "parameterlist")
+		m_pItem = CUIModule_ContentParameterList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "configurationlist")
+		m_pItem = CUIModule_ContentConfigurationList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "form")
+		m_pItem = CUIModule_ContentForm::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "videostream")
 		m_pItem = CUIModule_ContentVideoStream::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 
@@ -97,7 +121,9 @@ CUIModule_ContentLeaf::~CUIModule_ContentLeaf()
 
 bool CUIModule_ContentLeaf::isSupportedModuleType(const std::string& sType)
 {
-	return (sType == "paragraph") || (sType == "image") || (sType == "chart") || (sType == "videostream");
+	return (sType == "paragraph") || (sType == "image") || (sType == "chart") || (sType == "videostream") ||
+		(sType == "upload") || (sType == "buildlist") || (sType == "executionlist") || (sType == "alertlist") ||
+		(sType == "buttongroup") || (sType == "parameterlist") || (sType == "configurationlist") || (sType == "form");
 }
 
 std::string CUIModule_ContentLeaf::getType()

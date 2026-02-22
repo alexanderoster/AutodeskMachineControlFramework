@@ -33,20 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_ui_module.hpp"
 #include "amc_ui_module_content.hpp"
-#include "amc_ui_module_contentitem.hpp"
-
-#include "amc_ui_module_contentitem_paragraph.hpp"
-#include "amc_ui_module_contentitem_image.hpp"
-#include "amc_ui_module_contentitem_chart.hpp"
-#include "amc_ui_module_contentitem_buttongroup.hpp"
-#include "amc_ui_module_contentitem_buildlist.hpp"
-#include "amc_ui_module_contentitem_executionlist.hpp"
-#include "amc_ui_module_contentitem_alertlist.hpp"
-#include "amc_ui_module_contentitem_parameterlist.hpp"
-#include "amc_ui_module_contentitem_upload.hpp"
-#include "amc_ui_module_contentitem_form.hpp"
-#include "amc_ui_module_contentitem_configurationlist.hpp"
-#include "amc_ui_module_contentitem_videostream.hpp"
+#include "amc_ui_modulefactory.hpp"
+#include "amc_ui_module_contentleaf.hpp"
 
 #include "amc_api_constants.hpp"
 #include "amc_resourcepackage.hpp"
@@ -63,8 +51,6 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	: CUIModule(getNameFromXML(xmlNode), sPath, pUIModuleEnvironment->getFrontendDefinition ()), m_nNamingIDCounter(1)
 {
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
-
-	auto pFrontendDefinition = pUIModuleEnvironment->getFrontendDefinition();
 
 	if (getTypeFromXML(xmlNode) != getStaticType())
 		throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODULETYPE, "should be " + getStaticType ());
@@ -97,32 +83,19 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 		std::string sChildName = childNode.name();
-		auto sItemName = readItemNameFromXML(childNode, sChildName);
+		if (!CUIModule_ContentLeaf::isSupportedModuleType(sChildName))
+			continue;
 
-		if (sChildName == "paragraph") 
-			addItem(CUIModule_ContentParagraph::makeFromXML(childNode, sItemName, m_sModulePath));
-		if (sChildName == "image") 
-			addItem(CUIModule_ContentImage::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "chart")
-			addItem(CUIModule_ContentChart::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "form")
-			addItem(CUIModule_ContentForm::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "buildlist")
-			addItem(CUIModule_ContentBuildList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "executionlist")
-			addItem(CUIModule_ContentExecutionList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "alertlist")
-			addItem(CUIModule_ContentAlertList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "buttongroup") 
-			addItem(CUIModule_ContentButtonGroup::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "upload")
-			addItem(CUIModule_ContentUpload::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "parameterlist")
-			addItem(CUIModule_ContentParameterList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "configurationlist")
-			addItem(CUIModule_ContentConfigurationList::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
-		if (sChildName == "videostream")
-			addItem(CUIModule_ContentVideoStream::makeFromXML(childNode, sItemName, m_sModulePath, pUIModuleEnvironment));
+		auto sSubModuleName = readSubModuleNameFromXML(childNode, sChildName);
+		auto nameAttrib = childNode.attribute("name");
+		if (nameAttrib.empty())
+			childNode.append_attribute("name").set_value(sSubModuleName.c_str());
+		else
+			nameAttrib.set_value(sSubModuleName.c_str());
+
+		// Keep submodule paths under the content module path.
+		auto pSubModule = CUIModuleFactory::createModule(childNode, m_sModulePath, pUIModuleEnvironment);
+		addSubModule(pSubModule);
 
 	}
 
@@ -148,11 +121,6 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	registerStringAttribute("title", titleExpr);
 	registerStringAttribute("subtitle", subtitleExpr);
 	registerBoolAttribute("visible", visibleExpr);
-
-	// Initialize v2 frontend module stores for all content items
-	for (auto pItem : m_Items) {
-		pItem->initFrontendModuleStore(pFrontendDefinition);
-	}
 
 }
 
@@ -206,8 +174,8 @@ void CUIModule_Content::populateLegacyClientVariables(CParameterHandler* pParame
 	auto pGroup = pParameterHandler->addGroup(m_sModulePath, "content UI element");
 	pGroup->addNewBoolParameter(AMC_API_KEY_UI_VISIBLE, "visibility of the UI content", m_bVisible);
 
-	for (auto pItem : m_Items)
-		pItem->populateClientVariables(pParameterHandler);
+	for (auto pSubModule : m_SubModules)
+		pSubModule->populateLegacyClientVariables(pParameterHandler);
 
 }
 
@@ -222,13 +190,13 @@ void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 	moduleObject.addString(AMC_API_KEY_UI_CAPTION, m_sCaption);
 	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
 
-	CJSONWriterArray itemsNode(writer);
-	for (auto item : m_Items) {
-		CJSONWriterObject itemObject(writer);
-		item->addLegacyContentToJSON(writer, itemObject, pLegacyClientVariableHandler, 0);
-		itemsNode.addObject(itemObject);
+	CJSONWriterArray modulesNode(writer);
+	for (auto pSubModule : m_SubModules) {
+		CJSONWriterObject subModuleObject(writer);
+		pSubModule->writeLegacyDefinitionToJSON(writer, subModuleObject, pLegacyClientVariableHandler);
+		modulesNode.addObject(subModuleObject);
 	}
-	moduleObject.addArray(AMC_API_KEY_UI_ITEMS, itemsNode);
+	moduleObject.addArray(AMC_API_KEY_UI_MODULES, modulesNode);
 
 }
 
@@ -243,44 +211,43 @@ void CUIModule_Content::addContentToJSON(CJSONWriter& writer, CJSONWriterObject&
 
 PUIModuleItem CUIModule_Content::findLegacyItem(const std::string& sUUID)
 {
-	auto iIter = m_ItemMap.find(sUUID);
-	if (iIter != m_ItemMap.end())
-		return iIter->second;
+	for (auto pSubModule : m_SubModules) {
+		auto pItem = pSubModule->findLegacyItem(sUUID);
+		if (pItem.get() != nullptr)
+			return pItem;
+	}
 
 	return nullptr;
 }
 
-void CUIModule_Content::addItem(PUIModule_ContentItem pItem)
+void CUIModule_Content::addSubModule(PUIModule pSubModule)
 {
-	LibMCAssertNotNull(pItem.get());
+	LibMCAssertNotNull(pSubModule.get());
 
-	m_Items.push_back(pItem);
-
-	auto referenceList = pItem->getReferenceUUIDs();
-	for (auto sUUID : referenceList)
-		m_ItemMap.insert(std::make_pair (sUUID, pItem));
+	m_SubModules.push_back(pSubModule);
+	m_SubModuleMap.insert(std::make_pair(pSubModule->getUUID(), pSubModule));
 
 }
 
 void CUIModule_Content::populateModuleMap(std::map<std::string, PUIModule>& moduleMap)
 {
 	moduleMap.insert(std::make_pair(m_sUUID, std::make_shared<CUIModule_Content>(*this)));
+	for (auto pSubModule : m_SubModules) {
+		moduleMap.insert(std::make_pair(pSubModule->getUUID(), pSubModule));
+		pSubModule->populateModuleMap(moduleMap);
+	}
 }
 
 void CUIModule_Content::populateLegacyItemMap(std::map<std::string, PUIModuleItem>& itemMap)
 {
-	for (auto item : m_Items) {
-		auto referenceList = item->getReferenceUUIDs();
-		for (auto sUUID : referenceList)
-			itemMap.insert(std::make_pair(sUUID, item));
-
-	}
+	for (auto pSubModule : m_SubModules)
+		pSubModule->populateLegacyItemMap(itemMap);
 }
 
 void CUIModule_Content::configureLegacyPostLoading()
 {
-	for (auto item : m_Items)
-		item->configurePostLoading();
+	for (auto pSubModule : m_SubModules)
+		pSubModule->configureLegacyPostLoading();
 }
 
 std::string CUIModule_Content::getDefaultContentName(const std::string& sPrefix)
@@ -299,17 +266,17 @@ std::string CUIModule_Content::getDefaultContentName(const std::string& sPrefix)
 }
 
 
-std::string CUIModule_Content::readItemNameFromXML(const pugi::xml_node& itemNode, const std::string& sPrefix)
+std::string CUIModule_Content::readSubModuleNameFromXML(const pugi::xml_node& moduleNode, const std::string& sPrefix)
 {
-	auto nameAttrib = itemNode.attribute("name");
-	std::string sItemName = nameAttrib.as_string();
-	if (sItemName.empty())
-		sItemName = getDefaultContentName(sPrefix);
+	auto nameAttrib = moduleNode.attribute("name");
+	std::string sSubModuleName = nameAttrib.as_string();
+	if (sSubModuleName.empty())
+		sSubModuleName = getDefaultContentName(sPrefix);
 
-	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sItemName))
-		throw ELibMCCustomException(LIBMC_ERROR_INVALIDITEMPATH, m_sModulePath + "." + sItemName);
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sSubModuleName))
+		throw ELibMCCustomException(LIBMC_ERROR_INVALIDITEMPATH, m_sModulePath + "." + sSubModuleName);
 
-	return sItemName;
+	return sSubModuleName;
 }
 
 
@@ -328,16 +295,13 @@ void CUIModule_Content::frontendWriteModuleStatusToJSON(CJSONWriter& writer, CJS
 
 	CJSONWriterArray submodulesArray(writer);
 
-	for (auto& pItem : m_Items) {
-		std::string sItemType = pItem->getItemType();
-		if (!sItemType.empty()) {
+	for (auto& pSubModule : m_SubModules) {
+		if (pSubModule->isVersion2FrontendModule()) {
 			CJSONWriterObject subModuleObject(writer);
-			pItem->frontendWriteItemToJSON(writer, subModuleObject, pFrontendState, pStateMachineData);
+			pSubModule->frontendWriteModuleStatusToJSON(writer, subModuleObject, pFrontendState, pStateMachineData);
 			submodulesArray.addObject(subModuleObject);
 		}
 	}
 
 	moduleObject.addArray("submodules", submodulesArray);
 }
-
-

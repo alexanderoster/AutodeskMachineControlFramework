@@ -31,9 +31,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
+import AMCApplicationItem_Content_AlertList from "./AMCModule_ContentItem_AlertList.js"
+import AMCApplicationItem_Content_BuildList from "./AMCModule_ContentItem_BuildList.js"
+import AMCApplicationItem_Content_ButtonGroup from "./AMCModule_ContentItem_ButtonGroup.js"
 import AMCApplicationItem_Content_Chart from "./AMCModule_ContentItem_Chart.js"
+import AMCApplicationItem_Content_ExecutionList from "./AMCModule_ContentItem_ExecutionList.js"
+import AMCApplicationItem_Content_Form from "./AMCModule_ContentItem_Form.js"
 import AMCApplicationItem_Content_Image from "./AMCModule_ContentItem_Image.js"
 import AMCApplicationItem_Content_Paragraph from "./AMCModule_ContentItem_Paragraph.js"
+import AMCApplicationItem_Content_ParameterList from "./AMCModule_ContentItem_ParameterList.js"
+import AMCApplicationItem_Content_Upload from "./AMCModule_ContentItem_Upload.js"
+import AMCApplicationItem_Content_ConfigurationList from "./AMCModule_ContentItem_ConfigurationList.js"
 import AMCApplicationItem_Content_VideoStream from "./AMCModule_ContentItem_VideoStream.js"
 
 export default class AMCApplicationModule_ContentLeaf extends Common.AMCApplicationModule {
@@ -75,12 +83,27 @@ export default class AMCApplicationModule_ContentLeaf extends Common.AMCApplicat
 			item = new AMCApplicationItem_Content_Image (this, itemJSON);
 		if (itemJSON.type === "chart")
 			item = new AMCApplicationItem_Content_Chart (this, itemJSON);
+		if (itemJSON.type === "upload")
+			item = new AMCApplicationItem_Content_Upload (this, itemJSON);
+		if (itemJSON.type === "buildlist")
+			item = new AMCApplicationItem_Content_BuildList (this, itemJSON);
+		if (itemJSON.type === "executionlist")
+			item = new AMCApplicationItem_Content_ExecutionList (this, itemJSON);
+		if (itemJSON.type === "alertlist")
+			item = new AMCApplicationItem_Content_AlertList (this, itemJSON);
+		if (itemJSON.type === "buttongroup")
+			item = new AMCApplicationItem_Content_ButtonGroup (this, itemJSON);
+		if (itemJSON.type === "parameterlist")
+			item = new AMCApplicationItem_Content_ParameterList (this, itemJSON);
+		if (itemJSON.type === "configurationlist")
+			item = new AMCApplicationItem_Content_ConfigurationList (this, itemJSON);
+		if (itemJSON.type === "form")
+			item = new AMCApplicationItem_Content_Form (this, itemJSON);
 		if (itemJSON.type === "videostream")
 			item = new AMCApplicationItem_Content_VideoStream (this, itemJSON);
 
 		if (item) {
 			this.items.push(item);
-			this.page.addItem(item);
 		} else {
 			throw "Leaf module type not found: " + itemJSON.type;
 		}
@@ -100,13 +123,26 @@ export default class AMCApplicationModule_ContentLeaf extends Common.AMCApplicat
 	}
 
 	updateFromV2Attributes (attrs) {
-		if (!attrs)
-			return true;
+		let attrSource = attrs || {};
+		let v2Entry = this.page.application.getV2Entry(this.uuid);
+		if ((v2Entry) && (v2Entry.submodules) && (v2Entry.submodules.length > 0) && v2Entry.submodules[0].attributes) {
+			if (Object.keys(attrSource).length === 0)
+				attrSource = v2Entry.submodules[0].attributes;
+		}
 
-		if (attrs.caption !== undefined)
+		if (attrs && (attrs.caption !== undefined))
 			this.caption = attrs.caption;
-		if (attrs.visible !== undefined)
+		if (attrs && (attrs.visible !== undefined))
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+
+		if ((this.type === "image") && (attrSource.imageresource === undefined) && (attrSource.resource !== undefined))
+			attrSource.imageresource = attrSource.resource;
+		if ((this.type === "videostream") && (attrSource.streamresource === undefined) && (attrSource.resource !== undefined))
+			attrSource.streamresource = attrSource.resource;
+
+		let item = this.items[0];
+		if (item && typeof item.updateFromV2Attributes === "function")
+			item.updateFromV2Attributes(attrSource);
 
 		return true;
 	}

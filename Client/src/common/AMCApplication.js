@@ -318,7 +318,10 @@ export default class AMCApplication extends Common.AMCObject {
 	// represented as first-class v2 modules.
 	_isContentLeafModuleType (moduleType)
 	{
-		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream");
+		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream") ||
+			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "executionlist") ||
+			(moduleType === "alertlist") || (moduleType === "buttongroup") || (moduleType === "parameterlist") ||
+			(moduleType === "configurationlist") || (moduleType === "form");
 	}
 
 	// Normalize a v2 frontend JSON node into the legacy shape that
@@ -376,7 +379,7 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.title = attrs.title || "";
 			legacy.subtitle = attrs.subtitle || "";
 			legacy.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
-			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+			legacy.modules = subs.map(sub => this._normalizeV2ToLegacy(sub));
 
 		} else if (moduleType === "tabs") {
 			legacy.tabs = subs.map(sub => this._normalizeV2ToLegacy(sub));
@@ -483,6 +486,15 @@ export default class AMCApplication extends Common.AMCObject {
 		let attrs = v2Item.attributes || {};
 		for (let key in attrs)
 			item[key] = attrs[key];
+
+		// Leaf modules can expose payload attributes on a single nested submodule.
+		if (this._isContentLeafModuleType(item.type) && v2Item.submodules && (v2Item.submodules.length > 0)) {
+			let leafAttrs = v2Item.submodules[0].attributes || {};
+			for (let key in leafAttrs) {
+				if (item[key] === undefined)
+					item[key] = leafAttrs[key];
+			}
+		}
 
 		// v2 image attributes use "resource", legacy item constructor expects "imageresource".
 		if ((item.type === "image") && (item.imageresource === undefined) && (item.resource !== undefined))
