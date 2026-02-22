@@ -44,16 +44,26 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		this.entries = [];
 				
 		this.headers = [];
-		for (let header of itemJSON.headers) {
-			let checkedHeader = {
-				"text": header.text,
-				"value": header.value,						
-				"sortable": header.sortable,
-				"width": header.width,
-                "align": header.align
+		if (itemJSON.headers && itemJSON.headers.length > 0) {
+			for (let header of itemJSON.headers) {
+				let checkedHeader = {
+					"text": header.text,
+					"value": header.value,						
+					"sortable": header.sortable,
+					"width": header.width,
+					"align": header.align
+				}
+				
+				this.headers.push(checkedHeader);
 			}
-			
-			this.headers.push(checkedHeader);
+		} else {
+			this.headers = [
+				{ text: "Active", value: "configurationActive", sortable: true, width: "5vw", align: "center" },
+				{ text: "Version", value: "configurationVersion", sortable: true, width: "5vw", align: "center" },
+				{ text: "Upload time", value: "configurationTimestamp", sortable: true, width: "10vw", align: "center" },
+				{ text: "User", value: "userName", sortable: true, width: "5vw", align: "center" },
+				{ text: "Actions", value: "configurationActions", sortable: true, width: "20vw", align: "center" }
+			];
 		}
 
 		this.entrybuttons = [];
@@ -81,6 +91,11 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		this.thumbnailheight = "150pt";
 		this.thumbnailwidth = "";
 		this.entriesperpage = 5;
+		this.configurationSchema = "com.scanlab.ocmsmc";
+		this.lastKnownHeadID = -1;
+		this.hasFetchedEntries = false;
+		this.configurationFetchInFlight = false;
+		this.usesV2Frontend = true;
 		
 		/*  this.entrybuttons = [
 		{
@@ -112,7 +127,6 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		Assert.ArrayValue (updateJSON.entries);
 		
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
@@ -125,6 +139,9 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		if (updateJSON.entriesperpage)
 			this.entriesperpage = Assert.IntegerValue (updateJSON.entriesperpage);
 
+		if (!updateJSON.entries)
+			return;
+
 		let oldEntryCount = this.entries.length;
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
@@ -133,7 +150,82 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
-		
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		if (attrs.loadingtext !== undefined)
+			this.loadingtext = attrs.loadingtext;
+		if (attrs.selectevent !== undefined)
+			this.selectevent = attrs.selectevent;
+		if (attrs.entriesperpage !== undefined)
+			this.entriesperpage = parseInt (attrs.entriesperpage) || this.entriesperpage;
+		if (attrs.selectionvalueuuid !== undefined)
+			this.selectionvalueuuid = attrs.selectionvalueuuid;
+		if (attrs.buttonvalueuuid !== undefined)
+			this.buttonvalueuuid = attrs.buttonvalueuuid;
+		if (attrs.schema !== undefined)
+			this.configurationSchema = attrs.schema;
+
+		let shouldFetch = !this.hasFetchedEntries;
+
+		if (attrs.configurationlistheadid !== undefined) {
+			let headID = parseInt (attrs.configurationlistheadid);
+			if (!isNaN (headID)) {
+				if (headID > this.lastKnownHeadID) {
+					this.lastKnownHeadID = headID;
+					shouldFetch = true;
+				}
+			}
+		}
+
+		if (!shouldFetch)
+			return true;
+
+		if (this.configurationFetchInFlight)
+			return true;
+
+		this.configurationFetchInFlight = true;
+
+		let app = this.moduleInstance.page.application;
+		let requestURL = "/configurations";
+		if (this.configurationSchema && this.configurationSchema.length > 0)
+			requestURL += "?schema=" + encodeURIComponent(this.configurationSchema);
+
+		app.axiosGetRequest(requestURL)
+		.then(resultJSON => {
+			this.configurationFetchInFlight = false;
+			this.hasFetchedEntries = true;
+
+			if (resultJSON.data && resultJSON.data.configurations) {
+				let newEntries = [];
+				for (let entry of resultJSON.data.configurations) {
+					newEntries.push({
+						configurationActive: !!entry.configurationactive,
+						configurationVersion: entry.configurationversion || 0,
+						userName: entry.username || "",
+						configurationUUID: entry.configurationuuid || Common.nullUUID (),
+						configurationTimestamp: entry.configurationtimestamp || ""
+					});
+				}
+
+				let oldCount = this.entries.length;
+				for (let i = 0; i < oldCount; i++) {
+					this.entries.pop();
+				}
+				for (let newEntry of newEntries) {
+					this.entries.push(newEntry);
+				}
+			}
+		})
+		.catch(() => {
+			this.configurationFetchInFlight = false;
+		});
+
+		return true;
 	}
 	
 		
