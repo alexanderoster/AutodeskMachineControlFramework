@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						
 				<v-tab-item v-if="moduleTab.visible" :key="moduleTab.uuid" style="overflow:auto; width:100%; height:100%;">
 						<Module_Content :key="moduleTab.name" v-if="(moduleTab.type == 'content')" :module="moduleTab" :Application="Application" />					
+						<Module_ContentLeaf :key="moduleTab.name" v-if="(moduleTab.type == 'paragraph') || (moduleTab.type == 'image') || (moduleTab.type == 'chart') || (moduleTab.type == 'videostream')" :module="moduleTab" :Application="Application" />
 						<Module_GLScene :key="moduleTab.name" v-if="(moduleTab.type == 'glscene')" :module="moduleTab" :Application="Application" />							
 						<Module_Graphic :key="moduleTab.name" v-if="(moduleTab.type == 'graphic')" :module="moduleTab" :Application="Application" />							
 						<Module_LayerView :key="moduleTab.name" v-if="(moduleTab.type == 'layerview')" :module="moduleTab" :Application="Application" />							
@@ -66,6 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 
 	import Module_Content from "../modules/AMCModule_Content.vue";
+	import Module_ContentLeaf from "../modules/AMCModule_ContentLeaf.vue";
 	import Module_GLScene from "../modules/AMCModule_GLScene.vue";
 	import Module_Graphic from "../modules/AMCModule_Graphic.vue";
 	import Module_LayerView from "../modules/AMCModule_LayerView.vue";
@@ -76,6 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	  
 		components: {
 			Module_Content,
+			Module_ContentLeaf,
 			Module_GLScene,
 			Module_Graphic,
 			Module_LayerView,

@@ -92,6 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 										
 						<template v-for="uiModule in uiPage.modules">
 							<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
+							<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream')" :module="uiModule" :Application="Application" />
 							<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
 							<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
 							<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							
@@ -132,6 +133,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			
 				<template v-for="uiModule in uiDialog.modules">
 					<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
+					<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream')" :module="uiModule" :Application="Application" />
 					<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
 					<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
 					<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							
@@ -184,6 +186,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import Dialog_Error from "./dialogs/Dialog_Error.vue";
 	
 	import Module_Content from "./modules/AMCModule_Content.vue";
+	import Module_ContentLeaf from "./modules/AMCModule_ContentLeaf.vue";
 	import Module_Tabs from "./modules/AMCModule_Tabs.vue";
 	import Module_Grid from "./modules/AMCModule_Grid.vue";
 	import Module_GLScene from "./modules/AMCModule_GLScene.vue";
@@ -325,6 +328,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Dialog_Login,
 			Dialog_Error,
 			Module_Content,
+			Module_ContentLeaf,
 			Module_Tabs,
 			Module_Logs,
 			Module_GLScene,

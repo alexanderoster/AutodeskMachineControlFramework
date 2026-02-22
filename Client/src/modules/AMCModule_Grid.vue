@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 				<div :key="moduleSection.uuid" tile flat v-bind:style="moduleSection.cssstyle">
 					<Module_Content :key="moduleSection.name" v-if="(moduleSection.type == 'content')" :module="moduleSection" :Application="Application" />
+					<Module_ContentLeaf :key="moduleSection.name" v-if="(moduleSection.type == 'paragraph') || (moduleSection.type == 'image') || (moduleSection.type == 'chart') || (moduleSection.type == 'videostream')" :module="moduleSection" :Application="Application" />
 					<Module_Tabs :key="moduleSection.name" v-if="(moduleSection.type == 'tabs')" :module="moduleSection" :Application="Application" />
 					<Module_GLScene :key="moduleSection.name" v-if="(moduleSection.type == 'glscene')" :module="moduleSection" :Application="Application" />
 					<Module_Graphic :key="moduleSection.name" v-if="(moduleSection.type == 'graphic')" :module="moduleSection" :Application="Application" />
@@ -52,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 
 	import Module_Content from "../modules/AMCModule_Content.vue";
+	import Module_ContentLeaf from "../modules/AMCModule_ContentLeaf.vue";
 	import Module_Tabs from "../modules/AMCModule_Tabs.vue";
 	import Module_GLScene from "../modules/AMCModule_GLScene.vue";
 	import Module_Graphic from "../modules/AMCModule_Graphic.vue";
@@ -63,6 +65,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	  
 		components: {
 			Module_Content,
+			Module_ContentLeaf,
 			Module_Logs,
 			Module_Tabs,
 			Module_GLScene,

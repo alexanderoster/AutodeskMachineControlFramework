@@ -43,6 +43,7 @@ import AMCApplicationModule_Tabs from "../modules/AMCModule_Tabs.js"
 import AMCApplicationModule_Logs from "../modules/AMCModule_Logs.js"
 import AMCApplicationModule_LayerView from "../modules/AMCModule_LayerView.js"
 import AMCApplicationModule_Custom from "../modules/AMCModule_Custom.js"
+import AMCApplicationModule_ContentLeaf from "../modules/AMCModule_ContentLeaf.js"
 
 import AMCApplicationPage from "./AMCPage.js"
 import AMCApplicationCustomPage from "./AMCCustomPage.js"
@@ -313,6 +314,13 @@ export default class AMCApplication extends Common.AMCObject {
 		return (json.moduletype !== undefined && json.type === undefined);
 	}
 
+	// Leaf modules that were historically content items and now can be
+	// represented as first-class v2 modules.
+	_isContentLeafModuleType (moduleType)
+	{
+		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream");
+	}
+
 	// Normalize a v2 frontend JSON node into the legacy shape that
 	// existing module/item constructors expect.  The conversion is
 	// recursive so that nested submodules (tabs, grid sections) are
@@ -341,6 +349,19 @@ export default class AMCApplication extends Common.AMCObject {
 
 		let attrs = v2.attributes || {};
 		let subs = v2.submodules || [];
+
+		if (this._isContentLeafModuleType(moduleType)) {
+			if (legacy.visible === undefined)
+				legacy.visible = true;
+
+			// v2 image attributes use "resource", legacy image item expects "imageresource".
+			if ((moduleType === "image") && (legacy.imageresource === undefined) && (attrs.resource !== undefined))
+				legacy.imageresource = attrs.resource;
+
+			// Keep a compatibility alias if future v2 stream modules expose "resource".
+			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (attrs.resource !== undefined))
+				legacy.streamresource = attrs.resource;
+		}
 
 		if (moduleType === "content") {
 			legacy.headline = attrs.headline || "";
@@ -455,6 +476,14 @@ export default class AMCApplication extends Common.AMCObject {
 		for (let key in attrs)
 			item[key] = attrs[key];
 
+		// v2 image attributes use "resource", legacy item constructor expects "imageresource".
+		if ((item.type === "image") && (item.imageresource === undefined) && (item.resource !== undefined))
+			item.imageresource = item.resource;
+
+		// Keep a compatibility alias if a v2 stream item uses "resource".
+		if ((item.type === "videostream") && (item.streamresource === undefined) && (item.resource !== undefined))
+			item.streamresource = item.resource;
+
 		if (v2Item.submodules && v2Item.submodules.length > 0)
 			item.submodules = v2Item.submodules;
 
@@ -493,6 +522,9 @@ export default class AMCApplication extends Common.AMCObject {
 
 		if (def.type === "custom") 
 			return new AMCApplicationModule_Custom (page, def);
+
+		if (this._isContentLeafModuleType(def.type))
+			return new AMCApplicationModule_ContentLeaf (page, def);
 		
 		return null;
 		
