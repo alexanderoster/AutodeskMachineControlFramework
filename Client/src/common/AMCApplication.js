@@ -1115,7 +1115,7 @@ export default class AMCApplication extends Common.AMCObject {
     }
 	
     getChartURL(uuid) {
-        return this.API.baseURL + '/ui/chart/' + uuid;
+        return this.API.baseURL + '/dataseries/' + uuid;
     }
 	
     getDownloadURL(uuid) {

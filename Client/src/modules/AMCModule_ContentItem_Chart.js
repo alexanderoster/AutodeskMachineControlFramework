@@ -82,8 +82,8 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 		let application = this.getApplication ();
 		let normalizedUUID = this.dataseries;
 	
-		application.axiosGetArrayBufferRequest("/ui/chart/" + normalizedUUID)
-				.then(responseData => {
+		application.axiosGetArrayBufferRequest("/dataseries/" + normalizedUUID)
+					.then(responseData => {
 					var floatView = new Float32Array(responseData.data);
 					let dataLength = floatView.length;
 					let pointCount = dataLength / 2;
