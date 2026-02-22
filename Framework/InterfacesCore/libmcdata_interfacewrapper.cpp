@@ -1336,6 +1336,32 @@ LibMCDataResult libmcdata_alertsession_retrievealertsbytype(LibMCData_AlertSessi
 	}
 }
 
+LibMCDataResult libmcdata_alertsession_getalertheadid(LibMCData_AlertSession pAlertSession, LibMCData_uint64 * pHeadID)
+{
+	IBase* pIBaseClass = (IBase *)pAlertSession;
+
+	try {
+		if (pHeadID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IAlertSession* pIAlertSession = dynamic_cast<IAlertSession*>(pIBaseClass);
+		if (!pIAlertSession)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pHeadID = pIAlertSession->GetAlertHeadID();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for TelemetrySession
@@ -7298,6 +7324,32 @@ LibMCDataResult libmcdata_buildjobhandler_getbuildlistheadid(LibMCData_BuildJobH
 	}
 }
 
+LibMCDataResult libmcdata_buildjobhandler_getexecutionlistheadid(LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 * pHeadID)
+{
+	IBase* pIBaseClass = (IBase *)pBuildJobHandler;
+
+	try {
+		if (pHeadID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBuildJobHandler* pIBuildJobHandler = dynamic_cast<IBuildJobHandler*>(pIBaseClass);
+		if (!pIBuildJobHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pHeadID = pIBuildJobHandler->GetExecutionListHeadID();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for UserList
@@ -11217,6 +11269,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_alertsession_retrievealerts;
 	if (sProcName == "libmcdata_alertsession_retrievealertsbytype") 
 		*ppProcAddress = (void*) &libmcdata_alertsession_retrievealertsbytype;
+	if (sProcName == "libmcdata_alertsession_getalertheadid") 
+		*ppProcAddress = (void*) &libmcdata_alertsession_getalertheadid;
 	if (sProcName == "libmcdata_telemetrysession_getsessionuuid") 
 		*ppProcAddress = (void*) &libmcdata_telemetrysession_getsessionuuid;
 	if (sProcName == "libmcdata_telemetrysession_createchannelindb") 
@@ -11559,6 +11613,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_buildjobhandler_listjobexecutions;
 	if (sProcName == "libmcdata_buildjobhandler_getbuildlistheadid") 
 		*ppProcAddress = (void*) &libmcdata_buildjobhandler_getbuildlistheadid;
+	if (sProcName == "libmcdata_buildjobhandler_getexecutionlistheadid") 
+		*ppProcAddress = (void*) &libmcdata_buildjobhandler_getexecutionlistheadid;
 	if (sProcName == "libmcdata_userlist_count") 
 		*ppProcAddress = (void*) &libmcdata_userlist_count;
 	if (sProcName == "libmcdata_userlist_getuserproperties") 

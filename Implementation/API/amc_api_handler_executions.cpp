@@ -28,7 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#define __AMCIMPL_API_CONSTANTS
+
 #include "amc_api_handler_executions.hpp"
+#include "amc_api_constants.hpp"
 #include "libmc_interfaceexception.hpp"
 #include "libmcdata_dynamic.hpp"
 #include "common_utils.hpp"
@@ -60,6 +63,8 @@ void CAPIHandler_Executions::handleListExecutionsRequest(CJSONWriter& writer)
 	auto pDataModel = m_pSystemState->getDataModelInstance();
 	auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
 	auto pGlobalChrono = m_pSystemState->globalChrono();
+
+	writer.addInteger(AMC_API_KEY_EXECUTIONS_HEADID, (int64_t) pBuildJobHandler->GetExecutionListHeadID());
 
 	auto pExecutionIterator = pBuildJobHandler->ListJobExecutions("", "", "");
 

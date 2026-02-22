@@ -631,6 +631,12 @@ public:
 	*/
 	virtual IAlertIterator * RetrieveAlertsByType(const std::string & sIdentifier, const bool bOnlyActive) = 0;
 
+	/**
+	* IAlertSession::GetAlertHeadID - Returns the current maximum incremental ID across all alerts. Used by the frontend to detect when the alert list has changed.
+	* @return Maximum incremental ID, or 0 if no alerts exist.
+	*/
+	virtual LibMCData_uint64 GetAlertHeadID() = 0;
+
 };
 
 typedef IBaseSharedPtr<IAlertSession> PIAlertSession;
@@ -2037,6 +2043,12 @@ public:
 	* @return Maximum incremental ID, or 0 if no jobs exist.
 	*/
 	virtual LibMCData_uint64 GetBuildListHeadID() = 0;
+
+	/**
+	* IBuildJobHandler::GetExecutionListHeadID - Returns the current maximum incremental ID across all build job executions. Used by the frontend to detect when the execution list has changed.
+	* @return Maximum incremental ID, or 0 if no executions exist.
+	*/
+	virtual LibMCData_uint64 GetExecutionListHeadID() = 0;
 
 };
 

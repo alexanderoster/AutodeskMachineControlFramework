@@ -1412,6 +1412,7 @@ public:
 	inline PAlert GetAlertByUUID(const std::string & sUUID);
 	inline PAlertIterator RetrieveAlerts(const bool bOnlyActive);
 	inline PAlertIterator RetrieveAlertsByType(const std::string & sIdentifier, const bool bOnlyActive);
+	inline LibMCData_uint64 GetAlertHeadID();
 };
 	
 /*************************************************************************************************************************
@@ -1887,6 +1888,7 @@ public:
 	inline PBuildJobExecution RetrieveJobExecution(const std::string & sExecutionUUID);
 	inline PBuildJobExecutionIterator ListJobExecutions(const std::string & sMinTimestamp, const std::string & sMaxTimestamp, const std::string & sJournalUUIDFilter);
 	inline LibMCData_uint64 GetBuildListHeadID();
+	inline LibMCData_uint64 GetExecutionListHeadID();
 };
 	
 /*************************************************************************************************************************
@@ -2294,6 +2296,7 @@ public:
 		pWrapperTable->m_AlertSession_GetAlertByUUID = nullptr;
 		pWrapperTable->m_AlertSession_RetrieveAlerts = nullptr;
 		pWrapperTable->m_AlertSession_RetrieveAlertsByType = nullptr;
+		pWrapperTable->m_AlertSession_GetAlertHeadID = nullptr;
 		pWrapperTable->m_TelemetrySession_GetSessionUUID = nullptr;
 		pWrapperTable->m_TelemetrySession_CreateChannelInDB = nullptr;
 		pWrapperTable->m_TelemetrySession_WriteTelemetryChunk = nullptr;
@@ -2465,6 +2468,7 @@ public:
 		pWrapperTable->m_BuildJobHandler_RetrieveJobExecution = nullptr;
 		pWrapperTable->m_BuildJobHandler_ListJobExecutions = nullptr;
 		pWrapperTable->m_BuildJobHandler_GetBuildListHeadID = nullptr;
+		pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID = nullptr;
 		pWrapperTable->m_UserList_Count = nullptr;
 		pWrapperTable->m_UserList_GetUserProperties = nullptr;
 		pWrapperTable->m_LoginHandler_UserExists = nullptr;
@@ -2916,6 +2920,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_AlertSession_RetrieveAlertsByType == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_AlertSession_GetAlertHeadID = (PLibMCDataAlertSession_GetAlertHeadIDPtr) GetProcAddress(hLibrary, "libmcdata_alertsession_getalertheadid");
+		#else // _WIN32
+		pWrapperTable->m_AlertSession_GetAlertHeadID = (PLibMCDataAlertSession_GetAlertHeadIDPtr) dlsym(hLibrary, "libmcdata_alertsession_getalertheadid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_AlertSession_GetAlertHeadID == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4458,6 +4471,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID = (PLibMCDataBuildJobHandler_GetExecutionListHeadIDPtr) GetProcAddress(hLibrary, "libmcdata_buildjobhandler_getexecutionlistheadid");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID = (PLibMCDataBuildJobHandler_GetExecutionListHeadIDPtr) dlsym(hLibrary, "libmcdata_buildjobhandler_getexecutionlistheadid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_UserList_Count = (PLibMCDataUserList_CountPtr) GetProcAddress(hLibrary, "libmcdata_userlist_count");
 		#else // _WIN32
 		pWrapperTable->m_UserList_Count = (PLibMCDataUserList_CountPtr) dlsym(hLibrary, "libmcdata_userlist_count");
@@ -5559,6 +5581,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_AlertSession_RetrieveAlertsByType == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_alertsession_getalertheadid", (void**)&(pWrapperTable->m_AlertSession_GetAlertHeadID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_AlertSession_GetAlertHeadID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_telemetrysession_getsessionuuid", (void**)&(pWrapperTable->m_TelemetrySession_GetSessionUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetrySession_GetSessionUUID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6241,6 +6267,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobhandler_getbuildlistheadid", (void**)&(pWrapperTable->m_BuildJobHandler_GetBuildListHeadID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_GetBuildListHeadID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobhandler_getexecutionlistheadid", (void**)&(pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_userlist_count", (void**)&(pWrapperTable->m_UserList_Count));
@@ -7195,6 +7225,18 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CAlertIterator>(m_pWrapper, hIteratorInstance);
+	}
+	
+	/**
+	* CAlertSession::GetAlertHeadID - Returns the current maximum incremental ID across all alerts. Used by the frontend to detect when the alert list has changed.
+	* @return Maximum incremental ID, or 0 if no alerts exist.
+	*/
+	LibMCData_uint64 CAlertSession::GetAlertHeadID()
+	{
+		LibMCData_uint64 resultHeadID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_AlertSession_GetAlertHeadID(m_pHandle, &resultHeadID));
+		
+		return resultHeadID;
 	}
 	
 	/**
@@ -9630,6 +9672,18 @@ public:
 	{
 		LibMCData_uint64 resultHeadID = 0;
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_GetBuildListHeadID(m_pHandle, &resultHeadID));
+		
+		return resultHeadID;
+	}
+	
+	/**
+	* CBuildJobHandler::GetExecutionListHeadID - Returns the current maximum incremental ID across all build job executions. Used by the frontend to detect when the execution list has changed.
+	* @return Maximum incremental ID, or 0 if no executions exist.
+	*/
+	LibMCData_uint64 CBuildJobHandler::GetExecutionListHeadID()
+	{
+		LibMCData_uint64 resultHeadID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_GetExecutionListHeadID(m_pHandle, &resultHeadID));
 		
 		return resultHeadID;
 	}

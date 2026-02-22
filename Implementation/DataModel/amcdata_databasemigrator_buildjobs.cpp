@@ -158,6 +158,13 @@ namespace AMCData {
 			break;
 		}
 
+		case 20:
+		{
+			std::string sIncrementalIDAddQuery = "ALTER TABLE `buildjobexecutions` ADD `incremental_id` integer DEFAULT 0";
+			pTransaction->executeStatement(sIncrementalIDAddQuery);
+			break;
+		}
+
 		}
 
 		

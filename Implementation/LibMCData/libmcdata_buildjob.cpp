@@ -690,6 +690,9 @@ IBuildJobExecution* CBuildJob::CreateBuildJobExecution(const std::string& sDescr
     pInsertStatement->setInt(9, 1);
     pInsertStatement->setString(10, sAbsoluteCreationTimeStamp);
     pInsertStatement->execute();
+    pInsertStatement = nullptr;
+
+    CBuildJobExecution::bumpIncrementalID(m_pSQLHandler, sExecutionUUID);
 
     return new CBuildJobExecution(m_pSQLHandler, sExecutionUUID, m_sUUID, sJournalUUID, sUserUUID, nAbsoluteStartTimeStampInMicrosecondsSince1970, m_sName, m_eJobStatus, m_nLayerCount, m_pStorageState);
 

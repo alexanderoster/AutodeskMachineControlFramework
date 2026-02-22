@@ -98,6 +98,8 @@ public:
 
     LibMCData_uint64 GetBuildListHeadID() override;
 
+    LibMCData_uint64 GetExecutionListHeadID() override;
+
 };
 
 } // namespace Impl

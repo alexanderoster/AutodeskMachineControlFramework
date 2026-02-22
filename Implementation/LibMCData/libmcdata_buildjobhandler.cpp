@@ -272,3 +272,12 @@ LibMCData_uint64 CBuildJobHandler::GetBuildListHeadID()
         return 0;
     return (uint64_t) pStatement->getColumnInt64(1);
 }
+
+LibMCData_uint64 CBuildJobHandler::GetExecutionListHeadID()
+{
+    std::string sQuery = "SELECT COALESCE(MAX(incremental_id), 0) FROM buildjobexecutions";
+    auto pStatement = m_pSQLHandler->prepareStatement(sQuery);
+    if (!pStatement->nextRow())
+        return 0;
+    return (uint64_t) pStatement->getColumnInt64(1);
+}

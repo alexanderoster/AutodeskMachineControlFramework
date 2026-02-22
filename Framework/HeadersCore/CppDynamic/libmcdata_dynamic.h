@@ -434,6 +434,15 @@ typedef LibMCDataResult (*PLibMCDataAlertSession_RetrieveAlertsPtr) (LibMCData_A
 */
 typedef LibMCDataResult (*PLibMCDataAlertSession_RetrieveAlertsByTypePtr) (LibMCData_AlertSession pAlertSession, const char * pIdentifier, bool bOnlyActive, LibMCData_AlertIterator * pIteratorInstance);
 
+/**
+* Returns the current maximum incremental ID across all alerts. Used by the frontend to detect when the alert list has changed.
+*
+* @param[in] pAlertSession - AlertSession instance.
+* @param[out] pHeadID - Maximum incremental ID, or 0 if no alerts exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataAlertSession_GetAlertHeadIDPtr) (LibMCData_AlertSession pAlertSession, LibMCData_uint64 * pHeadID);
+
 /*************************************************************************************************************************
  Class definition for TelemetrySession
 **************************************************************************************************************************/
@@ -2329,6 +2338,15 @@ typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ListJobExecutionsPtr) (LibMC
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr) (LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 * pHeadID);
 
+/**
+* Returns the current maximum incremental ID across all build job executions. Used by the frontend to detect when the execution list has changed.
+*
+* @param[in] pBuildJobHandler - BuildJobHandler instance.
+* @param[out] pHeadID - Maximum incremental ID, or 0 if no executions exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_GetExecutionListHeadIDPtr) (LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 * pHeadID);
+
 /*************************************************************************************************************************
  Class definition for UserList
 **************************************************************************************************************************/
@@ -3558,6 +3576,7 @@ typedef struct {
 	PLibMCDataAlertSession_GetAlertByUUIDPtr m_AlertSession_GetAlertByUUID;
 	PLibMCDataAlertSession_RetrieveAlertsPtr m_AlertSession_RetrieveAlerts;
 	PLibMCDataAlertSession_RetrieveAlertsByTypePtr m_AlertSession_RetrieveAlertsByType;
+	PLibMCDataAlertSession_GetAlertHeadIDPtr m_AlertSession_GetAlertHeadID;
 	PLibMCDataTelemetrySession_GetSessionUUIDPtr m_TelemetrySession_GetSessionUUID;
 	PLibMCDataTelemetrySession_CreateChannelInDBPtr m_TelemetrySession_CreateChannelInDB;
 	PLibMCDataTelemetrySession_WriteTelemetryChunkPtr m_TelemetrySession_WriteTelemetryChunk;
@@ -3729,6 +3748,7 @@ typedef struct {
 	PLibMCDataBuildJobHandler_RetrieveJobExecutionPtr m_BuildJobHandler_RetrieveJobExecution;
 	PLibMCDataBuildJobHandler_ListJobExecutionsPtr m_BuildJobHandler_ListJobExecutions;
 	PLibMCDataBuildJobHandler_GetBuildListHeadIDPtr m_BuildJobHandler_GetBuildListHeadID;
+	PLibMCDataBuildJobHandler_GetExecutionListHeadIDPtr m_BuildJobHandler_GetExecutionListHeadID;
 	PLibMCDataUserList_CountPtr m_UserList_Count;
 	PLibMCDataUserList_GetUserPropertiesPtr m_UserList_GetUserProperties;
 	PLibMCDataLoginHandler_UserExistsPtr m_LoginHandler_UserExists;

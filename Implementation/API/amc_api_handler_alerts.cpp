@@ -58,6 +58,9 @@ void CAPIHandler_Alerts::handleListAlertsRequest(CJSONWriter& writer)
 {
 	auto pDataModel = m_pSystemState->getDataModelInstance();
 	auto pAlertSession = pDataModel->CreateAlertSession();
+
+	writer.addInteger(AMC_API_KEY_ALERTS_HEADID, (int64_t) pAlertSession->GetAlertHeadID());
+
 	auto pAlertIterator = pAlertSession->RetrieveAlerts(false);
 
 	CJSONWriterArray alertArray(writer);
