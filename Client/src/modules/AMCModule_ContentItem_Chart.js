@@ -48,6 +48,7 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 		this.version = 0;
 		this.loadeddataseries = Common.nullUUID ();
 		this.loadedversion = 0;
+		this.usesV2Frontend = true;
 		
 		this.onChartDataUpdated = null;
 		this.chartData = [];
@@ -60,27 +61,54 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
-		this.dataseries = Assert.UUIDValue (updateJSON.dataseries);
-		if (updateJSON.version) {
-			this.version = Assert.IntegerValue (updateJSON.version);
-		} else {
-			this.version = 0;
-		}
-		
+
+		let dataSeriesUUID = Common.nullUUID ();
+		if (updateJSON.dataseries)
+			dataSeriesUUID = Assert.UUIDValue(updateJSON.dataseries);
+
+		let nVersion = 0;
+		if (updateJSON.version !== undefined)
+			nVersion = Assert.IntegerValue(updateJSON.version);
+
+		this.updateDataSeriesMetadata(dataSeriesUUID, nVersion);
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		let dataSeriesUUID = this.dataseries;
+		if (attrs.dataseries !== undefined)
+			dataSeriesUUID = Assert.UUIDValue(attrs.dataseries);
+
+		let nVersion = this.version;
+		if (attrs.version !== undefined)
+			nVersion = Assert.IntegerValue(attrs.version);
+
+		this.updateDataSeriesMetadata(dataSeriesUUID, nVersion);
+		return true;
+	}
+
+	updateDataSeriesMetadata (dataSeriesUUID, nVersion)
+	{
+		this.dataseries = dataSeriesUUID;
+		this.version = nVersion;
+
 		if ((this.loadeddataseries != this.dataseries) || (this.loadedversion != this.version)) {
 			this.loadeddataseries = this.dataseries;
 			this.loadedversion = this.version;
 			this.refreshChartData ();
 		}
-				
 	}
-	
-	
+
 	refreshChartData ()
 	{
 		let application = this.getApplication ();
 		let normalizedUUID = this.dataseries;
+
+		if ((normalizedUUID == Common.nullUUID ()) || (normalizedUUID == ""))
+			return;
 	
 		application.axiosGetArrayBufferRequest("/dataseries/" + normalizedUUID)
 					.then(responseData => {
