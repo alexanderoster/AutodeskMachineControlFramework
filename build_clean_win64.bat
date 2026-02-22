@@ -54,7 +54,10 @@ echo long git hash: %LONGGITHASH%
 
 git log -n 1 --format="%%H" -- "%basepath%\Client" >"%builddir%\clientdirhash.txt"
 SET /p CLIENTDIRHASH=<"%builddir%\clientdirhash.txt"
-SET /p CLIENTDISTHASH=<"%basepath%\Artifacts\clientdist\_githash_client.txt"
+SET /p CLIENTDISTHASH=<"%basepath%\Artifacts\clientdist\_githash_client_vue2.txt"
+if exist "%basepath%\Artifacts\clientdist_v3\_githash_client_vue3.txt" (
+  SET /p CLIENTDISTHASH_VUE3=<"%basepath%\Artifacts\clientdist_v3\_githash_client_vue3.txt"
+)
 
 REM Trim Strings
 for /f "tokens=* delims= " %%a in ("%CLIENTDIRHASH%") do set CLIENTDIRHASH=%%a
@@ -72,7 +75,10 @@ if "%CLIENTDIRHASH%" neq "%CLIENTDISTHASH%" (
 
 cd /d "%basepath%"
 
-copy /y "%basepath%Artifacts\clientdist\clientpackage.zip" "%builddir%\Output\%GITHASH%_core.client"
+copy /y "%basepath%Artifacts\clientdist\clientpackage_vue2.zip" "%builddir%\Output\%GITHASH%_core_vue2.client"
+if exist "%basepath%Artifacts\clientdist_v3\clientpackage_vue3.zip" (
+  copy /y "%basepath%Artifacts\clientdist_v3\clientpackage_vue3.zip" "%builddir%\Output\%GITHASH%_core_vue3.client"
+)
 if "%ERRORLEVEL%" neq "0" (
 	goto ERROR
 )
@@ -103,7 +109,7 @@ echo "Building Deployment ZIP"
 echo "Building Developer Package"
 cd "%builddir%\DevPackage"
 
-copy "%basepath%\Artifacts\clientdist\clientsourcepackage.zip" Framework\ClientSource\%GITHASH%_client_source.zip
+copy "%basepath%\Artifacts\clientdist\clientsourcepackage_vue2.zip" Framework\ClientSource\%GITHASH%_client_source.zip
 if "%ERRORLEVEL%" neq "0" (
 	goto ERROR
 )
@@ -114,7 +120,10 @@ copy ..\Output\amc_server.exe Framework\Dist\
 copy ..\Output\%GITHASH%_core_libmc.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_lib3mf.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_libmcdata.dll Framework\Dist\
-copy ..\Output\%GITHASH%_core.client Framework\Dist\
+copy ..\Output\%GITHASH%_core_vue2.client Framework\Dist\
+if exist ..\Output\%GITHASH%_core_vue3.client (
+	copy ..\Output\%GITHASH%_core_vue3.client Framework\Dist\
+)
 copy ..\Output\%GITHASH%_core.apidocs Framework\Dist\
 copy ..\Output\%GITHASH%_*.data Framework\Dist\
 copy ..\Output\%GITHASH%_driver_*.dll Framework\Dist\
