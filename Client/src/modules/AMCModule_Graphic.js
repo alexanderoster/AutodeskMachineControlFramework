@@ -41,6 +41,7 @@ class AMCApplicationItem_Graphic_SVGImage extends Common.AMCApplicationItem {
 		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_SVGImage");
+		this.usesV2Frontend = true;
 		
 		this.name = Assert.IdentifierString (itemJSON.name);		
 		this.imageuuid = Assert.OptionalUUIDValue (itemJSON.imageuuid);
@@ -63,7 +64,49 @@ class AMCApplicationItem_Graphic_SVGImage extends Common.AMCApplicationItem {
 		this.angle = Assert.NumberValue (updateJSON.angle);
 		
 		this.moduleInstance.callDataHasChanged ();
-	}		
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		if (attrs.name !== undefined)
+			this.name = attrs.name;
+		if (attrs.x !== undefined) {
+			let x = parseFloat (attrs.x);
+			if (!isNaN (x))
+				this.x = x;
+		}
+		if (attrs.y !== undefined) {
+			let y = parseFloat (attrs.y);
+			if (!isNaN (y))
+				this.y = y;
+		}
+		if (attrs.z !== undefined) {
+			let z = parseFloat (attrs.z);
+			if (!isNaN (z))
+				this.z = z;
+		}
+		if (attrs.scalex !== undefined) {
+			let scalex = parseFloat (attrs.scalex);
+			if (!isNaN (scalex))
+				this.scalex = scalex;
+		}
+		if (attrs.scaley !== undefined) {
+			let scaley = parseFloat (attrs.scaley);
+			if (!isNaN (scaley))
+				this.scaley = scaley;
+		}
+		if (attrs.angle !== undefined) {
+			let angle = parseFloat (attrs.angle);
+			if (!isNaN (angle))
+				this.angle = angle;
+		}
+
+		this.moduleInstance.callDataHasChanged ();
+		return true;
+	}
 }
 
 
@@ -74,6 +117,7 @@ export default class AMCApplicationModule_Graphic extends Common.AMCApplicationM
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Graphic");
+		this.usesV2Frontend = true;
 		
 		this.viewminx = Assert.NumberValue (moduleJSON.viewminx);
 		this.viewminy = Assert.NumberValue (moduleJSON.viewminy);
@@ -100,6 +144,46 @@ export default class AMCApplicationModule_Graphic extends Common.AMCApplicationM
 			
 		}			
 				
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs) {
+			if (attrs.viewminx !== undefined) {
+				let value = parseFloat (attrs.viewminx);
+				if (!isNaN (value))
+					this.viewminx = value;
+			}
+			if (attrs.viewminy !== undefined) {
+				let value = parseFloat (attrs.viewminy);
+				if (!isNaN (value))
+					this.viewminy = value;
+			}
+			if (attrs.viewmaxx !== undefined) {
+				let value = parseFloat (attrs.viewmaxx);
+				if (!isNaN (value))
+					this.viewmaxx = value;
+			}
+			if (attrs.viewmaxy !== undefined) {
+				let value = parseFloat (attrs.viewmaxy);
+				if (!isNaN (value))
+					this.viewmaxy = value;
+			}
+			if (attrs.showgrid !== undefined)
+				this.showgrid = (attrs.showgrid === true || attrs.showgrid === "1" || attrs.showgrid === "true");
+		}
+
+		let v2Entry = this.page.application.getV2Entry (this.uuid);
+		if (v2Entry && v2Entry.submodules) {
+			for (let submodule of v2Entry.submodules) {
+				let item = this.items.find(entry => entry.uuid === submodule.uuid);
+				if (item && submodule.attributes) {
+					item.updateFromV2Attributes (submodule.attributes);
+				}
+			}
+		}
+
+		return true;
 	}
 		
 }

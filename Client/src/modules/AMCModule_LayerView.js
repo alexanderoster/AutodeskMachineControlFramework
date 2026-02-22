@@ -41,6 +41,7 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_Platform");
+		this.usesV2Frontend = true;
 		
 		this.displayed_layer = 0;
 		this.displayed_build = Common.nullUUID ();
@@ -73,6 +74,62 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		this.moduleInstance.callDataHasChanged ();
 	}
 
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		if (attrs.currentlayer !== undefined) {
+			let currentlayer = parseInt (attrs.currentlayer);
+			if (!isNaN (currentlayer))
+				this.currentlayer = currentlayer;
+		}
+		if (attrs.layercount !== undefined) {
+			let layercount = parseInt (attrs.layercount);
+			if (!isNaN (layercount))
+				this.layercount = layercount;
+		}
+		if (attrs.builduuid !== undefined)
+			this.builduuid = attrs.builduuid;
+		if (attrs.scatterplotuuid !== undefined)
+			this.scatterplotuuid = attrs.scatterplotuuid;
+		if (attrs.baseimageresource !== undefined)
+			this.baseimageresource = attrs.baseimageresource;
+		if (attrs.sizex !== undefined) {
+			let sizex = parseFloat (attrs.sizex);
+			if (!isNaN (sizex))
+				this.sizex = sizex;
+		}
+		if (attrs.sizey !== undefined) {
+			let sizey = parseFloat (attrs.sizey);
+			if (!isNaN (sizey))
+				this.sizey = sizey;
+		}
+		if (attrs.originx !== undefined) {
+			let originx = parseFloat (attrs.originx);
+			if (!isNaN (originx))
+				this.originx = originx;
+		}
+		if (attrs.originy !== undefined) {
+			let originy = parseFloat (attrs.originy);
+			if (!isNaN (originy))
+				this.originy = originy;
+		}
+		if (attrs.labelvisible !== undefined)
+			this.labelvisible = (attrs.labelvisible === true || attrs.labelvisible === "1" || attrs.labelvisible === "true");
+		if (attrs.labelcaption !== undefined)
+			this.labelcaption = attrs.labelcaption;
+		if (attrs.labelicon !== undefined)
+			this.labelicon = attrs.labelicon;
+		if (attrs.sliderchangeevent !== undefined)
+			this.sliderchangeevent = attrs.sliderchangeevent;
+		if (attrs.sliderfixed !== undefined)
+			this.sliderfixed = (attrs.sliderfixed === true || attrs.sliderfixed === "1" || attrs.sliderfixed === "true");
+
+		this.moduleInstance.callDataHasChanged ();
+		return true;
+	}
+
 		
 }
 
@@ -86,6 +143,7 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_LayerView");
+		this.usesV2Frontend = true;
 		
 		Assert.ArrayValue (moduleJSON.items);
 		this.items = [];
@@ -111,6 +169,18 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 		
 		
 	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (this.platform)
+			this.platform.updateFromV2Attributes (attrs);
+
+		let v2Entry = this.page.application.getV2Entry (this.uuid);
+		if (v2Entry && this.platform && this.platform.uuid) {
+			this.page.application.API.frontendLookup[this.platform.uuid] = v2Entry;
+		}
+
+		return true;
+	}
 		
 }
-

@@ -41,6 +41,7 @@ class AMCApplicationItem_Custom_Properties extends Common.AMCApplicationItem {
 		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_CustomProperties");
+		this.usesV2Frontend = true;
 		
 		this.values = {}
 				
@@ -59,6 +60,23 @@ class AMCApplicationItem_Custom_Properties extends Common.AMCApplicationItem {
 		this.moduleInstance.callDataHasChanged ();
 	}
 
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		let values = {};
+		for (let key of Object.keys (attrs)) {
+			if ((key !== "name") && (key !== "caption")) {
+				values[key] = attrs[key];
+			}
+		}
+
+		this.values = values;
+		this.moduleInstance.callDataHasChanged ();
+		return true;
+	}
+
 		
 }
 
@@ -72,6 +90,7 @@ class AMCApplicationItem_Custom_Event extends Common.AMCApplicationItem {
 		
 		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
 		this.registerClass ("amcItem_CustomEvent");
+		this.usesV2Frontend = true;
 		
 		
 		this.name = Assert.StringValue (itemJSON.name);
@@ -91,6 +110,18 @@ class AMCApplicationItem_Custom_Event extends Common.AMCApplicationItem {
 	{
 		Assert.ObjectValue (updateJSON);		
 				
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+
+		if (attrs.eventname !== undefined)
+			this.name = attrs.eventname;
+
+		this.moduleInstance.rebuildEventMap ();
+		return true;
 	}
 
 	prepareUIEvent (parameters)
@@ -134,11 +165,13 @@ export default class AMCApplicationModule_Custom extends Common.AMCApplicationMo
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Custom");
+		this.usesV2Frontend = true;
 		
 		Assert.ArrayValue (moduleJSON.items);
 		this.items = [];
 		this.propertiesitem = null;
 		this.eventitems = new Map();
+		this.eventitemsByUUID = new Map();
 
 		for (let itemJSON of moduleJSON.items) {
 			
@@ -152,6 +185,7 @@ export default class AMCApplicationModule_Custom extends Common.AMCApplicationMo
 			if (itemJSON.type === "event") {
 				item = new AMCApplicationItem_Custom_Event (this, itemJSON);
 				this.eventitems.set (item.name, item);
+				this.eventitemsByUUID.set (item.uuid, item);
 			}
 			
 
@@ -166,6 +200,31 @@ export default class AMCApplicationModule_Custom extends Common.AMCApplicationMo
 		
 		
 	}
+
+	rebuildEventMap ()
+	{
+		this.eventitems = new Map();
+		for (let eventItem of this.eventitemsByUUID.values()) {
+			this.eventitems.set (eventItem.name, eventItem);
+		}
+	}
+
+	updateFromV2Attributes (attrs)
+	{
+		if (this.propertiesitem)
+			this.propertiesitem.updateFromV2Attributes (attrs);
+
+		let v2Entry = this.page.application.getV2Entry (this.uuid);
+		if (v2Entry && v2Entry.submodules) {
+			for (let submodule of v2Entry.submodules) {
+				let eventItem = this.eventitemsByUUID.get (submodule.uuid);
+				if (eventItem && submodule.attributes)
+					eventItem.updateFromV2Attributes (submodule.attributes);
+			}
+		}
+
+		return true;
+	}
 	
 	
 	findEvent (name)
@@ -179,4 +238,3 @@ export default class AMCApplicationModule_Custom extends Common.AMCApplicationMo
 	}
 		
 }
-

@@ -73,6 +73,7 @@ export default class AMCApplicationModule_GLScene extends Common.AMCApplicationM
 		Assert.ObjectValue (moduleJSON);				
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_GLScene");		
+		this.usesV2Frontend = true;
 		
 		this.scene = null;
 		
@@ -80,6 +81,38 @@ export default class AMCApplicationModule_GLScene extends Common.AMCApplicationM
 			this.scene = new AMCApplicationItem_GLScene (this, moduleJSON.scene);
 		}
 				
+	}
+
+	updateFromV2Attributes ()
+	{
+		let v2Entry = this.page.application.getV2Entry (this.uuid);
+		let instances = [];
+
+		if (v2Entry && v2Entry.submodules) {
+			for (let submodule of v2Entry.submodules) {
+				if (submodule.moduletype === "glsceneinstance") {
+					let instance = Object.assign ({}, submodule.attributes || {});
+					instance.uuid = submodule.uuid || "";
+					instance.type = submodule.moduletype;
+					instances.push (instance);
+				}
+			}
+		}
+
+		if (!this.scene) {
+			this.scene = new AMCApplicationItem_GLScene (this, {
+				uuid: this.uuid,
+				type: "scene",
+				instances: instances
+			});
+		} else {
+			this.scene.updateFromJSON ({
+				instances: instances
+			});
+		}
+
+		this.callDataHasChanged ();
+		return true;
 	}
 		
 }
