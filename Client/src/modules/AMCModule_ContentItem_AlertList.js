@@ -42,13 +42,29 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 		this.registerClass ("amcItem_AlertList");
 
 		this.entries = [];
-				
-		// TODO: check validity
-		this.headers = itemJSON.headers;
+
+		// Default headers used in v2 mode (backend does not send headers via v2 attributes)
+		this.headers = [
+			{ text: 'Time',    value: 'alerttimestamp', sortable: true },
+			{ text: 'Alert',   value: 'alertcaption',   sortable: true },
+			{ text: 'Level',   value: 'severity',        sortable: true },
+			{ text: 'Context', value: 'alertcontext',   sortable: false },
+			{ text: 'Active',  value: 'alertactive',    sortable: true },
+		];
+
+		// If the legacy path supplies headers, use them instead
+		if (itemJSON.headers && itemJSON.headers.length > 0)
+			this.headers = itemJSON.headers;
+
 		this.loadingtext = "";
 		this.selectevent = "";
 		this.selectionvalueuuid = Common.nullUUID ();
 		this.entriesperpage = 25;
+
+		// v2 change-detection via alertlistheadid
+		this.usesV2Frontend = true;
+		this.lastKnownHeadID = 0;
+		this.alertFetchInFlight = false;
 		
 		this.updateFromJSON (itemJSON);
 		
@@ -60,7 +76,6 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		Assert.ArrayValue (updateJSON.entries);
 		
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
@@ -71,6 +86,10 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 		if (updateJSON.entriesperpage)
 			this.entriesperpage = Assert.IntegerValue (updateJSON.entriesperpage);
 
+		// Legacy path only — v2 fetches entries separately via updateFromV2Attributes
+		if (!updateJSON.entries)
+			return;
+
 		let oldEntryCount = this.entries.length;
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
@@ -79,10 +98,69 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
-		
 	}
-	
-	
+
+	updateFromV2Attributes (attrs)
+	{
+		if (attrs.loadingtext !== undefined)
+			this.loadingtext = attrs.loadingtext;
+		if (attrs.selectevent !== undefined)
+			this.selectevent = attrs.selectevent;
+		if (attrs.entriesperpage !== undefined)
+			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
+
+		if (attrs.alertlistheadid === undefined)
+			return true;
+
+		let headID = parseInt(attrs.alertlistheadid);
+		if (headID <= this.lastKnownHeadID)
+			return true;
+
+		this.lastKnownHeadID = headID;
+
+		if (this.alertFetchInFlight)
+			return true;
+
+		this.alertFetchInFlight = true;
+
+		let app = this.moduleInstance.page.application;
+
+		app.axiosGetRequest("/alerts")
+		.then(resultJSON => {
+			this.alertFetchInFlight = false;
+
+			if (resultJSON.data && resultJSON.data.alerts) {
+				let newEntries = [];
+
+				for (let alert of resultJSON.data.alerts) {
+					newEntries.push({
+						alertuuid:             alert.alertuuid             || "",
+						alertidentifier:       alert.alertidentifier       || "",
+						alerttimestamp:        alert.alerttimestamp        || "",
+						alertcaption:          alert.alertcaption          || "",
+						alertcontext:          alert.alertcontext          || "",
+						alertlevel:            alert.alertlevel            || "",
+						severity:              alert.alertlevel            || "",  // alias used by severity badge column
+						alertactive:           alert.alertactive           || false,
+						alertneedsacknowledge: alert.alertneedsacknowledge || false,
+					});
+				}
+
+				let oldCount = this.entries.length;
+				for (let i = 0; i < oldCount; i++) {
+					this.entries.pop();
+				}
+				for (let entry of newEntries) {
+					this.entries.push(entry);
+				}
+			}
+		})
+		.catch(() => {
+			this.alertFetchInFlight = false;
+		});
+
+		return true;
+	}
 
 		
 }
