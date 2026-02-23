@@ -30,8 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_api_handler_state.hpp"
 #include "amc_ui_handler.hpp"
+#include "amc_logger.hpp"
 
 #include "libmc_interfaceexception.hpp"
+
+#include <mutex>
 
 using namespace AMC;
 
@@ -48,6 +51,7 @@ CAPIHandler_State::~CAPIHandler_State()
 
 std::string CAPIHandler_State::getBaseURI()
 {
+	// DEPRECATED: kept as compatibility endpoint.
 	return "api/state";
 }
 
@@ -63,6 +67,14 @@ PAPIResponse CAPIHandler_State::handleRequest(const std::string& sURI, const eAP
 	if (requestType != eAPIRequestType::rtGet)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+	static std::once_flag s_DeprecationWarningOnceFlag;
+	std::call_once(s_DeprecationWarningOnceFlag, [this]() {
+		auto pLogger = m_pSystemState->logger();
+		if (pLogger != nullptr) {
+			pLogger->logMessage("Deprecated API endpoint /api/state was called. Migrate to /api/frontend endpoint family.", "api", AMC::eLogLevel::Warning);
+		}
+	});
+
 	CJSONWriter writer;
 	writeJSONHeader(writer, AMC_API_PROTOCOL_UI);
 
@@ -70,4 +82,3 @@ PAPIResponse CAPIHandler_State::handleRequest(const std::string& sURI, const eAP
 
 	return std::make_shared<CAPIStringResponse>(AMC_API_HTTP_SUCCESS, AMC_API_CONTENTTYPE, writer.saveToString());
 }
-

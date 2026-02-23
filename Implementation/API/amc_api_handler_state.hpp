@@ -37,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace AMC {
 
+	// DEPRECATED: Legacy state payload endpoint.
+	// Keep for compatibility only; prefer the frontend endpoint family.
 	class CAPIHandler_State : public CAPIHandler {
 	private:
 		PSystemState m_pSystemState;
@@ -55,4 +57,3 @@ namespace AMC {
 }
 
 #endif //__AMC_API_HANDLER_STATE
-

@@ -76,8 +76,7 @@ PAPIResponse CAPIHandler_Config::handleRequest(const std::string& sURI, const eA
 	CJSONWriter writer;
 	writeJSONHeader(writer, AMC_API_PROTOCOL_UI);
 
-	m_pSystemState->uiHandler()->writeLegacyConfigurationToJSON(writer);
+	m_pSystemState->uiHandler()->writeConfigurationToJSON(writer);
 
 	return std::make_shared<CAPIStringResponse>(AMC_API_HTTP_SUCCESS, AMC_API_CONTENTTYPE, writer.saveToString());
 }
-

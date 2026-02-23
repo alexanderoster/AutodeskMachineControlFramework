@@ -880,10 +880,11 @@ void CUIHandler::populateClientVariables(CParameterHandler* pClientVariableHandl
         pDialog.second->populateClientVariables(pClientVariableHandler);
     }
 }
+/////////////////////////////////////////////////////////////////////////////////////
+// Shared UI bootstrap configuration
+/////////////////////////////////////////////////////////////////////////////////////
 
-
-
-void CUIHandler::writeLegacyConfigurationToJSON(CJSONWriter& writer)
+void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
 {
     auto pStateMachineData = m_pUISystemState->getStateMachineData();
 
@@ -921,6 +922,10 @@ void CUIHandler::writeLegacyConfigurationToJSON(CJSONWriter& writer)
     writer.addObject(AMC_API_KEY_UI_COLORS, colorsObject);
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Legacy UI System
+/////////////////////////////////////////////////////////////////////////////////////
 
 void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* pLegacyClientVariableHandler)
 {
@@ -1028,4 +1033,3 @@ PUIFrontendDefinition CUIHandler::getFrontendDefinition()
 {
     return m_pFrontendDefinition;
 }
-

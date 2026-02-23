@@ -174,9 +174,13 @@ namespace AMC {
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
+		// Shared UI bootstrap configuration
+		/////////////////////////////////////////////////////////////////////////////////////
+		void writeConfigurationToJSON (CJSONWriter& writer);
+
+		/////////////////////////////////////////////////////////////////////////////////////
 		// Legacy UI System
 		/////////////////////////////////////////////////////////////////////////////////////
-		void writeLegacyConfigurationToJSON (CJSONWriter& writer);
 		void writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* pLegacyClientVariableHandler);
 		PUIModuleItem findModuleItem(const std::string& sUUID);
 		PUIPage findPageOfModuleItem(const std::string& sUUID);
@@ -198,4 +202,3 @@ namespace AMC {
 
 
 #endif //__AMC_UI_HANDLER
-

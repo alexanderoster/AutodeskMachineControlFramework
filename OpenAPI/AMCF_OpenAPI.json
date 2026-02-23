@@ -166,14 +166,14 @@
         }
       }
     },
-    "/status": {
+    "/statemachines": {
       "get": {
         "tags": [
           "general"
         ],
-        "summary": "Query the full system state",
-        "description": "Queries a full image of all state variables",
-        "operationId": "retrieveStatus",
+        "summary": "List state machine instances",
+        "description": "Returns all configured state machine instances with their current state.",
+        "operationId": "retrieveStateMachines",
         "security": [
           {
             "bearerAuth": []
@@ -185,7 +185,55 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StatusResponse"
+                  "$ref": "#/components/schemas/StateMachineListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statemachines/{instancename}": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve details of one state machine instance",
+        "description": "Returns one state machine instance including parameter groups and parameter values.",
+        "operationId": "retrieveStateMachineByInstanceName",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instancename",
+            "in": "path",
+            "description": "State machine instance name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateMachineDetailResponse"
                 }
               }
             }
@@ -822,54 +870,16 @@
         "tags": [
           "general"
         ],
-        "summary": "Retrieve legacy UI configuration",
-        "description": "Returns the legacy UI configuration JSON used by the vue2 client bootstrap flow.",
-        "operationId": "getLegacyConfig",
+        "summary": "Retrieve UI configuration",
+        "description": "Returns the server-provided UI configuration used to bootstrap the active web client.",
+        "operationId": "getConfig",
         "responses": {
           "200": {
             "description": "Successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/state": {
-      "get": {
-        "tags": [
-          "general"
-        ],
-        "summary": "Retrieve legacy UI state",
-        "description": "Returns the legacy UI state payload for the currently authenticated session.",
-        "operationId": "getLegacyState",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ConfigResponse"
                 }
               }
             }
@@ -1981,6 +1991,98 @@
           }
         }
       },
+      "ConfigResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "appname",
+          "copyright",
+          "mainpage",
+          "logouuid",
+          "logoaspectratio",
+          "loginwelcomemessage",
+          "colors"
+        ],
+        "type": "object",
+        "description": "Server-provided client bootstrap configuration.",
+        "example": {
+          "protocol": "AMC",
+          "version": "2.0.0",
+          "appname": "Autodesk Machine Control Framework",
+          "copyright": "Copyright (C) 2026 Autodesk Inc.",
+          "mainpage": "dashboard",
+          "logouuid": "8f4a6dd8-a88d-4dd1-a139-0b73e2f25353",
+          "logoaspectratio": 1.5,
+          "toolbarlogouuid": "3ddc0457-bbe6-47f5-a379-96f1571698cd",
+          "loginbackgrounduuid": "66b3e377-ef71-4e2c-af95-b6f237f89d20",
+          "loginwelcomemessage": "Welcome",
+          "colors": {
+            "primary": "#004F7A",
+            "secondary": "#00A3A3",
+            "accent": "#FFB400",
+            "error": "#B00020"
+          }
+        },
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "Response protocol identifier."
+          },
+          "version": {
+            "type": "string",
+            "description": "Response protocol version."
+          },
+          "appname": {
+            "type": "string",
+            "description": "Application display name."
+          },
+          "copyright": {
+            "type": "string",
+            "description": "Copyright footer text."
+          },
+          "mainpage": {
+            "type": "string",
+            "description": "Name of the page opened after startup."
+          },
+          "logouuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Image UUID for the login/main logo."
+          },
+          "logoaspectratio": {
+            "type": "number",
+            "description": "Aspect ratio of the logo image."
+          },
+          "toolbarlogouuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional image UUID for the toolbar logo."
+          },
+          "loginbackgrounduuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional image UUID for the login background."
+          },
+          "loginwelcomemessage": {
+            "type": "string",
+            "description": "Welcome message shown on login."
+          },
+          "colors": {
+            "type": "object",
+            "description": "Theme color map as hex color strings.",
+            "additionalProperties": {
+              "type": "string",
+              "example": "#004F7A"
+            },
+            "example": {
+              "primary": "#004F7A",
+              "secondary": "#00A3A3",
+              "accent": "#FFB400",
+              "error": "#B00020"
+            }
+          }
+        }
+      },
       "SessionRequest": {
         "required": [
           "username"
@@ -2302,7 +2404,26 @@
           }
         }
       },
-      "StatusResponse": {
+      "StateMachineInstanceSummary": {
+        "required": [
+          "name",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the state machine instance",
+            "example": "main"
+          },
+          "state": {
+            "type": "string",
+            "description": "The current state of the state machine instance",
+            "example": "idle"
+          }
+        }
+      },
+      "StateMachineListResponse": {
         "required": [
           "protocol",
           "version",
@@ -2312,7 +2433,7 @@
         "properties": {
           "protocol": {
             "type": "string",
-            "description": "The protocol type, used for identifying error messages. he value of this field should be 'com.autodesk.machinecontrol.status' and must be verified by the client.",
+            "description": "The protocol type, used for identifying state machine responses. The value of this field should be 'com.autodesk.machinecontrol.status' and must be verified by the client.",
             "example": "com.autodesk.machinecontrol.status"
           },
           "version": {
@@ -2323,7 +2444,57 @@
           "instances": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StateMachineInstance"
+              "$ref": "#/components/schemas/StateMachineInstanceSummary"
+            }
+          }
+        }
+      },
+      "StateMachineDetailResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "instance"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying state machine responses. The value of this field should be 'com.autodesk.machinecontrol.status' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.status"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "instance": {
+            "$ref": "#/components/schemas/StateMachineInstance"
+          }
+        }
+      },
+      "StatusResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "instances"
+        ],
+        "type": "object",
+        "description": "Deprecated compatibility schema. Use StateMachineListResponse.",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type, used for identifying state machine responses. The value of this field should be 'com.autodesk.machinecontrol.status' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.status"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateMachineInstanceSummary"
             }
           }
         }
