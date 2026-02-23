@@ -422,6 +422,53 @@
         }
       }
     },
+    "/build/toolpath": {
+      "post": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve toolpath segments for one layer",
+        "description": "Returns the geometric segment data for a specific layer of a build job.",
+        "operationId": "getBuildToolpathLayer",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildToolpathRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildToolpathResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/logs": {
       "get": {
         "tags": [
@@ -2331,6 +2378,121 @@
             "type": "string",
             "description": "The new desired status of the build. If empty or omitted, status will not be updated. Allowed update pathes are from status \"validated\" to \"archived\", and \"archived\" to \"validated\". Call will fail in any other combination.",
             "example": "archived"
+          }
+        }
+      },
+      "BuildToolpathRequest": {
+        "required": [
+          "builduuid",
+          "layerindex"
+        ],
+        "type": "object",
+        "properties": {
+          "builduuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Build job UUID."
+          },
+          "layerindex": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "0-based layer index to retrieve."
+          }
+        }
+      },
+      "BuildToolpathPoint": {
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate in mm."
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate in mm."
+          }
+        }
+      },
+      "BuildToolpathSegment": {
+        "required": [
+          "type",
+          "points",
+          "laserpower",
+          "laserspeed",
+          "partid",
+          "profilename",
+          "color",
+          "laserindex"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Segment type.",
+            "enum": [
+              "hatch",
+              "polyline"
+            ]
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildToolpathPoint"
+            }
+          },
+          "laserpower": {
+            "type": "number",
+            "description": "Laser power value for this segment."
+          },
+          "laserspeed": {
+            "type": "number",
+            "description": "Laser speed value for this segment."
+          },
+          "partid": {
+            "type": "integer",
+            "description": "Part identifier."
+          },
+          "profilename": {
+            "type": "string",
+            "description": "Toolpath profile name."
+          },
+          "color": {
+            "type": "integer",
+            "description": "Display color as packed RGB integer."
+          },
+          "laserindex": {
+            "type": "integer",
+            "description": "Laser index for this segment."
+          }
+        }
+      },
+      "BuildToolpathResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "segments"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type. Must be 'com.autodesk.machinecontrol.build'.",
+            "example": "com.autodesk.machinecontrol.build"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildToolpathSegment"
+            }
           }
         }
       },
