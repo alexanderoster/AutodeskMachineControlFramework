@@ -90,16 +90,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				<template v-for="uiPage in Application.AppContent.Pages">
 					<v-container :key="uiPage.name" v-if="appIsReady && Application.pageIsActive (uiPage)" style="width:100%; height:100%; display:block;">
 										
-						<template v-for="uiModule in uiPage.modules">
-							<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
-							<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream') || (uiModule.type == 'upload') || (uiModule.type == 'buildlist') || (uiModule.type == 'executionlist') || (uiModule.type == 'alertlist') || (uiModule.type == 'buttongroup') || (uiModule.type == 'parameterlist') || (uiModule.type == 'configurationlist') || (uiModule.type == 'form')" :module="uiModule" :Application="Application" />
-							<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
-							<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
-							<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							
-							<Module_GLScene :key="uiModule.name" v-if="(uiModule.type == 'glscene')" :module="uiModule" :Application="Application" />
-							<Module_Graphic :key="uiModule.name" v-if="(uiModule.type == 'graphic')" :module="uiModule" :Application="Application" />
-							<Module_LayerView :key="uiModule.name" v-if="(uiModule.type == 'layerview')" :module="uiModule" :Application="Application" />
-						</template>										
+					<template v-for="uiModule in uiPage.modules">
+						<Module_Factory :key="uiModule.uuid" :module="uiModule" :Application="Application" />
+					</template>
 								
 					</v-container>		
 				</template>
@@ -132,14 +125,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<div style="overflow:auto">
 			
 				<template v-for="uiModule in uiDialog.modules">
-					<Module_Content :key="uiModule.name" v-if="(uiModule.type == 'content')" :module="uiModule" :Application="Application" />					
-					<Module_ContentLeaf :key="uiModule.name" v-if="(uiModule.type == 'paragraph') || (uiModule.type == 'image') || (uiModule.type == 'chart') || (uiModule.type == 'videostream') || (uiModule.type == 'upload') || (uiModule.type == 'buildlist') || (uiModule.type == 'executionlist') || (uiModule.type == 'alertlist') || (uiModule.type == 'buttongroup') || (uiModule.type == 'parameterlist') || (uiModule.type == 'configurationlist') || (uiModule.type == 'form')" :module="uiModule" :Application="Application" />
-					<Module_Tabs :key="uiModule.name" v-if="(uiModule.type == 'tabs')" :module="uiModule" :Application="Application" />							
-					<Module_Grid :key="uiModule.name" v-if="(uiModule.type == 'grid')" :module="uiModule" :Application="Application" />							
-					<Module_Logs :key="uiModule.name" v-if="(uiModule.type == 'logs')" :module="uiModule" :Application="Application" />							
-					<Module_GLScene :key="uiModule.name" v-if="(uiModule.type == 'glscene')" :module="uiModule" :Application="Application" />
-					<Module_Graphic :key="uiModule.name" v-if="(uiModule.type == 'graphic')" :module="uiModule" :Application="Application" />
-					<Module_LayerView :key="uiModule.name" v-if="(uiModule.type == 'layerview')" :module="uiModule" :Application="Application" />
+					<Module_Factory :key="uiModule.uuid" :module="uiModule" :Application="Application" />
 				</template>										
 
 			</div>
@@ -185,14 +171,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import Dialog_Login from "./dialogs/Dialog_Login.vue";
 	import Dialog_Error from "./dialogs/Dialog_Error.vue";
 	
-	import Module_Content from "./modules/AMCModule_Content.vue";
-	import Module_ContentLeaf from "./modules/AMCModule_ContentLeaf.vue";
-	import Module_Tabs from "./modules/AMCModule_Tabs.vue";
-	import Module_Grid from "./modules/AMCModule_Grid.vue";
-	import Module_GLScene from "./modules/AMCModule_GLScene.vue";
-	import Module_Graphic from "./modules/AMCModule_Graphic.vue";
-	import Module_LayerView from "./modules/AMCModule_LayerView.vue";
-	import Module_Logs from "./modules/AMCModule_Logs.vue";
+	import Module_Factory from "./modules/AMCModule_Factory.vue";
 
 	import CustomPage_Example from "./CustomPage_Example.vue";
 
@@ -327,14 +306,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		components: {
 			Dialog_Login,
 			Dialog_Error,
-			Module_Content,
-			Module_ContentLeaf,
-			Module_Tabs,
-			Module_Logs,
-			Module_GLScene,
-			Module_Graphic,
-			Module_Grid,
-			Module_LayerView,
+			Module_Factory,
 			CustomPage_Example
 		},	
 
@@ -359,8 +331,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					// Refresh v2 frontend state first, then update local widgets.
 					this.Application.retrieveFrontendState ()
 					.finally (() => {
-						this.Application.updateModules ();
-						this.Application.updateContentItems ();
+					this.Application.updateModules ();
 					});
 				}													
 			},

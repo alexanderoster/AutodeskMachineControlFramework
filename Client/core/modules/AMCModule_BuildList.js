@@ -33,94 +33,65 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_BuildList extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_BuildList");
+export default class AMCApplicationModule_BuildList extends Common.AMCApplicationModule {
 
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_BuildList");
+
+		this.usesV2Frontend = true;
 		this.entries = [];
-				
+
 		this.headers = [];
-		for (let header of itemJSON.headers) {
-			let checkedHeader = {
-				"text": header.text,
-				"value": header.value,						
-				"sortable": header.sortable,
-				"width": header.width
+		if (moduleJSON.headers && moduleJSON.headers.length > 0) {
+			for (let header of moduleJSON.headers) {
+				this.headers.push({
+					text:     header.text,
+					value:    header.value,
+					sortable: header.sortable,
+					width:    header.width,
+				});
 			}
-			
-			this.headers.push(checkedHeader);
 		}
 
 		this.entrybuttons = [];
-		if (itemJSON.entrybuttons) {
-			for (let entrybutton of itemJSON.entrybuttons) {				
-				
-				let checkedEntryButton = {
-					"uuid": entrybutton.uuid,
-					"caption": entrybutton.caption,
-					"color": entrybutton.color,
-					"cursor": entrybutton.cursor,
-					"selectevent": entrybutton.selectevent
-				}
-				
-				this.entrybuttons.push(checkedEntryButton);
+		if (moduleJSON.entrybuttons) {
+			for (let entrybutton of moduleJSON.entrybuttons) {
+				this.entrybuttons.push({
+					uuid:        entrybutton.uuid,
+					caption:     entrybutton.caption,
+					color:       entrybutton.color,
+					cursor:      entrybutton.cursor,
+					selectevent: entrybutton.selectevent,
+				});
 			}
 		}
 
-		
-		this.loadingtext = "";
-		this.selectevent = "";
-		this.selectionvalueuuid = Common.nullUUID ();
-		this.buttonvalueuuid = Common.nullUUID ();
+		this.loadingtext          = "";
+		this.selectevent          = "";
+		this.selectionvalueuuid   = Common.nullUUID ();
+		this.buttonvalueuuid      = Common.nullUUID ();
 		this.thumbnailaspectratio = 1.8;
-		this.thumbnailheight = "150pt";
-		this.thumbnailwidth = "";
-		this.entriesperpage = 25;
+		this.thumbnailheight      = "150pt";
+		this.thumbnailwidth       = "";
+		this.entriesperpage       = 25;
+		this.lastKnownHeadID      = 0;
+		this.buildFetchInFlight   = false;
 
-		// Phase 2: v2 change-detection via buildlistheadid
-		this.usesV2Frontend = true;
-		this.lastKnownHeadID = 0;
-		this.buildFetchInFlight = false;
-		
-		/*  this.entrybuttons = [
-		{
-			uuid: "123",
-			caption: "Details",
-			color: "primary",
-			cursor: "cursor-pointer",
-			selectionvalueuuid: Common.nullUUID (),
-			selectevent: "12324353",
-							
-		},
-		{
-			uuid: "234",
-			caption: "History",
-			color: "primary",
-			cursor: "cursor-pointer",
-			selectionvalueuuid: Common.nullUUID (),
-			selectevent: "12324353",						
-		}
-		]; */
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
-								
+		this.updateFromJSON (moduleJSON);
 	}
-	
-	
+
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
+
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.selectevent)
-			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);		
+			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);
 		if (updateJSON.selectionvalueuuid)
 			this.selectionvalueuuid = Assert.IdentifierString (updateJSON.selectionvalueuuid);
 		if (updateJSON.buttonvalueuuid)
@@ -133,21 +104,28 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 			for (let index = 0; index < oldEntryCount; index++) {
 				this.entries.pop();
 			}
-
 			for (let entry of updateJSON.entries) {
 				this.entries.push(entry);
 			}
 		}
 	}
 
+
 	updateFromV2Attributes (attrs)
 	{
+		if (!attrs)
+			return true;
+
 		if (attrs.loadingtext !== undefined)
 			this.loadingtext = attrs.loadingtext;
 		if (attrs.selectevent !== undefined)
 			this.selectevent = attrs.selectevent;
 		if (attrs.entriesperpage !== undefined)
 			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 
 		if (attrs.buildlistheadid === undefined)
 			return true;
@@ -163,7 +141,7 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 
 		this.buildFetchInFlight = true;
 
-		let app = this.moduleInstance.page.application;
+		let app = this.page.application;
 
 		app.axiosGetRequest("/build?status=validated")
 		.then(resultJSON => {
@@ -171,27 +149,21 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 
 			if (resultJSON.data && resultJSON.data.buildjobs) {
 				let newEntries = [];
-
 				for (let job of resultJSON.data.buildjobs) {
-					let entry = {
-						buildUUID: job.uuid || "",
-						buildName: job.name || "",
-						buildLayers: job.layercount || 0,
-						buildTimestamp: job.timestamp || "",
-						buildUser: job.user || "",
+					newEntries.push({
+						buildUUID:           job.uuid           || "",
+						buildName:           job.name           || "",
+						buildLayers:         job.layercount     || 0,
+						buildTimestamp:      job.timestamp      || "",
+						buildUser:           job.user           || "",
 						buildExecutionCount: job.executioncount || 0,
-						buildThumbnail: job.thumbnail || "00000000-0000-0000-0000-000000000000"
-					};
-					newEntries.push(entry);
+						buildThumbnail:      job.thumbnail      || "00000000-0000-0000-0000-000000000000",
+					});
 				}
 
 				let oldCount = this.entries.length;
-				for (let i = 0; i < oldCount; i++) {
-					this.entries.pop();
-				}
-				for (let entry of newEntries) {
-					this.entries.push(entry);
-				}
+				for (let i = 0; i < oldCount; i++) this.entries.pop();
+				for (let entry of newEntries) this.entries.push(entry);
 			}
 		})
 		.catch(() => {
@@ -201,5 +173,4 @@ export default class AMCApplicationItem_Content_BuildList extends Common.AMCAppl
 		return true;
 	}
 
-		
 }

@@ -30,17 +30,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='image')">  	
-	<v-img v-bind:src="Application.getImageURL (moduleitem.imageresource)" v-bind:aspect-ratio="moduleitem.aspectratio" v-bind:max-width="moduleitem.maxwidth" v-bind:max-height="moduleitem.maxheight" contain></v-img>
+<div>
+	<img
+		v-bind:src="Application.getStreamURL(module.streamresource)"
+		v-bind:style="imgStyle"
+		alt="Video Stream"
+	/>
 </div>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'module'],
 
-	export default {
-	  props: ["Application", "moduleitem"]
-	  
-	};
-	
+	computed: {
+		imgStyle() {
+			let style = { display: 'block' };
+			if (this.module.maxwidth)
+				style['max-width'] = this.module.maxwidth + 'px';
+			if (this.module.maxheight)
+				style['max-height'] = this.module.maxheight + 'px';
+			if (!this.module.maxwidth && !this.module.maxheight)
+				style['max-width'] = '100%';
+			return style;
+		}
+	}
+};
 </script>

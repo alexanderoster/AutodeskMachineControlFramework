@@ -33,51 +33,58 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_Image extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
+export default class AMCApplicationModule_Image extends Common.AMCApplicationModule {
+
+	constructor (page, moduleJSON)
 	{
-		Assert.ObjectValue (itemJSON);		
-		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_Image");
-		
-		this.updateFromJSON (itemJSON);
-		
-		// Phase 2: image is fully described by v2 attributes
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_Image");
+
 		this.usesV2Frontend = true;
-		
-		this.setRefreshFlag ();		
+
+		this.imageresource = Common.nullUUID ();
+		this.aspectratio = 1.0;
+		this.maxwidth  = 0;
+		this.maxheight = 0;
+
+		this.updateFromJSON (moduleJSON);
 	}
-	
+
+
 	updateFromJSON (updateJSON)
-	{	
-		this.imageresource = Assert.UUIDValue (updateJSON.imageresource);		
-		this.aspectratio = Assert.NumberValue (updateJSON.aspectratio);		
-		if (updateJSON.maxwidth) 
+	{
+		if (updateJSON.imageresource)
+			this.imageresource = Assert.UUIDValue (updateJSON.imageresource);
+		if (updateJSON.aspectratio !== undefined)
+			this.aspectratio = Assert.NumberValue (updateJSON.aspectratio);
+		if (updateJSON.maxwidth)
 			this.maxwidth = Assert.NumberValue (updateJSON.maxwidth);
-		if (updateJSON.maxheight) 
+		if (updateJSON.maxheight)
 			this.maxheight = Assert.NumberValue (updateJSON.maxheight);
-		
 	}
+
 
 	updateFromV2Attributes (attrs)
 	{
+		if (!attrs)
+			return true;
+
 		// v2 backend uses "resource", legacy uses "imageresource"
 		let resourceUUID = attrs.resource || attrs.imageresource;
-		if (resourceUUID) {
+		if (resourceUUID)
 			this.imageresource = resourceUUID;
-		}
-		if (attrs.aspectratio !== undefined) {
+		if (attrs.aspectratio !== undefined)
 			this.aspectratio = parseFloat(attrs.aspectratio) || 1.0;
-		}
-		if (attrs.maxwidth !== undefined) {
+		if (attrs.maxwidth !== undefined)
 			this.maxwidth = parseFloat(attrs.maxwidth) || 0;
-		}
-		if (attrs.maxheight !== undefined) {
+		if (attrs.maxheight !== undefined)
 			this.maxheight = parseFloat(attrs.maxheight) || 0;
-		}
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
 	}
-		
+
 }

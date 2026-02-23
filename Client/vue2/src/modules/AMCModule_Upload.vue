@@ -30,37 +30,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type==='videostream')">
-	<img 
-		v-bind:src="Application.getStreamURL(moduleitem.streamresource)" 
-		v-bind:style="imgStyle"
-		alt="Video Stream"
-	/>
+<div>
+	<v-file-input v-bind:accept="module.acceptedtypes" show-size full-width v-model="module.state.chosenFile" v-bind:label="module.uploadcaption" v-bind:messages="module.state.messages" @change="uiUploadStart(module)"></v-file-input>
 </div>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'module'],
 
-	export default {
-	  props: ["Application", "moduleitem"],
-	  
-	  computed: {
-		  imgStyle() {
-			  let style = { display: 'block' };
-			  if (this.moduleitem.maxwidth) {
-				  style['max-width'] = this.moduleitem.maxwidth + 'px';
-			  }
-			  if (this.moduleitem.maxheight) {
-				  style['max-height'] = this.moduleitem.maxheight + 'px';
-			  }
-			  if (!this.moduleitem.maxwidth && !this.moduleitem.maxheight) {
-				  style['max-width'] = '100%';
-			  }
-			  return style;
-		  }
-	  }
-	  
-	};
-	
+	methods: {
+		uiUploadStart(item) {
+			if (item && item.state) {
+				if (item.state.chosenFile) {
+					item.state.generateUploadID();
+					if (item.uploadclass === 'build') {
+						item.state.mimeType = 'application/3mf';
+						this.Application.performJobUpload(item.state, item.uploadsuccessevent, item.uploadfailureevent);
+					}
+					if (item.uploadclass === 'image') {
+						let chosenfile = item.state.getChosenFile();
+						item.state.mimeType = chosenfile.type;
+						this.Application.performImageUpload(item.state, item.uploadsuccessevent, item.uploadfailureevent);
+					}
+				} else {
+					item.state.cancelUpload();
+				}
+				item.state.uploadid = item.state.idcounter;
+			}
+		},
+	}
+};
 </script>

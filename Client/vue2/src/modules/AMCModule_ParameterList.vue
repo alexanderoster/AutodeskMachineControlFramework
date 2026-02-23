@@ -30,11 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="moduleitem.type === 'parameterlist'" class="plist-root">
+<div class="plist-root">
 	<v-data-table
-		:headers="moduleitem.headers"
-		:items="moduleitem.entries"
-		:items-per-page="moduleitem.entriesperpage || -1"
+		:headers="module.headers"
+		:items="module.entries"
+		:items-per-page="module.entriesperpage || -1"
 		class="plist-table"
 		disable-pagination
 		hide-default-footer
@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <script>
 export default {
-	props: ['Application', 'moduleitem'],
+	props: ['Application', 'module'],
 };
 </script>
 

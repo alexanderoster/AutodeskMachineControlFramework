@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="moduleitem.type === 'paragraph'" class="para-root">
-	<p class="para-text" :class="{ 'para-text--headline': moduleitem.headline, 'para-text--muted': moduleitem.muted }">
-		{{ moduleitem.text }}
+<div class="para-root">
+	<p class="para-text" :class="{ 'para-text--headline': module.headline, 'para-text--muted': module.muted }">
+		{{ module.text }}
 	</p>
 </div>
 
@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <script>
 export default {
-	props: ['Application', 'moduleitem'],
+	props: ['Application', 'module'],
 };
 </script>
 

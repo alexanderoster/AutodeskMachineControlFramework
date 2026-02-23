@@ -33,20 +33,20 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_ExecutionList extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_ExecutionList");
+export default class AMCApplicationModule_ExecutionList extends Common.AMCApplicationModule {
 
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_ExecutionList");
+
+		this.usesV2Frontend = true;
 		this.entries = [];
 
-		// Build headers — use legacy-supplied headers if present, otherwise define defaults
 		this.headers = [];
-		if (itemJSON.headers && itemJSON.headers.length > 0) {
-			for (let header of itemJSON.headers) {
+		if (moduleJSON.headers && moduleJSON.headers.length > 0) {
+			for (let header of moduleJSON.headers) {
 				this.headers.push({
 					text:     header.text,
 					value:    header.value,
@@ -56,16 +56,16 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 			}
 		} else {
 			this.headers = [
-				{ text: '',          value: 'executionThumbnail',     sortable: false, width: '96px' },
-				{ text: 'Execution', value: 'executionName',          sortable: true },
+				{ text: '',          value: 'executionThumbnail',      sortable: false, width: '96px' },
+				{ text: 'Execution', value: 'executionName',           sortable: true },
 				{ text: 'Started',   value: 'executionStartTimestamp', sortable: true },
 				{ text: 'Status',    value: 'executionStatus',         sortable: true, width: '110px' },
 			];
 		}
 
 		this.entrybuttons = [];
-		if (itemJSON.entrybuttons) {
-			for (let entrybutton of itemJSON.entrybuttons) {
+		if (moduleJSON.entrybuttons) {
+			for (let entrybutton of moduleJSON.entrybuttons) {
 				this.entrybuttons.push({
 					uuid:        entrybutton.uuid,
 					caption:     entrybutton.caption,
@@ -76,35 +76,29 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 			}
 		}
 
-		this.loadingtext = "";
-		this.selectevent = "";
-		this.selectionvalueuuid = Common.nullUUID ();
-		this.buttonvalueuuid    = Common.nullUUID ();
-		this.thumbnailaspectratio = 1.8;
-		this.thumbnailheight = "150pt";
-		this.thumbnailwidth  = "";
-		this.entriesperpage  = 25;
-
-		// v2 change-detection via executionlistheadid
-		this.usesV2Frontend = true;
-		this.lastKnownHeadID = 0;
+		this.loadingtext            = "";
+		this.selectevent            = "";
+		this.selectionvalueuuid     = Common.nullUUID ();
+		this.buttonvalueuuid        = Common.nullUUID ();
+		this.thumbnailaspectratio   = 1.8;
+		this.thumbnailheight        = "150pt";
+		this.thumbnailwidth         = "";
+		this.entriesperpage         = 25;
+		this.lastKnownHeadID        = 0;
 		this.executionFetchInFlight = false;
-				
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
-								
+
+		this.updateFromJSON (moduleJSON);
 	}
-	
-	
+
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
+
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.selectevent)
-			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);		
+			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);
 		if (updateJSON.selectionvalueuuid)
 			this.selectionvalueuuid = Assert.IdentifierString (updateJSON.selectionvalueuuid);
 		if (updateJSON.buttonvalueuuid)
@@ -112,7 +106,6 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 		if (updateJSON.entriesperpage)
 			this.entriesperpage = Assert.IntegerValue (updateJSON.entriesperpage);
 
-		// Legacy path only — v2 fetches entries separately via updateFromV2Attributes
 		if (!updateJSON.entries)
 			return;
 
@@ -120,20 +113,27 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
 		}
-
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
 	}
 
+
 	updateFromV2Attributes (attrs)
 	{
+		if (!attrs)
+			return true;
+
 		if (attrs.loadingtext !== undefined)
 			this.loadingtext = attrs.loadingtext;
 		if (attrs.selectevent !== undefined)
 			this.selectevent = attrs.selectevent;
 		if (attrs.entriesperpage !== undefined)
 			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 
 		if (attrs.executionlistheadid === undefined)
 			return true;
@@ -149,7 +149,7 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 
 		this.executionFetchInFlight = true;
 
-		let app = this.moduleInstance.page.application;
+		let app = this.page.application;
 
 		app.axiosGetRequest("/executions")
 		.then(resultJSON => {
@@ -157,9 +157,7 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 
 			if (resultJSON.data && resultJSON.data.executions) {
 				let newEntries = [];
-
 				for (let exec of resultJSON.data.executions) {
-					// Map lowercase API fields → camelCase entry fields expected by the Vue template
 					newEntries.push({
 						executionUUID:           exec.executionuuid           || "",
 						executionName:           exec.executionname           || "",
@@ -176,12 +174,8 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 				}
 
 				let oldCount = this.entries.length;
-				for (let i = 0; i < oldCount; i++) {
-					this.entries.pop();
-				}
-				for (let entry of newEntries) {
-					this.entries.push(entry);
-				}
+				for (let i = 0; i < oldCount; i++) this.entries.pop();
+				for (let entry of newEntries) this.entries.push(entry);
 			}
 		})
 		.catch(() => {
@@ -191,5 +185,4 @@ export default class AMCApplicationItem_Content_ExecutionList extends Common.AMC
 		return true;
 	}
 
-		
 }

@@ -30,106 +30,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='chart')">  	
-	 <VueApexCharts width="500" type="line" ref="apexChart" :options="options" :series="series"></VueApexCharts>
+<div>
+	<VueApexCharts width="500" type="line" ref="apexChart" :options="options" :series="series"></VueApexCharts>
 </div>
 
 </template>
 
 <script>
-	import VueApexCharts from 'vue-apexcharts';
-	
-	export default {
-	  props: ["Application", "moduleitem"],
-	  components: {
-		VueApexCharts
-	  },
-	  
-		mounted() {
-									
-			this.moduleitem.onChartDataUpdated = this.updateChartData;
-			
-		},
-		
-		methods: {
-		
-			updateChartData ()
-			{
-				if (this.moduleitem) {
-				
-					this.$refs.apexChart.updateSeries([{
-						data: this.moduleitem.chartData
-					}]); 				
-					
-				}
-				
+import VueApexCharts from 'vue-apexcharts';
+
+export default {
+	props: ['Application', 'module'],
+	components: { VueApexCharts },
+
+	mounted() {
+		this.module.onChartDataUpdated = this.updateChartData;
+	},
+
+	methods: {
+		updateChartData() {
+			if (this.module && this.$refs.apexChart) {
+				this.$refs.apexChart.updateSeries([{
+					data: this.module.chartData
+				}]);
 			}
-		
-		},
-	  
-	   data: () => ({
-		options: {
-		
-        chart: {
-          id: 'vuechart-example'
-        },
-		stroke: {
-			show: true,
-			curve: 'stepline',
-			lineCap: 'butt',
-			colors: ['#546E7A'],
-			width: 1,
-			dashArray: 0, 
-		},
-  yaxis: [
-    {
-      axisTicks: {
-        show: true
-      },
-	  
-      axisBorder: {
-        show: true,		
-      },
-      labels: {
-        style: {
-          
-        },
-		formatter: function (val) {
-			return (val).toFixed(2);
-		},
-      },
-      title: {
-        style: {
-          
-        }
-      }
-    }
-  ],
-		
-		xaxis: {			
-			type: "numeric",
-			  labels: {
-				formatter: function (value) {
-					return value.toFixed(3) + "s";
-				}
-			  }
 		}
-		
-      },
-	  
-  newData: [],
-  	  
-  series: [
-    {
-      name: "Series 1",
-      data: []
-    }
-	
-  ],
-	  
+	},
 
-
-	  })
-	};
-	
+	data: () => ({
+		options: {
+			chart: { id: 'vuechart-example' },
+			stroke: {
+				show: true,
+				curve: 'stepline',
+				lineCap: 'butt',
+				colors: ['#546E7A'],
+				width: 1,
+				dashArray: 0,
+			},
+			yaxis: [{
+				axisTicks: { show: true },
+				axisBorder: { show: true },
+				labels: {
+					formatter: function (val) { return (val).toFixed(2); }
+				},
+				title: { style: {} }
+			}],
+			xaxis: {
+				type: 'numeric',
+				labels: {
+					formatter: function (value) { return value.toFixed(3) + 's'; }
+				}
+			}
+		},
+		series: [{ name: 'Series 1', data: [] }],
+	})
+};
 </script>

@@ -30,51 +30,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="(moduleitem.type=='upload')">  	
-	<v-file-input v-bind:accept="moduleitem.acceptedtypes" show-size full-width v-model="moduleitem.state.chosenFile" v-bind:label="moduleitem.uploadcaption" v-bind:messages="moduleitem.state.messages" @change="uiUploadStart (moduleitem)"></v-file-input>
+<div class="btngroup-root" :style="module.cssstyle">
+	<v-btn
+		v-for="button in module.buttons"
+		:key="button.uuid || button.name"
+		:disabled="button.disabled"
+		:color="button.color || 'primary'"
+		:style="module.buttoncssstyle"
+		class="btngroup-btn"
+		@click.stop="uiModuleButtonClick(button)"
+	>
+		<v-icon v-if="button.icon" small left>{{ button.icon }}</v-icon>
+		{{ button.caption }}
+	</v-btn>
 </div>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'module'],
 
-	export default {
-	  props: ["Application", "moduleitem"],
-
-	  methods: {	
-	  
-			uiUploadStart: function (item) {
-														
-					if (item) {
-						if (item.state) {
-							if (item.state.chosenFile) {
-								item.state.generateUploadID ();
-								if (item.uploadclass == "build") {
-									item.state.mimeType = "application/3mf";
-									this.Application.performJobUpload (item.state, item.uploadsuccessevent, item.uploadfailureevent);
-								}
-								if (item.uploadclass == "image") {
-									let chosenfile = item.state.getChosenFile ();		
-									item.state.mimeType = chosenfile.type;
-									this.Application.performImageUpload (item.state, item.uploadsuccessevent, item.uploadfailureevent);
-								}
-							} else {		
-								item.state.cancelUpload ();
-							}
-								
-						}					
-					}
-					
-					
-						item.state.uploadid = item.state.idcounter; 
-						
-						
-					
-				
-			},	
-			
-	  }
-	  
-	};
-
+	methods: {
+		uiModuleButtonClick(button) {
+			const formvalues = this.Application.assembleFormValues(button.eventformvalues);
+			if (button.event && button.event !== '')
+				this.Application.triggerUIEvent(button.event, button.uuid, formvalues);
+			if (button.targetpage && button.targetpage !== '')
+				this.Application.changePage(button.targetpage);
+		},
+	},
+};
 </script>
+
+<style scoped>
+.btngroup-root {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.btngroup-btn {
+	height: 36px !important;
+	letter-spacing: 0.01em;
+	text-transform: none;
+	font-weight: 500;
+}
+</style>

@@ -33,30 +33,26 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default 
+export default class AMCApplicationModule_Chart extends Common.AMCApplicationModule {
 
-class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
+	constructor (page, moduleJSON)
 	{
-		Assert.ObjectValue (itemJSON);		
-		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_Chart");
-		
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_Chart");
+
+		this.usesV2Frontend = true;
+
 		this.dataseries = Common.nullUUID ();
 		this.version = 0;
 		this.loadeddataseries = Common.nullUUID ();
 		this.loadedversion = 0;
-		this.usesV2Frontend = true;
-		
 		this.onChartDataUpdated = null;
 		this.chartData = [];
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
+
+		this.updateFromJSON (moduleJSON);
 	}
+
 
 	updateFromJSON (updateJSON)
 	{
@@ -72,6 +68,7 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 
 		this.updateDataSeriesMetadata(dataSeriesUUID, nVersion);
 	}
+
 
 	updateFromV2Attributes (attrs)
 	{
@@ -90,6 +87,7 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 		return true;
 	}
 
+
 	updateDataSeriesMetadata (dataSeriesUUID, nVersion)
 	{
 		this.dataseries = dataSeriesUUID;
@@ -102,41 +100,39 @@ class AMCApplicationItem_Content_Chart extends Common.AMCApplicationItem {
 		}
 	}
 
+
 	refreshChartData ()
 	{
-		let application = this.getApplication ();
+		let application = this.page.application;
 		let normalizedUUID = this.dataseries;
 
 		if ((normalizedUUID == Common.nullUUID ()) || (normalizedUUID == ""))
 			return;
-	
+
 		application.axiosGetArrayBufferRequest("/dataseries/" + normalizedUUID)
-					.then(responseData => {
-					var floatView = new Float32Array(responseData.data);
-					let dataLength = floatView.length;
-					let pointCount = dataLength / 2;
-										
-					this.chartData = [];
-					for (let index = 0; index < pointCount; index++) {
-						let xvalue = floatView[index * 2];
-						let yvalue = floatView[index * 2 + 1];
-						this.chartData.push ([xvalue, yvalue]);
-					}
-					
-					if (this.onChartDataUpdated)
-						this.onChartDataUpdated ();
-										
-				})
-				.catch(err => {
-					this.loadeddataseries = Common.nullUUID ();
-					
-					if (err.response) {
-						console.log (err.response);
-					} else {
-						console.log ("fatal error while retrieving chart data " + normalizedUUID);
-					}
-				});			
-	
+			.then(responseData => {
+				var floatView = new Float32Array(responseData.data);
+				let dataLength = floatView.length;
+				let pointCount = dataLength / 2;
+
+				this.chartData = [];
+				for (let index = 0; index < pointCount; index++) {
+					let xvalue = floatView[index * 2];
+					let yvalue = floatView[index * 2 + 1];
+					this.chartData.push ([xvalue, yvalue]);
+				}
+
+				if (this.onChartDataUpdated)
+					this.onChartDataUpdated ();
+			})
+			.catch(err => {
+				this.loadeddataseries = Common.nullUUID ();
+				if (err.response) {
+					console.log (err.response);
+				} else {
+					console.log ("fatal error while retrieving chart data " + normalizedUUID);
+				}
+			});
 	}
 
 }

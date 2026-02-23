@@ -33,34 +33,42 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_VideoStream extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
+export default class AMCApplicationModule_VideoStream extends Common.AMCApplicationModule {
+
+	constructor (page, moduleJSON)
 	{
-		Assert.ObjectValue (itemJSON);		
-		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_VideoStream");
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_VideoStream");
+
 		this.usesV2Frontend = true;
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();		
-	}
-	
-	updateFromJSON (updateJSON)
-	{	
-		this.streamresource = Assert.UUIDValue (updateJSON.streamresource);		
-		if (updateJSON.aspectratio) 
-			this.aspectratio = Assert.NumberValue (updateJSON.aspectratio);
-		if (updateJSON.maxwidth) 
-			this.maxwidth = Assert.NumberValue (updateJSON.maxwidth);
-		if (updateJSON.maxheight) 
-			this.maxheight = Assert.NumberValue (updateJSON.maxheight);
-		
+
+		this.streamresource = Common.nullUUID ();
+		this.aspectratio = 1.0;
+		this.maxwidth  = 0;
+		this.maxheight = 0;
+
+		this.updateFromJSON (moduleJSON);
 	}
 
-	updateFromV2Attributes (attrs) {
+
+	updateFromJSON (updateJSON)
+	{
+		if (updateJSON.streamresource)
+			this.streamresource = Assert.UUIDValue (updateJSON.streamresource);
+		if (updateJSON.aspectratio !== undefined)
+			this.aspectratio = Assert.NumberValue (updateJSON.aspectratio);
+		if (updateJSON.maxwidth !== undefined)
+			this.maxwidth = Assert.NumberValue (updateJSON.maxwidth);
+		if (updateJSON.maxheight !== undefined)
+			this.maxheight = Assert.NumberValue (updateJSON.maxheight);
+	}
+
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
 		if (attrs.streamresource !== undefined)
 			this.streamresource = attrs.streamresource;
 		if (attrs.aspectratio !== undefined)
@@ -69,7 +77,11 @@ export default class AMCApplicationItem_Content_VideoStream extends Common.AMCAp
 			this.maxwidth = parseFloat(attrs.maxwidth);
 		if (attrs.maxheight !== undefined)
 			this.maxheight = parseFloat(attrs.maxheight);
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
 	}
-		
+
 }

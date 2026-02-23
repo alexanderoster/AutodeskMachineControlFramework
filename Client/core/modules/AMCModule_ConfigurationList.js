@@ -33,105 +33,76 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_ConfigurationList extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_ConfigurationList");
+export default class AMCApplicationModule_ConfigurationList extends Common.AMCApplicationModule {
 
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_ConfigurationList");
+
+		this.usesV2Frontend = true;
 		this.entries = [];
-				
+
 		this.headers = [];
-		if (itemJSON.headers && itemJSON.headers.length > 0) {
-			for (let header of itemJSON.headers) {
-				let checkedHeader = {
-					"text": header.text,
-					"value": header.value,						
-					"sortable": header.sortable,
-					"width": header.width,
-					"align": header.align
-				}
-				
-				this.headers.push(checkedHeader);
+		if (moduleJSON.headers && moduleJSON.headers.length > 0) {
+			for (let header of moduleJSON.headers) {
+				this.headers.push({
+					text:     header.text,
+					value:    header.value,
+					sortable: header.sortable,
+					width:    header.width,
+					align:    header.align,
+				});
 			}
 		} else {
 			this.headers = [
-				{ text: "Active", value: "configurationActive", sortable: true, width: "5vw", align: "center" },
-				{ text: "Version", value: "configurationVersion", sortable: true, width: "5vw", align: "center" },
-				{ text: "Upload time", value: "configurationTimestamp", sortable: true, width: "10vw", align: "center" },
-				{ text: "User", value: "userName", sortable: true, width: "5vw", align: "center" },
-				{ text: "Actions", value: "configurationActions", sortable: true, width: "20vw", align: "center" }
+				{ text: "Active",      value: "configurationActive",    sortable: true,  width: "5vw",  align: "center" },
+				{ text: "Version",     value: "configurationVersion",   sortable: true,  width: "5vw",  align: "center" },
+				{ text: "Upload time", value: "configurationTimestamp", sortable: true,  width: "10vw", align: "center" },
+				{ text: "User",        value: "userName",               sortable: true,  width: "5vw",  align: "center" },
+				{ text: "Actions",     value: "configurationActions",   sortable: true,  width: "20vw", align: "center" },
 			];
 		}
 
 		this.entrybuttons = [];
-		if (itemJSON.entrybuttons) {
-			for (let entrybutton of itemJSON.entrybuttons) {				
-				
-				let checkedEntryButton = {
-					"uuid": entrybutton.uuid,
-					"caption": entrybutton.caption,
-					"color": entrybutton.color,
-					"cursor": entrybutton.cursor,
-					"selectevent": entrybutton.selectevent
-				}
-				
-				this.entrybuttons.push(checkedEntryButton);
+		if (moduleJSON.entrybuttons) {
+			for (let entrybutton of moduleJSON.entrybuttons) {
+				this.entrybuttons.push({
+					uuid:        entrybutton.uuid,
+					caption:     entrybutton.caption,
+					color:       entrybutton.color,
+					cursor:      entrybutton.cursor,
+					selectevent: entrybutton.selectevent,
+				});
 			}
 		}
 
-		
-		this.loadingtext = "";
-		this.selectevent = "";
-		this.selectionvalueuuid = Common.nullUUID ();
-		this.buttonvalueuuid = Common.nullUUID ();
-		this.thumbnailaspectratio = 1.8;
-		this.thumbnailheight = "150pt";
-		this.thumbnailwidth = "";
-		this.entriesperpage = 5;
-		this.configurationSchema = "com.scanlab.ocmsmc";
-		this.lastKnownHeadID = -1;
-		this.hasFetchedEntries = false;
-		this.configurationFetchInFlight = false;
-		this.usesV2Frontend = true;
-		
-		/*  this.entrybuttons = [
-		{
-			uuid: "123",
-			caption: "Details",
-			color: "primary",
-			cursor: "cursor-pointer",
-			selectionvalueuuid: Common.nullUUID (),
-			selectevent: "12324353",
-							
-		},
-		{
-			uuid: "234",
-			caption: "History",
-			color: "primary",
-			cursor: "cursor-pointer",
-			selectionvalueuuid: Common.nullUUID (),
-			selectevent: "12324353",						
-		}
-		]; */
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
-								
+		this.loadingtext                  = "";
+		this.selectevent                  = "";
+		this.selectionvalueuuid           = Common.nullUUID ();
+		this.buttonvalueuuid              = Common.nullUUID ();
+		this.thumbnailaspectratio         = 1.8;
+		this.thumbnailheight              = "150pt";
+		this.thumbnailwidth               = "";
+		this.entriesperpage               = 5;
+		this.configurationSchema          = "com.scanlab.ocmsmc";
+		this.lastKnownHeadID              = -1;
+		this.hasFetchedEntries            = false;
+		this.configurationFetchInFlight   = false;
+
+		this.updateFromJSON (moduleJSON);
 	}
-	
-	
+
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
+
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.selectevent)
-			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);		
+			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);
 		if (updateJSON.selectionvalueuuid)
 			this.selectionvalueuuid = Assert.IdentifierString (updateJSON.selectionvalueuuid);
 		if (updateJSON.buttonvalueuuid)
@@ -146,11 +117,11 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
 		}
-
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
 	}
+
 
 	updateFromV2Attributes (attrs)
 	{
@@ -162,35 +133,36 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 		if (attrs.selectevent !== undefined)
 			this.selectevent = attrs.selectevent;
 		if (attrs.entriesperpage !== undefined)
-			this.entriesperpage = parseInt (attrs.entriesperpage) || this.entriesperpage;
+			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
 		if (attrs.selectionvalueuuid !== undefined)
 			this.selectionvalueuuid = attrs.selectionvalueuuid;
 		if (attrs.buttonvalueuuid !== undefined)
 			this.buttonvalueuuid = attrs.buttonvalueuuid;
 		if (attrs.schema !== undefined)
 			this.configurationSchema = attrs.schema;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 
 		let shouldFetch = !this.hasFetchedEntries;
 
 		if (attrs.configurationlistheadid !== undefined) {
-			let headID = parseInt (attrs.configurationlistheadid);
-			if (!isNaN (headID)) {
-				if (headID > this.lastKnownHeadID) {
-					this.lastKnownHeadID = headID;
-					shouldFetch = true;
-				}
+			let headID = parseInt(attrs.configurationlistheadid);
+			if (!isNaN(headID) && headID > this.lastKnownHeadID) {
+				this.lastKnownHeadID = headID;
+				shouldFetch = true;
 			}
 		}
 
 		if (!shouldFetch)
 			return true;
-
 		if (this.configurationFetchInFlight)
 			return true;
 
 		this.configurationFetchInFlight = true;
 
-		let app = this.moduleInstance.page.application;
+		let app = this.page.application;
 		let requestURL = "/configurations";
 		if (this.configurationSchema && this.configurationSchema.length > 0)
 			requestURL += "?schema=" + encodeURIComponent(this.configurationSchema);
@@ -204,21 +176,17 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 				let newEntries = [];
 				for (let entry of resultJSON.data.configurations) {
 					newEntries.push({
-						configurationActive: !!entry.configurationactive,
-						configurationVersion: entry.configurationversion || 0,
-						userName: entry.username || "",
-						configurationUUID: entry.configurationuuid || Common.nullUUID (),
-						configurationTimestamp: entry.configurationtimestamp || ""
+						configurationActive:    !!entry.configurationactive,
+						configurationVersion:   entry.configurationversion   || 0,
+						userName:               entry.username               || "",
+						configurationUUID:      entry.configurationuuid      || Common.nullUUID (),
+						configurationTimestamp: entry.configurationtimestamp || "",
 					});
 				}
 
 				let oldCount = this.entries.length;
-				for (let i = 0; i < oldCount; i++) {
-					this.entries.pop();
-				}
-				for (let newEntry of newEntries) {
-					this.entries.push(newEntry);
-				}
+				for (let i = 0; i < oldCount; i++) this.entries.pop();
+				for (let newEntry of newEntries) this.entries.push(newEntry);
 			}
 		})
 		.catch(() => {
@@ -227,6 +195,5 @@ export default class AMCApplicationItem_Content_ConfigurationList extends Common
 
 		return true;
 	}
-	
-		
+
 }

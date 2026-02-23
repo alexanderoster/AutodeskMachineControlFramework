@@ -79,7 +79,7 @@ git rev-parse --verify HEAD > "$builddir/longgithash.txt"
 LONGGITHASH=$(<"$builddir/longgithash.txt")
 echo "long git hash: $LONGGITHASH"
 
-git log -n 1 --format="%H" -- "$basepath/Client" > "$builddir/clientdirhash.txt"
+git log -n 1 --format="%H" -- "$basepath/Client/core" "$basepath/Client/vue2" > "$builddir/clientdirhash.txt"
 CLIENTDIRHASH=$(<"$builddir/clientdirhash.txt")
 echo "client dir hash: $CLIENTDIRHASH"
 

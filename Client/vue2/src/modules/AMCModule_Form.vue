@@ -30,11 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="moduleitem.type === 'form'" class="form-root">
-	<template v-for="entity in moduleitem.entities">
+<div class="form-root">
+	<template v-for="entity in module.entities">
 
 		<!-- Text input -->
-		<div :key="entity.name + '_edit'" v-if="entity.type === 'edit'" class="form-field">
+		<div :key="entity.uuid + '_edit'" v-if="entity.type === 'edit'" class="form-field">
 			<v-text-field
 				outlined
 				dense
@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</div>
 
 		<!-- Toggle switch -->
-		<div :key="entity.name + '_switch'" v-if="entity.type === 'switch'" class="form-field form-field--switch">
+		<div :key="entity.uuid + '_switch'" v-if="entity.type === 'switch'" class="form-field form-field--switch">
 			<span class="form-switch-label">{{ entity.caption }}</span>
 			<v-switch
 				dense
@@ -66,7 +66,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</div>
 
 		<!-- Memo / textarea -->
-		<div :key="entity.name + '_memo'" v-if="entity.type === 'memo'" class="form-field">
+		<div :key="entity.uuid + '_memo'" v-if="entity.type === 'memo'" class="form-field">
 			<v-textarea
 				outlined
 				dense
@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</div>
 
 		<!-- Select / combobox -->
-		<div :key="entity.name + '_combo'" v-if="entity.type === 'combobox'" class="form-field">
+		<div :key="entity.uuid + '_combo'" v-if="entity.type === 'combobox'" class="form-field">
 			<v-select
 				outlined
 				dense
@@ -102,7 +102,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <script>
 export default {
-	props: ['Application', 'moduleitem', 'visible'],
+	props: ['Application', 'module'],
 
 	methods: {
 		uiToggleSwitch(switchentity) {
@@ -146,7 +146,6 @@ export default {
 		checkRules(editentity) {
 			const rules = [];
 			if (!editentity) return rules;
-
 			if (editentity.validation === 'double') {
 				rules.push(v => !!v || editentity.validationmessage);
 				rules.push(v => !isNaN(v) || editentity.validationmessage);
@@ -192,7 +191,6 @@ export default {
 	margin: 0 !important;
 }
 
-/* Tighten up Vuetify outlined inputs to match Svelte h-9 (36px) aesthetic */
 .form-input >>> .v-input__control > .v-input__slot {
 	min-height: 36px !important;
 }
@@ -207,7 +205,6 @@ export default {
 	font-size: 0.875rem;
 }
 
-/* Softer border radius */
 .form-input >>> fieldset {
 	border-radius: 6px;
 }

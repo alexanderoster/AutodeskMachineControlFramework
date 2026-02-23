@@ -33,60 +33,52 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_AlertList extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_AlertList");
+export default class AMCApplicationModule_AlertList extends Common.AMCApplicationModule {
 
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_AlertList");
+
+		this.usesV2Frontend = true;
 		this.entries = [];
 
-		// Default headers used in v2 mode (backend does not send headers via v2 attributes)
 		this.headers = [
 			{ text: 'Time',    value: 'alerttimestamp', sortable: true },
 			{ text: 'Alert',   value: 'alertcaption',   sortable: true },
-			{ text: 'Level',   value: 'severity',        sortable: true },
+			{ text: 'Level',   value: 'severity',       sortable: true },
 			{ text: 'Context', value: 'alertcontext',   sortable: false },
 			{ text: 'Active',  value: 'alertactive',    sortable: true },
 		];
 
-		// If the legacy path supplies headers, use them instead
-		if (itemJSON.headers && itemJSON.headers.length > 0)
-			this.headers = itemJSON.headers;
+		if (moduleJSON.headers && moduleJSON.headers.length > 0)
+			this.headers = moduleJSON.headers;
 
-		this.loadingtext = "";
-		this.selectevent = "";
-		this.selectionvalueuuid = Common.nullUUID ();
-		this.entriesperpage = 25;
+		this.loadingtext          = "";
+		this.selectevent          = "";
+		this.selectionvalueuuid   = Common.nullUUID ();
+		this.entriesperpage       = 25;
+		this.lastKnownHeadID      = 0;
+		this.alertFetchInFlight   = false;
 
-		// v2 change-detection via alertlistheadid
-		this.usesV2Frontend = true;
-		this.lastKnownHeadID = 0;
-		this.alertFetchInFlight = false;
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
-								
+		this.updateFromJSON (moduleJSON);
 	}
-	
-	
+
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
+
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.selectevent)
-			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);		
+			this.selectevent = Assert.IdentifierString (updateJSON.selectevent);
 		if (updateJSON.selectionvalueuuid)
 			this.selectionvalueuuid = Assert.IdentifierString (updateJSON.selectionvalueuuid);
 		if (updateJSON.entriesperpage)
 			this.entriesperpage = Assert.IntegerValue (updateJSON.entriesperpage);
 
-		// Legacy path only — v2 fetches entries separately via updateFromV2Attributes
 		if (!updateJSON.entries)
 			return;
 
@@ -94,20 +86,27 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
 		}
-
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
 	}
 
+
 	updateFromV2Attributes (attrs)
 	{
+		if (!attrs)
+			return true;
+
 		if (attrs.loadingtext !== undefined)
 			this.loadingtext = attrs.loadingtext;
 		if (attrs.selectevent !== undefined)
 			this.selectevent = attrs.selectevent;
 		if (attrs.entriesperpage !== undefined)
 			this.entriesperpage = parseInt(attrs.entriesperpage) || this.entriesperpage;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 
 		if (attrs.alertlistheadid === undefined)
 			return true;
@@ -123,7 +122,7 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 
 		this.alertFetchInFlight = true;
 
-		let app = this.moduleInstance.page.application;
+		let app = this.page.application;
 
 		app.axiosGetRequest("/alerts")
 		.then(resultJSON => {
@@ -131,7 +130,6 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 
 			if (resultJSON.data && resultJSON.data.alerts) {
 				let newEntries = [];
-
 				for (let alert of resultJSON.data.alerts) {
 					newEntries.push({
 						alertuuid:             alert.alertuuid             || "",
@@ -140,19 +138,15 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 						alertcaption:          alert.alertcaption          || "",
 						alertcontext:          alert.alertcontext          || "",
 						alertlevel:            alert.alertlevel            || "",
-						severity:              alert.alertlevel            || "",  // alias used by severity badge column
+						severity:              alert.alertlevel            || "",
 						alertactive:           alert.alertactive           || false,
 						alertneedsacknowledge: alert.alertneedsacknowledge || false,
 					});
 				}
 
 				let oldCount = this.entries.length;
-				for (let i = 0; i < oldCount; i++) {
-					this.entries.pop();
-				}
-				for (let entry of newEntries) {
-					this.entries.push(entry);
-				}
+				for (let i = 0; i < oldCount; i++) this.entries.pop();
+				for (let entry of newEntries) this.entries.push(entry);
 			}
 		})
 		.catch(() => {
@@ -162,5 +156,4 @@ export default class AMCApplicationItem_Content_AlertList extends Common.AMCAppl
 		return true;
 	}
 
-		
 }

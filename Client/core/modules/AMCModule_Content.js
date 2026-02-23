@@ -64,19 +64,24 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 		// Backward compatibility: legacy content definitions with "items" are
 		// wrapped into leaf modules on the client.
+		// The legacy state uses the ContentLeaf shell pattern:
+		//   itemJSON = { type, uuid (ContentLeaf UUID), name, caption, visible, items: [innerJSON] }
+		// The actual payload (entities, buttons, entries…) lives inside items[0].
+		// We merge: identity/visibility from the outer shell, payload from the inner item.
 		if (moduleJSON.items && Array.isArray(moduleJSON.items)) {
 			for (let itemJSON of moduleJSON.items) {
-				let wrappedModuleJSON = Object.assign({}, itemJSON);
-				wrappedModuleJSON.type = itemJSON.type;
-				wrappedModuleJSON.uuid = itemJSON.uuid;
-				wrappedModuleJSON.name = itemJSON.name || itemJSON.uuid || (this.name + "_" + itemJSON.type);
-				wrappedModuleJSON.caption = itemJSON.caption || "";
-				wrappedModuleJSON.visible = (itemJSON.visible === undefined) ? true : itemJSON.visible;
-				wrappedModuleJSON.items = [ itemJSON ];
+				let innerJSON = (itemJSON.items && itemJSON.items.length > 0) ? itemJSON.items[0] : itemJSON;
+
+				let wrappedModuleJSON = Object.assign({}, innerJSON);
+				wrappedModuleJSON.type    = itemJSON.type || innerJSON.type;
+				wrappedModuleJSON.uuid    = itemJSON.uuid;
+				wrappedModuleJSON.name    = itemJSON.name  || innerJSON.name  || itemJSON.uuid || (this.name + "_" + (itemJSON.type || ""));
+				wrappedModuleJSON.caption = (itemJSON.caption !== undefined) ? itemJSON.caption : (innerJSON.caption || "");
+				wrappedModuleJSON.visible = (itemJSON.visible !== undefined) ? itemJSON.visible : true;
 
 				let wrappedModule = this.page.application.createModuleInstance(this.page, wrappedModuleJSON);
 				if (!wrappedModule)
-					throw "Item type not found: " + itemJSON.type;
+					throw "Item type not found: " + (itemJSON.type || innerJSON.type);
 				this.modules.push(wrappedModule);
 				this.page.application.addModule(wrappedModule);
 			}

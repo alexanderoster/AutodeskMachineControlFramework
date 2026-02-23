@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div v-if="moduleitem.type === 'executionlist'" class="el-root">
+<div class="el-root">
 
 	<div class="el-area">
 
@@ -68,11 +68,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				<tbody>
 
 					<!-- Empty state -->
-					<tr v-if="!moduleitem.entries || moduleitem.entries.length === 0">
+					<tr v-if="!module.entries || module.entries.length === 0">
 						<td :colspan="columnCount" class="el-cell-empty">
 							<div class="el-empty-state">
 								<v-icon color="grey lighten-1" size="36">mdi-history</v-icon>
-								<span class="el-empty-title">{{ moduleitem.loadingtext || 'No executions' }}</span>
+								<span class="el-empty-title">{{ module.loadingtext || 'No executions' }}</span>
 								<span class="el-empty-hint">Build executions will appear here</span>
 							</div>
 						</td>
@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 					<!-- Data rows -->
 					<tr
-						v-for="item in moduleitem.entries"
+						v-for="item in module.entries"
 						:key="item.executionUUID"
 						class="el-row"
 						@click="onRowClick(item)"
@@ -132,7 +132,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						<!-- Action buttons -->
 						<td v-if="hasButtons" class="el-cell el-cell-actions" @click.stop>
 							<button
-								v-for="button in moduleitem.entrybuttons"
+								v-for="button in module.entrybuttons"
 								:key="button.uuid"
 								class="el-action-btn"
 								@click.stop="onButtonClick(button, item)"
@@ -206,7 +206,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<!-- Dialog buttons -->
 			<div v-if="hasButtons" class="el-dialog-actions">
 				<button
-					v-for="button in moduleitem.entrybuttons"
+					v-for="button in module.entrybuttons"
 					:key="button.uuid"
 					class="el-dialog-action-btn"
 					@click="onButtonClick(button, selectedItem); closeDialog()"
@@ -244,7 +244,7 @@ const STATUS_CLASSES = {
 };
 
 export default {
-	props: ['Application', 'moduleitem'],
+	props: ['Application', 'module'],
 
 	data() {
 		return {
@@ -255,12 +255,12 @@ export default {
 
 	computed: {
 		hasThumbnails() {
-			if (!this.moduleitem.entries || this.moduleitem.entries.length === 0) return false;
-			return this.moduleitem.entries.some(e => this.hasThumbnailImage(e));
+			if (!this.module.entries || this.module.entries.length === 0) return false;
+			return this.module.entries.some(e => this.hasThumbnailImage(e));
 		},
 
 		hasButtons() {
-			return this.moduleitem.entrybuttons && this.moduleitem.entrybuttons.length > 0;
+			return this.module.entrybuttons && this.module.entrybuttons.length > 0;
 		},
 
 		columnCount() {
@@ -307,19 +307,19 @@ export default {
 			this.selectedItem = item;
 			this.dialogOpen = true;
 
-			if (item && this.moduleitem.selectevent && this.moduleitem.selectionvalueuuid) {
+			if (item && this.module.selectevent && this.module.selectionvalueuuid) {
 				const eventValues = {};
-				eventValues[this.moduleitem.selectionvalueuuid] = item.executionUUID;
-				this.Application.triggerUIEvent(this.moduleitem.selectevent, this.moduleitem.uuid, eventValues);
+				eventValues[this.module.selectionvalueuuid] = item.executionUUID;
+				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
 			}
 		},
 
 		onButtonClick(button, item) {
 			if (item && button && button.selectevent) {
 				const eventValues = {};
-				if (this.moduleitem.selectionvalueuuid) eventValues[this.moduleitem.selectionvalueuuid] = item.executionUUID;
-				if (this.moduleitem.buttonvalueuuid)    eventValues[this.moduleitem.buttonvalueuuid]    = button.uuid;
-				this.Application.triggerUIEvent(button.selectevent, this.moduleitem.uuid, eventValues);
+				if (this.module.selectionvalueuuid) eventValues[this.module.selectionvalueuuid] = item.executionUUID;
+				if (this.module.buttonvalueuuid)    eventValues[this.module.buttonvalueuuid]    = button.uuid;
+				this.Application.triggerUIEvent(button.selectevent, this.module.uuid, eventValues);
 			}
 		},
 
@@ -668,3 +668,4 @@ export default {
 	background: rgba(0, 0, 0, 0.05);
 }
 </style>
+

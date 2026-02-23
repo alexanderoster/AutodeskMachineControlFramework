@@ -27,6 +27,14 @@ Client/.DS_Store
 Client/node_modules
 Client/dist
 Client/dist.xml
+Client/vue2/.DS_Store
+Client/vue2/node_modules
+Client/vue2/dist
+Client/vue2/dist.xml
+Client/vue3/.DS_Store
+Client/vue3/node_modules
+Client/vue3/dist
+Client/vue3/dist.xml
 
 # local env files
 Client/.env.local

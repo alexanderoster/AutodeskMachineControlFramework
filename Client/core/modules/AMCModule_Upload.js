@@ -32,61 +32,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
-
 import AMCUploadState from "../common/AMCImplementation_UploadState.js"
 
-export default class AMCApplicationItem_Content_Upload extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
+
+export default class AMCApplicationModule_Upload extends Common.AMCApplicationModule {
+
+	constructor (page, moduleJSON)
 	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_Upload");
-		
-		this.uploadclass = Assert.IdentifierString (itemJSON.uploadclass);
-		this.uploadsuccessevent = Assert.OptionalIdentifierString (itemJSON.uploadsuccessevent);
-		this.uploadfailureevent = Assert.OptionalIdentifierString (itemJSON.uploadfailureevent);
-		this.uploadcaption = Assert.StringValue (itemJSON.uploadcaption);
-		this.uploadfilename = "";
-		this.uploadisinitial = 1;
-		this.uploadissaving = 0;
-		this.acceptedtypes = "";
-				
-		if (this.uploadclass == "build") {
-			this.acceptedtypes = itemJSON.acceptedtypes || ".3mf";
-		}
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_Upload");
 
-		if (this.uploadclass == "image") {
-			this.acceptedtypes = itemJSON.acceptedtypes || ".png,.jpg";
-		}
-				
-		this.state = new AMCUploadState (this.uuid);
-
-		// Phase 2: upload config is fully described by v2 attributes
 		this.usesV2Frontend = true;
-		
-		this.setRefreshFlag ();
-		
+
+		this.uploadclass          = Assert.OptionalIdentifierString (moduleJSON.uploadclass) || "build";
+		this.uploadsuccessevent   = Assert.OptionalIdentifierString (moduleJSON.uploadsuccessevent);
+		this.uploadfailureevent   = Assert.OptionalIdentifierString (moduleJSON.uploadfailureevent);
+		this.uploadcaption        = moduleJSON.uploadcaption || "";
+		this.uploadfilename       = "";
+		this.uploadisinitial      = 1;
+		this.uploadissaving       = 0;
+		this.acceptedtypes        = moduleJSON.acceptedtypes || "";
+
+		if (!this.acceptedtypes) {
+			if (this.uploadclass === "build")  this.acceptedtypes = ".3mf";
+			if (this.uploadclass === "image")  this.acceptedtypes = ".png,.jpg";
+		}
+
+		this.state = new AMCUploadState (this.uuid);
 	}
+
 
 	updateFromV2Attributes (attrs)
 	{
-		if (attrs.uploadclass !== undefined) {
+		if (!attrs)
+			return true;
+		if (attrs.uploadclass !== undefined)
 			this.uploadclass = attrs.uploadclass;
-		}
-		if (attrs.uploadcaption !== undefined) {
+		if (attrs.uploadcaption !== undefined)
 			this.uploadcaption = attrs.uploadcaption;
-		}
-		if (attrs.successevent !== undefined) {
+		if (attrs.successevent !== undefined)
 			this.uploadsuccessevent = attrs.successevent;
-		}
-		if (attrs.failureevent !== undefined) {
+		if (attrs.failureevent !== undefined)
 			this.uploadfailureevent = attrs.failureevent;
-		}
-		if (attrs.acceptedtypes !== undefined) {
+		if (attrs.acceptedtypes !== undefined)
 			this.acceptedtypes = attrs.acceptedtypes;
-		}
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
 	}
-		
+
 }

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div v-if="moduleitem.type === 'alertlist'" class="al-root">
+<div class="al-root">
 
 	<div class="al-area">
 
@@ -68,7 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				<tbody>
 
 					<!-- Empty state -->
-					<tr v-if="!moduleitem.entries || moduleitem.entries.length === 0">
+					<tr v-if="!module.entries || module.entries.length === 0">
 						<td colspan="5" class="al-cell-empty">
 							<div class="al-empty-state">
 								<v-icon color="grey lighten-1" size="36">mdi-bell-off-outline</v-icon>
@@ -79,7 +79,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 					<!-- Data rows -->
 					<tr
-						v-for="item in moduleitem.entries"
+						v-for="item in module.entries"
 						:key="item.alertuuid"
 						class="al-row"
 						:class="{ 'al-row--active': item.alertactive }"
@@ -135,7 +135,7 @@ const SEVERITY_CLASSES = {
 };
 
 export default {
-	props: ['Application', 'moduleitem'],
+	props: ['Application', 'module'],
 
 	methods: {
 		severityClass(level) {
@@ -157,10 +157,10 @@ export default {
 		},
 
 		onRowClick(item) {
-			if (item && this.moduleitem.selectevent && this.moduleitem.selectionvalueuuid) {
+			if (item && this.module.selectevent && this.module.selectionvalueuuid) {
 				const eventValues = {};
-				eventValues[this.moduleitem.selectionvalueuuid] = item.alertuuid;
-				this.Application.triggerUIEvent(this.moduleitem.selectevent, this.moduleitem.uuid, eventValues);
+				eventValues[this.module.selectionvalueuuid] = item.alertuuid;
+				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
 			}
 		},
 	},
@@ -324,3 +324,4 @@ export default {
 	font-style: italic;
 }
 </style>
+

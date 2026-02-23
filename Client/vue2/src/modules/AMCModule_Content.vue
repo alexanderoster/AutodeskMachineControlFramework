@@ -30,14 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-		<div width="100%" height="100%" flat v-if="(module.type == 'content')">
+		<div width="100%" height="100%" flat>
           <v-card-title v-if="module.title != ''">{{ module.title }}</v-card-title>
-          <v-card-subtitle v-if="(module.subtitle != '')">	{{ module.subtitle }}</v-card-subtitle>
+          <v-card-subtitle v-if="(module.subtitle != '')">{{ module.subtitle }}</v-card-subtitle>
           <div v-if="module.modules && (module.modules.length > 0)" class="text--primary" width="100%">
-				<template v-for="childModule in module.modules">
-					<Module_Content :key="childModule.uuid" v-if="(childModule.type == 'content')" :module="childModule" :Application="Application" />
-					<Module_ContentLeaf :key="childModule.uuid" v-if="(childModule.type == 'paragraph') || (childModule.type == 'image') || (childModule.type == 'chart') || (childModule.type == 'videostream') || (childModule.type == 'upload') || (childModule.type == 'buildlist') || (childModule.type == 'executionlist') || (childModule.type == 'alertlist') || (childModule.type == 'buttongroup') || (childModule.type == 'parameterlist') || (childModule.type == 'configurationlist') || (childModule.type == 'form')" :module="childModule" :Application="Application" />
-				</template>
+				<Module_Factory
+					v-for="childModule in module.modules"
+					:key="childModule.uuid"
+					:module="childModule"
+					:Application="Application"
+				/>
 			</div>
 	</div>
 
@@ -45,17 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <script>
 
-	import Module_ContentLeaf from "../modules/AMCModule_ContentLeaf.vue";
-
-
 	export default {
 		name: "Module_Content",
 		props: ["Application", "module"],
-	  
-		components: {
-			Module_ContentLeaf
-		}		
-		
 	};
 	
 </script>

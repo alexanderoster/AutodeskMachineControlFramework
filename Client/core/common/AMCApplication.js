@@ -50,7 +50,18 @@ import AMCApplicationModule_Tabs from "../modules/AMCModule_Tabs.js"
 import AMCApplicationModule_Logs from "../modules/AMCModule_Logs.js"
 import AMCApplicationModule_LayerView from "../modules/AMCModule_LayerView.js"
 import AMCApplicationModule_Custom from "../modules/AMCModule_Custom.js"
-import AMCApplicationModule_ContentLeaf from "../modules/AMCModule_ContentLeaf.js"
+import AMCApplicationModule_ParameterList from "../modules/AMCModule_ParameterList.js"
+import AMCApplicationModule_Form from "../modules/AMCModule_Form.js"
+import AMCApplicationModule_Chart from "../modules/AMCModule_Chart.js"
+import AMCApplicationModule_Image from "../modules/AMCModule_Image.js"
+import AMCApplicationModule_Paragraph from "../modules/AMCModule_Paragraph.js"
+import AMCApplicationModule_Upload from "../modules/AMCModule_Upload.js"
+import AMCApplicationModule_BuildList from "../modules/AMCModule_BuildList.js"
+import AMCApplicationModule_ExecutionList from "../modules/AMCModule_ExecutionList.js"
+import AMCApplicationModule_AlertList from "../modules/AMCModule_AlertList.js"
+import AMCApplicationModule_ButtonGroup from "../modules/AMCModule_ButtonGroup.js"
+import AMCApplicationModule_ConfigurationList from "../modules/AMCModule_ConfigurationList.js"
+import AMCApplicationModule_VideoStream from "../modules/AMCModule_VideoStream.js"
 
 import AMCApplicationPage from "./AMCPage.js"
 import AMCApplicationCustomPage from "./AMCCustomPage.js"
@@ -306,7 +317,7 @@ export default class AMCApplication extends Common.AMCObject {
 	
 	// Leaf modules that were historically content items and can now be
 	// represented as first-class v2 modules.
-	_isContentLeafModuleType (moduleType)
+	_isLeafModuleType (moduleType)
 	{
 		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream") ||
 			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "executionlist") ||
@@ -348,27 +359,6 @@ export default class AMCApplication extends Common.AMCObject {
 
 		let attrs = v2.attributes || {};
 		let subs = v2.submodules || [];
-
-		if (this._isContentLeafModuleType(moduleType)) {
-			if (subs.length > 0)
-				legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
-
-			if (legacy.visible === undefined)
-				legacy.visible = true;
-
-			// Some backends expose leaf attributes on a single submodule.
-			let attrSource = attrs;
-			if ((subs.length > 0) && (Object.keys(attrSource).length === 0) && subs[0].attributes)
-				attrSource = subs[0].attributes;
-
-			// v2 image attributes use "resource", legacy image item expects "imageresource".
-			if ((moduleType === "image") && (legacy.imageresource === undefined) && (attrSource.resource !== undefined))
-				legacy.imageresource = attrSource.resource;
-
-			// Keep a compatibility alias if future v2 stream modules expose "resource".
-			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (attrSource.resource !== undefined))
-				legacy.streamresource = attrSource.resource;
-		}
 
 		if (moduleType === "content") {
 			legacy.headline = attrs.headline || "";
@@ -458,6 +448,67 @@ export default class AMCApplication extends Common.AMCObject {
 			}
 			legacy.items = items;
 
+		} else if (moduleType === "form") {
+			legacy.visible = (attrs.visible !== undefined)
+				? (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true")
+				: true;
+			legacy.entities = subs.map(sub => {
+				let a = sub.attributes || {};
+				return {
+					uuid:                sub.uuid,
+					name:                a.name || sub.uuid,
+					type:                sub.moduletype || "edit",
+					caption:             a.caption || "",
+					value:               a.value,
+					disabled:            (a.disabled  === true || a.disabled  === "1" || a.disabled  === "true"),
+					readonly:            (a.readonly   === true || a.readonly   === "1" || a.readonly   === "true"),
+					changeevent:         a.changeevent         || "",
+					validation:          a.validation          || "",
+					validationmessage:   a.validationmessage   || "",
+					minvalue:            a.minvalue,
+					maxvalue:            a.maxvalue,
+				};
+			});
+
+		} else if (moduleType === "buttongroup") {
+			legacy.visible = true;
+			legacy.buttondistribution = attrs.buttondistribution || "";
+			legacy.buttons = subs.map(sub => {
+				let a = sub.attributes || {};
+				return {
+					uuid:        sub.uuid,
+					name:        sub.uuid,
+					caption:     a.caption     || "",
+					disabled:    (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
+					event:       a.event       || "",
+					targetpage:  a.targetpage  || "",
+					icon:        a.icon        || "",
+					color:       a.color       || "",
+				};
+			});
+
+		} else if (this._isLeafModuleType(moduleType)) {
+			// Generic leaf type: flatten module-level attrs then submodule[0] attrs.
+			legacy.visible = (attrs.visible !== undefined)
+				? (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true")
+				: true;
+			for (let key in attrs) {
+				if (key !== "name" && key !== "caption" && key !== "visible")
+					legacy[key] = attrs[key];
+			}
+			if (subs.length > 0 && subs[0].attributes) {
+				let subAttrs = subs[0].attributes;
+				for (let key in subAttrs) {
+					if (legacy[key] === undefined)
+						legacy[key] = subAttrs[key];
+				}
+			}
+			// resource aliases
+			if ((moduleType === "image") && (legacy.imageresource === undefined) && (legacy.resource !== undefined))
+				legacy.imageresource = legacy.resource;
+			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (legacy.resource !== undefined))
+				legacy.streamresource = legacy.resource;
+
 		} else {
 			for (let key in attrs)
 				legacy[key] = attrs[key];
@@ -482,15 +533,6 @@ export default class AMCApplication extends Common.AMCObject {
 		let attrs = v2Item.attributes || {};
 		for (let key in attrs)
 			item[key] = attrs[key];
-
-		// Leaf modules can expose payload attributes on a single nested submodule.
-		if (this._isContentLeafModuleType(item.type) && v2Item.submodules && (v2Item.submodules.length > 0)) {
-			let leafAttrs = v2Item.submodules[0].attributes || {};
-			for (let key in leafAttrs) {
-				if (item[key] === undefined)
-					item[key] = leafAttrs[key];
-			}
-		}
 
 		// v2 image attributes use "resource", legacy item constructor expects "imageresource".
 		if ((item.type === "image") && (item.imageresource === undefined) && (item.resource !== undefined))
@@ -539,9 +581,31 @@ export default class AMCApplication extends Common.AMCObject {
 		if (def.type === "custom") 
 			return new AMCApplicationModule_Custom (page, def);
 
-		if (this._isContentLeafModuleType(def.type))
-			return new AMCApplicationModule_ContentLeaf (page, def);
-		
+		if (def.type === "parameterlist")
+			return new AMCApplicationModule_ParameterList (page, def);
+		if (def.type === "form")
+			return new AMCApplicationModule_Form (page, def);
+		if (def.type === "chart")
+			return new AMCApplicationModule_Chart (page, def);
+		if (def.type === "image")
+			return new AMCApplicationModule_Image (page, def);
+		if (def.type === "paragraph")
+			return new AMCApplicationModule_Paragraph (page, def);
+		if (def.type === "upload")
+			return new AMCApplicationModule_Upload (page, def);
+		if (def.type === "buildlist")
+			return new AMCApplicationModule_BuildList (page, def);
+		if (def.type === "executionlist")
+			return new AMCApplicationModule_ExecutionList (page, def);
+		if (def.type === "alertlist")
+			return new AMCApplicationModule_AlertList (page, def);
+		if (def.type === "buttongroup")
+			return new AMCApplicationModule_ButtonGroup (page, def);
+		if (def.type === "configurationlist")
+			return new AMCApplicationModule_ConfigurationList (page, def);
+		if (def.type === "videostream")
+			return new AMCApplicationModule_VideoStream (page, def);
+
 		return null;
 		
 	}
@@ -772,12 +836,18 @@ export default class AMCApplication extends Common.AMCObject {
 
 		if (module.isActive()) {
 
-			// Phase 2: If module supports v2 and we have v2 data, use it
-			// instead of the legacy /ui/module/ call.
+			// If the module supports v2 and we have a v2 entry, build merged effective
+			// attributes and use them instead of the legacy /ui/module/ polling endpoint.
+			// Item payload (entries, etc.) lives in submodule[0]; display attrs
+			// (caption, visible) live at the module level.  Module-level attrs win.
 			if (module.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(module.uuid);
-				if (v2Entry && v2Entry.attributes) {
-					module.updateFromV2Attributes(v2Entry.attributes);
+				if (v2Entry) {
+					let subAttrs = (v2Entry.submodules && v2Entry.submodules.length > 0)
+						? (v2Entry.submodules[0].attributes || {})
+						: {};
+					let effectiveAttrs = Object.assign({}, subAttrs, v2Entry.attributes || {});
+					module.updateFromV2Attributes(effectiveAttrs);
 					return;
 				}
 			}

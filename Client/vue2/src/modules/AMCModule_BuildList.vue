@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div v-if="moduleitem.type === 'buildlist'" class="bl-root">
+<div class="bl-root">
 
 	<div class="bl-area">
 
@@ -73,7 +73,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				</colgroup>
 				<tbody>
 					<!-- Empty state -->
-					<tr v-if="!moduleitem.entries || moduleitem.entries.length === 0">
+					<tr v-if="!module.entries || module.entries.length === 0">
 						<td :colspan="hasActions ? 7 : 6" class="bl-cell-empty">
 							<div class="bl-empty-state">
 								<v-icon color="grey lighten-1" size="40">mdi-folder-open-outline</v-icon>
@@ -85,7 +85,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 					<!-- Data rows -->
 					<tr
-						v-for="item in moduleitem.entries"
+						v-for="item in module.entries"
 						:key="item.buildUUID"
 						class="bl-row"
 						@click="onRowClick(item)"
@@ -137,7 +137,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						<!-- Action buttons -->
 						<td v-if="hasActions" class="bl-cell bl-cell-actions" @click.stop>
 							<v-btn
-								v-for="button in moduleitem.entrybuttons"
+								v-for="button in module.entrybuttons"
 								:key="button.uuid"
 								text
 								x-small
@@ -223,7 +223,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <script>
 export default {
-	props: ['Application', 'moduleitem'],
+	props: ['Application', 'module'],
 
 	data() {
 		return {
@@ -234,7 +234,7 @@ export default {
 
 	computed: {
 		hasActions() {
-			return this.moduleitem.entrybuttons && this.moduleitem.entrybuttons.length > 0;
+			return this.module.entrybuttons && this.module.entrybuttons.length > 0;
 		},
 	},
 
@@ -265,20 +265,20 @@ export default {
 
 		onSelectFromDialog() {
 			this.showDialog = false;
-			if (this.selectedEntry && this.moduleitem.selectevent && this.moduleitem.selectionvalueuuid) {
+			if (this.selectedEntry && this.module.selectevent && this.module.selectionvalueuuid) {
 				const eventValues = {};
-				eventValues[this.moduleitem.selectionvalueuuid] = this.selectedEntry.buildUUID;
-				this.Application.triggerUIEvent(this.moduleitem.selectevent, this.moduleitem.uuid, eventValues);
+				eventValues[this.module.selectionvalueuuid] = this.selectedEntry.buildUUID;
+				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
 			}
 		},
 
 		uiModuleBuildListHistoryClick(button, item) {
 			if (item && button && button.selectevent &&
-				this.moduleitem.selectionvalueuuid && this.moduleitem.buttonvalueuuid) {
+				this.module.selectionvalueuuid && this.module.buttonvalueuuid) {
 				const eventValues = {};
-				eventValues[this.moduleitem.selectionvalueuuid] = item.buildUUID;
-				eventValues[this.moduleitem.buttonvalueuuid] = button.uuid;
-				this.Application.triggerUIEvent(button.selectevent, this.moduleitem.uuid, eventValues);
+				eventValues[this.module.selectionvalueuuid] = item.buildUUID;
+				eventValues[this.module.buttonvalueuuid] = button.uuid;
+				this.Application.triggerUIEvent(button.selectevent, this.module.uuid, eventValues);
 			}
 		},
 	},
@@ -521,3 +521,4 @@ export default {
 	word-break: break-all;
 }
 </style>
+

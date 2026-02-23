@@ -34,6 +34,11 @@ import vuetify from './vuetify';
 import 'roboto-fontface/css/roboto/roboto-fontface.css'
 import '@mdi/font/css/materialdesignicons.css'
 
+// Register Module_Factory globally so container modules (Content, Grid, Tabs)
+// can use it without importing it — eliminating the recursive component reference.
+import Module_Factory from './modules/AMCModule_Factory.vue';
+Vue.component('Module_Factory', Module_Factory);
+
 Vue.config.productionTip = false
 
 new Vue({

@@ -33,64 +33,49 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_ButtonGroup extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{		
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_ButtonGroup");
-		
+export default class AMCApplicationModule_ButtonGroup extends Common.AMCApplicationModule {
+
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_ButtonGroup");
+
 		this.usesV2Frontend = true;
-		
-		Assert.ArrayValue (itemJSON.buttons);		
-		this.buttons = itemJSON.buttons;
-		
-		this.buttoncssstyle = ""; 
+
+		this.buttons = Array.isArray(moduleJSON.buttons) ? moduleJSON.buttons : [];
+
+		this.buttoncssstyle = "";
 		this.cssstyle = "";
-		
-		if (itemJSON.buttondistribution === "rightaligned") {
-			this.cssstyle = this.cssstyle + "text-align: right;"; 
-		}
 
-		if (itemJSON.buttondistribution === "leftaligned") {
-			this.cssstyle = this.cssstyle + "text-align: left;"; 
-		}
+		let buttondistribution = moduleJSON.buttondistribution || "";
 
-		if (itemJSON.buttondistribution === "centered") {
-			this.cssstyle = this.cssstyle + "text-align: centered;"; 
-		}
-
-		if (itemJSON.buttondistribution === "equal") {
-			
+		if (buttondistribution === "rightaligned")
+			this.cssstyle += "text-align: right;";
+		if (buttondistribution === "leftaligned")
+			this.cssstyle += "text-align: left;";
+		if (buttondistribution === "centered")
+			this.cssstyle += "text-align: centered;";
+		if (buttondistribution === "equal") {
 			let buttoncount = this.buttons.length;
-			if (buttoncount > 0) {
-				this.buttoncssstyle = this.buttoncssstyle + "min-width: calc(" + (100.0 / buttoncount) + "% - 10px);"; 
-			}
-			
-			this.cssstyle = this.cssstyle + "text-align: center;";	
+			if (buttoncount > 0)
+				this.buttoncssstyle += "min-width: calc(" + (100.0 / buttoncount) + "% - 10px);";
+			this.cssstyle += "text-align: center;";
 		}
-		
-		this.setRefreshFlag ();
-		
-				
 	}
-	
-	
+
+
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		
-		if (updateJSON.buttons) {
+		if (updateJSON.buttons)
 			this.buttons = updateJSON.buttons;
-		}
-		
 	}
-	
-	
-	updateFromV2Attributes ()
+
+
+	updateFromV2Attributes (attrs)
 	{
-		let v2Entry = this.getApplication().getV2Entry(this.uuid);
+		let v2Entry = this.page.application.getV2Entry(this.uuid);
 		if (v2Entry && v2Entry.submodules) {
 			this.buttons = v2Entry.submodules.map(sub => {
 				let a = sub.attributes || {};
@@ -99,18 +84,22 @@ export default class AMCApplicationItem_Content_ButtonGroup extends Common.AMCAp
 					formValues = a.eventformvalues.split(" ");
 				}
 				return {
-					uuid: sub.uuid,
-					name: sub.uuid,
-					caption: a.caption || "",
-					disabled: (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
-					event: a.event || "",
-					targetpage: a.targetpage || "",
-					icon: a.icon || "",
-					eventformvalues: formValues
+					uuid:            sub.uuid,
+					name:            sub.uuid,
+					caption:         a.caption  || "",
+					disabled:        (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
+					event:           a.event     || "",
+					targetpage:      a.targetpage || "",
+					icon:            a.icon      || "",
+					eventformvalues: formValues,
 				};
 			});
 		}
+		if (attrs && attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs && attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
 	}
-		
+
 }

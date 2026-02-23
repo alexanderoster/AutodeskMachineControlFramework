@@ -33,46 +33,40 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_ParameterList extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
+export default class AMCApplicationModule_ParameterList extends Common.AMCApplicationModule {
+
+	constructor (page, moduleJSON)
 	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_ParameterList");
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_ParameterList");
 
 		this.usesV2Frontend = true;
-		
+
 		this.entries = [];
 
-		// Static column definitions — keys match AMC_API_KEY_UI_ITEMPARAMETER* constants
 		this.headers = [
 			{ text: 'Parameter', value: 'paramDescription' },
 			{ text: 'Value',     value: 'paramValue' },
 			{ text: 'Group',     value: 'paramGroup' },
 			{ text: 'System',    value: 'paramSystem' },
 		];
-		
+
 		this.stateid = 1;
-		
 		this.loadingtext = "";
 		this.entriesperpage = 25;
-		
-		this.updateFromJSON (itemJSON);
-		
-		this.setRefreshFlag ();
-		
+
+		this.updateFromJSON (moduleJSON);
 	}
-		
+
 
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
 
-		// In v2 mode the legacy polling response is not used; guard gracefully.
 		if (!updateJSON.entries)
 			return;
-		
+
 		if (updateJSON.loadingtext)
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.entriesperpage)
@@ -82,7 +76,6 @@ export default class AMCApplicationItem_Content_ParameterList extends Common.AMC
 		for (let index = 0; index < oldEntryCount; index++) {
 			this.entries.pop();
 		}
-
 		for (let entry of updateJSON.entries) {
 			this.entries.push(entry);
 		}
@@ -98,11 +91,14 @@ export default class AMCApplicationItem_Content_ParameterList extends Common.AMC
 			this.loadingtext = attrs.loadingtext;
 		if (attrs.entriesperpage !== undefined)
 			this.entriesperpage = attrs.entriesperpage;
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 
-		// Replace entries in-place so Vue reactivity fires correctly.
 		const incoming = Array.isArray(attrs.entries) ? attrs.entries : [];
 		while (this.entries.length > 0) this.entries.pop();
 		for (let entry of incoming) this.entries.push(entry);
 	}
-	
+
 }

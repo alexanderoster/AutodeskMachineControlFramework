@@ -33,26 +33,31 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
-export default class AMCApplicationItem_Content_Paragraph extends Common.AMCApplicationItem {
-	
-	constructor (moduleInstance, itemJSON) 
-	{
-		Assert.ObjectValue (itemJSON);		
-		super (moduleInstance, itemJSON.uuid, itemJSON.type);		
-		this.registerClass ("amcItem_Paragraph");
-		
-		this.text = itemJSON.text;
+export default class AMCApplicationModule_Paragraph extends Common.AMCApplicationModule {
 
-		// Phase 2: paragraph is fully described by v2 attributes
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_Paragraph");
+
 		this.usesV2Frontend = true;
+
+		this.text = moduleJSON.text || "";
 	}
+
 
 	updateFromV2Attributes (attrs)
 	{
-		if (attrs.text !== undefined) {
+		if (!attrs)
+			return true;
+		if (attrs.text !== undefined)
 			this.text = attrs.text;
-		}
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
 	}
-		
+
 }

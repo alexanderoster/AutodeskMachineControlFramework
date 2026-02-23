@@ -4,26 +4,33 @@ basepath=$(cd "$(dirname "$0")" && pwd)
 echo "$basepath"
 cd "$basepath"
 
+mkdir -p ../build_client/core/common
+mkdir -p ../build_client/core/modules
 mkdir -p ../build_client/Client/public
 mkdir -p ../build_client/Client/src/common
 mkdir -p ../build_client/Client/src/modules
 mkdir -p ../build_client/Client/src/dialogs
 mkdir -p ../build_client/Client/dist
 
-cp ../Client/public/* ../build_client/Client/public/ 2>/dev/null || true
-cp ../Client/src/*.* ../build_client/Client/src/ 2>/dev/null || true
-cp ../Client/src/common/* ../build_client/Client/src/common/ 2>/dev/null || true
-cp ../Client/src/modules/* ../build_client/Client/src/modules/ 2>/dev/null || true
-cp ../Client/src/dialogs/* ../build_client/Client/src/dialogs/ 2>/dev/null || true
-cp ../Client/*.js ../build_client/Client/ 2>/dev/null || true
-cp ../Client/*.json ../build_client/Client/ 2>/dev/null || true
+# Shared core JS (framework-agnostic)
+cp ../Client/core/common/* ../build_client/core/common/ 2>/dev/null || true
+cp ../Client/core/modules/* ../build_client/core/modules/ 2>/dev/null || true
+
+# Vue 2 specific files
+cp ../Client/vue2/public/* ../build_client/Client/public/ 2>/dev/null || true
+cp ../Client/vue2/src/*.* ../build_client/Client/src/ 2>/dev/null || true
+cp ../Client/vue2/src/modules/* ../build_client/Client/src/modules/ 2>/dev/null || true
+cp ../Client/vue2/src/dialogs/* ../build_client/Client/src/dialogs/ 2>/dev/null || true
+cp ../Client/vue2/vue.config.js ../build_client/Client/ 2>/dev/null || true
+cp ../Client/vue2/babel.config.js ../build_client/Client/ 2>/dev/null || true
+cp ../Client/vue2/package.json ../build_client/Client/ 2>/dev/null || true
 
 cd ..
 git log -n 1 --format="%H" -- "Client" > "build_client/Client/dist/_githash_client_vue2.txt"
 git log -n 1 --format="%H" -- "Client" > "Artifacts/clientdist/_githash_client_vue2.txt"
 CLIENTDIRHASH=$(cat "build_client/Client/dist/_githash_client_vue2.txt")
 
-cat > build_client/Client/src/AMCGitHash.js <<EOF
+cat > build_client/core/common/AMCGitHash.js <<EOF
 export function getClientGitHash ()
 {
   return "$CLIENTDIRHASH";
@@ -38,7 +45,7 @@ cd build_client/Client
 TOOLBUILDDIR="../../build_clientdist_tools"
 mkdir -p "$TOOLBUILDDIR"
 git rev-parse --verify --short HEAD > "$TOOLBUILDDIR/githash.txt"
-git log -n 1 --format="%H" -- "Client" > "$TOOLBUILDDIR/clientdirhash.txt"
+git log -n 1 --format="%H" -- "Client/core" "Client/vue2" > "$TOOLBUILDDIR/clientdirhash.txt"
 cmake -S ../.. -B "$TOOLBUILDDIR"
 cmake --build "$TOOLBUILDDIR" --target create_client_dist --config Release
 cmake --build "$TOOLBUILDDIR" --target create_client_source --config Release
