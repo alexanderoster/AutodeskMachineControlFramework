@@ -817,6 +817,684 @@
       }
     },
 
+    "/config": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve legacy UI configuration",
+        "description": "Returns the legacy UI configuration JSON used by the vue2 client bootstrap flow.",
+        "operationId": "getLegacyConfig",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/state": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve legacy UI state",
+        "description": "Returns the legacy UI state payload for the currently authenticated session.",
+        "operationId": "getLegacyState",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/dataseries/{dataseriesUUID}": {
+      "get": {
+        "tags": [
+          "stream"
+        ],
+        "summary": "Retrieve chart data series as binary float buffer",
+        "operationId": "getDataSeries",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dataseriesUUID",
+            "in": "path",
+            "description": "Data series UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary float32 stream containing x/y pairs",
+            "content": {
+              "application/binary": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/pointcloud/{scatterplotUUID}": {
+      "get": {
+        "tags": [
+          "stream"
+        ],
+        "summary": "Retrieve point cloud as binary float buffer",
+        "operationId": "getPointCloud",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scatterplotUUID",
+            "in": "path",
+            "description": "Scatterplot UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary float32 stream containing x/y point pairs",
+            "content": {
+              "application/binary": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/pointchanneldata/{scatterplotUUID}/{channelName}": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Retrieve named scatterplot channel data",
+        "operationId": "getPointChannelData",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scatterplotUUID",
+            "in": "path",
+            "description": "Scatterplot UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "channelName",
+            "in": "path",
+            "description": "Channel name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/meshgeometry/{meshUUID}": {
+      "get": {
+        "tags": [
+          "stream"
+        ],
+        "summary": "Retrieve mesh face geometry as binary float buffer",
+        "operationId": "getMeshGeometry",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meshUUID",
+            "in": "path",
+            "description": "Mesh UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary float32 stream containing triangle vertices",
+            "content": {
+              "application/binary": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/meshedges/{meshUUID}": {
+      "get": {
+        "tags": [
+          "stream"
+        ],
+        "summary": "Retrieve mesh edge geometry as binary float buffer",
+        "operationId": "getMeshEdges",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meshUUID",
+            "in": "path",
+            "description": "Mesh UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary float32 stream containing edge line segments",
+            "content": {
+              "application/binary": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/event": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Trigger a UI event",
+        "operationId": "triggerUiEvent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "eventname"
+                ],
+                "properties": {
+                  "eventname": {
+                    "type": "string"
+                  },
+                  "sender": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "formvaluejson": {
+                    "type": "object"
+                  },
+                  "parameters": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/widget/{widgetUUID}/{requestType}": {
+      "post": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Send a custom request to a widget/module item",
+        "operationId": "widgetRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "widgetUUID",
+            "in": "path",
+            "description": "Widget (module item) UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requestType",
+            "in": "path",
+            "description": "Alphanumeric request type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/module/{moduleUUID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Retrieve legacy module payload",
+        "operationId": "getModuleByUuid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moduleUUID",
+            "in": "path",
+            "description": "Module UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/module/{moduleUUID}/{stateID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Retrieve legacy module payload at specific state ID",
+        "operationId": "getModuleByUuidAndState",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moduleUUID",
+            "in": "path",
+            "description": "Module UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stateID",
+            "in": "path",
+            "description": "Legacy state ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/contentitem/{itemUUID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Retrieve legacy content item payload",
+        "operationId": "getContentItemByUuid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "itemUUID",
+            "in": "path",
+            "description": "Content item UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/contentitem/{itemUUID}/{stateID}": {
+      "get": {
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Retrieve legacy content item payload at specific state ID",
+        "operationId": "getContentItemByUuidAndState",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "itemUUID",
+            "in": "path",
+            "description": "Content item UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stateID",
+            "in": "path",
+            "description": "Legacy state ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
     "/frontend": {
       "get": {
         "tags": [
@@ -859,8 +1537,9 @@
         "tags": [
           "frontend"
         ],
+        "deprecated": true,
         "summary": "Trigger a frontend event.",
-        "operationId": "frontendPageStatus",
+        "operationId": "frontendEventLegacy",
         "security": [
           {
             "bearerAuth": []
