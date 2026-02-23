@@ -27,24 +27,20 @@
       "description": "Authentication flow"
     },
     {
-      "name": "general",
-      "description": "General API end points, data exchange"
+      "name": "data",
+      "description": "Data endpoints for queries and streams (logs, executions, alerts, configurations, and binary data payloads)"
+    },
+    {
+      "name": "ext",
+      "description": "Application specific end points"
     },
     {
       "name": "frontend",
       "description": "Frontent end point"
     },
     {
-      "name": "stream",
-      "description": "Data streaming end points"
-    },
-    {
-      "name": "data",
-      "description": "Data query end points for logs, executions, alerts, and configurations"
-    },
-    {
-      "name": "ext",
-      "description": "Application specific end points"
+      "name": "general",
+      "description": "General API end points, data exchange"
     }
   ],
   "paths": {
@@ -159,6 +155,38 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "tags": [
+          "general"
+        ],
+        "summary": "Retrieve UI configuration",
+        "description": "Returns the server-provided UI configuration used to bootstrap the active web client.",
+        "operationId": "getConfig",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -865,43 +893,10 @@
       }
     },
 
-    "/config": {
-      "get": {
-        "tags": [
-          "general"
-        ],
-        "summary": "Retrieve UI configuration",
-        "description": "Returns the server-provided UI configuration used to bootstrap the active web client.",
-        "operationId": "getConfig",
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-
     "/dataseries/{dataseriesUUID}": {
       "get": {
         "tags": [
-          "stream"
+          "data"
         ],
         "summary": "Retrieve chart data series as binary float buffer",
         "operationId": "getDataSeries",
@@ -951,7 +946,7 @@
     "/pointcloud/{scatterplotUUID}": {
       "get": {
         "tags": [
-          "stream"
+          "data"
         ],
         "summary": "Retrieve point cloud as binary float buffer",
         "operationId": "getPointCloud",
@@ -1059,7 +1054,7 @@
     "/meshgeometry/{meshUUID}": {
       "get": {
         "tags": [
-          "stream"
+          "data"
         ],
         "summary": "Retrieve mesh face geometry as binary float buffer",
         "operationId": "getMeshGeometry",
@@ -1109,7 +1104,7 @@
     "/meshedges/{meshUUID}": {
       "get": {
         "tags": [
-          "stream"
+          "data"
         ],
         "summary": "Retrieve mesh edge geometry as binary float buffer",
         "operationId": "getMeshEdges",
