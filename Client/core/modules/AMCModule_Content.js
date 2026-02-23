@@ -52,39 +52,33 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 		this.modules = [];
 
-		if (moduleJSON.modules && Array.isArray(moduleJSON.modules)) {
-			for (let childModuleJSON of moduleJSON.modules) {
-				let childModule = this.page.application.createModuleInstance(this.page, childModuleJSON);
-				if (!childModule)
-					throw "Submodule type not found: " + childModuleJSON.type;
-				this.modules.push(childModule);
-				this.page.application.addModule(childModule);
-			}
-		}			
+		// The legacy backend serialises child modules under the "modules" key via
+		// writeLegacyDefinitionToJSON; each child is a ContentLeaf shell:
+		//   { type, uuid (ContentLeaf UUID), name, caption, visible, items: [innerJSON] }
+		// The actual payload (entities, buttons, imageresource …) lives in items[0].
+		// Both the "modules" and legacy "items" key are handled with the same
+		// ContentLeaf-unwrapping logic so the leaf constructors receive clean data.
+		const childList =
+			(moduleJSON.modules && Array.isArray(moduleJSON.modules)) ? moduleJSON.modules :
+			(moduleJSON.items   && Array.isArray(moduleJSON.items))   ? moduleJSON.items   :
+			[];
 
-		// Backward compatibility: legacy content definitions with "items" are
-		// wrapped into leaf modules on the client.
-		// The legacy state uses the ContentLeaf shell pattern:
-		//   itemJSON = { type, uuid (ContentLeaf UUID), name, caption, visible, items: [innerJSON] }
-		// The actual payload (entities, buttons, entries…) lives inside items[0].
-		// We merge: identity/visibility from the outer shell, payload from the inner item.
-		if (moduleJSON.items && Array.isArray(moduleJSON.items)) {
-			for (let itemJSON of moduleJSON.items) {
-				let innerJSON = (itemJSON.items && itemJSON.items.length > 0) ? itemJSON.items[0] : itemJSON;
+		for (let childJSON of childList) {
+			// Unwrap ContentLeaf shell when present: real payload is in items[0].
+			let innerJSON = (childJSON.items && childJSON.items.length > 0) ? childJSON.items[0] : childJSON;
 
-				let wrappedModuleJSON = Object.assign({}, innerJSON);
-				wrappedModuleJSON.type    = itemJSON.type || innerJSON.type;
-				wrappedModuleJSON.uuid    = itemJSON.uuid;
-				wrappedModuleJSON.name    = itemJSON.name  || innerJSON.name  || itemJSON.uuid || (this.name + "_" + (itemJSON.type || ""));
-				wrappedModuleJSON.caption = (itemJSON.caption !== undefined) ? itemJSON.caption : (innerJSON.caption || "");
-				wrappedModuleJSON.visible = (itemJSON.visible !== undefined) ? itemJSON.visible : true;
+			let wrappedModuleJSON = Object.assign({}, innerJSON);
+			wrappedModuleJSON.type    = childJSON.type    || innerJSON.type;
+			wrappedModuleJSON.uuid    = childJSON.uuid;
+			wrappedModuleJSON.name    = childJSON.name    || innerJSON.name    || childJSON.uuid || (this.name + "_" + (childJSON.type || ""));
+			wrappedModuleJSON.caption = (childJSON.caption !== undefined) ? childJSON.caption : (innerJSON.caption || "");
+			wrappedModuleJSON.visible = (childJSON.visible !== undefined) ? childJSON.visible : true;
 
-				let wrappedModule = this.page.application.createModuleInstance(this.page, wrappedModuleJSON);
-				if (!wrappedModule)
-					throw "Item type not found: " + (itemJSON.type || innerJSON.type);
-				this.modules.push(wrappedModule);
-				this.page.application.addModule(wrappedModule);
-			}
+			let childModule = this.page.application.createModuleInstance(this.page, wrappedModuleJSON);
+			if (!childModule)
+				throw "Child module type not found: " + (childJSON.type || innerJSON.type);
+			this.modules.push(childModule);
+			this.page.application.addModule(childModule);
 		}
 				
 	}

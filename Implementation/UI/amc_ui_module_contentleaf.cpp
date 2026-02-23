@@ -142,12 +142,13 @@ std::string CUIModule_ContentLeaf::getCaption()
 
 void CUIModule_ContentLeaf::addContentToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
-	writer;
-	pClientVariableHandler;
-	nStateID;
-
 	moduleObject.addString(AMC_API_KEY_UI_UUID, m_sUUID);
 	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, m_VisibleExpression.evaluateBoolValue(m_pStateMachineData));
+
+	// Write the wrapped item's live state (entities, buttons, imageresource, etc.)
+	// so the Vue client can refresh leaf module data on every poll cycle.
+	if (m_pItem.get() != nullptr)
+		m_pItem->addLegacyContentToJSON(writer, moduleObject, pClientVariableHandler, nStateID);
 }
 
 void CUIModule_ContentLeaf::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWriterObject& moduleObject, CParameterHandler* pClientVariableHandler)

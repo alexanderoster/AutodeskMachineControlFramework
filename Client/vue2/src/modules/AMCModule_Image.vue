@@ -31,7 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <template>
 
 <div>
-	<v-img v-bind:src="Application.getImageURL(module.imageresource)" v-bind:aspect-ratio="module.aspectratio" v-bind:max-width="module.maxwidth" v-bind:max-height="module.maxheight" contain></v-img>
+	<v-img
+		v-bind:src="Application.getImageURL(module.imageresource)"
+		v-bind:aspect-ratio="module.aspectratio || undefined"
+		v-bind:max-width="module.maxwidth || undefined"
+		v-bind:max-height="module.maxheight || undefined"
+		contain
+	></v-img>
 </div>
 
 </template>

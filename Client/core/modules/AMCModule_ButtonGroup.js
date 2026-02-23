@@ -76,8 +76,12 @@ export default class AMCApplicationModule_ButtonGroup extends Common.AMCApplicat
 	updateFromV2Attributes (attrs)
 	{
 		let v2Entry = this.page.application.getV2Entry(this.uuid);
-		if (v2Entry && v2Entry.submodules) {
-			this.buttons = v2Entry.submodules.map(sub => {
+		if (v2Entry && v2Entry.submodules && v2Entry.submodules.length > 0) {
+			// ContentLeaf wraps the ButtonGroup item as submodules[0].
+			// The individual buttons are one level deeper: submodules[0].submodules.
+			let itemEntry = v2Entry.submodules[0];
+			let buttonEntries = (itemEntry && itemEntry.submodules) ? itemEntry.submodules : [];
+			this.buttons = buttonEntries.map(sub => {
 				let a = sub.attributes || {};
 				let formValues = [];
 				if (a.eventformvalues && a.eventformvalues.trim() !== "") {

@@ -143,10 +143,16 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 				this.caption = v2Entry.attributes.caption;
 		}
 
-		if (v2Entry.submodules) {
+		// ContentLeaf wraps the Form item as submodules[0].
+		// The individual form entities are one level deeper: submodules[0].submodules.
+		let entitySubmodules = (v2Entry.submodules && v2Entry.submodules.length > 0 && v2Entry.submodules[0].submodules)
+			? v2Entry.submodules[0].submodules
+			: [];
+
+		if (entitySubmodules.length > 0) {
 			let app = this.page.application;
 
-			for (let sub of v2Entry.submodules) {
+			for (let sub of entitySubmodules) {
 				if (!app.AppContent.FormEntityMap.has(sub.uuid))
 					continue;
 

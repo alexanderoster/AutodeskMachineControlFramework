@@ -639,6 +639,7 @@ export default class AMCApplication extends Common.AMCObject {
 			this.AppContent.DialogMap.clear ();
 			this.AppContent.ModuleMap.clear ();
 			this.AppContent.ItemMap.clear ();
+			this.AppContent.FormEntityMap.clear ();
 			
             this.AppContent.MenuItems = resultJSON.data.menuitems;
             this.AppContent.ToolbarItems = resultJSON.data.toolbaritems;

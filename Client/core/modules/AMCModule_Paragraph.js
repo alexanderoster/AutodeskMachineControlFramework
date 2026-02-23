@@ -47,6 +47,16 @@ export default class AMCApplicationModule_Paragraph extends Common.AMCApplicatio
 	}
 
 
+	updateFromJSON (updateJSON)
+	{
+		Assert.ObjectValue (updateJSON);
+		if (updateJSON.text !== undefined)
+			this.text = updateJSON.text;
+		if (updateJSON.visible !== undefined)
+			this.visible = Assert.BoolValue (updateJSON.visible);
+	}
+
+
 	updateFromV2Attributes (attrs)
 	{
 		if (!attrs)
