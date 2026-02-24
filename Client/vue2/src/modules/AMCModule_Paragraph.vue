@@ -47,6 +47,7 @@ export default {
 <style scoped>
 .para-root {
 	width: 100%;
+	min-height: 0;
 }
 
 .para-text {

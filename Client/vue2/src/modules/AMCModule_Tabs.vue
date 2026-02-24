@@ -30,42 +30,66 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-	<v-card v-if="(module.type == 'tabs') && module.visible !== false" style="width:100%; height:100%">
-		
-		<v-tabs  v-model="tab">
-				
+	<v-card v-if="(module.type == 'tabs') && module.visible !== false" class="tabs-root">
+
+		<!-- Tab header bar -->
+		<v-tabs v-model="tab" class="tabs-bar">
 			<template v-for="moduleTab in module.tabs">
-						
 				<v-tab v-if="moduleTab.visible" :key="moduleTab.uuid">
 					{{ moduleTab.caption }}
 				</v-tab>
-							
 			</template>
-			
 		</v-tabs>
-		
-		<v-tabs-items v-model="tab" style="overflow:auto; width:100%; height:95%;">
 
+		<!-- Tab content fills the remaining height via flex:1 -->
+		<v-tabs-items v-model="tab" class="tabs-content">
 			<template v-for="moduleTab in module.tabs">
-				<v-tab-item v-if="moduleTab.visible" :key="moduleTab.uuid" style="overflow:auto; width:100%; height:100%;">
+				<v-tab-item v-if="moduleTab.visible" :key="moduleTab.uuid" class="tabs-item">
 					<Module_Factory :module="moduleTab" :Application="Application" />
 				</v-tab-item>
 			</template>
-
 		</v-tabs-items>
 
-	</v-card>	
+	</v-card>
 
 </template>
 
 <script>
+export default {
+	props: ['Application', 'module'],
 
-	export default {
-		props: ["Application", "module"],
-
-		data: () => ({
-			tab: null,
-		})
-	};
-	
+	data: () => ({
+		tab: null,
+	}),
+};
 </script>
+
+<style scoped>
+/* Root card is a flex column so the tab bar and content area share height */
+.tabs-root {
+	width: 100%;
+	height: 100%;
+	display: flex !important;
+	flex-direction: column;
+}
+
+/* Tab bar: shrinks to its natural height */
+.tabs-bar {
+	flex: 0 0 auto;
+}
+
+/* Tab content: takes all remaining height; Vuetify sets this to block by default */
+.tabs-content {
+	flex: 1 1 0 !important;
+	min-height: 0;
+	overflow: auto;
+	width: 100%;
+}
+
+/* Individual tab item fills its container */
+.tabs-item {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+}
+</style>

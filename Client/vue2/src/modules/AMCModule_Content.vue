@@ -30,26 +30,58 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-		<div width="100%" height="100%" flat>
-          <v-card-title v-if="module.title != ''">{{ module.title }}</v-card-title>
-          <v-card-subtitle v-if="(module.subtitle != '')">{{ module.subtitle }}</v-card-subtitle>
-          <div v-if="module.modules && (module.modules.length > 0)" class="text--primary" width="100%">
-				<Module_Factory
-					v-for="childModule in module.modules"
-					:key="childModule.uuid"
-					:module="childModule"
-					:Application="Application"
-				/>
-			</div>
+	<div class="content-root">
+
+		<div v-if="module.title" class="content-title">{{ module.title }}</div>
+		<div v-if="module.subtitle" class="content-subtitle">{{ module.subtitle }}</div>
+
+		<div v-if="module.modules && module.modules.length > 0" class="content-children">
+			<Module_Factory
+				v-for="childModule in module.modules"
+				:key="childModule.uuid"
+				:module="childModule"
+				:Application="Application"
+			/>
+		</div>
+
 	</div>
 
 </template>
 
 <script>
-
-	export default {
-		name: "Module_Content",
-		props: ["Application", "module"],
-	};
-	
+export default {
+	name: 'Module_Content',
+	props: ['Application', 'module'],
+};
 </script>
+
+<style scoped>
+/*
+ * Plain block layout. Do NOT use flex or grid here -- the child Grid module
+ * relies on width:100% (not flex sizing) to establish its column tracks, and
+ * its height:100% must resolve in a block context. Introducing a flex container
+ * collapses the grid's height to 0 and breaks the column layout.
+ */
+.content-root {
+	display: block;
+	width: 100%;
+}
+
+.content-title {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: rgba(0, 0, 0, 0.75);
+	padding: 4px 0 2px;
+}
+
+.content-subtitle {
+	font-size: 0.9375rem;
+	color: rgba(0, 0, 0, 0.54);
+	padding-bottom: 8px;
+}
+
+.content-children {
+	display: block;
+	width: 100%;
+}
+</style>

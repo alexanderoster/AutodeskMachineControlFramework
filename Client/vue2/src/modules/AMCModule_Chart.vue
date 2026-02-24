@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false">
-	<VueApexCharts width="500" type="line" ref="apexChart" :options="options" :series="series"></VueApexCharts>
+<div v-if="module.visible !== false" class="chart-root">
+	<VueApexCharts width="100%" type="line" ref="apexChart" :options="options" :series="series"></VueApexCharts>
 </div>
 
 </template>
@@ -87,3 +87,10 @@ export default {
 	})
 };
 </script>
+
+<style scoped>
+.chart-root {
+	width: 100%;
+	min-height: 0;
+}
+</style>

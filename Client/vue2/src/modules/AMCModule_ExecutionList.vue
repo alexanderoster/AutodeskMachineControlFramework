@@ -238,6 +238,7 @@ export default {
 <style scoped>
 .el-root {
 	width: 100%;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
 }

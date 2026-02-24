@@ -30,8 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false">
-<v-container>
+<div v-if="module.visible !== false" class="clist-root">
 	<v-data-table
 		:headers="module.headers"
 		:items="module.entries"
@@ -68,7 +67,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			</div>
 		</template>
 	</v-data-table>
-</v-container>
 </div>
 
 </template>
@@ -101,3 +99,10 @@ export default {
 	}
 };
 </script>
+
+<style scoped>
+.clist-root {
+	width: 100%;
+	min-height: 0;
+}
+</style>

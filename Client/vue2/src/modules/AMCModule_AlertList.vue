@@ -114,6 +114,7 @@ export default {
 <style scoped>
 .al-root {
 	width: 100%;
+	min-height: 0;
 }
 
 /* ── Caption cell ────────────────────────────────────────── */

@@ -174,6 +174,7 @@ export default {
 	flex-direction: column;
 	gap: 4px;
 	width: 100%;
+	min-height: 0;
 }
 
 .form-field {

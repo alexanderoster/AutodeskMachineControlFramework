@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false">
+<div v-if="module.visible !== false" class="image-root">
 	<v-img
 		v-bind:src="Application.getImageURL(module.imageresource)"
 		v-bind:aspect-ratio="module.aspectratio || undefined"
@@ -47,3 +47,10 @@ export default {
 	props: ['Application', 'module'],
 };
 </script>
+
+<style scoped>
+.image-root {
+	width: 100%;
+	min-height: 0;
+}
+</style>

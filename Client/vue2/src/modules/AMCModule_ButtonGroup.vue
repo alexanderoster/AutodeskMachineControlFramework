@@ -70,6 +70,7 @@ export default {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
+	min-height: 0;
 }
 .btngroup-btn {
 	height: 36px !important;

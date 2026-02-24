@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false">
+<div v-if="module.visible !== false" class="upload-root">
 	<v-file-input v-bind:accept="module.acceptedtypes" show-size full-width v-model="module.state.chosenFile" v-bind:label="module.uploadcaption" v-bind:messages="module.state.messages" @change="uiUploadStart(module)"></v-file-input>
 </div>
 
@@ -63,3 +63,10 @@ export default {
 	}
 };
 </script>
+
+<style scoped>
+.upload-root {
+	width: 100%;
+	min-height: 0;
+}
+</style>

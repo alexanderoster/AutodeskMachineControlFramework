@@ -57,6 +57,7 @@ export default {
 <style scoped>
 .plist-root {
 	width: 100%;
+	min-height: 0;
 }
 
 .plist-table {

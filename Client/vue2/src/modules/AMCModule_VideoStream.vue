@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false">
+<div v-if="module.visible !== false" class="videostream-root">
 	<img
 		v-bind:src="Application.getStreamURL(module.streamresource)"
 		v-bind:style="imgStyle"
@@ -58,3 +58,10 @@ export default {
 	}
 };
 </script>
+
+<style scoped>
+.videostream-root {
+	width: 100%;
+	min-height: 0;
+}
+</style>

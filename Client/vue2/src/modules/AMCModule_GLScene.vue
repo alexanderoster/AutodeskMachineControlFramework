@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 	
-	<div v-if="(module.type == 'glscene') && module.visible !== false" style="width:100%; height:100%; display:block; overflow:hidden;">
+	<div v-if="(module.type == 'glscene') && module.visible !== false" class="glscene-root">
 		
 			<div ref="glDiv" style="width:100%;height:100%;"  v-resize="onResize" />
 		
@@ -127,3 +127,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	};
 	
 </script>
+
+<style scoped>
+.glscene-root {
+	width: 100%;
+	height: 100%;
+	display: block;
+	overflow: hidden;
+}
+</style>
