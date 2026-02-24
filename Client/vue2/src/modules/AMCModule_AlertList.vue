@@ -29,230 +29,91 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div class="al-root">
+<div v-if="module.visible !== false" class="al-root">
 
-	<div class="al-area">
+	<AMCModule_TableBase
+		:columns="columns"
+		:entries="module.entries"
+		row-key="alertuuid"
+		empty-icon="mdi-bell-off-outline"
+		empty-title="No alerts"
+		@row-click="onRowClick"
+	>
+		<!-- Timestamp -->
+		<template #cell-alerttimestamp="{ item }">
+			{{ formatTime(item.alerttimestamp) }}
+		</template>
 
-		<!-- Sticky header -->
-		<div class="al-header">
-			<table class="al-table">
-				<colgroup>
-					<col style="width: 110px" />
-					<col />
-					<col style="width: 200px" />
-					<col style="width: 110px" />
-					<col style="width: 70px" />
-				</colgroup>
-				<thead>
-					<tr>
-						<th>Time</th>
-						<th>Alert</th>
-						<th>Context</th>
-						<th>Level</th>
-						<th>Active</th>
-					</tr>
-				</thead>
-			</table>
-		</div>
+		<!-- Caption + identifier -->
+		<template #cell-alertcaption="{ item }">
+			<div class="al-caption-cell">
+				<span class="al-caption-text">{{ item.alertcaption }}</span>
+				<span v-if="item.alertidentifier" class="al-sub-text">{{ item.alertidentifier }}</span>
+			</div>
+		</template>
 
-		<!-- Scrollable body -->
-		<div class="al-scroll">
-			<table class="al-table">
-				<colgroup>
-					<col style="width: 110px" />
-					<col />
-					<col style="width: 200px" />
-					<col style="width: 110px" />
-					<col style="width: 70px" />
-				</colgroup>
-				<tbody>
+		<!-- Context -->
+		<template #cell-alertcontext="{ item }">
+			<span class="al-context">{{ item.alertcontext }}</span>
+		</template>
 
-					<!-- Empty state -->
-					<tr v-if="!module.entries || module.entries.length === 0">
-						<td colspan="5" class="al-cell-empty">
-							<div class="al-empty-state">
-								<v-icon color="grey lighten-1" size="36">mdi-bell-off-outline</v-icon>
-								<span class="al-empty-title">No alerts</span>
-							</div>
-						</td>
-					</tr>
+		<!-- Severity badge -->
+		<template #cell-severity="{ item }">
+			<span
+				v-if="item.severity || item.alertlevel"
+				class="al-badge"
+				:class="severityClass(item.severity || item.alertlevel)"
+			>{{ item.severity || item.alertlevel }}</span>
+		</template>
 
-					<!-- Data rows -->
-					<tr
-						v-for="item in module.entries"
-						:key="item.alertuuid"
-						class="al-row"
-						:class="{ 'al-row--active': item.alertactive }"
-						@click="onRowClick(item)"
-					>
-						<!-- Timestamp -->
-						<td class="al-cell al-cell-time">{{ formatTime(item.alerttimestamp) }}</td>
-
-						<!-- Alert caption + identifier subtitle -->
-						<td class="al-cell">
-							<div class="al-caption-cell">
-								<span class="al-caption-text">{{ item.alertcaption }}</span>
-								<span v-if="item.alertidentifier" class="al-sub-text">{{ item.alertidentifier }}</span>
-							</div>
-						</td>
-
-						<!-- Context -->
-						<td class="al-cell al-cell-context">{{ item.alertcontext }}</td>
-
-						<!-- Severity badge -->
-						<td class="al-cell">
-							<span v-if="item.severity || item.alertlevel" class="al-badge" :class="severityClass(item.severity || item.alertlevel)">
-								{{ item.severity || item.alertlevel }}
-							</span>
-						</td>
-
-						<!-- Active indicator -->
-						<td class="al-cell al-cell-active">
-							<v-icon v-if="item.alertactive" small color="red darken-1">mdi-alert-circle</v-icon>
-							<v-icon v-else small color="grey lighten-1">mdi-check-circle-outline</v-icon>
-						</td>
-					</tr>
-
-				</tbody>
-			</table>
-		</div>
-
-	</div>
+		<!-- Active indicator -->
+		<template #cell-alertactive="{ item }">
+			<v-icon v-if="item.alertactive" small color="red darken-1">mdi-alert-circle</v-icon>
+			<v-icon v-else small color="grey lighten-1">mdi-check-circle-outline</v-icon>
+		</template>
+	</AMCModule_TableBase>
 
 </div>
 </template>
 
 <script>
-const SEVERITY_CLASSES = {
-	error:    'al-badge--red',
-	critical: 'al-badge--red',
-	warning:  'al-badge--yellow',
-	warn:     'al-badge--yellow',
-	info:     'al-badge--blue',
-	debug:    'al-badge--slate',
-	ok:       'al-badge--green',
-	fatal:    'al-badge--red',
-};
+import AMCModule_TableBase from './AMCModule_TableBase.vue';
+import { formatTime, SEVERITY_CLASSES, triggerSelectEvent } from '../../../core/modules/AMCModule_TableUtils.js';
 
 export default {
 	props: ['Application', 'module'],
 
+	components: { AMCModule_TableBase },
+
+	data () {
+		return {
+			columns: [
+				{ key: 'alerttimestamp', label: 'Time',    width: '110px' },
+				{ key: 'alertcaption',   label: 'Alert',   width: ''      },
+				{ key: 'alertcontext',   label: 'Context', width: '200px' },
+				{ key: 'severity',       label: 'Level',   width: '110px' },
+				{ key: 'alertactive',    label: 'Active',  width: '70px', align: 'center' },
+			],
+		};
+	},
+
 	methods: {
-		severityClass(level) {
-			return SEVERITY_CLASSES[(level || '').toLowerCase()] || 'al-badge--slate';
+		formatTime,
+
+		severityClass (level) {
+			return 'al-badge--' + (SEVERITY_CLASSES[(level || '').toLowerCase()] || 'badge--slate').replace('badge--', '');
 		},
 
-		formatTime(timeString) {
-			if (!timeString) return '';
-			const date = new Date(timeString);
-			if (isNaN(date.getTime())) return timeString;
-			return new Intl.DateTimeFormat('en-US', {
-				month:  'short',
-				day:    'numeric',
-				hour:   '2-digit',
-				minute: '2-digit',
-				second: '2-digit',
-				hour12: false,
-			}).format(date);
-		},
-
-		onRowClick(item) {
-			if (item && this.module.selectevent && this.module.selectionvalueuuid) {
-				const eventValues = {};
-				eventValues[this.module.selectionvalueuuid] = item.alertuuid;
-				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
-			}
+		onRowClick (item) {
+			triggerSelectEvent(this.Application, this.module, item.alertuuid);
 		},
 	},
 };
 </script>
 
 <style scoped>
-/* ── Root ────────────────────────────────────────────────── */
 .al-root {
 	width: 100%;
-	display: flex;
-	flex-direction: column;
-}
-
-.al-area {
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-}
-
-/* ── Header ──────────────────────────────────────────────── */
-.al-header {
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-bottom: none;
-	border-radius: 6px 6px 0 0;
-	overflow: hidden;
-}
-
-/* ── Scrollable body ─────────────────────────────────────── */
-.al-scroll {
-	overflow-x: hidden;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-top: none;
-	border-radius: 0 0 6px 6px;
-}
-
-/* ── Shared table ────────────────────────────────────────── */
-.al-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: fixed;
-}
-
-.al-table thead th {
-	background: #fafafa;
-	text-align: left;
-	padding: 6px 12px;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: rgba(0, 0, 0, 0.55);
-	text-transform: none;
-	letter-spacing: 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-	white-space: nowrap;
-}
-
-/* ── Body rows ───────────────────────────────────────────── */
-.al-row {
-	cursor: pointer;
-}
-
-.al-row:hover {
-	background: rgba(0, 0, 0, 0.03);
-}
-
-.al-row--active {
-	background: rgba(220, 38, 38, 0.03);
-}
-
-.al-row--active:hover {
-	background: rgba(220, 38, 38, 0.06);
-}
-
-.al-cell {
-	padding: 6px 12px;
-	font-size: 0.8125rem;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-	vertical-align: middle;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.al-row:last-child .al-cell {
-	border-bottom: none;
-}
-
-/* ── Time cell ───────────────────────────────────────────── */
-.al-cell-time {
-	font-family: 'Roboto Mono', monospace;
-	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.45);
 }
 
 /* ── Caption cell ────────────────────────────────────────── */
@@ -275,14 +136,9 @@ export default {
 }
 
 /* ── Context ─────────────────────────────────────────────── */
-.al-cell-context {
+.al-context {
 	font-size: 0.8125rem;
 	color: rgba(0, 0, 0, 0.55);
-}
-
-/* ── Active column ───────────────────────────────────────── */
-.al-cell-active {
-	text-align: center;
 }
 
 /* ── Severity badge ──────────────────────────────────────── */
@@ -303,25 +159,4 @@ export default {
 .al-badge--blue   { color: #2563eb; }
 .al-badge--green  { color: #16a34a; }
 .al-badge--slate  { color: rgba(0, 0, 0, 0.45); }
-
-/* ── Empty state ─────────────────────────────────────────── */
-.al-cell-empty {
-	padding: 0;
-	border-bottom: none;
-}
-
-.al-empty-state {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	padding: 40px 16px;
-}
-
-.al-empty-title {
-	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.38);
-	font-style: italic;
-}
 </style>
-

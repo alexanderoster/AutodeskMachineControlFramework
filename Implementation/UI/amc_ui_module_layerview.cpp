@@ -316,6 +316,17 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	registerStringAttribute(AMC_API_KEY_UI_LABELICON, labelIcon);
 	registerStringAttribute(AMC_API_KEY_UI_SLIDERCHANGEEVENT, sliderChangeEvent);
 	registerBoolAttribute(AMC_API_KEY_UI_SLIDERFIXED, sliderFixed);
+
+	auto captionAttrib = xmlNode.attribute("caption");
+	m_sCaption = captionAttrib.as_string();
+
+	CUIExpression captionExpr;
+	captionExpr.setFixedValue(m_sCaption);
+	registerStringAttribute("caption", captionExpr);
+
+	CUIExpression visibleExpr;
+	visibleExpr.setFixedValue("1");
+	registerBoolAttribute("visible", visibleExpr);
 }
 
 

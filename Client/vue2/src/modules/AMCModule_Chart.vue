@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div>
+<div v-if="module.visible !== false">
 	<VueApexCharts width="500" type="line" ref="apexChart" :options="options" :series="series"></VueApexCharts>
 </div>
 

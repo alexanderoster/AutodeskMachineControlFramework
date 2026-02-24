@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div class="para-root">
+<div v-if="module.visible !== false" class="para-root">
 	<p class="para-text" :class="{ 'para-text--headline': module.headline, 'para-text--muted': module.muted }">
 		{{ module.text }}
 	</p>

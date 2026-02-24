@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div class="plist-root">
+<div v-if="module.visible !== false" class="plist-root">
 	<v-data-table
 		:headers="module.headers"
 		:items="module.entries"

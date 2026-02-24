@@ -122,6 +122,10 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 
 	updateFromV2Attributes (attrs)
 	{
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
 		if (attrs.defaultcount !== undefined)
 			this.defaultCount = parseInt (attrs.defaultcount) || 200;
 		if (attrs.showtoolbar !== undefined)

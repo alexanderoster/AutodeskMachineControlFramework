@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div class="form-root">
+<div v-if="module.visible !== false" class="form-root">
 	<template v-for="entity in module.entities">
 
 		<!-- Text input -->
@@ -152,7 +152,15 @@ export default {
 				rules.push(v => (v >= editentity.minvalue && v <= editentity.maxvalue) || editentity.validationmessage);
 			}
 			if (editentity.validation === 'string') {
-				rules.push(v => (v.length >= editentity.minlength && v.length <= editentity.maxlength) || editentity.validationmessage);
+				rules.push(v => (v !== null && v !== undefined && v !== '') || editentity.validationmessage);
+				if (editentity.minlength != null || editentity.maxlength != null) {
+					rules.push(v => {
+						const len = (v || '').length;
+						const minOk = editentity.minlength == null || len >= editentity.minlength;
+						const maxOk = editentity.maxlength == null || len <= editentity.maxlength;
+						return (minOk && maxOk) || editentity.validationmessage;
+					});
+				}
 			}
 			return rules;
 		},

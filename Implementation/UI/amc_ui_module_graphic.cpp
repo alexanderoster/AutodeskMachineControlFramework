@@ -102,6 +102,17 @@ CUIModule_Graphic::CUIModule_Graphic(pugi::xml_node& xmlNode, const std::string&
 	registerNumberAttribute("viewmaxy", maxYExpr);
 	registerBoolAttribute("showgrid", showGridExpr);
 
+	auto captionAttrib = xmlNode.attribute("caption");
+	m_sCaption = captionAttrib.as_string();
+
+	CUIExpression captionExpr;
+	captionExpr.setFixedValue(m_sCaption);
+	registerStringAttribute("caption", captionExpr);
+
+	CUIExpression visibleExpr;
+	visibleExpr.setFixedValue("1");
+	registerBoolAttribute("visible", visibleExpr);
+
 	for (auto pItem : m_Items) {
 		pItem->initFrontendModuleStore(pFrontendDefinition);
 	}

@@ -75,6 +75,11 @@ export default class AMCApplicationModule_Chart extends Common.AMCApplicationMod
 		if (!attrs)
 			return true;
 
+		if (attrs.caption !== undefined)
+			this.caption = attrs.caption;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+
 		let dataSeriesUUID = this.dataseries;
 		if (attrs.dataseries !== undefined)
 			dataSeriesUUID = Assert.UUIDValue(attrs.dataseries);

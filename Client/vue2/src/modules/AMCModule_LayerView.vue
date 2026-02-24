@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 	
-	<div v-if="(module.type == 'layerview')" class="layerview-container" @mousemove="onMouseMove">
+	<div v-if="(module.type == 'layerview') && module.visible !== false" class="layerview-container" @mousemove="onMouseMove">
 			<div ref="layerViewDiv" class="layerview" v-resize="onResize" @mousedown="onStartDraggingRenderView" @wheel="onMouseWheel">
 			</div>
 								

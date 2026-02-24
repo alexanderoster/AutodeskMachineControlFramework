@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div>
+<div v-if="module.visible !== false">
 <v-container>
 	<v-data-table
 		:headers="module.headers"
@@ -79,10 +79,12 @@ export default {
 
 	methods: {
 		getActionButtons() {
+			if (this.module.entrybuttons && this.module.entrybuttons.length > 0)
+				return this.module.entrybuttons;
 			return [
-				{ name: 'load',      caption: 'Load',       icon: 'mdi-pencil', disabled: false, event: 'loadconfiguration'       },
-				{ name: 'setactive', caption: 'Set Active', icon: 'mdi-check',  disabled: false, event: 'setactiveconfiguration'  },
-				{ name: 'delete',    caption: 'Delete',     icon: 'mdi-delete', disabled: false, event: 'deleteconfiguration'     },
+				{ uuid: null, name: 'load',      caption: 'Load',       icon: 'mdi-pencil', disabled: false, selectevent: 'loadconfiguration'      },
+				{ uuid: null, name: 'setactive',  caption: 'Set Active', icon: 'mdi-check',  disabled: false, selectevent: 'setactiveconfiguration' },
+				{ uuid: null, name: 'delete',     caption: 'Delete',     icon: 'mdi-delete', disabled: false, selectevent: 'deleteconfiguration'    },
 			];
 		},
 
@@ -90,8 +92,11 @@ export default {
 			const formvalues = {};
 			if (this.module.selectionvalueuuid && item.configurationUUID)
 				formvalues[this.module.selectionvalueuuid] = item.configurationUUID;
-			if (button.event)
-				this.Application.triggerUIEvent(button.event, this.module.uuid, formvalues);
+			if (button.uuid && this.module.buttonvalueuuid)
+				formvalues[this.module.buttonvalueuuid] = button.uuid;
+			const eventName = button.selectevent || button.event;
+			if (eventName)
+				this.Application.triggerUIEvent(eventName, this.module.uuid, formvalues);
 		},
 	}
 };

@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-	<v-card v-if="(module.type == 'tabs')" style="width:100%; height:100%">
+	<v-card v-if="(module.type == 'tabs') && module.visible !== false" style="width:100%; height:100%">
 		
 		<v-tabs  v-model="tab">
 				

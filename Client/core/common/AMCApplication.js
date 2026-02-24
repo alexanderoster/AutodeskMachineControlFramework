@@ -63,6 +63,8 @@ import AMCApplicationModule_ButtonGroup from "../modules/AMCModule_ButtonGroup.j
 import AMCApplicationModule_ConfigurationList from "../modules/AMCModule_ConfigurationList.js"
 import AMCApplicationModule_VideoStream from "../modules/AMCModule_VideoStream.js"
 
+import { validateModuleJSON } from "./AMCModuleSchema.js"
+
 import AMCApplicationPage from "./AMCPage.js"
 import AMCApplicationCustomPage from "./AMCCustomPage.js"
 import AMCUpload from "./AMCImplementation_Upload.js"
@@ -337,8 +339,13 @@ export default class AMCApplication extends Common.AMCObject {
 	// also normalized.
 	_normalizeV2ToLegacy (v2)
 	{
-		if (!v2 || !v2.moduletype)
+		if (!v2 || !v2.moduletype) {
+			if (v2 && typeof v2 === 'object' && !v2.moduletype && !v2.type)
+				console.warn ('[AMC] _normalizeV2ToLegacy: payload has neither moduletype nor type', v2);
 			return v2;
+		}
+		if (!v2.uuid)
+			console.warn ('[AMC] _normalizeV2ToLegacy: v2 payload for type "' + v2.moduletype + '" is missing uuid');
 
 		let legacy = {};
 		let moduleType = v2.moduletype;
@@ -556,7 +563,13 @@ export default class AMCApplication extends Common.AMCObject {
 		let def = moduleDefinitionJSON;
 		if (this._isV2Format(def))
 			def = this._normalizeV2ToLegacy(def);
-		
+
+		const validation = validateModuleJSON(def);
+		if (!validation.valid) {
+			for (const err of validation.errors)
+				console.warn ('[AMC] Module validation: ' + err, def);
+		}
+
 		if (def.type === "content") 
 			return new AMCApplicationModule_Content (page, def);
 

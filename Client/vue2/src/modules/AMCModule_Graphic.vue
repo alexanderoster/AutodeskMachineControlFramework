@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 	
-	<div v-if="(module.type == 'graphic')" style="width:100%; height:100%; display:block; overflow:hidden;">
+	<div v-if="(module.type == 'graphic') && module.visible !== false" style="width:100%; height:100%; display:block; overflow:hidden;">
 			
 			<div ref="graphicDiv" style="width:100%;height:100%;" v-resize="onResize" @mousedown="onStartDragging" @mousemove="onDragging">
 			</div>

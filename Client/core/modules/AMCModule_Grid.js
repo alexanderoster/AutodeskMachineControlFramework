@@ -189,7 +189,13 @@ export default class AMCApplicationModule_Grid extends Common.AMCApplicationModu
 	// Phase 3: v2 frontend – section child modules are independently indexed in
 	// the frontendLookup and updated via their own updateModule() calls.  The
 	// grid layout itself is static, so we just suppress the legacy poll.
-	updateFromV2Attributes () {
+	updateFromV2Attributes (attrs) {
+		if (attrs) {
+			if (attrs.caption !== undefined)
+				this.caption = attrs.caption;
+			if (attrs.visible !== undefined)
+				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+		}
 		return true;
 	}
 		

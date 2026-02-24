@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div class="btngroup-root" :style="module.cssstyle">
+<div v-if="module.visible !== false" class="btngroup-root" :style="module.cssstyle">
 	<v-btn
 		v-for="button in module.buttons"
 		:key="button.uuid || button.name"

@@ -83,8 +83,15 @@ export default class AMCApplicationModule_GLScene extends Common.AMCApplicationM
 				
 	}
 
-	updateFromV2Attributes ()
+	updateFromV2Attributes (attrs)
 	{
+		if (attrs) {
+			if (attrs.caption !== undefined)
+				this.caption = attrs.caption;
+			if (attrs.visible !== undefined)
+				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+		}
+
 		let v2Entry = this.page.application.getV2Entry (this.uuid);
 		let instances = [];
 

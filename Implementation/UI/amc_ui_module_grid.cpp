@@ -303,6 +303,14 @@ CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath
 	registerIntegerAttribute("columncount", columnsExpression);
 	registerIntegerAttribute("rowcount", rowsExpression);
 
+	CUIExpression captionExpr;
+	captionExpr.setFixedValue(xmlNode.attribute("caption").as_string());
+	registerStringAttribute("caption", captionExpr);
+
+	CUIExpression visibleExpr;
+	visibleExpr.setFixedValue("1");
+	registerBoolAttribute("visible", visibleExpr);
+
 }
 
 

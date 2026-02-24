@@ -247,6 +247,9 @@ void CUIModule_ContentAlertList::registerFrontendAttributes()
 
 	expr.setFixedValue(std::to_string(m_nEntriesPerPage));
 	registerItemIntegerAttribute("entriesperpage", expr);
+
+	expr.setFixedValue(m_sSelectedBuildField);
+	registerItemStringAttribute("selectionvalueuuid", expr);
 }
 
 void CUIModule_ContentAlertList::frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)

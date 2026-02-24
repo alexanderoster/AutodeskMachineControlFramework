@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 	
-	<div v-bind:style="module.cssstyle">
+	<div v-if="module.visible !== false" v-bind:style="module.cssstyle">
 
 		<template v-for="moduleSection in module.sections">
 			<div :key="moduleSection.uuid" tile flat v-bind:style="moduleSection.cssstyle">

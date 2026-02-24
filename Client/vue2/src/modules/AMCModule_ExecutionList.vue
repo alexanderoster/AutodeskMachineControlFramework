@@ -29,134 +29,80 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div class="el-root">
+<div v-if="module.visible !== false" class="el-root">
 
-	<div class="el-area">
+	<AMCModule_TableBase
+		:columns="visibleColumns"
+		:entries="module.entries"
+		row-key="executionUUID"
+		empty-icon="mdi-history"
+		:empty-title="module.loadingtext || 'No executions'"
+		empty-hint="Build executions will appear here"
+		@row-click="onRowClick"
+	>
+		<!-- Thumbnail -->
+		<template v-if="hasThumbnailColumn" #cell-executionThumbnail="{ item }">
+			<img
+				v-if="isValidUUID(item.executionThumbnail)"
+				:src="Application.getImageURL(item.executionThumbnail)"
+				class="el-thumb-img"
+				:alt="item.executionName"
+			/>
+			<div v-else class="el-thumb-placeholder">
+				<v-icon color="grey lighten-2" size="28">mdi-cube-outline</v-icon>
+			</div>
+		</template>
 
-		<!-- Sticky header -->
-		<div class="el-header">
-			<table class="el-table">
-				<colgroup>
-					<col v-if="hasThumbnails" style="width: 112px" />
-					<col />
-					<col style="width: 180px" />
-					<col style="width: 110px" />
-					<col v-if="hasButtons" style="width: 160px" />
-				</colgroup>
-				<thead>
-					<tr>
-						<th v-if="hasThumbnails"></th>
-						<th>Execution</th>
-						<th>Time</th>
-						<th>Status</th>
-						<th v-if="hasButtons">Actions</th>
-					</tr>
-				</thead>
-			</table>
-		</div>
+		<!-- Name + description -->
+		<template #cell-executionName="{ item }">
+			<div class="el-name-text">{{ item.executionName }}</div>
+			<div v-if="item.executionDescription" class="el-sub-text">{{ item.executionDescription }}</div>
+			<div v-if="item.executionLayerCount" class="el-sub-text">{{ item.executionLayerCount }} layers</div>
+		</template>
 
-		<!-- Scrollable body -->
-		<div class="el-scroll">
-			<table class="el-table">
-				<colgroup>
-					<col v-if="hasThumbnails" style="width: 112px" />
-					<col />
-					<col style="width: 180px" />
-					<col style="width: 110px" />
-					<col v-if="hasButtons" style="width: 160px" />
-				</colgroup>
-				<tbody>
+		<!-- Timestamp block -->
+		<template #cell-executionStartTimestamp="{ item }">
+			<div v-if="item.executionStartTimestamp" class="el-time-row">
+				<span class="el-time-label">Start</span>
+				<span class="el-time-value">{{ formatDateTime(item.executionStartTimestamp) }}</span>
+			</div>
+			<div v-if="item.executionEndTimestamp" class="el-time-row">
+				<span class="el-time-label">End</span>
+				<span class="el-time-value">{{ formatDateTime(item.executionEndTimestamp) }}</span>
+			</div>
+			<div v-if="item.executionDuration != null" class="el-time-row">
+				<span class="el-time-label">Dur</span>
+				<span class="el-time-value el-duration">{{ formatDuration(item.executionDuration) }}</span>
+			</div>
+		</template>
 
-					<!-- Empty state -->
-					<tr v-if="!module.entries || module.entries.length === 0">
-						<td :colspan="columnCount" class="el-cell-empty">
-							<div class="el-empty-state">
-								<v-icon color="grey lighten-1" size="36">mdi-history</v-icon>
-								<span class="el-empty-title">{{ module.loadingtext || 'No executions' }}</span>
-								<span class="el-empty-hint">Build executions will appear here</span>
-							</div>
-						</td>
-					</tr>
+		<!-- Status badge -->
+		<template #cell-executionStatus="{ item }">
+			<span v-if="item.executionStatus" class="el-status-badge" :class="statusClass(item.executionStatus)">
+				{{ item.executionStatus }}
+			</span>
+		</template>
 
-					<!-- Data rows -->
-					<tr
-						v-for="item in module.entries"
-						:key="item.executionUUID"
-						class="el-row"
-						@click="onRowClick(item)"
-					>
-						<!-- Thumbnail -->
-						<td v-if="hasThumbnails" class="el-cell el-cell-thumb">
-							<img
-								v-if="hasThumbnailImage(item)"
-								:src="Application.getImageURL(item.executionThumbnail)"
-								class="el-thumb-img"
-								:alt="item.executionName"
-								@click.stop="onRowClick(item)"
-							/>
-							<div v-else class="el-thumb-placeholder">
-								<v-icon color="grey lighten-2" size="28">mdi-cube-outline</v-icon>
-							</div>
-						</td>
-
-						<!-- Name + description -->
-						<td class="el-cell el-name-cell">
-							<div class="el-name-text">{{ item.executionName }}</div>
-							<div v-if="item.executionDescription" class="el-sub-text">{{ item.executionDescription }}</div>
-							<div v-if="item.executionLayerCount" class="el-sub-text">{{ item.executionLayerCount }} layers</div>
-						</td>
-
-						<!-- Timestamp block -->
-						<td class="el-cell el-cell-time">
-							<div v-if="item.executionStartTimestamp" class="el-time-row">
-								<span class="el-time-label">Start</span>
-								<span class="el-time-value">{{ formatDateTime(item.executionStartTimestamp) }}</span>
-							</div>
-							<div v-if="item.executionEndTimestamp" class="el-time-row">
-								<span class="el-time-label">End</span>
-								<span class="el-time-value">{{ formatDateTime(item.executionEndTimestamp) }}</span>
-							</div>
-							<div v-if="item.executionDuration != null" class="el-time-row">
-								<span class="el-time-label">Dur</span>
-								<span class="el-time-value el-duration">{{ formatDuration(item.executionDuration) }}</span>
-							</div>
-						</td>
-
-						<!-- Status badge -->
-						<td class="el-cell">
-							<span v-if="item.executionStatus" class="el-status-badge" :class="statusClass(item.executionStatus)">
-								{{ item.executionStatus }}
-							</span>
-						</td>
-
-						<!-- Action buttons -->
-						<td v-if="hasButtons" class="el-cell el-cell-actions" @click.stop>
-							<button
-								v-for="button in module.entrybuttons"
-								:key="button.uuid"
-								class="el-action-btn"
-								@click.stop="onButtonClick(button, item)"
-							>
-								<v-icon v-if="button.icon" small>{{ button.icon }}</v-icon>
-								<span v-if="button.caption">{{ button.caption }}</span>
-							</button>
-						</td>
-
-					</tr>
-
-				</tbody>
-			</table>
-		</div>
-
-	</div>
+		<!-- Action buttons -->
+		<template v-if="hasButtons" #row-actions="{ item }">
+			<button
+				v-for="button in module.entrybuttons"
+				:key="button.uuid"
+				class="el-action-btn"
+				@click.stop="onButtonClick(button, item)"
+			>
+				<v-icon v-if="button.icon" small>{{ button.icon }}</v-icon>
+				<span v-if="button.caption">{{ button.caption }}</span>
+			</button>
+		</template>
+	</AMCModule_TableBase>
 
 	<!-- Detail dialog -->
 	<v-dialog v-if="selectedItem" v-model="dialogOpen" max-width="520" @click:outside="closeDialog">
 		<v-card class="el-dialog-card">
 			<div class="el-dialog-title">Execution Details</div>
 
-			<!-- Thumbnail row if available -->
-			<div v-if="hasThumbnailImage(selectedItem)" class="el-dialog-thumb-row">
+			<div v-if="isValidUUID(selectedItem.executionThumbnail)" class="el-dialog-thumb-row">
 				<img
 					:src="Application.getImageURL(selectedItem.executionThumbnail)"
 					class="el-dialog-thumb-img"
@@ -203,7 +149,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				</div>
 			</div>
 
-			<!-- Dialog buttons -->
 			<div v-if="hasButtons" class="el-dialog-actions">
 				<button
 					v-for="button in module.entrybuttons"
@@ -226,27 +171,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </template>
 
 <script>
-const NULL_UUID = '00000000-0000-0000-0000-000000000000';
-
-const STATUS_CLASSES = {
-	running:    'el-status--running',
-	active:     'el-status--running',
-	finished:   'el-status--finished',
-	completed:  'el-status--finished',
-	succeeded:  'el-status--finished',
-	failed:     'el-status--failed',
-	error:      'el-status--failed',
-	aborted:    'el-status--aborted',
-	cancelled:  'el-status--aborted',
-	pending:    'el-status--pending',
-	queued:     'el-status--pending',
-	paused:     'el-status--paused',
-};
+import AMCModule_TableBase from './AMCModule_TableBase.vue';
+import { formatDateTime, formatDuration, STATUS_CLASSES, isValidUUID, triggerSelectEvent, triggerButtonEvent } from '../../../core/modules/AMCModule_TableUtils.js';
 
 export default {
 	props: ['Application', 'module'],
 
-	data() {
+	components: { AMCModule_TableBase },
+
+	data () {
 		return {
 			dialogOpen: false,
 			selectedItem: null,
@@ -254,76 +187,47 @@ export default {
 	},
 
 	computed: {
-		hasThumbnails() {
-			if (!this.module.entries || this.module.entries.length === 0) return false;
-			return this.module.entries.some(e => this.hasThumbnailImage(e));
+		hasThumbnailColumn () {
+			return this.module.entries && this.module.entries.some(e => isValidUUID(e.executionThumbnail));
 		},
 
-		hasButtons() {
+		hasButtons () {
 			return this.module.entrybuttons && this.module.entrybuttons.length > 0;
 		},
 
-		columnCount() {
-			let cols = 3; // name + time + status
-			if (this.hasThumbnails) cols++;
-			if (this.hasButtons) cols++;
+		visibleColumns () {
+			const cols = [];
+			if (this.hasThumbnailColumn)
+				cols.push({ key: 'executionThumbnail',      label: '',         width: '112px' });
+			cols.push({ key: 'executionName',            label: 'Execution', width: ''      });
+			cols.push({ key: 'executionStartTimestamp',  label: 'Time',      width: '180px' });
+			cols.push({ key: 'executionStatus',          label: 'Status',    width: '110px' });
 			return cols;
 		},
 	},
 
 	methods: {
-		hasThumbnailImage(item) {
-			return item && item.executionThumbnail && item.executionThumbnail !== NULL_UUID;
+		formatDateTime,
+		formatDuration,
+		isValidUUID,
+
+		statusClass (status) {
+			const key = (status || '').toLowerCase();
+			const cls = STATUS_CLASSES[key] || 'badge--slate';
+			return 'el-status--' + cls.replace('badge--', '');
 		},
 
-		statusClass(status) {
-			return STATUS_CLASSES[(status || '').toLowerCase()] || 'el-status--pending';
-		},
-
-		formatDateTime(timeString) {
-			if (!timeString) return '';
-			const date = new Date(timeString);
-			if (isNaN(date.getTime())) return timeString;
-			return new Intl.DateTimeFormat('en-US', {
-				month:  'short',
-				day:    'numeric',
-				hour:   '2-digit',
-				minute: '2-digit',
-				second: '2-digit',
-				hour12: false,
-			}).format(date);
-		},
-
-		formatDuration(durationInSeconds) {
-			if (durationInSeconds == null) return '';
-			const s = Math.round(durationInSeconds);
-			const h = Math.floor(s / 3600);
-			const m = Math.floor((s % 3600) / 60);
-			const sec = s % 60;
-			return [h, m, sec].map(n => String(n).padStart(2, '0')).join(':');
-		},
-
-		onRowClick(item) {
+		onRowClick (item) {
 			this.selectedItem = item;
 			this.dialogOpen = true;
-
-			if (item && this.module.selectevent && this.module.selectionvalueuuid) {
-				const eventValues = {};
-				eventValues[this.module.selectionvalueuuid] = item.executionUUID;
-				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
-			}
+			triggerSelectEvent(this.Application, this.module, item.executionUUID);
 		},
 
-		onButtonClick(button, item) {
-			if (item && button && button.selectevent) {
-				const eventValues = {};
-				if (this.module.selectionvalueuuid) eventValues[this.module.selectionvalueuuid] = item.executionUUID;
-				if (this.module.buttonvalueuuid)    eventValues[this.module.buttonvalueuuid]    = button.uuid;
-				this.Application.triggerUIEvent(button.selectevent, this.module.uuid, eventValues);
-			}
+		onButtonClick (button, item) {
+			triggerButtonEvent(this.Application, this.module, button, item.executionUUID);
 		},
 
-		closeDialog() {
+		closeDialog () {
 			this.dialogOpen = false;
 			this.selectedItem = null;
 		},
@@ -332,81 +236,32 @@ export default {
 </script>
 
 <style scoped>
-/* ── Root ────────────────────────────────────────────────── */
 .el-root {
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 }
 
-.el-area {
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-}
-
-/* ── Header ──────────────────────────────────────────────── */
-.el-header {
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-bottom: none;
-	border-radius: 6px 6px 0 0;
-	overflow: hidden;
-}
-
-/* ── Scrollable body ─────────────────────────────────────── */
-.el-scroll {
-	overflow-x: hidden;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-top: none;
-	border-radius: 0 0 6px 6px;
-}
-
-/* ── Shared table ────────────────────────────────────────── */
-.el-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: fixed;
-}
-
-.el-table thead th {
-	background: #fafafa;
-	text-align: left;
-	padding: 6px 12px;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: rgba(0, 0, 0, 0.55);
-	text-transform: none;
-	letter-spacing: 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+/* ── Name cell ───────────────────────────────────────────── */
+.el-name-text {
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: rgba(0, 0, 0, 0.87);
 	white-space: nowrap;
-}
-
-/* ── Body rows ───────────────────────────────────────────── */
-.el-row {
-	cursor: pointer;
-}
-
-.el-row:hover {
-	background: rgba(0, 0, 0, 0.03);
-}
-
-.el-cell {
-	padding: 8px 12px;
-	font-size: 0.8125rem;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-	vertical-align: middle;
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.el-row:last-child .el-cell {
-	border-bottom: none;
+.el-sub-text {
+	font-size: 0.75rem;
+	color: rgba(0, 0, 0, 0.45);
+	margin-top: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 /* ── Thumbnail ───────────────────────────────────────────── */
-.el-cell-thumb {
-	padding: 6px 8px;
-}
-
 .el-thumb-img {
 	width: 96px;
 	height: 72px;
@@ -426,35 +281,7 @@ export default {
 	border-radius: 4px;
 }
 
-/* ── Name cell ───────────────────────────────────────────── */
-.el-name-cell {
-	overflow: hidden;
-}
-
-.el-name-text {
-	font-weight: 500;
-	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.87);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.el-sub-text {
-	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.45);
-	margin-top: 2px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
 /* ── Time block ──────────────────────────────────────────── */
-.el-cell-time {
-	vertical-align: top;
-	padding-top: 10px;
-}
-
 .el-time-row {
 	display: flex;
 	gap: 6px;
@@ -497,18 +324,14 @@ export default {
 	white-space: nowrap;
 }
 
-.el-status--running   { color: #2563eb; }
-.el-status--finished  { color: #16a34a; }
-.el-status--failed    { color: #dc2626; }
-.el-status--aborted   { color: #ca8a04; }
-.el-status--pending   { color: rgba(0, 0, 0, 0.45); }
-.el-status--paused    { color: #7c3aed; }
+.el-status--blue   { color: #2563eb; }
+.el-status--green  { color: #16a34a; }
+.el-status--red    { color: #dc2626; }
+.el-status--yellow { color: #ca8a04; }
+.el-status--slate  { color: rgba(0, 0, 0, 0.45); }
+.el-status--purple { color: #7c3aed; }
 
-/* ── Actions ─────────────────────────────────────────────── */
-.el-cell-actions {
-	white-space: nowrap;
-}
-
+/* ── Action button ───────────────────────────────────────── */
 .el-action-btn {
 	display: inline-flex;
 	align-items: center;
@@ -528,31 +351,6 @@ export default {
 .el-action-btn:hover {
 	background: rgba(0, 0, 0, 0.05);
 	border-color: rgba(0, 0, 0, 0.3);
-}
-
-/* ── Empty state ─────────────────────────────────────────── */
-.el-cell-empty {
-	padding: 0;
-	border-bottom: none;
-}
-
-.el-empty-state {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	padding: 48px 16px;
-}
-
-.el-empty-title {
-	font-size: 0.9375rem;
-	font-weight: 500;
-	color: rgba(0, 0, 0, 0.55);
-}
-
-.el-empty-hint {
-	font-size: 0.8125rem;
-	color: rgba(0, 0, 0, 0.38);
 }
 
 /* ── Dialog ──────────────────────────────────────────────── */
@@ -668,4 +466,3 @@ export default {
 	background: rgba(0, 0, 0, 0.05);
 }
 </style>
-

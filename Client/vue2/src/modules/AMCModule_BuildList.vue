@@ -29,131 +29,80 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !-->
 
 <template>
-<div class="bl-root">
+<div v-if="module.visible !== false" class="bl-root">
 
-	<div class="bl-area">
+	<AMCModule_TableBase
+		:columns="columns"
+		:entries="module.entries"
+		row-key="buildUUID"
+		empty-icon="mdi-folder-open-outline"
+		empty-title="No build files uploaded"
+		empty-hint="Click a row to view details and select a build"
+		@row-click="onRowClick"
+	>
+		<!-- Thumbnail -->
+		<template #cell-buildThumbnail="{ item }">
+			<img
+				v-if="isValidUUID(item.buildThumbnail)"
+				class="bl-thumb-img"
+				:src="Application.getImageURL(item.buildThumbnail)"
+			/>
+			<div v-else class="bl-thumb-placeholder">
+				<v-icon color="grey lighten-1" size="28">mdi-file-3d-outline</v-icon>
+			</div>
+		</template>
 
-		<!-- Sticky header -->
-		<div class="bl-header">
-			<table class="bl-table">
-				<colgroup>
-					<col style="width: 96px" />
-					<col />
-					<col style="width: 80px" />
-					<col style="width: 160px" />
-					<col style="width: 200px" />
-					<col style="width: 110px" />
-					<col v-if="hasActions" style="width: 1px" />
-				</colgroup>
-				<thead>
-					<tr>
-						<th></th>
-						<th>Build</th>
-						<th>Layers</th>
-						<th>Uploaded</th>
-						<th>UUID</th>
-						<th>Status</th>
-						<th v-if="hasActions"></th>
-					</tr>
-				</thead>
-			</table>
-		</div>
+		<!-- Build name + execution count -->
+		<template #cell-buildName="{ item }">
+			<div class="bl-name-cell">
+				<span class="bl-name-text">{{ item.buildName }}</span>
+				<span class="bl-sub-text">
+					{{ item.buildExecutionCount === 1 ? 'Printed 1 time' : 'Printed ' + item.buildExecutionCount + ' times' }}
+				</span>
+			</div>
+		</template>
 
-		<!-- Scrollable body -->
-		<div class="bl-scroll">
-			<table class="bl-table">
-				<colgroup>
-					<col style="width: 96px" />
-					<col />
-					<col style="width: 80px" />
-					<col style="width: 160px" />
-					<col style="width: 200px" />
-					<col style="width: 110px" />
-					<col v-if="hasActions" style="width: 1px" />
-				</colgroup>
-				<tbody>
-					<!-- Empty state -->
-					<tr v-if="!module.entries || module.entries.length === 0">
-						<td :colspan="hasActions ? 7 : 6" class="bl-cell-empty">
-							<div class="bl-empty-state">
-								<v-icon color="grey lighten-1" size="40">mdi-folder-open-outline</v-icon>
-								<span class="bl-empty-title">No build files uploaded</span>
-								<span class="bl-empty-hint">Click a row to view details and select a build</span>
-							</div>
-						</td>
-					</tr>
+		<!-- Layers -->
+		<template #cell-buildLayers="{ item }">
+			<span class="bl-meta">{{ item.buildLayers }}</span>
+		</template>
 
-					<!-- Data rows -->
-					<tr
-						v-for="item in module.entries"
-						:key="item.buildUUID"
-						class="bl-row"
-						@click="onRowClick(item)"
-					>
-						<!-- Thumbnail -->
-						<td class="bl-cell bl-cell-thumb">
-							<img
-								v-if="hasThumbnail(item)"
-								class="bl-thumb-img"
-								:src="Application.getImageURL(item.buildThumbnail)"
-							/>
-							<div v-else class="bl-thumb-placeholder">
-								<v-icon color="grey lighten-1" size="28">mdi-file-3d-outline</v-icon>
-							</div>
-						</td>
+		<!-- Upload time + user -->
+		<template #cell-buildTimestamp="{ item }">
+			<div class="bl-date-cell">
+				<span class="bl-date-text">{{ formatDateTime(item.buildTimestamp) }}</span>
+				<span class="bl-sub-text">{{ item.buildUser }}</span>
+			</div>
+		</template>
 
-						<!-- Build name + execution count -->
-						<td class="bl-cell">
-							<div class="bl-name-cell">
-								<span class="bl-name-text">{{ item.buildName }}</span>
-								<span class="bl-sub-text">
-									{{ item.buildExecutionCount === 1 ? 'Printed 1 time' : 'Printed ' + item.buildExecutionCount + ' times' }}
-								</span>
-							</div>
-						</td>
+		<!-- UUID -->
+		<template #cell-buildUUID="{ item }">
+			<span class="bl-uuid">{{ item.buildUUID }}</span>
+		</template>
 
-						<!-- Layers -->
-						<td class="bl-cell bl-cell-meta">{{ item.buildLayers }}</td>
+		<!-- Status -->
+		<template #cell-buildStatus>
+			<div class="bl-status-cell">
+				<v-icon small color="green darken-1">mdi-check-circle</v-icon>
+				<span class="bl-status-ready">Ready</span>
+			</div>
+		</template>
 
-						<!-- Upload time + user -->
-						<td class="bl-cell">
-							<div class="bl-date-cell">
-								<span class="bl-date-text">{{ formatDateTime(item.buildTimestamp) }}</span>
-								<span class="bl-sub-text">{{ item.buildUser }}</span>
-							</div>
-						</td>
-
-						<!-- UUID -->
-						<td class="bl-cell bl-cell-uuid">{{ item.buildUUID }}</td>
-
-						<!-- Status -->
-						<td class="bl-cell">
-							<div class="bl-status-cell">
-								<v-icon small color="green darken-1">mdi-check-circle</v-icon>
-								<span class="bl-status-ready">Ready</span>
-							</div>
-						</td>
-
-						<!-- Action buttons -->
-						<td v-if="hasActions" class="bl-cell bl-cell-actions" @click.stop>
-							<v-btn
-								v-for="button in module.entrybuttons"
-								:key="button.uuid"
-								text
-								x-small
-								color="primary"
-								@click.stop="uiModuleBuildListHistoryClick(button, item)"
-							>
-								<v-icon v-if="button.icon" small left>{{ button.icon }}</v-icon>
-								{{ button.caption }}
-							</v-btn>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-
-	</div>
+		<!-- Action buttons -->
+		<template v-if="hasActions" #row-actions="{ item }">
+			<v-btn
+				v-for="button in module.entrybuttons"
+				:key="button.uuid"
+				text
+				x-small
+				color="primary"
+				@click.stop="onButtonClick(button, item)"
+			>
+				<v-icon v-if="button.icon" small left>{{ button.icon }}</v-icon>
+				{{ button.caption }}
+			</v-btn>
+		</template>
+	</AMCModule_TableBase>
 
 	<!-- Detail dialog -->
 	<v-dialog v-model="showDialog" max-width="540" @click:outside="showDialog = false">
@@ -170,7 +119,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 			<v-card-text class="bl-dialog-body pt-4">
 
-				<div v-if="hasThumbnail(selectedEntry)" class="bl-dialog-thumb-row mb-4">
+				<div v-if="isValidUUID(selectedEntry.buildThumbnail)" class="bl-dialog-thumb-row mb-4">
 					<v-img
 						:src="Application.getImageURL(selectedEntry.buildThumbnail)"
 						max-height="160"
@@ -222,162 +171,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </template>
 
 <script>
+import AMCModule_TableBase from './AMCModule_TableBase.vue';
+import { formatDateTime, isValidUUID, triggerSelectEvent, triggerButtonEvent } from '../../../core/modules/AMCModule_TableUtils.js';
+
 export default {
 	props: ['Application', 'module'],
 
-	data() {
+	components: { AMCModule_TableBase },
+
+	data () {
 		return {
 			showDialog: false,
 			selectedEntry: null,
+			columns: [
+				{ key: 'buildThumbnail', label: '',        width: '96px'  },
+				{ key: 'buildName',      label: 'Build',   width: ''      },
+				{ key: 'buildLayers',    label: 'Layers',  width: '80px'  },
+				{ key: 'buildTimestamp', label: 'Uploaded',width: '160px' },
+				{ key: 'buildUUID',      label: 'UUID',    width: '200px' },
+				{ key: 'buildStatus',    label: 'Status',  width: '110px' },
+			],
 		};
 	},
 
 	computed: {
-		hasActions() {
+		hasActions () {
 			return this.module.entrybuttons && this.module.entrybuttons.length > 0;
 		},
 	},
 
 	methods: {
-		hasThumbnail(item) {
-			return item.buildThumbnail &&
-				item.buildThumbnail !== '00000000-0000-0000-0000-000000000000';
-		},
+		formatDateTime,
+		isValidUUID,
 
-		formatDateTime(timeString) {
-			if (!timeString) return '';
-			const date = new Date(timeString);
-			if (isNaN(date.getTime())) return timeString;
-			return new Intl.DateTimeFormat('en-US', {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: false,
-			}).format(date);
-		},
-
-		onRowClick(item) {
+		onRowClick (item) {
 			this.selectedEntry = item;
 			this.showDialog = true;
 		},
 
-		onSelectFromDialog() {
+		onSelectFromDialog () {
 			this.showDialog = false;
-			if (this.selectedEntry && this.module.selectevent && this.module.selectionvalueuuid) {
-				const eventValues = {};
-				eventValues[this.module.selectionvalueuuid] = this.selectedEntry.buildUUID;
-				this.Application.triggerUIEvent(this.module.selectevent, this.module.uuid, eventValues);
-			}
+			triggerSelectEvent(this.Application, this.module, this.selectedEntry && this.selectedEntry.buildUUID);
 		},
 
-		uiModuleBuildListHistoryClick(button, item) {
-			if (item && button && button.selectevent &&
-				this.module.selectionvalueuuid && this.module.buttonvalueuuid) {
-				const eventValues = {};
-				eventValues[this.module.selectionvalueuuid] = item.buildUUID;
-				eventValues[this.module.buttonvalueuuid] = button.uuid;
-				this.Application.triggerUIEvent(button.selectevent, this.module.uuid, eventValues);
-			}
+		onButtonClick (button, item) {
+			triggerButtonEvent(this.Application, this.module, button, item.buildUUID);
 		},
 	},
 };
 </script>
 
 <style scoped>
-/* ── Root layout ─────────────────────────────────────────── */
+/* ── Root ────────────────────────────────────────────────── */
 .bl-root {
 	width: 100%;
-}
-
-.bl-area {
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-}
-
-/* ── Header ──────────────────────────────────────────────── */
-.bl-header {
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-bottom: none;
-	border-radius: 6px 6px 0 0;
-	overflow: hidden;
-}
-
-/* ── Scrollable body ─────────────────────────────────────── */
-.bl-scroll {
-	overflow-x: hidden;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-top: none;
-	border-radius: 0 0 6px 6px;
-}
-
-/* ── Shared table styles ─────────────────────────────────── */
-.bl-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: fixed;
-}
-
-.bl-table thead th {
-	background: #fafafa;
-	text-align: left;
-	padding: 6px 12px;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: rgba(0, 0, 0, 0.55);
-	text-transform: none;
-	letter-spacing: 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-	white-space: nowrap;
-}
-
-/* ── Body rows ───────────────────────────────────────────── */
-.bl-row {
-	cursor: pointer;
-}
-
-.bl-row:hover {
-	background: rgba(0, 0, 0, 0.03);
-}
-
-.bl-cell {
-	padding: 6px 12px;
-	font-size: 0.875rem;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-	vertical-align: middle;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.bl-row:last-child .bl-cell {
-	border-bottom: none;
-}
-
-/* ── Thumbnail cell ──────────────────────────────────────── */
-.bl-cell-thumb {
-	padding: 6px 12px;
-}
-
-.bl-thumb-img {
-	display: block;
-	width: 72px;
-	height: 52px;
-	object-fit: contain;
-	border-radius: 4px;
-	background: #f5f5f5;
-}
-
-.bl-thumb-placeholder {
-	width: 72px;
-	height: 52px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: #f5f5f5;
-	border-radius: 4px;
 }
 
 /* ── Name cell ───────────────────────────────────────────── */
@@ -401,6 +248,32 @@ export default {
 	font-style: italic;
 }
 
+/* ── Thumbnail ───────────────────────────────────────────── */
+.bl-thumb-img {
+	display: block;
+	width: 72px;
+	height: 52px;
+	object-fit: contain;
+	border-radius: 4px;
+	background: #f5f5f5;
+}
+
+.bl-thumb-placeholder {
+	width: 72px;
+	height: 52px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #f5f5f5;
+	border-radius: 4px;
+}
+
+/* ── Meta / layers ───────────────────────────────────────── */
+.bl-meta {
+	font-size: 0.8125rem;
+	color: rgba(0, 0, 0, 0.55);
+}
+
 /* ── Date cell ───────────────────────────────────────────── */
 .bl-date-cell {
 	display: flex;
@@ -412,26 +285,12 @@ export default {
 	font-size: 0.8125rem;
 }
 
-/* ── Meta (layers) ───────────────────────────────────────── */
-.bl-cell-meta {
-	font-size: 0.8125rem;
-	color: rgba(0, 0, 0, 0.55);
-}
-
 /* ── UUID ────────────────────────────────────────────────── */
-.bl-cell-uuid {
+.bl-uuid {
 	font-size: 0.7rem;
 	font-family: 'Roboto Mono', monospace;
 	color: rgba(0, 0, 0, 0.38);
 	letter-spacing: 0.01em;
-}
-
-.bl-uuid-text {
-	font-size: 0.7rem;
-	font-family: 'Roboto Mono', monospace;
-	color: rgba(0, 0, 0, 0.38);
-	letter-spacing: 0.01em;
-	word-break: break-all;
 }
 
 /* ── Status ──────────────────────────────────────────────── */
@@ -447,37 +306,7 @@ export default {
 	font-weight: 500;
 }
 
-/* ── Actions ─────────────────────────────────────────────── */
-.bl-cell-actions {
-	white-space: nowrap;
-}
-
-/* ── Empty state ─────────────────────────────────────────── */
-.bl-cell-empty {
-	padding: 0;
-	border-bottom: none;
-}
-
-.bl-empty-state {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	padding: 48px 16px;
-}
-
-.bl-empty-title {
-	font-size: 0.9375rem;
-	color: rgba(0, 0, 0, 0.45);
-}
-
-.bl-empty-hint {
-	font-size: 0.8125rem;
-	color: rgba(0, 0, 0, 0.3);
-	font-style: italic;
-}
-
-/* ── Detail dialog ───────────────────────────────────────── */
+/* ── Dialog ──────────────────────────────────────────────── */
 .bl-dialog-title {
 	font-size: 1rem !important;
 	padding: 14px 20px !important;
@@ -517,8 +346,11 @@ export default {
 	font-size: 0.875rem;
 }
 
-.bl-dialog-uuid-row .bl-uuid-text {
+.bl-uuid-text {
+	font-size: 0.7rem;
+	font-family: 'Roboto Mono', monospace;
+	color: rgba(0, 0, 0, 0.38);
+	letter-spacing: 0.01em;
 	word-break: break-all;
 }
 </style>
-

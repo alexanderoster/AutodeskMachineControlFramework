@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div>
+<div v-if="module.visible !== false">
 	<v-img
 		v-bind:src="Application.getImageURL(module.imageresource)"
 		v-bind:aspect-ratio="module.aspectratio || undefined"

@@ -172,6 +172,13 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 
 	updateFromV2Attributes (attrs)
 	{
+		if (attrs) {
+			if (attrs.caption !== undefined)
+				this.caption = attrs.caption;
+			if (attrs.visible !== undefined)
+				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+		}
+
 		if (this.platform)
 			this.platform.updateFromV2Attributes (attrs);
 

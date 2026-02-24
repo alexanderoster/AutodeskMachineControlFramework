@@ -79,7 +79,14 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 	// submodules to child tabs, mirroring the legacy updateFromJSON behaviour.
 	// Modules that do not register a "visible" attribute on the backend
 	// (e.g. Logs, GLScene) keep the base-class default of true.
-	updateFromV2Attributes () {
+	updateFromV2Attributes (attrs) {
+		if (attrs) {
+			if (attrs.caption !== undefined)
+				this.caption = attrs.caption;
+			if (attrs.visible !== undefined)
+				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+		}
+
 		let v2Entry = this.page.application.getV2Entry(this.uuid);
 		if (v2Entry && v2Entry.submodules) {
 			for (let submod of v2Entry.submodules) {

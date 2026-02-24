@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-	<div v-if="(module.type == 'logs')" class="logs-module-root">
+	<div v-if="(module.type == 'logs') && module.visible !== false" class="logs-module-root">
 
 		<!-- Vertical toolbar -->
 		<div v-if="module.showToolbar" class="logs-toolbar">

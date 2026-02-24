@@ -149,6 +149,10 @@ export default class AMCApplicationModule_Graphic extends Common.AMCApplicationM
 	updateFromV2Attributes (attrs)
 	{
 		if (attrs) {
+			if (attrs.caption !== undefined)
+				this.caption = attrs.caption;
+			if (attrs.visible !== undefined)
+				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
 			if (attrs.viewminx !== undefined) {
 				let value = parseFloat (attrs.viewminx);
 				if (!isNaN (value))

@@ -182,6 +182,18 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 					dataObject.suffix = a.suffix;
 				if (a.changeevent !== undefined)
 					dataObject.changeevent = a.changeevent;
+				if (a.validation !== undefined)
+					dataObject.validation = a.validation;
+				if (a.validationmessage !== undefined)
+					dataObject.validationmessage = a.validationmessage;
+				if (a.minvalue !== undefined)
+					dataObject.minvalue = a.minvalue;
+				if (a.maxvalue !== undefined)
+					dataObject.maxvalue = a.maxvalue;
+				if (a.minlength !== undefined)
+					dataObject.minlength = a.minlength;
+				if (a.maxlength !== undefined)
+					dataObject.maxlength = a.maxlength;
 			}
 		}
 

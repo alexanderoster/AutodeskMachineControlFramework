@@ -265,6 +265,12 @@ void CUIModule_ContentFormEdit::writeVariablesToJSON(CJSONWriter& writer, CJSONW
 		object.addDouble(AMC_API_KEY_UI_FORMMINVALUE, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_FORMMINVALUE));
 		object.addDouble(AMC_API_KEY_UI_FORMMAXVALUE, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_FORMMAXVALUE));
 	}
+	if (sValidation == "string") {
+		object.addString(AMC_API_KEY_UI_FORMVALIDATION, sValidation);
+		object.addString(AMC_API_KEY_UI_FORMVALIDATIONMESSAGE, pGroup->getParameterValueByName(AMC_API_KEY_UI_FORMVALIDATIONMESSAGE));
+		object.addInteger(AMC_API_KEY_UI_FORMMINLENGTH, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_FORMMINVALUE));
+		object.addInteger(AMC_API_KEY_UI_FORMMAXLENGTH, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_FORMMAXVALUE));
+	}
 }
 
 void CUIModule_ContentFormEdit::registerFrontendAttributes(PUIFrontendDefinitionModuleStore pStore)
