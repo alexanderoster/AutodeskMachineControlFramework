@@ -54,6 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_meshgeometry.hpp"
 #include "API/amc_api_handler_meshedges.hpp"
 #include "API/amc_api_handler_event.hpp"
+#include "API/amc_api_handler_validate.hpp"
 #include "API/amc_api_handler_widget.hpp"
 #include "API/amc_api_handler_module.hpp"
 #include "API/amc_api_handler_contentitem.hpp"
@@ -87,6 +88,7 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_MeshGeometry>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_MeshEdges>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Event>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Validate>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Widget>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Module>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_ContentItem>(pSystemState));

@@ -70,7 +70,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </template>
     </v-app-bar>
 
-	<v-main app v-bind:style="appMainStyle" v-resize="uiUpdateAppSize">
+	<v-main app v-bind:style="appMainStyle" v-resize="uiUpdateAppSize" class="amc-main">
         <v-container class="fill-height" fluid v-if="appIsLoading">
             <v-row align="center" justify="center">
                 <v-progress-circular :value="20" indeterminate></v-progress-circular>
@@ -85,24 +85,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<Dialog_Error :Application="Application" />
         </v-container>		
 
-		<div v-bind:style="appContentDivStyle" v-if="appIsReady">
-			<v-card v-bind:style="appContentCardStyle" elevation="2" class="pa-3" width="90%" > 
+		<div class="amc-content-wrap" v-if="appIsReady">
+			<v-card class="amc-content-card" elevation="2" width="100%" > 
 				<template v-for="uiPage in Application.AppContent.Pages">
-					<v-container :key="uiPage.name" v-if="appIsReady && Application.pageIsActive (uiPage)" style="width:100%; height:100%; display:block;">
+					<div :key="uiPage.name" v-if="appIsReady && Application.pageIsActive (uiPage)" style="width:100%; height:100%; display:block;">
 										
 					<template v-for="uiModule in uiPage.modules">
 						<Module_Factory :key="uiModule.uuid" :module="uiModule" :Application="Application" />
 					</template>
 								
-					</v-container>		
+					</div>		
 				</template>
 				
 				<template v-for="uiCustomPage in Application.AppContent.CustomPages">
-					<v-container :key="uiCustomPage.name" v-if="appIsReady && (Application.AppState.activePage == uiCustomPage.name)" style="width:100%; height:100%; display:block;">
+					<div :key="uiCustomPage.name" v-if="appIsReady && (Application.AppState.activePage == uiCustomPage.name)" style="width:100%; height:100%; display:block;">
 										
 						<CustomPage_Example v-if="(uiCustomPage.component == 'Example')" :CustomPage="uiCustomPage" :Application="Application" />
 								
-					</v-container>		
+					</div>		
 				</template>
 			</v-card>
 		</div>
@@ -363,19 +363,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			},			
 
 			uiUpdateAppSize () {
-
-				let height = window.innerHeight - this.$vuetify.application.footer - this.$vuetify.application.top;
-				let style = "height: " + height + "px; padding-top: 20px;";
-				if (style != this.appContentDivStyle) {
-					this.appContentDivStyle = style;
-				}
-
-				height = window.innerHeight - this.$vuetify.application.footer - this.$vuetify.application.top - 40;
-				style = "height: " + height + "px; background: rgba(255.0, 255.0, 255.0, 0.9); overflow:auto; margin:auto";
-				if (style != this.appContentCardStyle) {
-					this.appContentCardStyle = style;
-				}
-				
+				// Height is handled by CSS flex layout; nothing to compute.
 			}
 						
 		},
@@ -385,8 +373,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Application: null,
 			GlobalTimer: null,
 			ShowDrawer: true,
-			appContentDivStyle: "",
-			appContentCardStyle: "",
 								
 		})
 	};
@@ -403,5 +389,28 @@ html {
 html::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Make v-main fill its allocated space and arrange children in a column. */
+.amc-main .v-main__wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Full-height wrapper for the content card. */
+.amc-content-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The card itself stretches to fill the wrapper. */
+.amc-content-card {
+  flex: 1 1 0;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.9) !important;
+  overflow: auto;
 }
 </style>

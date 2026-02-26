@@ -429,7 +429,34 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
 
 		} else if (moduleType === "layerview") {
-			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+			if (subs.length > 0) {
+				legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
+			} else if (attrs.platformuuid) {
+				// v2 mode: all platform data is in the module-level attributes.
+				// Synthesise a minimal platform item so the JS module can create it.
+				// layercount starts at 0 and will be refreshed via the legacy polling path.
+				legacy.items = [{
+					type:               "platform",
+					uuid:               attrs.platformuuid,
+					currentlayer:       parseInt(attrs.currentlayer)  || 0,
+					layercount:         0,
+					builduuid:          attrs.builduuid          || "00000000-0000-0000-0000-000000000000",
+					executionuuid:      attrs.executionuuid      || "00000000-0000-0000-0000-000000000000",
+					scatterplotuuid:    attrs.scatterplotuuid    || "00000000-0000-0000-0000-000000000000",
+					sizex:              parseFloat(attrs.sizex)  || 0,
+					sizey:              parseFloat(attrs.sizey)  || 0,
+					originx:            parseFloat(attrs.originx) || 0,
+					originy:            parseFloat(attrs.originy) || 0,
+					baseimageresource:  attrs.baseimageresource  || "",
+					labelvisible:       (attrs.labelvisible === true || attrs.labelvisible === "1" || attrs.labelvisible === "true") ? 1 : 0,
+					labelcaption:       attrs.labelcaption       || "",
+					labelicon:          attrs.labelicon          || "",
+					sliderchangeevent:  attrs.sliderchangeevent  || "",
+					sliderfixed:        (attrs.sliderfixed === true || attrs.sliderfixed === "1" || attrs.sliderfixed === "true") ? 1 : 0,
+				}];
+			} else {
+				legacy.items = [];
+			}
 
 		} else if (moduleType === "logs") {
 			legacy.items = [];
@@ -1357,6 +1384,25 @@ export default class AMCApplication extends Common.AMCObject {
 
         return resultObject;
 
+    }
+
+    validateFormValues (eventname, senderuuid, formvalues) {
+        return this.axiosPostRequest("/validate", {
+            "eventname": eventname,
+            "senderuuid": senderuuid,
+            "formvalues": formvalues
+        })
+        .then(response => {
+            const data = response.data || {};
+            return {
+                valid: data.valid === true,
+                errors: data.errors || {}
+            };
+        })
+        .catch(err => {
+            console.log('[AMC] validateFormValues error:', err);
+            return { valid: true, errors: {} };
+        });
     }
 
     retrieveWebGLInstance(uuid) {

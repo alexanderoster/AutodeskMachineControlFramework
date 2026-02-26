@@ -78,11 +78,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		
 		
 		created () {
-			this.glInstance = this.Application.retrieveWebGLInstance (module.uuid);
+			this.glInstance = this.Application.retrieveWebGLInstance (this.module.uuid);
 			if (!this.glInstance) {
 				this.glInstance = new WebGLImpl ();
-				this.Application.storeWebGLInstance (this.glInstance);
-								
+				this.Application.storeWebGLInstance (this.module.uuid, this.glInstance);
+							
 			}
 		},
 		
@@ -102,20 +102,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					
 					this.glInstance.addAmbientLight ("ambientlight", 0x808080, 3);
 
-					
-					/*this.mesh1 = this.glInstance.addMeshElement ("mesh1", this.Application, "fff71800-4b1d-489e-8679-1f90b9b26646");
-					this.mesh1.setPosition (0,0, 0.0, 0.0);
-
-					this.mesh2 = this.glInstance.addMeshElement ("mesh2", this.Application, "e7cf4193-c77d-49b3-b8e3-edf266454a50", 0xc0c0c0);
-					this.mesh2.setPosition (0,0, 0.0, 0.0); */
-					
 					let scene = this.module.scene;
-					for (let instance of scene.instances) {
-						let mesh = this.glInstance.addMeshElement (instance.instancename, this.Application, instance.meshuuid);
-						mesh.setPosition (0,0, 0.0, 0.0);
-					
+					if (scene && Array.isArray(scene.instances)) {
+						for (let instance of scene.instances) {
+							let mesh = this.glInstance.addMeshElement (instance.instancename, this.Application, instance.meshuuid);
+							mesh.setPosition (0,0, 0.0, 0.0);
+						}
 					}
-					 
 					
 					this.glInstance.setupDemoScene ();
 					this.animate();

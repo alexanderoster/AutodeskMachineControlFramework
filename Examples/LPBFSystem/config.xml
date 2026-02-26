@@ -355,7 +355,7 @@
 				<row height="50" unit="pt"/>
 				<row height="100" unit="pt"/>
 
-				<content name="infobox" title="Example LPBF Project." columnstart="1" rowstart="1" columnend="1" rowend="1">
+				<content name="infobox" cardstyle="elevated" title="Example LPBF Project." columnstart="1" rowstart="1" columnend="1" rowend="1">
 					<image resource="ui_logo" aspectratio="2" maxheight="50"/>
 					<paragraph text="."/>
 					<paragraph text="Autodesk example machine"/>

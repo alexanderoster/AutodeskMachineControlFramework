@@ -57,7 +57,7 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		Assert.ObjectValue (updateJSON);		
 		
 		this.currentlayer = Assert.IntegerValue (updateJSON.currentlayer);
-		this.layercount = Assert.IntegerValue (updateJSON.layercount);
+		this.layercount = Assert.OptionalIntegerValue (updateJSON.layercount);
 		this.builduuid = Assert.OptionalUUIDValue (updateJSON.builduuid);
 		this.scatterplotuuid = Assert.OptionalUUIDValue (updateJSON.scatterplotuuid);
 		this.baseimageresource = Assert.OptionalUUIDValue (updateJSON.baseimageresource);
@@ -179,13 +179,12 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
 		}
 
+		// Pass merged module-level attrs (which include all platform data) to the platform item.
+		// Do NOT overwrite frontendLookup[platform.uuid] — we want the platform to fall through
+		// to the legacy /ui/contentitem/ polling path so it receives the dynamically computed
+		// layercount value that the v2 attribute system cannot easily express.
 		if (this.platform)
 			this.platform.updateFromV2Attributes (attrs);
-
-		let v2Entry = this.page.application.getV2Entry (this.uuid);
-		if (v2Entry && this.platform && this.platform.uuid) {
-			this.page.application.API.frontendLookup[this.platform.uuid] = v2Entry;
-		}
 
 		return true;
 	}

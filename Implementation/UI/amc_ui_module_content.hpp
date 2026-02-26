@@ -64,6 +64,11 @@ namespace AMC {
 		std::string m_sTitle;
 		std::string m_sSubtitle;
 
+		std::string m_sCardStyle;
+		std::string m_sCardColor;
+		uint32_t    m_nSpacing;
+		uint32_t    m_nElevation;
+
 		uint32_t m_nNamingIDCounter;
 
 		bool m_bVisible;

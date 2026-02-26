@@ -32,41 +32,134 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<div class="content-root">
 
-		<div v-if="module.title" class="content-title">{{ module.title }}</div>
-		<div v-if="module.subtitle" class="content-subtitle">{{ module.subtitle }}</div>
+		<!-- ── Card styles: elevated / outlined / tinted ─────────────────── -->
+		<v-card
+			v-if="isCard"
+			class="content-card"
+			:outlined="module.cardstyle === 'outlined'"
+			:elevation="module.cardstyle === 'elevated' ? module.elevation : 0"
+			:color="cardBackground || undefined"
+		>
+			<v-card-title v-if="module.title" class="content-card-title">
+				{{ module.title }}
+			</v-card-title>
+			<v-card-subtitle v-if="module.subtitle" class="content-card-subtitle">
+				{{ module.subtitle }}
+			</v-card-subtitle>
 
-		<div v-if="module.modules && module.modules.length > 0" class="content-children">
-			<Module_Factory
-				v-for="childModule in module.modules"
-				:key="childModule.uuid"
-				:module="childModule"
-				:Application="Application"
-			/>
-		</div>
+			<v-card-text class="content-card-body">
+				<div class="content-children" :style="childrenStyle">
+					<Module_Factory
+						v-for="childModule in module.modules"
+						:key="childModule.uuid"
+						:module="childModule"
+						:Application="Application"
+					/>
+				</div>
+			</v-card-text>
+		</v-card>
+
+		<!-- ── Plain (cardstyle="none") — backward-compatible divs ───────── -->
+		<template v-else>
+			<div v-if="module.title"    class="content-title">{{ module.title }}</div>
+			<div v-if="module.subtitle" class="content-subtitle">{{ module.subtitle }}</div>
+
+			<div
+				v-if="module.modules && module.modules.length > 0"
+				class="content-children"
+				:style="childrenStyle"
+			>
+				<Module_Factory
+					v-for="childModule in module.modules"
+					:key="childModule.uuid"
+					:module="childModule"
+					:Application="Application"
+				/>
+			</div>
+		</template>
 
 	</div>
 
 </template>
 
 <script>
+import Module_Factory from './AMCModule_Factory.vue';
+
 export default {
 	name: 'Module_Content',
 	props: ['Application', 'module'],
+	components: { Module_Factory },
+
+	computed: {
+		isCard () {
+			const s = this.module.cardstyle;
+			return s === 'elevated' || s === 'outlined' || s === 'tinted';
+		},
+
+		cardBackground () {
+			if (this.module.cardstyle === 'tinted')
+				return this.module.cardcolor || '#eaf1fb';
+			return '';
+		},
+
+		childrenStyle () {
+			const gap = (this.module.spacing || 0) + 'px';
+			return { gap };
+		},
+	},
 };
 </script>
 
 <style scoped>
 /*
- * Plain block layout. Do NOT use flex or grid here -- the child Grid module
- * relies on width:100% (not flex sizing) to establish its column tracks, and
- * its height:100% must resolve in a block context. Introducing a flex container
- * collapses the grid's height to 0 and breaks the column layout.
+ * The root always fills its grid cell / flex parent completely.
+ * display:flex + flex-direction:column lets the card or the children
+ * wrapper stretch via flex:1.
  */
 .content-root {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	width: 100%;
+	height: 100%;
 }
 
+/* ── Card variant ─────────────────────────────────────────────────── */
+.content-card {
+	flex: 1 1 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+/*
+ * Vuetify injects its own padding on v-card__text; we override it so the
+ * inner body can stretch to fill the card height.
+ */
+.content-card ::v-deep .v-card__text {
+	flex: 1 1 0;
+	min-height: 0;
+	padding: 8px 12px 12px;
+}
+
+.content-card-title {
+	padding-bottom: 0;
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.3;
+}
+
+.content-card-subtitle {
+	padding-top: 2px;
+	font-size: 0.8125rem;
+}
+
+.content-card-body {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: auto;
+}
+
+/* ── Plain (none) variant ─────────────────────────────────────────── */
 .content-title {
 	font-size: 1.125rem;
 	font-weight: 600;
@@ -80,8 +173,13 @@ export default {
 	padding-bottom: 8px;
 }
 
+/* ── Shared children wrapper ──────────────────────────────────────── */
 .content-children {
-	display: block;
+	flex: 1 1 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 	width: 100%;
+	height: 100%;
 }
 </style>

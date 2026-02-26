@@ -310,12 +310,29 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	registerNumberAttribute(AMC_API_KEY_UI_SIZEY, sizeY);
 	registerNumberAttribute(AMC_API_KEY_UI_ORIGINX, originX);
 	registerNumberAttribute(AMC_API_KEY_UI_ORIGINY, originY);
-	registerStringAttribute(AMC_API_KEY_UI_BASEIMAGERESOURCE, baseImage);
+	// baseimageresource must be the UUID so the frontend's /image/{uuid} endpoint works.
+	// Resolve the resource name -> UUID once at startup and register as a fixed value.
+	{
+		auto pStateMachineData = pUIModuleEnvironment->stateMachineData();
+		std::string sBaseImageName = baseImage.evaluateStringValue(pStateMachineData.get());
+		CUIExpression baseImageUUIDExpr;
+		if (!sBaseImageName.empty()) {
+			auto pResourceEntry = pUIModuleEnvironment->resourcePackage()->findEntryByName(sBaseImageName, true);
+			baseImageUUIDExpr.setFixedValue(pResourceEntry->getUUID());
+		} else {
+			baseImageUUIDExpr.setFixedValue(AMCCommon::CUtils::createEmptyUUID());
+		}
+		registerStringAttribute(AMC_API_KEY_UI_BASEIMAGERESOURCE, baseImageUUIDExpr);
+	}
 	registerBoolAttribute(AMC_API_KEY_UI_LABELVISIBLE, labelVisible);
 	registerStringAttribute(AMC_API_KEY_UI_LABELCAPTION, labelCaption);
 	registerStringAttribute(AMC_API_KEY_UI_LABELICON, labelIcon);
 	registerStringAttribute(AMC_API_KEY_UI_SLIDERCHANGEEVENT, sliderChangeEvent);
 	registerBoolAttribute(AMC_API_KEY_UI_SLIDERFIXED, sliderFixed);
+
+	CUIExpression platformUUIDExpr;
+	platformUUIDExpr.setFixedValue(m_PlatformItem->getUUID());
+	registerStringAttribute(AMC_API_KEY_UI_PLATFORMUUID, platformUUIDExpr);
 
 	auto captionAttrib = xmlNode.attribute("caption");
 	m_sCaption = captionAttrib.as_string();

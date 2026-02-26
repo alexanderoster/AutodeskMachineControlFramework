@@ -684,24 +684,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			
 		},
 		
-		created () {
-			this.module.onDataHasChanged = null;			
-			if (this.module.platform) {
-				this.module.platform.displayed_layer = 0;
-				this.module.platform.displayed_build = 0;
-			}
-			
-			this.glInstance = this.Application.retrieveWebGLInstance (module.uuid);
+	created () {
+		this.module.onDataHasChanged = null;			
+		if (this.module.platform) {
+			this.module.platform.displayed_layer = 0;
+			this.module.platform.displayed_build = 0;
+		}
+		
+		this.glInstance = this.Application.retrieveWebGLInstance (this.module.uuid);
 
-			if (!this.glInstance) {
-				this.glInstance = new WebGLImpl ();
+		if (!this.glInstance) {
+			this.glInstance = new WebGLImpl ();
+			this.Application.storeWebGLInstance (this.module.uuid, this.glInstance);
+		}
 
-				this.Application.storeWebGLInstance (this.glInstance);				
-				this.LayerViewerInstance = new LayerViewImpl (this.glInstance);				
-				this.LayerViewerInstance.RenderScene (true);
-				
-			}
-		},
+		// Always create a fresh LayerViewerInstance wrapping the (possibly cached) glInstance.
+		this.LayerViewerInstance = new LayerViewImpl (this.glInstance);
+		this.LayerViewerInstance.RenderScene (true);
+	},
 		
 		unmounted ()
 		{

@@ -69,16 +69,17 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 			}
 		}
 
-		this.loadingtext          = "";
-		this.selectevent          = "";
-		this.selectionvalueuuid   = Common.nullUUID ();
-		this.buttonvalueuuid      = Common.nullUUID ();
-		this.thumbnailaspectratio = 1.8;
-		this.thumbnailheight      = "150pt";
-		this.thumbnailwidth       = "";
-		this.entriesperpage       = 25;
-		this.lastKnownHeadID      = 0;
-		this.buildFetchInFlight   = false;
+		this.loadingtext            = "";
+		this.selectevent            = "";
+		this.selectionvalueuuid     = Common.nullUUID ();
+		this.buttonvalueuuid        = Common.nullUUID ();
+		this.thumbnailaspectratio   = 1.8;
+		this.thumbnailheight        = "150pt";
+		this.thumbnailwidth         = "";
+		this.entriesperpage         = 25;
+		this.lastKnownHeadID        = 0;
+		this.buildFetchInFlight     = false;
+		this.defaultThumbnailUUID   = Common.nullUUID ();
 
 		this.updateFromJSON (moduleJSON);
 	}
@@ -126,6 +127,8 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+		if (attrs.defaultthumbnail !== undefined)
+			this.defaultThumbnailUUID = attrs.defaultthumbnail;
 
 		if (attrs.buildlistheadid === undefined)
 			return true;
@@ -157,7 +160,7 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 						buildTimestamp:      job.timestamp      || "",
 						buildUser:           job.user           || "",
 						buildExecutionCount: job.executioncount || 0,
-						buildThumbnail:      job.thumbnail      || "00000000-0000-0000-0000-000000000000",
+						buildThumbnail:      job.thumbnail      || this.defaultThumbnailUUID || "00000000-0000-0000-0000-000000000000",
 					});
 				}
 

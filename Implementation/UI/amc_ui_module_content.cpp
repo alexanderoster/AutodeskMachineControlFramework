@@ -80,6 +80,15 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	else
 		m_bVisible = true;
 
+	auto cardStyleAttrib = xmlNode.attribute("cardstyle");
+	m_sCardStyle = cardStyleAttrib.empty() ? "none" : cardStyleAttrib.as_string();
+
+	auto cardColorAttrib = xmlNode.attribute("cardcolor");
+	m_sCardColor = cardColorAttrib.empty() ? "" : cardColorAttrib.as_string();
+
+	m_nSpacing   = (uint32_t) xmlNode.attribute("spacing").as_int(0);
+	m_nElevation = (uint32_t) xmlNode.attribute("elevation").as_int(2);
+
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 		std::string sChildName = childNode.name();
@@ -121,6 +130,22 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	registerStringAttribute("title", titleExpr);
 	registerStringAttribute("subtitle", subtitleExpr);
 	registerBoolAttribute("visible", visibleExpr);
+
+	CUIExpression cardStyleExpr;
+	cardStyleExpr.setFixedValue(m_sCardStyle);
+	registerStringAttribute("cardstyle", cardStyleExpr);
+
+	CUIExpression cardColorExpr;
+	cardColorExpr.setFixedValue(m_sCardColor);
+	registerStringAttribute("cardcolor", cardColorExpr);
+
+	CUIExpression spacingExpr;
+	spacingExpr.setFixedValue(std::to_string(m_nSpacing));
+	registerStringAttribute("spacing", spacingExpr);
+
+	CUIExpression elevationExpr;
+	elevationExpr.setFixedValue(std::to_string(m_nElevation));
+	registerStringAttribute("elevation", elevationExpr);
 
 }
 
@@ -189,6 +214,10 @@ void CUIModule_Content::writeLegacyDefinitionToJSON(CJSONWriter& writer, CJSONWr
 	moduleObject.addString(AMC_API_KEY_UI_SUBTITLE, m_sSubtitle);
 	moduleObject.addString(AMC_API_KEY_UI_CAPTION, m_sCaption);
 	moduleObject.addBool(AMC_API_KEY_UI_VISIBLE, m_bVisible);
+	moduleObject.addString("cardstyle", m_sCardStyle);
+	moduleObject.addString("cardcolor", m_sCardColor);
+	moduleObject.addInteger("spacing",   (int64_t) m_nSpacing);
+	moduleObject.addInteger("elevation", (int64_t) m_nElevation);
 
 	CJSONWriterArray modulesNode(writer);
 	for (auto pSubModule : m_SubModules) {

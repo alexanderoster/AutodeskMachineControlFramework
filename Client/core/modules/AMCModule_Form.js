@@ -33,6 +33,42 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
+function makeEntityDataObject (entity) {
+	return {
+		uuid:                 entity.uuid,
+		value:                entity.value,
+		remotevalue:          entity.value,
+		disabled:             entity.disabled,
+		readonly:             entity.readonly,
+		changeevent:          entity.changeevent,
+		validation:           entity.validation,
+		validationmessage:    entity.validationmessage,
+		minvalue:             entity.minvalue,
+		maxvalue:             entity.maxvalue,
+		minlength:            entity.minlength,
+		maxlength:            entity.maxlength,
+		step:                 entity.step,
+		unit:                 entity.unit,
+		mode:                 entity.mode,
+		format:               entity.format,
+		items:                entity.items,
+		// actionbar-specific
+		submitevent:          entity.submitevent,
+		cancelevent:          entity.cancelevent,
+		validateevent:        entity.validateevent,
+		submitcaption:        entity.submitcaption,
+		cancelcaption:        entity.cancelcaption,
+		optimistic:           entity.optimistic,
+		// section-specific
+		description:          entity.description,
+		icon:                 entity.icon,
+		collapsible:          entity.collapsible,
+		defaultOpen:          entity.defaultopen,
+		isProgrammaticChange: false,
+	};
+}
+
+
 export default class AMCApplicationModule_Form extends Common.AMCApplicationModule {
 
 	constructor (page, moduleJSON)
@@ -45,23 +81,71 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 
 		this.entities = Array.isArray(moduleJSON.entities) ? moduleJSON.entities : [];
 
-		for (let entity of this.entities) {
-			entity.dataObject = {
-				uuid:                 entity.uuid,
-				value:                entity.value,
-				remotevalue:          entity.value,
-				disabled:             entity.disabled,
-				readonly:             entity.readonly,
-				changeevent:          entity.changeevent,
-				validation:           entity.validation,
-				validationmessage:    entity.validationmessage,
-				minvalue:             entity.minvalue,
-				maxvalue:             entity.maxvalue,
-				isProgrammaticChange: false
-			};
+		// Dirty-state tracking and server-side error map
+		this.serverErrors = {};
+		this.isSubmitting = false;
 
+		this._registerEntities(this.entities);
+	}
+
+
+	_registerEntities (entities) {
+		for (let entity of entities) {
+			entity.dataObject = makeEntityDataObject(entity);
 			this.page.application.AppContent.FormEntityMap.set (entity.uuid, entity);
+
+			// Recursively register children inside sections
+			if (entity.type === 'section' && Array.isArray(entity.entities)) {
+				this._registerEntities(entity.entities);
+			}
 		}
+	}
+
+
+	_flatEntities () {
+		const result = [];
+		const collect = (list) => {
+			for (let e of list) {
+				result.push(e);
+				if (e.type === 'section' && Array.isArray(e.entities))
+					collect(e.entities);
+			}
+		};
+		collect(this.entities);
+		return result;
+	}
+
+
+	isEntityDirty (entity) {
+		if (!entity || !entity.dataObject) return false;
+		return entity.dataObject.value !== entity.dataObject.remotevalue;
+	}
+
+
+	get isFormDirty () {
+		return this._flatEntities().some(e => this.isEntityDirty(e));
+	}
+
+
+	resetDirtyFields () {
+		for (let entity of this._flatEntities()) {
+			if (entity.dataObject) {
+				entity.dataObject.isProgrammaticChange = true;
+				entity.dataObject.value = entity.dataObject.remotevalue;
+			}
+		}
+		this.serverErrors = {};
+	}
+
+
+	assembleAllFormValues () {
+		const values = {};
+		for (let entity of this._flatEntities()) {
+			if (entity.dataObject && entity.type !== 'actionbar' && entity.type !== 'section' && entity.type !== 'calculated') {
+				values[entity.uuid] = entity.dataObject.value;
+			}
+		}
+		return values;
 	}
 
 
@@ -76,7 +160,6 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 
 			for (let entityJSON of updateJSON.entities) {
 				if (!this.page.application.AppContent.FormEntityMap.has (entityJSON.uuid)) {
-					// Entity not yet registered — add it now (late-init fallback).
 					let newEntity = {
 						uuid:              entityJSON.uuid,
 						name:              entityJSON.name || entityJSON.uuid,
@@ -90,20 +173,15 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 						validationmessage: entityJSON.validationmessage || "",
 						minvalue:          entityJSON.minvalue,
 						maxvalue:          entityJSON.maxvalue,
+						minlength:         entityJSON.minlength,
+						maxlength:         entityJSON.maxlength,
+						step:              entityJSON.step,
+						unit:              entityJSON.unit,
+						mode:              entityJSON.mode,
+						format:            entityJSON.format,
+						items:             entityJSON.items,
 					};
-					newEntity.dataObject = {
-						uuid:                 newEntity.uuid,
-						value:                newEntity.value,
-						remotevalue:          newEntity.value,
-						disabled:             newEntity.disabled,
-						readonly:             newEntity.readonly,
-						changeevent:          newEntity.changeevent,
-						validation:           newEntity.validation,
-						validationmessage:    newEntity.validationmessage,
-						minvalue:             newEntity.minvalue,
-						maxvalue:             newEntity.maxvalue,
-						isProgrammaticChange: false,
-					};
+					newEntity.dataObject = makeEntityDataObject(newEntity);
 					this.entities.push(newEntity);
 					this.page.application.AppContent.FormEntityMap.set(newEntity.uuid, newEntity);
 				}
@@ -113,7 +191,7 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 
 				Assert.ObjectValue (dataObject);
 
-				if (dataObject.remotevalue != entityJSON.value) {
+				if (dataObject.remotevalue !== entityJSON.value) {
 					dataObject.value = entityJSON.value;
 					dataObject.isProgrammaticChange = true;
 				} else {
@@ -194,6 +272,14 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 					dataObject.minlength = a.minlength;
 				if (a.maxlength !== undefined)
 					dataObject.maxlength = a.maxlength;
+				if (a.step !== undefined)
+					dataObject.step = a.step;
+				if (a.unit !== undefined)
+					dataObject.unit = a.unit;
+				if (a.mode !== undefined)
+					dataObject.mode = a.mode;
+				if (a.format !== undefined)
+					dataObject.format = a.format;
 			}
 		}
 

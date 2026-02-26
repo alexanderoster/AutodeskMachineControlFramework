@@ -50,6 +50,11 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 
 		this.visible = Assert.BoolValue (moduleJSON.visible);
 
+		this.cardstyle  = moduleJSON.cardstyle  || "none";
+		this.spacing    = parseInt (moduleJSON.spacing)   || 0;
+		this.elevation  = parseInt (moduleJSON.elevation) || 2;
+		this.cardcolor  = moduleJSON.cardcolor  || "";
+
 		this.modules = [];
 
 		// The legacy backend serialises child modules under the "modules" key via
@@ -102,6 +107,14 @@ export default class AMCApplicationModule_Content extends Common.AMCApplicationM
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+		if (attrs.cardstyle !== undefined)
+			this.cardstyle = attrs.cardstyle;
+		if (attrs.cardcolor !== undefined)
+			this.cardcolor = attrs.cardcolor;
+		if (attrs.spacing !== undefined)
+			this.spacing = parseInt (attrs.spacing) || 0;
+		if (attrs.elevation !== undefined)
+			this.elevation = parseInt (attrs.elevation) || 2;
 		return true;
 	}
 	

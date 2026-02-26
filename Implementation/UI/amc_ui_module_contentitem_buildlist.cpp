@@ -402,5 +402,7 @@ void CUIModule_ContentBuildList::frontendWriteItemToJSON(CJSONWriter& writer, CJ
 		attributesObject.addInteger("buildlistheadid", (int64_t) pBuildJobHandler->GetBuildListHeadID());
 	}
 
+	attributesObject.addString(AMC_API_KEY_UI_ITEMDEFAULTTHUMBNAIL, m_sDefaultThumbnailResourceUUID);
+
 	itemObject.addObject("attributes", attributesObject);
 }
