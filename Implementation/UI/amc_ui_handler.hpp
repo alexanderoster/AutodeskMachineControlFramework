@@ -109,6 +109,9 @@ namespace AMC {
 
 		CUIExpression m_LoginBackgroundUUID;
 		CUIExpression m_LoginWelcomeMessage;
+		std::string m_sLoginStyle;
+		CUIExpression m_LoginSubtitle;
+		std::string m_sPanelResourceName;
 
 		std::string m_sMainPageName;
 

@@ -305,7 +305,9 @@
 
 		<login
 			backgroundresource="login_background"
-			welcomemessage="Welcome to the Autodesk Machine Control Framework. This is SLM Test Machine 1. Please enter your account credential to log into the system."
+			loginstyle="split"
+			loginsubtitle="SLM Test Machine 1"
+			welcomemessage="Welcome to the Autodesk Machine Control Framework. Please enter your credentials to log into the system."
 		/>
 
 		<colors>

@@ -358,6 +358,14 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
     if (!loginNode.empty()) {
         m_LoginBackgroundUUID = CUIExpression(loginNode, "backgroundresource", "");
         m_LoginWelcomeMessage = CUIExpression(loginNode, "welcomemessage", "");
+
+        auto loginStyleAttrib = loginNode.attribute("loginstyle");
+        m_sLoginStyle = loginStyleAttrib.empty() ? "classic" : loginStyleAttrib.as_string();
+
+        m_LoginSubtitle = CUIExpression(loginNode, "loginsubtitle", "");
+
+        auto panelResourceAttrib = loginNode.attribute("panelresource");
+        m_sPanelResourceName = panelResourceAttrib.empty() ? "" : panelResourceAttrib.as_string();
     }
 
 
@@ -905,6 +913,14 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
         writer.addString(AMC_API_KEY_UI_LOGINBACKGROUNDUUID, pResourceEntry->getUUID());
     }
     writer.addString(AMC_API_KEY_UI_LOGINWELCOMEMESSAGE, m_LoginWelcomeMessage.evaluateStringValue(pStateMachineData));
+
+    writer.addString(AMC_API_KEY_UI_LOGINSTYLE, m_sLoginStyle);
+    writer.addString(AMC_API_KEY_UI_LOGINSUBTITLE, m_LoginSubtitle.evaluateStringValue(pStateMachineData));
+
+    if (!m_sPanelResourceName.empty()) {
+        auto pPanelResource = m_pCoreResourcePackage->findEntryByName(m_sPanelResourceName, true);
+        writer.addString(AMC_API_KEY_UI_LOGINPANELUUID, pPanelResource->getUUID());
+    }
 
     CJSONWriterObject colorsObject(writer);
     for (auto color : m_Colors) {

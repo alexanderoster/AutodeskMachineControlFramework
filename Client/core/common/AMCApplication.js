@@ -113,6 +113,9 @@ export default class AMCApplication extends Common.AMCObject {
             LogoAspectRatio: 1.0,
 			LoginBackgroundImageUUID: "",
 			LoginWelcomeMessage: "",
+			LoginStyle: "classic",
+			LoginSubtitle: "",
+			LoginPanelUUID: "",
 			FirstLaunchMode: false,
             Colors: {}
         }
@@ -226,6 +229,9 @@ export default class AMCApplication extends Common.AMCObject {
             this.AppDefinition.LoginBackgroundImageUUID = resultJSON.data.loginbackgrounduuid;
 			this.AppDefinition.ToolbarLogoUUID = resultJSON.data.toolbarlogouuid;
 			this.AppDefinition.LoginWelcomeMessage = resultJSON.data.loginwelcomemessage;
+			this.AppDefinition.LoginStyle = resultJSON.data.loginstyle || "classic";
+			this.AppDefinition.LoginSubtitle = resultJSON.data.loginsubtitle || "";
+			this.AppDefinition.LoginPanelUUID = resultJSON.data.loginpaneluuid || "";
 
             this.AppDefinition.LogoAspectRatio = resultJSON.data.logoaspectratio;
             if (resultJSON.data.colors) {
