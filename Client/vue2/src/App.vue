@@ -380,6 +380,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <style>
+/*
+ * Establish a definite height chain from the document root.
+ * Without height:100% on html+body, Vuetify's .v-application--wrap uses
+ * only min-height:100vh (not height:100vh), which breaks height:100%
+ * resolution in all descendant modules (Grid, LayerView, Logs, Tabs, etc.).
+ */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Override Vuetify's min-height:100vh so percentage heights resolve correctly. */
+#AMCApp,
+#AMCApp .v-application--wrap {
+  height: 100%;
+  min-height: 0 !important;
+}
+
 html {
   overflow: hidden !important;
   scrollbar-width: none;

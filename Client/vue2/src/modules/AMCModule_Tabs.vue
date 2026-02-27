@@ -86,10 +86,19 @@ export default {
 	width: 100%;
 }
 
+/*
+ * Vuetify sets height:auto on .v-window__container after the slide/fade
+ * transition ends, collapsing tab content to its natural height.
+ * Forcing height:100% here keeps it flush with the flex-allocated space
+ * both during and after the animation.
+ */
+.tabs-content ::v-deep .v-window__container {
+	height: 100%;
+}
+
 /* Individual tab item fills its container */
 .tabs-item {
 	width: 100%;
 	height: 100%;
-	overflow: auto;
 }
 </style>
