@@ -133,8 +133,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<v-col cols="12" md="7" class="login-split__form">
 			<div class="login-split__form-inner">
 				<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4 d-md-none"></v-img>
-				<h1 class="login-glass__title" style="color: #212121;">Sign In</h1>
-				<p class="login-glass__subtitle" style="color: #555;">Enter your credentials to continue</p>
+				<h1 class="login-glass__title" style="color: #1E1E1E;">Sign In</h1>
+				<p class="login-glass__subtitle" style="color: #5F6368;">Enter your credentials to continue</p>
 				<div class="login-glass__body mt-6">
 					<v-text-field ref="edit_login" label="User name" prepend-icon="mdi-account" type="text" v-model="uiLoginUser" autofocus clearable @keydown.enter="onIndustrialEnter" />
 					<v-text-field ref="edit_password" label="Password" prepend-icon="mdi-lock" type="password" v-model="uiLoginPassword" clearable @keydown.enter="onIndustrialEnter" />
@@ -216,7 +216,7 @@ export default {
 
 		splitBrandStyle () {
 			var colors = this.Application.AppDefinition.Colors || {};
-			var primary = colors.primary || "#1976D2";
+			var primary = colors.primary || "#C8102E";
 			return {
 				backgroundColor: primary,
 			};
@@ -408,11 +408,11 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(255, 255, 255, 0.78);
+	background: rgba(255, 255, 255, 0.92);
 	backdrop-filter: blur(18px) saturate(1.4);
 	-webkit-backdrop-filter: blur(18px) saturate(1.4);
 	border-left: 1px solid rgba(0, 0, 0, 0.08);
-	box-shadow: -4px 0 32px rgba(0, 0, 0, 0.10);
+	box-shadow: -4px 0 32px rgba(0, 0, 0, 0.06);
 }
 
 .login-split__form-inner {

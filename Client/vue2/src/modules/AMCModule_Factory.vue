@@ -56,6 +56,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import Module_ButtonGroup   from '../modules/AMCModule_ButtonGroup.vue';
 	import Module_ConfigurationList from '../modules/AMCModule_ConfigurationList.vue';
 	import Module_VideoStream   from '../modules/AMCModule_VideoStream.vue';
+	import Module_Separator     from '../modules/AMCModule_Separator.vue';
+	import Module_StatusBanner  from '../modules/AMCModule_StatusBanner.vue';
 
 	// Container modules use async imports to avoid circular dependencies.
 	// (Factory → Content → Factory, Factory → Grid → Factory, etc.)
@@ -83,6 +85,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		buttongroup:       Module_ButtonGroup,
 		configurationlist: Module_ConfigurationList,
 		videostream:       Module_VideoStream,
+		separator:         Module_Separator,
+		statusbanner:      Module_StatusBanner,
 	};
 
 	export default {

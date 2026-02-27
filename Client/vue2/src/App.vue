@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 <v-app id="AMCApp" app>
-    <v-navigation-drawer v-if="appIsReady" v-model="ShowDrawer" clipped :clipped-left="$vuetify.breakpoint.lgAndUp" disable-resize-watcher app style="opacity:90%">
+    <v-navigation-drawer v-if="appIsReady" v-model="ShowDrawer" clipped :clipped-left="$vuetify.breakpoint.lgAndUp" disable-resize-watcher app>
         <v-list three-line dense>
             <template v-for="(item, index) in Application.AppContent.MenuItems">                
 									  
@@ -54,7 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar app color="primary" dark v-if="appIsReady" :clipped-left="$vuetify.breakpoint.lgAndUp">
+    <v-app-bar app color="#3C3C3C" dark v-if="appIsReady" :clipped-left="$vuetify.breakpoint.lgAndUp">
         <v-app-bar-nav-icon v-on:click.stop="uiToggleDrawer" />		
         <v-btn text large dark v-on:click.stop="Application.changePage(Application.AppDefinition.MainPage)">
             <v-img v-if="Application.AppDefinition.ToolbarLogoUUID != ''" width="150" v-bind:src="Application.getImageURL (Application.AppDefinition.ToolbarLogoUUID)"></v-img>
@@ -137,9 +137,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</template>
     </v-main>
 	
-    <v-footer color="primary" class="text-right" min-height="30" app >
+    <v-footer color="#3C3C3C" class="text-right" min-height="30" app dark>
         <v-spacer />
-        <span class="caption white--text" v-if="appHasInformation">&copy; {{ Application.AppDefinition.TextCopyRight }}</span>		
+        <span class="caption" v-if="appHasInformation">&copy; {{ Application.AppDefinition.TextCopyRight }}</span>		
     </v-footer>
 	
 	<v-snackbar
@@ -428,7 +428,78 @@ html::-webkit-scrollbar {
 .amc-content-card {
   flex: 1 1 0;
   min-height: 0;
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: var(--amcf-color-bg, #E0E3E7) !important;
   overflow: auto;
+}
+
+/* Navigation drawer — light surface with subtle border */
+.v-navigation-drawer {
+  background: var(--amcf-color-surface, #FFFFFF) !important;
+  border-right: 1px solid var(--amcf-color-border, #C8CCD0) !important;
+}
+
+.v-navigation-drawer .v-list-item__title {
+  color: var(--amcf-color-text, #1E1E1E) !important;
+  font-weight: 500;
+}
+
+.v-navigation-drawer .v-list-item__subtitle {
+  color: var(--amcf-color-text-muted, #5F6368) !important;
+}
+
+.v-navigation-drawer .v-icon {
+  color: var(--amcf-color-text-muted, #5F6368) !important;
+}
+
+.v-navigation-drawer .v-divider {
+  border-color: var(--amcf-color-border, #C8CCD0) !important;
+}
+
+/* Active/hovered nav item gets a ScanLab red left accent */
+.v-navigation-drawer .v-list-item--active {
+  border-left: 3px solid var(--amcf-color-primary, #C8102E);
+  background: var(--amcf-color-primary-bg, rgba(200, 16, 46, 0.06)) !important;
+}
+
+.v-navigation-drawer .v-list-item--active .v-icon {
+  color: var(--amcf-color-primary, #C8102E) !important;
+}
+
+/* Footer — light with top border */
+.v-footer {
+  background: var(--amcf-color-surface, #FFFFFF) !important;
+  border-top: 1px solid var(--amcf-color-border, #C8CCD0) !important;
+}
+
+.v-footer .caption {
+  color: var(--amcf-color-text-muted, #5F6368) !important;
+}
+
+/* Dialog styling */
+.v-dialog .v-card {
+  background: var(--amcf-color-surface, #FFFFFF) !important;
+}
+
+.v-dialog .v-card__title {
+  color: var(--amcf-color-text, #1E1E1E) !important;
+}
+
+/* Scrollbar styling — subtle for light theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--amcf-color-surface-inset, #D8DBDF);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--amcf-color-border-strong, #9BA3AB);
+  border-radius: var(--amcf-radius-pill, 999px);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--amcf-color-text-muted, #5F6368);
 }
 </style>

@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <template>
 
-<div v-if="module.visible !== false" class="para-root">
-	<p class="para-text" :class="{ 'para-text--headline': module.headline, 'para-text--muted': module.muted }">
+<div v-if="module.visible !== false" class="amcf-para">
+	<component :is="tagName" :class="variantClass">
 		{{ module.text }}
-	</p>
+	</component>
 </div>
 
 </template>
@@ -41,31 +41,89 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 export default {
 	props: ['Application', 'module'],
+
+	computed: {
+		variant () {
+			return this.module.variant || 'body';
+		},
+
+		tagName () {
+			switch (this.variant) {
+				case 'h1': return 'h1';
+				case 'h2': return 'h2';
+				case 'label': return 'span';
+				case 'subtext': return 'small';
+				case 'code': return 'code';
+				default: return 'p';
+			}
+		},
+
+		variantClass () {
+			return 'amcf-para__text amcf-para--' + this.variant;
+		}
+	}
 };
 </script>
 
 <style scoped>
-.para-root {
+.amcf-para {
 	width: 100%;
 	min-height: 0;
 }
 
-.para-text {
+.amcf-para__text {
 	margin: 0;
-	font-size: 0.875rem;
-	line-height: 1.5;
-	color: rgba(0, 0, 0, 0.87);
 	white-space: pre-wrap;
+	font-family: var(--amcf-font-family, "Segoe UI", sans-serif);
 }
 
-.para-text--headline {
-	font-size: 1rem;
-	font-weight: 600;
+.amcf-para--h1 {
+	font-size: var(--amcf-typo-h1-size, 24px);
+	font-weight: var(--amcf-typo-h1-weight, 700);
+	line-height: 1.3;
+	color: var(--amcf-color-text, rgba(0, 0, 0, 0.87));
 }
 
-.para-text--muted {
-	font-size: 0.75rem;
-	font-style: italic;
-	color: rgba(0, 0, 0, 0.55);
+.amcf-para--h2 {
+	font-size: var(--amcf-typo-h2-size, 18px);
+	font-weight: var(--amcf-typo-h2-weight, 600);
+	line-height: 1.4;
+	color: var(--amcf-color-text, rgba(0, 0, 0, 0.87));
+}
+
+.amcf-para--body {
+	font-size: var(--amcf-typo-body-size, 14px);
+	font-weight: var(--amcf-typo-body-weight, 400);
+	line-height: 1.6;
+	color: var(--amcf-color-text-muted, rgba(0, 0, 0, 0.87));
+}
+
+.amcf-para--label {
+	display: block;
+	font-size: var(--amcf-typo-label-size, 12px);
+	font-weight: var(--amcf-typo-label-weight, 600);
+	line-height: 1.5;
+	color: var(--amcf-color-text-dim, rgba(0, 0, 0, 0.55));
+}
+
+.amcf-para--subtext {
+	display: block;
+	font-size: var(--amcf-typo-subtext-size, 12px);
+	font-weight: var(--amcf-typo-subtext-weight, 400);
+	line-height: 1.5;
+	color: var(--amcf-color-text-dim, rgba(0, 0, 0, 0.55));
+}
+
+.amcf-para--code {
+	display: block;
+	font-family: var(--amcf-font-family-mono, Consolas, monospace);
+	font-size: var(--amcf-typo-code-size, 12px);
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--amcf-color-text-muted, rgba(0, 0, 0, 0.87));
+	background: var(--amcf-color-surface-inset, rgba(0, 0, 0, 0.04));
+	border: 1px solid var(--amcf-color-border, rgba(0, 0, 0, 0.12));
+	border-radius: var(--amcf-radius-sm, 4px);
+	padding: var(--amcf-space-2, 8px) var(--amcf-space-3, 12px);
 }
 </style>

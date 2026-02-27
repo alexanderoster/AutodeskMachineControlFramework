@@ -98,7 +98,7 @@ export default {
 
 		cardBackground () {
 			if (this.module.cardstyle === 'tinted')
-				return this.module.cardcolor || '#eaf1fb';
+				return this.module.cardcolor || 'var(--amcf-color-surface-raised, #F5F6F8)';
 			return '';
 		},
 
@@ -143,14 +143,16 @@ export default {
 
 .content-card-title {
 	padding-bottom: 0;
-	font-size: 1rem;
-	font-weight: 700;
+	font-size: var(--amcf-typo-h2-size, 1rem);
+	font-weight: var(--amcf-typo-h2-weight, 700);
 	line-height: 1.3;
+	color: var(--amcf-color-text, #1E1E1E);
 }
 
 .content-card-subtitle {
 	padding-top: 2px;
-	font-size: 0.8125rem;
+	font-size: var(--amcf-typo-subtext-size, 0.8125rem);
+	color: var(--amcf-color-text-muted, #5F6368);
 }
 
 .content-card-body {
@@ -161,15 +163,15 @@ export default {
 
 /* ── Plain (none) variant ─────────────────────────────────────────── */
 .content-title {
-	font-size: 1.125rem;
-	font-weight: 600;
-	color: rgba(0, 0, 0, 0.75);
+	font-size: var(--amcf-typo-h2-size, 1.125rem);
+	font-weight: var(--amcf-typo-h2-weight, 600);
+	color: var(--amcf-color-text, #1E1E1E);
 	padding: 4px 0 2px;
 }
 
 .content-subtitle {
 	font-size: 0.9375rem;
-	color: rgba(0, 0, 0, 0.54);
+	color: var(--amcf-color-text-muted, #5F6368);
 	padding-bottom: 8px;
 }
 

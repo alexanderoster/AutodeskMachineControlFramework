@@ -47,6 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_configurationlist.hpp"
 #include "amc_ui_module_contentitem_form.hpp"
 #include "amc_ui_module_contentitem_videostream.hpp"
+#include "amc_ui_module_contentitem_separator.hpp"
+#include "amc_ui_module_contentitem_statusbanner.hpp"
 
 #include "amc_api_constants.hpp"
 
@@ -98,6 +100,10 @@ CUIModule_ContentLeaf::CUIModule_ContentLeaf(pugi::xml_node& xmlNode, const std:
 		m_pItem = CUIModule_ContentForm::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "videostream")
 		m_pItem = CUIModule_ContentVideoStream::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
+	if (m_sModuleType == "separator")
+		m_pItem = CUIModule_ContentSeparator::makeFromXML(xmlNode, m_sName, sPath);
+	if (m_sModuleType == "statusbanner")
+		m_pItem = CUIModule_ContentStatusBanner::makeFromXML(xmlNode, m_sName, sPath);
 
 	LibMCAssertNotNull(m_pItem.get());
 
@@ -123,7 +129,8 @@ bool CUIModule_ContentLeaf::isSupportedModuleType(const std::string& sType)
 {
 	return (sType == "paragraph") || (sType == "image") || (sType == "chart") || (sType == "videostream") ||
 		(sType == "upload") || (sType == "buildlist") || (sType == "executionlist") || (sType == "alertlist") ||
-		(sType == "buttongroup") || (sType == "parameterlist") || (sType == "configurationlist") || (sType == "form");
+		(sType == "buttongroup") || (sType == "parameterlist") || (sType == "configurationlist") || (sType == "form") ||
+		(sType == "separator") || (sType == "statusbanner");
 }
 
 std::string CUIModule_ContentLeaf::getType()

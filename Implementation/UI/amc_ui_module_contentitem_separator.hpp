@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2026 Autodesk Inc.
 
 All rights reserved.
 
@@ -28,24 +28,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-import Vue from 'vue'
-import App from './App.vue'
-import vuetify from './vuetify';
-import 'roboto-fontface/css/roboto/roboto-fontface.css'
-import '@mdi/font/css/materialdesignicons.css'
-import '@core/theme/tokens.css'
-import { restoreHighContrastPreference } from '@core/theme/themeLoader.js'
 
-restoreHighContrastPreference ();
+#ifndef __AMC_UI_MODULE_CONTENTITEM_SEPARATOR
+#define __AMC_UI_MODULE_CONTENTITEM_SEPARATOR
 
-// Register Module_Factory globally so container modules (Content, Grid, Tabs)
-// can use it without importing it — eliminating the recursive component reference.
-import Module_Factory from './modules/AMCModule_Factory.vue';
-Vue.component('Module_Factory', Module_Factory);
+#include "header_protection.hpp"
 
-Vue.config.productionTip = false
+#ifndef __AMCIMPL_UI_MODULE
+#error this header is protected and should only be included in the corresponding implementation CPP files.
+#endif
 
-new Vue({
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+#include "amc_ui_module_contentitem.hpp"
+
+#include "pugixml.hpp"
+
+namespace AMC {
+
+	amcDeclareDependingClass(CUIModule_ContentSeparator, PUIModule_ContentSeparator);
+
+
+	class CUIModule_ContentSeparator : public CUIModule_ContentItem {
+	protected:
+
+		std::string m_sOrientation;
+		std::string m_sVariant;
+		CUIExpression m_OrientationExpression;
+		CUIExpression m_VariantExpression;
+
+	public:
+
+		static PUIModule_ContentSeparator makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath);
+
+		CUIModule_ContentSeparator(const std::string& sOrientation, const CUIExpression& orientationExpression, const std::string& sVariant, const CUIExpression& variantExpression, const std::string& sItemName, const std::string& sModulePath);
+
+		virtual ~CUIModule_ContentSeparator();
+
+		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
+
+		virtual std::string getItemType() override;
+		virtual void registerFrontendAttributes() override;
+
+	};
+
+}
+
+
+#endif //__AMC_UI_MODULE_CONTENTITEM_SEPARATOR

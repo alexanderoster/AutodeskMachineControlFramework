@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2026 Autodesk Inc.
 
 All rights reserved.
 
@@ -31,62 +31,64 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMCIMPL_UI_MODULE
 #define __AMCIMPL_API_CONSTANTS
 
-#include "amc_ui_module_contentitem_paragraph.hpp"
+#include "amc_ui_module_contentitem_separator.hpp"
 #include "libmc_interfaceexception.hpp"
 
 #include "amc_api_constants.hpp"
 #include "Common/common_utils.hpp"
 #include "amc_parameterhandler.hpp"
 
-
 #include "libmcdata_dynamic.hpp"
 
 using namespace AMC;
 
 
-PUIModule_ContentParagraph CUIModule_ContentParagraph::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath)
+PUIModule_ContentSeparator CUIModule_ContentSeparator::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath)
 {
-	auto textAttrib = xmlNode.attribute("text");
-	CUIExpression textExpression(xmlNode, "text");
+	auto orientationAttrib = xmlNode.attribute("orientation");
+	CUIExpression orientationExpression(xmlNode, "orientation", std::string("horizontal"));
 
 	auto variantAttrib = xmlNode.attribute("variant");
-	CUIExpression variantExpression(xmlNode, "variant", std::string("body"));
+	CUIExpression variantExpression(xmlNode, "variant", std::string("light"));
 
-	return std::make_shared<CUIModule_ContentParagraph>(textAttrib.as_string(), textExpression, variantAttrib.empty() ? "body" : variantAttrib.as_string(), variantExpression, sItemName, sModulePath);
+	return std::make_shared<CUIModule_ContentSeparator>(
+		orientationAttrib.empty() ? "horizontal" : orientationAttrib.as_string(),
+		orientationExpression,
+		variantAttrib.empty() ? "light" : variantAttrib.as_string(),
+		variantExpression,
+		sItemName,
+		sModulePath
+	);
 }
 
-CUIModule_ContentParagraph::CUIModule_ContentParagraph(const std::string& sText, const CUIExpression& textExpression, const std::string& sVariant, const CUIExpression& variantExpression, const std::string& sItemName, const std::string& sModulePath)
-	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID (), sItemName, sModulePath), m_sText (sText), m_TextExpression(textExpression), m_sVariant (sVariant), m_VariantExpression(variantExpression)
+CUIModule_ContentSeparator::CUIModule_ContentSeparator(const std::string& sOrientation, const CUIExpression& orientationExpression, const std::string& sVariant, const CUIExpression& variantExpression, const std::string& sItemName, const std::string& sModulePath)
+	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sItemName, sModulePath),
+	  m_sOrientation(sOrientation),
+	  m_sVariant(sVariant),
+	  m_OrientationExpression(orientationExpression),
+	  m_VariantExpression(variantExpression)
 {
-
 }
 
-CUIModule_ContentParagraph::~CUIModule_ContentParagraph()
+CUIModule_ContentSeparator::~CUIModule_ContentSeparator()
 {
-
 }
 
-std::string CUIModule_ContentParagraph::getText()
+void CUIModule_ContentSeparator::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID)
 {
-	return m_sText;
-}
-
-void CUIModule_ContentParagraph::addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) 
-{
-	object.addString(AMC_API_KEY_UI_ITEMTYPE, "paragraph");
+	object.addString(AMC_API_KEY_UI_ITEMTYPE, "separator");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
-	object.addString(AMC_API_KEY_UI_ITEMTEXT, m_sText);
+	object.addString("orientation", m_sOrientation);
+	object.addString("variant", m_sVariant);
 }
 
-std::string CUIModule_ContentParagraph::getItemType()
+std::string CUIModule_ContentSeparator::getItemType()
 {
-	return "paragraph";
+	return "separator";
 }
 
-void CUIModule_ContentParagraph::registerFrontendAttributes()
+void CUIModule_ContentSeparator::registerFrontendAttributes()
 {
-	registerItemStringAttribute("text", m_TextExpression);
+	registerItemStringAttribute("orientation", m_OrientationExpression);
 	registerItemStringAttribute("variant", m_VariantExpression);
 }
-
-

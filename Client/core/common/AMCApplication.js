@@ -62,6 +62,8 @@ import AMCApplicationModule_AlertList from "../modules/AMCModule_AlertList.js"
 import AMCApplicationModule_ButtonGroup from "../modules/AMCModule_ButtonGroup.js"
 import AMCApplicationModule_ConfigurationList from "../modules/AMCModule_ConfigurationList.js"
 import AMCApplicationModule_VideoStream from "../modules/AMCModule_VideoStream.js"
+import AMCApplicationModule_Separator from "../modules/AMCModule_Separator.js"
+import AMCApplicationModule_StatusBanner from "../modules/AMCModule_StatusBanner.js"
 
 import { validateModuleJSON } from "./AMCModuleSchema.js"
 
@@ -244,14 +246,22 @@ export default class AMCApplication extends Common.AMCObject {
             document.title = this.AppDefinition.TextApplicationName;
 
             if (vuetifythemes) {
-                if (this.AppDefinition.Colors.primary)
+                if (this.AppDefinition.Colors.primary) {
                     vuetifythemes.light.primary = this.AppDefinition.Colors.primary;
-                if (this.AppDefinition.Colors.secondary)
+                    vuetifythemes.dark.primary = this.AppDefinition.Colors.primary;
+                }
+                if (this.AppDefinition.Colors.secondary) {
                     vuetifythemes.light.secondary = this.AppDefinition.Colors.secondary;
-                if (this.AppDefinition.Colors.accent)
+                    vuetifythemes.dark.secondary = this.AppDefinition.Colors.secondary;
+                }
+                if (this.AppDefinition.Colors.accent) {
                     vuetifythemes.light.accent = this.AppDefinition.Colors.accent;
-                if (this.AppDefinition.Colors.error)
+                    vuetifythemes.dark.accent = this.AppDefinition.Colors.accent;
+                }
+                if (this.AppDefinition.Colors.error) {
                     vuetifythemes.light.error = this.AppDefinition.Colors.error;
+                    vuetifythemes.dark.error = this.AppDefinition.Colors.error;
+                }
             }
 
             this.changePage(this.AppDefinition.MainPage);
@@ -651,6 +661,10 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_ConfigurationList (page, def);
 		if (def.type === "videostream")
 			return new AMCApplicationModule_VideoStream (page, def);
+		if (def.type === "separator")
+			return new AMCApplicationModule_Separator (page, def);
+		if (def.type === "statusbanner")
+			return new AMCApplicationModule_StatusBanner (page, def);
 
 		return null;
 		

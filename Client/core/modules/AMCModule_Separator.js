@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2026 Autodesk Inc.
 
 All rights reserved.
 
@@ -28,24 +28,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-import Vue from 'vue'
-import App from './App.vue'
-import vuetify from './vuetify';
-import 'roboto-fontface/css/roboto/roboto-fontface.css'
-import '@mdi/font/css/materialdesignicons.css'
-import '@core/theme/tokens.css'
-import { restoreHighContrastPreference } from '@core/theme/themeLoader.js'
 
-restoreHighContrastPreference ();
+import * as Assert from "../common/AMCAsserts.js";
+import * as Common from "../common/AMCCommon.js"
 
-// Register Module_Factory globally so container modules (Content, Grid, Tabs)
-// can use it without importing it — eliminating the recursive component reference.
-import Module_Factory from './modules/AMCModule_Factory.vue';
-Vue.component('Module_Factory', Module_Factory);
 
-Vue.config.productionTip = false
+export default class AMCApplicationModule_Separator extends Common.AMCApplicationModule {
 
-new Vue({
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+	constructor (page, moduleJSON)
+	{
+		Assert.ObjectValue (moduleJSON);
+		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name || moduleJSON.uuid, moduleJSON.caption || "");
+		this.registerClass ("amcModule_Separator");
+
+		this.usesV2Frontend = true;
+
+		this.orientation = moduleJSON.orientation || "horizontal";
+		this.variant = moduleJSON.variant || "light";
+	}
+
+
+	updateFromJSON (updateJSON)
+	{
+		Assert.ObjectValue (updateJSON);
+		if (updateJSON.visible !== undefined)
+			this.visible = Assert.BoolValue (updateJSON.visible);
+	}
+
+
+	updateFromV2Attributes (attrs)
+	{
+		if (!attrs)
+			return true;
+		if (attrs.orientation !== undefined)
+			this.orientation = attrs.orientation;
+		if (attrs.variant !== undefined)
+			this.variant = attrs.variant;
+		if (attrs.visible !== undefined)
+			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+		return true;
+	}
+
+}

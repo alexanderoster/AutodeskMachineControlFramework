@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) 2020 Autodesk Inc.
+Copyright (C) 2026 Autodesk Inc.
 
 All rights reserved.
 
@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef __AMC_UI_MODULE_CONTENTITEM_PARAGRAPH
-#define __AMC_UI_MODULE_CONTENTITEM_PARAGRAPH
+#ifndef __AMC_UI_MODULE_CONTENTITEM_STATUSBANNER
+#define __AMC_UI_MODULE_CONTENTITEM_STATUSBANNER
 
 #include "header_protection.hpp"
 
@@ -44,38 +44,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace AMC {
 
-	amcDeclareDependingClass(CUIModule_ContentParagraph, PUIModule_ContentParagraph);
+	amcDeclareDependingClass(CUIModule_ContentStatusBanner, PUIModule_ContentStatusBanner);
 
 
-	class CUIModule_ContentParagraph : public CUIModule_ContentItem {
-	protected:		
+	class CUIModule_ContentStatusBanner : public CUIModule_ContentItem {
+	protected:
 
-		std::string m_sText;
-		std::string m_sVariant;
-		CUIExpression m_TextExpression;
-		CUIExpression m_VariantExpression;
+		std::string m_sSeverity;
+		std::string m_sTitle;
+		std::string m_sDescription;
+		CUIExpression m_SeverityExpression;
+		CUIExpression m_TitleExpression;
+		CUIExpression m_DescriptionExpression;
 
 	public:
 
-		static PUIModule_ContentParagraph makeFromXML(const pugi::xml_node & xmlNode, const std::string& sItemName, const std::string& sModulePath);
+		static PUIModule_ContentStatusBanner makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath);
 
-		CUIModule_ContentParagraph(const std::string& sText, const CUIExpression& textExpression, const std::string& sVariant, const CUIExpression& variantExpression, const std::string & sItemName, const std::string& sModulePath);
-		
-		virtual ~CUIModule_ContentParagraph();
+		CUIModule_ContentStatusBanner(
+			const std::string& sSeverity, const CUIExpression& severityExpression,
+			const std::string& sTitle, const CUIExpression& titleExpression,
+			const std::string& sDescription, const CUIExpression& descriptionExpression,
+			const std::string& sItemName, const std::string& sModulePath);
 
-		std::string getText ();
+		virtual ~CUIModule_ContentStatusBanner();
 
 		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
 
-		// New UI Frontend System
 		virtual std::string getItemType() override;
 		virtual void registerFrontendAttributes() override;
 
 	};
 
-
 }
 
 
-#endif //__AMC_UI_MODULE_CONTENTITEM_PARAGRAPH
-
+#endif //__AMC_UI_MODULE_CONTENTITEM_STATUSBANNER
