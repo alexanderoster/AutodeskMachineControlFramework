@@ -64,6 +64,7 @@ import AMCApplicationModule_ConfigurationList from "../modules/AMCModule_Configu
 import AMCApplicationModule_VideoStream from "../modules/AMCModule_VideoStream.js"
 import AMCApplicationModule_Separator from "../modules/AMCModule_Separator.js"
 import AMCApplicationModule_StatusBanner from "../modules/AMCModule_StatusBanner.js"
+import AMCApplicationModule_Workflow from "../modules/AMCModule_Workflow.js"
 
 import { validateModuleJSON } from "./AMCModuleSchema.js"
 
@@ -340,7 +341,7 @@ export default class AMCApplication extends Common.AMCObject {
 		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream") ||
 			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "executionlist") ||
 			(moduleType === "alertlist") || (moduleType === "buttongroup") || (moduleType === "parameterlist") ||
-			(moduleType === "configurationlist") || (moduleType === "form");
+			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow");
 	}
 
 	// Detect whether a JSON object uses the v2 frontend format.
@@ -388,6 +389,11 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.title = attrs.title || "";
 			legacy.subtitle = attrs.subtitle || "";
 			legacy.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
+			legacy.cardstyle = attrs.cardstyle || "none";
+			legacy.cardcolor = attrs.cardcolor || "";
+			legacy.spacing = attrs.spacing || 0;
+			legacy.elevation = attrs.elevation || 2;
+			if (attrs.cssstyle) legacy.cssstyle = attrs.cssstyle;
 			legacy.modules = subs.map(sub => this._normalizeV2ToLegacy(sub));
 
 		} else if (moduleType === "tabs") {
@@ -502,7 +508,11 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.visible = (attrs.visible !== undefined)
 				? (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true")
 				: true;
-			legacy.entities = subs.map(sub => {
+			let formSubs = subs;
+			if (subs.length === 1 && subs[0].moduletype === "form") {
+				formSubs = subs[0].submodules || [];
+			}
+			legacy.entities = formSubs.map(sub => {
 				let a = sub.attributes || {};
 				return {
 					uuid:                sub.uuid,
@@ -522,8 +532,14 @@ export default class AMCApplication extends Common.AMCObject {
 
 		} else if (moduleType === "buttongroup") {
 			legacy.visible = true;
-			legacy.buttondistribution = attrs.buttondistribution || "";
-			legacy.buttons = subs.map(sub => {
+			let bgSubs = subs;
+			let bgAttrs = attrs;
+			if (subs.length === 1 && subs[0].moduletype === "buttongroup") {
+				bgAttrs = subs[0].attributes || {};
+				bgSubs = subs[0].submodules || [];
+			}
+			legacy.buttondistribution = bgAttrs.buttondistribution || attrs.buttondistribution || "";
+			legacy.buttons = bgSubs.map(sub => {
 				let a = sub.attributes || {};
 				return {
 					uuid:        sub.uuid,
@@ -553,6 +569,14 @@ export default class AMCApplication extends Common.AMCObject {
 						legacy[key] = subAttrs[key];
 				}
 			}
+			// Copy top-level properties for buildlist / executionlist (buttons, selection UUIDs)
+			if (v2.entrybuttons)
+				legacy.entrybuttons = v2.entrybuttons;
+			if (v2.selectionvalueuuid)
+				legacy.selectionvalueuuid = v2.selectionvalueuuid;
+			if (v2.buttonvalueuuid)
+				legacy.buttonvalueuuid = v2.buttonvalueuuid;
+
 			// resource aliases
 			if ((moduleType === "image") && (legacy.imageresource === undefined) && (legacy.resource !== undefined))
 				legacy.imageresource = legacy.resource;
@@ -665,6 +689,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_Separator (page, def);
 		if (def.type === "statusbanner")
 			return new AMCApplicationModule_StatusBanner (page, def);
+		if (def.type === "workflow")
+			return new AMCApplicationModule_Workflow (page, def);
 
 		return null;
 		
@@ -687,7 +713,7 @@ export default class AMCApplication extends Common.AMCObject {
 
     retrieveStateUpdate() {
 
-        this.axiosGetRequest("/state")
+        this.axiosGetRequest("/frontend")
 
         .then(resultJSON => {
 			
