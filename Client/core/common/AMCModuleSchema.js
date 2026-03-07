@@ -115,6 +115,14 @@ const MODULE_SCHEMAS = {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible', 'streamresource', 'maxwidth', 'maxheight'],
 	},
+	separator: {
+		required: ['uuid', 'type'],
+		optional: ['caption', 'visible', 'orientation', 'variant'],
+	},
+	statusbanner: {
+		required: ['uuid', 'type'],
+		optional: ['caption', 'visible', 'severity', 'title', 'description'],
+	},
 	custom: {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible'],

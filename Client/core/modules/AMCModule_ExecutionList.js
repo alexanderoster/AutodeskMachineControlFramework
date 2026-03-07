@@ -84,7 +84,8 @@ export default class AMCApplicationModule_ExecutionList extends Common.AMCApplic
 		this.thumbnailheight        = "150pt";
 		this.thumbnailwidth         = "";
 		this.entriesperpage         = 25;
-		this.lastKnownHeadID        = 0;
+		this.lastKnownHeadID        = -1;
+		this.loaded                 = false;
 		this.executionFetchInFlight = false;
 
 		this.updateFromJSON (moduleJSON);
@@ -154,6 +155,7 @@ export default class AMCApplicationModule_ExecutionList extends Common.AMCApplic
 		app.axiosGetRequest("/executions")
 		.then(resultJSON => {
 			this.executionFetchInFlight = false;
+			this.loaded = true;
 
 			if (resultJSON.data && resultJSON.data.executions) {
 				let newEntries = [];
@@ -180,6 +182,7 @@ export default class AMCApplicationModule_ExecutionList extends Common.AMCApplic
 		})
 		.catch(() => {
 			this.executionFetchInFlight = false;
+			this.loaded = true;
 		});
 
 		return true;

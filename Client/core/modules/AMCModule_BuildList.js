@@ -77,7 +77,8 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 		this.thumbnailheight        = "150pt";
 		this.thumbnailwidth         = "";
 		this.entriesperpage         = 25;
-		this.lastKnownHeadID        = 0;
+		this.lastKnownHeadID        = -1;
+		this.loaded                 = false;
 		this.buildFetchInFlight     = false;
 		this.defaultThumbnailUUID   = Common.nullUUID ();
 
@@ -149,6 +150,7 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 		app.axiosGetRequest("/build?status=validated")
 		.then(resultJSON => {
 			this.buildFetchInFlight = false;
+			this.loaded = true;
 
 			if (resultJSON.data && resultJSON.data.buildjobs) {
 				let newEntries = [];
@@ -171,6 +173,7 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 		})
 		.catch(() => {
 			this.buildFetchInFlight = false;
+			this.loaded = true;
 		});
 
 		return true;

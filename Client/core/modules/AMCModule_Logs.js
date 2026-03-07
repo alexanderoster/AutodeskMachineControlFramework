@@ -93,7 +93,7 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 		this.usesV2Frontend = true;
 		
 		this.logStartID = 1;
-		this.lastKnownHeadID = 0;
+		this.lastKnownHeadID = -1;
 		this.logFetchInFlight = false;
 		this.defaultCount = 200;
 		this.showToolbar = true;

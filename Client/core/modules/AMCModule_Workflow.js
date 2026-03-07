@@ -68,11 +68,44 @@ export default class AMCApplicationModule_Workflow extends Common.AMCApplication
 			this.workflowData = attrs.workflowdata;
 		if (attrs.catalogdata !== undefined)
 			this.catalogData = attrs.catalogdata;
+		if (attrs.catalog !== undefined)
+			this.catalogData = this._normalizeCatalog(attrs.catalog);
 		if (attrs.caption !== undefined)
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		return true;
+	}
+
+	_normalizeCatalog (rawCatalog)
+	{
+		if (!Array.isArray(rawCatalog))
+			return null;
+		return rawCatalog.map(entry => {
+			const normalized = {
+				id: entry.id,
+				label: entry.label || entry.id,
+				category: entry.category || "functionblock",
+				color: entry.color || "blue"
+			};
+			if (entry.params && Array.isArray(entry.params)) {
+				normalized.params = entry.params.map(p => {
+					const param = {
+						name: p.name,
+						type: p.type || "string"
+					};
+					if (p.unit) param.unit = p.unit;
+					if (p.default !== undefined && p.default !== "") {
+						if (p.type === "int") param.default = parseInt(p.default, 10);
+						else if (p.type === "float") param.default = parseFloat(p.default);
+						else if (p.type === "bool") param.default = (p.default === "true" || p.default === "1");
+						else param.default = p.default;
+					}
+					return param;
+				});
+			}
+			return normalized;
+		});
 	}
 
 	getDefaultWorkflow ()
