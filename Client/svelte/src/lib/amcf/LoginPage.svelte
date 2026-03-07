@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -33,6 +34,17 @@
 	let bgURL       = $derived(bgUUID && app ? app.getImageURL(bgUUID) : '');
 	let bgStyle     = $derived(bgURL ? `background-image: url("${bgURL}"); background-size: cover; background-position: center;` : '');
 
+	function autofocus (node: HTMLElement) {
+		tick().then(() => node.focus());
+	}
+
+	onMount(() => {
+		tick().then(() => {
+			const firstInput = document.querySelector<HTMLInputElement>('[data-login-user], [data-login-first]');
+			firstInput?.focus();
+		});
+	});
+
 	function doLogin () {
 		if (loginUser && loginPassword && app) {
 			app.requestLogin(loginUser, loginPassword);
@@ -41,13 +53,21 @@
 		}
 	}
 
-	function nextStep () {
-		if (loginUser) userStep = false;
+	async function nextStep () {
+		if (loginUser) {
+			userStep = false;
+			await tick();
+			const pwdInput = document.querySelector<HTMLInputElement>('[data-login-password]');
+			pwdInput?.focus();
+		}
 	}
 
-	function backStep () {
+	async function backStep () {
 		userStep = true;
 		loginPassword = '';
+		await tick();
+		const userInput = document.querySelector<HTMLInputElement>('[data-login-user]');
+		userInput?.focus();
 	}
 
 	function onEnter () {
@@ -71,21 +91,21 @@
 						<p class="text-sm text-center text-muted-foreground">{welcomeMsg}</p>
 					{/if}
 
-					{#if userStep}
-						<div class="w-full flex flex-col gap-3 mt-2">
-							<div class="flex items-center gap-2">
-								<User class="h-4 w-4 text-muted-foreground shrink-0" />
-								<Input placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && nextStep()} />
-							</div>
-							<Button onclick={nextStep} disabled={!loginUser} variant="outline" class="w-full">
-								Next <ArrowRight class="h-4 w-4 ml-1" />
-							</Button>
+				{#if userStep}
+					<div class="w-full flex flex-col gap-3 mt-2">
+						<div class="flex items-center gap-2">
+							<User class="h-4 w-4 text-muted-foreground shrink-0" />
+							<Input data-login-user placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && nextStep()} />
 						</div>
-					{:else}
-						<div class="w-full flex flex-col gap-3 mt-2">
-							<div class="flex items-center gap-2">
-								<Lock class="h-4 w-4 text-muted-foreground shrink-0" />
-								<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && doLogin()} />
+						<Button onclick={nextStep} disabled={!loginUser} variant="outline" class="w-full">
+							Next <ArrowRight class="h-4 w-4 ml-1" />
+						</Button>
+					</div>
+				{:else}
+					<div class="w-full flex flex-col gap-3 mt-2">
+						<div class="flex items-center gap-2">
+							<Lock class="h-4 w-4 text-muted-foreground shrink-0" />
+							<Input data-login-password type="password" placeholder="Password" bind:value={loginPassword} autofocus onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && doLogin()} />
 							</div>
 							<div class="flex gap-2">
 								<Button onclick={backStep} variant="outline" class="flex-1">
@@ -116,12 +136,12 @@
 					{#if welcomeMsg}<p class="text-xs opacity-60 mt-2 leading-relaxed">{welcomeMsg}</p>{/if}
 				</div>
 				<div class="flex flex-col gap-4 max-w-[360px] mx-auto">
-					<input type="text" placeholder="User name" bind:value={loginUser}
-						class="h-10 w-full rounded-md border border-white/25 bg-transparent px-3 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
-						onkeydown={(e) => e.key === 'Enter' && onEnter()} />
-					<input type="password" placeholder="Password" bind:value={loginPassword}
-						class="h-10 w-full rounded-md border border-white/25 bg-transparent px-3 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
-						onkeydown={(e) => e.key === 'Enter' && onEnter()} />
+				<input type="text" placeholder="User name" bind:value={loginUser} use:autofocus
+					class="h-10 w-full rounded-md border border-white/25 bg-transparent px-3 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
+					onkeydown={(e) => e.key === 'Enter' && onEnter()} />
+				<input type="password" placeholder="Password" bind:value={loginPassword}
+					class="h-10 w-full rounded-md border border-white/25 bg-transparent px-3 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
+					onkeydown={(e) => e.key === 'Enter' && onEnter()} />
 					<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full mt-2">
 						<LogIn class="h-4 w-4 mr-2" /> Sign In
 					</Button>
@@ -143,16 +163,16 @@
 					{#if subtitle}<p class="text-sm text-muted-foreground mt-1">{subtitle}</p>{/if}
 					{#if welcomeMsg}<p class="text-xs text-muted-foreground/70 mt-2 leading-relaxed">{welcomeMsg}</p>{/if}
 				</div>
-				<div class="flex flex-col gap-4 max-w-[360px] mx-auto">
-					<Input placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-					<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-					<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full mt-2">
-						<LogIn class="h-4 w-4 mr-2" /> Sign In
-					</Button>
-				</div>
+			<div class="flex flex-col gap-4 max-w-[360px] mx-auto">
+				<Input data-login-first placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+				<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+				<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full mt-2">
+					<LogIn class="h-4 w-4 mr-2" /> Sign In
+				</Button>
 			</div>
 		</div>
 	</div>
+</div>
 
 <!-- ========== SPLIT ========== -->
 {:else if loginStyle === 'split'}
@@ -180,16 +200,16 @@
 				{/if}
 				<h1 class="text-2xl font-semibold text-foreground">Sign In</h1>
 				<p class="text-sm text-muted-foreground mt-1 mb-6">Enter your credentials to continue</p>
-				<div class="flex flex-col gap-4">
-					<Input placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-					<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-					<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full mt-2">
-						<LogIn class="h-4 w-4 mr-2" /> Sign In
-					</Button>
-				</div>
+			<div class="flex flex-col gap-4">
+				<Input data-login-first placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+				<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+				<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full mt-2">
+					<LogIn class="h-4 w-4 mr-2" /> Sign In
+				</Button>
 			</div>
 		</div>
 	</div>
+</div>
 
 <!-- ========== FALLBACK (same as classic) ========== -->
 {:else}
@@ -206,13 +226,13 @@
 					{#if welcomeMsg}
 						<p class="text-sm text-center text-muted-foreground">{welcomeMsg}</p>
 					{/if}
-					<div class="w-full flex flex-col gap-3 mt-2">
-						<Input placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-						<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
-						<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full">
-							<LogIn class="h-4 w-4 mr-2" /> Sign In
-						</Button>
-					</div>
+				<div class="w-full flex flex-col gap-3 mt-2">
+					<Input data-login-first placeholder="User name" bind:value={loginUser} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+					<Input type="password" placeholder="Password" bind:value={loginPassword} onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && onEnter()} />
+					<Button onclick={doLogin} disabled={!loginUser || !loginPassword} class="w-full">
+						<LogIn class="h-4 w-4 mr-2" /> Sign In
+					</Button>
+				</div>
 				</Card.Content>
 			</Card.Root>
 		</div>

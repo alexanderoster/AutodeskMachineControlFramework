@@ -9,5 +9,14 @@ export default defineConfig({
 		alias: {
 			'@core': path.resolve(__dirname, '../core'),
 		},
+		// @core files (../core) import packages like axios that live in
+		// this project's node_modules.  Without dedupe, Vite walks up from
+		// Client/core/ and fails to find them.
+		dedupe: ['axios', 'luxon'],
+	},
+	server: {
+		fs: {
+			allow: [path.resolve(__dirname, '..')],
+		},
 	},
 });
