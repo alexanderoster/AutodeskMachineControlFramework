@@ -1033,6 +1033,34 @@ void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState
 {
 
     auto pStateMachineData = m_pUISystemState->getStateMachineData().get ();
+
+    CJSONWriterArray menuItems(writer);
+    for (auto iter : m_MenuItems) {
+        CJSONWriterObject menuItem(writer);
+        menuItem.addString(AMC_API_KEY_UI_ID, iter->getID());
+        menuItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
+        menuItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon());
+        menuItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
+        menuItem.addString(AMC_API_KEY_UI_DESCRIPTION, iter->getDescription());
+        menuItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
+        menuItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        menuItems.addObject(menuItem);
+    }
+    writer.addArray(AMC_API_KEY_UI_MENUITEMS, menuItems);
+
+    CJSONWriterArray toolbarItems(writer);
+    for (auto iter : m_ToolbarItems) {
+        CJSONWriterObject toolbarItem(writer);
+        toolbarItem.addString(AMC_API_KEY_UI_ID, iter->getID());
+        toolbarItem.addString(AMC_API_KEY_UI_UUID, iter->getUUID());
+        toolbarItem.addString(AMC_API_KEY_UI_ICON, iter->getIcon());
+        toolbarItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
+        toolbarItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
+        toolbarItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        toolbarItems.addObject(toolbarItem);
+    }
+    writer.addArray(AMC_API_KEY_UI_TOOLBARITEMS, toolbarItems);
+
     CJSONWriterArray pages(writer);
     for (auto iter : m_Pages) {
         CJSONWriterObject pageObject(writer);
@@ -1042,6 +1070,24 @@ void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState
         pages.addObject(pageObject);
     }
     writer.addArray(AMC_API_KEY_UI_PAGES, pages);
+
+    CJSONWriterArray custompages(writer);
+    for (auto iter : m_CustomPages) {
+        CJSONWriterObject custompage(writer);
+        custompage.addString(AMC_API_KEY_UI_COMPONENTNAME, iter.second->getComponentName());
+        iter.second->frontendWritePageStatusToJSON(writer, custompage, pFrontendState, pStateMachineData);
+        custompages.addObject(custompage);
+    }
+    writer.addArray(AMC_API_KEY_UI_CUSTOMPAGES, custompages);
+
+    CJSONWriterArray dialogs(writer);
+    for (auto iter : m_Dialogs) {
+        CJSONWriterObject dialog(writer);
+        dialog.addString(AMC_API_KEY_UI_DIALOGTITLE, iter.second->getTitle());
+        iter.second->frontendWritePageStatusToJSON(writer, dialog, pFrontendState, pStateMachineData);
+        dialogs.addObject(dialog);
+    }
+    writer.addArray(AMC_API_KEY_UI_DIALOGS, dialogs);
 
 }
 

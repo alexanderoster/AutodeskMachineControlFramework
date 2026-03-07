@@ -430,4 +430,8 @@ void CUIModule_ContentExecutionList::frontendWriteItemToJSON(CJSONWriter& writer
 	}
 
 	itemObject.addObject("attributes", attributesObject);
+
+	itemObject.addString(AMC_API_KEY_UI_ITEMSELECTIONVALUEUUID, m_sSelectedExecutionFieldUUID);
+	itemObject.addString(AMC_API_KEY_UI_ITEMBUTTONVALUEUUID, m_sSelectedButtonFieldUUID);
+	writeButtonsToJSON(writer, itemObject);
 }

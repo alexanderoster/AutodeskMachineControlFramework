@@ -405,4 +405,8 @@ void CUIModule_ContentBuildList::frontendWriteItemToJSON(CJSONWriter& writer, CJ
 	attributesObject.addString(AMC_API_KEY_UI_ITEMDEFAULTTHUMBNAIL, m_sDefaultThumbnailResourceUUID);
 
 	itemObject.addObject("attributes", attributesObject);
+
+	itemObject.addString(AMC_API_KEY_UI_ITEMSELECTIONVALUEUUID, m_sSelectedBuildFieldUUID);
+	itemObject.addString(AMC_API_KEY_UI_ITEMBUTTONVALUEUUID, m_sSelectedButtonFieldUUID);
+	writeButtonsToJSON(writer, itemObject);
 }

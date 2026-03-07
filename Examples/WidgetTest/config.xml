@@ -668,7 +668,18 @@
 
 		<page name="workfloweditor">
 			<content name="workflowpanel" cardstyle="elevated" title="Workflow Editor">
-				<workflow name="testworkflow" caption="Workflow Editor"/>
+				<workflow name="testworkflow" caption="Workflow Editor">
+					<step id="exposure"        label="Exposure"         category="functionblock" color="blue"/>
+					<step id="delay"           label="Delay"            category="functionblock" color="blue">
+						<param name="duration" type="int" unit="ms" default="1000"/>
+					</step>
+					<step id="beschichter_lr"  label="Beschichter L→R"  category="template" color="amber"/>
+					<step id="beschichter_rl"  label="Beschichter R→L"  category="template" color="amber"/>
+					<step id="dosierung_r"     label="Dosierung R"      category="template" color="amber"/>
+					<step id="dosierung_l"     label="Dosierung L"      category="template" color="amber"/>
+					<step id="heatup_layer"    label="Heatup Layer"     category="template" color="amber"/>
+					<step id="hold_temp"       label="Hold Temperature" category="template" color="amber"/>
+				</workflow>
 			</content>
 		</page>
 

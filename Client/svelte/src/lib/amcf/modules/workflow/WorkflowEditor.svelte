@@ -37,10 +37,11 @@
 		catalog: StepCatalogEntry[];
 	} = $props();
 
-	let state: WorkflowState = $state(createWorkflowState(
-		JSON.parse(JSON.stringify(initialWorkflow)),
-		catalog,
-	));
+	// Intentionally snapshot props once; the editor owns its own mutable copy.
+	const snapshotWorkflow = JSON.parse(JSON.stringify(initialWorkflow)) as Workflow;
+	const snapshotCatalog = [...catalog];
+
+	let state: WorkflowState = $state(createWorkflowState(snapshotWorkflow, snapshotCatalog));
 
 	const flipDurationMs = 200;
 

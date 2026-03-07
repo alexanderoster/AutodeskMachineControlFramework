@@ -57,6 +57,11 @@ CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& a
 	readFromXML(xmlNode, attributeName, defaultValue, false);
 }
 
+CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& attributeName, const char* defaultValue)
+{
+	readFromXML(xmlNode, attributeName, (defaultValue != nullptr) ? defaultValue : "", false);
+}
+
 void CUIExpression::setFixedValue(const std::string& sValue)
 {
 	m_sFixedValue = sValue;

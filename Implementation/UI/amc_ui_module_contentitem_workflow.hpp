@@ -42,13 +42,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "pugixml.hpp"
 
+#include <vector>
+
 namespace AMC {
 
 	amcDeclareDependingClass(CUIModule_ContentWorkflow, PUIModule_ContentWorkflow);
 
+	struct SWorkflowStepParam {
+		std::string m_sName;
+		std::string m_sType;
+		std::string m_sUnit;
+		std::string m_sDefault;
+	};
+
+	struct SWorkflowCatalogEntry {
+		std::string m_sId;
+		std::string m_sLabel;
+		std::string m_sCategory;
+		std::string m_sColor;
+		std::vector<SWorkflowStepParam> m_Params;
+	};
+
 
 	class CUIModule_ContentWorkflow : public CUIModule_ContentItem {
 	protected:
+
+		std::vector<SWorkflowCatalogEntry> m_CatalogEntries;
 
 	public:
 
@@ -58,10 +77,14 @@ namespace AMC {
 
 		virtual ~CUIModule_ContentWorkflow();
 
+		void addCatalogEntry(const SWorkflowCatalogEntry& entry);
+
 		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
 
 		virtual std::string getItemType() override;
 		virtual void registerFrontendAttributes() override;
+
+		virtual void frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData) override;
 
 	};
 
