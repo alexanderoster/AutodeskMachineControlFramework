@@ -55,10 +55,6 @@ echo long git hash: %LONGGITHASH%
 git log -n 1 --format="%%H" -- "%basepath%\Client" >"%builddir%\clientdirhash.txt"
 SET /p CLIENTDIRHASH=<"%builddir%\clientdirhash.txt"
 SET /p CLIENTDISTHASH=<"%basepath%\Artifacts\clientdist\_githash_client_vue2.txt"
-if exist "%basepath%\Artifacts\clientdist_v3\_githash_client_vue3.txt" (
-  SET /p CLIENTDISTHASH_VUE3=<"%basepath%\Artifacts\clientdist_v3\_githash_client_vue3.txt"
-)
-
 REM Trim Strings
 for /f "tokens=* delims= " %%a in ("%CLIENTDIRHASH%") do set CLIENTDIRHASH=%%a
 for /l %%a in (1,1,100) do if "!CLIENTDIRHASH:~-1!"==" " set CLIENTDIRHASH=!CLIENTDIRHASH:~0,-1! 
@@ -76,11 +72,12 @@ if "%CLIENTDIRHASH%" neq "%CLIENTDISTHASH%" (
 cd /d "%basepath%"
 
 copy /y "%basepath%Artifacts\clientdist\clientpackage_vue2.zip" "%builddir%\Output\%GITHASH%_core_vue2.client"
-if exist "%basepath%Artifacts\clientdist_v3\clientpackage_vue3.zip" (
-  copy /y "%basepath%Artifacts\clientdist_v3\clientpackage_vue3.zip" "%builddir%\Output\%GITHASH%_core_vue3.client"
-)
 if "%ERRORLEVEL%" neq "0" (
 	goto ERROR
+)
+
+if exist "%basepath%Artifacts\clientdist\clientpackage_svelte.zip" (
+	copy /y "%basepath%Artifacts\clientdist\clientpackage_svelte.zip" "%builddir%\Output\%GITHASH%_core_svelte.client"
 )
 
 copy /y "%basepath%Artifacts\apidocsdist\apidocspackage.zip" "%builddir%\Output\%GITHASH%_core.apidocs"
@@ -121,8 +118,8 @@ copy ..\Output\%GITHASH%_core_libmc.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_lib3mf.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_libmcdata.dll Framework\Dist\
 copy ..\Output\%GITHASH%_core_vue2.client Framework\Dist\
-if exist ..\Output\%GITHASH%_core_vue3.client (
-	copy ..\Output\%GITHASH%_core_vue3.client Framework\Dist\
+if exist ..\Output\%GITHASH%_core_svelte.client (
+	copy ..\Output\%GITHASH%_core_svelte.client Framework\Dist\
 )
 copy ..\Output\%GITHASH%_core.apidocs Framework\Dist\
 copy ..\Output\%GITHASH%_*.data Framework\Dist\
