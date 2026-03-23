@@ -179,8 +179,9 @@ export default class AMCApplicationModule_Logs extends Common.AMCApplicationModu
 				this.trimDisplayItems ();
 			}
 		})
-		.catch (() => {
+		.catch (err => {
 			this.logFetchInFlight = false;
+			console.warn('[AMC Logs] fetch failed:', err);
 		});
 
 		return true;

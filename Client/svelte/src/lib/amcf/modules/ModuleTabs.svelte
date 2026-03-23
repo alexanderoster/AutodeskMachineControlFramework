@@ -25,10 +25,8 @@
 			{/each}
 		</Tabs.List>
 		{#each tabs as tab (tab.uuid)}
-			<Tabs.Content value={tab.uuid} class="flex-1 min-h-0 overflow-auto flex flex-col gap-2 pt-2">
-				{#each tab.modules || [] as child (child.uuid)}
-					<ModuleFactory module={child} {app} />
-				{/each}
+			<Tabs.Content value={tab.uuid} class="flex-1 min-h-0 overflow-auto flex flex-col pt-2">
+				<ModuleFactory module={tab} {app} />
 			</Tabs.Content>
 		{/each}
 	</Tabs.Root>

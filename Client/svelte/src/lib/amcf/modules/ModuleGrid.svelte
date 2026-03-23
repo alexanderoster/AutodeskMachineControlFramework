@@ -13,7 +13,7 @@
 {#if visible}
 	<div class="w-full h-full" style={cssstyle}>
 		{#each sections as section (section.uuid)}
-			<div style={section.cssstyle || ''}>
+			<div style="min-height:0;height:100%;{section.cssstyle || ''}">
 				<ModuleFactory module={section} {app} />
 			</div>
 		{/each}

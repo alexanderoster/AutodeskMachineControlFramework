@@ -278,12 +278,20 @@ export default class AMCApplicationModule_Form extends Common.AMCApplicationModu
 					dataObject.unit = a.unit;
 				if (a.mode !== undefined)
 					dataObject.mode = a.mode;
-				if (a.format !== undefined)
-					dataObject.format = a.format;
+			if (a.format !== undefined)
+				dataObject.format = a.format;
+
+			if ((entity.type === "combobox" || entity.type === "multiselect") && sub.submodules) {
+				entity.items = sub.submodules.map(item => {
+					let ia = item.attributes || {};
+					return { value: String(ia.value !== undefined ? ia.value : ""), text: ia.text || String(ia.value !== undefined ? ia.value : "") };
+				});
+				dataObject.items = entity.items;
 			}
 		}
+	}
 
-		return true;
+	return true;
 	}
 
 

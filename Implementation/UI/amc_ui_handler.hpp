@@ -101,6 +101,8 @@ namespace AMC {
 
 		std::mutex m_Mutex;
 		std::map<std::string, uint32_t> m_Colors;
+		std::map<std::string, uint32_t> m_DarkColors;
+		std::string m_sDefaultTheme;
 
 		std::string m_sAppName;
 		std::string m_sCopyrightString;

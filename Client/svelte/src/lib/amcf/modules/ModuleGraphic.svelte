@@ -2,6 +2,8 @@
 	import { onMount, onDestroy } from 'svelte';
 
 	import { usePollTick } from '$lib/amcf/poll.svelte';
+	// @ts-ignore — core JS has no type declarations yet
+	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 
 	let { module, app }: { module: any; app: any } = $props();
 	const poll = usePollTick();
@@ -16,13 +18,17 @@
 
 		try {
 			glInstance = app.retrieveWebGLInstance(module.uuid);
+			if (!glInstance) {
+				glInstance = new WebGLImpl();
+				app.storeWebGLInstance(module.uuid, glInstance);
+			}
 			if (glInstance && containerEl) {
 				glInstance.setupDOMElement(containerEl);
 				glInstance.setupOrthographicView();
 				initialized = true;
 			}
 		} catch (e) {
-			console.warn('[Graphic] WebGL init skipped:', e);
+			console.warn('[Graphic] WebGL init failed:', e);
 		}
 
 		if (initialized && module.items) {

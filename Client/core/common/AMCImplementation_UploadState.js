@@ -52,6 +52,8 @@ export default class AMCUploadState extends Common.AMCObject {
 		this.waitMessage = "Waiting for upload to finish..";
 		this.buildMessage = "Processing build..";
 		this.mimeType = "application/binary";
+		this._onComplete = null;
+		this._onError = null;
 	}
 	
 	generateUploadID ()
@@ -69,8 +71,30 @@ export default class AMCUploadState extends Common.AMCObject {
 		
 		this.chosenFile = null;
 		this.setMessage (this.cancelMessage);
+		if (this._onError) {
+			try { this._onError (); } catch (_) { /* noop */ }
+			this._onComplete = null;
+			this._onError = null;
+		}
 	}
 	
+	setChosenFile (file)
+	{
+		Assert.ObjectValue (file);
+		this.chosenFile = file;
+
+		if (file.type && file.type.length > 0) {
+			this.mimeType = file.type;
+		} else {
+			const name = (file.name || "").toLowerCase ();
+			if (name.endsWith (".3mf")) this.mimeType = "application/3mf";
+			else if (name.endsWith (".csv")) this.mimeType = "text/csv";
+			else if (name.endsWith (".png")) this.mimeType = "image/png";
+			else if (name.endsWith (".jpg") || name.endsWith (".jpeg")) this.mimeType = "image/jpeg";
+			else this.mimeType = "application/octet-stream";
+		}
+	}
+
 	getChosenFile ()
 	{
 		if (!this.chosenFile)
@@ -87,6 +111,11 @@ export default class AMCUploadState extends Common.AMCObject {
 		this.uploadID = 0;
 		this.chosenFile = null;
 		this.setMessage (this.finishMessage);
+		if (this._onComplete) {
+			try { this._onComplete (); } catch (_) { /* noop */ }
+			this._onComplete = null;
+			this._onError = null;
+		}
 	}
 	
 	setMessage (messageString)

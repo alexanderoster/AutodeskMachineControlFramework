@@ -23,28 +23,28 @@
 		uploading = true;
 		statusMessage = `Uploading ${file.name}...`;
 
-		module.state.chosenFile = file;
+		if (typeof module.state.setChosenFile === 'function')
+			module.state.setChosenFile(file);
+		else
+			module.state.chosenFile = file;
 
-		if (module.uploadclass === 'image') {
-			app.performImageUpload(module.state, module.uploadsuccessevent, module.uploadfailureevent)
-				.then(() => {
-					statusMessage = `${file.name} uploaded successfully.`;
-					uploading = false;
-				})
-				.catch(() => {
-					statusMessage = `Upload failed.`;
-					uploading = false;
-				});
-		} else {
-			app.performJobUpload(module.state, module.uploadsuccessevent, module.uploadfailureevent)
-				.then(() => {
-					statusMessage = `${file.name} uploaded successfully.`;
-					uploading = false;
-				})
-				.catch(() => {
-					statusMessage = `Upload failed.`;
-					uploading = false;
-				});
+		module.state._onComplete = () => {
+			statusMessage = `${file.name} uploaded successfully.`;
+			uploading = false;
+		};
+		module.state._onError = () => {
+			statusMessage = `Upload failed.`;
+			uploading = false;
+		};
+
+		try {
+			if (module.uploadclass === 'image')
+				app.performImageUpload(module.state, module.uploadsuccessevent, module.uploadfailureevent);
+			else
+				app.performJobUpload(module.state, module.uploadsuccessevent, module.uploadfailureevent);
+		} catch (e) {
+			statusMessage = `Upload failed.`;
+			uploading = false;
 		}
 	}
 

@@ -36,6 +36,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 //const RAYCAST_LINE_THRESHOLD = 3;
 
+const DEFAULT_SCENE_BACKGROUND = 0xffffff;
+const DEFAULT_GRID_COLOR_FINE = 0xe0e0e0;
+const DEFAULT_GRID_COLOR_MEDIUM = 0xc8c8c8;
+const DEFAULT_GRID_COLOR_COARSE = 0xc0c0c0;
+const GRID_DARK_LUMINANCE_THRESHOLD = 0.3;
+const GRID_DARK_SCALE_MEDIUM = 1.4;
+const GRID_DARK_SCALE_COARSE = 1.8;
+const GRID_LIGHT_SCALE_MEDIUM = 0.88;
+const GRID_LIGHT_SCALE_COARSE = 0.78;
+
 class WebGLElement {
 
     constructor() {
@@ -652,7 +662,7 @@ class WebGLMeshElement extends WebGLElement {
 
 class WebGLGridElement extends WebGLElement {
 
-    constructor(width, height, zValue, factor) {
+    constructor(width, height, zValue, factor, gridBaseColor) {
         super();
 
         this.lineElement1 = null;
@@ -704,9 +714,23 @@ class WebGLGridElement extends WebGLElement {
             gridArray3.push(0, y * gridRecursionSquared * factor, width, y * gridRecursionSquared * factor);
         }
 
-        this.lineElement1 = new WebGLLinesElement(gridArray1, zValue, 0.5, 0xe0e0e0);
-        this.lineElement2 = new WebGLLinesElement(gridArray2, zValue, 0.6, 0xc8c8c8);
-        this.lineElement3 = new WebGLLinesElement(gridArray3, zValue, 0.8, 0xc0c0c0);
+        let c1 = DEFAULT_GRID_COLOR_FINE, c2 = DEFAULT_GRID_COLOR_MEDIUM, c3 = DEFAULT_GRID_COLOR_COARSE;
+        if (gridBaseColor !== undefined) {
+            const base = new THREE.Color(gridBaseColor);
+            c1 = base.getHex();
+            const luminance = base.r * 0.299 + base.g * 0.587 + base.b * 0.114;
+            if (luminance < GRID_DARK_LUMINANCE_THRESHOLD) {
+                c2 = base.clone().multiplyScalar(GRID_DARK_SCALE_MEDIUM).getHex();
+                c3 = base.clone().multiplyScalar(GRID_DARK_SCALE_COARSE).getHex();
+            } else {
+                c2 = base.clone().multiplyScalar(GRID_LIGHT_SCALE_MEDIUM).getHex();
+                c3 = base.clone().multiplyScalar(GRID_LIGHT_SCALE_COARSE).getHex();
+            }
+        }
+
+        this.lineElement1 = new WebGLLinesElement(gridArray1, zValue, 0.5, c1);
+        this.lineElement2 = new WebGLLinesElement(gridArray2, zValue, 0.6, c2);
+        this.lineElement3 = new WebGLLinesElement(gridArray3, zValue, 0.8, c3);
 
         group.add(this.lineElement1.glelement);
         group.add(this.lineElement2.glelement);
@@ -829,7 +853,7 @@ class WebGLImpl {
         });
 		
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xffffff);
+        this.scene.background = new THREE.Color(DEFAULT_SCENE_BACKGROUND);
 
 		this.raycaster = new THREE.Raycaster();
 
@@ -839,6 +863,12 @@ class WebGLImpl {
 		this.hasPerspectiveView = false;
 		
 		this.controls = null;
+    }
+
+    setBackgroundColor(hexColor) {
+        if (this.scene && hexColor) {
+            this.scene.background = new THREE.Color(hexColor);
+        }
     }
 
     setup2DView(paramSizeX, paramSizeY, paramNear, paramFar) 
@@ -1040,12 +1070,12 @@ class WebGLImpl {
         }
     }
 
-    add2DGridGeometry(identifier, width, height, zValue, factor) {
+    add2DGridGeometry(identifier, width, height, zValue, factor, gridBaseColor) {
 
         if (!identifier)
             return;
 
-        let gridElement = new WebGLGridElement(width, height, zValue, factor);
+        let gridElement = new WebGLGridElement(width, height, zValue, factor, gridBaseColor);
 
         this.addElement(identifier, gridElement);
 

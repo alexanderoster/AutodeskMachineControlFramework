@@ -306,10 +306,12 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGMAINPAGE);
     std::string sMainPage(mainpageAttrib.as_string());
 
-    auto colorsNode = xmlNode.child("colors");
-    if (!colorsNode.empty()) {
+    auto defaultThemeAttrib = xmlNode.attribute("defaulttheme");
+    m_sDefaultTheme = defaultThemeAttrib.empty() ? "light" : defaultThemeAttrib.as_string();
 
-        auto colorNodes = colorsNode.children("color");
+    auto parseColorBlock = [](pugi::xml_node& parentNode, std::map<std::string, uint32_t>& targetMap)
+    {
+        auto colorNodes = parentNode.children("color");
         for (pugi::xml_node colorNode : colorNodes) {
             auto nameColorAttrib = colorNode.attribute("name");
             auto redColorAttrib = colorNode.attribute("red");
@@ -325,7 +327,6 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
                 throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGCOLORGREENCHANNEL);
             if (blueColorAttrib.empty())
                 throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGCOLORBLUECHANNEL);
-
 
             double dRed = redColorAttrib.as_double(-1.0);
             double dGreen = greenColorAttrib.as_double(-1.0);
@@ -348,11 +349,17 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             if (nBlue > 255) nBlue = 255;
 
             uint32_t nColor = (nRed + nGreen * 256 + nBlue * 65536);
-            m_Colors.insert(std::make_pair (sColorName, nColor));
-
+            targetMap.insert(std::make_pair (sColorName, nColor));
         }
+    };
 
-    }
+    auto colorsNode = xmlNode.child("colors");
+    if (!colorsNode.empty())
+        parseColorBlock(colorsNode, m_Colors);
+
+    auto darkColorsNode = xmlNode.child("darkcolors");
+    if (!darkColorsNode.empty())
+        parseColorBlock(darkColorsNode, m_DarkColors);
 
     auto loginNode = xmlNode.child("login");
     if (!loginNode.empty()) {
@@ -673,6 +680,8 @@ CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, co
                         throw ELibMCCustomException(LIBMC_ERROR_COULDNOTFINDEVENTSENDER, sEventName + "/" + sSenderUUID);
 
                     sSenderPath = pModuleItem->findElementPathByUUID(sSenderUUID);
+                    if (sSenderPath.empty())
+                        sSenderPath = pModuleItem->getItemPath();
                 }
 
             }
@@ -922,20 +931,28 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
         writer.addString(AMC_API_KEY_UI_LOGINPANELUUID, pPanelResource->getUUID());
     }
 
-    CJSONWriterObject colorsObject(writer);
-    for (auto color : m_Colors) {
+    writer.addString(AMC_API_KEY_UI_DEFAULTTHEME, m_sDefaultTheme);
 
-        std::stringstream sColorStream;
-        uint32_t nRed = color.second & 0xff;
-        uint32_t nGreen = (color.second >> 8) & 0xff;
-        uint32_t nBlue = (color.second >> 16) & 0xff;
+    auto writeColorMap = [&writer](const std::map<std::string, uint32_t>& colorMap, const std::string& sKey)
+    {
+        CJSONWriterObject colorsObject(writer);
+        for (auto color : colorMap) {
+            std::stringstream sColorStream;
+            uint32_t nRed = color.second & 0xff;
+            uint32_t nGreen = (color.second >> 8) & 0xff;
+            uint32_t nBlue = (color.second >> 16) & 0xff;
 
-        sColorStream << "#" << std::setfill('0') << std::setw(2) << std::hex << nRed << std::setfill('0') << std::setw(2) << std::hex << nGreen << std::setfill('0') << std::setw(2) << std::hex << nBlue;
+            sColorStream << "#" << std::setfill('0') << std::setw(2) << std::hex << nRed << std::setfill('0') << std::setw(2) << std::hex << nGreen << std::setfill('0') << std::setw(2) << std::hex << nBlue;
 
-        colorsObject.addString(color.first, sColorStream.str());
-    }
+            colorsObject.addString(color.first, sColorStream.str());
+        }
+        writer.addObject(sKey, colorsObject);
+    };
 
-    writer.addObject(AMC_API_KEY_UI_COLORS, colorsObject);
+    writeColorMap(m_Colors, AMC_API_KEY_UI_COLORS);
+
+    if (!m_DarkColors.empty())
+        writeColorMap(m_DarkColors, AMC_API_KEY_UI_DARKCOLORS);
 
 }
 

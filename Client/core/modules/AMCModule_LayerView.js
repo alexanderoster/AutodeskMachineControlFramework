@@ -45,6 +45,17 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		
 		this.displayed_layer = 0;
 		this.displayed_build = Common.nullUUID ();
+
+		this.colors = {
+			background: "#ffffff", grid: "#e0e0e0",
+			contour: "#00aa88", hatch: "#cc88cc", travel: "#aaaaaa"
+		};
+		this.darkcolors = {
+			background: "#1a1a2e", grid: "#333344",
+			contour: "#33ddaa", hatch: "#dd99dd", travel: "#555566"
+		};
+
+		this.dark_baseimageresource = "";
 		
 		this.updateFromJSON (itemJSON);
 		
@@ -95,6 +106,8 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 			this.scatterplotuuid = attrs.scatterplotuuid;
 		if (attrs.baseimageresource !== undefined)
 			this.baseimageresource = attrs.baseimageresource;
+		if (attrs.dark_baseimageresource !== undefined)
+			this.dark_baseimageresource = attrs.dark_baseimageresource;
 		if (attrs.sizex !== undefined) {
 			let sizex = parseFloat (attrs.sizex);
 			if (!isNaN (sizex))
@@ -125,6 +138,14 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 			this.sliderchangeevent = attrs.sliderchangeevent;
 		if (attrs.sliderfixed !== undefined)
 			this.sliderfixed = (attrs.sliderfixed === true || attrs.sliderfixed === "1" || attrs.sliderfixed === "true");
+
+		const colorKeys = ["background", "grid", "contour", "hatch", "travel"];
+		for (let k of colorKeys) {
+			if (attrs["color_" + k] !== undefined)
+				this.colors[k] = attrs["color_" + k];
+			if (attrs["darkcolor_" + k] !== undefined)
+				this.darkcolors[k] = attrs["darkcolor_" + k];
+		}
 
 		this.moduleInstance.callDataHasChanged ();
 		return true;

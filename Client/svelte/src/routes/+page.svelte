@@ -16,17 +16,24 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import AlertTriangle from '@lucide/svelte/icons/triangle-alert';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
 
 	// @ts-ignore — core JS has no type declarations yet
 	import AMCApplication from '@core/common/AMCApplication.js';
-	import { applyTokens, restoreHighContrastPreference } from '@core/theme/themeLoader.js';
+	import { applyTokens, restoreHighContrastPreference, toggleDarkMode, restoreDarkModePreference, isDarkMode } from '@core/theme/themeLoader.js';
 	import { initPollTick, type PollTick } from '$lib/amcf/poll.svelte';
+
+	const POLL_INTERVAL_MS = 600;
+	const INITIAL_TICK_DELAY_MS = 1200;
+	const POST_LOGIN_TICK_DELAY_MS = 800;
 
 	let app: any = $state(null);
 	let timer: ReturnType<typeof setInterval> | null = null;
 	let drawerOpen = $state(false);
 	let sidebarVisible = $state(true);
 	let isLargeScreen = $state(false);
+	let darkMode = $state(false);
 
 	const poll: PollTick = initPollTick();
 
@@ -47,6 +54,8 @@
 	let activePage  = $derived.by(() => { poll.v; return app?.AppState?.activePage || ''; });
 	let currentError = $derived.by(() => { poll.v; return app?.AppState?.currentError || ''; });
 	let serverColors = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors || {}; });
+	let serverDarkColors = $derived.by(() => { poll.v; return app?.AppDefinition?.DarkColors || {}; });
+	let serverDefaultTheme = $derived.by(() => { poll.v; return app?.AppDefinition?.DefaultTheme || 'light'; });
 
 	function bumpTick () { poll.v++; }
 
@@ -65,43 +74,108 @@
 
 	$effect(() => {
 		if (serverColors && !colorsApplied && Object.keys(serverColors).length > 0) {
-			applyServerColors(serverColors);
+			applyServerColors(serverColors, serverDarkColors);
 			colorsApplied = true;
+
+			darkMode = restoreDarkModePreference(serverDefaultTheme);
 		}
 	});
 
-	function applyServerColors (colors: Record<string, string>) {
-		if (!colors) return;
-		const root = document.documentElement;
+	function deriveDarkVariant (hex: string): string {
+		hex = hex.replace('#', '');
+		if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+		let r = parseInt(hex.substring(0, 2), 16) / 255;
+		let g = parseInt(hex.substring(2, 4), 16) / 255;
+		let b = parseInt(hex.substring(4, 6), 16) / 255;
+		const lightness = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
 
-		if (colors.primary) {
-			root.style.setProperty('--primary', colors.primary);
-			root.style.setProperty('--ring', colors.primary);
-			root.style.setProperty('--sidebar-primary', colors.primary);
-			root.style.setProperty('--sidebar-ring', colors.primary);
-			root.style.setProperty('--destructive', colors.primary);
-			root.style.setProperty('--chart-1', colors.primary);
+		if (lightness < 0.2) {
+			r = 0.85 + r * 0.15;
+			g = 0.85 + g * 0.15;
+			b = 0.85 + b * 0.15;
+		} else if (lightness > 0.8) {
+			r *= 0.35;
+			g *= 0.35;
+			b *= 0.35;
+		} else {
+			const boost = 1.2;
+			r = Math.min(1, r * boost);
+			g = Math.min(1, g * boost);
+			b = Math.min(1, b * boost);
 		}
-		if (colors.secondary) {
-			root.style.setProperty('--secondary', colors.secondary);
+
+		const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+		return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+	}
+
+	function buildColorCSS (
+		selector: string,
+		colors: Record<string, string>,
+		derive: boolean
+	): string {
+		const resolve = (key: string) => colors[key] || '';
+		const primary = resolve('primary');
+		const secondary = resolve('secondary');
+		const accent = resolve('accent');
+		const error = resolve('error');
+		if (!primary && !secondary && !accent && !error) return '';
+
+		let css = `${selector} {\n`;
+		if (primary) {
+			css += `  --primary: ${primary};\n`;
+			css += `  --ring: ${primary};\n`;
+			css += `  --sidebar-primary: ${primary};\n`;
+			css += `  --sidebar-ring: ${primary};\n`;
+			css += `  --chart-1: ${primary};\n`;
 		}
-		if (colors.accent) {
-			root.style.setProperty('--accent', colors.accent);
-			root.style.setProperty('--sidebar-accent', colors.accent);
+		if (secondary) css += `  --secondary: ${secondary};\n`;
+		if (accent) {
+			css += `  --accent: ${accent};\n`;
+			css += `  --sidebar-accent: ${accent};\n`;
 		}
-		if (colors.error) {
-			root.style.setProperty('--destructive', colors.error);
+		if (error) css += `  --destructive: ${error};\n`;
+		else if (primary) css += `  --destructive: ${primary};\n`;
+		css += '}\n';
+		return css;
+	}
+
+	function applyServerColors (
+		lightColors: Record<string, string>,
+		darkColorsFromServer: Record<string, string>
+	) {
+		if (!lightColors) return;
+
+		const hasDarkColors = darkColorsFromServer && Object.keys(darkColorsFromServer).length > 0;
+		const darkColors: Record<string, string> = hasDarkColors
+			? darkColorsFromServer
+			: Object.fromEntries(
+				Object.entries(lightColors).map(([k, v]) => [k, deriveDarkVariant(v)])
+			);
+
+		let styleEl = document.getElementById('amcf-server-colors') as HTMLStyleElement | null;
+		if (!styleEl) {
+			styleEl = document.createElement('style');
+			styleEl.id = 'amcf-server-colors';
+			document.head.appendChild(styleEl);
 		}
+		styleEl.textContent =
+			buildColorCSS(':root', lightColors, false) +
+			buildColorCSS('.dark', darkColors, false);
 
 		const tokenMap: Record<string, string> = {};
-		if (colors.primary) tokenMap['--amcf-color-primary'] = colors.primary;
-		if (colors.secondary) tokenMap['--amcf-color-secondary'] = colors.secondary;
-		if (colors.error) tokenMap['--amcf-color-error'] = colors.error;
+		if (lightColors.primary) tokenMap['--amcf-color-primary'] = lightColors.primary;
+		if (lightColors.secondary) tokenMap['--amcf-color-secondary'] = lightColors.secondary;
+		if (lightColors.error) tokenMap['--amcf-color-error'] = lightColors.error;
 		applyTokens(tokenMap);
+	}
+
+	function handleToggleDarkMode () {
+		darkMode = toggleDarkMode();
 	}
 
 	onMount(() => {
 		restoreHighContrastPreference();
+		darkMode = restoreDarkModePreference('system');
 
 		mql = window.matchMedia('(min-width: 1024px)');
 		isLargeScreen = mql.matches;
@@ -119,18 +193,25 @@
 		app = new AMCApplication(baseURL, bumpTick);
 		app.retrieveConfiguration(null);
 
-		setTimeout(bumpTick, 1200);
+		setTimeout(bumpTick, INITIAL_TICK_DELAY_MS);
 
+		startPolling();
+	});
+
+	function startPolling () {
+		if (timer) return;
 		timer = setInterval(() => {
-			if (app) {
+			if (app && app.AppState.currentStatus === 'ready') {
 				app.retrieveFrontendState()
 					.finally(() => {
 						app.updateModules();
 						poll.v++;
 					});
+			} else if (app) {
+				poll.v++;
 			}
-		}, 600);
-	});
+		}, POLL_INTERVAL_MS);
+	}
 
 	onDestroy(() => {
 		if (timer) clearInterval(timer);
@@ -163,7 +244,7 @@
 			app.setStatus('initial');
 			colorsApplied = false;
 			app.retrieveConfiguration(null);
-			setTimeout(bumpTick, 1200);
+			setTimeout(bumpTick, INITIAL_TICK_DELAY_MS);
 		}
 	}
 
@@ -189,20 +270,20 @@
 
 <!-- Loading -->
 {#if status === 'initial'}
-	<div class="flex-1 flex items-center justify-center">
-		<div class="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+	<div class="flex-1 flex items-center justify-center bg-white dark:bg-black">
+		<div class="animate-spin h-8 w-8 border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full"></div>
 	</div>
 
 <!-- Login -->
 {:else if status === 'login'}
-	<LoginPage {app} onLogin={() => setTimeout(bumpTick, 800)} />
+	<LoginPage {app} onLogin={() => setTimeout(bumpTick, POST_LOGIN_TICK_DELAY_MS)} />
 
 <!-- Main Application -->
 {:else if status === 'ready'}
 	<!-- Header bar -->
-	<header class="h-12 bg-[#3C3C3C] text-white flex items-center px-3 gap-2 shrink-0">
+	<header class="h-12 bg-toolbar text-toolbar-foreground flex items-center px-3 gap-2 shrink-0">
 		<!-- Hamburger / sidebar toggle -->
-		<button class="p-2 hover:bg-white/10 rounded" onclick={toggleSidebar}>
+		<button class="p-2 hover:bg-toolbar-foreground/10 rounded" onclick={toggleSidebar}>
 			{#if isLargeScreen}
 				{#if sidebarVisible}
 					<PanelLeftClose class="h-5 w-5" />
@@ -247,7 +328,7 @@
 
 		<!-- Toolbar logo / app name -->
 		<button
-			class="text-sm font-medium px-3 py-1.5 hover:bg-white/10 rounded"
+			class="text-sm font-medium px-3 py-1.5 hover:bg-toolbar-foreground/10 rounded"
 			onclick={() => app.changePage(app.AppDefinition.MainPage)}
 		>
 			{#if toolbarLogoUUID}
@@ -259,13 +340,32 @@
 
 		<div class="flex-1"></div>
 
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{#snippet child({ props })}
+					<button
+						{...props}
+						class="p-2 hover:bg-toolbar-foreground/10 rounded"
+						onclick={handleToggleDarkMode}
+					>
+						{#if darkMode}
+							<Sun class="h-4 w-4" />
+						{:else}
+							<Moon class="h-4 w-4" />
+						{/if}
+					</button>
+				{/snippet}
+			</Tooltip.Trigger>
+			<Tooltip.Content>{darkMode ? 'Switch to light mode' : 'Switch to dark mode'}</Tooltip.Content>
+		</Tooltip.Root>
+
 		{#each toolbarItems as item (item.uuid)}
 			<Tooltip.Root>
 				<Tooltip.Trigger>
 					{#snippet child({ props })}
 						<button
 							{...props}
-							class="text-sm px-3 py-1.5 hover:bg-white/10 rounded flex items-center gap-1.5"
+							class="text-sm px-3 py-1.5 hover:bg-toolbar-foreground/10 rounded flex items-center gap-1.5"
 							onclick={() => toolbarClick(item)}
 						>
 							{#if item.icon}
@@ -310,10 +410,10 @@
 		{/if}
 
 		<!-- Page content -->
-		<main class="flex-1 min-w-0 overflow-auto p-2">
+		<main class="flex-1 min-w-0 min-h-0 relative">
 			{#each pages as page (page.name)}
 				{#if poll.v >= 0 && app.pageIsActive(page)}
-					<div class="w-full h-full">
+					<div class="absolute inset-2">
 						{#each page.modules || [] as mod (mod.uuid)}
 							<ModuleFactory module={mod} {app} />
 						{/each}
@@ -348,7 +448,7 @@
 	<Snackbar {app} />
 
 	<!-- Footer -->
-	<footer class="h-8 bg-[#3C3C3C] text-white/60 flex items-center justify-end px-4 text-xs shrink-0">
+	<footer class="h-8 bg-toolbar text-toolbar-foreground/60 flex items-center justify-end px-4 text-xs shrink-0">
 		{#if copyright}
 			&copy; {copyright}
 		{/if}
@@ -356,18 +456,18 @@
 
 <!-- Error -->
 {:else if status === 'error'}
-	<div class="flex-1 flex items-center justify-center">
-		<div class="bg-card border border-destructive/25 rounded-lg p-8 text-center max-w-md shadow-lg">
+	<div class="flex-1 flex items-center justify-center bg-white dark:bg-black">
+		<div class="bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-900/50 rounded-xl p-8 text-center max-w-md shadow-lg">
 			<div class="flex justify-center mb-4">
-				<AlertTriangle class="h-10 w-10 text-destructive" />
+				<AlertTriangle class="h-10 w-10 text-red-500 dark:text-red-400" />
 			</div>
-			<h2 class="text-lg font-semibold text-destructive mb-2">Connection Error</h2>
-			<p class="text-sm text-muted-foreground mb-2">Unable to connect to the AMCF server.</p>
+			<h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Connection Error</h2>
+			<p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4">Unable to connect to the server.</p>
 			{#if currentError}
-				<p class="text-xs text-muted-foreground/80 bg-muted rounded p-3 mb-4 text-left font-mono break-words">{currentError}</p>
+				<p class="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-3 mb-5 text-left font-mono break-words leading-relaxed">{currentError}</p>
 			{/if}
-			<Button onclick={reloadPage} variant="default" class="mt-2">
-				<RefreshCw class="h-4 w-4 mr-2" /> Reload page
+			<Button onclick={reloadPage} variant="default" class="mt-1">
+				<RefreshCw class="h-4 w-4 mr-2" /> Retry connection
 			</Button>
 		</div>
 	</div>

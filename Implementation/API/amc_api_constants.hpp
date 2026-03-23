@@ -135,6 +135,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_KEY_UI_LOGINSUBTITLE "loginsubtitle"
 #define AMC_API_KEY_UI_LOGINPANELUUID "loginpaneluuid"
 #define AMC_API_KEY_UI_COLORS "colors"
+#define AMC_API_KEY_UI_DARKCOLORS "darkcolors"
+#define AMC_API_KEY_UI_DEFAULTTHEME "defaulttheme"
 #define AMC_API_KEY_UI_LOGOASPECTRATIO "logoaspectratio"
 #define AMC_API_KEY_UI_SESSIONID "sessionid"
 #define AMC_API_KEY_UI_SESSIONKEY "sessionkey"

@@ -12,7 +12,7 @@ export default defineConfig({
 		// @core files (../core) import packages like axios that live in
 		// this project's node_modules.  Without dedupe, Vite walks up from
 		// Client/core/ and fails to find them.
-		dedupe: ['axios', 'luxon'],
+		dedupe: ['axios', 'luxon', 'three'],
 	},
 	server: {
 		fs: {

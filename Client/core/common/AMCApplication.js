@@ -54,6 +54,7 @@ import AMCApplicationModule_ParameterList from "../modules/AMCModule_ParameterLi
 import AMCApplicationModule_Form from "../modules/AMCModule_Form.js"
 import AMCApplicationModule_Chart from "../modules/AMCModule_Chart.js"
 import AMCApplicationModule_Image from "../modules/AMCModule_Image.js"
+import AMCApplicationModule_StateMachineGraph from "../modules/AMCModule_StateMachineGraph.js"
 import AMCApplicationModule_Paragraph from "../modules/AMCModule_Paragraph.js"
 import AMCApplicationModule_Upload from "../modules/AMCModule_Upload.js"
 import AMCApplicationModule_BuildList from "../modules/AMCModule_BuildList.js"
@@ -73,6 +74,10 @@ import AMCApplicationCustomPage from "./AMCCustomPage.js"
 import AMCUpload from "./AMCImplementation_Upload.js"
 
 import AMCApplicationDialog from "./AMCDialog.js"
+
+const CONFIG_REQUEST_TIMEOUT_MS = 2000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+const MAX_CONSECUTIVE_FAILURES = 5;
 
 export default class AMCApplication extends Common.AMCObject {
 	
@@ -120,7 +125,9 @@ export default class AMCApplication extends Common.AMCObject {
 			LoginSubtitle: "",
 			LoginPanelUUID: "",
 			FirstLaunchMode: false,
-            Colors: {}
+            Colors: {},
+            DarkColors: {},
+            DefaultTheme: "light"
         }
 
         this.AppContent = {
@@ -156,11 +163,22 @@ export default class AMCApplication extends Common.AMCObject {
 
     setStatusToError(message) {
         this.AppState.currentStatus = "error";
-        this.AppState.currentError = message;
+        this.AppState.currentError = message || "An unknown error occurred.";
         this.closeAllDialogs();
     }
 
-    axiosGetRequest(subURL) {
+    extractErrorMessage(err) {
+        if (!err) return "An unknown error occurred.";
+        if (err.code === "ECONNABORTED")
+            return "The server did not respond in time. Please ensure the server is running and reachable.";
+        if (err.response && err.response.data && err.response.data.message)
+            return err.response.data.message.toString();
+        if (err.message)
+            return err.message.toString();
+        return err.toString();
+    }
+
+    axiosGetRequest(subURL, config) {
         let headers = {}
         let authToken = this.API.authToken;
 
@@ -170,7 +188,9 @@ export default class AMCApplication extends Common.AMCObject {
         return axios({
             method: "GET",
             "headers": headers,
-            url: this.API.baseURL + subURL
+            url: this.API.baseURL + subURL,
+            timeout: DEFAULT_REQUEST_TIMEOUT_MS,
+            ...config
         });
     }
 
@@ -190,7 +210,7 @@ export default class AMCApplication extends Common.AMCObject {
     }
 
 
-    axiosPostRequest(subURL, data) {
+    axiosPostRequest(subURL, data, config) {
         let headers = {}
         let authToken = this.API.authToken;
 
@@ -201,7 +221,9 @@ export default class AMCApplication extends Common.AMCObject {
             "method": "POST",
             "url": this.API.baseURL + subURL,
             "headers": headers,
-            "data": data
+            "data": data,
+            timeout: DEFAULT_REQUEST_TIMEOUT_MS,
+            ...config
         });
     }
 
@@ -223,7 +245,7 @@ export default class AMCApplication extends Common.AMCObject {
     }
 
     retrieveConfiguration(vuetifythemes) {
-        this.axiosGetRequest("/config")
+        this.axiosGetRequest("/config", { timeout: CONFIG_REQUEST_TIMEOUT_MS })
         .then(resultJSON => {
             this.AppDefinition.TextApplicationName = resultJSON.data.appname;
             this.AppDefinition.TextCopyRight = resultJSON.data.copyright;
@@ -242,6 +264,8 @@ export default class AMCApplication extends Common.AMCObject {
             } else {
                 this.AppDefinition.Colors = {};
             }
+            this.AppDefinition.DarkColors = resultJSON.data.darkcolors || {};
+            this.AppDefinition.DefaultTheme = resultJSON.data.defaulttheme || "light";
             this.setStatus("login");
 
             document.title = this.AppDefinition.TextApplicationName;
@@ -268,7 +292,7 @@ export default class AMCApplication extends Common.AMCObject {
             this.changePage(this.AppDefinition.MainPage);
         })
         .catch(err => {
-            this.setStatusToError(err.response.data.message);
+            this.setStatusToError(this.extractErrorMessage(err));
         });
     }
 
@@ -324,11 +348,7 @@ export default class AMCApplication extends Common.AMCObject {
 
         })
         .catch(err => {
-			if (err.response) {
-				this.setStatusToError(err.response.data.message.toString ());
-			} else {
-				this.setStatusToError(err.toString ());
-			}
+            this.setStatusToError(this.extractErrorMessage(err));
         });
 
     }
@@ -341,7 +361,7 @@ export default class AMCApplication extends Common.AMCObject {
 		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream") ||
 			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "executionlist") ||
 			(moduleType === "alertlist") || (moduleType === "buttongroup") || (moduleType === "parameterlist") ||
-			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow");
+			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow") || (moduleType === "statemachinegraph");
 	}
 
 	// Detect whether a JSON object uses the v2 frontend format.
@@ -470,6 +490,7 @@ export default class AMCApplication extends Common.AMCObject {
 					originx:            parseFloat(attrs.originx) || 0,
 					originy:            parseFloat(attrs.originy) || 0,
 					baseimageresource:  attrs.baseimageresource  || "",
+					dark_baseimageresource: attrs.dark_baseimageresource || "",
 					labelvisible:       (attrs.labelvisible === true || attrs.labelvisible === "1" || attrs.labelvisible === "true") ? 1 : 0,
 					labelcaption:       attrs.labelcaption       || "",
 					labelicon:          attrs.labelicon          || "",
@@ -512,23 +533,32 @@ export default class AMCApplication extends Common.AMCObject {
 			if (subs.length === 1 && subs[0].moduletype === "form") {
 				formSubs = subs[0].submodules || [];
 			}
-			legacy.entities = formSubs.map(sub => {
-				let a = sub.attributes || {};
-				return {
-					uuid:                sub.uuid,
-					name:                a.name || sub.uuid,
-					type:                sub.moduletype || "edit",
-					caption:             a.caption || "",
-					value:               a.value,
-					disabled:            (a.disabled  === true || a.disabled  === "1" || a.disabled  === "true"),
-					readonly:            (a.readonly   === true || a.readonly   === "1" || a.readonly   === "true"),
-					changeevent:         a.changeevent         || "",
-					validation:          a.validation          || "",
-					validationmessage:   a.validationmessage   || "",
-					minvalue:            a.minvalue,
-					maxvalue:            a.maxvalue,
-				};
-			});
+		legacy.entities = formSubs.map(sub => {
+			let a = sub.attributes || {};
+			let entity = {
+				uuid:                sub.uuid,
+				name:                a.name || sub.uuid,
+				type:                sub.moduletype || "edit",
+				caption:             a.caption || "",
+				value:               a.value,
+				disabled:            (a.disabled  === true || a.disabled  === "1" || a.disabled  === "true"),
+				readonly:            (a.readonly   === true || a.readonly   === "1" || a.readonly   === "true"),
+				changeevent:         a.changeevent         || "",
+				validation:          a.validation          || "",
+				validationmessage:   a.validationmessage   || "",
+				minvalue:            a.minvalue,
+				maxvalue:            a.maxvalue,
+			};
+
+			if ((entity.type === "combobox" || entity.type === "multiselect") && sub.submodules) {
+				entity.items = sub.submodules.map(item => {
+					let ia = item.attributes || {};
+					return { value: String(ia.value !== undefined ? ia.value : ""), text: ia.text || String(ia.value !== undefined ? ia.value : "") };
+				});
+			}
+
+			return entity;
+		});
 
 		} else if (moduleType === "buttongroup") {
 			legacy.visible = true;
@@ -569,13 +599,15 @@ export default class AMCApplication extends Common.AMCObject {
 						legacy[key] = subAttrs[key];
 				}
 			}
-			// Copy top-level properties for buildlist / executionlist (buttons, selection UUIDs)
-			if (v2.entrybuttons)
-				legacy.entrybuttons = v2.entrybuttons;
-			if (v2.selectionvalueuuid)
-				legacy.selectionvalueuuid = v2.selectionvalueuuid;
-			if (v2.buttonvalueuuid)
-				legacy.buttonvalueuuid = v2.buttonvalueuuid;
+			// Copy top-level properties for buildlist / executionlist (buttons, selection UUIDs).
+			// These may appear on the parent (v2) or the first submodule (sub0).
+			let sub0 = (subs.length > 0) ? subs[0] : {};
+			if (v2.entrybuttons || sub0.entrybuttons)
+				legacy.entrybuttons = v2.entrybuttons || sub0.entrybuttons;
+			if (v2.selectionvalueuuid || sub0.selectionvalueuuid)
+				legacy.selectionvalueuuid = v2.selectionvalueuuid || sub0.selectionvalueuuid;
+			if (v2.buttonvalueuuid || sub0.buttonvalueuuid)
+				legacy.buttonvalueuuid = v2.buttonvalueuuid || sub0.buttonvalueuuid;
 
 			// resource aliases
 			if ((moduleType === "image") && (legacy.imageresource === undefined) && (legacy.resource !== undefined))
@@ -691,6 +723,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_StatusBanner (page, def);
 		if (def.type === "workflow")
 			return new AMCApplicationModule_Workflow (page, def);
+		if (def.type === "statemachinegraph")
+			return new AMCApplicationModule_StateMachineGraph (page, def);
 
 		return null;
 		
@@ -760,11 +794,7 @@ export default class AMCApplication extends Common.AMCObject {
 
         })
         .catch(err => {
-			if (err.response) {
-				this.setStatusToError(err.response.data.message.toString ());
-			} else {
-				this.setStatusToError(err.toString ());
-			}
+            this.setStatusToError(this.extractErrorMessage(err));
         });
     }
 
@@ -799,12 +829,8 @@ export default class AMCApplication extends Common.AMCObject {
 		})
 		.catch(err => {
 			this.API.unsuccessfulFrontendCounter = (this.API.unsuccessfulFrontendCounter || 0) + 1;
-			if (this.API.unsuccessfulFrontendCounter > 5) {
-				if (err.response) {
-					console.warn("[v2 frontend] repeated failure:", err.response.data.message);
-				} else {
-					console.warn("[v2 frontend] repeated failure:", err.toString());
-				}
+			if (this.API.unsuccessfulFrontendCounter > MAX_CONSECUTIVE_FAILURES) {
+				console.warn("[v2 frontend] repeated failure:", this.extractErrorMessage(err));
 			}
 		});
 	}
@@ -845,7 +871,8 @@ export default class AMCApplication extends Common.AMCObject {
 			if (item.usesV2Frontend) {
 				let v2Entry = this.getV2Entry(item.uuid);
 				if (v2Entry && v2Entry.attributes) {
-					item.updateFromV2Attributes(v2Entry.attributes);
+					let attrs = Object.assign({}, v2Entry.attributes, v2Entry.clientvariables || {});
+					item.updateFromV2Attributes(attrs);
 					item.setRefreshFlag();
 					return;
 				}
@@ -883,7 +910,7 @@ export default class AMCApplication extends Common.AMCObject {
 			.catch(err => {
 
 				this.unsuccessfulUpdateCounter = this.unsuccessfulUpdateCounter + 1;
-				if (this.unsuccessfulUpdateCounter > 5) {
+				if (this.unsuccessfulUpdateCounter > MAX_CONSECUTIVE_FAILURES) {
 					this.setStatusToError(err.message);
 				} else {
 					item.setRefreshFlag ();
@@ -933,8 +960,8 @@ export default class AMCApplication extends Common.AMCObject {
 					let subAttrs = (v2Entry.submodules && v2Entry.submodules.length > 0)
 						? (v2Entry.submodules[0].attributes || {})
 						: {};
-					let effectiveAttrs = Object.assign({}, subAttrs, v2Entry.attributes || {});
-					module.updateFromV2Attributes(effectiveAttrs);
+				let effectiveAttrs = Object.assign({}, subAttrs, v2Entry.attributes || {}, v2Entry.clientvariables || {});
+				module.updateFromV2Attributes(effectiveAttrs);
 					return;
 				}
 			}
@@ -977,7 +1004,7 @@ export default class AMCApplication extends Common.AMCObject {
 
 				// Increment failure counter and react accordingly
 				this.unsuccessfulUpdateCounter = this.unsuccessfulUpdateCounter + 1;
-				if (this.unsuccessfulUpdateCounter > 5) {
+				if (this.unsuccessfulUpdateCounter > MAX_CONSECUTIVE_FAILURES) {
 					this.setStatusToError(err.message);
 				}
 			});

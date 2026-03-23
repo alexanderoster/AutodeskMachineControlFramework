@@ -138,3 +138,78 @@ export function restoreHighContrastPreference ()
 		/* localStorage unavailable */
 	}
 }
+
+/**
+ * Toggle dark mode on or off.
+ * Adds or removes the `dark` class on the root element and
+ * persists the preference in localStorage.
+ *
+ * @param {boolean} [enable]  Force on/off; omit to toggle
+ * @returns {boolean}  The new dark-mode state
+ */
+export function toggleDarkMode (enable)
+{
+	const root = document.documentElement;
+	const isOn = root.classList.contains ("dark");
+	const next = (enable !== undefined) ? enable : !isOn;
+
+	if (next) {
+		root.classList.add ("dark");
+		try { localStorage.setItem ("amcf-dark-mode", "1"); } catch (_) { /* noop */ }
+	} else {
+		root.classList.remove ("dark");
+		try { localStorage.setItem ("amcf-dark-mode", "0"); } catch (_) { /* noop */ }
+	}
+
+	return next;
+}
+
+/**
+ * Restore dark-mode preference from localStorage on startup.
+ * Priority: (1) localStorage, (2) OS prefers-color-scheme, (3) server default.
+ *
+ * @param {string} [serverDefault]  "dark", "light", or "system" (default: "system")
+ * @returns {boolean}  Whether dark mode was activated
+ */
+export function restoreDarkModePreference (serverDefault)
+{
+	try {
+		const stored = localStorage.getItem ("amcf-dark-mode");
+		if (stored !== null) {
+			const wantDark = stored === "1";
+			if (wantDark)
+				document.documentElement.classList.add ("dark");
+			else
+				document.documentElement.classList.remove ("dark");
+			return wantDark;
+		}
+	} catch (_) {
+		/* localStorage unavailable */
+	}
+
+	const sd = (serverDefault || "system").toLowerCase ();
+	let wantDark;
+	if (sd === "dark") {
+		wantDark = true;
+	} else if (sd === "light") {
+		wantDark = false;
+	} else {
+		wantDark = window.matchMedia && window.matchMedia ("(prefers-color-scheme: dark)").matches;
+	}
+
+	if (wantDark)
+		document.documentElement.classList.add ("dark");
+	else
+		document.documentElement.classList.remove ("dark");
+	return wantDark;
+}
+
+/**
+ * Check whether dark mode is currently active.
+ *
+ * @returns {boolean}
+ */
+export function isDarkMode ()
+{
+	return document.documentElement.classList.contains ("dark");
+}

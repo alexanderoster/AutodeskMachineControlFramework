@@ -130,6 +130,10 @@ export default class AMCApplicationModule_BuildList extends Common.AMCApplicatio
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		if (attrs.defaultthumbnail !== undefined)
 			this.defaultThumbnailUUID = attrs.defaultthumbnail;
+		if (attrs.selectionvalueuuid !== undefined)
+			this.selectionvalueuuid = attrs.selectionvalueuuid;
+		if (attrs.buttonvalueuuid !== undefined)
+			this.buttonvalueuuid = attrs.buttonvalueuuid;
 
 		if (attrs.buildlistheadid === undefined)
 			return true;

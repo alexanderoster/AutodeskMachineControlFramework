@@ -89,6 +89,9 @@ bool CUIModuleFactory::moduleTypeIsRegistered(const std::string& sType)
 	if (sType == CUIModule_Tabs::getStaticType())
 		return true;
 
+	if (sType == CUIModule_Logs::getStaticType())
+		return true;
+
 	if (sType == CUIModule_Grid::getStaticType())
 		return true;
 

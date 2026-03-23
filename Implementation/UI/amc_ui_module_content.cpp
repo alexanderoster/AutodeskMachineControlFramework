@@ -92,7 +92,11 @@ CUIModule_Content::CUIModule_Content(pugi::xml_node& xmlNode, const std::string&
 	auto children = xmlNode.children();
 	for (auto childNode : children) {
 		std::string sChildName = childNode.name();
-		if (!CUIModule_ContentLeaf::isSupportedModuleType(sChildName))
+		if (sChildName.empty())
+			continue;
+
+		if (!CUIModule_ContentLeaf::isSupportedModuleType(sChildName) &&
+			!CUIModuleFactory::moduleTypeIsRegistered(sChildName))
 			continue;
 
 		auto sSubModuleName = readSubModuleNameFromXML(childNode, sChildName);

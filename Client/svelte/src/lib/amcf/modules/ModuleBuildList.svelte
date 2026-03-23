@@ -43,6 +43,8 @@
 	function triggerButton (btn: any, build: any) {
 		if (btn.selectevent && app) {
 			const formvalues: Record<string, string> = {};
+			if (module.selectionvalueuuid)
+				formvalues[module.selectionvalueuuid] = build.buildUUID;
 			if (module.buttonvalueuuid)
 				formvalues[module.buttonvalueuuid] = build.buildUUID;
 			app.triggerUIEvent(btn.selectevent, module.uuid, formvalues);
@@ -61,7 +63,7 @@
 						<Table.Head class="text-xs font-semibold uppercase tracking-wider w-[80px] text-right">Layers</Table.Head>
 						<Table.Head class="text-xs font-semibold uppercase tracking-wider w-[140px]">Date</Table.Head>
 						{#if entrybuttons.length > 0}
-							<Table.Head class="text-xs font-semibold uppercase tracking-wider w-[140px]">Actions</Table.Head>
+							<Table.Head class="text-xs font-semibold uppercase tracking-wider w-[220px]">Actions</Table.Head>
 						{/if}
 					</Table.Row>
 				</Table.Header>
@@ -74,10 +76,10 @@
 						</Table.Row>
 					{:else}
 						{#each entries as build, idx (build.buildUUID || idx)}
-							<Table.Row
-								class="hover:bg-muted/50 transition-colors cursor-pointer"
-								onclick={() => { detailItem = build; }}
-							>
+						<Table.Row
+							class="hover:bg-muted/50 transition-colors cursor-pointer"
+							onclick={() => { if (entrybuttons.length > 0) { detailItem = build; } else { selectBuild(build); } }}
+						>
 								<Table.Cell class="py-1.5">
 									{#if thumbnailURL(build.buildThumbnail)}
 										<img src={thumbnailURL(build.buildThumbnail)} alt="" class="h-12 w-16 object-cover rounded border" />
@@ -141,9 +143,13 @@
 			{/if}
 			<Dialog.Footer class="mt-4">
 				<Button variant="outline" onclick={() => { detailItem = null; }}>Close</Button>
-				{#if module.selectevent}
-					<Button onclick={() => { selectBuild(detailItem); detailItem = null; }}>Select for Execution</Button>
-				{/if}
+				{#each entrybuttons as btn (btn.uuid)}
+					{#if btn.selectevent}
+						<Button onclick={() => { triggerButton(btn, detailItem); detailItem = null; }}>
+							{btn.caption}
+						</Button>
+					{/if}
+				{/each}
 			</Dialog.Footer>
 		</Dialog.Content>
 	</Dialog.Root>

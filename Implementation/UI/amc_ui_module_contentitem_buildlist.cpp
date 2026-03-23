@@ -378,6 +378,16 @@ void CUIModule_ContentBuildList::registerFrontendAttributes()
 		expr.setFixedValue(std::to_string(m_nEntriesPerPage));
 		registerItemIntegerAttribute("entriesperpage", expr);
 	}
+	{
+		CUIExpression expr;
+		expr.setFixedValue(m_sSelectedBuildFieldUUID);
+		registerItemStringAttribute("selectionvalueuuid", expr);
+	}
+	{
+		CUIExpression expr;
+		expr.setFixedValue(m_sSelectedButtonFieldUUID);
+		registerItemStringAttribute("buttonvalueuuid", expr);
+	}
 }
 
 void CUIModule_ContentBuildList::frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)

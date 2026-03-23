@@ -21,6 +21,7 @@
 	import ModuleGLScene from './modules/ModuleGLScene.svelte';
 	import ModuleGraphic from './modules/ModuleGraphic.svelte';
 	import ModuleWorkflow from './modules/ModuleWorkflow.svelte';
+	import ModuleStateMachineGraph from './modules/ModuleStateMachineGraph.svelte';
 	import ModuleFallback from './modules/ModuleFallback.svelte';
 
 	let { module, app }: { module: any; app: any } = $props();
@@ -48,6 +49,7 @@
 		glscene: ModuleGLScene,
 		graphic: ModuleGraphic,
 		workflow: ModuleWorkflow,
+		statemachinegraph: ModuleStateMachineGraph,
 	};
 
 	let Component = $derived(componentMap[module?.type] || ModuleFallback);

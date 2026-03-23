@@ -110,12 +110,8 @@ void CUIModule_ContentUpload::populateClientVariables(CParameterHandler* pClient
 void CUIModule_ContentUpload::setEventPayloadValue(const std::string& sEventName, const std::string& sPayloadUUID, const std::string& sPayloadValue, CParameterHandler* pClientVariableHandler)
 {
 	LibMCAssertNotNull(pClientVariableHandler);
-	if (AMCCommon::CUtils::normalizeUUIDString (sPayloadUUID) == getUUID()) {
-		auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
-		pGroup->setParameterValueByName("uploaduuid", AMCCommon::CUtils::normalizeUUIDString (sPayloadValue));
-
-	}
-
+	auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
+	pGroup->setParameterValueByName("uploaduuid", AMCCommon::CUtils::normalizeUUIDString (sPayloadValue));
 }
 
 

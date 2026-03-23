@@ -133,16 +133,17 @@
 				onValueChange={(v: string) => onComboChange(entity, v)}
 				disabled={d(entity).disabled}
 			>
-				<Select.Trigger class="h-8 text-sm">
-					{d(entity).value || 'Select...'}
-				</Select.Trigger>
-				<Select.Content>
-					{#each (entity.items || []) as item}
-						<Select.Item value={typeof item === 'string' ? item : item.value}>
-							{typeof item === 'string' ? item : item.text || item.value}
-						</Select.Item>
-					{/each}
-				</Select.Content>
+			<Select.Trigger class="h-8 text-sm">
+				{@const selectedItem = (d(entity).items || []).find((i: any) => (typeof i === 'string' ? i : i.value) === d(entity).value)}
+				{selectedItem ? (typeof selectedItem === 'string' ? selectedItem : selectedItem.text || selectedItem.value) : d(entity).value || 'Select...'}
+			</Select.Trigger>
+			<Select.Content>
+				{#each (d(entity).items || entity.items || []) as item}
+					<Select.Item value={typeof item === 'string' ? item : item.value}>
+						{typeof item === 'string' ? item : item.text || item.value}
+					</Select.Item>
+				{/each}
+			</Select.Content>
 			</Select.Root>
 		</div>
 
@@ -210,8 +211,8 @@
 	{:else if entity.type === 'multiselect'}
 		<div class="grid grid-cols-[140px_1fr] items-center gap-2">
 			<Label class="text-sm text-muted-foreground">{entity.caption}</Label>
-			<div class="flex flex-wrap gap-1 p-1 border rounded-md min-h-[32px]">
-				{#each (entity.items || []) as item}
+		<div class="flex flex-wrap gap-1 p-1 border rounded-md min-h-[32px]">
+			{#each (d(entity).items || entity.items || []) as item}
 					{@const val = typeof item === 'string' ? item : item.value}
 					{@const selected = (() => { try { const arr = JSON.parse(d(entity).value || '[]'); return Array.isArray(arr) && arr.includes(val); } catch { return false; } })()}
 					<button

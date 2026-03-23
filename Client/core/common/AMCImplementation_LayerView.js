@@ -70,9 +70,32 @@ class LayerViewImpl {
 		
 		this.toolpathVisible = true;
 		this.pointsVisible = true;
+
+		this.gridColor = undefined;
         
 		this.updateTransform ();
 
+    }
+
+    applyColors(colorSet) {
+        if (!colorSet) return;
+        if (colorSet.background && this.glInstance)
+            this.glInstance.setBackgroundColor(colorSet.background);
+        if (colorSet.grid !== undefined)
+            this.gridColor = colorSet.grid;
+        this.rebuildGrid();
+        this.RenderScene(true);
+    }
+
+    rebuildGrid() {
+        if (!this.glInstance) return;
+        if (this.currentSize.gridWidth <= 0 || this.currentSize.gridHeight <= 0) return;
+        var gridObject = this.glInstance.scene.getObjectByName("grid");
+        if (gridObject)
+            this.glInstance.scene.remove(gridObject);
+        this.glInstance.add2DGridGeometry("grid", this.currentSize.gridWidth, this.currentSize.gridHeight, 50, 5, this.gridColor);
+        this.updateTransform();
+        this.renderNeedsUpdate = true;
     }
 
     updateSize(width, height) {
@@ -110,7 +133,7 @@ class LayerViewImpl {
         if (gridObject)
             this.glInstance.scene.remove(gridObject);
 
-        this.glInstance.add2DGridGeometry("grid", width, height, 50, 5);
+        this.glInstance.add2DGridGeometry("grid", width, height, 50, 5, this.gridColor);
 		this.updateTransform ();
 		
 		this.renderNeedsUpdate = true;
