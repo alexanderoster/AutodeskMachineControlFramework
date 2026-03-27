@@ -13,8 +13,12 @@
 
 	function handleClick (btn: any) {
 		if (!app) return;
-		if (btn.event)
-			app.triggerUIEvent(btn.event, btn.uuid, {});
+		if (btn.event) {
+			const formvalues = (btn.eventformvalues && app.assembleFormValues)
+				? app.assembleFormValues(btn.eventformvalues)
+				: {};
+			app.triggerUIEvent(btn.event, btn.uuid, formvalues);
+		}
 		if (btn.targetpage)
 			app.changePage(btn.targetpage);
 	}
