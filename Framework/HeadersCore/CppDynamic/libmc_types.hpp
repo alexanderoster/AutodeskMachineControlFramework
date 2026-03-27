@@ -721,6 +721,7 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE 705 /** Invalid telemetry channel type. */
 #define LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER 706 /** Missing telemetry channel identifier. */
 #define LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION 707 /** Missing telemetry channel description. */
+#define LIBMC_ERROR_XMLNODEHASNULLNAMESPACE 708 /** XML node has a null namespace. Ensure the XML document declares a namespace on the root element. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1354,6 +1355,7 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE: return "Invalid telemetry channel type.";
     case LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER: return "Missing telemetry channel identifier.";
     case LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION: return "Missing telemetry channel description.";
+    case LIBMC_ERROR_XMLNODEHASNULLNAMESPACE: return "XML node has a null namespace. Ensure the XML document declares a namespace on the root element.";
     default: return "unknown error";
   }
 }

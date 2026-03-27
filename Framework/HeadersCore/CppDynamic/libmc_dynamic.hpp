@@ -799,6 +799,7 @@ public:
 			case LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE: return "INVALIDTELEMETRYCHANNELTYPE";
 			case LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER: return "MISSINGTELEMETRYCHANNELIDENTIFIER";
 			case LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION: return "MISSINGTELEMETRYCHANNELDESCRIPTION";
+			case LIBMC_ERROR_XMLNODEHASNULLNAMESPACE: return "XMLNODEHASNULLNAMESPACE";
 		}
 		return "UNKNOWN";
 	}
@@ -1432,6 +1433,7 @@ public:
 			case LIBMC_ERROR_INVALIDTELEMETRYCHANNELTYPE: return "Invalid telemetry channel type.";
 			case LIBMC_ERROR_MISSINGTELEMETRYCHANNELIDENTIFIER: return "Missing telemetry channel identifier.";
 			case LIBMC_ERROR_MISSINGTELEMETRYCHANNELDESCRIPTION: return "Missing telemetry channel description.";
+			case LIBMC_ERROR_XMLNODEHASNULLNAMESPACE: return "XML node has a null namespace. Ensure the XML document declares a namespace on the root element.";
 		}
 		return "unknown error";
 	}
