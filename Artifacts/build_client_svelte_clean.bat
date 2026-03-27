@@ -42,10 +42,18 @@ if %ERRORLEVEL% NEQ 0 goto :error
 call npm run build
 if %ERRORLEVEL% NEQ 0 goto :error
 
-cd ..\..\
+cd ..\..
+
+REM Build create_client_dist from the existing cmake tree if needed
+set CLIENTDIST_EXE=build_win64\DevPackage\Framework\create_client_dist.exe
+if not exist "%CLIENTDIST_EXE%" (
+	echo Building create_client_dist tool...
+	cmake --build build_win64 --target create_client_dist --config Release
+	if %ERRORLEVEL% NEQ 0 goto :error
+)
 
 REM Package the build output into a client ZIP
-python BuildScripts\createClientDist.py build_client_svelte\Client\dist Artifacts\clientdist\clientpackage_svelte.zip
+"%CLIENTDIST_EXE%" build_client_svelte\Client\dist Artifacts\clientdist\clientpackage_svelte.zip
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo.

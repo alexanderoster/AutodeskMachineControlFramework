@@ -33,8 +33,15 @@ npm run build
 
 cd ../..
 
+# Build create_client_dist from the existing cmake tree if needed
+CLIENTDIST_EXE="build_linux64/DevPackage/Framework/create_client_dist"
+if [ ! -f "$CLIENTDIST_EXE" ]; then
+	echo "Building create_client_dist tool..."
+	cmake --build build_linux64 --target create_client_dist --config Release
+fi
+
 # Package the build output into a client ZIP
-python3 BuildScripts/createClientDist.py build_client_svelte/Client/dist Artifacts/clientdist/clientpackage_svelte.zip
+"$CLIENTDIST_EXE" build_client_svelte/Client/dist Artifacts/clientdist/clientpackage_svelte.zip
 
 echo
 echo "Created svelte package in Artifacts/clientdist/:"
