@@ -4,6 +4,11 @@ basepath=$(cd "$(dirname "$0")" && pwd)
 echo "$basepath"
 cd "$basepath"
 
+if [ -d "../build_client" ]; then
+	echo "Error: build_client directory already exists. Please remove it before running this script."
+	exit 1
+fi
+
 mkdir -p ../build_client/core/common
 mkdir -p ../build_client/core/modules
 mkdir -p ../build_client/Client/public

@@ -4,6 +4,11 @@ set basepath=%~dp0
 echo %basepath%
 cd %basepath%
 
+if exist "..\build_client_svelte" (
+	echo Error: build_client_svelte directory already exists. Please remove it before running this script.
+	exit 1
+)
+
 if not exist "..\build_client_svelte" (mkdir "..\build_client_svelte")
 if not exist "..\build_client_svelte\Client" (mkdir "..\build_client_svelte\Client")
 if not exist "..\build_client_svelte\core" (mkdir "..\build_client_svelte\core")

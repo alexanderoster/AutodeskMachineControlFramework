@@ -5,6 +5,11 @@ basepath=$(cd "$(dirname "$0")" && pwd)
 echo "$basepath"
 cd "$basepath"
 
+if [ -d "../build_client_svelte" ]; then
+	echo "Error: build_client_svelte directory already exists. Please remove it before running this script."
+	exit 1
+fi
+
 mkdir -p ../build_client_svelte
 mkdir -p clientdist
 

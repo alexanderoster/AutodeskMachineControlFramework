@@ -4,6 +4,11 @@ set basepath=%~dp0
 echo %basepath%
 cd %basepath%
 
+if exist "..\build_client" (
+	echo Error: build_client directory already exists. Please remove it before running this script.
+	exit 1
+)
+
 mkdir ..\build_client\core
 mkdir ..\build_client\core\common
 mkdir ..\build_client\core\modules
