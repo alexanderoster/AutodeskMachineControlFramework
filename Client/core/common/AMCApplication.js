@@ -389,7 +389,8 @@ export default class AMCApplication extends Common.AMCObject {
 
 		legacy.type = moduleType;
 		legacy.uuid = v2.uuid || "";
-		legacy.name = (v2.attributes && v2.attributes.name) ? v2.attributes.name : (v2.uuid || "");
+		let rawName = (v2.attributes && v2.attributes.name) ? v2.attributes.name : (v2.name || v2.uuid || "");
+		legacy.name = /^\d/.test(rawName) ? '_' + rawName : rawName;
 		legacy.caption = (v2.attributes && v2.attributes.caption !== undefined) ? v2.attributes.caption : "";
 
 		if (v2.gridcolumn !== undefined)
@@ -420,16 +421,23 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.tabs = subs.map(sub => this._normalizeV2ToLegacy(sub));
 
 		} else if (moduleType === "grid") {
-			let colCount = parseInt(attrs.columncount) || 1;
-			let rowCount = parseInt(attrs.rowcount) || 1;
+			if (v2.columns && v2.columns.length > 0) {
+				legacy.columns = v2.columns;
+			} else {
+				let colCount = parseInt(attrs.columncount) || 1;
+				legacy.columns = [];
+				for (let i = 0; i < colCount; i++)
+					legacy.columns.push({ width: 1, unit: "free" });
+			}
 
-			legacy.columns = [];
-			for (let i = 0; i < colCount; i++)
-				legacy.columns.push({ width: 1, unit: "free" });
-
-			legacy.rows = [];
-			for (let i = 0; i < rowCount; i++)
-				legacy.rows.push({ height: 1, unit: "free" });
+			if (v2.rows && v2.rows.length > 0) {
+				legacy.rows = v2.rows;
+			} else {
+				let rowCount = parseInt(attrs.rowcount) || 1;
+				legacy.rows = [];
+				for (let i = 0; i < rowCount; i++)
+					legacy.rows.push({ height: 1, unit: "free" });
+			}
 
 			legacy.sections = subs.map(sub => {
 				let section = this._normalizeV2ToLegacy(sub);
@@ -441,12 +449,9 @@ export default class AMCApplication extends Common.AMCObject {
 				section.columnend = gc + gcs - 1;
 				section.rowstart = gr;
 				section.rowend = gr + grs - 1;
-				if (section.scrollbars === undefined)
-					section.scrollbars = false;
-				if (section.columnposition === undefined)
-					section.columnposition = "stretch";
-				if (section.rowposition === undefined)
-					section.rowposition = "stretch";
+				section.scrollbars = (sub.scrollbars !== undefined) ? sub.scrollbars : (section.scrollbars || false);
+				section.columnposition = sub.columnposition || section.columnposition || "stretch";
+				section.rowposition = sub.rowposition || section.rowposition || "stretch";
 				return section;
 			});
 

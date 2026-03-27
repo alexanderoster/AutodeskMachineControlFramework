@@ -17,12 +17,13 @@
 	let layerViewer: any = $state(null);
 	let initialized = $state(false);
 
-	let platform = $derived(module.platform || null);
-	let layerCount = $derived(platform?.layercount || 0);
+	let platform = $derived.by(() => { poll.v; return module.platform || null; });
+	let layerCount = $derived.by(() => { poll.v; return platform?.layercount || 0; });
 	let sliderValue = $state(0);
 	let appliedColorTheme = $state('');
 
 	$effect(() => {
+		poll.v;
 		if (platform) {
 			sliderValue = platform.currentlayer || 0;
 		}
