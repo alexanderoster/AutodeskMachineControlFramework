@@ -51,7 +51,7 @@ void writeUsage()
 	std::cout << "   --output: Output package xml file to write. (default: GITHASH_package.xml)" << std::endl;
 	std::cout << "   --serveroutput: Server Output xml file to write. (default: amc_server.xml)" << std::endl;
 	std::cout << "   --tempdir: Temporary directory to write into server path. (default: no custom temp dir)" << std::endl;
-	std::cout << "   --client: Client variant to select (vue2 or vue3). (default: vue2)" << std::endl;
+	std::cout << "   --client: Client variant to select (vue2 or svelte). (default: vue2)" << std::endl;
 }
 
 
@@ -279,18 +279,15 @@ int main(int argc, char* argv[])
 		std::string sPackageName = "Build " + sDevPackagePrefix;
 		std::string sConfigName = sDevPackagePrefix + "_config.xml";
 		std::string sClientNameVue2 = sDevPackagePrefix + "_core_vue2.client";
-		std::string sClientNameVue3 = sDevPackagePrefix + "_core_vue3.client";
 		std::string sClientNameSvelte = sDevPackagePrefix + "_core_svelte.client";
 		std::string sDefaultClient = sClientVariant;
 		if (sDefaultClient.empty())
 			sDefaultClient = sConfigClientVariant;
 		if (sDefaultClient.empty())
 			sDefaultClient = "vue2";
-		if ((sDefaultClient != "vue2") && (sDefaultClient != "vue3") && (sDefaultClient != "svelte"))
+		if ((sDefaultClient != "vue2") && (sDefaultClient != "svelte"))
 			throw std::runtime_error("unsupported client variant: " + sDefaultClient);
 		std::string sClientName = sClientNameVue2;
-		if (sDefaultClient == "vue3")
-			sClientName = sClientNameVue3;
 		if (sDefaultClient == "svelte")
 			sClientName = sClientNameSvelte;
 		std::string sAPIDocsName = sDevPackagePrefix + "_core.apidocs";
@@ -306,7 +303,6 @@ int main(int argc, char* argv[])
 		packageXMLStream << "  <build name=\"" << sPackageName << "\" configuration=\"" << sConfigName << "\" coreclient=\"" << sClientName << "\" apidocs=\"" << sAPIDocsName << "\">\n";
 		packageXMLStream << "    <coreclients default=\"" << sDefaultClient << "\">\n";
 		packageXMLStream << "      <coreclient name=\"vue2\" file=\"" << sClientNameVue2 << "\" />\n";
-		packageXMLStream << "      <coreclient name=\"vue3\" file=\"" << sClientNameVue3 << "\" />\n";
 		packageXMLStream << "      <coreclient name=\"svelte\" file=\"" << sClientNameSvelte << "\" />\n";
 		packageXMLStream << "    </coreclients>\n";
 
