@@ -12,9 +12,12 @@ if exist "..\build_client" (
 mkdir ..\build_client\core
 mkdir ..\build_client\core\common
 mkdir ..\build_client\core\modules
+mkdir ..\build_client\core\theme
+mkdir ..\build_client\core\theme\themes
 mkdir ..\build_client\Client
 mkdir ..\build_client\Client\public
 mkdir ..\build_client\Client\src
+mkdir ..\build_client\Client\src\common
 mkdir ..\build_client\Client\src\modules
 mkdir ..\build_client\Client\src\dialogs
 mkdir ..\build_client\Client\dist
@@ -22,6 +25,11 @@ mkdir ..\build_client\Client\dist
 REM Shared core JS (framework-agnostic)
 copy ..\Client\core\common\*.* ..\build_client\core\common
 copy ..\Client\core\modules\*.* ..\build_client\core\modules
+copy ..\Client\core\theme\*.* ..\build_client\core\theme
+copy ..\Client\core\theme\themes\*.* ..\build_client\core\theme\themes
+
+REM Core common files for source packaging
+copy ..\Client\core\common\*.* ..\build_client\Client\src\common
 
 REM Vue 2 specific files
 copy ..\Client\vue2\public\*.* ..\build_client\Client\public
@@ -31,6 +39,7 @@ copy ..\Client\vue2\src\dialogs\*.* ..\build_client\Client\src\dialogs
 copy ..\Client\vue2\vue.config.js ..\build_client\Client
 copy ..\Client\vue2\babel.config.js ..\build_client\Client
 copy ..\Client\vue2\package.json ..\build_client\Client
+copy ..\Client\vue2\package-lock.json ..\build_client\Client
 
 cd ..
 git log -n 1 --format="%%H" -- "Client/core" "Client/vue2" >"build_client\Client\dist\_githash_client_vue2.txt"
