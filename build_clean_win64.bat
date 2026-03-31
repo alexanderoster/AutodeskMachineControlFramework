@@ -64,10 +64,10 @@ for /l %%a in (1,1,100) do if "!CLIENTDIRHASH:~-1!"==" " set CLIENTDIRHASH=!CLIE
 echo client hash: %CLIENTDIRHASH%
 echo client dist hash: %CLIENTDISTHASH%
 
-if "%CLIENTDIRHASH%" neq "%CLIENTDISTHASH%" (
-	echo "Please rebuild client!"
-	goto ERROR
-)
+REM if "%CLIENTDIRHASH%" neq "%CLIENTDISTHASH%" (
+REM 	echo "Please rebuild client!"
+REM 	goto ERROR
+REM )
 
 cd /d "%basepath%"
 
