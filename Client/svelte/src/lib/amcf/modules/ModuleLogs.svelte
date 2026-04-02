@@ -42,8 +42,8 @@
 </script>
 
 {#if visible}
-	<div class="w-full flex flex-col border rounded-md overflow-hidden">
-		<div class="flex items-center justify-between px-3 py-1.5 bg-muted border-b">
+	<div class="w-full flex-1 min-h-0 flex flex-col border rounded-md overflow-hidden">
+		<div class="flex-shrink-0 flex items-center justify-between px-3 py-1.5 bg-muted border-b">
 			<span class="text-xs text-muted-foreground font-medium">
 				{items.length} entries
 			</span>
@@ -55,8 +55,7 @@
 		<div
 			bind:this={scrollContainer}
 			onscroll={onScroll}
-			class="overflow-auto"
-			style="max-height: 400px;"
+			class="flex-1 min-h-0 overflow-auto"
 		>
 			<Table.Root>
 				<Table.Header class="sticky top-0 bg-muted z-10">

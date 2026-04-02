@@ -19,8 +19,8 @@
 </script>
 
 {#if visible}
-	<div class="w-full border rounded-md overflow-hidden">
-		<ScrollArea class="max-h-[500px]">
+	<div class="w-full min-h-0 flex-1 flex flex-col border rounded-md overflow-hidden">
+		<ScrollArea class="flex-1 min-h-0">
 			<Table.Root>
 				<Table.Header class="sticky top-0 bg-muted z-10">
 					<Table.Row>
