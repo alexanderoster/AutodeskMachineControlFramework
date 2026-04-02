@@ -47,13 +47,14 @@ EOF
 
 cd build_client/Client
 
-TOOLBUILDDIR="../../build_clientdist_tools"
-mkdir -p "$TOOLBUILDDIR"
-git rev-parse --verify --short HEAD > "$TOOLBUILDDIR/githash.txt"
-git log -n 1 --format="%H" -- "Client/core" "Client/vue2" > "$TOOLBUILDDIR/clientdirhash.txt"
-cmake -S ../.. -B "$TOOLBUILDDIR"
-cmake --build "$TOOLBUILDDIR" --target create_client_dist --config Release
-cmake --build "$TOOLBUILDDIR" --target create_client_source --config Release
+TOOLBUILDDIR="../../build_client_dist"
+if [ ! -f "$TOOLBUILDDIR/CMakeCache.txt" ]; then
+	echo "Configuring client build tools..."
+	mkdir -p "$TOOLBUILDDIR"
+	cmake -S ../../BuildScripts/ClientDist -B "$TOOLBUILDDIR"
+fi
+echo "Building client build tools..."
+cmake --build "$TOOLBUILDDIR" --config Release
 
 
 npm install
@@ -103,9 +104,9 @@ cd ../..
 
 cd build_client/Client
 
-"$TOOLBUILDDIR/DevPackage/Framework/create_client_dist" dist ../../Artifacts/clientdist/clientpackage_vue2.zip
+"$TOOLBUILDDIR/create_client_dist" dist ../../Artifacts/clientdist/clientpackage_vue2.zip
 
-"$TOOLBUILDDIR/DevPackage/Framework/create_client_source" . ../../Artifacts/clientdist/clientsourcepackage_vue2.zip
+"$TOOLBUILDDIR/create_client_source" . ../../Artifacts/clientdist/clientsourcepackage_vue2.zip
 
 echo
 echo "Created packages in Artifacts/clientdist/:"

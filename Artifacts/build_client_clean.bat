@@ -53,13 +53,16 @@ echo }>> build_client\core\common\AMCGitHash.js
 
 cd build_client\Client
 
-set TOOLBUILDDIR=..\..\build_clientdist_tools
-if not exist "%TOOLBUILDDIR%" (mkdir "%TOOLBUILDDIR%")
-git rev-parse --verify --short HEAD >"%TOOLBUILDDIR%\githash.txt"
-git log -n 1 --format="%%H" -- "Client/core" "Client/vue2" >"%TOOLBUILDDIR%\clientdirhash.txt"
-cmake -S ..\.. -B "%TOOLBUILDDIR%"
-cmake --build "%TOOLBUILDDIR%" --target create_client_dist --config Release
-cmake --build "%TOOLBUILDDIR%" --target create_client_source --config Release
+set TOOLBUILDDIR=..\..\build_client_dist
+if not exist "%TOOLBUILDDIR%\CMakeCache.txt" (
+	echo Configuring client build tools...
+	if not exist "%TOOLBUILDDIR%" (mkdir "%TOOLBUILDDIR%")
+	cmake -S ..\..\BuildScripts\ClientDist -B "%TOOLBUILDDIR%"
+	if %ERRORLEVEL% NEQ 0 goto :error
+)
+echo Building client build tools...
+cmake --build "%TOOLBUILDDIR%" --config Release
+if %ERRORLEVEL% NEQ 0 goto :error
 
 call npm install
 
@@ -74,12 +77,29 @@ cd ..\..\
 
 cd build_client\Client
 
-"%TOOLBUILDDIR%\DevPackage\Framework\create_client_dist.exe" dist ..\..\Artifacts\clientdist\clientpackage_vue2.zip 
+if exist "%TOOLBUILDDIR%\Release\create_client_dist.exe" (
+	set CLIENTDIST_EXE=%TOOLBUILDDIR%\Release\create_client_dist.exe
+	set CLIENTSRC_EXE=%TOOLBUILDDIR%\Release\create_client_source.exe
+) else (
+	set CLIENTDIST_EXE=%TOOLBUILDDIR%\create_client_dist.exe
+	set CLIENTSRC_EXE=%TOOLBUILDDIR%\create_client_source.exe
+)
 
-"%TOOLBUILDDIR%\DevPackage\Framework\create_client_source.exe" . ..\..\Artifacts\clientdist\clientsourcepackage_vue2.zip 
+"%CLIENTDIST_EXE%" dist ..\..\Artifacts\clientdist\clientpackage_vue2.zip 
+
+"%CLIENTSRC_EXE%" . ..\..\Artifacts\clientdist\clientsourcepackage_vue2.zip 
 
 if "%1" neq "NOPAUSE" (
 	pause
 )
 
 exit 0
+
+:error
+echo.
+echo Build failed!
+echo.
+if "%1" neq "NOPAUSE" (
+	pause
+)
+exit 1

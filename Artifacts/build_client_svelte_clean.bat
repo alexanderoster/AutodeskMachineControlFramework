@@ -49,12 +49,22 @@ if %ERRORLEVEL% NEQ 0 goto :error
 
 cd ..\..
 
-REM Build create_client_dist from the existing cmake tree if needed
-set CLIENTDIST_EXE=build_win64\DevPackage\Framework\create_client_dist.exe
-if not exist "%CLIENTDIST_EXE%" (
-	echo Building create_client_dist tool...
-	cmake --build build_win64 --target create_client_dist --config Release
+REM Build create_client_dist in its own lightweight build directory
+set CLIENTDIST_BUILDDIR=build_client_dist
+if not exist "%CLIENTDIST_BUILDDIR%\CMakeCache.txt" (
+	echo Configuring create_client_dist tool...
+	if not exist "%CLIENTDIST_BUILDDIR%" (mkdir "%CLIENTDIST_BUILDDIR%")
+	cmake -S BuildScripts\ClientDist -B "%CLIENTDIST_BUILDDIR%"
 	if %ERRORLEVEL% NEQ 0 goto :error
+)
+echo Building create_client_dist tool...
+cmake --build "%CLIENTDIST_BUILDDIR%" --config Release
+if %ERRORLEVEL% NEQ 0 goto :error
+
+if exist "%CLIENTDIST_BUILDDIR%\Release\create_client_dist.exe" (
+	set CLIENTDIST_EXE=%CLIENTDIST_BUILDDIR%\Release\create_client_dist.exe
+) else (
+	set CLIENTDIST_EXE=%CLIENTDIST_BUILDDIR%\create_client_dist.exe
 )
 
 REM Package the build output into a client ZIP

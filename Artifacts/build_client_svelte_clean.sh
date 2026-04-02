@@ -38,12 +38,17 @@ npm run build
 
 cd ../..
 
-# Build create_client_dist from the existing cmake tree if needed
-CLIENTDIST_EXE="build_linux64/DevPackage/Framework/create_client_dist"
-if [ ! -f "$CLIENTDIST_EXE" ]; then
-	echo "Building create_client_dist tool..."
-	cmake --build build_linux64 --target create_client_dist --config Release
+# Build create_client_dist in its own lightweight build directory
+CLIENTDIST_BUILDDIR="build_client_dist"
+if [ ! -f "$CLIENTDIST_BUILDDIR/CMakeCache.txt" ]; then
+	echo "Configuring create_client_dist tool..."
+	mkdir -p "$CLIENTDIST_BUILDDIR"
+	cmake -S BuildScripts/ClientDist -B "$CLIENTDIST_BUILDDIR"
 fi
+echo "Building create_client_dist tool..."
+cmake --build "$CLIENTDIST_BUILDDIR" --config Release
+
+CLIENTDIST_EXE="$CLIENTDIST_BUILDDIR/create_client_dist"
 
 # Package the build output into a client ZIP
 "$CLIENTDIST_EXE" build_client_svelte/Client/dist Artifacts/clientdist/clientpackage_svelte.zip
