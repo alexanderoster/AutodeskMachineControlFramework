@@ -8380,6 +8380,42 @@ public:
 	virtual bool GetMachineParameterAsBool(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName) = 0;
 
 	/**
+	* IUIEnvironment::SetMachineParameter - sets a string parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] sValue - New Parameter Value
+	*/
+	virtual void SetMachineParameter(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue) = 0;
+
+	/**
+	* IUIEnvironment::SetMachineParameterAsDouble - sets a double parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] dValue - New Parameter Value
+	*/
+	virtual void SetMachineParameterAsDouble(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_double dValue) = 0;
+
+	/**
+	* IUIEnvironment::SetMachineParameterAsInteger - sets an integer parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] nValue - New Parameter Value
+	*/
+	virtual void SetMachineParameterAsInteger(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_int64 nValue) = 0;
+
+	/**
+	* IUIEnvironment::SetMachineParameterAsBool - sets a boolean parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] bValue - New Parameter Value
+	*/
+	virtual void SetMachineParameterAsBool(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const bool bValue) = 0;
+
+	/**
 	* IUIEnvironment::GetUIProperty - returns a string property of a UI element on the client
 	* @param[in] sElementPath - Path of UI Element. Fails if element does not exist.
 	* @param[in] sPropertyName - Property name. Fails if property does not exist.

@@ -130,6 +130,15 @@ public:
 
 	bool GetMachineParameterAsBool(const std::string& sMachineInstance, const std::string& sParameterGroup, const std::string& sParameterName) override;
 
+	void SetMachineParameter(const std::string& sMachineInstance, const std::string& sParameterGroup, const std::string& sParameterName, const std::string& sValue) override;
+
+	void SetMachineParameterAsDouble(const std::string& sMachineInstance, const std::string& sParameterGroup, const std::string& sParameterName, LibMCEnv_double dValue) override;
+
+	void SetMachineParameterAsInteger(const std::string& sMachineInstance, const std::string& sParameterGroup, const std::string& sParameterName, LibMCEnv_int64 nValue) override;
+
+	void SetMachineParameterAsBool(const std::string& sMachineInstance, const std::string& sParameterGroup, const std::string& sParameterName, bool bValue) override;
+
+
 	std::string GetUIProperty(const std::string& sElementPath, const std::string& sPropertyName) override;
 
 	std::string GetUIPropertyAsUUID(const std::string& sElementPath, const std::string& sPropertyName) override;

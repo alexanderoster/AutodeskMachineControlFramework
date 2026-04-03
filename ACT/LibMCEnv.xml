@@ -5896,7 +5896,30 @@
 			<param name="Value" type="bool" pass="return" description="Current Parameter Value" />
 		</method>
 
-
+		<method name="SetMachineParameter" description="sets a string parameter of a state machine">
+			<param name="MachineInstance" type="string" pass="in" description="State machine instance name" />
+			<param name="ParameterGroup" type="string" pass="in" description="Parameter Group" />
+			<param name="ParameterName" type="string" pass="in" description="Parameter Name" />
+			<param name="Value" type="string" pass="in" description="New Parameter Value" />
+		</method>
+		<method name="SetMachineParameterAsDouble" description="sets a double parameter of a state machine">
+			<param name="MachineInstance" type="string" pass="in" description="State machine instance name" />
+			<param name="ParameterGroup" type="string" pass="in" description="Parameter Group" />
+			<param name="ParameterName" type="string" pass="in" description="Parameter Name" />
+			<param name="Value" type="double" pass="in" description="New Parameter Value" />
+		</method>
+		<method name="SetMachineParameterAsInteger" description="sets an integer parameter of a state machine">
+			<param name="MachineInstance" type="string" pass="in" description="State machine instance name" />
+			<param name="ParameterGroup" type="string" pass="in" description="Parameter Group" />
+			<param name="ParameterName" type="string" pass="in" description="Parameter Name" />
+			<param name="Value" type="int64" pass="in" description="New Parameter Value" />
+		</method>
+		<method name="SetMachineParameterAsBool" description="sets a boolean parameter of a state machine">
+			<param name="MachineInstance" type="string" pass="in" description="State machine instance name" />
+			<param name="ParameterGroup" type="string" pass="in" description="Parameter Group" />
+			<param name="ParameterName" type="string" pass="in" description="Parameter Name" />
+			<param name="Value" type="bool" pass="in" description="New Parameter Value" />
+		</method>
 
 		<method name="GetUIProperty" description="returns a string property of a UI element on the client">
 			<param name="ElementPath" type="string" pass="in" description="Path of UI Element. Fails if element does not exist." />

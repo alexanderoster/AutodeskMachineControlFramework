@@ -1224,3 +1224,35 @@ IMachineConfigurationHandler* CUIEnvironment::CreateMachineConfigurationHandler(
 {
     return new CMachineConfigurationHandler(m_pUISystemState->getDataModel());
 }
+
+void CUIEnvironment::SetMachineParameter(const std::string& sMachineInstance,
+    const std::string& sParameterGroup, const std::string& sParameterName, const std::string& sValue)
+{
+    auto pParameterHandler = m_pUISystemState->getStateMachineData()->getParameterHandler(sMachineInstance);
+    auto pGroup = pParameterHandler->findGroup(sParameterGroup, true);
+    pGroup->setParameterValueByName(sParameterName, sValue);
+}
+
+void CUIEnvironment::SetMachineParameterAsDouble(const std::string& sMachineInstance,
+    const std::string& sParameterGroup, const std::string& sParameterName, LibMCEnv_double dValue)
+{
+    auto pParameterHandler = m_pUISystemState->getStateMachineData()->getParameterHandler(sMachineInstance);
+    auto pGroup = pParameterHandler->findGroup(sParameterGroup, true);
+    pGroup->setDoubleParameterValueByName(sParameterName, dValue);
+}
+
+void CUIEnvironment::SetMachineParameterAsInteger(const std::string& sMachineInstance,
+    const std::string& sParameterGroup, const std::string& sParameterName, LibMCEnv_int64 nValue)
+{
+    auto pParameterHandler = m_pUISystemState->getStateMachineData()->getParameterHandler(sMachineInstance);
+    auto pGroup = pParameterHandler->findGroup(sParameterGroup, true);
+    pGroup->setIntParameterValueByName(sParameterName, nValue);
+}
+
+void CUIEnvironment::SetMachineParameterAsBool(const std::string& sMachineInstance,
+    const std::string& sParameterGroup, const std::string& sParameterName, bool bValue)
+{
+    auto pParameterHandler = m_pUISystemState->getStateMachineData()->getParameterHandler(sMachineInstance);
+    auto pGroup = pParameterHandler->findGroup(sParameterGroup, true);
+    pGroup->setBoolParameterValueByName(sParameterName, bValue);
+}
