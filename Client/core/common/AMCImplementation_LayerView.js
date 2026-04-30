@@ -70,6 +70,7 @@ class LayerViewImpl {
 		
 		this.toolpathVisible = true;
 		this.pointsVisible = true;
+		this.showLaserOffPoints = false;
 
 		this.gridColor = undefined;
         
@@ -577,7 +578,27 @@ class LayerViewImpl {
 		this.glInstance.removeElement("layerdata_points");
 						
 		if (this.layerPointsArray && this.pointsVisible) {
-			this.glInstance.add2DLocalizedPointsGeometry("layerdata_points", this.layerPointsArray, 61, this.lineScaleLevel * 0.06, 0x00d0ff, this.layerPointsColorArray, -200, -200, 2, 2, 400, 400);
+			let pointsToRender = this.layerPointsArray;
+			let colorsToRender = this.layerPointsColorArray;
+
+			if (!this.showLaserOffPoints && this.laser && this.laser.laseron) {
+				let pointCount = this.layerPointsArray.length / 2;
+				let filteredCoords = [];
+				let filteredColors = colorsToRender ? [] : null;
+
+				for (let i = 0; i < pointCount; i++) {
+					if (this.laser.laseron[i] !== 0) {
+						filteredCoords.push(this.layerPointsArray[i * 2], this.layerPointsArray[i * 2 + 1]);
+						if (filteredColors && colorsToRender[i] !== undefined) {
+							filteredColors.push(colorsToRender[i]);
+						}
+					}
+				}
+				pointsToRender = new Float32Array(filteredCoords);
+				colorsToRender = filteredColors;
+			}
+
+			this.glInstance.add2DLocalizedPointsGeometry("layerdata_points", pointsToRender, 61, this.lineScaleLevel * 0.06, 0x00d0ff, colorsToRender, -200, -200, 2, 2, 400, 400);
 			this.updateTransform ();
 			this.RenderScene (true);
 		}

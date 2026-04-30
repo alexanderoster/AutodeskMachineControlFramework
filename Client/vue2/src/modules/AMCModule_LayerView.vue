@@ -60,6 +60,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                     {{ getColorModeCaption () }}
                 </button>
 
+				<button class="rounded-button" @click="onToggleShowLaserOffClick" v-if="LayerViewerInstance.pointDataIsAvailable ()">
+                    <v-icon v-if="LayerViewerInstance.showLaserOffPoints" left size="20px" color="white">mdi-checkbox-outline</v-icon>
+                    <v-icon v-else left size="20px" color="white">mdi-checkbox-blank-outline</v-icon>
+                    Show LaserOff Points
+                </button>
+
 			</div>
 
 			<div class="layerview-slider-container">
@@ -171,6 +177,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 this.LayerViewerInstance.toolpathVisible = !this.LayerViewerInstance.toolpathVisible;
 				this.LayerViewerInstance.updateLoadedLayer ();
             },
+
+			onToggleShowLaserOffClick: function () {
+				this.LayerViewerInstance.showLaserOffPoints = !this.LayerViewerInstance.showLaserOffPoints;
+				this.LayerViewerInstance.updateLayerPoints();
+			},
 
 			
 			onResetViewClick: function () {
