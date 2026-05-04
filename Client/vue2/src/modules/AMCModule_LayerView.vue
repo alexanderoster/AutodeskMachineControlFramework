@@ -606,7 +606,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						const mouseX = event.clientX - renderElementPosition.left;
 						const mouseY = event.clientY - renderElementPosition.top;
 
-						let pointIndex = this.LayerViewerInstance.glInstance.getRaycasterCollisions ("layerdata_points", mouseX, mouseY);
+						let rawPointIndex = this.LayerViewerInstance.glInstance.getRaycasterCollisions ("layerdata_points", mouseX, mouseY);
+						let pointIndex = this.LayerViewerInstance.resolvePointIndex (rawPointIndex);
 						if (pointIndex >= 0) {
 						
 							let pointPosition = this.LayerViewerInstance.getPointPosition (pointIndex);
@@ -661,8 +662,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 									const laserpower = this.LayerViewerInstance.segmentProperties[lineIndex].laserpower;
 									const laserspeed = this.LayerViewerInstance.segmentProperties[lineIndex].laserspeed;
 
+									const profilename = this.LayerViewerInstance.segmentProperties[lineIndex].profilename;
 									let infoCaption = `Line ID = ${lineIndex.toFixed(0)}\n${x1.toFixed(3)} / ${y1.toFixed(3)} - ${x2.toFixed(3)} / ${y2.toFixed(3)} mm\n`;
 									infoCaption += `${laserpower.toFixed(0)}W / ${laserspeed.toFixed (1)} mm/s`;
+									if (profilename) {
+										infoCaption += `\nProfile: ${profilename}`;
+									}
 									infoboxDiv.innerText = infoCaption;
 									infoboxDiv.style.background = 'rgba(0, 0, 0, 0.7)';
 								}
