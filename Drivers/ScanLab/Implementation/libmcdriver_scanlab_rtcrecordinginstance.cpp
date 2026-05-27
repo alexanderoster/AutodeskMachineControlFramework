@@ -368,11 +368,19 @@ void CRTCRecordingChannel::getAllScaledRecordEntries(uint64_t nValuesBufferSize,
 		uint64_t nIndex = 0;
 		double* pTarget = pValuesBuffer;
 		for (auto pChunk : m_Chunks) {
-			auto& buffer = pChunk->getBuffer();
-			for (int32_t value : buffer) {
-				*pTarget = ((double)value * dScaleFactor) + dOffset;
-				nIndex++;
-				pTarget++;
+			if (nIndex < m_nEntryCount) {
+
+				auto& buffer = pChunk->getBuffer();
+				for (int32_t value : buffer) {
+					*pTarget = ((double)value * dScaleFactor) + dOffset;
+					nIndex++;
+					pTarget++;
+
+					if (nIndex >= m_nEntryCount)
+						break;
+				}
+			} else {
+				break;
 			}
 
 		}
