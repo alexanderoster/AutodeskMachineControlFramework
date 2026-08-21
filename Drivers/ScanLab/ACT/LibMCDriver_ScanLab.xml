@@ -340,8 +340,8 @@
 	<struct name="MicroVector">
 		<member name="X" type="double" description="The X Position in mm." />
 		<member name="Y" type="double" description="The Y Position in mm."  />
-		<member name="LaserOnDelay" type="double" description="The Delay to switch the laser on in Microseconds. A negative value will not change the active delay." />
-		<member name="LaserOffDelay" type="double" description="The Delay to switch the laser off in Microseconds. A negative value will not change the active delay."  />
+		<member name="LaserOnDelay" type="double" description="The Delay to switch the laser on in Seconds. A negative value will not change the active delay. Note that this differs from SetLaserDelaysInMicroseconds, which takes Microseconds." />
+		<member name="LaserOffDelay" type="double" description="The Delay to switch the laser off in Seconds. A negative value will not change the active delay. Note that this differs from SetLaserDelaysInMicroseconds, which takes Microseconds."  />
 		<member name="LaserPowerInPercent" type="double" pass="in" description="The nominal laser power to be used in percent."/>
 	</struct>
 

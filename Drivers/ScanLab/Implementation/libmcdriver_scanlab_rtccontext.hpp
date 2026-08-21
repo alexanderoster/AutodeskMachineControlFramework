@@ -207,6 +207,23 @@ protected:
 	double m_dStandbyPulseHalfPeriodInMS;
 	double m_dStandbyPulseLengthInMS;
 
+	// Cache of the laser power value that was last actually written into the currently OPEN list.
+	// Lets writePower() skip redundant set_laser_power list commands, which is what makes bulk
+	// microvector loading feasible. MUST be dropped whenever the open list changes, the laser port
+	// changes, or another command writes to the same physical output - see invalidateLaserPowerCache().
+	int32_t m_nCachedLaserPowerDACValue;				// -1 == invalid, re-issue unconditionally
+	uint32_t m_nCachedLaserPulseHalfPeriodInBits;		// for eLaserPort::LaserPulseModulation
+	uint32_t m_nCachedLaserPulseLengthInBits;			// for eLaserPort::LaserPulseModulation
+
+	// Monotonic count of power commands writePower() has actually emitted into a list. Used to
+	// report the deduplication hit rate of bulk writers; never reset.
+	uint64_t m_nLaserPowerCommandsWritten;
+
+	// List sizes as passed to ConfigureLists / n_config_list. 0 == never configured, capacity
+	// checks are skipped then.
+	uint32_t m_nConfiguredListSizeA;
+	uint32_t m_nConfiguredListSizeB;
+
 	LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
 
 	LibMCDriver_ScanLab::eOIEOperationMode m_OIEOperationMode;
@@ -228,7 +245,15 @@ protected:
 
 	void writeMarkSpeed(float markSpeed);
 
-	void writePower(double dPowerInPercent, bool bOIEPIDControlFlag);
+	// bCheckError == false suppresses the per-call n_get_last_error query. That query is a control
+	// command, and on RTC6 Ethernet boards every control command forces the DLL to wait until the
+	// board has acknowledged all previously buffered list commands (RTC6 manual, ch. 16.9 "High
+	// Performance Mode"), i.e. one network round trip per call. Only pass false from bulk list
+	// writers that check the accumulated error (n_get_error) once after the whole block.
+	void writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bool bCheckError = true);
+
+	// Drops the cached laser power value, so the next writePower() re-issues the list command.
+	void invalidateLaserPowerCache();
 
 	void writeSpeeds(const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, bool bOIEPIDControlFlag);
 

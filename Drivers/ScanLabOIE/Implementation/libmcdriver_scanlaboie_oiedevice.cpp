@@ -494,7 +494,7 @@ void COIEDeviceInstance::startAppEx(const std::string& sName, const int32_t nMaj
 	{
 		std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
 		const uint32_t nValuesPerRecord = m_nSensorSignalCount + m_nRTCSignalCount + m_nAdditionalSignalCount;
-		const uint64_t nTargetBufferSizeInBytes = 1ULL * 1024ULL * 1024ULL;
+		const uint64_t nTargetBufferSizeInBytes = 8ULL * 1024ULL * 1024ULL;
 		const uint64_t nTargetBufferSizeInValues = nTargetBufferSizeInBytes / sizeof(int32_t);
 
 		uint32_t nBufferSizeInRecords = 256;
