@@ -86,11 +86,21 @@ echo "client dir hash: $CLIENTDIRHASH"
 CLIENTDISTHASH=$(<"$basepath/Artifacts/clientdist/_githash_client_vue2.txt")
 echo "client dist hash (vue2): $CLIENTDISTHASH"
 
-#if test $CLIENTDISTHASH != $CLIENTDIRHASH
-#then
-#	echo "Invalid client hash! Please rebuild client!"
-#	exit 1
-#fi
+if test "$CLIENTDISTHASH" != "$CLIENTDIRHASH"
+then
+	echo ""
+	echo "Client artifact is outdated — rebuilding automatically..."
+	echo "  Artifact built from: $CLIENTDISTHASH"
+	echo "  Current Client source: $CLIENTDIRHASH"
+	echo ""
+	"$basepath/Artifacts/build_client_clean.sh"
+	CLIENTDISTHASH=$(<"$basepath/Artifacts/clientdist/_githash_client.txt")
+	if test "$CLIENTDISTHASH" != "$CLIENTDIRHASH"
+	then
+		echo "ERROR: Client rebuild did not produce matching hash!"
+		exit 1
+	fi
+fi
 
 cd "$basepath"
 
