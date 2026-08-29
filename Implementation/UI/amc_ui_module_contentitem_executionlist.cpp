@@ -263,7 +263,7 @@ void CUIModule_ContentExecutionList::addLegacyContentToJSON(CJSONWriter& writer,
 
 		LibMCData::eBuildJobExecutionStatus status = pExecution->GetStatus();
 		std::string sStatusString = pExecution->GetStatusString();
-		bool bHasEndTime = (status == LibMCData::eBuildJobExecutionStatus::Finished);
+		bool bHasEndTime = (status == LibMCData::eBuildJobExecutionStatus::Finished) || (status == LibMCData::eBuildJobExecutionStatus::Failed);
 
 		uint64_t nStartTimeStamp = pExecution->GetStartTimeStampInMicroseconds();
 		uint64_t nEndTimeStamp = 0;
