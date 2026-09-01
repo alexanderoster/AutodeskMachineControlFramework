@@ -37,6 +37,7 @@ Abstract: This is the class declaration of CRTCContext
 
 // Include custom headers here.
 #include <set>
+#include <atomic>
 
 namespace LibMCDriver_ScanLab {
 namespace Impl {
@@ -224,6 +225,34 @@ protected:
 	uint32_t m_nConfiguredListSizeA;
 	uint32_t m_nConfiguredListSizeB;
 
+	// true while list execution has already been started out of AddMicrovectorMovement in
+	// streaming mode. While set, the next ExecuteList() / executeListWithRecording() MUST NOT
+	// issue a second n_execute_list_pos: the list is already running and the RTC6 would report
+	// RTC6_BUSY. Shared with CRTCRecordingInstance (see PrepareRecording), because the recording
+	// path starts list execution itself and bypasses this context.
+	std::shared_ptr<std::atomic<bool>> m_pMicrovectorStreamExecutionStarted;
+
+	// List index / position of the last SetStartList() call, i.e. where the currently open list
+	// begins. The streaming path starts execution from here (prologue included).
+	uint32_t m_nCurrentStartListIndex;
+	uint32_t m_nCurrentStartListPosition;
+
+	// Opt-in switch set via the public SetMicrovectorStreamingEnabled(). The machine plugin
+	// forwards cardconfig/enablemicrovectorstreaming here at initialization. Default false:
+	// a plugin that never calls the setter gets the sequential download path.
+	bool m_bMicrovectorStreamingEnabled;
+
+	// Streaming threshold in microvectors, also set via SetMicrovectorStreamingEnabled().
+	// Layers below this size always download sequentially. Clamped to at least
+	// RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER, because below that the prebuffer would cover
+	// the whole layer and the margin checks would never run.
+	uint64_t m_nMicrovectorStreamMinLayerSize;
+
+	// Fraction of the layer downloaded before execution starts, also set via
+	// SetMicrovectorStreamingEnabled(). Range (0..1]; values below the safe minimum only make
+	// sense for testing the overrun detector and are accepted with a logged warning.
+	double m_dMicrovectorStreamPrebufferFraction;
+
 	LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
 
 	LibMCDriver_ScanLab::eOIEOperationMode m_OIEOperationMode;
@@ -282,6 +311,17 @@ protected:
 
 	// Converts a delay in seconds to RTC ticks
 	int32_t ConvertDelaySecondsToTicks(double delay);
+
+	// Writes nCount microvectors into the currently open list without any per-command or
+	// per-block error checking. Shared loop body of the sequential and the streaming download
+	// paths of AddMicrovectorMovement; callers bracket it with n_reset_error / n_get_error.
+	void emitMicroVectorsToOpenList(const LibMCDriver_ScanLab::sMicroVector* pBegin, uint64_t nCount);
+
+	// Streaming download only: reads input and output pointer (two control commands, so this
+	// drains the High Performance Mode pipeline - call sparingly) and verifies that the output
+	// pointer has not caught up with the download. Throws after stopping list execution if the
+	// margin is exhausted. Returns min(nMinObservedMargin, current margin) for diagnostics.
+	uint64_t checkStreamMargin(uint64_t nMinObservedMargin);
 
 public:
 
@@ -592,6 +632,8 @@ public:
 	LibMCDriver_ScanLab_int32 GetRTCInternalValue(const LibMCDriver_ScanLab_uint32 nInternalSignalID) override;
 
 	void AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector* pMicrovectorArrayBuffer) override;
+
+	void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction) override;
 
 };
 

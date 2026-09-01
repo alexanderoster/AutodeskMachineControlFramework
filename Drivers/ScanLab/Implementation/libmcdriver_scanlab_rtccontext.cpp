@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <string>
 #include <array>
+#include <limits>
 
 using namespace LibMCDriver_ScanLab::Impl;
 
@@ -69,6 +70,53 @@ using namespace LibMCDriver_ScanLab::Impl;
 // List positions a single microvector can occupy in the worst case:
 // one set_laser_power (short list command) plus one micro_vector_abs (normal list command).
 #define RTCCONTEXT_LISTPOSITIONS_PER_MICROVECTOR 2
+
+// --- Streamed microvector download (see doc/scanner_phase3_optionA.md) ---------------------------
+// The RTC6 executes one microvector per 10 us list cycle, while the measured download rate over
+// Ethernet is ~12.4 us per list position: the board consumes the list FASTER than it is loaded.
+// Streaming therefore preloads a buffer of B vectors, starts execution with execute_list_pos while
+// the list is still being written (explicitly allowed, RTC6 manual p. 447), and appends the rest
+// during marking. If the output pointer ever catches up with the input pointer the board silently
+// executes stale memory (no back-pressure, manual p. 113-114), so the margin between the two
+// pointers is checked periodically and a shortfall is a hard error.
+
+// Default fraction of the layer to preload before starting execution; the effective value is
+// m_dMicrovectorStreamPrebufferFraction, settable per machine via SetMicrovectorStreamingEnabled
+// (cardconfig/microvectorstreamingprebufferfraction, 0 = this default). Must stay >=
+// (1 - T_mark/T_load), = 0.192 at the originally measured 12.38 us/vector. 0.30 aborted a real
+// run on 2026-08-31: network jitter degraded the download to ~12.6 us/vector over a job and the
+// final margin on a 640k layer dipped 253 positions below MINMARGIN. 0.40 keeps the margin
+// comfortable up to a sustained ~14.5 us/vector; the cost is linear (~1 s per layer), an abort
+// scraps the layer.
+#define RTCCONTEXT_MICROVECTORSTREAM_PREBUFFERFRACTION 0.40
+
+// Below this prebuffer fraction the streaming is expected to abort on real-world download rates.
+// Configured values under it are accepted (they are the documented way to test the overrun
+// detector without a rebuild) but logged as a warning.
+#define RTCCONTEXT_MICROVECTORSTREAM_MINSAFEPREBUFFERFRACTION 0.25
+
+// Lower bound of the prebuffer in vectors, for short layers. The margin is smallest at download
+// end: margin_end = B - 0.238 * (N - B) at the measured rates. 150000 keeps margin_end above
+// ~66000 positions for every layer >= MINLAYERSIZE (100000 would fall below MINMARGIN for
+// layers of 300k..375k vectors and fail the last margin check spuriously).
+#define RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER 150000
+
+// Default streaming threshold: below this layer size the sequential path is used, because the
+// streaming overhead is not worth it and the prebuffer would cover most of the layer anyway.
+// The effective threshold is m_nMicrovectorStreamMinLayerSize, settable per machine via
+// SetMicrovectorStreamingEnabled (cardconfig/microvectorstreamingminlayersize, 0 = this default).
+#define RTCCONTEXT_MICROVECTORSTREAM_MINLAYERSIZE 300000
+
+// How many vectors to append between two margin checks. Each check issues two control commands,
+// and on Ethernet every control command makes the DLL wait for all buffered list telegrams
+// (manual ch. 16.9), i.e. it drains the High Performance Mode pipeline. 20000 vectors means
+// ~100 checks on a 2M layer - do not lower this by an order of magnitude.
+#define RTCCONTEXT_MICROVECTORSTREAM_CHECKINTERVAL 20000
+
+// Minimum allowed distance between input and output pointer in list positions (= 0.5 s of
+// marking). Less than this aborts the download before the board can reach stale memory.
+#define RTCCONTEXT_MICROVECTORSTREAM_MINMARGIN 50000
+
 
 
 CRTCPowerMapping::CRTCPowerMapping ()
@@ -519,12 +567,19 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
 	m_nCachedLaserPulseLengthInBits (0xffffffffUL),
 	m_nLaserPowerCommandsWritten (0),
 	m_nConfiguredListSizeA (0),
-	m_nConfiguredListSizeB (0)
+	m_nConfiguredListSizeB (0),
+	m_nCurrentStartListIndex (1),
+	m_nCurrentStartListPosition (0),
+	m_bMicrovectorStreamingEnabled (false),
+	m_nMicrovectorStreamMinLayerSize (RTCCONTEXT_MICROVECTORSTREAM_MINLAYERSIZE),
+	m_dMicrovectorStreamPrebufferFraction (RTCCONTEXT_MICROVECTORSTREAM_PREBUFFERFRACTION)
 
 
 {
 	if (pOwnerData.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+
+	m_pMicrovectorStreamExecutionStarted = std::make_shared<std::atomic<bool>> (false);
 
 	m_pScanLabSDK = pOwnerData->getScanLabSDK();
 	if (m_pScanLabSDK.get() == nullptr)
@@ -864,6 +919,13 @@ void CRTCContext::SetStartList(const LibMCDriver_ScanLab_uint32 nListIndex, cons
 	m_pScanLabSDK->n_set_start_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 
+	// A new list build begins: any pending "execution already started by streaming" state
+	// belongs to the previous layer. Also remember where this list starts, because the
+	// streaming path has to start execution from here (prologue included).
+	m_pMicrovectorStreamExecutionStarted->store(false);
+	m_nCurrentStartListIndex = nListIndex;
+	m_nCurrentStartListPosition = nPosition;
+
 	m_CurrentMeasurementTagInfo.m_PartID = 0;
 	m_CurrentMeasurementTagInfo.m_ProfileID = 0;
 	m_CurrentMeasurementTagInfo.m_SegmentID = 0;
@@ -884,6 +946,15 @@ void CRTCContext::SetEndOfList()
 
 void CRTCContext::ExecuteList(const LibMCDriver_ScanLab_uint32 nListIndex, const LibMCDriver_ScanLab_uint32 nPosition)
 {
+	// If AddMicrovectorMovement already started this list in streaming mode, the list is
+	// running right now - a second n_execute_list_pos would fail with RTC6_BUSY (manual
+	// p. 447). Consume the flag and only do the cache bookkeeping.
+	if (m_pMicrovectorStreamExecutionStarted->exchange(false)) {
+		m_pDriverEnvironment->LogMessage("ExecuteList skipped: list execution was already started by the streamed microvector download.");
+		invalidateLaserPowerCache();
+		return;
+	}
+
 	m_pScanLabSDK->n_execute_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 
@@ -1359,6 +1430,77 @@ int32_t CRTCContext::ConvertDelaySecondsToTicks(double delay)
 	return static_cast<int32_t>( (ticks < 0) ? 0 :	(ticks > 32767) ? 32767 : ticks );
 }
 
+void CRTCContext::emitMicroVectorsToOpenList(const LibMCDriver_ScanLab::sMicroVector* pBegin, uint64_t nCount)
+{
+	auto pMicroVector = pBegin;
+
+	for (uint64_t nIndex = 0; nIndex < nCount; nIndex++) {
+
+		double dX = round((pMicroVector->m_X - m_dLaserOriginX) * m_dCorrectionFactor);
+		double dY = round((pMicroVector->m_Y - m_dLaserOriginY) * m_dCorrectionFactor);
+
+		int32_t intX = (int32_t)dX;
+		int32_t intY = (int32_t)dY;
+		int32_t intDelayLaserOn = (pMicroVector->m_LaserOnDelay < 0.0) ? -1 : ConvertDelaySecondsToTicks(pMicroVector->m_LaserOnDelay);
+		int32_t intDelayLaserOff = (pMicroVector->m_LaserOffDelay < 0.0) ? -1 : ConvertDelaySecondsToTicks(pMicroVector->m_LaserOffDelay);
+
+		// bCheckError = false: n_get_last_error is a control command, and on RTC6 Ethernet
+		// boards every control command makes the DLL wait until the board has acknowledged all
+		// buffered list commands (RTC6 manual, ch. 16.9), i.e. one network round trip per
+		// microvector. The accumulated error is checked once after the loop instead.
+		writePower(pMicroVector->m_LaserPowerInPercent, false, false);
+
+		m_pScanLabSDK->n_micro_vector_abs(m_CardNo, intX, intY, intDelayLaserOn, intDelayLaserOff);
+
+		m_nCurrentScanPositionX = intX;
+		m_nCurrentScanPositionY = intY;
+
+		pMicroVector++;
+
+	}
+}
+
+uint64_t CRTCContext::checkStreamMargin(uint64_t nMinObservedMargin)
+{
+	// Both pointers are ABSOLUTE list memory addresses (offsets from the start of "List1"):
+	// the output pointer via n_get_status (manual p. 503-504), the input pointer via
+	// n_get_input_pointer (p. 479 - not to be confused with the relative get_list_pointer).
+	// The manual explicitly endorses this pair for making sure unprocessed commands are not
+	// overwritten during simultaneous loading and execution (p. 504).
+	uint32_t nStatus = 0;
+	uint32_t nOutputPointer = 0;
+	m_pScanLabSDK->n_get_status(m_CardNo, &nStatus, &nOutputPointer);
+	uint64_t nInputPointer = m_pScanLabSDK->n_get_input_pointer(m_CardNo);
+
+	bool bOvertaken = ((uint64_t)nOutputPointer > nInputPointer);
+	uint64_t nMargin = bOvertaken ? 0 : (nInputPointer - (uint64_t)nOutputPointer);
+
+	if (bOvertaken || (nMargin < (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINMARGIN)) {
+
+		// Stop the list before throwing: past this point the board would run into stale list
+		// memory with the laser armed. stop_execution also switches the laser signals off.
+		m_pScanLabSDK->n_stop_execution(m_CardNo);
+		m_pMicrovectorStreamExecutionStarted->store(false);
+		invalidateLaserPowerCache();
+
+		if (bOvertaken)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DRIVERERROR,
+				"Microvector streaming: output pointer overtook the download (output pointer at "
+				+ std::to_string(nOutputPointer) + ", input pointer at " + std::to_string(nInputPointer)
+				+ ") - the board has executed stale list memory, the layer is corrupted. Execution was stopped.");
+
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DRIVERERROR,
+			"Microvector streaming: download margin exhausted (input pointer at " + std::to_string(nInputPointer)
+			+ ", output pointer at " + std::to_string(nOutputPointer) + ", margin " + std::to_string(nMargin)
+			+ " < " + std::to_string((uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINMARGIN)
+			+ " list positions). Execution was stopped before reaching stale list memory."
+			+ " Increase cardconfig/microvectorstreamingprebufferfraction or disable streaming via"
+			+ " cardconfig/enablemicrovectorstreaming.");
+	}
+
+	return (nMargin < nMinObservedMargin) ? nMargin : nMinObservedMargin;
+}
+
 void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector* pMicrovectorArrayBuffer)
 {
 	if (nMicrovectorArrayBufferSize > 0) {
@@ -1399,7 +1541,16 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 			}
 		}
 
-		// The loop below writes the list without querying n_get_last_error per command. Clear the
+		// Streaming starts list execution after a prebuffer and appends the rest while the laser
+		// marks (see the constant block above). It requires the explicit opt-in via
+		// SetMicrovectorStreamingEnabled and stays off for small layers and when execution is
+		// already running (a second block in the same list must not issue another
+		// execute_list_pos).
+		bool bStreamDownload = m_bMicrovectorStreamingEnabled
+			&& (nMicrovectorArrayBufferSize >= m_nMicrovectorStreamMinLayerSize)
+			&& (!m_pMicrovectorStreamExecutionStarted->load());
+
+		// The loops below write the list without querying n_get_last_error per command. Clear the
 		// accumulated error first so the check after the loop reports only this block. Nothing can
 		// be masked: the checkGlobalErrorOfCard above already threw on any pre-existing error.
 		m_pScanLabSDK->n_reset_error(m_CardNo, 0xffffffff);
@@ -1407,49 +1558,124 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 		auto tLoadStartTime = std::chrono::steady_clock::now();
 		uint64_t nPowerCommandsBefore = m_nLaserPowerCommandsWritten;
 
-		auto pMicroVector = pMicrovectorArrayBuffer;
+		if (!bStreamDownload) {
 
-		for (uint64_t nIndex = 0; nIndex < nMicrovectorArrayBufferSize; nIndex++) {
+			// Sequential path - unchanged behavior: write the whole block, check once.
+			emitMicroVectorsToOpenList(pMicrovectorArrayBuffer, nMicrovectorArrayBufferSize);
 
-			double dX = round((pMicroVector->m_X - m_dLaserOriginX) * m_dCorrectionFactor);
-			double dY = round((pMicroVector->m_Y - m_dLaserOriginY) * m_dCorrectionFactor);
+			m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
 
-			int32_t intX = (int32_t)dX;
-			int32_t intY = (int32_t)dY;
-			int32_t intDelayLaserOn = (pMicroVector->m_LaserOnDelay < 0.0) ? -1 : ConvertDelaySecondsToTicks(pMicroVector->m_LaserOnDelay);
-			int32_t intDelayLaserOff = (pMicroVector->m_LaserOffDelay < 0.0) ? -1 : ConvertDelaySecondsToTicks(pMicroVector->m_LaserOffDelay);
+			// One summary line per block, not per vector. Reports both the achieved download rate and
+			// the power deduplication hit rate, which is what determines how many list positions the
+			// block actually consumed.
+			double dLoadDurationInMS = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>
+				(std::chrono::steady_clock::now() - tLoadStartTime).count();
+			uint64_t nPowerCommands = m_nLaserPowerCommandsWritten - nPowerCommandsBefore;
 
-			// bCheckError = false: n_get_last_error is a control command, and on RTC6 Ethernet
-			// boards every control command makes the DLL wait until the board has acknowledged all
-			// buffered list commands (RTC6 manual, ch. 16.9), i.e. one network round trip per
-			// microvector. The accumulated error is checked once after the loop instead.
-			writePower(pMicroVector->m_LaserPowerInPercent, false, false);
+			m_pDriverEnvironment->LogMessage("Wrote " + std::to_string(nMicrovectorArrayBufferSize)
+				+ " microvectors in " + std::to_string(dLoadDurationInMS) + " ms ("
+				+ std::to_string((dLoadDurationInMS * 1000.0) / (double)nMicrovectorArrayBufferSize)
+				+ " us/vector), " + std::to_string(nPowerCommands) + " power commands, "
+				+ std::to_string(nMicrovectorArrayBufferSize + nPowerCommands) + " list positions used");
 
-			m_pScanLabSDK->n_micro_vector_abs(m_CardNo, intX, intY, intDelayLaserOn, intDelayLaserOff);
+		}
+		else {
 
-			m_nCurrentScanPositionX = intX;
-			m_nCurrentScanPositionY = intY;
+			uint64_t nPrebufferCount = (uint64_t)((double)nMicrovectorArrayBufferSize * m_dMicrovectorStreamPrebufferFraction);
+			if (nPrebufferCount < (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER)
+				nPrebufferCount = (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER;
+			if (nPrebufferCount > nMicrovectorArrayBufferSize)
+				nPrebufferCount = nMicrovectorArrayBufferSize;
 
-			pMicroVector++;
+			emitMicroVectorsToOpenList(pMicrovectorArrayBuffer, nPrebufferCount);
+
+			// The prologue and the prebuffer must be known-good before the laser starts on them.
+			m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
+			// Start execution at the position SetStartList opened the list at, so the prologue
+			// (laser pins, delays, OIE trigger) runs first. Simultaneous loading and execution of
+			// the same list is explicitly supported (manual p. 447). Deliberately NOT routed
+			// through ExecuteList(): that would invalidate the laser power cache, and the
+			// set_laser_power written into the prebuffer stays valid for the whole remainder.
+			m_pScanLabSDK->n_execute_list_pos(m_CardNo, m_nCurrentStartListIndex, m_nCurrentStartListPosition);
+			m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
+			m_pMicrovectorStreamExecutionStarted->store(true);
+
+			// Clear again: the append loop below runs without per-command checks too.
+			m_pScanLabSDK->n_reset_error(m_CardNo, 0xffffffff);
+
+			uint64_t nMinObservedMargin = std::numeric_limits<uint64_t>::max();
+			uint64_t nWritten = nPrebufferCount;
+
+			while (nWritten < nMicrovectorArrayBufferSize) {
+
+				uint64_t nChunk = nMicrovectorArrayBufferSize - nWritten;
+				if (nChunk > (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_CHECKINTERVAL)
+					nChunk = (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_CHECKINTERVAL;
+
+				emitMicroVectorsToOpenList(pMicrovectorArrayBuffer + nWritten, nChunk);
+				nWritten += nChunk;
+
+				nMinObservedMargin = checkStreamMargin(nMinObservedMargin);
+			}
+
+			m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+
+			double dLoadDurationInMS = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>
+				(std::chrono::steady_clock::now() - tLoadStartTime).count();
+			uint64_t nPowerCommands = m_nLaserPowerCommandsWritten - nPowerCommandsBefore;
+
+			// The minimum observed margin is the main tuning indicator: close to MINMARGIN means
+			// PREBUFFERFRACTION has to grow; a large value means exposure time is wasted.
+			m_pDriverEnvironment->LogMessage("Wrote " + std::to_string(nMicrovectorArrayBufferSize)
+				+ " microvectors in " + std::to_string(dLoadDurationInMS) + " ms ("
+				+ std::to_string((dLoadDurationInMS * 1000.0) / (double)nMicrovectorArrayBufferSize)
+				+ " us/vector), " + std::to_string(nPowerCommands) + " power commands, "
+				+ std::to_string(nMicrovectorArrayBufferSize + nPowerCommands) + " list positions used"
+				+ " (streamed: execution started after " + std::to_string(nPrebufferCount)
+				+ " vectors, min margin " + std::to_string(nMinObservedMargin) + " list positions)");
 
 		}
 
-		m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
-
-		// One summary line per block, not per vector. Reports both the achieved download rate and
-		// the power deduplication hit rate, which is what determines how many list positions the
-		// block actually consumed.
-		double dLoadDurationInMS = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>
-			(std::chrono::steady_clock::now() - tLoadStartTime).count();
-		uint64_t nPowerCommands = m_nLaserPowerCommandsWritten - nPowerCommandsBefore;
-
-		m_pDriverEnvironment->LogMessage("Wrote " + std::to_string(nMicrovectorArrayBufferSize)
-			+ " microvectors in " + std::to_string(dLoadDurationInMS) + " ms ("
-			+ std::to_string((dLoadDurationInMS * 1000.0) / (double)nMicrovectorArrayBufferSize)
-			+ " us/vector), " + std::to_string(nPowerCommands) + " power commands, "
-			+ std::to_string(nMicrovectorArrayBufferSize + nPowerCommands) + " list positions used");
-
 	}
+}
+
+
+void CRTCContext::SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction)
+{
+	uint64_t nEffectiveMinLayerSize = (nMinLayerSize == 0)
+		? (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINLAYERSIZE
+		: (uint64_t)nMinLayerSize;
+
+	// Below the prebuffer minimum the prebuffer would cover the whole layer: execution would
+	// start only after everything is written and the margin checks would never run, so the
+	// overrun detector could not do its job. Clamp instead of failing.
+	if (nEffectiveMinLayerSize < (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER) {
+		m_pDriverEnvironment->LogMessage("Microvector streaming minimum layer size "
+			+ std::to_string(nEffectiveMinLayerSize) + " is below the prebuffer minimum, clamping to "
+			+ std::to_string((uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER) + " microvectors.");
+		nEffectiveMinLayerSize = (uint64_t)RTCCONTEXT_MICROVECTORSTREAM_MINPREBUFFER;
+	}
+
+	double dEffectivePrebufferFraction = (dPrebufferFraction == 0.0)
+		? RTCCONTEXT_MICROVECTORSTREAM_PREBUFFERFRACTION
+		: dPrebufferFraction;
+
+	if ((dEffectivePrebufferFraction < 0.0) || (dEffectivePrebufferFraction > 1.0))
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM,
+			"invalid microvector streaming prebuffer fraction: " + std::to_string(dPrebufferFraction));
+
+	// Deliberately accepted, not clamped: a too small fraction is the documented way to test
+	// the overrun detector (the layer aborts with a clear error instead of marking garbage).
+	if (dEffectivePrebufferFraction < RTCCONTEXT_MICROVECTORSTREAM_MINSAFEPREBUFFERFRACTION)
+		m_pDriverEnvironment->LogWarning("Microvector streaming prebuffer fraction "
+			+ std::to_string(dEffectivePrebufferFraction) + " is below the safe minimum of "
+			+ std::to_string(RTCCONTEXT_MICROVECTORSTREAM_MINSAFEPREBUFFERFRACTION)
+			+ " - streamed layers are likely to abort on the download margin check.");
+
+	m_bMicrovectorStreamingEnabled = bEnabled;
+	m_nMicrovectorStreamMinLayerSize = nEffectiveMinLayerSize;
+	m_dMicrovectorStreamPrebufferFraction = dEffectivePrebufferFraction;
 }
 
 
@@ -2514,7 +2740,9 @@ IRTCRecording* CRTCContext::PrepareRecording(const bool bKeepInMemory, const boo
 {
 	auto pCryptoContext = m_pDriverEnvironment->CreateCryptoContext();
 	std::string sUUID = pCryptoContext->CreateUUID();
-	auto pInstance = std::make_shared<CRTCRecordingInstance>(sUUID, m_pScanLabSDK, m_CardNo, m_dCorrectionFactor, m_dZCorrectionFactor, RTC_CHUNKSIZE_DEFAULT, bEnableScanheadFeedback, bEnableBacktransformation);
+	// The shared flag lets executeListWithRecording() know when the streamed microvector download
+	// has already started list execution, so it must not issue a second execute_list_pos.
+	auto pInstance = std::make_shared<CRTCRecordingInstance>(sUUID, m_pScanLabSDK, m_CardNo, m_dCorrectionFactor, m_dZCorrectionFactor, RTC_CHUNKSIZE_DEFAULT, bEnableScanheadFeedback, bEnableBacktransformation, m_pMicrovectorStreamExecutionStarted);
 
 	std::lock_guard<std::mutex> guard(m_RecordingsMutex);
 

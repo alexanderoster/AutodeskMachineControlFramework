@@ -1000,6 +1000,7 @@ public:
 	inline void AddTimedMarkMovement(const LibMCDriver_ScanLab_double dTargetX, const LibMCDriver_ScanLab_double dTargetY, const LibMCDriver_ScanLab_double dDurationInMicroseconds);
 	inline void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue);
 	inline void AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer);
+	inline void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction);
 	inline LibMCDriver_ScanLab_uint32 GetCurrentFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo);
 	inline LibMCDriver_ScanLab_uint32 GetTimeStamp();
 	inline LibMCDriver_ScanLab_int32 GetRTCChannel(const eRTCChannelType eChannelType);
@@ -1483,6 +1484,7 @@ public:
 		pWrapperTable->m_RTCContext_AddTimedMarkMovement = nullptr;
 		pWrapperTable->m_RTCContext_AddFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_AddMicrovectorMovement = nullptr;
+		pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled = nullptr;
 		pWrapperTable->m_RTCContext_GetCurrentFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_GetTimeStamp = nullptr;
 		pWrapperTable->m_RTCContext_GetRTCChannel = nullptr;
@@ -2857,6 +2859,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_AddMicrovectorMovement == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled = (PLibMCDriver_ScanLabRTCContext_SetMicrovectorStreamingEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled = (PLibMCDriver_ScanLabRTCContext_SetMicrovectorStreamingEnabledPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4951,6 +4962,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_addmicrovectormovement", (void**)&(pWrapperTable->m_RTCContext_AddMicrovectorMovement));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_AddMicrovectorMovement == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled", (void**)&(pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getcurrentfreevariable", (void**)&(pWrapperTable->m_RTCContext_GetCurrentFreeVariable));
@@ -7093,6 +7108,17 @@ public:
 	void CRTCContext::AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_AddMicrovectorMovement(m_pHandle, (LibMCDriver_ScanLab_uint64)MicrovectorArrayBuffer.size(), MicrovectorArrayBuffer.data()));
+	}
+	
+	/**
+	* CRTCContext::SetMicrovectorStreamingEnabled - Enables or disables the streamed microvector download with overlapped marking. If enabled, AddMicrovectorMovement of a layer of at least MinLayerSize microvectors starts list execution after a prebuffer and appends the remaining microvectors while the laser is already marking. Default is disabled.
+	* @param[in] bEnabled - True to enable the streamed microvector download.
+	* @param[in] nMinLayerSize - Minimum layer size in microvectors for streaming to be used; smaller layers are downloaded sequentially. 0 uses the built-in default of 300000. Values below the prebuffer minimum of 150000 are clamped to it.
+	* @param[in] dPrebufferFraction - Fraction of the layer (0..1) that is downloaded before execution starts. 0 uses the built-in default of 0.4. Values below 0.25 risk margin aborts on download slowdowns and are only meant for testing the overrun detector.
+	*/
+	void CRTCContext::SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetMicrovectorStreamingEnabled(m_pHandle, bEnabled, nMinLayerSize, dPrebufferFraction));
 	}
 	
 	/**

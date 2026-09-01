@@ -395,15 +395,16 @@ void CRTCRecordingChannel::getAllScaledRecordEntries(uint64_t nValuesBufferSize,
 /*************************************************************************************************************************
  Class definition of CRTCRecording 
 **************************************************************************************************************************/
-CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation)
-	: m_pSDK (pSDK), 
+CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted)
+	: m_pSDK (pSDK),
 	m_sUUID (sUUID),
 	m_CardNo (cardNo),
 	m_dXYCorrectionFactor (dXYCorrectionFactor),
 	m_dZCorrectionFactor(dZCorrectionFactor),
 	m_nChunkSize (nChunkSize),
 	m_bEnableScanheadFeedback (bEnableScanheadFeedback),
-	m_bEnableBacktransformation (bEnableBacktransformation)
+	m_bEnableBacktransformation (bEnableBacktransformation),
+	m_pListExecutionAlreadyStarted (pListExecutionAlreadyStarted)
 
 {
 	if (pSDK.get() == nullptr)
@@ -699,8 +700,16 @@ void CRTCRecordingInstance::readRecordedDataBlockFromRTC(uint32_t DataStart, uin
 
 void CRTCRecordingInstance::executeListWithRecording()
 {
-	m_pSDK->n_execute_list_pos(m_CardNo, 1, 0);
-	m_pSDK->checkError(m_pSDK->n_get_last_error(m_CardNo));
+	// The streamed microvector download (CRTCContext::AddMicrovectorMovement) may have started
+	// list execution already; a second execute_list_pos would fail with RTC6_BUSY. In that case
+	// only the measurement readout loop below is needed.
+	bool bAlreadyStarted = (m_pListExecutionAlreadyStarted.get() != nullptr)
+		&& m_pListExecutionAlreadyStarted->exchange(false);
+
+	if (!bAlreadyStarted) {
+		m_pSDK->n_execute_list_pos(m_CardNo, 1, 0);
+		m_pSDK->checkError(m_pSDK->n_get_last_error(m_CardNo));
+	}
 
 	uint32_t Busy, Position, MesBusy, MesPosition;
 	uint32_t LastPosition = 0;
