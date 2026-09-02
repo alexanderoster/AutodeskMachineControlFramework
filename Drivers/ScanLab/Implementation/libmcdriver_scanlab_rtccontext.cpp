@@ -617,6 +617,16 @@ void CRTCContext::loadFirmwareEx(PScanLabSDK pSDK, uint32_t nCardNo, const LibMC
 	if (pDriverEnvironment.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 
+	// RTC6 Software Package >= 1.23.0 (DLL 653) replaces RTC6RBF.rbf by RTC6RBF_CEBA[2|4].rbf and
+	// supports path "::", which extracts version-matched program files directly from the RTC6 DLL.
+	if (pSDK->get_dll_version() >= 653) {
+		uint32_t nErrorCode = pSDK->n_load_program_file(nCardNo, "::");
+		if (nErrorCode != 0)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_COULDNOTLOADPROGRAMFILE, "could not load program file: #" + std::to_string(nErrorCode));
+
+		return;
+	}
+
 	auto pWorkingDirectory = pDriverEnvironment->CreateWorkingDirectory();
 
 	std::string sFirmwareName;

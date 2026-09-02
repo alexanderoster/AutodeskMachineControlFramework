@@ -215,6 +215,8 @@ void CSMCConfiguration::SetFirmware(const LibMCDriver_ScanLabSMC_uint64 nFirmwar
 {
     m_FirmwareData.resize (0);
     m_FPGAData.resize (0);
+    m_FPGADataCEBA2.resize (0);
+    m_FPGADataCEBA4.resize (0);
     m_AuxiliaryData.resize (0);
 
     if (nFirmwareDataBufferSize > 0) {
@@ -254,6 +256,8 @@ void CSMCConfiguration::SetFirmwareResources(const std::string& sFirmwareDataRes
 {
     m_FirmwareData.resize(0);
     m_FPGAData.resize(0);
+    m_FPGADataCEBA2.resize(0);
+    m_FPGADataCEBA4.resize(0);
     m_AuxiliaryData.resize(0);
 
     if (sFirmwareDataResource.empty())
@@ -285,6 +289,24 @@ void CSMCConfiguration::SetFirmwareResources(const std::string& sFirmwareDataRes
     }
     else {
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_RTCFPGARESOURCENOTFOUND, "RTC FPGA resource not found: " + sFPGADataResource);
+    }
+
+    // RTC6 Software Package >= 1.23.0 replaces RTC6RBF.rbf by RTC6RBF_CEBA[2|4].rbf; the CEBA
+    // resources are optional and only present when the machine ships a matching RTC6 DLL.
+    std::string sFPGADataResourceCEBA2 = sFPGADataResource + "_ceba2";
+    if (m_pDriverEnvironment->MachineHasResourceData(sFPGADataResourceCEBA2)) {
+        m_pDriverEnvironment->RetrieveMachineResourceData(sFPGADataResourceCEBA2, m_FPGADataCEBA2);
+    }
+    else if (m_pDriverEnvironment->DriverHasResourceData(sFPGADataResourceCEBA2)) {
+        m_pDriverEnvironment->RetrieveDriverResourceData(sFPGADataResourceCEBA2, m_FPGADataCEBA2);
+    }
+
+    std::string sFPGADataResourceCEBA4 = sFPGADataResource + "_ceba4";
+    if (m_pDriverEnvironment->MachineHasResourceData(sFPGADataResourceCEBA4)) {
+        m_pDriverEnvironment->RetrieveMachineResourceData(sFPGADataResourceCEBA4, m_FPGADataCEBA4);
+    }
+    else if (m_pDriverEnvironment->DriverHasResourceData(sFPGADataResourceCEBA4)) {
+        m_pDriverEnvironment->RetrieveDriverResourceData(sFPGADataResourceCEBA4, m_FPGADataCEBA4);
     }
 
     if (sAuxiliaryDataResource.empty())
@@ -323,6 +345,10 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     }
 
     pWorkingDirectory->StoreCustomData("RTC6RBF.rbf", m_FPGAData);
+    if (!m_FPGADataCEBA2.empty())
+        pWorkingDirectory->StoreCustomData("RTC6RBF_CEBA2.rbf", m_FPGADataCEBA2);
+    if (!m_FPGADataCEBA4.empty())
+        pWorkingDirectory->StoreCustomData("RTC6RBF_CEBA4.rbf", m_FPGADataCEBA4);
     if (sRTCIPAddress.empty()) {
         pWorkingDirectory->StoreCustomData("RTC6OUT.out", m_FirmwareData);
     }
