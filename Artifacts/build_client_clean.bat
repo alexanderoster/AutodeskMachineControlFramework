@@ -57,14 +57,15 @@ set TOOLBUILDDIR=..\..\build_client_dist
 if not exist "%TOOLBUILDDIR%\CMakeCache.txt" (
 	echo Configuring client build tools...
 	if not exist "%TOOLBUILDDIR%" (mkdir "%TOOLBUILDDIR%")
-	cmake -S ..\..\BuildScripts\ClientDist -B "%TOOLBUILDDIR%"
-	if %ERRORLEVEL% NEQ 0 goto :error
+	cmake -S ..\..\BuildScripts\ClientDist -B "%TOOLBUILDDIR%" -G "Visual Studio 17 2022" -A x64
+	if errorlevel 1 goto :error
 )
 echo Building client build tools...
 cmake --build "%TOOLBUILDDIR%" --config Release
 if %ERRORLEVEL% NEQ 0 goto :error
 
 call npm install
+if errorlevel 1 goto :error
 
 REM Work around node-ipc crashing when os.networkInterfaces fails in sandboxed environments.
 if exist "node_modules\\@achrinza\\node-ipc\\entities\\Defaults.js" (
@@ -72,6 +73,7 @@ if exist "node_modules\\@achrinza\\node-ipc\\entities\\Defaults.js" (
 )
 
 call npm run build
+if errorlevel 1 goto :error
 
 cd ..\..\
 
