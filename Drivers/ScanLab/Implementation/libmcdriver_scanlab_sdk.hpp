@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <map>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <fstream>
 #include <mutex>
@@ -55,6 +56,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RTC6_BITFLAG_SCANHEADSTATUS_POWERFLAG (1UL << 7)
 #define RTC6_BITFLAG_SETTRIGGER_ROUNDTRIP (1UL << 31)
 
+
+// Returned by CScanLabSDK::n_eth_set_high_performance_mode if the loaded RTC6 DLL is older than
+// DLL633 and does not export the call. Distinct from the RTC6 error codes 0..4.
+#define SCANLAB_HIGHPERFORMANCEMODE_NOTAVAILABLE 0xFFFFFFFFUL
 
 namespace LibMCDriver_ScanLab {
 	namespace Impl {
@@ -218,7 +223,10 @@ namespace LibMCDriver_ScanLab {
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_set_mcbsp_out_oie_ctrl) (uint32_t nCardNo, uint32_t nSignalID1, uint32_t nSignalID2);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_eth_config_waveform_streaming_ctrl) (uint32_t nCardNo, uint32_t nSize, uint32_t nFlags);
 			
-		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_eth_set_high_performance_mode) (uint32_t nCardNo, uint32_t nMode);
+		// Returns an error code, not void: 0 == OK, 1 == mode not allowed, 2 == BIOS-ETH < 35,
+		// 3 == no access rights to the board (i.e. called before acquire_rtc), 4 == not an
+		// Ethernet board. See RTC6 manual, eth_set_high_performance_mode.
+		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_eth_set_high_performance_mode) (uint32_t nCardNo, uint32_t nMode);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_list_repeat) (uint32_t nCardNo);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_list_until) (uint32_t nCardNo, uint32_t nNumberOfRepetitions);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_list_jump_rel_cond) (uint32_t nCardNo, uint32_t nMask1, uint32_t nMask0, int32_t nRelativeJumpPosition);
@@ -227,6 +235,10 @@ namespace LibMCDriver_ScanLab {
 		class CScanLabSDKJournal {
 		private:
 			std::map<std::string, uint32_t> m_DefinedVariables;
+			// Explicit stream buffer, installed before the file is opened. The journal records every
+			// single SDK call, so on list-heavy paths (millions of microvectors) a per-line flush
+			// dominates the runtime. See writeCLine().
+			std::vector<char> m_StreamBuffer;
 			std::ofstream m_CStream;
 			std::mutex m_Mutex;
 
@@ -581,7 +593,9 @@ namespace LibMCDriver_ScanLab {
 			uint32_t n_rs232_read_data(uint32_t nCardNo);
 			void n_set_mcbsp_out_oie_ctrl (uint32_t nCardNo, uint32_t nSignalID1, uint32_t nSignalID2);
 			void n_eth_config_waveform_streaming_ctrl(uint32_t nCardNo, uint32_t nSize, uint32_t nFlags);
-			void n_eth_set_high_performance_mode(uint32_t nCardNo, uint32_t nMode);
+			// Returns the RTC6 error code (0 == success), or SCANLAB_HIGHPERFORMANCEMODE_NOTAVAILABLE
+			// if the loaded RTC6 DLL does not export the call at all.
+			uint32_t n_eth_set_high_performance_mode(uint32_t nCardNo, uint32_t nMode);
 			void n_list_repeat (uint32_t nCardNo);
 			void n_list_until (uint32_t nCardNo, uint32_t nNumberOfRepetitions);
 			void n_list_jump_rel_cond (uint32_t nCardNo, uint32_t nMask1, uint32_t nMask0, int32_t nRelativeJumpPosition);

@@ -1415,6 +1415,17 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_addmicrovectormovement(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer);
 
 /**
+* Enables or disables the streamed microvector download with overlapped marking. If enabled, AddMicrovectorMovement of a layer of at least MinLayerSize microvectors starts list execution after a prebuffer and appends the remaining microvectors while the laser is already marking. Default is disabled.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] bEnabled - True to enable the streamed microvector download.
+* @param[in] nMinLayerSize - Minimum layer size in microvectors for streaming to be used; smaller layers are downloaded sequentially. 0 uses the built-in default of 300000. Values below the prebuffer minimum of 150000 are clamped to it.
+* @param[in] dPrebufferFraction - Fraction of the layer (0..1) that is downloaded before execution starts. 0 uses the built-in default of 0.4. Values below 0.25 risk margin aborts on download slowdowns and are only meant for testing the overrun detector.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled(LibMCDriver_ScanLab_RTCContext pRTCContext, bool bEnabled, LibMCDriver_ScanLab_uint32 nMinLayerSize, LibMCDriver_ScanLab_double dPrebufferFraction);
+
+/**
 * Returns the currently set free variable.
 *
 * @param[in] pRTCContext - RTCContext instance.

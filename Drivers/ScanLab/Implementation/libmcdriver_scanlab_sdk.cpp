@@ -47,6 +47,9 @@ using namespace LibMCDriver_ScanLab::Impl;
 
 #define SCANLAB_MAXDLLNAMELENGTH 1024 * 1024
 
+// Size of the explicit stream buffer of the SDK call journal, in bytes.
+#define SCANLAB_JOURNALSTREAMBUFFERSIZE (1024 * 1024)
+
 #ifdef _WIN32
 void* _loadScanLabAddress (HMODULE hLibrary, const char * pSymbolName, bool bMandatory = true) {
 	void * pFuncPtr = (void*) GetProcAddress(hLibrary, pSymbolName);
@@ -72,8 +75,11 @@ void* _loadScanLabAddress(void * hLibrary, const char* pSymbolName, bool bMandat
 #endif
 
 
-CScanLabSDKJournal::CScanLabSDKJournal(const std::string& sDebugFileName)	
+CScanLabSDKJournal::CScanLabSDKJournal(const std::string& sDebugFileName)
 {
+	// pubsetbuf on a basic_filebuf is only guaranteed to take effect before the file is opened.
+	m_StreamBuffer.resize(SCANLAB_JOURNALSTREAMBUFFERSIZE);
+	m_CStream.rdbuf()->pubsetbuf(m_StreamBuffer.data(), (std::streamsize) m_StreamBuffer.size());
 
 	m_CStream.open(sDebugFileName, std::ios::out);
 	if (!m_CStream.is_open())
@@ -82,12 +88,17 @@ CScanLabSDKJournal::CScanLabSDKJournal(const std::string& sDebugFileName)
 
 CScanLabSDKJournal::~CScanLabSDKJournal()
 {
+	m_CStream.flush();
 }
 
 void CScanLabSDKJournal::writeCLine(const std::string& sLine)
 {
 	std::lock_guard<std::mutex> lockGuard(m_Mutex);
-	m_CStream << sLine << std::endl;
+	// Deliberately '\n' instead of std::endl: std::endl flushes to the OS on every line, and the
+	// journal records every SDK call. On list-heavy paths (millions of microvectors) that is
+	// millions of write syscalls and dominates the list download time. The stream is explicitly
+	// buffered in the constructor and flushed in the destructor instead.
+	m_CStream << sLine << '\n';
 
 }
 
@@ -1726,13 +1737,18 @@ void CScanLabSDK::n_eth_config_waveform_streaming_ctrl(uint32_t nCardNo, uint32_
 
 }
 
-void CScanLabSDK::n_eth_set_high_performance_mode(uint32_t nCardNo, uint32_t nMode)
+uint32_t CScanLabSDK::n_eth_set_high_performance_mode(uint32_t nCardNo, uint32_t nMode)
 {
 	if (m_pLogJournal.get() != nullptr)
 		m_pLogJournal->logCall("n_eth_set_high_performance_mode", std::to_string(nCardNo) + ", " + std::to_string(nMode));
 
-	if (ptr_n_eth_set_high_performance_mode != nullptr)
-		ptr_n_eth_set_high_performance_mode(nCardNo, nMode);
+	if (ptr_n_eth_set_high_performance_mode == nullptr)
+		return SCANLAB_HIGHPERFORMANCEMODE_NOTAVAILABLE;
+
+	// The return code MUST be evaluated by the caller. High Performance Mode silently staying off
+	// costs a full network round trip per list command, and the most likely rejection - error 3,
+	// no access rights - happens whenever this is called before acquire_rtc.
+	return ptr_n_eth_set_high_performance_mode(nCardNo, nMode);
 
 }
 

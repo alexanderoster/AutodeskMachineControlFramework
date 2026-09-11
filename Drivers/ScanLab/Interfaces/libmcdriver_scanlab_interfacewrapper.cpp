@@ -3632,6 +3632,30 @@ LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_addmicrovectormovement(
 	}
 }
 
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled(LibMCDriver_ScanLab_RTCContext pRTCContext, bool bEnabled, LibMCDriver_ScanLab_uint32 nMinLayerSize, LibMCDriver_ScanLab_double dPrebufferFraction)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCContext->SetMicrovectorStreamingEnabled(bEnabled, nMinLayerSize, dPrebufferFraction);
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getcurrentfreevariable(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nVariableNo, LibMCDriver_ScanLab_uint32 * pValue)
 {
 	IBase* pIBaseClass = (IBase *)pRTCContext;
@@ -8405,6 +8429,8 @@ LibMCDriver_ScanLabResult LibMCDriver_ScanLab::Impl::LibMCDriver_ScanLab_GetProc
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_addfreevariable;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_addmicrovectormovement") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_addmicrovectormovement;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_getcurrentfreevariable") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_getcurrentfreevariable;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_gettimestamp") 

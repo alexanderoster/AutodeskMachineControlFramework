@@ -340,8 +340,8 @@
 	<struct name="MicroVector">
 		<member name="X" type="double" description="The X Position in mm." />
 		<member name="Y" type="double" description="The Y Position in mm."  />
-		<member name="LaserOnDelay" type="double" description="The Delay to switch the laser on in Microseconds. A negative value will not change the active delay." />
-		<member name="LaserOffDelay" type="double" description="The Delay to switch the laser off in Microseconds. A negative value will not change the active delay."  />
+		<member name="LaserOnDelay" type="double" description="The Delay to switch the laser on in Seconds. A negative value will not change the active delay. Note that this differs from SetLaserDelaysInMicroseconds, which takes Microseconds." />
+		<member name="LaserOffDelay" type="double" description="The Delay to switch the laser off in Seconds. A negative value will not change the active delay. Note that this differs from SetLaserDelaysInMicroseconds, which takes Microseconds."  />
 		<member name="LaserPowerInPercent" type="double" pass="in" description="The nominal laser power to be used in percent."/>
 	</struct>
 
@@ -1047,8 +1047,14 @@ Custom implementation
 		<method name="AddMicrovectorMovement" description="Adds a movement with microvectors. See micro_vector_abs in SCANLABs RTC documentation.">
 			<param name="MicrovectorArray" type="structarray" class="MicroVector" pass="in" description="Microvector array to execute." />
 		</method>
-				
-		
+
+		<method name="SetMicrovectorStreamingEnabled" description="Enables or disables the streamed microvector download with overlapped marking. If enabled, AddMicrovectorMovement of a layer of at least MinLayerSize microvectors starts list execution after a prebuffer and appends the remaining microvectors while the laser is already marking. Default is disabled.">
+			<param name="Enabled" type="bool" pass="in" description="True to enable the streamed microvector download." />
+			<param name="MinLayerSize" type="uint32" pass="in" description="Minimum layer size in microvectors for streaming to be used; smaller layers are downloaded sequentially. 0 uses the built-in default of 300000. Values below the prebuffer minimum of 150000 are clamped to it." />
+			<param name="PrebufferFraction" type="double" pass="in" description="Fraction of the layer (0..1) that is downloaded before execution starts. 0 uses the built-in default of 0.4. Values below 0.25 risk margin aborts on download slowdowns and are only meant for testing the overrun detector." />
+		</method>
+
+
 		<method name="GetCurrentFreeVariable" description="Returns the currently set free variable.">
 			<param name="VariableNo" type="uint32" pass="in" description="Number of the variable (0-7)." />
 			<param name="Value" type="uint32" pass="return" description="Value to return." />

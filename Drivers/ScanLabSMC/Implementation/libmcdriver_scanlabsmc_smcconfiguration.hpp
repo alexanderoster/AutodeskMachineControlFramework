@@ -71,6 +71,8 @@ private:
     std::vector<uint8_t> m_FirmwareData;
 
     std::vector<uint8_t> m_FPGAData;
+    std::vector<uint8_t> m_FPGADataCEBA2;
+    std::vector<uint8_t> m_FPGADataCEBA4;
     std::vector<uint8_t> m_AuxiliaryData;
     std::string m_sIPAddress;
     std::string m_sConfigurationTemplateXML;
