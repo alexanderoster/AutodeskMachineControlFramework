@@ -64,6 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_scanlab_jumpfilter.hpp"
 #include "amc_unittests_scanlab_powerramp.hpp"
 #include "amc_unittests_parquetwriter.hpp"
+#include "amc_unittests_uifrontend.hpp"
 
 // LibMCData unit tests
 #include "amc_unittests_libmcdata_storage.hpp"
@@ -122,6 +123,7 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_ScanLab_JumpFilter>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_ScanLab_PowerRamp>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_ParquetWriter>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_UIFrontend>());
 
 	// LibMCData unit tests
 	registerTestGroup(std::make_shared <CUnitTestGroup_LibMCData_Storage>());

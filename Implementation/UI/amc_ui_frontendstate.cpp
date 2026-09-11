@@ -301,9 +301,22 @@ void CUIFrontendState::validateSessionReference(const std::string& sReference, C
 
 void CUIFrontendState::writeModuleAttributesToJSON(CJSONWriter& writer, CJSONWriterObject & attributesObject, CUIFrontendDefinitionModuleStore * pModuleStore, CStateMachineData* pStateMachineData, const sUIFrontendBuildEpoch& epoch)
 {
+	LibMCAssertNotNull(pModuleStore);
+
+	// UI event handlers change element properties of a session with UIEnvironment::SetUIProperty,
+	// which writes to the legacy client variables. Report these values instead of the definition
+	// values. Attributes bound to state machine data always win, like in the legacy syncClientVariables.
+	auto pClientVariableGroup = m_pLegacyParameterHandler->findGroup(pModuleStore->getPath(), false);
+
 	auto attributes = pModuleStore->getAttributes();
 	for (auto& pAttribute : attributes) {
-		pAttribute->writeToFrontendJSONForEpoch(writer, attributesObject, pStateMachineData, this, epoch);
+		std::string sAttributeName = pAttribute->getName();
+
+		// A client value is specific to this session, so it bypasses the per-epoch cache of global attributes.
+		if ((pClientVariableGroup.get() != nullptr) && (!pAttribute->isSynchronized()) && pClientVariableGroup->hasParameter(sAttributeName))
+			pAttribute->writeClientValueToFrontendJSON(writer, attributesObject, pClientVariableGroup->getParameterValueByName(sAttributeName));
+		else
+			pAttribute->writeToFrontendJSONForEpoch(writer, attributesObject, pStateMachineData, this, epoch);
 	}
 
 }
