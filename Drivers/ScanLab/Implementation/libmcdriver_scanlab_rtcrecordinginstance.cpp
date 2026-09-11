@@ -650,8 +650,6 @@ void CRTCRecordingInstance::disableRecording()
 
 }
 
-#include <iostream>
-
 void CRTCRecordingInstance::readRecordedDataBlockFromRTC(uint32_t DataStart, uint32_t DataEnd)
 {
 
@@ -662,8 +660,6 @@ void CRTCRecordingInstance::readRecordedDataBlockFromRTC(uint32_t DataStart, uin
 
 	uint32_t Error = 0;
 	uint32_t nDataLength = DataEnd - DataStart;
-
-	//std::cout << "Saving RTC Data Block FROM " << DataStart << " TO " << DataEnd << std::endl;
 
 	if (nDataLength > 0) {
 		
@@ -728,8 +724,6 @@ void CRTCRecordingInstance::executeListWithRecording()
 
 		m_pSDK->n_get_status(m_CardNo, &Busy, &Position);
 		m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
-		//std::cout << "RTC Status busy: " << Busy << " Position: " << Position << " Measure Busy: " << MesBusy << " Measure Position: " << MesPosition << std::endl;
-
 		if (MesPosition > LastPosition + Increment)
 		{
 			readRecordedDataBlockFromRTC(LastPosition, LastPosition + Increment);
@@ -737,8 +731,6 @@ void CRTCRecordingInstance::executeListWithRecording()
 		}
 		else if (MesPosition < LastPosition)
 		{
-			//std::cout << "Roundtrip reached: MesPosition: " << MesPosition << " / LastPosition: " << LastPosition << std::endl;
-
 			if (MesPosition > nMaxMESPosition)
 				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGOVERFLOW, "data recording interval overflow: MesPosition exceeds Max MES Position");
 

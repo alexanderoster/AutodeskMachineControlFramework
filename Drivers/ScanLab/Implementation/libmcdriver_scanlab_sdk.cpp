@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <vector>
-#include <iostream>
 #include <string>
 
 using namespace LibMCDriver_ScanLab::Impl;

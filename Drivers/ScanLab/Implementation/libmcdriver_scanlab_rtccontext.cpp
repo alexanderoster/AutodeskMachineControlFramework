@@ -195,13 +195,6 @@ bool CRTCPowerMapping::mapLaserPowerFromWattsToPercent(double dLaserPowerInWatts
 
 	}
 
-	/*std::cout << "Calculating nonlinear mapping for " << dLaserPowerInWatts << "watts" << std::endl;
-	std::cout << "Mapping table: " << m_wattsToPercent.size() << " entries" << std::endl;
-
-	for (auto iIter : m_wattsToPercent) {
-		std::cout << "  " << iIter.x << " W -> " << iIter.y << " %" << std::endl;
-	}*/
-
 	return interpolate(m_wattsToPercent, dLaserPowerInWatts, dPercent);
 }
 
@@ -1133,8 +1126,6 @@ void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bo
 			uint32_t nHalfPeriodInBits = (uint32_t)round(m_dLaserPulseHalfPeriodInMS * 64.0);
 			uint32_t nFullPeriodInBits = nHalfPeriodInBits * 2;
 			uint32_t nPulseLength = (uint32_t)round((double)nFullPeriodInBits * dClippedPowerFactor);
-
-			//std::cout << "laser pulse modulation: half period " << nHalfPeriodInBits << " bits, pulse length " << nPulseLength << " bits, factor " << dClippedPowerFactor << std::endl;
 
 			if ((nHalfPeriodInBits == m_nCachedLaserPulseHalfPeriodInBits) && (nPulseLength == m_nCachedLaserPulseLengthInBits))
 				return;
@@ -2068,8 +2059,6 @@ void CRTCContext::GetStatus(bool & bBusy, LibMCDriver_ScanLab_uint32 & nPosition
 	uint32_t Pos = 0;
 	m_pScanLabSDK->n_get_status(m_CardNo, &Status, &Pos);
 
-	//std::cout << "Free Variable: " << m_pScanLabSDK->n_get_value (m_CardNo, 40) << std::endl;
-
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 
 	bBusy = ((Status & ((1UL << 0) | (1UL << 7) | (1UL << 15))) != 0);
@@ -2663,7 +2652,6 @@ void CRTCContext::EnableSkyWritingMode2(const LibMCDriver_ScanLab_double dTimela
 void CRTCContext::EnableSkyWritingMode3(const LibMCDriver_ScanLab_double dTimelag, const LibMCDriver_ScanLab_int64 nLaserOnShift, const LibMCDriver_ScanLab_int64 nNPrev, const LibMCDriver_ScanLab_int64 nNPost, const LibMCDriver_ScanLab_double dLimit)
 {
 
-	//std::cout << "Enabling Skywriting mode 3: timelag " << dTimelag << " laseronshift " << nLaserOnShift << " nprev " << nNPrev << " npost " << nNPost << " limit " << dLimit << std::endl;
 	if (dTimelag < 0.0)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDSKYWRITINGTIMELAG);
 	if ((nLaserOnShift < (int64_t)INT32_MIN) || (nLaserOnShift > (int64_t)INT32_MAX))
@@ -2681,7 +2669,6 @@ void CRTCContext::EnableSkyWritingMode3(const LibMCDriver_ScanLab_double dTimela
 void CRTCContext::EnableSkyWritingMode4(const LibMCDriver_ScanLab_double dTimelag, const LibMCDriver_ScanLab_int64 nLaserOnShift, const LibMCDriver_ScanLab_int64 nNPrev, const LibMCDriver_ScanLab_int64 nNPost, const LibMCDriver_ScanLab_double dLimit)
 {
 
-	//std::cout << "Enabling Skywriting mode 4: timelag " << dTimelag << " laseronshift " << nLaserOnShift << " nprev " << nNPrev << " npost " << nNPost << " limit " << dLimit << std::endl;
 	if (dTimelag < 0.0)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDSKYWRITINGTIMELAG);
 	if ((nLaserOnShift < (int64_t)INT32_MIN) || (nLaserOnShift > (int64_t)INT32_MAX))
@@ -2896,7 +2883,7 @@ uint32_t CRTCContext::saveRecordedDataBlock(std::ofstream& MyFile, uint32_t Data
 	uint32_t Error = 0;
 	uint32_t nDataLength = DataEnd - DataStart;
 
-	std::cout << "Saving RTC Data Block FROM " << DataStart << " TO " << DataEnd << std::endl;
+	m_pDriverEnvironment->LogMessage("Saving RTC data block from " + std::to_string(DataStart) + " to " + std::to_string(DataEnd));
 
 	if (nDataLength > 0) {
 
@@ -2940,8 +2927,6 @@ std::string return_current_time_and_date()
 
 void CRTCContext::ExecuteListWithRecording(const LibMCDriver_ScanLab_uint32 nListIndex, const LibMCDriver_ScanLab_uint32 nPosition)
 {
-	//std::cout << "Executing list position" << std::endl;
-
 	m_pScanLabSDK->n_execute_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 
@@ -2953,7 +2938,7 @@ void CRTCContext::ExecuteListWithRecording(const LibMCDriver_ScanLab_uint32 nLis
 	uint32_t Increment = 100000;
 
 	std::string sFileName = "c:/temp/recording_out_" + return_current_time_and_date() + ".csv";
-	std::cout << "Creating recording file" << std::endl;
+	m_pDriverEnvironment->LogMessage("Creating RTC recording file: " + sFileName);
 
 	std::ofstream MyFile;
 	MyFile.open(sFileName, std::ios::out);
@@ -2962,7 +2947,7 @@ void CRTCContext::ExecuteListWithRecording(const LibMCDriver_ScanLab_uint32 nLis
 
 	double CalibrationFactorXY = m_dCorrectionFactor;
 
-	std::cout << "Wait for measurement to start" << std::endl;
+	m_pDriverEnvironment->LogMessage("Waiting for RTC measurement to start");
 	do // Wait for measurement to start
 	{
 		m_pScanLabSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
@@ -2974,7 +2959,10 @@ void CRTCContext::ExecuteListWithRecording(const LibMCDriver_ScanLab_uint32 nLis
 
 		m_pScanLabSDK->n_get_status(m_CardNo, &Busy, &Position);
 		m_pScanLabSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
-		std::cout << "RTC Status busy: " << Busy << " Position: " << Position << " Measure Busy: " << MesBusy << " Measure Position: " << MesPosition << std::endl;
+		m_pDriverEnvironment->LogMessage("RTC status: busy=" + std::to_string(Busy)
+			+ ", position=" + std::to_string(Position)
+			+ ", measurement busy=" + std::to_string(MesBusy)
+			+ ", measurement position=" + std::to_string(MesPosition));
 
 		if (MesPosition > LastPosition + Increment)
 		{
@@ -3043,7 +3031,6 @@ void CRTCContext::GetLaserOrigin(LibMCDriver_ScanLab_double& dOriginX, LibMCDriv
 
 void CRTCContext::SetLaserField(const LibMCDriver_ScanLab_double dMinX, const LibMCDriver_ScanLab_double dMinY, const LibMCDriver_ScanLab_double dMaxX, const LibMCDriver_ScanLab_double dMaxY)
 {	
-	//std::cout << "Setting laser field: " << dMinX << "/" << dMinY << " - " << dMaxX << "/" << dMaxY << std::endl;
 	if ((dMinX >= dMaxX) || (dMinY >= dMaxY))
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERFIELDCOORDINATES);
 
@@ -3106,13 +3093,6 @@ void CRTCContext::updateLaserField(double dMinXInMM, double dMaxXInMM, double dM
 	int64_t nMinY = (int64_t)(round(dMinYInMM * m_dCorrectionFactor));
 	int64_t nMaxY = (int64_t)(round(dMaxYInMM * m_dCorrectionFactor));
 
-	/*std::cout << "updating laser field" << std::endl;
-	std::cout << " minx: " << nMinX << std::endl;
-	std::cout << " maxx: " << nMaxX << std::endl;
-	std::cout << " miny: " << nMinY << std::endl;
-	std::cout << " maxy: " << nMaxY << std::endl;*/
-
-
 	if (nMinX < SCANLAB_LASERFIELD_MINIMUMUNITS)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDLASERFIELDCOORDINATES);
 	if (nMinY < SCANLAB_LASERFIELD_MINIMUMUNITS)
@@ -3160,8 +3140,6 @@ void CRTCContext::EnableMarkOnTheFly2D(const LibMCDriver_ScanLab_double dScaleXI
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDENCODERSCALINGINX);
 	if ((dAbsScaleY < (1.0 / 256.0)) || (dAbsScaleY > 16000.0))
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDENCODERSCALINGINY);
-
-	//std::cout << "n_set_fly_2d: card no:" << m_CardNo << " " << dScaleXInBitsPerEncoderStep << " / " << dScaleYInBitsPerEncoderStep << std::endl;
 
 	// Reset Laser position to be sure we are in scope.
 	m_pScanLabSDK->n_set_fly_2d(m_CardNo, 0.0, 0.0);
@@ -3422,10 +3400,6 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 		nCustomPostDelaySegmentAttributeID = (int32_t)pLayer->FindCustomSegmentAttributeID("http://schemas.scanlab.com/delay/2023/01", "postdelay");
 	}
 
-	//std::cout << "Custom predelay segment attribute " << nCustomPreDelaySegmentAttributeID << std::endl;
-	//std::cout << "Custom postdelay segment attribute " << nCustomPostDelaySegmentAttributeID << std::endl;
-
-
 	uint32_t nSegmentCount = pLayer->GetSegmentCount();
 	for (uint32_t nSegmentIndex = 0; nSegmentIndex < nSegmentCount; nSegmentIndex++) {
 
@@ -3626,8 +3600,6 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 						if (nScanlabPostSegmentDelayInMicroseconds >= 0)
 							nPostSegmentDelayInTicks = (uint32_t)(nScanlabPostSegmentDelayInMicroseconds / 10);
 					}
-
-					//std::cout << "Post Segment Delay: " << nPostSegmentDelayInTicks << std::endl;
 
 					if (nPostSegmentDelayInTicks > 0) {
 						if (nPostSegmentDelayInTicks > RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ)
