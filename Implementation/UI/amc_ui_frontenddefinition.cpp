@@ -71,34 +71,52 @@ CUIFrontendDefinitionExpressionAttribute::~CUIFrontendDefinitionExpressionAttrib
 
 void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData)
 {
+	writeExpressionToFrontendJSON(attributesObject, m_ValueExpression, pStateMachineData);
+}
+
+bool CUIFrontendDefinitionExpressionAttribute::isSynchronized()
+{
+	return m_ValueExpression.needsSync();
+}
+
+void CUIFrontendDefinitionExpressionAttribute::writeClientValueToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, const std::string& sClientValue)
+{
+	// Client values are converted with the same rules as fixed values of the definition.
+	CUIExpression clientValueExpression;
+	clientValueExpression.setFixedValue(sClientValue);
+	writeExpressionToFrontendJSON(attributesObject, clientValueExpression, nullptr);
+}
+
+void CUIFrontendDefinitionExpressionAttribute::writeExpressionToFrontendJSON(CJSONWriterObject& attributesObject, CUIExpression& valueExpression, CStateMachineData* pStateMachineData)
+{
 
 	switch (getAttributeType()) {
 		case eUIFrontendDefinitionAttributeType::atBoolean: {
-			bool bValue = m_ValueExpression.evaluateBoolValue (pStateMachineData);
+			bool bValue = valueExpression.evaluateBoolValue (pStateMachineData);
 			attributesObject.addBool(getName(), bValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atString: {
-			std::string sValue = m_ValueExpression.evaluateStringValue(pStateMachineData);
+			std::string sValue = valueExpression.evaluateStringValue(pStateMachineData);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atNumber: {
-			double dValue = m_ValueExpression.evaluateNumberValue(pStateMachineData);
+			double dValue = valueExpression.evaluateNumberValue(pStateMachineData);
 			attributesObject.addDouble(getName(), dValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atInteger: {
-			int64_t nValue = m_ValueExpression.evaluateIntegerValue(pStateMachineData);
+			int64_t nValue = valueExpression.evaluateIntegerValue(pStateMachineData);
 			attributesObject.addInteger(getName(), nValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atUUID: {
-			std::string sValue = m_ValueExpression.evaluateUUIDValue(pStateMachineData);
+			std::string sValue = valueExpression.evaluateUUIDValue(pStateMachineData);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}
@@ -170,6 +188,11 @@ std::string CUIFrontendDefinitionModuleStore::getModuleType()
 std::string CUIFrontendDefinitionModuleStore::getUUID()
 {
 	return m_sUUID;
+}
+
+std::string CUIFrontendDefinitionModuleStore::getPath()
+{
+	return m_sPath;
 }
 
 

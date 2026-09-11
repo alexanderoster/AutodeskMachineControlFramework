@@ -196,6 +196,8 @@ void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObje
 
 	pageObject.addString("name", m_sName);
 	pageObject.addString("uuid", AMCCommon::CUtils::normalizeUUIDString(m_sUUID));
+	if (!m_sShowEvent.empty())
+		pageObject.addString(AMC_API_KEY_UI_PAGESHOWEVENT, m_sShowEvent);
 
 	if (!m_Caption.isEmpty (pStateMachineData))
 		pageObject.addString("caption", m_Caption.evaluateStringValue (pStateMachineData));
