@@ -61,8 +61,8 @@ using namespace LibMCDriver_ScanLab::Impl;
 
 #define RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ 3600UL * 100000UL
 
-// Sentinel for m_nCachedLaserPowerDACValue meaning "nothing cached, always re-issue".
-#define RTCCONTEXT_INVALIDLASERPOWERCACHE -1
+// Sentinel for m_nMicrovectorPowerCacheDACValue meaning "nothing cached, always re-issue".
+#define RTCCONTEXT_INVALIDMICROVECTORPOWERCACHE -1
 
 // Spare list positions kept free when checking whether a microvector block fits into the open list.
 #define RTCCONTEXT_LISTCAPACITY_SAFETYMARGIN 64
@@ -555,10 +555,10 @@ CRTCContext::CRTCContext(PRTCContextOwnerData pOwnerData, uint32_t nCardNo, bool
     m_dLaserPulseLengthInMS(RTC_TIMINGDEFAULT_LASERPULSELENGTH),
     m_dStandbyPulseHalfPeriodInMS(RTC_TIMINGDEFAULT_STANDBYPULSEHALFPERIOD),
     m_dStandbyPulseLengthInMS(RTC_TIMINGDEFAULT_STANDBYPULSELENGTH),
-	m_nCachedLaserPowerDACValue (RTCCONTEXT_INVALIDLASERPOWERCACHE),
-	m_nCachedLaserPulseHalfPeriodInBits (0xffffffffUL),
-	m_nCachedLaserPulseLengthInBits (0xffffffffUL),
-	m_nLaserPowerCommandsWritten (0),
+	m_nMicrovectorPowerCacheDACValue (RTCCONTEXT_INVALIDMICROVECTORPOWERCACHE),
+	m_nMicrovectorPowerCachePulseHalfPeriodInBits (0xffffffffUL),
+	m_nMicrovectorPowerCachePulseLengthInBits (0xffffffffUL),
+	m_nMicrovectorPowerCommandsWritten (0),
 	m_nConfiguredListSizeA (0),
 	m_nConfiguredListSizeB (0),
 	m_nCurrentStartListIndex (1),
@@ -762,9 +762,6 @@ void CRTCContext::ConfigureLists(const LibMCDriver_ScanLab_uint32 nSizeListA, co
 
 	m_nConfiguredListSizeA = nSizeListA;
 	m_nConfiguredListSizeB = nSizeListB;
-
-	// List memory has been re-partitioned, everything written so far is gone.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetLaserMode(const LibMCDriver_ScanLab::eLaserMode eLaserMode, const LibMCDriver_ScanLab::eLaserPort eLaserPort)
@@ -777,18 +774,12 @@ void CRTCContext::SetLaserMode(const LibMCDriver_ScanLab::eLaserMode eLaserMode,
 	m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
 
 	m_LaserPort = eLaserPort;
-
-	// The cached power value is per-port, so a port change makes it meaningless.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::DisableAutoLaserControl()
 {
 	m_pScanLabSDK->n_set_auto_laser_control(m_CardNo, 0, 0, 0, 0, 0);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	// Changes how the written power value is interpreted.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetLaserControlParameters(const bool DisableLaser, const bool bFinishLaserPulseAfterOn, const bool bPhaseShiftOfLaserSignal, const bool bLaserOnSignalLowActive, const bool bLaserHalfSignalsLowActive, const bool bSetDigitalInOneHighActive, const bool bOutputSynchronizationActive)
@@ -811,9 +802,6 @@ void CRTCContext::SetLaserControlParameters(const bool DisableLaser, const bool 
 
 	m_pScanLabSDK->n_set_laser_control(m_CardNo, bitmode);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	// Changes how the written power value is interpreted.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetLaserPulsesInBits(const LibMCDriver_ScanLab_uint32 nHalfPeriod, const LibMCDriver_ScanLab_uint32 nPulseLength)
@@ -823,9 +811,6 @@ void CRTCContext::SetLaserPulsesInBits(const LibMCDriver_ScanLab_uint32 nHalfPer
 
 	m_dLaserPulseHalfPeriodInMS = nHalfPeriod / 64.0;
 	m_dLaserPulseLengthInMS = nPulseLength / 64.0;
-
-	// m_dLaserPulseHalfPeriodInMS feeds the LaserPulseModulation branch of writePower.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetLaserPulsesInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength)
@@ -853,9 +838,6 @@ void CRTCContext::SetStandbyInBits(const LibMCDriver_ScanLab_uint32 nHalfPeriod,
 
 	m_dStandbyPulseHalfPeriodInMS = nHalfPeriod / 64.0;
 	m_dStandbyPulseLengthInMS = nPulseLength / 64.0;
-
-	// Shares the laser pulse generator with the LaserPulseModulation power path.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetStandbyInMicroSeconds(const LibMCDriver_ScanLab_double dHalfPeriod, const LibMCDriver_ScanLab_double dPulseLength)
@@ -933,45 +915,32 @@ void CRTCContext::SetStartList(const LibMCDriver_ScanLab_uint32 nListIndex, cons
 	m_CurrentMeasurementTagInfo.m_ProfileID = 0;
 	m_CurrentMeasurementTagInfo.m_SegmentID = 0;
 	m_CurrentMeasurementTagInfo.m_VectorID = 0;
-
-	// A different list (or a different position within one) is now open, so any previously written
-	// set_laser_power command may be overwritten or belong to a list that is not executed next.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetEndOfList()
 {
 	m_pScanLabSDK->n_set_end_of_list(m_CardNo);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::ExecuteList(const LibMCDriver_ScanLab_uint32 nListIndex, const LibMCDriver_ScanLab_uint32 nPosition)
 {
 	// If AddMicrovectorMovement already started this list in streaming mode, the list is
 	// running right now - a second n_execute_list_pos would fail with RTC6_BUSY (manual
-	// p. 447). Consume the flag and only do the cache bookkeeping.
+	// p. 447). Consume the flag and skip the duplicate execution request.
 	if (m_pMicrovectorStreamExecutionStarted->exchange(false)) {
 		m_pDriverEnvironment->LogMessage("ExecuteList skipped: list execution was already started by the streamed microvector download.");
-		invalidateLaserPowerCache();
 		return;
 	}
 
 	m_pScanLabSDK->n_execute_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	// The next list build has to re-establish the power value.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetAutoChangePos(const LibMCDriver_ScanLab_uint32 nPosition)
 {
 	m_pScanLabSDK->n_auto_change_pos(m_CardNo, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	// Segments the list - a cached value from before the split may not be reached on all paths.
-	invalidateLaserPowerCache();
 }
 
 void CRTCContext::SetDefocusFactor(const LibMCDriver_ScanLab_double dValue)
@@ -1056,14 +1025,14 @@ void CRTCContext::writeMarkSpeed(float markSpeedinMMPerSecond)
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 }
 
-void CRTCContext::invalidateLaserPowerCache()
+void CRTCContext::invalidateMicrovectorPowerCache()
 {
-	m_nCachedLaserPowerDACValue = RTCCONTEXT_INVALIDLASERPOWERCACHE;
-	m_nCachedLaserPulseHalfPeriodInBits = 0xffffffffUL;
-	m_nCachedLaserPulseLengthInBits = 0xffffffffUL;
+	m_nMicrovectorPowerCacheDACValue = RTCCONTEXT_INVALIDMICROVECTORPOWERCACHE;
+	m_nMicrovectorPowerCachePulseHalfPeriodInBits = 0xffffffffUL;
+	m_nMicrovectorPowerCachePulseLengthInBits = 0xffffffffUL;
 }
 
-void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bool bCheckError)
+void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bool bUseMicrovectorPowerCache, bool bCheckError)
 {
 
 	double dClippedPowerFactor = dPowerInPercent / 100.0f;
@@ -1116,25 +1085,24 @@ void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bo
 	}
 	else {
 
-		// Quantize first, then compare against the cache. Consecutive microvectors of one hatch
-		// carry identical power, and every skipped set_laser_power is one list position and one
-		// telegram less. Comparing DAC integers rather than percentages is what makes the hit rate
-		// high. See invalidateLaserPowerCache() for where this cache has to be dropped.
-
 		if (m_LaserPort == eLaserPort::LaserPulseModulation) {
 
 			uint32_t nHalfPeriodInBits = (uint32_t)round(m_dLaserPulseHalfPeriodInMS * 64.0);
 			uint32_t nFullPeriodInBits = nHalfPeriodInBits * 2;
 			uint32_t nPulseLength = (uint32_t)round((double)nFullPeriodInBits * dClippedPowerFactor);
 
-			if ((nHalfPeriodInBits == m_nCachedLaserPulseHalfPeriodInBits) && (nPulseLength == m_nCachedLaserPulseLengthInBits))
+			if (bUseMicrovectorPowerCache
+				&& (nHalfPeriodInBits == m_nMicrovectorPowerCachePulseHalfPeriodInBits)
+				&& (nPulseLength == m_nMicrovectorPowerCachePulseLengthInBits))
 				return;
 
 			m_pScanLabSDK->n_set_laser_pulses(m_CardNo, nHalfPeriodInBits, nPulseLength);
 
-			m_nCachedLaserPulseHalfPeriodInBits = nHalfPeriodInBits;
-			m_nCachedLaserPulseLengthInBits = nPulseLength;
-			m_nLaserPowerCommandsWritten++;
+			if (bUseMicrovectorPowerCache) {
+				m_nMicrovectorPowerCachePulseHalfPeriodInBits = nHalfPeriodInBits;
+				m_nMicrovectorPowerCachePulseLengthInBits = nPulseLength;
+				m_nMicrovectorPowerCommandsWritten++;
+			}
 
 		}
 		else {
@@ -1155,39 +1123,44 @@ void CRTCContext::writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bo
 				break;
 			}
 
-			if (digitalPowerValue == m_nCachedLaserPowerDACValue)
+			if (bUseMicrovectorPowerCache && (digitalPowerValue == m_nMicrovectorPowerCacheDACValue))
 				return;
 
+			uint32_t nPowerCommandsWritten = 0;
 			switch (m_LaserPort) {
 			case eLaserPort::Port16bitDigital:
 				//nPortIndex = 3;  See set_laser_power in SDK documentation
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 3, digitalPowerValue);
-
+				nPowerCommandsWritten = 1;
 				break;
 			case eLaserPort::Port8bitDigital:
 				//nPortIndex = 2; See set_laser_power in SDK documentation
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 2, digitalPowerValue);
+				nPowerCommandsWritten = 1;
 				break;
 			case eLaserPort::Port12BitAnalog1:
 				//nPortIndex = 0;  See set_laser_power in SDK documentation
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 0, digitalPowerValue);
+				nPowerCommandsWritten = 1;
 				break;
 			case eLaserPort::Port12BitAnalog2:
 				//nPortIndex = 1; // See set_laser_power in SDK documentation
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 1, digitalPowerValue);
+				nPowerCommandsWritten = 1;
 				break;
 			case eLaserPort::Port12BitAnalog1andAnalog2:
-				// One cached scalar is enough here: both DACs always receive the identical value.
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 0, digitalPowerValue);
 				m_pScanLabSDK->n_set_laser_power(m_CardNo, 1, digitalPowerValue);
-				m_nLaserPowerCommandsWritten++;	// two commands, hence counted twice in total
+				nPowerCommandsWritten = 2;
 				break;
 			default:
 				break;
 			}
 
-			m_nCachedLaserPowerDACValue = digitalPowerValue;
-			m_nLaserPowerCommandsWritten++;
+			if (bUseMicrovectorPowerCache) {
+				m_nMicrovectorPowerCacheDACValue = digitalPowerValue;
+				m_nMicrovectorPowerCommandsWritten += nPowerCommandsWritten;
+			}
 
 		}
 
@@ -1227,7 +1200,7 @@ void CRTCContext::writeSpeeds(const LibMCDriver_ScanLab_single fMarkSpeed, const
 
 	writeMarkSpeed(fMarkSpeed);
 	writeJumpSpeed(fJumpSpeed);
-	writePower(fPower, bOIEPIDControlFlag);
+	writePower(fPower, bOIEPIDControlFlag, false);
 
 
 
@@ -1284,7 +1257,7 @@ void CRTCContext::markAbsoluteEx(double dStartXInMM, double dStartYInMM, double 
 		if (m_pModulationCallback != nullptr) {
 			double dNewPowerInPercent = dLaserPowerInPercent;
 			m_pModulationCallback(dOldX, dOldY, dMarkToX, dMarkToY, dLaserPowerInPercent, nModulationType, m_pModulationCallbackUserData, &dNewPowerInPercent);
-			writePower(dNewPowerInPercent, bOIEControlFlag);
+			writePower(dNewPowerInPercent, bOIEControlFlag, false);
 		}
 
 		int32_t nTargetX = (int32_t)dTargetXInUnits;
@@ -1449,7 +1422,7 @@ void CRTCContext::emitMicroVectorsToOpenList(const LibMCDriver_ScanLab::sMicroVe
 		// boards every control command makes the DLL wait until the board has acknowledged all
 		// buffered list commands (RTC6 manual, ch. 16.9), i.e. one network round trip per
 		// microvector. The accumulated error is checked once after the loop instead.
-		writePower(pMicroVector->m_LaserPowerInPercent, false, false);
+		writePower(pMicroVector->m_LaserPowerInPercent, false, true, false);
 
 		m_pScanLabSDK->n_micro_vector_abs(m_CardNo, intX, intY, intDelayLaserOn, intDelayLaserOff);
 
@@ -1482,7 +1455,6 @@ uint64_t CRTCContext::checkStreamMargin(uint64_t nMinObservedMargin)
 		// memory with the laser armed. stop_execution also switches the laser signals off.
 		m_pScanLabSDK->n_stop_execution(m_CardNo);
 		m_pMicrovectorStreamExecutionStarted->store(false);
-		invalidateLaserPowerCache();
 
 		if (bOvertaken)
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DRIVERERROR,
@@ -1508,6 +1480,7 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 		if (pMicrovectorArrayBuffer == nullptr)
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 		m_pScanLabSDK->checkGlobalErrorOfCard(m_CardNo);
+		invalidateMicrovectorPowerCache();
 
 		// Refuse to overrun the open list. The RTC6 does not report this: once the input pointer
 		// reaches the end of a list it silently wraps to the start of that same list and keeps
@@ -1528,8 +1501,8 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 
 				uint64_t nAvailablePositions = nListEnd - nInputPointer;
 
-				// Worst case, not the deduplicated case: the skip rate of writePower() depends on
-				// the data, and this guard must not rely on it.
+				// Worst case, not the cached case: the skip rate depends on the microvector data,
+				// and this guard must not rely on it.
 				uint64_t nWorstCasePositions = nMicrovectorArrayBufferSize * (uint64_t)RTCCONTEXT_LISTPOSITIONS_PER_MICROVECTOR
 					+ (uint64_t)RTCCONTEXT_LISTCAPACITY_SAFETYMARGIN;
 
@@ -1557,7 +1530,7 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 		m_pScanLabSDK->n_reset_error(m_CardNo, 0xffffffff);
 
 		auto tLoadStartTime = std::chrono::steady_clock::now();
-		uint64_t nPowerCommandsBefore = m_nLaserPowerCommandsWritten;
+		uint64_t nPowerCommandsBefore = m_nMicrovectorPowerCommandsWritten;
 
 		if (!bStreamDownload) {
 
@@ -1571,7 +1544,7 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 			// block actually consumed.
 			double dLoadDurationInMS = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>
 				(std::chrono::steady_clock::now() - tLoadStartTime).count();
-			uint64_t nPowerCommands = m_nLaserPowerCommandsWritten - nPowerCommandsBefore;
+			uint64_t nPowerCommands = m_nMicrovectorPowerCommandsWritten - nPowerCommandsBefore;
 
 			m_pDriverEnvironment->LogMessage("Wrote " + std::to_string(nMicrovectorArrayBufferSize)
 				+ " microvectors in " + std::to_string(dLoadDurationInMS) + " ms ("
@@ -1596,8 +1569,8 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 			// Start execution at the position SetStartList opened the list at, so the prologue
 			// (laser pins, delays, OIE trigger) runs first. Simultaneous loading and execution of
 			// the same list is explicitly supported (manual p. 447). Deliberately NOT routed
-			// through ExecuteList(): that would invalidate the laser power cache, and the
-			// set_laser_power written into the prebuffer stays valid for the whole remainder.
+			// through ExecuteList(), because that would issue a duplicate execution request.
+			// The microvector power cache remains valid across the prebuffer and append chunks.
 			m_pScanLabSDK->n_execute_list_pos(m_CardNo, m_nCurrentStartListIndex, m_nCurrentStartListPosition);
 			m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
 			m_pMicrovectorStreamExecutionStarted->store(true);
@@ -1624,7 +1597,7 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 
 			double dLoadDurationInMS = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>
 				(std::chrono::steady_clock::now() - tLoadStartTime).count();
-			uint64_t nPowerCommands = m_nLaserPowerCommandsWritten - nPowerCommandsBefore;
+			uint64_t nPowerCommands = m_nMicrovectorPowerCommandsWritten - nPowerCommandsBefore;
 
 			// The minimum observed margin is the main tuning indicator: close to MINMARGIN means
 			// PREBUFFERFRACTION has to grow; a large value means exposure time is wasted.
@@ -1638,6 +1611,7 @@ void CRTCContext::AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicro
 
 		}
 
+		invalidateMicrovectorPowerCache();
 	}
 }
 
@@ -1893,7 +1867,7 @@ double CRTCContext::adjustLaserPowerCalibration(double dLaserPowerInPercent, dou
 
 void CRTCContext::AddSetPower(const LibMCDriver_ScanLab_single fPowerInPercent)
 {
-	writePower(fPowerInPercent, false);
+	writePower(fPowerInPercent, false, false);
 }
 
 void CRTCContext::AddSetAnalogOut(const LibMCDriver_ScanLab::eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue)
@@ -1936,11 +1910,6 @@ void CRTCContext::AddSetAnalogOut(const LibMCDriver_ScanLab::eLaserPort eLaserPo
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_PORTNUMBERISNOTANALOG);
 	}
 
-	// write_da_1_list / write_da_2_list drive the very same physical DACs as set_laser_power ports
-	// 0 and 1. Without invalidating, a following writePower() carrying the cached value would be
-	// skipped and the DAC would silently keep the analog-out value instead.
-	invalidateLaserPowerCache();
-
 }
 
 void CRTCContext::AddSetDigitalOut(const LibMCDriver_ScanLab::eLaserPort eLaserPort, const LibMCDriver_ScanLab_single fOutputValue)
@@ -1982,16 +1951,12 @@ void CRTCContext::AddSetDigitalOut(const LibMCDriver_ScanLab::eLaserPort eLaserP
 
 	}
 
-	// write_io_port_list / write_8bit_port_list drive the same physical ports as set_laser_power
-	// for Port16bitDigital / Port8bitDigital - see the comment in AddSetAnalogOut.
-	invalidateLaserPowerCache();
-
 }
 
 
 void CRTCContext::AddSetPowerForPIDControl(const LibMCDriver_ScanLab_single fPowerInPercent)
 {
-	writePower(fPowerInPercent, true);
+	writePower(fPowerInPercent, true, false);
 }
 
 
@@ -2340,9 +2305,6 @@ void CRTCContext::AddWriteDigitalIOList(const LibMCDriver_ScanLab_uint32 nDigita
 	m_pScanLabSDK->n_write_io_port_list(m_CardNo, nDigitalOutput);
 	m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
 
-	// Same physical port as set_laser_power for Port16bitDigital - see AddSetAnalogOut.
-	invalidateLaserPowerCache();
-
 }
 
 void CRTCContext::AddWriteMaskedDigitalIOList(const LibMCDriver_ScanLab_uint32 nDigitalOutput, const LibMCDriver_ScanLab_uint32 nOutputMask)
@@ -2356,10 +2318,6 @@ void CRTCContext::AddWriteMaskedDigitalIOList(const LibMCDriver_ScanLab_uint32 n
 	m_pScanLabSDK->n_write_io_port_mask_list(m_CardNo, nDigitalOutput, nOutputMask);
 
 	m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
-
-	// Same physical port as set_laser_power for Port16bitDigital - see AddSetAnalogOut. Even a
-	// masked write can touch the power bits, so drop the cache unconditionally.
-	invalidateLaserPowerCache();
 
 }
 
@@ -2929,9 +2887,6 @@ void CRTCContext::ExecuteListWithRecording(const LibMCDriver_ScanLab_uint32 nLis
 {
 	m_pScanLabSDK->n_execute_list_pos(m_CardNo, nListIndex, nPosition);
 	m_pScanLabSDK->checkError(m_pScanLabSDK->n_get_last_error(m_CardNo));
-
-	// The next list build has to re-establish the power value.
-	invalidateLaserPowerCache();
 
 	uint32_t Busy, Position, MesBusy, MesPosition;
 	uint32_t LastPosition = 0;

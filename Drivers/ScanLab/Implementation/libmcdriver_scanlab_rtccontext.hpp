@@ -208,17 +208,14 @@ protected:
 	double m_dStandbyPulseHalfPeriodInMS;
 	double m_dStandbyPulseLengthInMS;
 
-	// Cache of the laser power value that was last actually written into the currently OPEN list.
-	// Lets writePower() skip redundant set_laser_power list commands, which is what makes bulk
-	// microvector loading feasible. MUST be dropped whenever the open list changes, the laser port
-	// changes, or another command writes to the same physical output - see invalidateLaserPowerCache().
-	int32_t m_nCachedLaserPowerDACValue;				// -1 == invalid, re-issue unconditionally
-	uint32_t m_nCachedLaserPulseHalfPeriodInBits;		// for eLaserPort::LaserPulseModulation
-	uint32_t m_nCachedLaserPulseLengthInBits;			// for eLaserPort::LaserPulseModulation
+	// Cache used only while AddMicrovectorMovement writes one microvector block. Normal power
+	// writes never consult or update it, so their semantics remain independent of this optimization.
+	int32_t m_nMicrovectorPowerCacheDACValue;				// -1 == invalid, re-issue unconditionally
+	uint32_t m_nMicrovectorPowerCachePulseHalfPeriodInBits;	// for eLaserPort::LaserPulseModulation
+	uint32_t m_nMicrovectorPowerCachePulseLengthInBits;		// for eLaserPort::LaserPulseModulation
 
-	// Monotonic count of power commands writePower() has actually emitted into a list. Used to
-	// report the deduplication hit rate of bulk writers; never reset.
-	uint64_t m_nLaserPowerCommandsWritten;
+	// Monotonic count of power commands emitted while the microvector cache is enabled.
+	uint64_t m_nMicrovectorPowerCommandsWritten;
 
 	// List sizes as passed to ConfigureLists / n_config_list. 0 == never configured, capacity
 	// checks are skipped then.
@@ -279,10 +276,10 @@ protected:
 	// board has acknowledged all previously buffered list commands (RTC6 manual, ch. 16.9 "High
 	// Performance Mode"), i.e. one network round trip per call. Only pass false from bulk list
 	// writers that check the accumulated error (n_get_error) once after the whole block.
-	void writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bool bCheckError = true);
+	void writePower(double dPowerInPercent, bool bOIEPIDControlFlag, bool bUseMicrovectorPowerCache, bool bCheckError = true);
 
-	// Drops the cached laser power value, so the next writePower() re-issues the list command.
-	void invalidateLaserPowerCache();
+	// Drops the microvector-local power cache, so the next cached write re-issues the command.
+	void invalidateMicrovectorPowerCache();
 
 	void writeSpeeds(const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, bool bOIEPIDControlFlag);
 
