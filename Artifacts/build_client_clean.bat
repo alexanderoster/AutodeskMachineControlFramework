@@ -57,7 +57,7 @@ set TOOLBUILDDIR=..\..\build_client_dist
 if not exist "%TOOLBUILDDIR%\CMakeCache.txt" (
 	echo Configuring client build tools...
 	if not exist "%TOOLBUILDDIR%" (mkdir "%TOOLBUILDDIR%")
-	cmake -S ..\..\BuildScripts\ClientDist -B "%TOOLBUILDDIR%" -G "Visual Studio 17 2022" -A x64
+	cmake -S ..\..\BuildScripts\ClientDist -B "%TOOLBUILDDIR%" -A x64
 	if errorlevel 1 goto :error
 )
 echo Building client build tools...
