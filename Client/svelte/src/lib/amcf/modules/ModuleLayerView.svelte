@@ -17,10 +17,34 @@
 	let layerViewer: any = $state(null);
 	let initialized = $state(false);
 
+	type CoordinateTransform = readonly [
+		angleDegrees: number,
+		rotationCenterX: number,
+		rotationCenterY: number,
+		translationX: number,
+		translationY: number
+	];
 	let platform = $derived.by(() => { poll.v; return module.platform || null; });
 	let layerCount = $derived.by(() => { poll.v; return platform?.layercount || 0; });
+	let transformAngle = $derived(Number(platform?.transformangle) || 0);
+	let rotationCenterX = $derived(Number(platform?.rotationcenterx) || 0);
+	let rotationCenterY = $derived(Number(platform?.rotationcentery) || 0);
+	let translationX = $derived(Number(platform?.translationx) || 0);
+	let translationY = $derived(Number(platform?.translationy) || 0);
+	let coordinateTransform = $derived([
+		transformAngle,
+		rotationCenterX,
+		rotationCenterY,
+		translationX,
+		translationY
+	] as CoordinateTransform);
 	let sliderValue = $state(0);
 	let appliedColorTheme = $state('');
+	let coordinateSystemOverride: boolean | null = $state(null);
+	let coordinateSystemVisible = $derived(
+		coordinateSystemOverride ?? Boolean(platform?.showcoordinatesystem)
+	);
+	let appliedCoordinateTransform: CoordinateTransform | null = null;
 
 	$effect(() => {
 		poll.v;
@@ -62,6 +86,17 @@
 		}
 	});
 
+	$effect(() => {
+		poll.v;
+		if (!layerViewer || !initialized) return;
+
+		if (coordinateTransform === appliedCoordinateTransform) return;
+
+		layerViewer.setCoordinateTransform(...coordinateTransform);
+		appliedCoordinateTransform = coordinateTransform;
+		layerViewer.RenderScene(true);
+	});
+
 	function ensureInit() {
 		if (initialized || !containerEl || !app) return;
 		const w = containerEl.clientWidth, h = containerEl.clientHeight;
@@ -78,6 +113,8 @@
 
 			glInstance.setupDOMElement(containerEl);
 			layerViewer.updateSize(w, h);
+			layerViewer.setCoordinateTransform(...coordinateTransform);
+			appliedCoordinateTransform = coordinateTransform;
 
 			if (platform) {
 				const plateURL = getBuildPlateURL();
@@ -203,10 +240,10 @@
 		try {
 			const bounds = layerViewer.getPathBoundaries?.();
 			if (bounds && bounds.radius > 0 && platform) {
-				const left = bounds.center.x - bounds.radius + (platform.sizex || 300) / 2;
-				const right = bounds.center.x + bounds.radius + (platform.sizex || 300) / 2;
-				const top = bounds.center.y - bounds.radius + (platform.sizey || 300) / 2;
-				const bottom = bounds.center.y + bounds.radius + (platform.sizey || 300) / 2;
+				const left = bounds.center.x - bounds.radius + (platform.originx || 0);
+				const right = bounds.center.x + bounds.radius + (platform.originx || 0);
+				const top = bounds.center.y - bounds.radius + (platform.originy || 0);
+				const bottom = bounds.center.y + bounds.radius + (platform.originy || 0);
 				layerViewer.CenterOnRectangle(left, top, right, bottom);
 			} else {
 				resetView();
@@ -270,6 +307,13 @@
 		<div class="layerview-toolbar">
 			<button class="layerview-btn" onclick={resetView}>Reset View</button>
 			<button class="layerview-btn" onclick={fitToPath}>Fit</button>
+			<button
+				class="layerview-btn"
+				onclick={() => coordinateSystemOverride = !coordinateSystemVisible}
+				title="Toggle coordinate axes"
+				aria-label="Toggle coordinate axes"
+				aria-pressed={coordinateSystemVisible}
+			>Axes</button>
 		</div>
 
 		<!-- Layer info overlay -->
@@ -277,6 +321,35 @@
 			<div class="layerview-layer-info">
 				Layer {sliderValue} / {layerCount}
 			</div>
+		{/if}
+
+		{#if coordinateSystemVisible}
+			<svg
+				class={['layerview-coordinate-indicator', { 'above-slider': layerCount > 0 }]}
+				viewBox="0 0 64 64"
+				role="img"
+				aria-label={`Machine coordinate axes, rotated ${transformAngle} degrees`}
+			>
+				<g transform={`translate(32 32) rotate(${-transformAngle})`}>
+					<line class="coordinate-axis-x" x1="0" y1="0" x2="24" y2="0" />
+					<polygon class="coordinate-axis-x" points="24,0 18,-3 18,3" />
+					<text
+						class="coordinate-label-x"
+						x="27"
+						y="4"
+						transform={`rotate(${transformAngle} 27 4)`}
+					>X</text>
+
+					<line class="coordinate-axis-y" x1="0" y1="0" x2="0" y2="-24" />
+					<polygon class="coordinate-axis-y" points="0,-24 -3,-18 3,-18" />
+					<text
+						class="coordinate-label-y"
+						x="4"
+						y="-24"
+						transform={`rotate(${transformAngle} 4 -24)`}
+					>Y</text>
+				</g>
+			</svg>
 		{/if}
 
 		<!-- Layer slider -->
@@ -327,6 +400,10 @@
 	.layerview-btn:hover {
 		background-color: rgba(0, 0, 0, 0.85);
 	}
+	.layerview-btn[aria-pressed='true'] {
+		background-color: var(--primary, #2563eb);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
+	}
 	.layerview-layer-info {
 		position: absolute;
 		top: 8px;
@@ -338,6 +415,43 @@
 		font-size: 11px;
 		font-variant-numeric: tabular-nums;
 		z-index: 10;
+	}
+	.layerview-coordinate-indicator {
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		width: 64px;
+		height: 64px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.35);
+		pointer-events: none;
+		z-index: 9;
+	}
+	.layerview-coordinate-indicator.above-slider {
+		bottom: 36px;
+	}
+	.coordinate-axis-x {
+		fill: #ef4444;
+		stroke: #ef4444;
+		stroke-width: 2;
+	}
+	.coordinate-axis-y {
+		fill: #22c55e;
+		stroke: #22c55e;
+		stroke-width: 2;
+	}
+	.coordinate-label-x,
+	.coordinate-label-y {
+		font-size: 11px;
+		font-weight: 600;
+		text-anchor: middle;
+		stroke: none;
+	}
+	.coordinate-label-x {
+		fill: #ef4444;
+	}
+	.coordinate-label-y {
+		fill: #22c55e;
 	}
 	.layerview-slider-wrap {
 		position: absolute;

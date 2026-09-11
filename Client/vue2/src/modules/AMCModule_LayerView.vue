@@ -134,11 +134,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			showJumps: true,
 			loadingLayerData: false,
 			loadingScatterplot: false,
-			hoverOverData: true
+			hoverOverData: true,
+			appliedCoordinateTransform: ""
 		
 		}),
 		
 		methods: {
+			applyCoordinateTransform: function () {
+				const platform = this.module.platform;
+				if (!platform || !this.LayerViewerInstance)
+					return;
+
+				const transform = [
+					Number(platform.transformangle) || 0,
+					Number(platform.rotationcenterx) || 0,
+					Number(platform.rotationcentery) || 0,
+					Number(platform.translationx) || 0,
+					Number(platform.translationy) || 0
+				];
+				const transformKey = transform.join(",");
+				if (transformKey === this.appliedCoordinateTransform)
+					return;
+
+				this.LayerViewerInstance.setCoordinateTransform(...transform);
+				this.appliedCoordinateTransform = transformKey;
+				this.LayerViewerInstance.RenderScene(true);
+			},
+
 			onResize: function () {
 				let domelement = this.$refs.layerViewDiv; 
 				if (!domelement) 
@@ -275,10 +297,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				
 					if (pathBoundaries.radius > 0) {
 
-						const left = pathBoundaries.center.x - pathBoundaries.radius + platform.sizex / 2;
-						const right = pathBoundaries.center.x + pathBoundaries.radius + platform.sizex / 2;
-						const top = pathBoundaries.center.y - pathBoundaries.radius + platform.sizey / 2;
-						const bottom = pathBoundaries.center.y + pathBoundaries.radius + platform.sizey / 2;
+						const left = pathBoundaries.center.x - pathBoundaries.radius + platform.originx;
+						const right = pathBoundaries.center.x + pathBoundaries.radius + platform.originx;
+						const top = pathBoundaries.center.y - pathBoundaries.radius + platform.originy;
+						const bottom = pathBoundaries.center.y + pathBoundaries.radius + platform.originy;
 
 						this.LayerViewerInstance.CenterOnRectangle (left, top, right, bottom);
 						this.LayerViewerInstance.RenderScene (true);
@@ -414,6 +436,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				let module = this.module;				
 				let platform = this.module.platform;
 				if (platform && sender) {
+					this.applyCoordinateTransform();
 
 					if (module.isActive () && (sender.uuid === module.uuid)) {
 																								
@@ -759,6 +782,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 							}
 						
 							this.LayerViewerInstance.setOrigin (platform.originx, platform.originy);
+							this.applyCoordinateTransform();
 							this.LayerViewerInstance.CenterOnRectangle (- ZOOM_MARGIN, - ZOOM_MARGIN, platform.sizex + ZOOM_MARGIN, platform.sizey + ZOOM_MARGIN);
 							this.viewed_platform_uuid = platform.uuid;
 						}

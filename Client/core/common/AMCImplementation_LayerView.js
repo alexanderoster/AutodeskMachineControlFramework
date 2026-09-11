@@ -53,6 +53,15 @@ class LayerViewImpl {
             x: 0,
             y: 0
         }
+        this.transformAngleDegrees = 0.0;
+        this.rotationCenter = {
+            x: 0,
+            y: 0
+        };
+        this.translation = {
+            x: 0,
+            y: 0
+        };
 		
 		this.lineScaleLevel = 0;
 		this.renderNeedsUpdate = true;
@@ -143,10 +152,27 @@ class LayerViewImpl {
 
     }
 
+    transformToolpathPoint(x, y) {
+        const angleInRadians = this.transformAngleDegrees * Math.PI / 180.0;
+        const cosine = Math.cos(angleInRadians);
+        const sine = Math.sin(angleInRadians);
+        const relativeX = x - this.rotationCenter.x;
+        const relativeY = y - this.rotationCenter.y;
+
+        return {
+            x: relativeX * cosine - relativeY * sine + this.rotationCenter.x + this.translation.x,
+            y: relativeX * sine + relativeY * cosine + this.rotationCenter.y + this.translation.y
+        };
+    }
+
     updateTransform() {
 
         if (!this.glInstance)
             return;
+
+        const placementOffset = this.transformToolpathPoint(0, 0);
+        const toolpathPositionX = this.transform.x + (this.origin.x + placementOffset.x) * this.transform.scaling;
+        const toolpathPositionY = this.transform.y - (this.origin.y + placementOffset.y) * this.transform.scaling;
 
         var gridgeometry = this.glInstance.findElement("grid");
         if (gridgeometry) {
@@ -201,14 +227,19 @@ class LayerViewImpl {
 
         var layerlinesgeometry = this.glInstance.findElement("layerdata_lines");
         if (layerlinesgeometry) {
-            layerlinesgeometry.setPositionXY(this.transform.x + this.origin.x * this.transform.scaling, this.transform.y - this.origin.y  * this.transform.scaling);
+            layerlinesgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
             layerlinesgeometry.setScaleXY(this.transform.scaling,  - this.transform.scaling);
+            // Three.js composes rotation before the screen-space Y inversion from
+            // setScaleXY. Negating the angle therefore produces a positive
+            // counter-clockwise rotation in machine coordinates.
+            layerlinesgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
         }
 
         var layerpointsgeometry = this.glInstance.findElement("layerdata_points");
         if (layerpointsgeometry) {
-            layerpointsgeometry.setPositionXY(this.transform.x + this.origin.x * this.transform.scaling, this.transform.y - this.origin.y  * this.transform.scaling);
+            layerpointsgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
             layerpointsgeometry.setScaleXY(this.transform.scaling,  - this.transform.scaling);
+            layerpointsgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
         } 
 
         var buildplategeometry = this.glInstance.findElement("buildplate");
@@ -245,8 +276,19 @@ class LayerViewImpl {
 		let layerLines = this.glInstance.findElement("layerdata_lines");
 		if (layerLines) {
 			const pathBoundaries = layerLines.glelement.geometry.boundingSphere;
+			if (!pathBoundaries)
+				return null;
 
-			return pathBoundaries;
+			const transformedCenter = this.transformToolpathPoint(pathBoundaries.center.x, pathBoundaries.center.y);
+
+			return {
+				center: {
+					x: transformedCenter.x,
+					y: transformedCenter.y,
+					z: pathBoundaries.center.z
+				},
+				radius: pathBoundaries.radius
+			};
 		} else {
 			return null;
 		}
@@ -925,6 +967,24 @@ class LayerViewImpl {
 		
 		this.origin.x = x;
 		this.origin.y = y;
+	}
+
+	setTransformAngle (angleInDegrees)
+	{
+		this.setCoordinateTransform(angleInDegrees, this.rotationCenter.x, this.rotationCenter.y, this.translation.x, this.translation.y);
+	}
+
+	setCoordinateTransform (angleInDegrees, rotationCenterX, rotationCenterY, translationX, translationY)
+	{
+		if (isNaN(angleInDegrees) || isNaN(rotationCenterX) || isNaN(rotationCenterY) || isNaN(translationX) || isNaN(translationY))
+			return;
+
+		this.transformAngleDegrees = Number(angleInDegrees);
+		this.rotationCenter.x = Number(rotationCenterX);
+		this.rotationCenter.y = Number(rotationCenterY);
+		this.translation.x = Number(translationX);
+		this.translation.y = Number(translationY);
+		this.updateTransform();
 	}
 }
 

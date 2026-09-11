@@ -56,6 +56,12 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		};
 
 		this.dark_baseimageresource = "";
+		this.transformangle = 0.0;
+		this.rotationcenterx = 0.0;
+		this.rotationcentery = 0.0;
+		this.translationx = 0.0;
+		this.translationy = 0.0;
+		this.showcoordinatesystem = false;
 		
 		this.updateFromJSON (itemJSON);
 		
@@ -76,6 +82,18 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		this.sizey = Assert.NumberValue (updateJSON.sizey);
 		this.originx = Assert.NumberValue (updateJSON.originx);
 		this.originy = Assert.NumberValue (updateJSON.originy);
+		if (updateJSON.transformangle !== undefined)
+			this.transformangle = Assert.NumberValue (updateJSON.transformangle);
+		if (updateJSON.rotationcenterx !== undefined)
+			this.rotationcenterx = Assert.NumberValue (updateJSON.rotationcenterx);
+		if (updateJSON.rotationcentery !== undefined)
+			this.rotationcentery = Assert.NumberValue (updateJSON.rotationcentery);
+		if (updateJSON.translationx !== undefined)
+			this.translationx = Assert.NumberValue (updateJSON.translationx);
+		if (updateJSON.translationy !== undefined)
+			this.translationy = Assert.NumberValue (updateJSON.translationy);
+		if (updateJSON.showcoordinatesystem !== undefined)
+			this.showcoordinatesystem = (updateJSON.showcoordinatesystem === true || updateJSON.showcoordinatesystem === 1 || updateJSON.showcoordinatesystem === "1" || updateJSON.showcoordinatesystem === "true");
 		this.labelvisible = Assert.IntegerValue (updateJSON.labelvisible);
 		this.labelcaption = Assert.StringValue (updateJSON.labelcaption);
 		this.labelicon = Assert.StringValue (updateJSON.labelicon);
@@ -128,6 +146,33 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 			if (!isNaN (originy))
 				this.originy = originy;
 		}
+		if (attrs.transformangle !== undefined) {
+			let transformangle = parseFloat (attrs.transformangle);
+			if (!isNaN (transformangle))
+				this.transformangle = transformangle;
+		}
+		if (attrs.rotationcenterx !== undefined) {
+			let rotationcenterx = parseFloat (attrs.rotationcenterx);
+			if (!isNaN (rotationcenterx))
+				this.rotationcenterx = rotationcenterx;
+		}
+		if (attrs.rotationcentery !== undefined) {
+			let rotationcentery = parseFloat (attrs.rotationcentery);
+			if (!isNaN (rotationcentery))
+				this.rotationcentery = rotationcentery;
+		}
+		if (attrs.translationx !== undefined) {
+			let translationx = parseFloat (attrs.translationx);
+			if (!isNaN (translationx))
+				this.translationx = translationx;
+		}
+		if (attrs.translationy !== undefined) {
+			let translationy = parseFloat (attrs.translationy);
+			if (!isNaN (translationy))
+				this.translationy = translationy;
+		}
+		if (attrs.showcoordinatesystem !== undefined)
+			this.showcoordinatesystem = (attrs.showcoordinatesystem === true || attrs.showcoordinatesystem === 1 || attrs.showcoordinatesystem === "1" || attrs.showcoordinatesystem === "true");
 		if (attrs.labelvisible !== undefined)
 			this.labelvisible = (attrs.labelvisible === true || attrs.labelvisible === "1" || attrs.labelvisible === "true");
 		if (attrs.labelcaption !== undefined)

@@ -60,6 +60,7 @@ class WebGLElement {
             y: 1.0,
             z: 1.0
         }
+        this.rotationZ = 0.0;
     }
 
     setPosition(x, y, z) {
@@ -107,6 +108,14 @@ class WebGLElement {
             this.glelement.scale.y = y;
         }
     }
+
+    setRotationZ(angleInRadians) {
+        this.rotationZ = angleInRadians;
+
+        if (this.glelement) {
+            this.glelement.rotation.z = angleInRadians;
+        }
+    }
 	
 	updateGLPosition () 
 	{
@@ -117,6 +126,7 @@ class WebGLElement {
             this.glelement.scale.x = this.scale.x;
             this.glelement.scale.y = this.scale.y;
             this.glelement.scale.z = this.scale.z;
+            this.glelement.rotation.z = this.rotationZ;
         }
 	}
 		
