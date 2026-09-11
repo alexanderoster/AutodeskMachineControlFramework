@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		hide-default-footer
 		width="100%"
 	>
-		<template v-slot:item.paramValue="{ item }">
+		<template v-slot:[`item.paramValue`]="{ item }">
 			<div v-if="isEditable(item) && editingKey === rowKey(item)" class="plist-edit-wrap">
 				<input
 					class="plist-edit-input"
