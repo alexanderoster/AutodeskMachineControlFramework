@@ -52,6 +52,7 @@ private:
 
 	PSMCContextHandle m_pContextHandle;
 	PScanLabSMCSDK m_pSDK;
+	LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
 
 	LibMCEnv::PWorkingDirectory m_pWorkingDirectory;
 	std::string m_sSimulationSubDirectory;
@@ -74,7 +75,7 @@ private:
 
 public:
 
-	CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts);
+	CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts);
 
 	virtual ~CSMCJobInstance();
 

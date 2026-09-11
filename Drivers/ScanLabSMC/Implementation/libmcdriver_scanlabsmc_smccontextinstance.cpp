@@ -232,7 +232,7 @@ std::string CSMCContextInstance::GetSimulationSubDirectory()
 
 PSMCJobInstance CSMCContextInstance::BeginJob(const double dStartPositionX, const double dStartPositionY, const double dMaxPowerInWatts)
 {
-	return std::make_shared<CSMCJobInstance> (m_pContextHandle, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory, m_bSendToHardware, dMaxPowerInWatts);
+	return std::make_shared<CSMCJobInstance> (m_pContextHandle, m_pDriverEnvironment, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory, m_bSendToHardware, dMaxPowerInWatts);
 }
 
 PSMCJobInstance CSMCContextInstance::GetUnfinishedJob()

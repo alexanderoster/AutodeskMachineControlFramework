@@ -45,7 +45,6 @@ Abstract: This is a stub class definition of CSMCJob
 #include <array>
 #include <thread>
 #include <cmath>
-#include <iostream>
 #include <cstring>
 #include <chrono>
 
@@ -55,12 +54,13 @@ using namespace LibMCDriver_ScanLabSMC::Impl;
  Class definition of CSMCJob
 **************************************************************************************************************************/
 
-CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts)
+CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts)
     : m_pContextHandle(pContextHandle), 
-    m_JobID(0), 
-    m_bIsFinalized(false), 
+    m_pDriverEnvironment(pDriverEnvironment),
     m_pWorkingDirectory (pWorkingDirectory), 
     m_sSimulationSubDirectory (sSimulationSubDirectory),
+    m_JobID(0),
+    m_bIsFinalized(false),
     m_bHasJobDuration (false),
     m_dJobDuration (0.0),
     m_bSendToHardware (bSendToHardware),
@@ -69,6 +69,8 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
     if (m_pWorkingDirectory.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
     if (m_pContextHandle.get() == nullptr)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+    if (m_pDriverEnvironment.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
     m_pSDK = m_pContextHandle->getSDK();    
@@ -101,7 +103,7 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, double dStart
 
 		auto sSimulationFileName = m_tmpSimulationFile->GetAbsoluteFileName();
 
-        std::cout << "Starting planning layer : module file name : " << sSimulationFileName << std::endl;
+        m_pDriverEnvironment->LogMessage("Starting layer planning; simulation module file: " + sSimulationFileName);
         m_pSDK->slsc_job_begin_module(contextHandle, &JobID, StartPosition, sSimulationFileName.c_str());
     }
 
@@ -236,8 +238,6 @@ void CSMCJobInstance::drawHatchesEx(const LibMCDriver_ScanLabSMC_uint64 nHatches
 
     //std::array<double, 1> paraPower;
     double dPowerFactor = dPowerInWatts / m_dMaxPowerInWatts;
-
-	//std::cout << "drawing hatches with laser power " << dPowerInWatts << " and max power " << m_dMaxPowerInWatts << std::endl;
 
     if (nHatchesBufferSize > 0) {
         if (pHatchesBuffer == nullptr)
@@ -414,7 +414,7 @@ void CSMCJobInstance::Execute(const bool bBlocking)
 {
     auto contextHandle = m_pContextHandle->getHandle();
 
-    std::cout << "Waiting for execution" << std::endl;
+    m_pDriverEnvironment->LogMessage("Waiting for execution readiness");
 
     slsc_ExecState execState1 = slsc_ExecState::slsc_ExecState_NotInitOrError;
     while (execState1 != slsc_ExecState::slsc_ExecState_ReadyForExecution) {
@@ -422,11 +422,11 @@ void CSMCJobInstance::Execute(const bool bBlocking)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     } 
 
-    std::cout << "Starting execution" << std::endl;
+    m_pDriverEnvironment->LogMessage("Starting execution");
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_start_execution(contextHandle));
 
-    std::cout << "Waiting for execution finished" << std::endl;
+    m_pDriverEnvironment->LogMessage("Waiting for execution to finish");
 
     slsc_ExecState execState2 = slsc_ExecState::slsc_ExecState_Executing;
     while (execState2 == slsc_ExecState::slsc_ExecState_Executing) {
@@ -434,7 +434,7 @@ void CSMCJobInstance::Execute(const bool bBlocking)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } 
 
-    std::cout << "Execution is finished" << std::endl;
+    m_pDriverEnvironment->LogMessage("Execution finished");
 }
 
 bool CSMCJobInstance::IsExecuting()
@@ -703,16 +703,12 @@ void CSMCJobInstance::ExecuteLaserInitSequence()
 {
     auto contextHandle = m_pContextHandle->getHandle();
 
-    //std::cout << "Executing laser init sequence" << std::endl;
- 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_exec_init_laser_sequence(contextHandle));
 }
 
 void CSMCJobInstance::ExecuteLaserShutdownSequence()
 {
     auto contextHandle = m_pContextHandle->getHandle();
-
-    //std::cout << "Executing laser shutdown sequence" << std::endl;
 
     m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_exec_shutdown_laser_sequence(contextHandle));
 }

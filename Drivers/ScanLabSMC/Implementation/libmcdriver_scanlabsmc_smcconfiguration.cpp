@@ -35,8 +35,6 @@ Abstract: This is a stub class definition of CSMCConfiguration
 #include "libmcdriver_scanlabsmc_interfaceexception.hpp"
 
 // Include custom headers here.
-#include <iostream>
-
 using namespace LibMCDriver_ScanLabSMC::Impl;
 
 #define SMCCONFIGURATION_MINSERIALNUMBER 1
@@ -598,8 +596,6 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     }
 
     std::string sXMLString = pXMLDocument->SaveToString (true);
-
-    //std::cout << sXMLString << std::endl;
     
     //m_pDriverEnvironment->Sleep(100000);
 
