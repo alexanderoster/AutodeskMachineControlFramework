@@ -51,6 +51,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace AMC;
 
 
+// The frontend loads platform images via /image/{uuid}, so a resource name from config.xml has to be
+// resolved to the UUID of its resource package entry. Returns an empty string for an empty name.
+static std::string resolveImageResourceUUID(PUIModuleEnvironment pUIModuleEnvironment, CUIExpression& imageExpression, PStateMachineData pStateMachineData)
+{
+	std::string sResourceName = imageExpression.evaluateStringValue(pStateMachineData);
+	if (sResourceName.empty())
+		return "";
+
+	auto pResourceEntry = pUIModuleEnvironment->resourcePackage()->findEntryByName(sResourceName, true);
+	return pResourceEntry->getUUID();
+}
+
 
 CUIModule_LayerViewPlatformItem::CUIModule_LayerViewPlatformItem (const std::string& sItemPath, CUIExpression sizeX, CUIExpression sizeY, CUIExpression originX, CUIExpression originY, CUIExpression transformAngle, CUIExpression rotationCenterX, CUIExpression rotationCenterY, CUIExpression translationX, CUIExpression translationY, CUIExpression showCoordinateSystem, CUIExpression layerIndex, CUIExpression baseImage, PUIModuleEnvironment pUIModuleEnvironment)
 	: CUIModuleItem(sItemPath), m_SizeX(sizeX), m_SizeY(sizeY), m_OriginX(originX), m_OriginY(originY), m_TransformAngle(transformAngle), m_RotationCenterX(rotationCenterX), m_RotationCenterY(rotationCenterY), m_TranslationX(translationX), m_TranslationY(translationY), m_ShowCoordinateSystem(showCoordinateSystem), m_BaseImage(baseImage), m_pUIModuleEnvironment(pUIModuleEnvironment),
@@ -134,11 +146,9 @@ void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer
 	object.addDouble(AMC_API_KEY_UI_TRANSLATIONY, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_TRANSLATIONY));
 	object.addInteger(AMC_API_KEY_UI_SHOWCOORDINATESYSTEM, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_SHOWCOORDINATESYSTEM));
 
-	std::string sBaseImageResource = m_BaseImage.evaluateStringValue(pStateMachineData);
-	if (!sBaseImageResource.empty()) {
-		auto pResourceEntry = m_pUIModuleEnvironment->resourcePackage()->findEntryByName(sBaseImageResource, true);
-		object.addString(AMC_API_KEY_UI_BASEIMAGERESOURCE, pResourceEntry->getUUID());
-	}
+	std::string sBaseImageResourceUUID = resolveImageResourceUUID(m_pUIModuleEnvironment, m_BaseImage, pStateMachineData);
+	if (!sBaseImageResourceUUID.empty())
+		object.addString(AMC_API_KEY_UI_BASEIMAGERESOURCE, sBaseImageResourceUUID);
 
 	std::string sBuildUUID = pGroup->getUUIDParameterValueByName(AMC_API_KEY_UI_BUILDUUID);
 	std::string sExecutionUUID = pGroup->getUUIDParameterValueByName(AMC_API_KEY_UI_EXECUTIONUUID);
@@ -241,7 +251,12 @@ void CUIModule_LayerViewPlatformItem::populateClientVariables(CParameterHandler*
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_TRANSLATIONX, "Toolpath translation x", m_TranslationX.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_TRANSLATIONY, "Toolpath translation y", m_TranslationY.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewIntParameter(AMC_API_KEY_UI_SHOWCOORDINATESYSTEM, "Show coordinate system annotation by default", m_ShowCoordinateSystem.evaluateIntegerValue(pStateMachineData));
-	pGroup->addNewStringParameter(AMC_API_KEY_UI_BASEIMAGERESOURCE, "Platform base image", m_BaseImage.evaluateStringValue(pStateMachineData));
+	// Client variables take precedence over the attributes of the new frontend, so the resource name
+	// has to be resolved to the UUID here as well.
+	std::string sBaseImageResourceUUID = resolveImageResourceUUID(m_pUIModuleEnvironment, m_BaseImage, pStateMachineData);
+	if (sBaseImageResourceUUID.empty())
+		sBaseImageResourceUUID = AMCCommon::CUtils::createEmptyUUID();
+	pGroup->addNewStringParameter(AMC_API_KEY_UI_BASEIMAGERESOURCE, "Platform base image", sBaseImageResourceUUID);
 	pGroup->addNewIntParameter(AMC_API_KEY_UI_LABELVISIBLE, "Label is visible", m_LabelVisible.evaluateIntegerValue (pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_LABELCAPTION, "Label caption", m_LabelCaption.evaluateStringValue(pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_LABELICON, "Label icon", m_LabelIcon.evaluateStringValue(pStateMachineData));
@@ -444,26 +459,17 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	// Resolve the resource name -> UUID once at startup and register as a fixed value.
 	{
 		auto pStateMachineData = pUIModuleEnvironment->stateMachineData();
-		std::string sBaseImageName = baseImage.evaluateStringValue(pStateMachineData.get());
+
+		std::string sBaseImageResourceUUID = resolveImageResourceUUID(pUIModuleEnvironment, baseImage, pStateMachineData);
+		if (sBaseImageResourceUUID.empty())
+			sBaseImageResourceUUID = AMCCommon::CUtils::createEmptyUUID();
 		CUIExpression baseImageUUIDExpr;
-		if (!sBaseImageName.empty()) {
-			auto pResourceEntry = pUIModuleEnvironment->resourcePackage()->findEntryByName(sBaseImageName, true);
-			baseImageUUIDExpr.setFixedValue(pResourceEntry->getUUID());
-		} else {
-			baseImageUUIDExpr.setFixedValue(AMCCommon::CUtils::createEmptyUUID());
-		}
+		baseImageUUIDExpr.setFixedValue(sBaseImageResourceUUID);
 		registerStringAttribute(AMC_API_KEY_UI_BASEIMAGERESOURCE, baseImageUUIDExpr);
-	}
-	{
-		auto pStateMachineData = pUIModuleEnvironment->stateMachineData();
-		std::string sDarkBaseImageName = darkBaseImage.evaluateStringValue(pStateMachineData.get());
+
+		// An empty value (not the null UUID) means "no dark image", the client falls back to the light one.
 		CUIExpression darkBaseImageUUIDExpr;
-		if (!sDarkBaseImageName.empty()) {
-			auto pResourceEntry = pUIModuleEnvironment->resourcePackage()->findEntryByName(sDarkBaseImageName, true);
-			darkBaseImageUUIDExpr.setFixedValue(pResourceEntry->getUUID());
-		} else {
-			darkBaseImageUUIDExpr.setFixedValue("");
-		}
+		darkBaseImageUUIDExpr.setFixedValue(resolveImageResourceUUID(pUIModuleEnvironment, darkBaseImage, pStateMachineData));
 		registerStringAttribute("dark_baseimageresource", darkBaseImageUUIDExpr);
 	}
 	registerBoolAttribute(AMC_API_KEY_UI_LABELVISIBLE, labelVisible);
