@@ -269,10 +269,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 			},
 
-			snackBarVisible () {
-				if (!this.Application)
-					return false;
-				return this.Application.SnackBar.Visible;
+			snackBarVisible: {
+				get () {
+					if (!this.Application)
+						return false;
+					return this.Application.SnackBar.Visible;
+				},
+				set (visible) {
+					if (this.Application)
+						this.Application.SnackBar.Visible = visible;
+				}
 			},
 			
 			snackBarTimeout () {

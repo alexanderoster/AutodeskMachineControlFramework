@@ -80,6 +80,7 @@ import AMCApplicationDialog from "./AMCDialog.js"
 
 const CONFIG_REQUEST_TIMEOUT_MS = 2000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+const EVENT_ERROR_SNACKBAR_TIMEOUT_MS = 8000;
 const MAX_CONSECUTIVE_FAILURES = 5;
 
 export default class AMCApplication extends Common.AMCObject {
@@ -152,7 +153,10 @@ export default class AMCApplication extends Common.AMCObject {
 			Timeout: -1,
 			Text: "",
 			Color: "secondary",
-			FontColor: "white"			
+			FontColor: "white",
+			// Incremented on every showSnackBar () call, so the client can restart its auto-hide
+			// timer even if text and visibility have not changed.
+			Sequence: 0
 		}
 
     }
@@ -1395,7 +1399,13 @@ export default class AMCApplication extends Common.AMCObject {
 
         this.axiosPostRequest("/event", requestBody)
         .then(resultHandleEvent => {
-			
+
+			// A failed event carries no actions and must not run the success callback
+			if (resultHandleEvent.data.errorcode) {
+				this.showEventError(eventname, resultHandleEvent.data.errormessage);
+				return;
+			}
+
 			if (resultHandleEvent.data.actions) {
 				if (Array.isArray(resultHandleEvent.data.actions)) {
 					let action;
@@ -1425,10 +1435,27 @@ export default class AMCApplication extends Common.AMCObject {
         })
         .catch(err => {
             console.log(err);
+            this.showEventError(eventname, this.extractErrorMessage(err));
         });
     }
 
-    triggerWidgetRequest (widgetuuid, requestType, requestJSON, executionCallback) {
+    // Sets every snack bar field, so a caller never inherits the color or timeout of a previous message.
+    // timeout <= 0 keeps the message until it is dismissed.
+    showSnackBar(text, color, timeout) {
+        this.SnackBar.Text = text;
+        this.SnackBar.Color = color || "secondary";
+        this.SnackBar.Timeout = (timeout > 0) ? timeout : -1;
+        this.SnackBar.Sequence++;
+        this.SnackBar.Visible = true;
+    }
+
+    // Failed events were only visible in the browser console. Report them in the snack bar.
+    showEventError(eventname, errormessage) {
+        this.showSnackBar("Event \"" + eventname + "\" failed: " + errormessage, "error", EVENT_ERROR_SNACKBAR_TIMEOUT_MS);
+    }
+
+    // failureCallback receives the request error, so the caller can roll back optimistic UI state.
+    triggerWidgetRequest (widgetuuid, requestType, requestJSON, executionCallback, failureCallback) {
 
 		
         this.axiosPostRequest("/widget/" + Assert.UUIDValue (widgetuuid) + "/" + Assert.StringValue (requestType), Assert.ObjectValue (requestJSON))
@@ -1458,11 +1485,14 @@ export default class AMCApplication extends Common.AMCObject {
 			
 			if (executionCallback) {
 				executionCallback ();
-			}				
-			
+			}
+
         })
         .catch(err => {
             console.log(err);
+            if (failureCallback) {
+                failureCallback (err);
+            }
         });
     }
 
