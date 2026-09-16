@@ -424,8 +424,6 @@ class WebGLLocalizedPointsElement extends WebGLElement {
 		let localmouseX = (mouseX - this.position.x) / this.scale.x;
 		let localmouseY = (mouseY - this.position.y) / this.scale.y;
 		
-		console.log (mouseX + " " + mouseY + ": " + localmouseX + " " + localmouseY);
-		
 		let quadx = Math.floor ( (localmouseX - this.originx) / this.quadsizex);
 		let quady = Math.floor ( (localmouseY - this.originy) / this.quadsizey);
 			
