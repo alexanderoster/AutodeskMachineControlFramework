@@ -157,6 +157,7 @@
 		'mdi-clock': Clock,
 		'mdi-clock-outline': Clock,
 		'mdi-timer': Clock,
+		'mdi-timer-outline': Clock,
 		'mdi-calendar': Calendar,
 		'mdi-calendar-outline': Calendar,
 		'mdi-map': Map,
