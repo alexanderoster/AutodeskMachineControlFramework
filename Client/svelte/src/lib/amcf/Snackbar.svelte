@@ -10,11 +10,14 @@
 	let color     = $derived.by(() => { poll.v; return app?.SnackBar?.Color || 'secondary'; });
 	let fontColor = $derived.by(() => { poll.v; return app?.SnackBar?.FontColor || 'white'; });
 	let timeout   = $derived.by(() => { poll.v; return app?.SnackBar?.Timeout || -1; });
+	let sequence  = $derived.by(() => { poll.v; return app?.SnackBar?.Sequence || 0; });
 
 	let show = $state(false);
 	let autoHideTimer: ReturnType<typeof setTimeout> | null = null;
 
 	$effect(() => {
+		// Depend on the sequence so that a repeated identical message restarts the auto-hide timer
+		sequence;
 		if (visible && text) {
 			show = true;
 			if (autoHideTimer) clearTimeout(autoHideTimer);
