@@ -44,13 +44,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUIModule_ContentButton::CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData)
+CUIModule_ContentButton::CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData)
 	: m_sUUID(AMCCommon::CUtils::createUUID()), 
 	 m_CaptionExpression(Caption), 
 	m_TargetPageExpression(TargetPage), 
 	m_EventExpression (Event), 
 	m_IconExpression(IconName),
 	m_DisabledExpression (DisabledExpression),
+	m_VisibleExpression (VisibleExpression),
 	m_sEventFormValueSetting(sEventFormValueSetting), 
 	m_sKind("button"),
 	m_sVariant("default"),
@@ -153,6 +154,7 @@ PParameterGroup CUIModule_ContentButton::registerClientVariableGroup(CParameterH
 	auto pGroup = pClientVariableHandler->addGroup(m_sElementPath, "button");
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONCAPTION, "button caption", m_CaptionExpression.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewBoolParameter(AMC_API_KEY_UI_BUTTONDISABLED, "button is disabled", m_DisabledExpression.evaluateBoolValue(m_pStateMachineData));
+	pGroup->addNewBoolParameter(AMC_API_KEY_UI_BUTTONVISIBLE, "button is visible", m_VisibleExpression.evaluateBoolValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONTARGETPAGE, "button target page", m_TargetPageExpression.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONEVENT, "button event", m_EventExpression.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONICON, "button icon", m_IconExpression.evaluateStringValue(m_pStateMachineData));
@@ -178,6 +180,7 @@ void CUIModule_ContentButton::writeVariablesToJSON(CJSONWriter& writer, CJSONWri
 	object.addString(AMC_API_KEY_UI_BUTTONUUID, getUUID());
 	object.addString(AMC_API_KEY_UI_BUTTONCAPTION, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONCAPTION));
 	object.addBool(AMC_API_KEY_UI_BUTTONDISABLED, pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_BUTTONDISABLED));
+	object.addBool(AMC_API_KEY_UI_BUTTONVISIBLE, pGroup->getBoolParameterValueByName(AMC_API_KEY_UI_BUTTONVISIBLE));
 	object.addString(AMC_API_KEY_UI_BUTTONTARGETPAGE, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONTARGETPAGE));
 	object.addString(AMC_API_KEY_UI_BUTTONEVENT, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONEVENT));
 	object.addString(AMC_API_KEY_UI_BUTTONICON, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONICON));
@@ -200,6 +203,8 @@ void CUIModule_ContentButton::syncClientVariables(CParameterHandler* pClientVari
 			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONCAPTION, m_CaptionExpression.evaluateStringValue(m_pStateMachineData));
 		if (m_DisabledExpression.needsSync())
 			pGroup->setBoolParameterValueByName(AMC_API_KEY_UI_BUTTONDISABLED, m_DisabledExpression.evaluateBoolValue(m_pStateMachineData));
+		if (m_VisibleExpression.needsSync())
+			pGroup->setBoolParameterValueByName(AMC_API_KEY_UI_BUTTONVISIBLE, m_VisibleExpression.evaluateBoolValue(m_pStateMachineData));
 		if (m_TargetPageExpression.needsSync())
 			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONTARGETPAGE, m_TargetPageExpression.evaluateStringValue(m_pStateMachineData));
 		if (m_EventExpression.needsSync())
@@ -219,6 +224,7 @@ void CUIModule_ContentButton::registerFrontendAttributes(PUIFrontendDefinitionMo
 
 	pStore->registerValue("caption", eUIFrontendDefinitionAttributeType::atString, m_CaptionExpression);
 	pStore->registerValue("disabled", eUIFrontendDefinitionAttributeType::atBoolean, m_DisabledExpression);
+	pStore->registerValue("visible", eUIFrontendDefinitionAttributeType::atBoolean, m_VisibleExpression);
 	pStore->registerValue("event", eUIFrontendDefinitionAttributeType::atString, m_EventExpression);
 	pStore->registerValue("targetpage", eUIFrontendDefinitionAttributeType::atString, m_TargetPageExpression);
 	pStore->registerValue("icon", eUIFrontendDefinitionAttributeType::atString, m_IconExpression);
@@ -313,8 +319,11 @@ PUIModule_ContentButtonGroup CUIModule_ContentButtonGroup::makeFromXML(const pug
 		CUIExpression eventExpression(childNode, "event");
 		CUIExpression iconExpression(childNode, "icon");
 		CUIExpression disabledExpression(childNode, "disabled");
+		// Per-button visibility; defaults to visible ("1") when neither "visible" nor
+		// "sync:visible" is specified, so existing buttons are unaffected.
+		CUIExpression visibleExpression(childNode, "visible", "1");
 
-		auto pButton = pButtonGroup->addButton(captionExpression, targetPageExpression, eventExpression, sButtonName, iconExpression, disabledExpression, formvaluesAttrib.as_string());
+		auto pButton = pButtonGroup->addButton(captionExpression, targetPageExpression, eventExpression, sButtonName, iconExpression, disabledExpression, visibleExpression, formvaluesAttrib.as_string());
 
 		pButton->setKind(sKind);
 
@@ -391,9 +400,9 @@ void CUIModule_ContentButtonGroup::addLegacyContentToJSON(CJSONWriter& writer, C
 }
 
 
-PUIModule_ContentButton CUIModule_ContentButtonGroup::addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const std::string& sEventFormValueSetting)
+PUIModule_ContentButton CUIModule_ContentButtonGroup::addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting)
 {
-	auto pButton = std::make_shared<CUIModule_ContentButton>(m_sItemPath, Caption, TargetPage, Event, sButtonName, IconName, DisabledExpression, sEventFormValueSetting, m_pStateMachineData);
+	auto pButton = std::make_shared<CUIModule_ContentButton>(m_sItemPath, Caption, TargetPage, Event, sButtonName, IconName, DisabledExpression, VisibleExpression, sEventFormValueSetting, m_pStateMachineData);
 	m_Buttons.push_back(pButton);
 	m_ButtonMap.insert(std::make_pair (pButton->getUUID (), pButton));
 

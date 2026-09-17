@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <template>
 
 <div v-if="module.visible !== false" class="btngroup-root" :class="{ 'btngroup-root--toolbar': isToolbar }" :style="module.cssstyle">
-	<template v-for="(button, index) in module.buttons">
+	<template v-for="(button, index) in visibleButtons">
 		<div v-if="button.kind === 'spring'" :key="button.uuid || 'spring' + index" class="btngroup-spring"></div>
 		<div v-else-if="button.kind === 'spacer'" :key="button.uuid || 'spacer' + index" class="btngroup-spacer"></div>
 		<v-btn
@@ -68,6 +68,12 @@ export default {
 	computed: {
 		isToolbar() {
 			return this.module.buttondistribution === 'toolbar';
+		},
+
+		// Buttons that are currently visible. Per-button visibility (including live
+		// sync:visible bindings) is honored here; buttons default to visible.
+		visibleButtons() {
+			return (this.module.buttons || []).filter(button => button.visible !== false);
 		},
 	},
 

@@ -41,6 +41,11 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_Tabs");
 		this.usesV2Frontend = true;
+
+		// Optional card framing (mirrors the "content" module).
+		this.cardstyle = moduleJSON.cardstyle || "none";
+		this.title = moduleJSON.title || "";
+		this.subtitle = moduleJSON.subtitle || "";
 		
 		this.tabs = [];
 
@@ -85,6 +90,12 @@ export default class AMCApplicationModule_Tabs extends Common.AMCApplicationModu
 				this.caption = attrs.caption;
 			if (attrs.visible !== undefined)
 				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+			if (attrs.cardstyle !== undefined)
+				this.cardstyle = attrs.cardstyle;
+			if (attrs.title !== undefined)
+				this.title = attrs.title;
+			if (attrs.subtitle !== undefined)
+				this.subtitle = attrs.subtitle;
 		}
 
 		let v2Entry = this.page.application.getV2Entry(this.uuid);

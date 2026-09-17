@@ -423,6 +423,10 @@ export default class AMCApplication extends Common.AMCObject {
 
 		} else if (moduleType === "tabs") {
 			legacy.tabs = subs.map(sub => this._normalizeV2ToLegacy(sub));
+			// Optional card framing (mirrors "content").
+			legacy.cardstyle = attrs.cardstyle || "none";
+			legacy.title = attrs.title || "";
+			legacy.subtitle = attrs.subtitle || "";
 
 		} else if (moduleType === "grid") {
 			legacy.padding = parseInt(attrs.padding) || 0;
@@ -481,6 +485,10 @@ export default class AMCApplication extends Common.AMCObject {
 			legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
 
 		} else if (moduleType === "layerview") {
+			// Optional card framing (mirrors "content").
+			legacy.cardstyle = attrs.cardstyle || "none";
+			legacy.title = attrs.title || "";
+			legacy.subtitle = attrs.subtitle || "";
 			if (subs.length > 0) {
 				legacy.items = subs.map(sub => this._normalizeV2ItemToLegacy(sub));
 			} else if (attrs.platformuuid) {
@@ -592,6 +600,7 @@ export default class AMCApplication extends Common.AMCObject {
 					name:        sub.uuid,
 					caption:     a.caption     || "",
 					disabled:    (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
+					visible:     (a.visible === undefined) ? true : (a.visible === true || a.visible === "1" || a.visible === "true"),
 					event:       a.event       || "",
 					targetpage:  a.targetpage  || "",
 					icon:        a.icon        || "",

@@ -10,8 +10,13 @@
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
 	let cssstyle = $derived.by(() => { poll.v; return module.cssstyle || ''; });
 	let buttoncssstyle = $derived.by(() => { poll.v; return module.buttoncssstyle || ''; });
-	let buttons = $derived.by(() => { poll.v; return [...(module.buttons || [])]; });
+	let buttons = $derived.by(() => { poll.v; return [...(module.buttons || [])].filter((btn: any) => btn.visible !== false); });
 	let isToolbar = $derived.by(() => { poll.v; return module.buttondistribution === 'toolbar'; });
+	// "equal" distribution must share the width among the *visible* buttons only.
+	// We use flex-1 (computed here, reactively) instead of the core's static
+	// min-width, which is based on the total button count and therefore reserves
+	// slots for buttons hidden via sync:visible.
+	let isEqual = $derived.by(() => { poll.v; return module.buttondistribution === 'equal'; });
 
 	function handleClick (btn: any) {
 		if (!app) return;
@@ -47,10 +52,10 @@
 				{@const hasIcon = !!(btn.icon || btn.iconresource)}
 				<Button
 					variant={btn.variant === 'primary' ? 'default' : 'outline'}
-					style={buttoncssstyle}
+					style={isEqual ? '' : buttoncssstyle}
 					disabled={btn.disabled}
 					onclick={() => handleClick(btn)}
-					class="{widthClass(btn)} {hasIcon ? 'h-auto flex-col gap-1 py-2' : ''}"
+					class="{widthClass(btn)} {isEqual && !widthClass(btn) ? 'flex-1' : ''} {hasIcon ? 'h-auto flex-col gap-1 py-2' : ''}"
 				>
 					{#if btn.iconresource}
 						<!-- Render the packaged SVG as a mask tinted with the button's

@@ -95,6 +95,7 @@ export default class AMCApplicationModule_ButtonGroup extends Common.AMCApplicat
 					name:            sub.uuid,
 					caption:         a.caption  || "",
 					disabled:        (a.disabled === true || a.disabled === "1" || a.disabled === "true"),
+					visible:         (a.visible === undefined) ? true : (a.visible === true || a.visible === "1" || a.visible === "true"),
 					event:           a.event     || "",
 					targetpage:      a.targetpage || "",
 					icon:            a.icon      || "",

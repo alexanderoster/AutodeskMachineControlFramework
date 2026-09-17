@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { onMount, tick as svelteTick } from 'svelte';
+	import { tick as svelteTick } from 'svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import ArrowDownToLine from '@lucide/svelte/icons/arrow-down-to-line';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import Download from '@lucide/svelte/icons/download';
 
 	import { usePollTick } from '$lib/amcf/poll.svelte';
 
@@ -39,6 +40,27 @@
 		const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
 		autoScroll = scrollHeight - scrollTop - clientHeight < 40;
 	}
+
+	// Quote a CSV field only when needed, doubling embedded quotes (RFC 4180).
+	function csvEscape (value: any): string {
+		const s = String(value ?? '');
+		return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+	}
+
+	function downloadCsv () {
+		const header = ['Time', 'Subsystem', 'Message'];
+		const rows = items.map((e: any) => [e.logTime, e.logSubsystem, e.logText].map(csvEscape).join(','));
+		const csv = [header.join(','), ...rows].join('\r\n');
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = (module.name || 'log') + '.csv';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 {#if visible}
@@ -47,9 +69,15 @@
 			<span class="text-xs text-muted-foreground font-medium">
 				{items.length} entries
 			</span>
-			<Button variant="ghost" size="sm" class="h-7 px-2" onclick={scrollToBottom}>
-				<ArrowDownToLine class="h-3.5 w-3.5" />
-			</Button>
+			<div class="flex items-center gap-1">
+				<Button variant="ghost" size="sm" class="h-7 px-2 gap-1" title="Download log as CSV" onclick={downloadCsv}>
+					<Download class="h-3.5 w-3.5" />
+					<span class="text-xs">CSV</span>
+				</Button>
+				<Button variant="ghost" size="sm" class="h-7 px-2" title="Scroll to latest" onclick={scrollToBottom}>
+					<ArrowDown class="h-3.5 w-3.5" />
+				</Button>
+			</div>
 		</div>
 
 		<div

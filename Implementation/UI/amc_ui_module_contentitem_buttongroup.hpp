@@ -71,6 +71,7 @@ namespace AMC {
 
 		CUIExpression m_CaptionExpression;
 		CUIExpression m_DisabledExpression;
+		CUIExpression m_VisibleExpression;
 		CUIExpression m_TargetPageExpression;
 		CUIExpression m_EventExpression;
 		CUIExpression m_IconExpression;
@@ -101,7 +102,7 @@ namespace AMC {
 
 	public:
 
-		CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression & IconName, const CUIExpression& Disabled, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData);
+		CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression & IconName, const CUIExpression& Disabled, const CUIExpression& Visible, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData);
 
 		virtual ~CUIModule_ContentButton();
 
@@ -158,7 +159,7 @@ namespace AMC {
 
 		void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pLegacyClientVariableHandler, uint32_t nStateID) override;
 
-		PUIModule_ContentButton addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const std::string& sEventFormValueSetting);
+		PUIModule_ContentButton addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting);
 
 		virtual void configurePostLoading() override;
 

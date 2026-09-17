@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { usePollTick } from '$lib/amcf/poll.svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
@@ -12,6 +13,10 @@
 	const poll = usePollTick();
 
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
+	let cardstyle = $derived.by(() => { poll.v; return module.cardstyle || 'none'; });
+	let isCard = $derived(cardstyle === 'elevated' || cardstyle === 'outlined' || cardstyle === 'tinted');
+	let cardTitle = $derived.by(() => { poll.v; return module.title || ''; });
+	let cardSubtitle = $derived.by(() => { poll.v; return module.subtitle || ''; });
 	let containerEl: HTMLDivElement | undefined = $state(undefined);
 	let glInstance: any = $state(null);
 	let layerViewer: any = $state(null);
@@ -289,7 +294,7 @@
 	});
 </script>
 
-{#if visible}
+{#snippet layerViewBody()}
 	<div class="layerview-container">
 		<!-- WebGL render target — setupDOMElement sets position:relative on this -->
 		<div
@@ -366,6 +371,26 @@
 			</div>
 		{/if}
 	</div>
+{/snippet}
+
+{#if visible}
+	{#if isCard}
+		<Card.Root class="flex flex-col h-full min-h-0">
+			{#if cardTitle}
+				<Card.Header class="pb-1">
+					<Card.Title>{cardTitle}</Card.Title>
+					{#if cardSubtitle}
+						<Card.Description>{cardSubtitle}</Card.Description>
+					{/if}
+				</Card.Header>
+			{/if}
+			<Card.Content class="flex-1 min-h-0 overflow-hidden flex flex-col">
+				{@render layerViewBody()}
+			</Card.Content>
+		</Card.Root>
+	{:else}
+		{@render layerViewBody()}
+	{/if}
 {/if}
 
 <style>

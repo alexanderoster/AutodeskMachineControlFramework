@@ -69,6 +69,21 @@ CUIModule_Tabs::CUIModule_Tabs(pugi::xml_node& xmlNode, const std::string& sPath
 	CUIExpression visibleExpr(xmlNode, "visible", "1");
 	registerBoolAttribute("visible", visibleExpr);
 
+	// Optional card framing (mirrors the "content" module), so a tab control can be
+	// rendered inside an elevated/outlined/tinted card with an optional title/subtitle.
+	auto cardStyleAttrib = xmlNode.attribute("cardstyle");
+	CUIExpression cardStyleExpr;
+	cardStyleExpr.setFixedValue(cardStyleAttrib.empty() ? "none" : cardStyleAttrib.as_string());
+	registerStringAttribute("cardstyle", cardStyleExpr);
+
+	CUIExpression cardTitleExpr;
+	cardTitleExpr.setFixedValue(xmlNode.attribute("title").as_string());
+	registerStringAttribute("title", cardTitleExpr);
+
+	CUIExpression cardSubtitleExpr;
+	cardSubtitleExpr.setFixedValue(xmlNode.attribute("subtitle").as_string());
+	registerStringAttribute("subtitle", cardSubtitleExpr);
+
 }
 
 

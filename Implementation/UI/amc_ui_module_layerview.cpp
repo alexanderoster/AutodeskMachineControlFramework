@@ -486,6 +486,21 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	CUIExpression visibleExpr;
 	visibleExpr.setFixedValue("1");
 	registerBoolAttribute("visible", visibleExpr);
+
+	// Optional card framing (mirrors the "content" module), so a layer view can be
+	// rendered inside an elevated/outlined/tinted card with an optional title/subtitle.
+	auto cardStyleAttrib = xmlNode.attribute("cardstyle");
+	CUIExpression cardStyleExpr;
+	cardStyleExpr.setFixedValue(cardStyleAttrib.empty() ? "none" : cardStyleAttrib.as_string());
+	registerStringAttribute("cardstyle", cardStyleExpr);
+
+	CUIExpression cardTitleExpr;
+	cardTitleExpr.setFixedValue(xmlNode.attribute("title").as_string());
+	registerStringAttribute("title", cardTitleExpr);
+
+	CUIExpression cardSubtitleExpr;
+	cardSubtitleExpr.setFixedValue(xmlNode.attribute("subtitle").as_string());
+	registerStringAttribute("subtitle", cardSubtitleExpr);
 }
 
 

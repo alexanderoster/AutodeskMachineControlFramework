@@ -210,6 +210,11 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 		super (page, moduleJSON.uuid, moduleJSON.type, moduleJSON.name, moduleJSON.caption);		
 		this.registerClass ("amcModule_LayerView");
 		this.usesV2Frontend = true;
+
+		// Optional card framing (mirrors the "content" module).
+		this.cardstyle = moduleJSON.cardstyle || "none";
+		this.title = moduleJSON.title || "";
+		this.subtitle = moduleJSON.subtitle || "";
 		
 		Assert.ArrayValue (moduleJSON.items);
 		this.items = [];
@@ -243,6 +248,12 @@ export default class AMCApplicationModule_LayerView extends Common.AMCApplicatio
 				this.caption = attrs.caption;
 			if (attrs.visible !== undefined)
 				this.visible = (attrs.visible === true || attrs.visible === "1" || attrs.visible === "true");
+			if (attrs.cardstyle !== undefined)
+				this.cardstyle = attrs.cardstyle;
+			if (attrs.title !== undefined)
+				this.title = attrs.title;
+			if (attrs.subtitle !== undefined)
+				this.subtitle = attrs.subtitle;
 		}
 
 		// Pass merged module-level attrs (which include all platform data) to the platform item.

@@ -49,7 +49,7 @@ const MODULE_SCHEMAS = {
 	},
 	tabs: {
 		required: ['uuid', 'type'],
-		optional: ['caption', 'visible', 'tabs'],
+		optional: ['caption', 'visible', 'tabs', 'cardstyle', 'title', 'subtitle'],
 	},
 	glscene: {
 		required: ['uuid', 'type'],
@@ -57,7 +57,7 @@ const MODULE_SCHEMAS = {
 	},
 	layerview: {
 		required: ['uuid', 'type'],
-		optional: ['caption', 'visible', 'items'],
+		optional: ['caption', 'visible', 'items', 'cardstyle', 'title', 'subtitle'],
 	},
 	graphic: {
 		required: ['uuid', 'type'],
