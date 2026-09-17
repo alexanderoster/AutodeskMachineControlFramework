@@ -414,10 +414,10 @@
 		{/if}
 
 		<!-- Page content -->
-		<main class="flex-1 min-w-0 min-h-0 relative">
+		<main class="flex-1 min-w-0 min-h-0 overflow-y-auto">
 			{#each pages as page (page.name)}
 				{#if poll.v >= 0 && app.pageIsActive(page)}
-					<div class="absolute inset-2">
+					<div class="h-full p-2 flex flex-col">
 						{#each page.modules || [] as mod (mod.uuid)}
 							<ModuleFactory module={mod} {app} />
 						{/each}
