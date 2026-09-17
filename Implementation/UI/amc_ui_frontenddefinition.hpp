@@ -71,6 +71,12 @@ namespace AMC {
 		eUIFrontendDefinitionAttributeType getAttributeType();
 
 		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData) = 0;
+
+		// Returns true if the value is bound to state machine data and has to be evaluated on every request.
+		virtual bool isSynchronized() = 0;
+
+		// Writes a session specific value (e.g. set by a UI event handler) with the type of the attribute.
+		virtual void writeClientValueToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, const std::string& sClientValue) = 0;
 	};
 
 	typedef std::shared_ptr<CUIFrontendDefinitionAttribute> PUIFrontendDefinitionAttribute;
@@ -80,13 +86,19 @@ namespace AMC {
 	private:
 		CUIExpression m_ValueExpression;
 
-	public: 
+		void writeExpressionToFrontendJSON(CJSONWriterObject& attributesObject, CUIExpression& valueExpression, CStateMachineData* pStateMachineData);
+
+	public:
 
 		CUIFrontendDefinitionExpressionAttribute(const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression& valueExpression);
 
 		virtual ~CUIFrontendDefinitionExpressionAttribute();
 
 		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData * pStateMachineData) override;
+
+		virtual bool isSynchronized() override;
+
+		virtual void writeClientValueToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, const std::string& sClientValue) override;
 
 	};
 
@@ -123,6 +135,8 @@ namespace AMC {
 		std::string getModuleType();
 
 		std::string getUUID();
+
+		std::string getPath();
 
 	};
 

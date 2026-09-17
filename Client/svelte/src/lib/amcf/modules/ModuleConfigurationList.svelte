@@ -24,13 +24,16 @@
 		} catch { return ts; }
 	}
 
+	// Used when the configuration list defines no <button> elements. These actions have no
+	// server-side button UUID, so only the selected configuration is sent with the event.
+	const fallbackActions = [
+		{ uuid: 'load',     caption: 'Load',       selectevent: 'loadconfiguration',      fallback: true },
+		{ uuid: 'activate', caption: 'Set Active', selectevent: 'setactiveconfiguration', fallback: true },
+	];
+
 	function getActions (item: any) {
 		if (entrybuttons.length > 0) return entrybuttons;
-		return [
-			{ uuid: 'load',     caption: 'Load',       selectevent: 'loadconfiguration' },
-			{ uuid: 'activate', caption: 'Set Active',  selectevent: 'setactiveconfiguration' },
-			{ uuid: 'delete',   caption: 'Delete',      selectevent: 'deleteconfiguration' },
-		];
+		return fallbackActions;
 	}
 
 	function triggerAction (action: any, config: any) {
@@ -38,7 +41,7 @@
 			const formvalues: Record<string, string> = {};
 			if (module.selectionvalueuuid)
 				formvalues[module.selectionvalueuuid] = config.configurationUUID;
-			if (module.buttonvalueuuid)
+			if (module.buttonvalueuuid && !action.fallback)
 				formvalues[module.buttonvalueuuid] = action.uuid;
 			app.triggerUIEvent(action.selectevent, module.uuid, formvalues);
 		}

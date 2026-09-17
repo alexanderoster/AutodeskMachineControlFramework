@@ -6,6 +6,8 @@
 	import Image from '@lucide/svelte/icons/image';
 
 	import { usePollTick } from '$lib/amcf/poll.svelte';
+	// @ts-ignore — core JS has no type declarations yet
+	import { triggerButtonEvent } from '@core/modules/AMCModule_TableUtils.js';
 
 	let { module, app }: { module: any; app: any } = $props();
 	const poll = usePollTick();
@@ -40,15 +42,9 @@
 		}
 	}
 
+	// Shared with the Vue 2 client: selectionvalueuuid receives the build, buttonvalueuuid the button
 	function triggerButton (btn: any, build: any) {
-		if (btn.selectevent && app) {
-			const formvalues: Record<string, string> = {};
-			if (module.selectionvalueuuid)
-				formvalues[module.selectionvalueuuid] = build.buildUUID;
-			if (module.buttonvalueuuid)
-				formvalues[module.buttonvalueuuid] = build.buildUUID;
-			app.triggerUIEvent(btn.selectevent, module.uuid, formvalues);
-		}
+		triggerButtonEvent(app, module, btn, build.buildUUID);
 	}
 </script>
 

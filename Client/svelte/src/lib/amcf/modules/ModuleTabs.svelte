@@ -7,11 +7,12 @@
 	const poll = usePollTick();
 
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
-	let tabs = $derived.by(() => { poll.v; return [...(module.tabs || [])]; });
+	let tabs = $derived.by(() => { poll.v; return (module.tabs || []).filter((tab: any) => tab.visible !== false); });
 	let activeTab = $state('');
 
 	$effect(() => {
-		if (activeTab === '' && tabs.length > 0) {
+		// Select the first visible tab initially and whenever the active tab gets hidden.
+		if (tabs.length > 0 && !tabs.some((tab: any) => tab.uuid === activeTab)) {
 			activeTab = tabs[0].uuid;
 		}
 	});
