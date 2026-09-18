@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_module.hpp"
 #include "API/amc_api_handler_contentitem.hpp"
 #include "API/amc_api_handler_image.hpp"
+#include "API/amc_api_handler_userpreferences.hpp"
 
 using namespace AMC;
 CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC::PStateMachineInstance>& MachineInstanceList)
@@ -95,6 +96,7 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Module>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_ContentItem>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Image>(pSystemState));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_UserPreferences>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Auth>(pAPI->getSessionHandler (), pSystemState->getDataModelInstance(), pSystemState->getInstallationSecret (), pSystemState->getGitHash (), pSystemState->getClientHash (), pSystemState->getAccessControlInstance ()));
 
 }

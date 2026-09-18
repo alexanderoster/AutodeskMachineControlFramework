@@ -903,6 +903,7 @@ typedef LibMCDataHandle LibMCData_BuildJobHandler;
 typedef LibMCDataHandle LibMCData_UserList;
 typedef LibMCDataHandle LibMCData_LoginHandler;
 typedef LibMCDataHandle LibMCData_PersistencyHandler;
+typedef LibMCDataHandle LibMCData_UserPreferenceHandler;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersion;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersionIterator;
 typedef LibMCDataHandle LibMCData_MachineConfigurationXSD;

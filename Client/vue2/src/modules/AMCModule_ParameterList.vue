@@ -31,15 +31,100 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <template>
 
 <div v-if="module.visible !== false" class="plist-root">
+	<div class="plist-toolbar">
+		<span v-if="hasPreferences && filterSummary" class="plist-filter-summary">{{ filterSummary }}</span>
+		<v-btn small text class="plist-csv-btn" title="Download parameters as CSV" @click="downloadCsv()">
+			<v-icon small left>mdi-download</v-icon>
+			CSV
+		</v-btn>
+		<v-menu v-if="hasPreferences" offset-y :close-on-content-click="false" left>
+			<template v-slot:activator="{ on, attrs }">
+				<v-btn icon small v-bind="attrs" v-on="on" aria-label="Parameter list options">
+					<v-icon small>mdi-tune-variant</v-icon>
+				</v-btn>
+			</template>
+			<v-list dense class="plist-menu">
+				<v-subheader>Sort by</v-subheader>
+				<v-list-item v-for="h in module.headers" :key="'sort-' + h.value" @click="sortBy(h)">
+					<v-list-item-title>{{ h.text }}</v-list-item-title>
+					<v-list-item-icon v-if="sortState.column === h.value">
+						<v-icon small>{{ sortState.direction === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}</v-icon>
+					</v-list-item-icon>
+				</v-list-item>
+
+				<v-divider></v-divider>
+				<v-list-item @click="setShowOnlyFavorites(!showOnlyFavorites)">
+					<v-list-item-icon>
+						<v-icon small>{{ showOnlyFavorites ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}</v-icon>
+					</v-list-item-icon>
+					<v-list-item-title>Show only favorites</v-list-item-title>
+				</v-list-item>
+				<v-list-item @click="setShowOnlyFavorites(false)">
+					<v-list-item-title>Show everything</v-list-item-title>
+				</v-list-item>
+
+				<template v-if="groupOptions.length > 0">
+					<v-divider></v-divider>
+					<v-subheader>Filter by group</v-subheader>
+					<v-list-item v-for="g in groupOptions" :key="'group-' + g" @click="toggleGroupFilter(g)">
+						<v-list-item-icon>
+							<v-icon small>{{ activeGroups.indexOf(g) >= 0 ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}</v-icon>
+						</v-list-item-icon>
+						<v-list-item-title>{{ g }}</v-list-item-title>
+					</v-list-item>
+				</template>
+
+				<template v-if="systemOptions.length > 0">
+					<v-divider></v-divider>
+					<v-subheader>Filter by system</v-subheader>
+					<v-list-item v-for="s in systemOptions" :key="'system-' + s" @click="toggleSystemFilter(s)">
+						<v-list-item-icon>
+							<v-icon small>{{ activeSystems.indexOf(s) >= 0 ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}</v-icon>
+						</v-list-item-icon>
+						<v-list-item-title>{{ s }}</v-list-item-title>
+					</v-list-item>
+				</template>
+
+				<v-list-item v-if="activeGroups.length > 0 || activeSystems.length > 0" @click="clearFilters()">
+					<v-list-item-title>Clear filters</v-list-item-title>
+				</v-list-item>
+
+				<v-divider></v-divider>
+				<v-list-item @click="openSaveDialog()">
+					<v-list-item-title>Save view as preset…</v-list-item-title>
+				</v-list-item>
+				<template v-if="presetNames.length > 0">
+					<v-subheader>Load preset</v-subheader>
+					<v-list-item v-for="name in presetNames" :key="'preset-' + name">
+						<v-list-item-title @click="loadPreset(name)" class="plist-preset-name">{{ name }}</v-list-item-title>
+						<v-list-item-icon @click.stop="deletePreset(name)">
+							<v-icon small>mdi-delete-outline</v-icon>
+						</v-list-item-icon>
+					</v-list-item>
+				</template>
+			</v-list>
+		</v-menu>
+	</div>
+
 	<v-data-table
-		:headers="module.headers"
-		:items="module.entries"
+		:headers="tableHeaders"
+		:items="viewEntries"
 		:items-per-page="module.entriesperpage || -1"
 		class="plist-table"
 		disable-pagination
+		disable-sort
 		hide-default-footer
 		width="100%"
 	>
+		<template v-if="hasPreferences" v-slot:[`item.__favorite`]="{ item }">
+			<v-icon
+				small
+				class="plist-icon-btn"
+				:class="{ 'plist-fav-active': isFavorite(item) }"
+				@click="toggleFavorite(item)"
+			>{{ isFavorite(item) ? 'mdi-star' : 'mdi-star-outline' }}</v-icon>
+		</template>
+
 		<template v-slot:[`item.paramValue`]="{ item }">
 			<div v-if="isEditable(item) && editingKey === rowKey(item)" class="plist-edit-wrap">
 				<input
@@ -69,6 +154,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<div class="plist-empty">No entries available</div>
 		</template>
 	</v-data-table>
+
+	<v-dialog v-model="saveDialog" max-width="420">
+		<v-card>
+			<v-card-title>Save view preset</v-card-title>
+			<v-card-text>
+				<v-text-field
+					v-model="presetName"
+					label="Preset name"
+					autofocus
+					@keydown.enter.prevent="confirmSavePreset()"
+				></v-text-field>
+			</v-card-text>
+			<v-card-actions>
+				<v-spacer></v-spacer>
+				<v-btn text @click="saveDialog = false">Cancel</v-btn>
+				<v-btn color="primary" text :disabled="presetName.trim().length === 0" @click="confirmSavePreset()">Save</v-btn>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
 </div>
 
 </template>
@@ -93,7 +197,81 @@ export default {
 			// polling never clobbers what the user is typing.
 			editingKey: null,
 			editValue: '',
+			// Bumped whenever the shared module's view state changes so that the
+			// computed properties below re-evaluate (module is a plain JS object
+			// outside Vue's reactivity graph).
+			stateTick: 0,
+			saveDialog: false,
+			presetName: '',
 		};
+	},
+
+	computed: {
+		hasPreferences() {
+			this.stateTick;
+			return !!this.module.preferenceKey;
+		},
+		tableHeaders() {
+			this.stateTick;
+			const headers = this.module.headers || [];
+			if (!this.hasPreferences)
+				return headers;
+			return [{ text: '', value: '__favorite', sortable: false, width: '48px' }].concat(headers);
+		},
+		viewEntries() {
+			this.stateTick;
+			const raw = this.module.entries || [];
+			return (typeof this.module.applyView === 'function') ? this.module.applyView(raw) : raw.slice();
+		},
+		sortState() {
+			this.stateTick;
+			return this.module.sort || { column: '', direction: 'asc' };
+		},
+		showOnlyFavorites() {
+			this.stateTick;
+			return !!this.module.showOnlyFavorites;
+		},
+		groupOptions() {
+			this.stateTick;
+			return (typeof this.module.distinctGroups === 'function') ? this.module.distinctGroups() : [];
+		},
+		systemOptions() {
+			this.stateTick;
+			return (typeof this.module.distinctSystems === 'function') ? this.module.distinctSystems() : [];
+		},
+		activeGroups() {
+			this.stateTick;
+			return (this.module.filters && this.module.filters.groups) ? this.module.filters.groups : [];
+		},
+		activeSystems() {
+			this.stateTick;
+			return (this.module.filters && this.module.filters.systems) ? this.module.filters.systems : [];
+		},
+		presetNames() {
+			this.stateTick;
+			return (typeof this.module.listPresets === 'function') ? this.module.listPresets() : [];
+		},
+		filterSummary() {
+			const parts = [];
+			if (this.showOnlyFavorites)
+				parts.push('Favorites only');
+			if (this.activeGroups.length > 0)
+				parts.push(this.activeGroups.length + ' group filter(s)');
+			if (this.activeSystems.length > 0)
+				parts.push(this.activeSystems.length + ' system filter(s)');
+			return parts.join(' \u00b7 ');
+		},
+	},
+
+	mounted() {
+		this.module.onPreferencesChanged = () => { this.stateTick++; };
+		if (typeof this.module.loadPreferences === 'function')
+			this.module.loadPreferences();
+	},
+
+	beforeDestroy() {
+		if (this.module)
+			this.module.onPreferencesChanged = null;
 	},
 
 	methods: {
@@ -128,6 +306,78 @@ export default {
 			this.Application.triggerUIEvent(this.module.editevent, this.module.uuid, {}, undefined, params);
 			this.editingKey = null;
 		},
+
+		// -- view-state actions (delegated to the shared core module) --
+		isFavorite(item) {
+			return (typeof this.module.isFavorite === 'function') ? this.module.isFavorite(item) : false;
+		},
+		toggleFavorite(item) {
+			if (typeof this.module.toggleFavorite === 'function') this.module.toggleFavorite(item);
+		},
+		sortBy(h) {
+			if (typeof this.module.toggleSort === 'function') this.module.toggleSort(h.value);
+		},
+		setShowOnlyFavorites(flag) {
+			if (typeof this.module.setShowOnlyFavorites === 'function') this.module.setShowOnlyFavorites(flag);
+		},
+		toggleGroupFilter(group) {
+			const active = this.activeGroups;
+			const next = active.indexOf(group) >= 0
+				? active.filter((g) => g !== group)
+				: active.concat([group]);
+			if (typeof this.module.setGroupFilter === 'function') this.module.setGroupFilter(next);
+		},
+		toggleSystemFilter(system) {
+			const active = this.activeSystems;
+			const next = active.indexOf(system) >= 0
+				? active.filter((s) => s !== system)
+				: active.concat([system]);
+			if (typeof this.module.setSystemFilter === 'function') this.module.setSystemFilter(next);
+		},
+		clearFilters() {
+			if (typeof this.module.clearFilters === 'function') this.module.clearFilters();
+		},
+		openSaveDialog() {
+			this.presetName = this.module.activePreset || '';
+			this.saveDialog = true;
+		},
+		confirmSavePreset() {
+			const name = this.presetName.trim();
+			if (name.length === 0) return;
+			if (typeof this.module.savePreset === 'function') this.module.savePreset(name);
+			this.saveDialog = false;
+			this.presetName = '';
+		},
+		loadPreset(name) {
+			if (typeof this.module.loadPreset === 'function') this.module.loadPreset(name);
+		},
+		deletePreset(name) {
+			if (typeof this.module.deletePreset === 'function') this.module.deletePreset(name);
+		},
+
+		// Quote a CSV field only when needed, doubling embedded quotes (RFC 4180).
+		csvEscape(value) {
+			const s = String(value !== undefined && value !== null ? value : '');
+			return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+		},
+		// Exports the full, unfiltered parameter set (description, value, state
+		// machine, group) as a CSV download, regardless of the active view filters.
+		downloadCsv() {
+			const header = ['Parameter', 'Value', 'State Machine', 'Group'];
+			const entries = this.module.entries || [];
+			const rows = entries.map((e) =>
+				[e.paramDescription, e.paramValue, e.paramSystem, e.paramGroup].map(this.csvEscape).join(','));
+			const csv = [header.join(','), ...rows].join('\r\n');
+			const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = (this.module.name || 'parameters') + '.csv';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		},
 	},
 };
 </script>
@@ -136,6 +386,28 @@ export default {
 .plist-root {
 	width: 100%;
 	min-height: 0;
+}
+
+.plist-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 2px 4px;
+}
+
+.plist-filter-summary {
+	margin-right: auto;
+	font-size: 0.75rem;
+	color: rgba(0, 0, 0, 0.55);
+}
+
+.plist-fav-active {
+	color: #f9a825 !important;
+}
+
+.plist-preset-name {
+	cursor: pointer;
 }
 
 .plist-table {

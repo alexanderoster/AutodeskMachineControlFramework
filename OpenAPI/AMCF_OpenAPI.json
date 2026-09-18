@@ -41,9 +41,132 @@
     {
       "name": "general",
       "description": "General API end points, data exchange"
+    },
+    {
+      "name": "userpreferences",
+      "description": "Generic per-user preference store (favorites, sorting, filters and view presets)"
     }
   ],
   "paths": {
+    "/userpreferences": {
+      "get": {
+        "tags": [
+          "userpreferences"
+        ],
+        "summary": "Retrieve a stored user preference",
+        "description": "Retrieves the preference value stored for the authenticated user under the given domain and key. Returns exists=false and an empty value if no preference is stored.",
+        "operationId": "retrieveUserPreference",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "required": true,
+            "description": "Domain the preference belongs to, e.g. 'parameterlist'.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "description": "Key identifying the preference within the domain.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preference lookup result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferenceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "userpreferences"
+        ],
+        "summary": "Store a user preference",
+        "description": "Stores (creates or overwrites) a preference value for the authenticated user under the given domain and key. The value is an opaque, client-defined string (typically a stringified JSON document).",
+        "operationId": "storeUserPreference",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPreferenceStoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Preference stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferenceMutationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/userpreferences/delete": {
+      "post": {
+        "tags": [
+          "userpreferences"
+        ],
+        "summary": "Delete a user preference",
+        "description": "Removes a preference for the authenticated user under the given domain and key. Does nothing if the preference does not exist.",
+        "operationId": "deleteUserPreference",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPreferenceDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Preference deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferenceMutationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/auth": {
       "post": {
         "tags": [
@@ -1987,6 +2110,106 @@
       }
     },
     "schemas": {
+      "UserPreferenceStoreRequest": {
+        "required": [
+          "domain",
+          "key",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain the preference belongs to, e.g. 'parameterlist'.",
+            "example": "parameterlist"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key identifying the preference within the domain.",
+            "example": "systemstatepage.systemstate"
+          },
+          "value": {
+            "type": "string",
+            "description": "Opaque, client-defined preference value. Typically a stringified JSON document.",
+            "example": "{\"version\":1,\"favorites\":[]}"
+          }
+        }
+      },
+      "UserPreferenceDeleteRequest": {
+        "required": [
+          "domain",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain the preference belongs to.",
+            "example": "parameterlist"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key identifying the preference within the domain.",
+            "example": "systemstatepage.systemstate"
+          }
+        }
+      },
+      "UserPreferenceResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "exists",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type. The value of this field should be 'com.autodesk.machinecontrol.userpreferences' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.userpreferences"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "exists": {
+            "type": "boolean",
+            "description": "Whether a preference is stored for the requested domain and key.",
+            "example": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Stored preference value. Empty string if the preference does not exist.",
+            "example": "{\"version\":1,\"favorites\":[]}"
+          }
+        }
+      },
+      "UserPreferenceMutationResponse": {
+        "required": [
+          "protocol",
+          "version",
+          "exists"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type. The value of this field should be 'com.autodesk.machinecontrol.userpreferences' and must be verified by the client.",
+            "example": "com.autodesk.machinecontrol.userpreferences"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the protocol.",
+            "example": "2.0.0"
+          },
+          "exists": {
+            "type": "boolean",
+            "description": "For store requests, always true. For delete requests, whether the preference existed prior to deletion.",
+            "example": true
+          }
+        }
+      },
       "VersionResponse": {
         "required": [
           "protocol",

@@ -56,8 +56,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AMC_API_PROTOCOL_VERSIONREQUEST "com.autodesk.machinecontrol.version"
 #define AMC_API_PROTOCOL_TOKEN "com.autodesk.machinecontrol.token"
 #define AMC_API_PROTOCOL_EXTERNAL "com.autodesk.machinecontrol.external"
+#define AMC_API_PROTOCOL_USERPREFERENCES "com.autodesk.machinecontrol.userpreferences"
 
 #define AMC_API_CONTENTTYPE "application/json"
+
+#define AMC_API_KEY_USERPREFERENCE_DOMAIN "domain"
+#define AMC_API_KEY_USERPREFERENCE_KEY "key"
+#define AMC_API_KEY_USERPREFERENCE_VALUE "value"
+#define AMC_API_KEY_USERPREFERENCE_EXISTS "exists"
 
 #define AMC_API_KEY_PROTOCOL "protocol"
 #define AMC_API_KEY_VERSION "version"

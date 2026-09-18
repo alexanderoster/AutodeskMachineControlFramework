@@ -88,6 +88,7 @@ class CBuildJobHandler;
 class CUserList;
 class CLoginHandler;
 class CPersistencyHandler;
+class CUserPreferenceHandler;
 class CMachineConfigurationVersion;
 class CMachineConfigurationVersionIterator;
 class CMachineConfigurationXSD;
@@ -130,6 +131,7 @@ typedef CBuildJobHandler CLibMCDataBuildJobHandler;
 typedef CUserList CLibMCDataUserList;
 typedef CLoginHandler CLibMCDataLoginHandler;
 typedef CPersistencyHandler CLibMCDataPersistencyHandler;
+typedef CUserPreferenceHandler CLibMCDataUserPreferenceHandler;
 typedef CMachineConfigurationVersion CLibMCDataMachineConfigurationVersion;
 typedef CMachineConfigurationVersionIterator CLibMCDataMachineConfigurationVersionIterator;
 typedef CMachineConfigurationXSD CLibMCDataMachineConfigurationXSD;
@@ -172,6 +174,7 @@ typedef std::shared_ptr<CBuildJobHandler> PBuildJobHandler;
 typedef std::shared_ptr<CUserList> PUserList;
 typedef std::shared_ptr<CLoginHandler> PLoginHandler;
 typedef std::shared_ptr<CPersistencyHandler> PPersistencyHandler;
+typedef std::shared_ptr<CUserPreferenceHandler> PUserPreferenceHandler;
 typedef std::shared_ptr<CMachineConfigurationVersion> PMachineConfigurationVersion;
 typedef std::shared_ptr<CMachineConfigurationVersionIterator> PMachineConfigurationVersionIterator;
 typedef std::shared_ptr<CMachineConfigurationXSD> PMachineConfigurationXSD;
@@ -214,6 +217,7 @@ typedef PBuildJobHandler PLibMCDataBuildJobHandler;
 typedef PUserList PLibMCDataUserList;
 typedef PLoginHandler PLibMCDataLoginHandler;
 typedef PPersistencyHandler PLibMCDataPersistencyHandler;
+typedef PUserPreferenceHandler PLibMCDataUserPreferenceHandler;
 typedef PMachineConfigurationVersion PLibMCDataMachineConfigurationVersion;
 typedef PMachineConfigurationVersionIterator PLibMCDataMachineConfigurationVersionIterator;
 typedef PMachineConfigurationXSD PLibMCDataMachineConfigurationXSD;
@@ -1217,6 +1221,7 @@ private:
 	friend class CUserList;
 	friend class CLoginHandler;
 	friend class CPersistencyHandler;
+	friend class CUserPreferenceHandler;
 	friend class CMachineConfigurationVersion;
 	friend class CMachineConfigurationVersionIterator;
 	friend class CMachineConfigurationXSD;
@@ -1983,6 +1988,26 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CUserPreferenceHandler 
+**************************************************************************************************************************/
+class CUserPreferenceHandler : public CBase {
+public:
+	
+	/**
+	* CUserPreferenceHandler::CUserPreferenceHandler - Constructor for UserPreferenceHandler class.
+	*/
+	CUserPreferenceHandler(CWrapper* pWrapper, LibMCDataHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline bool HasUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey);
+	inline std::string RetrieveUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey);
+	inline void StoreUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey, const std::string & sValue, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline bool DeleteUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey);
+};
+	
+/*************************************************************************************************************************
  Class CMachineConfigurationVersion 
 **************************************************************************************************************************/
 class CMachineConfigurationVersion : public CBase {
@@ -2159,6 +2184,7 @@ public:
 	inline PTelemetrySession CreateTelemetrySession();
 	inline PTelemetryReader CreateTelemetryReader(const std::string & sJournalUUID);
 	inline PPersistencyHandler CreatePersistencyHandler();
+	inline PUserPreferenceHandler CreateUserPreferenceHandler();
 	inline void SetBaseTempDirectory(const std::string & sTempDirectory);
 	inline std::string GetBaseTempDirectory();
 	inline void SetLogCallback(const LogCallback pLogCallback, const LibMCData_pvoid pUserData);
@@ -2516,6 +2542,10 @@ public:
 		pWrapperTable->m_PersistencyHandler_RetrievePersistentDoubleParameter = nullptr;
 		pWrapperTable->m_PersistencyHandler_RetrievePersistentIntegerParameter = nullptr;
 		pWrapperTable->m_PersistencyHandler_RetrievePersistentBoolParameter = nullptr;
+		pWrapperTable->m_UserPreferenceHandler_HasUserPreference = nullptr;
+		pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference = nullptr;
+		pWrapperTable->m_UserPreferenceHandler_StoreUserPreference = nullptr;
+		pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference = nullptr;
 		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = nullptr;
 		pWrapperTable->m_MachineConfigurationVersion_GetXSDUUID = nullptr;
 		pWrapperTable->m_MachineConfigurationVersion_GetNumericVersion = nullptr;
@@ -2567,6 +2597,7 @@ public:
 		pWrapperTable->m_DataModel_CreateTelemetrySession = nullptr;
 		pWrapperTable->m_DataModel_CreateTelemetryReader = nullptr;
 		pWrapperTable->m_DataModel_CreatePersistencyHandler = nullptr;
+		pWrapperTable->m_DataModel_CreateUserPreferenceHandler = nullptr;
 		pWrapperTable->m_DataModel_SetBaseTempDirectory = nullptr;
 		pWrapperTable->m_DataModel_GetBaseTempDirectory = nullptr;
 		pWrapperTable->m_DataModel_SetLogCallback = nullptr;
@@ -4875,6 +4906,42 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_UserPreferenceHandler_HasUserPreference = (PLibMCDataUserPreferenceHandler_HasUserPreferencePtr) GetProcAddress(hLibrary, "libmcdata_userpreferencehandler_hasuserpreference");
+		#else // _WIN32
+		pWrapperTable->m_UserPreferenceHandler_HasUserPreference = (PLibMCDataUserPreferenceHandler_HasUserPreferencePtr) dlsym(hLibrary, "libmcdata_userpreferencehandler_hasuserpreference");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UserPreferenceHandler_HasUserPreference == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference = (PLibMCDataUserPreferenceHandler_RetrieveUserPreferencePtr) GetProcAddress(hLibrary, "libmcdata_userpreferencehandler_retrieveuserpreference");
+		#else // _WIN32
+		pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference = (PLibMCDataUserPreferenceHandler_RetrieveUserPreferencePtr) dlsym(hLibrary, "libmcdata_userpreferencehandler_retrieveuserpreference");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UserPreferenceHandler_StoreUserPreference = (PLibMCDataUserPreferenceHandler_StoreUserPreferencePtr) GetProcAddress(hLibrary, "libmcdata_userpreferencehandler_storeuserpreference");
+		#else // _WIN32
+		pWrapperTable->m_UserPreferenceHandler_StoreUserPreference = (PLibMCDataUserPreferenceHandler_StoreUserPreferencePtr) dlsym(hLibrary, "libmcdata_userpreferencehandler_storeuserpreference");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UserPreferenceHandler_StoreUserPreference == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference = (PLibMCDataUserPreferenceHandler_DeleteUserPreferencePtr) GetProcAddress(hLibrary, "libmcdata_userpreferencehandler_deleteuserpreference");
+		#else // _WIN32
+		pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference = (PLibMCDataUserPreferenceHandler_DeleteUserPreferencePtr) dlsym(hLibrary, "libmcdata_userpreferencehandler_deleteuserpreference");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = (PLibMCDataMachineConfigurationVersion_GetVersionUUIDPtr) GetProcAddress(hLibrary, "libmcdata_machineconfigurationversion_getversionuuid");
 		#else // _WIN32
 		pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID = (PLibMCDataMachineConfigurationVersion_GetVersionUUIDPtr) dlsym(hLibrary, "libmcdata_machineconfigurationversion_getversionuuid");
@@ -5331,6 +5398,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_DataModel_CreatePersistencyHandler == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataModel_CreateUserPreferenceHandler = (PLibMCDataDataModel_CreateUserPreferenceHandlerPtr) GetProcAddress(hLibrary, "libmcdata_datamodel_createuserpreferencehandler");
+		#else // _WIN32
+		pWrapperTable->m_DataModel_CreateUserPreferenceHandler = (PLibMCDataDataModel_CreateUserPreferenceHandlerPtr) dlsym(hLibrary, "libmcdata_datamodel_createuserpreferencehandler");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataModel_CreateUserPreferenceHandler == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6489,6 +6565,22 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_PersistencyHandler_RetrievePersistentBoolParameter == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_userpreferencehandler_hasuserpreference", (void**)&(pWrapperTable->m_UserPreferenceHandler_HasUserPreference));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UserPreferenceHandler_HasUserPreference == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_userpreferencehandler_retrieveuserpreference", (void**)&(pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UserPreferenceHandler_RetrieveUserPreference == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_userpreferencehandler_storeuserpreference", (void**)&(pWrapperTable->m_UserPreferenceHandler_StoreUserPreference));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UserPreferenceHandler_StoreUserPreference == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_userpreferencehandler_deleteuserpreference", (void**)&(pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UserPreferenceHandler_DeleteUserPreference == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_machineconfigurationversion_getversionuuid", (void**)&(pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_MachineConfigurationVersion_GetVersionUUID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6691,6 +6783,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_datamodel_createpersistencyhandler", (void**)&(pWrapperTable->m_DataModel_CreatePersistencyHandler));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataModel_CreatePersistencyHandler == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datamodel_createuserpreferencehandler", (void**)&(pWrapperTable->m_DataModel_CreateUserPreferenceHandler));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataModel_CreateUserPreferenceHandler == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_datamodel_setbasetempdirectory", (void**)&(pWrapperTable->m_DataModel_SetBaseTempDirectory));
@@ -10386,6 +10482,71 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CUserPreferenceHandler
+	 */
+	
+	/**
+	* CUserPreferenceHandler::HasUserPreference - Checks if a preference has been stored for the given user, domain and key.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to, e.g. 'parameterlist'. MUST NOT be empty.
+	* @param[in] sKey - Key identifying the preference within the domain. MUST NOT be empty.
+	* @return returns if the preference exists.
+	*/
+	bool CUserPreferenceHandler::HasUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey)
+	{
+		bool resultPreferenceExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UserPreferenceHandler_HasUserPreference(m_pHandle, sUserUUID.c_str(), sDomain.c_str(), sKey.c_str(), &resultPreferenceExists));
+		
+		return resultPreferenceExists;
+	}
+	
+	/**
+	* CUserPreferenceHandler::RetrieveUserPreference - Retrieves a stored preference value. Fails if the preference does not exist.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to.
+	* @param[in] sKey - Key identifying the preference within the domain.
+	* @return Stored value of the preference.
+	*/
+	std::string CUserPreferenceHandler::RetrieveUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey)
+	{
+		LibMCData_uint32 bytesNeededValue = 0;
+		LibMCData_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UserPreferenceHandler_RetrieveUserPreference(m_pHandle, sUserUUID.c_str(), sDomain.c_str(), sKey.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_UserPreferenceHandler_RetrieveUserPreference(m_pHandle, sUserUUID.c_str(), sDomain.c_str(), sKey.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CUserPreferenceHandler::StoreUserPreference - Stores a preference value. Creates a new preference or overwrites the existing one.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to. MUST NOT be empty.
+	* @param[in] sKey - Key identifying the preference within the domain. MUST NOT be empty.
+	* @param[in] sValue - Value to store.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	void CUserPreferenceHandler::StoreUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey, const std::string & sValue, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UserPreferenceHandler_StoreUserPreference(m_pHandle, sUserUUID.c_str(), sDomain.c_str(), sKey.c_str(), sValue.c_str(), nAbsoluteTimeStamp));
+	}
+	
+	/**
+	* CUserPreferenceHandler::DeleteUserPreference - Removes a preference from the database. Does nothing if the preference does not exist.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to.
+	* @param[in] sKey - Key identifying the preference within the domain.
+	* @return returns if the preference existed.
+	*/
+	bool CUserPreferenceHandler::DeleteUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey)
+	{
+		bool resultPreferenceExisted = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UserPreferenceHandler_DeleteUserPreference(m_pHandle, sUserUUID.c_str(), sDomain.c_str(), sKey.c_str(), &resultPreferenceExisted));
+		
+		return resultPreferenceExisted;
+	}
+	
+	/**
 	 * Method definitions for class CMachineConfigurationVersion
 	 */
 	
@@ -11182,6 +11343,21 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CPersistencyHandler>(m_pWrapper, hPersistencyHandler);
+	}
+	
+	/**
+	* CDataModel::CreateUserPreferenceHandler - creates a user preference handler instance.
+	* @return UserPreferenceHandler instance.
+	*/
+	PUserPreferenceHandler CDataModel::CreateUserPreferenceHandler()
+	{
+		LibMCDataHandle hUserPreferenceHandler = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataModel_CreateUserPreferenceHandler(m_pHandle, &hUserPreferenceHandler));
+		
+		if (!hUserPreferenceHandler) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CUserPreferenceHandler>(m_pWrapper, hUserPreferenceHandler);
 	}
 	
 	/**

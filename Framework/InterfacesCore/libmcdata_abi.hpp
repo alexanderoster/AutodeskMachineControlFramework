@@ -2887,6 +2887,61 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_persistencyhandler_retrievepersiste
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_persistencyhandler_retrievepersistentboolparameter(LibMCData_PersistencyHandler pPersistencyHandler, const char * pUUID, bool * pValue);
 
 /*************************************************************************************************************************
+ Class definition for UserPreferenceHandler
+**************************************************************************************************************************/
+
+/**
+* Checks if a preference has been stored for the given user, domain and key.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to, e.g. 'parameterlist'. MUST NOT be empty.
+* @param[in] pKey - Key identifying the preference within the domain. MUST NOT be empty.
+* @param[out] pPreferenceExists - returns if the preference exists.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_userpreferencehandler_hasuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExists);
+
+/**
+* Retrieves a stored preference value. Fails if the preference does not exist.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to.
+* @param[in] pKey - Key identifying the preference within the domain.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Stored value of the preference., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_userpreferencehandler_retrieveuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const LibMCData_uint32 nValueBufferSize, LibMCData_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Stores a preference value. Creates a new preference or overwrites the existing one.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to. MUST NOT be empty.
+* @param[in] pKey - Key identifying the preference within the domain. MUST NOT be empty.
+* @param[in] pValue - Value to store.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_userpreferencehandler_storeuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const char * pValue, LibMCData_uint64 nAbsoluteTimeStamp);
+
+/**
+* Removes a preference from the database. Does nothing if the preference does not exist.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to.
+* @param[in] pKey - Key identifying the preference within the domain.
+* @param[out] pPreferenceExisted - returns if the preference existed.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_userpreferencehandler_deleteuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExisted);
+
+/*************************************************************************************************************************
  Class definition for MachineConfigurationVersion
 **************************************************************************************************************************/
 
@@ -3433,6 +3488,15 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createtelemetryreader(Lib
 * @return error code or 0 (success)
 */
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createpersistencyhandler(LibMCData_DataModel pDataModel, LibMCData_PersistencyHandler * pPersistencyHandler);
+
+/**
+* creates a user preference handler instance.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[out] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createuserpreferencehandler(LibMCData_DataModel pDataModel, LibMCData_UserPreferenceHandler * pUserPreferenceHandler);
 
 /**
 * Sets a custom base temp directory. An empty string defaults to the system temp directory.

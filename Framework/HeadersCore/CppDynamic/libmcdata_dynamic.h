@@ -2874,6 +2874,61 @@ typedef LibMCDataResult (*PLibMCDataPersistencyHandler_RetrievePersistentInteger
 typedef LibMCDataResult (*PLibMCDataPersistencyHandler_RetrievePersistentBoolParameterPtr) (LibMCData_PersistencyHandler pPersistencyHandler, const char * pUUID, bool * pValue);
 
 /*************************************************************************************************************************
+ Class definition for UserPreferenceHandler
+**************************************************************************************************************************/
+
+/**
+* Checks if a preference has been stored for the given user, domain and key.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to, e.g. 'parameterlist'. MUST NOT be empty.
+* @param[in] pKey - Key identifying the preference within the domain. MUST NOT be empty.
+* @param[out] pPreferenceExists - returns if the preference exists.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataUserPreferenceHandler_HasUserPreferencePtr) (LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExists);
+
+/**
+* Retrieves a stored preference value. Fails if the preference does not exist.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to.
+* @param[in] pKey - Key identifying the preference within the domain.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Stored value of the preference., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataUserPreferenceHandler_RetrieveUserPreferencePtr) (LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const LibMCData_uint32 nValueBufferSize, LibMCData_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Stores a preference value. Creates a new preference or overwrites the existing one.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to. MUST NOT be empty.
+* @param[in] pKey - Key identifying the preference within the domain. MUST NOT be empty.
+* @param[in] pValue - Value to store.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataUserPreferenceHandler_StoreUserPreferencePtr) (LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const char * pValue, LibMCData_uint64 nAbsoluteTimeStamp);
+
+/**
+* Removes a preference from the database. Does nothing if the preference does not exist.
+*
+* @param[in] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @param[in] pUserUUID - UUID of the user the preference belongs to.
+* @param[in] pDomain - Domain the preference belongs to.
+* @param[in] pKey - Key identifying the preference within the domain.
+* @param[out] pPreferenceExisted - returns if the preference existed.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataUserPreferenceHandler_DeleteUserPreferencePtr) (LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExisted);
+
+/*************************************************************************************************************************
  Class definition for MachineConfigurationVersion
 **************************************************************************************************************************/
 
@@ -3422,6 +3477,15 @@ typedef LibMCDataResult (*PLibMCDataDataModel_CreateTelemetryReaderPtr) (LibMCDa
 typedef LibMCDataResult (*PLibMCDataDataModel_CreatePersistencyHandlerPtr) (LibMCData_DataModel pDataModel, LibMCData_PersistencyHandler * pPersistencyHandler);
 
 /**
+* creates a user preference handler instance.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[out] pUserPreferenceHandler - UserPreferenceHandler instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataModel_CreateUserPreferenceHandlerPtr) (LibMCData_DataModel pDataModel, LibMCData_UserPreferenceHandler * pUserPreferenceHandler);
+
+/**
 * Sets a custom base temp directory. An empty string defaults to the system temp directory.
 *
 * @param[in] pDataModel - DataModel instance.
@@ -3833,6 +3897,10 @@ typedef struct {
 	PLibMCDataPersistencyHandler_RetrievePersistentDoubleParameterPtr m_PersistencyHandler_RetrievePersistentDoubleParameter;
 	PLibMCDataPersistencyHandler_RetrievePersistentIntegerParameterPtr m_PersistencyHandler_RetrievePersistentIntegerParameter;
 	PLibMCDataPersistencyHandler_RetrievePersistentBoolParameterPtr m_PersistencyHandler_RetrievePersistentBoolParameter;
+	PLibMCDataUserPreferenceHandler_HasUserPreferencePtr m_UserPreferenceHandler_HasUserPreference;
+	PLibMCDataUserPreferenceHandler_RetrieveUserPreferencePtr m_UserPreferenceHandler_RetrieveUserPreference;
+	PLibMCDataUserPreferenceHandler_StoreUserPreferencePtr m_UserPreferenceHandler_StoreUserPreference;
+	PLibMCDataUserPreferenceHandler_DeleteUserPreferencePtr m_UserPreferenceHandler_DeleteUserPreference;
 	PLibMCDataMachineConfigurationVersion_GetVersionUUIDPtr m_MachineConfigurationVersion_GetVersionUUID;
 	PLibMCDataMachineConfigurationVersion_GetXSDUUIDPtr m_MachineConfigurationVersion_GetXSDUUID;
 	PLibMCDataMachineConfigurationVersion_GetNumericVersionPtr m_MachineConfigurationVersion_GetNumericVersion;
@@ -3884,6 +3952,7 @@ typedef struct {
 	PLibMCDataDataModel_CreateTelemetrySessionPtr m_DataModel_CreateTelemetrySession;
 	PLibMCDataDataModel_CreateTelemetryReaderPtr m_DataModel_CreateTelemetryReader;
 	PLibMCDataDataModel_CreatePersistencyHandlerPtr m_DataModel_CreatePersistencyHandler;
+	PLibMCDataDataModel_CreateUserPreferenceHandlerPtr m_DataModel_CreateUserPreferenceHandler;
 	PLibMCDataDataModel_SetBaseTempDirectoryPtr m_DataModel_SetBaseTempDirectory;
 	PLibMCDataDataModel_GetBaseTempDirectoryPtr m_DataModel_GetBaseTempDirectory;
 	PLibMCDataDataModel_SetLogCallbackPtr m_DataModel_SetLogCallback;

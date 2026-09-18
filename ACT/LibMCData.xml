@@ -1981,6 +1981,39 @@
 
 	</class>
 
+	<class name="UserPreferenceHandler" parent="Base" description="Generic per-user preference store. A preference is identified by the tuple (UserUUID, Domain, Key) and holds an arbitrary UTF8 value (typically a JSON document)." multithread="true">
+
+		<method name="HasUserPreference" description="Checks if a preference has been stored for the given user, domain and key.">
+			<param name="UserUUID" type="string" pass="in" description="UUID of the user the preference belongs to." />
+			<param name="Domain" type="string" pass="in" description="Domain the preference belongs to, e.g. 'parameterlist'. MUST NOT be empty." />
+			<param name="Key" type="string" pass="in" description="Key identifying the preference within the domain. MUST NOT be empty." />
+			<param name="PreferenceExists" type="bool" pass="return" description="returns if the preference exists." />
+		</method>
+
+		<method name="RetrieveUserPreference" description="Retrieves a stored preference value. Fails if the preference does not exist.">
+			<param name="UserUUID" type="string" pass="in" description="UUID of the user the preference belongs to." />
+			<param name="Domain" type="string" pass="in" description="Domain the preference belongs to." />
+			<param name="Key" type="string" pass="in" description="Key identifying the preference within the domain." />
+			<param name="Value" type="string" pass="return" description="Stored value of the preference." />
+		</method>
+
+		<method name="StoreUserPreference" description="Stores a preference value. Creates a new preference or overwrites the existing one.">
+			<param name="UserUUID" type="string" pass="in" description="UUID of the user the preference belongs to." />
+			<param name="Domain" type="string" pass="in" description="Domain the preference belongs to. MUST NOT be empty." />
+			<param name="Key" type="string" pass="in" description="Key identifying the preference within the domain. MUST NOT be empty." />
+			<param name="Value" type="string" pass="in" description="Value to store." />
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+		</method>
+
+		<method name="DeleteUserPreference" description="Removes a preference from the database. Does nothing if the preference does not exist.">
+			<param name="UserUUID" type="string" pass="in" description="UUID of the user the preference belongs to." />
+			<param name="Domain" type="string" pass="in" description="Domain the preference belongs to." />
+			<param name="Key" type="string" pass="in" description="Key identifying the preference within the domain." />
+			<param name="PreferenceExisted" type="bool" pass="return" description="returns if the preference existed." />
+		</method>
+
+	</class>
+
 	<!-- The MachineConfigurationVersion class is not thread safe and MUST ONLY be used in a single thread context... -->
 	<class name="MachineConfigurationVersion" parent="Base" description="Machine configuration XML version.">
 
@@ -2270,6 +2303,10 @@
 
 		<method name="CreatePersistencyHandler" description="creates a persistency handler instance.">
 			<param name="PersistencyHandler" type="class" class="PersistencyHandler" pass="return" description="PersistencyHandler instance." />	
+		</method>
+
+		<method name="CreateUserPreferenceHandler" description="creates a user preference handler instance.">
+			<param name="UserPreferenceHandler" type="class" class="UserPreferenceHandler" pass="return" description="UserPreferenceHandler instance." />	
 		</method>
 		
 		<method name="SetBaseTempDirectory" description="Sets a custom base temp directory. An empty string defaults to the system temp directory.">

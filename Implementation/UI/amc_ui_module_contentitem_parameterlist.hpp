@@ -100,6 +100,12 @@ namespace AMC {
 		// Empty disables editing for the whole list.
 		std::string m_sEditEvent;
 
+		// Stable, restart-invariant identifier used by the frontend to scope
+		// per-user view preferences (favorites, sorting, filters, presets) to
+		// this specific list. Defaults to the config-derived item path; can be
+		// overridden via the optional "preferencekey" (or "name") attribute.
+		std::string m_sPreferenceKey;
+
 		// Per-column configuration. Columns are addressed by the canonical
 		// identifiers "parameter", "value", "group" and "system" via <column>
 		// subnodes. width is a raw CSS length (empty or "auto" = flexible),

@@ -247,6 +247,48 @@ export default class AMCApplication extends Common.AMCObject {
         });
     }
 
+    // Retrieves a generic per-user preference stored under (domain, key).
+    // Resolves to the parsed JSON document, or null when nothing is stored.
+    // Never rejects on "not found"; only genuine transport errors reject.
+    async getUserPreference (domain, key) {
+        let response = await this.axiosGetRequest ("/userpreferences", {
+            params: { domain: domain, key: key }
+        });
+
+        if (!response || !response.data || response.data.exists !== true)
+            return null;
+
+        let rawValue = response.data.value;
+        if (typeof rawValue !== "string" || rawValue.length === 0)
+            return null;
+
+        try {
+            return JSON.parse (rawValue);
+        } catch (parseError) {
+            // Stored value is not valid JSON; treat as absent rather than throwing.
+            return null;
+        }
+    }
+
+    // Stores a generic per-user preference document under (domain, key). The
+    // document is serialized to JSON before being sent to the backend.
+    storeUserPreference (domain, key, valueDocument) {
+        let serialized = JSON.stringify (valueDocument === undefined ? null : valueDocument);
+        return this.axiosPostRequest ("/userpreferences", {
+            "domain": domain,
+            "key": key,
+            "value": serialized
+        });
+    }
+
+    // Removes a generic per-user preference stored under (domain, key).
+    deleteUserPreference (domain, key) {
+        return this.axiosPostRequest ("/userpreferences/delete", {
+            "domain": domain,
+            "key": key
+        });
+    }
+
     retrieveConfiguration(vuetifythemes) {
         this.axiosGetRequest("/config", { timeout: CONFIG_REQUEST_TIMEOUT_MS })
         .then(resultJSON => {

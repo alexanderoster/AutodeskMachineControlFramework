@@ -111,6 +111,8 @@ public:
 
 	IPersistencyHandler* CreatePersistencyHandler() override;
 
+	IUserPreferenceHandler* CreateUserPreferenceHandler() override;
+
 	void SetBaseTempDirectory(const std::string& sTempDirectory) override;
 
 	// DEPRECIATED! DO NOT USE. Use GetInstallationInformationObject instead!

@@ -355,6 +355,17 @@ void CUIModule_ContentParameterList::loadFromXML(const pugi::xml_node& xmlNode)
 	auto editEventAttrib = xmlNode.attribute("editevent");
 	m_sEditEvent = editEventAttrib.as_string();
 
+	// Optional stable preference key override. Falls back to the config-derived
+	// item path (see frontendWriteItemToJSON) when neither attribute is given.
+	auto preferenceKeyAttrib = xmlNode.attribute("preferencekey");
+	if (!preferenceKeyAttrib.empty())
+		m_sPreferenceKey = preferenceKeyAttrib.as_string();
+	else {
+		auto nameAttrib = xmlNode.attribute("name");
+		if (!nameAttrib.empty())
+			m_sPreferenceKey = nameAttrib.as_string();
+	}
+
 	// Optional per-column configuration via <column> subnodes. Columns not
 	// listed keep their defaults (visible, flexible width, not resizable).
 	auto columnNodes = xmlNode.children("column");
@@ -452,6 +463,14 @@ void CUIModule_ContentParameterList::frontendWriteItemToJSON(CJSONWriter& writer
 
 	CJSONWriterObject attributesObject(writer);
 	pFrontendState->writeModuleAttributesToJSON(writer, attributesObject, m_pItemModuleStore.get(), pStateMachineData);
+
+	// Stable per-list identifier used by the frontend to scope persisted view
+	// preferences. Prefer the authored override, otherwise use the config-derived
+	// item path (restart-invariant, unlike the generated module/item UUID).
+	std::string sPreferenceKey = m_sPreferenceKey;
+	if (sPreferenceKey.empty())
+		sPreferenceKey = getItemPath();
+	attributesObject.addString("preferencekey", sPreferenceKey);
 
 	// Embed the per-column configuration so the frontend can build headers with
 	// visibility, widths and resize flags.

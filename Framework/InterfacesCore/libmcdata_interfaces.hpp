@@ -83,6 +83,7 @@ class IBuildJobHandler;
 class IUserList;
 class ILoginHandler;
 class IPersistencyHandler;
+class IUserPreferenceHandler;
 class IMachineConfigurationVersion;
 class IMachineConfigurationVersionIterator;
 class IMachineConfigurationXSD;
@@ -2420,6 +2421,54 @@ typedef IBaseSharedPtr<IPersistencyHandler> PIPersistencyHandler;
 
 
 /*************************************************************************************************************************
+ Class interface for UserPreferenceHandler 
+**************************************************************************************************************************/
+
+class IUserPreferenceHandler : public virtual IBase {
+public:
+	/**
+	* IUserPreferenceHandler::HasUserPreference - Checks if a preference has been stored for the given user, domain and key.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to, e.g. 'parameterlist'. MUST NOT be empty.
+	* @param[in] sKey - Key identifying the preference within the domain. MUST NOT be empty.
+	* @return returns if the preference exists.
+	*/
+	virtual bool HasUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey) = 0;
+
+	/**
+	* IUserPreferenceHandler::RetrieveUserPreference - Retrieves a stored preference value. Fails if the preference does not exist.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to.
+	* @param[in] sKey - Key identifying the preference within the domain.
+	* @return Stored value of the preference.
+	*/
+	virtual std::string RetrieveUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey) = 0;
+
+	/**
+	* IUserPreferenceHandler::StoreUserPreference - Stores a preference value. Creates a new preference or overwrites the existing one.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to. MUST NOT be empty.
+	* @param[in] sKey - Key identifying the preference within the domain. MUST NOT be empty.
+	* @param[in] sValue - Value to store.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	virtual void StoreUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey, const std::string & sValue, const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IUserPreferenceHandler::DeleteUserPreference - Removes a preference from the database. Does nothing if the preference does not exist.
+	* @param[in] sUserUUID - UUID of the user the preference belongs to.
+	* @param[in] sDomain - Domain the preference belongs to.
+	* @param[in] sKey - Key identifying the preference within the domain.
+	* @return returns if the preference existed.
+	*/
+	virtual bool DeleteUserPreference(const std::string & sUserUUID, const std::string & sDomain, const std::string & sKey) = 0;
+
+};
+
+typedef IBaseSharedPtr<IUserPreferenceHandler> PIUserPreferenceHandler;
+
+
+/*************************************************************************************************************************
  Class interface for MachineConfigurationVersion 
 **************************************************************************************************************************/
 
@@ -2826,6 +2875,12 @@ public:
 	* @return PersistencyHandler instance.
 	*/
 	virtual IPersistencyHandler * CreatePersistencyHandler() = 0;
+
+	/**
+	* IDataModel::CreateUserPreferenceHandler - creates a user preference handler instance.
+	* @return UserPreferenceHandler instance.
+	*/
+	virtual IUserPreferenceHandler * CreateUserPreferenceHandler() = 0;
 
 	/**
 	* IDataModel::SetBaseTempDirectory - Sets a custom base temp directory. An empty string defaults to the system temp directory.

@@ -58,6 +58,28 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 		this.entriesperpage = 25;
 		this.editevent = "";
 
+		// Stable per-list key (server provided via v2 attribute "preferencekey").
+		// Used together with the page name to scope persisted view preferences.
+		this.preferenceKey = "";
+
+		// Client-side view state. This is applied on top of the raw server entries
+		// by applyView() and persisted per-user through the preferences API.
+		this.favorites = [];                       // array of rowKey strings, insertion ordered
+		this.showOnlyFavorites = false;
+		this.sort = { column: "", direction: "asc" };   // column is a header "value" key
+		this.filters = { groups: [], systems: [] };     // empty array = no restriction
+		this.presets = {};                          // presetName -> preference document
+		this.activePreset = "";
+
+		// Persistence bookkeeping. preferencesLoaded guards against saving before the
+		// initial load has completed. onPreferencesChanged is an optional hook the
+		// frontend can set to react to state mutations (e.g. trigger a redraw).
+		this.preferencesLoaded = false;
+		this.onPreferencesChanged = null;
+		this._saveTimer = null;
+
+		this.PREFERENCE_DOMAIN = "parameterlist";
+
 		this.updateFromJSON (moduleJSON);
 	}
 
@@ -162,6 +184,8 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 			this.entriesperpage = attrs.entriesperpage;
 		if (attrs.editevent !== undefined)
 			this.editevent = attrs.editevent;
+		if (attrs.preferencekey !== undefined)
+			this.preferenceKey = String (attrs.preferencekey);
 
 		this.applyColumns (attrs.columns);
 		this.rebuildHeaders ();
@@ -173,6 +197,351 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 		const incoming = Array.isArray(attrs.entries) ? attrs.entries : [];
 		while (this.entries.length > 0) this.entries.pop();
 		for (let entry of incoming) this.entries.push(entry);
+	}
+
+
+	// -----------------------------------------------------------------------
+	// View state: identity, sorting, filtering, favorites
+	// -----------------------------------------------------------------------
+
+	// Stable identity of a parameter row, matching the frontend rowKey().
+	rowKey (row)
+	{
+		if (!row)
+			return "";
+		return `${row.paramInstance ?? ''}.${row.paramGroupName ?? ''}.${row.paramName ?? ''}`;
+	}
+
+	// Fully-qualified preference scope key for this list, combining the page and
+	// the server-provided stable list key. Returns "" if no stable key exists.
+	preferenceScopeKey ()
+	{
+		if (!this.preferenceKey)
+			return "";
+		const pageName = (this.page && this.page.name) ? this.page.name : "";
+		return `${pageName}.${this.preferenceKey}`;
+	}
+
+	isFavorite (row)
+	{
+		return this.favorites.indexOf (this.rowKey (row)) >= 0;
+	}
+
+	toggleFavorite (row)
+	{
+		const key = this.rowKey (row);
+		const index = this.favorites.indexOf (key);
+		if (index >= 0)
+			this.favorites.splice (index, 1);
+		else
+			this.favorites.push (key);
+		this.markPreferencesDirty ();
+	}
+
+	setShowOnlyFavorites (flag)
+	{
+		this.showOnlyFavorites = !!flag;
+		this.markPreferencesDirty ();
+	}
+
+	// Toggles the sort on a column value key: unsorted -> asc -> desc -> unsorted.
+	toggleSort (columnValue)
+	{
+		if (this.sort.column !== columnValue) {
+			this.sort = { column: columnValue, direction: "asc" };
+		} else if (this.sort.direction === "asc") {
+			this.sort = { column: columnValue, direction: "desc" };
+		} else {
+			this.sort = { column: "", direction: "asc" };
+		}
+		this.markPreferencesDirty ();
+	}
+
+	setSort (columnValue, direction)
+	{
+		this.sort = { column: columnValue || "", direction: (direction === "desc") ? "desc" : "asc" };
+		this.markPreferencesDirty ();
+	}
+
+	// Distinct group descriptions present in the current entries (for the filter UI).
+	distinctGroups ()
+	{
+		return this.distinctValues ("paramGroup");
+	}
+
+	// Distinct system descriptions present in the current entries (for the filter UI).
+	distinctSystems ()
+	{
+		return this.distinctValues ("paramSystem");
+	}
+
+	distinctValues (field)
+	{
+		const seen = {};
+		const result = [];
+		for (let row of this.entries) {
+			const value = row ? row[field] : undefined;
+			if (value !== undefined && value !== null && value !== "" && !seen[value]) {
+				seen[value] = true;
+				result.push (value);
+			}
+		}
+		return result;
+	}
+
+	setGroupFilter (groups)
+	{
+		this.filters.groups = Array.isArray (groups) ? groups.slice () : [];
+		this.markPreferencesDirty ();
+	}
+
+	setSystemFilter (systems)
+	{
+		this.filters.systems = Array.isArray (systems) ? systems.slice () : [];
+		this.markPreferencesDirty ();
+	}
+
+	clearFilters ()
+	{
+		this.filters = { groups: [], systems: [] };
+		this.markPreferencesDirty ();
+	}
+
+	// Applies favorites-first ordering, category filters, favorite-only visibility
+	// and column sorting to a raw entries array, returning a new array. The input
+	// is never mutated.
+	applyView (rows)
+	{
+		let result = Array.isArray (rows) ? rows.slice () : [];
+
+		// Category filters (AND across facets, OR within a facet).
+		const groupFilter = this.filters.groups || [];
+		const systemFilter = this.filters.systems || [];
+		if (groupFilter.length > 0)
+			result = result.filter ((row) => groupFilter.indexOf (row.paramGroup) >= 0);
+		if (systemFilter.length > 0)
+			result = result.filter ((row) => systemFilter.indexOf (row.paramSystem) >= 0);
+
+		// Favorites-only visibility.
+		if (this.showOnlyFavorites)
+			result = result.filter ((row) => this.isFavorite (row));
+
+		// Sorting. A stable sort keeps insertion order for equal keys. Favorites
+		// are always floated to the top regardless of the active column sort.
+		const sortColumn = this.sort.column;
+		const sortDir = (this.sort.direction === "desc") ? -1 : 1;
+		result = result
+			.map ((row, index) => ({ row, index }))
+			.sort ((a, b) => {
+				const aFav = this.isFavorite (a.row) ? 0 : 1;
+				const bFav = this.isFavorite (b.row) ? 0 : 1;
+				if (aFav !== bFav)
+					return aFav - bFav;
+
+				if (sortColumn) {
+					const aValue = a.row[sortColumn];
+					const bValue = b.row[sortColumn];
+					const comparison = this.compareValues (aValue, bValue);
+					if (comparison !== 0)
+						return comparison * sortDir;
+				}
+
+				return a.index - b.index;
+			})
+			.map ((entry) => entry.row);
+
+		return result;
+	}
+
+	// Compares two cell values numerically when both look numeric, otherwise
+	// case-insensitively as strings.
+	compareValues (a, b)
+	{
+		const aStr = (a === undefined || a === null) ? "" : String (a);
+		const bStr = (b === undefined || b === null) ? "" : String (b);
+
+		const aNum = parseFloat (aStr);
+		const bNum = parseFloat (bStr);
+		const bothNumeric = !isNaN (aNum) && !isNaN (bNum) &&
+			aStr.trim () !== "" && bStr.trim () !== "";
+		if (bothNumeric) {
+			if (aNum < bNum) return -1;
+			if (aNum > bNum) return 1;
+			return 0;
+		}
+
+		return aStr.toLowerCase ().localeCompare (bStr.toLowerCase ());
+	}
+
+
+	// -----------------------------------------------------------------------
+	// Presets
+	// -----------------------------------------------------------------------
+
+	// The current active view collapsed into a plain, serializable object.
+	currentViewSnapshot ()
+	{
+		return {
+			favorites: this.favorites.slice (),
+			showOnlyFavorites: this.showOnlyFavorites,
+			sort: { column: this.sort.column, direction: this.sort.direction },
+			filters: {
+				groups: (this.filters.groups || []).slice (),
+				systems: (this.filters.systems || []).slice ()
+			}
+		};
+	}
+
+	applyViewSnapshot (snapshot)
+	{
+		if (!snapshot)
+			return;
+		if (Array.isArray (snapshot.favorites))
+			this.favorites = snapshot.favorites.slice ();
+		if (snapshot.showOnlyFavorites !== undefined)
+			this.showOnlyFavorites = !!snapshot.showOnlyFavorites;
+		if (snapshot.sort) {
+			this.sort = {
+				column: snapshot.sort.column || "",
+				direction: (snapshot.sort.direction === "desc") ? "desc" : "asc"
+			};
+		}
+		if (snapshot.filters) {
+			this.filters = {
+				groups: Array.isArray (snapshot.filters.groups) ? snapshot.filters.groups.slice () : [],
+				systems: Array.isArray (snapshot.filters.systems) ? snapshot.filters.systems.slice () : []
+			};
+		}
+	}
+
+	listPresets ()
+	{
+		return Object.keys (this.presets).sort ((a, b) => a.toLowerCase ().localeCompare (b.toLowerCase ()));
+	}
+
+	savePreset (name)
+	{
+		const trimmed = (name || "").trim ();
+		if (trimmed.length === 0)
+			return false;
+		this.presets[trimmed] = this.currentViewSnapshot ();
+		this.activePreset = trimmed;
+		this.markPreferencesDirty ();
+		return true;
+	}
+
+	loadPreset (name)
+	{
+		const preset = this.presets[name];
+		if (!preset)
+			return false;
+		this.applyViewSnapshot (preset);
+		this.activePreset = name;
+		this.markPreferencesDirty ();
+		return true;
+	}
+
+	deletePreset (name)
+	{
+		if (!Object.prototype.hasOwnProperty.call (this.presets, name))
+			return false;
+		delete this.presets[name];
+		if (this.activePreset === name)
+			this.activePreset = "";
+		this.markPreferencesDirty ();
+		return true;
+	}
+
+
+	// -----------------------------------------------------------------------
+	// Persistence (serialization + REST via the owning application)
+	// -----------------------------------------------------------------------
+
+	// The complete preference document persisted for this list.
+	serializePreferences ()
+	{
+		const snapshot = this.currentViewSnapshot ();
+		return {
+			version: 1,
+			favorites: snapshot.favorites,
+			showOnlyFavorites: snapshot.showOnlyFavorites,
+			sort: snapshot.sort,
+			filters: snapshot.filters,
+			activePreset: this.activePreset,
+			presets: this.presets
+		};
+	}
+
+	// Applies a persisted preference document to the live view state.
+	applyPreferenceDocument (doc)
+	{
+		if (!doc || typeof doc !== "object")
+			return;
+		this.applyViewSnapshot (doc);
+		this.presets = (doc.presets && typeof doc.presets === "object") ? doc.presets : {};
+		this.activePreset = (typeof doc.activePreset === "string") ? doc.activePreset : "";
+	}
+
+	getApplication ()
+	{
+		return (this.page && this.page.application) ? this.page.application : null;
+	}
+
+	// Loads persisted preferences for this list from the backend. Safe to call
+	// when no stable key or application is available (resolves to false).
+	async loadPreferences ()
+	{
+		const scopeKey = this.preferenceScopeKey ();
+		const app = this.getApplication ();
+		if (!scopeKey || !app || typeof app.getUserPreference !== "function") {
+			this.preferencesLoaded = true;
+			return false;
+		}
+
+		try {
+			const doc = await app.getUserPreference (this.PREFERENCE_DOMAIN, scopeKey);
+			if (doc)
+				this.applyPreferenceDocument (doc);
+		} catch (loadError) {
+			// Non-fatal: fall back to defaults if preferences cannot be loaded.
+		}
+
+		this.preferencesLoaded = true;
+		if (typeof this.onPreferencesChanged === "function")
+			this.onPreferencesChanged ();
+		return true;
+	}
+
+	// Flags the preference state as changed. Notifies any listener and schedules a
+	// debounced persist so rapid UI interactions collapse into a single request.
+	markPreferencesDirty ()
+	{
+		if (typeof this.onPreferencesChanged === "function")
+			this.onPreferencesChanged ();
+		this.schedulePersist ();
+	}
+
+	schedulePersist (delayMs)
+	{
+		if (!this.preferencesLoaded)
+			return;
+		const scopeKey = this.preferenceScopeKey ();
+		const app = this.getApplication ();
+		if (!scopeKey || !app || typeof app.storeUserPreference !== "function")
+			return;
+
+		if (this._saveTimer)
+			clearTimeout (this._saveTimer);
+
+		this._saveTimer = setTimeout (() => {
+			this._saveTimer = null;
+			try {
+				app.storeUserPreference (this.PREFERENCE_DOMAIN, scopeKey, this.serializePreferences ())
+					.catch (() => { /* transient persist failures are non-fatal */ });
+			} catch (persistError) {
+				// Ignore synchronous persist errors; state remains in memory.
+			}
+		}, (delayMs === undefined) ? 400 : delayMs);
 	}
 
 }

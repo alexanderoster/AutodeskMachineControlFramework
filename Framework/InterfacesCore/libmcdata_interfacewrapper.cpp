@@ -9132,6 +9132,173 @@ LibMCDataResult libmcdata_persistencyhandler_retrievepersistentboolparameter(Lib
 
 
 /*************************************************************************************************************************
+ Class implementation for UserPreferenceHandler
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_userpreferencehandler_hasuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExists)
+{
+	IBase* pIBaseClass = (IBase *)pUserPreferenceHandler;
+
+	try {
+		if (pUserUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pDomain == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pKey == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pPreferenceExists == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID(pUserUUID);
+		std::string sDomain(pDomain);
+		std::string sKey(pKey);
+		IUserPreferenceHandler* pIUserPreferenceHandler = dynamic_cast<IUserPreferenceHandler*>(pIBaseClass);
+		if (!pIUserPreferenceHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pPreferenceExists = pIUserPreferenceHandler->HasUserPreference(sUserUUID, sDomain, sKey);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_userpreferencehandler_retrieveuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const LibMCData_uint32 nValueBufferSize, LibMCData_uint32* pValueNeededChars, char * pValueBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pUserPreferenceHandler;
+
+	try {
+		if (pUserUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pDomain == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pKey == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pValueBuffer) && !(pValueNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID(pUserUUID);
+		std::string sDomain(pDomain);
+		std::string sKey(pKey);
+		std::string sValue("");
+		IUserPreferenceHandler* pIUserPreferenceHandler = dynamic_cast<IUserPreferenceHandler*>(pIBaseClass);
+		if (!pIUserPreferenceHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pValueBuffer == nullptr);
+		if (isCacheCall) {
+			sValue = pIUserPreferenceHandler->RetrieveUserPreference(sUserUUID, sDomain, sKey);
+
+			pIUserPreferenceHandler->_setCache (new ParameterCache_1<std::string> (sValue));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIUserPreferenceHandler->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sValue);
+			pIUserPreferenceHandler->_setCache (nullptr);
+		}
+		
+		if (pValueNeededChars)
+			*pValueNeededChars = (LibMCData_uint32) (sValue.size()+1);
+		if (pValueBuffer) {
+			if (sValue.size() >= nValueBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iValue = 0; iValue < sValue.size(); iValue++)
+				pValueBuffer[iValue] = sValue[iValue];
+			pValueBuffer[sValue.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_userpreferencehandler_storeuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, const char * pValue, LibMCData_uint64 nAbsoluteTimeStamp)
+{
+	IBase* pIBaseClass = (IBase *)pUserPreferenceHandler;
+
+	try {
+		if (pUserUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pDomain == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pKey == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pValue == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID(pUserUUID);
+		std::string sDomain(pDomain);
+		std::string sKey(pKey);
+		std::string sValue(pValue);
+		IUserPreferenceHandler* pIUserPreferenceHandler = dynamic_cast<IUserPreferenceHandler*>(pIBaseClass);
+		if (!pIUserPreferenceHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pIUserPreferenceHandler->StoreUserPreference(sUserUUID, sDomain, sKey, sValue, nAbsoluteTimeStamp);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_userpreferencehandler_deleteuserpreference(LibMCData_UserPreferenceHandler pUserPreferenceHandler, const char * pUserUUID, const char * pDomain, const char * pKey, bool * pPreferenceExisted)
+{
+	IBase* pIBaseClass = (IBase *)pUserPreferenceHandler;
+
+	try {
+		if (pUserUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pDomain == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pKey == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pPreferenceExisted == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID(pUserUUID);
+		std::string sDomain(pDomain);
+		std::string sKey(pKey);
+		IUserPreferenceHandler* pIUserPreferenceHandler = dynamic_cast<IUserPreferenceHandler*>(pIBaseClass);
+		if (!pIUserPreferenceHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pPreferenceExisted = pIUserPreferenceHandler->DeleteUserPreference(sUserUUID, sDomain, sKey);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
  Class implementation for MachineConfigurationVersion
 **************************************************************************************************************************/
 LibMCDataResult libmcdata_machineconfigurationversion_getversionuuid(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nVersionUUIDBufferSize, LibMCData_uint32* pVersionUUIDNeededChars, char * pVersionUUIDBuffer)
@@ -10999,6 +11166,34 @@ LibMCDataResult libmcdata_datamodel_createpersistencyhandler(LibMCData_DataModel
 	}
 }
 
+LibMCDataResult libmcdata_datamodel_createuserpreferencehandler(LibMCData_DataModel pDataModel, LibMCData_UserPreferenceHandler * pUserPreferenceHandler)
+{
+	IBase* pIBaseClass = (IBase *)pDataModel;
+
+	try {
+		if (pUserPreferenceHandler == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseUserPreferenceHandler(nullptr);
+		IDataModel* pIDataModel = dynamic_cast<IDataModel*>(pIBaseClass);
+		if (!pIDataModel)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseUserPreferenceHandler = pIDataModel->CreateUserPreferenceHandler();
+
+		*pUserPreferenceHandler = (IBase*)(pBaseUserPreferenceHandler);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDataResult libmcdata_datamodel_setbasetempdirectory(LibMCData_DataModel pDataModel, const char * pTempDirectory)
 {
 	IBase* pIBaseClass = (IBase *)pDataModel;
@@ -11818,6 +12013,14 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_persistencyhandler_retrievepersistentintegerparameter;
 	if (sProcName == "libmcdata_persistencyhandler_retrievepersistentboolparameter") 
 		*ppProcAddress = (void*) &libmcdata_persistencyhandler_retrievepersistentboolparameter;
+	if (sProcName == "libmcdata_userpreferencehandler_hasuserpreference") 
+		*ppProcAddress = (void*) &libmcdata_userpreferencehandler_hasuserpreference;
+	if (sProcName == "libmcdata_userpreferencehandler_retrieveuserpreference") 
+		*ppProcAddress = (void*) &libmcdata_userpreferencehandler_retrieveuserpreference;
+	if (sProcName == "libmcdata_userpreferencehandler_storeuserpreference") 
+		*ppProcAddress = (void*) &libmcdata_userpreferencehandler_storeuserpreference;
+	if (sProcName == "libmcdata_userpreferencehandler_deleteuserpreference") 
+		*ppProcAddress = (void*) &libmcdata_userpreferencehandler_deleteuserpreference;
 	if (sProcName == "libmcdata_machineconfigurationversion_getversionuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getversionuuid;
 	if (sProcName == "libmcdata_machineconfigurationversion_getxsduuid") 
@@ -11920,6 +12123,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_datamodel_createtelemetryreader;
 	if (sProcName == "libmcdata_datamodel_createpersistencyhandler") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_createpersistencyhandler;
+	if (sProcName == "libmcdata_datamodel_createuserpreferencehandler") 
+		*ppProcAddress = (void*) &libmcdata_datamodel_createuserpreferencehandler;
 	if (sProcName == "libmcdata_datamodel_setbasetempdirectory") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_setbasetempdirectory;
 	if (sProcName == "libmcdata_datamodel_getbasetempdirectory") 
