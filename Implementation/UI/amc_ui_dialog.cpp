@@ -40,8 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUIDialog::CUIDialog(const std::string& sName, const std::string& sTitle, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
-	: CUIPage (sName, pUIEventHandler, icon, caption, description, ""), m_sTitle (sTitle)
+CUIDialog::CUIDialog(const std::string& sName, const std::string& sTitle, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const CUIExpression& active, const CUIExpression& closable)
+	: CUIPage (sName, pUIEventHandler, icon, caption, description, ""), m_sTitle (sTitle), m_Active (active), m_Closable (closable)
 {
 
 }
@@ -54,4 +54,14 @@ CUIDialog::~CUIDialog()
 std::string CUIDialog::getTitle()
 {
 	return m_sTitle;
+}
+
+CUIExpression& CUIDialog::getActiveExpression()
+{
+	return m_Active;
+}
+
+CUIExpression& CUIDialog::getClosableExpression()
+{
+	return m_Closable;
 }

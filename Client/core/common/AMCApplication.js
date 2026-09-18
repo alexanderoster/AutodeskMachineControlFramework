@@ -1156,6 +1156,10 @@ export default class AMCApplication extends Common.AMCObject {
 		applyPageVisibility(this.AppContent.PageMap, data.pages);
 		applyPageVisibility(this.AppContent.CustomPageMap, data.custompages);
 		applyPageVisibility(this.AppContent.DialogMap, data.dialogs);
+
+		// Server-driven dialogs follow their "active" flag; patches update the dialog objects in place.
+		if (data.dialogs)
+			this._syncServerDrivenDialogs(data.dialogs);
 	}
 
 	// Leaves a page that became hidden and closes dialogs that became hidden.
@@ -1243,6 +1247,37 @@ export default class AMCApplication extends Common.AMCObject {
 				}
 			}
 		}
+	}
+
+	// Applies the server-side open state of dialogs that carry an "active" flag (dialogs
+	// with sync:active in the machine configuration). The server is authoritative: such a
+	// dialog is opened while the flag is true, even if a client action closed it in between,
+	// and closed as soon as the flag turns false. Dialogs without the flag are untouched.
+	_syncServerDrivenDialogs(dialogsJSON) {
+		let changed = false;
+
+		for (let dialogJSON of dialogsJSON) {
+			if (typeof dialogJSON.active !== "boolean")
+				continue;
+
+			let dialog = this.AppContent.DialogMap.get(dialogJSON.name);
+			if (!dialog)
+				continue;
+
+			dialog.serverDriven = true;
+			dialog.closable = (dialogJSON.closable !== false);
+
+			if (dialogJSON.active && !dialog.dialogIsActive && (dialog.visible !== false)) {
+				// showDialog already refreshes the content items.
+				this.showDialog(dialog.name);
+			} else if (!dialogJSON.active && dialog.dialogIsActive) {
+				dialog.dialogIsActive = false;
+				changed = true;
+			}
+		}
+
+		if (changed)
+			this.updateContentItems();
 	}
 
 	// Recursively index a v2 module (and its submodules) by UUID.
@@ -2108,6 +2143,9 @@ export default class AMCApplication extends Common.AMCObject {
         }
     }
 
+    // Only one dialog is open at a time. A server-driven dialog (see
+    // _syncServerDrivenDialogs) re-opens on the next frontend poll while its flag is
+    // set, so it wins over dialogs opened by client actions.
     showDialog(dialog) {
 
         this.closeAllDialogs();
