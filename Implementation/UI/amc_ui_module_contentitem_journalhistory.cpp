@@ -51,22 +51,29 @@ PUIModule_ContentJournalHistory CUIModule_ContentJournalHistory::makeFromXML(con
 	auto defaultVariablesAttrib = xmlNode.attribute("defaultvariables");
 	CUIExpression defaultVariablesExpression(xmlNode, "defaultvariables", std::string(""));
 
+	CUIExpression compactExpression(xmlNode, "compact", std::string("false"));
+	CUIExpression liveWindowExpression(xmlNode, "livewindow", std::string("60"));
+
 	return std::make_shared<CUIModule_ContentJournalHistory>(
 		titleAttrib.empty() ? "Process History" : titleAttrib.as_string(),
 		titleExpression,
 		defaultVariablesAttrib.empty() ? "" : defaultVariablesAttrib.as_string(),
 		defaultVariablesExpression,
+		compactExpression,
+		liveWindowExpression,
 		sItemName,
 		sModulePath
 	);
 }
 
-CUIModule_ContentJournalHistory::CUIModule_ContentJournalHistory(const std::string& sTitle, const CUIExpression& titleExpression, const std::string& sDefaultVariables, const CUIExpression& defaultVariablesExpression, const std::string& sItemName, const std::string& sModulePath)
+CUIModule_ContentJournalHistory::CUIModule_ContentJournalHistory(const std::string& sTitle, const CUIExpression& titleExpression, const std::string& sDefaultVariables, const CUIExpression& defaultVariablesExpression, const CUIExpression& compactExpression, const CUIExpression& liveWindowExpression, const std::string& sItemName, const std::string& sModulePath)
 	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sItemName, sModulePath),
 	  m_sTitle(sTitle),
 	  m_sDefaultVariables(sDefaultVariables),
 	  m_TitleExpression(titleExpression),
-	  m_DefaultVariablesExpression(defaultVariablesExpression)
+	  m_DefaultVariablesExpression(defaultVariablesExpression),
+	  m_CompactExpression(compactExpression),
+	  m_LiveWindowExpression(liveWindowExpression)
 {
 }
 
@@ -80,6 +87,8 @@ void CUIModule_ContentJournalHistory::addLegacyContentToJSON(CJSONWriter& writer
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
 	object.addString("title", m_sTitle);
 	object.addString("defaultvariables", m_sDefaultVariables);
+	object.addBool("compact", m_CompactExpression.evaluateBoolValue(nullptr));
+	object.addInteger("livewindow", m_LiveWindowExpression.evaluateIntegerValue(nullptr));
 }
 
 std::string CUIModule_ContentJournalHistory::getItemType()
@@ -91,4 +100,6 @@ void CUIModule_ContentJournalHistory::registerFrontendAttributes()
 {
 	registerItemStringAttribute("title", m_TitleExpression);
 	registerItemStringAttribute("defaultvariables", m_DefaultVariablesExpression);
+	registerItemBoolAttribute("compact", m_CompactExpression);
+	registerItemIntegerAttribute("livewindow", m_LiveWindowExpression);
 }

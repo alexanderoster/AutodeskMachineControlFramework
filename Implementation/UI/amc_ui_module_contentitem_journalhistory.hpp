@@ -58,12 +58,17 @@ namespace AMC {
 		std::string m_sDefaultVariables;
 		CUIExpression m_TitleExpression;
 		CUIExpression m_DefaultVariablesExpression;
+		// Optional presentation flags. "compact" renders a space-filling chart without
+		// the variable selector / time-range controls (e.g. embedded in a dashboard
+		// card); "livewindow" is the default live time window in seconds.
+		CUIExpression m_CompactExpression;
+		CUIExpression m_LiveWindowExpression;
 
 	public:
 
 		static PUIModule_ContentJournalHistory makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath);
 
-		CUIModule_ContentJournalHistory(const std::string& sTitle, const CUIExpression& titleExpression, const std::string& sDefaultVariables, const CUIExpression& defaultVariablesExpression, const std::string& sItemName, const std::string& sModulePath);
+		CUIModule_ContentJournalHistory(const std::string& sTitle, const CUIExpression& titleExpression, const std::string& sDefaultVariables, const CUIExpression& defaultVariablesExpression, const CUIExpression& compactExpression, const CUIExpression& liveWindowExpression, const std::string& sItemName, const std::string& sModulePath);
 
 		virtual ~CUIModule_ContentJournalHistory();
 

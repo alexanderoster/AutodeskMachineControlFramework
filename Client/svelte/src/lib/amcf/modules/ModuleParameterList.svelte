@@ -27,7 +27,9 @@
 
 	$effect(() => {
 		module.onPreferencesChanged = () => { stateTick++; };
-		if (typeof module.loadPreferences === 'function') module.loadPreferences();
+		// The restore is driven from the core module's polled update once the stable
+		// key and auth token are available; this is just a best-effort early nudge.
+		if (typeof module.maybeLoadPreferences === 'function') module.maybeLoadPreferences();
 		return () => { module.onPreferencesChanged = null; };
 	});
 

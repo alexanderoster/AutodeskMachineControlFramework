@@ -265,8 +265,10 @@ export default {
 
 	mounted() {
 		this.module.onPreferencesChanged = () => { this.stateTick++; };
-		if (typeof this.module.loadPreferences === 'function')
-			this.module.loadPreferences();
+		// The restore is driven from the core module's polled update once the stable
+		// key and auth token are available; this is just a best-effort early nudge.
+		if (typeof this.module.maybeLoadPreferences === 'function')
+			this.module.maybeLoadPreferences();
 	},
 
 	beforeDestroy() {

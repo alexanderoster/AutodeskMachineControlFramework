@@ -18,6 +18,14 @@
 
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
 	let title = $derived.by(() => module.title || module.caption || 'Process History');
+	// Compact mode renders a space-filling embedded chart (no selector / range
+	// controls), preconfigured through the `defaultvariables` / `livewindow` attributes.
+	let compact = $derived.by(() => { poll.v; return module.compact === true; });
+	let liveWindowConfig = $derived.by(() => {
+		poll.v;
+		const n = parseInt(module.livewindow, 10);
+		return (!isNaN(n) && n > 0) ? n : 60;
+	});
 
 	let variables = $state<JournalVariable[]>([]);
 	let selected = $state<string[]>([]);
@@ -158,6 +166,30 @@
 		untrack(() => { scheduleRefresh(); });
 	});
 
+	// Preselect configured variables once they arrive (attributes are delivered via
+	// polling) and keep the live window aligned with configuration in compact mode.
+	let defaultsInitialized = false;
+	let appliedLiveWindow = -1;
+	$effect(() => {
+		poll.v;
+		const dv = String(module.defaultvariables || '');
+		const isCompact = compact;
+		const lw = liveWindowConfig;
+		untrack(() => {
+			if (!defaultsInitialized) {
+				const list = dv.split(',').map((s) => s.trim()).filter(Boolean);
+				if (list.length > 0) {
+					selected = list;
+					defaultsInitialized = true;
+				}
+			}
+			if (isCompact && lw !== appliedLiveWindow) {
+				appliedLiveWindow = lw;
+				liveWindowSeconds = lw;
+			}
+		});
+	});
+
 	function formatValue (v: number): string {
 		if (!isFinite(v)) return '—';
 		const abs = Math.abs(v);
@@ -179,7 +211,45 @@
 	}
 </script>
 
-{#if visible}
+{#if visible && compact}
+	<!-- Compact, space-filling embedded chart (e.g. a dashboard card). No selector or
+	     range controls; live values are drawn directly on the canvas. -->
+	<div class="w-full h-full min-h-0 flex flex-col gap-1">
+		{#if errorMsg}
+			<div class="text-xs text-red-500 border border-red-500/30 rounded p-1.5 bg-red-500/5">{errorMsg}</div>
+		{/if}
+
+		<div class="flex-1 min-h-0 relative" bind:clientWidth={chartWidth}>
+			{#if selected.length === 0}
+				<div class="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
+					No variables configured.
+				</div>
+			{:else if xValues.length === 0}
+				<div class="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
+					Waiting for recorded data…
+				</div>
+			{:else}
+				<UPlotChart
+					{xValues}
+					{traces}
+					fillHeight
+					showLiveLabels
+					onHover={handleHover}
+				/>
+			{/if}
+		</div>
+
+		<div class="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs px-0.5">
+			{#each traces as trace (trace.label)}
+				<span class="inline-flex items-center gap-1.5">
+					<span class="size-2.5 rounded-sm" style={`background:${trace.color};`}></span>
+					<span class="font-medium">{trace.label}</span>
+					<span class="tabular-nums text-muted-foreground">{legendValue(trace)}</span>
+				</span>
+			{/each}
+		</div>
+	</div>
+{:else if visible}
 	<Card.Root class="w-full h-full min-h-0 flex flex-col">
 		<Card.Header class="pb-2">
 			<div class="flex flex-wrap items-center justify-between gap-2">
@@ -227,6 +297,7 @@
 							{xValues}
 							{traces}
 							height={340}
+							showLiveLabels
 							onZoom={handleZoom}
 							onHover={handleHover}
 						/>

@@ -45,6 +45,10 @@ export default class AMCApplicationModule_JournalHistory extends Common.AMCAppli
 
 		this.title = "";
 		this.defaultvariables = "";
+		// Presentation options: compact renders a space-filling embedded chart without
+		// the selector / range controls; livewindow is the default live window in seconds.
+		this.compact = false;
+		this.livewindow = 60;
 
 		this.updateFromJSON (moduleJSON);
 	}
@@ -58,6 +62,13 @@ export default class AMCApplicationModule_JournalHistory extends Common.AMCAppli
 			this.title = Assert.StringValue (updateJSON.title);
 		if (updateJSON.defaultvariables !== undefined)
 			this.defaultvariables = Assert.StringValue (updateJSON.defaultvariables);
+		if (updateJSON.compact !== undefined)
+			this.compact = (updateJSON.compact === true || updateJSON.compact === "1" || updateJSON.compact === "true");
+		if (updateJSON.livewindow !== undefined) {
+			let nWindow = parseInt (updateJSON.livewindow, 10);
+			if (!isNaN (nWindow) && nWindow > 0)
+				this.livewindow = nWindow;
+		}
 		if (updateJSON.caption !== undefined)
 			this.caption = Assert.StringValue (updateJSON.caption);
 	}
@@ -72,6 +83,13 @@ export default class AMCApplicationModule_JournalHistory extends Common.AMCAppli
 			this.title = attrs.title;
 		if (attrs.defaultvariables !== undefined)
 			this.defaultvariables = attrs.defaultvariables;
+		if (attrs.compact !== undefined)
+			this.compact = (attrs.compact === true || attrs.compact === "1" || attrs.compact === "true");
+		if (attrs.livewindow !== undefined) {
+			let nWindow = parseInt (attrs.livewindow, 10);
+			if (!isNaN (nWindow) && nWindow > 0)
+				this.livewindow = nWindow;
+		}
 		if (attrs.caption !== undefined)
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)

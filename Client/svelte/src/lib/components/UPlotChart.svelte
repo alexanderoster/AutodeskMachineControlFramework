@@ -15,12 +15,20 @@
 		xValues = [],
 		traces = [],
 		height = 320,
+		fillHeight = false,
+		showLiveLabels = false,
 		onZoom = undefined,
 		onHover = undefined
 	}: {
 		xValues: number[];
 		traces: ChartTrace[];
 		height?: number;
+		// When true the chart follows its container's height instead of the fixed
+		// `height` prop (used for space-filling embedded charts).
+		fillHeight?: boolean;
+		// When true the latest value of each trace is drawn directly on the canvas
+		// next to the series, at the right-hand edge of the plot.
+		showLiveLabels?: boolean;
 		onZoom?: (minX: number, maxX: number) => void;
 		onHover?: (idx: number | null) => void;
 	} = $props();
@@ -42,7 +50,82 @@
 	}
 
 	function seriesSignature (): string {
-		return traces.map((t) => `${t.label}:${t.color}`).join('|');
+		return traces.map((t) => `${t.label}:${t.color}`).join('|') + `|fill:${fillHeight}|live:${showLiveLabels}`;
+	}
+
+	// Resolves the height uPlot should render at. In fillHeight mode the chart tracks
+	// its container so it stays space-filling; otherwise it uses the fixed prop.
+	function currentHeight (): number {
+		if (fillHeight && containerEl) {
+			const measured = containerEl.getBoundingClientRect().height;
+			if (measured > 0) return Math.floor(measured);
+		}
+		return height;
+	}
+
+	function formatLiveValue (v: number): string {
+		if (!isFinite(v)) return '';
+		const abs = Math.abs(v);
+		if (abs >= 1000) return v.toFixed(0);
+		if (abs >= 1) return v.toFixed(2);
+		return v.toFixed(4);
+	}
+
+	// uPlot draw hook that paints the latest value of every avg-series directly onto
+	// the canvas, right-aligned at the plot edge and coloured to match the trace.
+	function drawLiveLabels (u: uPlot) {
+		const ctx = u.ctx;
+		const data = u.data;
+		if (!data || data.length < 4) return;
+
+		const rightEdge = u.bbox.left + u.bbox.width;
+		const topEdge = u.bbox.top;
+		const bottomEdge = u.bbox.top + u.bbox.height;
+
+		ctx.save();
+		ctx.font = `${Math.round(11 * (u.ctx.canvas.height / (u.height || 1)))}px system-ui, sans-serif`;
+		ctx.textAlign = 'right';
+		ctx.textBaseline = 'middle';
+
+		traces.forEach((trace, i) => {
+			const avgIdx = 3 + i * 3;
+			const arr = data[avgIdx] as (number | null)[] | undefined;
+			if (!arr) return;
+
+			// Find the last finite sample of this series.
+			let lastVal = NaN;
+			for (let k = arr.length - 1; k >= 0; k--) {
+				const val = arr[k];
+				if (val != null && isFinite(val)) {
+					lastVal = val;
+					break;
+				}
+			}
+			if (!isFinite(lastVal)) return;
+
+			let cy = u.valToPos(lastVal, 'y', true);
+			if (!isFinite(cy)) return;
+			// Keep the label inside the plotting area.
+			cy = Math.max(topEdge + 8, Math.min(bottomEdge - 8, cy));
+
+			const text = formatLiveValue(lastVal);
+			const padX = 6 * (u.ctx.canvas.width / (u.width || 1));
+			const metrics = ctx.measureText(text);
+			const boxW = metrics.width + padX * 1.6;
+			const boxH = 18 * (u.ctx.canvas.height / (u.height || 1));
+
+			// Subtle background chip for readability over grid/bands.
+			ctx.fillStyle = 'rgba(255,255,255,0.85)';
+			ctx.fillRect(rightEdge - boxW, cy - boxH / 2, boxW, boxH);
+			ctx.strokeStyle = trace.color;
+			ctx.lineWidth = 1;
+			ctx.strokeRect(rightEdge - boxW, cy - boxH / 2, boxW, boxH);
+
+			ctx.fillStyle = trace.color;
+			ctx.fillText(text, rightEdge - padX * 0.8, cy);
+		});
+
+		ctx.restore();
 	}
 
 	function buildData (): (number[])[] {
@@ -73,9 +156,11 @@
 			bands.push({ series: [maxIdx, minIdx], fill: hexToRgba(trace.color, 0.15) });
 		});
 
+		const drawHooks = showLiveLabels ? [drawLiveLabels] : [];
+
 		return {
 			width: Math.max(width, 100),
-			height,
+			height: currentHeight(),
 			legend: { show: false },
 			cursor: {
 				drag: { x: true, y: false, setScale: false },
@@ -98,6 +183,7 @@
 			series,
 			bands,
 			hooks: {
+				draw: drawHooks,
 				setSelect: [
 					(u: uPlot) => {
 						if (u.select.width <= 2) return;
@@ -172,7 +258,10 @@
 		rebuild();
 		resizeObserver = new ResizeObserver(() => {
 			if (plot && containerEl) {
-				plot.setSize({ width: containerEl.getBoundingClientRect().width || 600, height });
+				plot.setSize({
+					width: containerEl.getBoundingClientRect().width || 600,
+					height: currentHeight()
+				});
 			}
 		});
 		if (containerEl) resizeObserver.observe(containerEl);
@@ -190,7 +279,7 @@
 <div
 	bind:this={containerEl}
 	class="w-full"
-	style="height: {height}px;"
+	style={fillHeight ? 'height: 100%;' : `height: ${height}px;`}
 	role="img"
 	aria-label="Process parameter history chart"
 	onwheel={handleWheel}

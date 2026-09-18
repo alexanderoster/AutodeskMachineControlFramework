@@ -74,7 +74,10 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 		// Persistence bookkeeping. preferencesLoaded guards against saving before the
 		// initial load has completed. onPreferencesChanged is an optional hook the
 		// frontend can set to react to state mutations (e.g. trigger a redraw).
+		// _loadTriggered ensures the one-time restore only fires once it is safe
+		// (stable key present, application available and session authenticated).
 		this.preferencesLoaded = false;
+		this._loadTriggered = false;
 		this.onPreferencesChanged = null;
 		this._saveTimer = null;
 
@@ -197,6 +200,11 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 		const incoming = Array.isArray(attrs.entries) ? attrs.entries : [];
 		while (this.entries.length > 0) this.entries.pop();
 		for (let entry of incoming) this.entries.push(entry);
+
+		// The stable key and the authentication token both arrive asynchronously
+		// with the polled frontend state, so drive the one-time preference restore
+		// from here. maybeLoadPreferences() is guarded and only fires once ready.
+		this.maybeLoadPreferences ();
 	}
 
 
@@ -485,6 +493,33 @@ export default class AMCApplicationModule_ParameterList extends Common.AMCApplic
 	getApplication ()
 	{
 		return (this.page && this.page.application) ? this.page.application : null;
+	}
+
+	// Returns true once it is safe to talk to the preferences backend: a stable
+	// scope key exists, the owning application is available and the session is
+	// authenticated (the token arrives asynchronously after login).
+	preferencesReady ()
+	{
+		const scopeKey = this.preferenceScopeKey ();
+		const app = this.getApplication ();
+		if (!scopeKey || !app || typeof app.getUserPreference !== "function")
+			return false;
+		if (app.API && typeof Common.nullToken === "function" && app.API.authToken === Common.nullToken ())
+			return false;
+		return true;
+	}
+
+	// Triggers the one-time preference restore as soon as the prerequisites are
+	// met. Called repeatedly from updateFromV2Attributes (once per poll) so it
+	// naturally waits for the stable key and authentication to become available.
+	maybeLoadPreferences ()
+	{
+		if (this._loadTriggered)
+			return;
+		if (!this.preferencesReady ())
+			return;
+		this._loadTriggered = true;
+		this.loadPreferences ();
 	}
 
 	// Loads persisted preferences for this list from the backend. Safe to call
