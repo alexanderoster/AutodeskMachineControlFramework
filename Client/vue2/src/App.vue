@@ -109,11 +109,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		
 		
 		<template v-for="uiDialog in Application.AppContent.Dialogs">
-			<v-dialog :key="uiDialog.name"						
+			<v-dialog :key="uiDialog.name"
 				v-model="uiDialog.dialogIsActive"
 				transition="dialog-bottom-transition"
 				max-width="50vw"
 				height="80vh"
+				:persistent="uiDialog.closable === false"
+				:no-click-animation="uiDialog.closable === false"
 			>
 			
 			<v-card> 
