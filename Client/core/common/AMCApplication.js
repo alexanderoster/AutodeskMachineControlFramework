@@ -852,6 +852,20 @@ export default class AMCApplication extends Common.AMCObject {
 					}
 				}
 			}
+
+			// Dialog content is indexed too, so synced items inside a dialog refresh
+			// from the same payload instead of falling back to legacy polling.
+			if (resultJSON.data && resultJSON.data.dialogs) {
+				for (let dialog of resultJSON.data.dialogs) {
+					if (dialog.modules) {
+						for (let mod of dialog.modules) {
+							this._indexFrontendModule(mod);
+						}
+					}
+				}
+
+				this._syncServerDrivenDialogs(resultJSON.data.dialogs);
+			}
 		})
 		.catch(err => {
 			this.API.unsuccessfulFrontendCounter = (this.API.unsuccessfulFrontendCounter || 0) + 1;
@@ -859,6 +873,37 @@ export default class AMCApplication extends Common.AMCObject {
 				console.warn("[v2 frontend] repeated failure:", this.extractErrorMessage(err));
 			}
 		});
+	}
+
+	// Applies the server-side open state of dialogs that carry an "active" flag (dialogs
+	// with sync:active in the machine configuration). The server is authoritative: such a
+	// dialog is opened while the flag is true, even if a client action closed it in between,
+	// and closed as soon as the flag turns false. Dialogs without the flag are untouched.
+	_syncServerDrivenDialogs(dialogsJSON) {
+		let changed = false;
+
+		for (let dialogJSON of dialogsJSON) {
+			if (typeof dialogJSON.active !== "boolean")
+				continue;
+
+			let dialog = this.AppContent.DialogMap.get(dialogJSON.name);
+			if (!dialog)
+				continue;
+
+			dialog.serverDriven = true;
+			dialog.closable = (dialogJSON.closable !== false);
+
+			if (dialogJSON.active && !dialog.dialogIsActive) {
+				// showDialog already refreshes the content items.
+				this.showDialog(dialog.name);
+			} else if (!dialogJSON.active && dialog.dialogIsActive) {
+				dialog.dialogIsActive = false;
+				changed = true;
+			}
+		}
+
+		if (changed)
+			this.updateContentItems();
 	}
 
 	// Recursively index a v2 module (and its submodules) into frontendLookup by UUID.
@@ -1333,6 +1378,9 @@ export default class AMCApplication extends Common.AMCObject {
         }
     }
 
+    // Only one dialog is open at a time. A server-driven dialog (see
+    // _syncServerDrivenDialogs) re-opens on the next frontend poll while its flag is
+    // set, so it wins over dialogs opened by client actions.
     showDialog(dialog) {
 
         this.closeAllDialogs();

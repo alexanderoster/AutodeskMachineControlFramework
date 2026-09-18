@@ -144,7 +144,7 @@ namespace AMC {
 
 		PUICustomPage addCustomPage_Unsafe(const std::string& sName, const std::string& sComponentName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
 
-		PUIDialog addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
+		PUIDialog addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const CUIExpression& active, const CUIExpression& closable);
 
 	public:
 
