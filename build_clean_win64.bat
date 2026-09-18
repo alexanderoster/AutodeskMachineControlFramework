@@ -88,7 +88,7 @@ if "%ERRORLEVEL%" neq "0" (
 cd "%builddir%"
 
 echo "Building Core Modules"
-call cmake ..
+call cmake .. -A x64
 if errorlevel 1 goto ERROR
 
 REM call cmake -G "MinGW Makefiles" ..
