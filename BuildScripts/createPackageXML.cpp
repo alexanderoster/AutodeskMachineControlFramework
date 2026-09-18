@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
 		
 		std::stringstream serverXMLStream;
 		serverXMLStream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
-		serverXMLStream << "<amc xmlns=\"http://schemas.autodesk.com/amc/2020/06\">\n";
+		serverXMLStream << "<amc xmlns=\"http://schemas.autodesk.com/amc/2020/06\" client=\"" << sDefaultClient << "\">\n";
 		serverXMLStream << "  <server hostname=\"0.0.0.0\" port=\"8869\" " << sTempFolderXMLAttribute << "/>\n";
 		serverXMLStream << "  <data directory=\"data/\" database=\"sqlite\" sqlitedb=\"storage.db\" />\n";
 		serverXMLStream << "  <defaultpackage name=\""<< sDevPackagePrefix << "_package.xml\" githash=\"" << sDevPackagePrefix <<"\" sha256=\"" << sPackageSHA << "\" />\n";
