@@ -127,11 +127,7 @@
 					layerViewer.SetBuildPlateSVG(plateURL);
 				}
 				layerViewer.setOrigin(platform.originx || 0, platform.originy || 0);
-				layerViewer.CenterOnRectangle(
-					-ZOOM_MARGIN, -ZOOM_MARGIN,
-					(platform.sizex || 300) + ZOOM_MARGIN,
-					(platform.sizey || 300) + ZOOM_MARGIN
-				);
+				centerOnPlatform();
 
 				platform.displayed_layer = 0;
 				platform.displayed_build = 0;
@@ -206,6 +202,14 @@
 
 	let dragging = false;
 	let dragX = 0, dragY = 0;
+	// Live machine/build-plate coordinates under the cursor (mm), shown bottom-right.
+	let mousePosition = $state<{ x: number; y: number } | null>(null);
+
+	function updateMousePosition(event: PointerEvent) {
+		if (!containerEl || !layerViewer || typeof layerViewer.screenToMachine !== 'function') return;
+		const box = containerEl.getBoundingClientRect();
+		mousePosition = layerViewer.screenToMachine(event.clientX - box.left, event.clientY - box.top);
+	}
 
 	function onPointerDown(event: PointerEvent) {
 		if (event.button === 0 || event.button === 1) {
@@ -217,6 +221,7 @@
 	}
 
 	function onPointerMove(event: PointerEvent) {
+		updateMousePosition(event);
 		if (!dragging || !layerViewer) return;
 		const dx = event.clientX - dragX;
 		const dy = event.clientY - dragY;
@@ -230,13 +235,33 @@
 		dragging = false;
 	}
 
+	function onPointerLeave() {
+		mousePosition = null;
+	}
+
+	// Frames the build-area rectangle. The origin is the location of machine-zero
+	// inside the plate (measured from the lower-left corner), so the plate corners in
+	// machine coordinates run from -origin to (size - origin). For origin=(sx/2,sy/2)
+	// this yields a view symmetric around zero, e.g. [-100..100] x [-125..125].
+	function centerOnPlatform() {
+		if (!layerViewer || !platform) return;
+		const ox = platform.originx || 0;
+		const oy = platform.originy || 0;
+		const sx = platform.sizex || 300;
+		const sy = platform.sizey || 300;
+		// Optional per-axis padding (in mm) that enlarges the reset zoom window,
+		// added on top of the fixed ZOOM_MARGIN on every side.
+		const px = platform.paddingx || 0;
+		const py = platform.paddingy || 0;
+		layerViewer.CenterOnRectangle(
+			-ox - ZOOM_MARGIN - px, -oy - ZOOM_MARGIN - py,
+			(sx - ox) + ZOOM_MARGIN + px, (sy - oy) + ZOOM_MARGIN + py
+		);
+	}
+
 	function resetView() {
 		if (!layerViewer || !platform) return;
-		layerViewer.CenterOnRectangle(
-			-ZOOM_MARGIN, -ZOOM_MARGIN,
-			(platform.sizex || 300) + ZOOM_MARGIN,
-			(platform.sizey || 300) + ZOOM_MARGIN
-		);
+		centerOnPlatform();
 		layerViewer.RenderScene(true);
 	}
 
@@ -306,6 +331,7 @@
 			onpointermove={onPointerMove}
 			onpointerup={onPointerUp}
 			onpointercancel={onPointerUp}
+			onpointerleave={onPointerLeave}
 		></div>
 
 		<!-- Overlaid toolbar -->
@@ -357,6 +383,13 @@
 			</svg>
 		{/if}
 
+		<!-- Live cursor position readout (machine coordinates, mm) -->
+		{#if mousePosition}
+			<div class={['layerview-mouse-pos', { 'above-slider': layerCount > 0 }]}>
+				X: {mousePosition.x.toFixed(2)} &middot; Y: {mousePosition.y.toFixed(2)} mm
+			</div>
+		{/if}
+
 		<!-- Layer slider -->
 		{#if layerCount > 0}
 			<div class="layerview-slider-wrap">
@@ -403,6 +436,7 @@
 	.layerview-canvas {
 		width: 100%;
 		height: 100%;
+		cursor: crosshair;
 	}
 	.layerview-toolbar {
 		position: absolute;
@@ -447,8 +481,6 @@
 		bottom: 8px;
 		width: 64px;
 		height: 64px;
-		border-radius: 4px;
-		background: rgba(0, 0, 0, 0.35);
 		pointer-events: none;
 		z-index: 9;
 	}
@@ -477,6 +509,22 @@
 	}
 	.coordinate-label-y {
 		fill: #22c55e;
+	}
+	.layerview-mouse-pos {
+		position: absolute;
+		right: 8px;
+		bottom: 8px;
+		padding: 4px 10px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.65);
+		color: white;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		pointer-events: none;
+		z-index: 10;
+	}
+	.layerview-mouse-pos.above-slider {
+		bottom: 36px;
 	}
 	.layerview-slider-wrap {
 		position: absolute;

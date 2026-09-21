@@ -107,9 +107,11 @@ namespace AMC {
 		std::string m_sAppName;
 		std::string m_sCopyrightString;
 		std::string m_sLogoUUID;
+		std::string m_sDarkLogoUUID;
 		double m_dLogoAspectRatio;
 
 		CUIExpression m_LoginBackgroundUUID;
+		CUIExpression m_DarkLoginBackgroundUUID;
 		CUIExpression m_LoginWelcomeMessage;
 		std::string m_sLoginStyle;
 		CUIExpression m_LoginSubtitle;

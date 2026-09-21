@@ -121,8 +121,10 @@ export default class AMCApplication extends Common.AMCObject {
             TextCopyRight: "",
             MainPage: "",
             LogoUUID: "",
+            DarkLogoUUID: "",
             LogoAspectRatio: 1.0,
 			LoginBackgroundImageUUID: "",
+			DarkLoginBackgroundImageUUID: "",
 			LoginWelcomeMessage: "",
 			LoginStyle: "classic",
 			LoginSubtitle: "",
@@ -296,7 +298,9 @@ export default class AMCApplication extends Common.AMCObject {
             this.AppDefinition.TextCopyRight = resultJSON.data.copyright;
             this.AppDefinition.MainPage = resultJSON.data.mainpage;
             this.AppDefinition.LogoUUID = resultJSON.data.logouuid;
+            this.AppDefinition.DarkLogoUUID = resultJSON.data.darklogouuid || "";
             this.AppDefinition.LoginBackgroundImageUUID = resultJSON.data.loginbackgrounduuid;
+            this.AppDefinition.DarkLoginBackgroundImageUUID = resultJSON.data.darkloginbackgrounduuid || "";
 			this.AppDefinition.ToolbarLogoUUID = resultJSON.data.toolbarlogouuid;
 			this.AppDefinition.LoginWelcomeMessage = resultJSON.data.loginwelcomemessage;
 			this.AppDefinition.LoginStyle = resultJSON.data.loginstyle || "classic";
@@ -549,6 +553,8 @@ export default class AMCApplication extends Common.AMCObject {
 					sizey:              parseFloat(attrs.sizey)  || 0,
 					originx:            parseFloat(attrs.originx) || 0,
 					originy:            parseFloat(attrs.originy) || 0,
+					paddingx:           parseFloat(attrs.paddingx) || 0,
+					paddingy:           parseFloat(attrs.paddingy) || 0,
 					transformangle:     parseFloat(attrs.transformangle) || 0,
 					rotationcenterx:    parseFloat(attrs.rotationcenterx) || 0,
 					rotationcentery:    parseFloat(attrs.rotationcentery) || 0,

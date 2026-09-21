@@ -364,6 +364,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
     auto loginNode = xmlNode.child("login");
     if (!loginNode.empty()) {
         m_LoginBackgroundUUID = CUIExpression(loginNode, "backgroundresource", "");
+        m_DarkLoginBackgroundUUID = CUIExpression(loginNode, "dark_backgroundresource", "");
         m_LoginWelcomeMessage = CUIExpression(loginNode, "welcomemessage", "");
 
         auto loginStyleAttrib = loginNode.attribute("loginstyle");
@@ -385,6 +386,12 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
         auto pResourceEntry = m_pCoreResourcePackage->findEntryByName(resourceAttrib.as_string(), true);
         m_sLogoUUID = pResourceEntry->getUUID ();
+
+        auto darkResourceAttrib = logoNode.attribute("dark_resource");
+        if (!darkResourceAttrib.empty()) {
+            auto pDarkResourceEntry = m_pCoreResourcePackage->findEntryByName(darkResourceAttrib.as_string(), true);
+            m_sDarkLogoUUID = pDarkResourceEntry->getUUID();
+        }
 
         auto aspectratioAttrib = logoNode.attribute("aspectratio");
         if (!aspectratioAttrib.empty()) {
@@ -910,6 +917,8 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
     writer.addString(AMC_API_KEY_UI_MAINPAGE, m_sMainPageName);
 
     writer.addString(AMC_API_KEY_UI_LOGOUUID, m_sLogoUUID);
+    if (!m_sDarkLogoUUID.empty())
+        writer.addString(AMC_API_KEY_UI_DARKLOGOUUID, m_sDarkLogoUUID);
     writer.addDouble(AMC_API_KEY_UI_LOGOASPECTRATIO, m_dLogoAspectRatio);
 
     if (!m_ToolbarLogoResourceName.empty()) {
@@ -920,6 +929,10 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
     if (!m_LoginBackgroundUUID.isEmpty(pStateMachineData)) {
         auto pResourceEntry = m_pCoreResourcePackage->findEntryByName(m_LoginBackgroundUUID.evaluateStringValue(pStateMachineData), true);
         writer.addString(AMC_API_KEY_UI_LOGINBACKGROUNDUUID, pResourceEntry->getUUID());
+    }
+    if (!m_DarkLoginBackgroundUUID.isEmpty(pStateMachineData)) {
+        auto pDarkResourceEntry = m_pCoreResourcePackage->findEntryByName(m_DarkLoginBackgroundUUID.evaluateStringValue(pStateMachineData), true);
+        writer.addString(AMC_API_KEY_UI_DARKLOGINBACKGROUNDUUID, pDarkResourceEntry->getUUID());
     }
     writer.addString(AMC_API_KEY_UI_LOGINWELCOMEMESSAGE, m_LoginWelcomeMessage.evaluateStringValue(pStateMachineData));
 

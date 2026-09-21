@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					<v-toolbar-title>{{ Application.AppDefinition.TextApplicationName }}</v-toolbar-title>
 				</v-toolbar>
 				<v-card-text>
-					<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain></v-img>
+					<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain></v-img>
 
 					<div class="text-right" style="width:90%; margin:auto;">
 
@@ -78,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<v-col cols="12" sm="8" md="5" lg="4" xl="3">
 			<div class="login-glass login-glass--dark">
 				<div class="login-glass__header">
-					<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4"></v-img>
+					<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4"></v-img>
 					<h1 class="login-glass__title">{{ Application.AppDefinition.TextApplicationName }}</h1>
 					<p v-if="loginSubtitle" class="login-glass__subtitle">{{ loginSubtitle }}</p>
 					<p v-if="Application.AppDefinition.LoginWelcomeMessage" class="login-glass__welcome">{{ Application.AppDefinition.LoginWelcomeMessage }}</p>
@@ -101,7 +101,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<v-col cols="12" sm="8" md="5" lg="4" xl="3">
 			<div class="login-glass login-glass--light">
 				<div class="login-glass__header">
-					<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4"></v-img>
+					<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4"></v-img>
 					<h1 class="login-glass__title">{{ Application.AppDefinition.TextApplicationName }}</h1>
 					<p v-if="loginSubtitle" class="login-glass__subtitle">{{ loginSubtitle }}</p>
 					<p v-if="Application.AppDefinition.LoginWelcomeMessage" class="login-glass__welcome">{{ Application.AppDefinition.LoginWelcomeMessage }}</p>
@@ -123,7 +123,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<v-row v-else-if="loginStyle === 'split'" no-gutters class="login-fullscreen login-split">
 		<v-col cols="12" md="5" class="login-split__brand d-none d-md-flex" :style="splitBrandStyle">
 			<div class="login-split__brand-inner">
-				<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="56" class="mb-6"></v-img>
+				<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="56" class="mb-6"></v-img>
 				<h1 class="login-split__brand-title">{{ Application.AppDefinition.TextApplicationName }}</h1>
 				<p v-if="loginSubtitle" class="login-split__brand-subtitle">{{ loginSubtitle }}</p>
 				<p v-if="Application.AppDefinition.LoginWelcomeMessage" class="login-split__brand-welcome">{{ Application.AppDefinition.LoginWelcomeMessage }}</p>
@@ -132,7 +132,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</v-col>
 		<v-col cols="12" md="7" class="login-split__form">
 			<div class="login-split__form-inner">
-				<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4 d-md-none"></v-img>
+				<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain max-height="48" class="mb-4 d-md-none"></v-img>
 				<h1 class="login-glass__title" style="color: #1E1E1E;">Sign In</h1>
 				<p class="login-glass__subtitle" style="color: #5F6368;">Enter your credentials to continue</p>
 				<div class="login-glass__body mt-6">
@@ -154,7 +154,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					<v-toolbar-title>{{ Application.AppDefinition.TextApplicationName }}</v-toolbar-title>
 				</v-toolbar>
 				<v-card-text>
-					<v-img v-if="Application.AppDefinition.LogoUUID != ''" v-bind:src="Application.getImageURL(Application.AppDefinition.LogoUUID)" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain></v-img>
+					<v-img v-if="logoURL != ''" v-bind:src="logoURL" v-bind:aspect-ratio="Application.AppDefinition.LogoAspectRatio" contain></v-img>
 					<div class="text-right" style="width:90%; margin:auto;">
 						<div class="text-center">
 							<p style="padding:20px">{{ Application.AppDefinition.LoginWelcomeMessage }}</p>
@@ -204,6 +204,20 @@ export default {
 
 		loginSubtitle () {
 			return this.Application.AppDefinition.LoginSubtitle || "";
+		},
+
+		// Prefer the dark logo in dark mode, falling back to the light one.
+		logoUUID () {
+			var def = this.Application.AppDefinition;
+			if (this.$vuetify.theme.dark && def.DarkLogoUUID)
+				return def.DarkLogoUUID;
+			return def.LogoUUID || "";
+		},
+
+		logoURL () {
+			if (this.logoUUID)
+				return this.Application.getImageURL(this.logoUUID);
+			return "";
 		},
 
 		panelImageURL () {

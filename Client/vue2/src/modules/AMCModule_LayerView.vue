@@ -210,7 +210,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				let platform = this.module.platform;
 				
 				if (platform) {
-					this.LayerViewerInstance.CenterOnRectangle (- ZOOM_MARGIN, - ZOOM_MARGIN, platform.sizex + ZOOM_MARGIN, platform.sizey + ZOOM_MARGIN);
+					// Origin is machine-zero's location inside the plate (from lower-left),
+					// so plate corners in machine coords span -origin .. (size - origin).
+					let ox = platform.originx || 0;
+					let oy = platform.originy || 0;
+					let sx = platform.sizex;
+					let sy = platform.sizey;
+					// Optional per-axis padding (in mm) enlarging the reset zoom window.
+					let px = platform.paddingx || 0;
+					let py = platform.paddingy || 0;
+					this.LayerViewerInstance.CenterOnRectangle (- ox - ZOOM_MARGIN - px, - oy - ZOOM_MARGIN - py, (sx - ox) + ZOOM_MARGIN + px, (sy - oy) + ZOOM_MARGIN + py);
 					this.LayerViewerInstance.RenderScene (true);
 				}
 			},
@@ -783,7 +792,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 						
 							this.LayerViewerInstance.setOrigin (platform.originx, platform.originy);
 							this.applyCoordinateTransform();
-							this.LayerViewerInstance.CenterOnRectangle (- ZOOM_MARGIN, - ZOOM_MARGIN, platform.sizex + ZOOM_MARGIN, platform.sizey + ZOOM_MARGIN);
+							let ox = platform.originx || 0;
+							let oy = platform.originy || 0;
+							let sx = platform.sizex;
+							let sy = platform.sizey;
+							// Optional per-axis padding (in mm) enlarging the reset zoom window.
+							let px = platform.paddingx || 0;
+							let py = platform.paddingy || 0;
+							this.LayerViewerInstance.CenterOnRectangle (- ox - ZOOM_MARGIN - px, - oy - ZOOM_MARGIN - py, (sx - ox) + ZOOM_MARGIN + px, (sy - oy) + ZOOM_MARGIN + py);
 							this.viewed_platform_uuid = platform.uuid;
 						}
 						

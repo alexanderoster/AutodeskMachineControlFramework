@@ -52,8 +52,8 @@ using namespace AMC;
 
 
 
-CUIModule_LayerViewPlatformItem::CUIModule_LayerViewPlatformItem (const std::string& sItemPath, CUIExpression sizeX, CUIExpression sizeY, CUIExpression originX, CUIExpression originY, CUIExpression transformAngle, CUIExpression rotationCenterX, CUIExpression rotationCenterY, CUIExpression translationX, CUIExpression translationY, CUIExpression showCoordinateSystem, CUIExpression layerIndex, CUIExpression baseImage, PUIModuleEnvironment pUIModuleEnvironment)
-	: CUIModuleItem(sItemPath), m_SizeX(sizeX), m_SizeY(sizeY), m_OriginX(originX), m_OriginY(originY), m_TransformAngle(transformAngle), m_RotationCenterX(rotationCenterX), m_RotationCenterY(rotationCenterY), m_TranslationX(translationX), m_TranslationY(translationY), m_ShowCoordinateSystem(showCoordinateSystem), m_BaseImage(baseImage), m_pUIModuleEnvironment(pUIModuleEnvironment),
+CUIModule_LayerViewPlatformItem::CUIModule_LayerViewPlatformItem (const std::string& sItemPath, CUIExpression sizeX, CUIExpression sizeY, CUIExpression originX, CUIExpression originY, CUIExpression paddingX, CUIExpression paddingY, CUIExpression transformAngle, CUIExpression rotationCenterX, CUIExpression rotationCenterY, CUIExpression translationX, CUIExpression translationY, CUIExpression showCoordinateSystem, CUIExpression layerIndex, CUIExpression baseImage, PUIModuleEnvironment pUIModuleEnvironment)
+	: CUIModuleItem(sItemPath), m_SizeX(sizeX), m_SizeY(sizeY), m_OriginX(originX), m_OriginY(originY), m_PaddingX(paddingX), m_PaddingY(paddingY), m_TransformAngle(transformAngle), m_RotationCenterX(rotationCenterX), m_RotationCenterY(rotationCenterY), m_TranslationX(translationX), m_TranslationY(translationY), m_ShowCoordinateSystem(showCoordinateSystem), m_BaseImage(baseImage), m_pUIModuleEnvironment(pUIModuleEnvironment),
 	m_sUUID(AMCCommon::CUtils::createUUID()), m_LayerIndex(layerIndex)
 {
 	LibMCAssertNotNull(m_pUIModuleEnvironment);
@@ -90,6 +90,10 @@ void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer
 		pGroup->setParameterValueByName(AMC_API_KEY_UI_ORIGINX, m_OriginX.evaluateStringValue(pStateMachineData));
 	if (m_OriginY.needsSync())
 		pGroup->setParameterValueByName(AMC_API_KEY_UI_ORIGINY, m_OriginY.evaluateStringValue(pStateMachineData));
+	if (m_PaddingX.needsSync())
+		pGroup->setDoubleParameterValueByName(AMC_API_KEY_UI_PADDINGX, m_PaddingX.evaluateNumberValue(pStateMachineData));
+	if (m_PaddingY.needsSync())
+		pGroup->setDoubleParameterValueByName(AMC_API_KEY_UI_PADDINGY, m_PaddingY.evaluateNumberValue(pStateMachineData));
 	if (m_TransformAngle.needsSync())
 		pGroup->setDoubleParameterValueByName(AMC_API_KEY_UI_TRANSFORMANGLE, m_TransformAngle.evaluateNumberValue(pStateMachineData));
 	if (m_RotationCenterX.needsSync())
@@ -127,6 +131,8 @@ void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer
 	object.addDouble(AMC_API_KEY_UI_SIZEY, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_SIZEY));
 	object.addDouble(AMC_API_KEY_UI_ORIGINX, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_ORIGINX));
 	object.addDouble(AMC_API_KEY_UI_ORIGINY, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_ORIGINY));
+	object.addDouble(AMC_API_KEY_UI_PADDINGX, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_PADDINGX));
+	object.addDouble(AMC_API_KEY_UI_PADDINGY, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_PADDINGY));
 	object.addDouble(AMC_API_KEY_UI_TRANSFORMANGLE, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_TRANSFORMANGLE));
 	object.addDouble(AMC_API_KEY_UI_ROTATIONCENTERX, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_ROTATIONCENTERX));
 	object.addDouble(AMC_API_KEY_UI_ROTATIONCENTERY, pGroup->getDoubleParameterValueByName(AMC_API_KEY_UI_ROTATIONCENTERY));
@@ -235,6 +241,8 @@ void CUIModule_LayerViewPlatformItem::populateClientVariables(CParameterHandler*
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_SIZEY, "Platform size y", m_SizeY.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ORIGINX, "Platform origin x", m_OriginX.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ORIGINY, "Platform origin y", m_OriginY.evaluateNumberValue(pStateMachineData), 1.0);
+	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_PADDINGX, "Reset view padding x", m_PaddingX.evaluateNumberValue(pStateMachineData), 1.0);
+	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_PADDINGY, "Reset view padding y", m_PaddingY.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_TRANSFORMANGLE, "Toolpath coordinate transform angle in degrees", m_TransformAngle.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ROTATIONCENTERX, "Toolpath rotation center x", m_RotationCenterX.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ROTATIONCENTERY, "Toolpath rotation center y", m_RotationCenterY.evaluateNumberValue(pStateMachineData), 1.0);
@@ -274,6 +282,8 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	CUIExpression sizeY(platformNode, "sizey");
 	CUIExpression originX(platformNode, "originx");
 	CUIExpression originY(platformNode, "originy");
+	CUIExpression paddingX;
+	CUIExpression paddingY;
 	CUIExpression transformAngle;
 	CUIExpression rotationCenterX;
 	CUIExpression rotationCenterY;
@@ -283,6 +293,18 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	CUIExpression baseImage(platformNode, "baseimage");
 	CUIExpression darkBaseImage(platformNode, "dark_baseimage", false);
 	CUIExpression layerIndex(platformNode, "layerindex", false);
+
+	auto paddingXAttribute = platformNode.attribute("paddingx");
+	if (!paddingXAttribute.empty())
+		paddingX = CUIExpression(platformNode, "paddingx");
+	else
+		paddingX.setFixedValue("0");
+
+	auto paddingYAttribute = platformNode.attribute("paddingy");
+	if (!paddingYAttribute.empty())
+		paddingY = CUIExpression(platformNode, "paddingy");
+	else
+		paddingY.setFixedValue("0");
 
 	auto transformAngleAttribute = platformNode.attribute("transformangle");
 	if (!transformAngleAttribute.empty())
@@ -332,7 +354,7 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	CUIExpression sliderChangeEvent;
 	CUIExpression sliderFixed;
 
-	m_PlatformItem = std::make_shared<CUIModule_LayerViewPlatformItem>(m_sModulePath, sizeX, sizeY, originX, originY, transformAngle, rotationCenterX, rotationCenterY, translationX, translationY, showCoordinateSystem, layerIndex, baseImage, pUIModuleEnvironment);
+	m_PlatformItem = std::make_shared<CUIModule_LayerViewPlatformItem>(m_sModulePath, sizeX, sizeY, originX, originY, paddingX, paddingY, transformAngle, rotationCenterX, rotationCenterY, translationX, translationY, showCoordinateSystem, layerIndex, baseImage, pUIModuleEnvironment);
 
 	auto labelNode = xmlNode.child("label");
 	if (!labelNode.empty()) {

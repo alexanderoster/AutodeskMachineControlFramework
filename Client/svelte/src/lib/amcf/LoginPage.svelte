@@ -20,10 +20,15 @@
 	let appName      = $derived.by(() => { poll.v; return app?.AppDefinition?.TextApplicationName || 'AMCF'; });
 	let welcomeMsg   = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginWelcomeMessage || ''; });
 	let subtitle     = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginSubtitle || ''; });
-	let logoUUID     = $derived.by(() => { poll.v; return app?.AppDefinition?.LogoUUID || ''; });
+	let lightLogoUUID = $derived.by(() => { poll.v; return app?.AppDefinition?.LogoUUID || ''; });
+	let darkLogoUUID  = $derived.by(() => { poll.v; return app?.AppDefinition?.DarkLogoUUID || ''; });
+	// Prefer the dark logo/background in dark mode, falling back to the light one.
+	let logoUUID     = $derived(darkMode && darkLogoUUID ? darkLogoUUID : lightLogoUUID);
 	let logoAspect   = $derived.by(() => { poll.v; return app?.AppDefinition?.LogoAspectRatio || 3; });
 	let panelUUID    = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginPanelUUID || ''; });
-	let bgUUID       = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginBackgroundImageUUID || ''; });
+	let lightBgUUID  = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginBackgroundImageUUID || ''; });
+	let darkBgUUID   = $derived.by(() => { poll.v; return app?.AppDefinition?.DarkLoginBackgroundImageUUID || ''; });
+	let bgUUID       = $derived(darkMode && darkBgUUID ? darkBgUUID : lightBgUUID);
 	let primaryColor = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors?.primary || '#1a1a1a'; });
 	let accentColor  = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors?.accent || ''; });
 

@@ -259,8 +259,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			
 				//if (this.appIsLogin) {
 				
-					if (this.Application.AppDefinition.LoginBackgroundImageUUID) {
-						let imageurl = this.Application.getImageURL (this.Application.AppDefinition.LoginBackgroundImageUUID);
+					// Prefer the dark login background in dark mode, falling back to the light one.
+					let backgroundUUID = (this.$vuetify.theme.dark && this.Application.AppDefinition.DarkLoginBackgroundImageUUID)
+						? this.Application.AppDefinition.DarkLoginBackgroundImageUUID
+						: this.Application.AppDefinition.LoginBackgroundImageUUID;
+					if (backgroundUUID) {
+						let imageurl = this.Application.getImageURL (backgroundUUID);
 						mainStyle = mainStyle + "background-image: url(\"" + imageurl + "\"); background-size: cover; "
 					}					
 					

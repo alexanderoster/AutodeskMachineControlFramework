@@ -32,6 +32,16 @@ const LAYERVIEW_MINSCALING = 0.4;
 const LAYERVIEW_MAXSCALING = 4000.0;
 const LAYERVIEW_MINVELOCITYRANGE = 1.0;
 
+// Grid level-of-detail switch band. The grid geometry is self-similar every 5
+// subdivisions, so the lower/upper bounds MUST keep a 5x ratio for the wrap to
+// stay seamless (LOWER * GRID_LOD_RECURSION === UPPER). Lowering the band
+// compared to the previous 0.5..2.5 keeps the on-screen grid finer and avoids
+// the coarse, "clunky" cells that appeared at the top of the old band right
+// after a zoom step crossed a threshold.
+const LAYERVIEW_GRIDLOD_LOWER = 0.25;
+const LAYERVIEW_GRIDLOD_UPPER = 1.25;
+const LAYERVIEW_GRIDLOD_RECURSION = 5.0;
+
 class LayerViewImpl {
 
     constructor(glInstance) {
@@ -179,42 +189,41 @@ class LayerViewImpl {
             var gridScale = this.transform.scaling;
 			var lineScaleLevel = 1;
 
-            if (gridScale < 0.5) {
-                gridScale = gridScale * 5.0;
+            if (gridScale < LAYERVIEW_GRIDLOD_LOWER) {
+                gridScale = gridScale * LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.8;
             }
 
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.4;
             }
 
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.25;
             }
 
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.125;
             }
 
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.06;
             }
 
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.02;
             }
 						
-            if (gridScale > 2.5) {
-                gridScale = gridScale / 5.0;
+            if (gridScale > LAYERVIEW_GRIDLOD_UPPER) {
+                gridScale = gridScale / LAYERVIEW_GRIDLOD_RECURSION;
 				lineScaleLevel = 0.01;
             }
-			
-			console.log ("line scale level: " + lineScaleLevel);
+
 			this.updateLineScaleLevel (lineScaleLevel);
 
             var fullGridSize = gridScale * 25.0 * 5;
@@ -967,6 +976,29 @@ class LayerViewImpl {
 		
 		this.origin.x = x;
 		this.origin.y = y;
+	}
+
+	// Converts a viewport pixel coordinate (relative to the canvas, in CSS pixels)
+	// into machine/build-plate coordinates in millimeters. The build plate places
+	// machine (0,0) at (transform.x, transform.y) with the Y axis inverted, so this
+	// is the exact inverse of that mapping. Returns null if no valid scaling exists.
+	/**
+	 * @param {number} screenX
+	 * @param {number} screenY
+	 */
+	screenToMachine (screenX, screenY)
+	{
+		if (!this.transform)
+			return null;
+
+		const scaling = this.transform.scaling;
+		if (!(scaling > 0) || isNaN (screenX) || isNaN (screenY))
+			return null;
+
+		return {
+			x: (screenX - this.transform.x) / scaling,
+			y: (this.transform.y - screenY) / scaling
+		};
 	}
 
 	setTransformAngle (angleInDegrees)

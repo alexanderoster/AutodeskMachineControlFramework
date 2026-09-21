@@ -56,6 +56,8 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		};
 
 		this.dark_baseimageresource = "";
+		this.paddingx = 0.0;
+		this.paddingy = 0.0;
 		this.transformangle = 0.0;
 		this.rotationcenterx = 0.0;
 		this.rotationcentery = 0.0;
@@ -82,6 +84,10 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		this.sizey = Assert.NumberValue (updateJSON.sizey);
 		this.originx = Assert.NumberValue (updateJSON.originx);
 		this.originy = Assert.NumberValue (updateJSON.originy);
+		if (updateJSON.paddingx !== undefined)
+			this.paddingx = Assert.NumberValue (updateJSON.paddingx);
+		if (updateJSON.paddingy !== undefined)
+			this.paddingy = Assert.NumberValue (updateJSON.paddingy);
 		if (updateJSON.transformangle !== undefined)
 			this.transformangle = Assert.NumberValue (updateJSON.transformangle);
 		if (updateJSON.rotationcenterx !== undefined)
@@ -145,6 +151,16 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 			let originy = parseFloat (attrs.originy);
 			if (!isNaN (originy))
 				this.originy = originy;
+		}
+		if (attrs.paddingx !== undefined) {
+			let paddingx = parseFloat (attrs.paddingx);
+			if (!isNaN (paddingx))
+				this.paddingx = paddingx;
+		}
+		if (attrs.paddingy !== undefined) {
+			let paddingy = parseFloat (attrs.paddingy);
+			if (!isNaN (paddingy))
+				this.paddingy = paddingy;
 		}
 		if (attrs.transformangle !== undefined) {
 			let transformangle = parseFloat (attrs.transformangle);

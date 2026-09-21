@@ -59,6 +59,8 @@ namespace AMC {
 		CUIExpression m_SizeY;
 		CUIExpression m_OriginX;
 		CUIExpression m_OriginY;
+		CUIExpression m_PaddingX;
+		CUIExpression m_PaddingY;
 		CUIExpression m_TransformAngle;
 		CUIExpression m_RotationCenterX;
 		CUIExpression m_RotationCenterY;
@@ -81,7 +83,7 @@ namespace AMC {
 
 	public:
 
-		CUIModule_LayerViewPlatformItem (const std::string& sItemPath, CUIExpression sizeX, CUIExpression sizeY, CUIExpression originX, CUIExpression originY, CUIExpression transformAngle, CUIExpression rotationCenterX, CUIExpression rotationCenterY, CUIExpression translationX, CUIExpression translationY, CUIExpression showCoordinateSystem, CUIExpression layerIndex, CUIExpression baseImage, PUIModuleEnvironment pUIModuleEnvironment);
+		CUIModule_LayerViewPlatformItem (const std::string& sItemPath, CUIExpression sizeX, CUIExpression sizeY, CUIExpression originX, CUIExpression originY, CUIExpression paddingX, CUIExpression paddingY, CUIExpression transformAngle, CUIExpression rotationCenterX, CUIExpression rotationCenterY, CUIExpression translationX, CUIExpression translationY, CUIExpression showCoordinateSystem, CUIExpression layerIndex, CUIExpression baseImage, PUIModuleEnvironment pUIModuleEnvironment);
 
 		virtual std::string getUUID() override;
 
