@@ -13,6 +13,7 @@
 	let dragOver = $state(false);
 	let uploading = $state(false);
 	let statusMessage = $state('');
+	let uploadProgress = $state(0);
 
 	let acceptedTypes = $derived(module.acceptedtypes || (module.uploadclass === 'image' ? '.png,.jpg' : '.3mf'));
 	let caption = $derived(module.uploadcaption || `Select ${module.uploadclass === 'image' ? 'image' : '3MF'} files to upload`);
@@ -21,6 +22,7 @@
 		if (!files || files.length === 0 || !app) return;
 		const file = files[0];
 		uploading = true;
+		uploadProgress = 0;
 		statusMessage = `Uploading ${file.name}...`;
 
 		if (typeof module.state.setChosenFile === 'function')
@@ -28,7 +30,11 @@
 		else
 			module.state.chosenFile = file;
 
+		module.state._onProgress = (percent: number) => {
+			uploadProgress = percent;
+		};
 		module.state._onComplete = () => {
+			uploadProgress = 100;
 			statusMessage = `${file.name} uploaded successfully.`;
 			uploading = false;
 		};
@@ -92,9 +98,20 @@
 			/>
 
 			{#if uploading}
-				<div class="flex flex-col items-center gap-2">
+				<div class="flex flex-col items-center gap-3">
 					<div class="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
 					<p class="text-sm text-muted-foreground">{statusMessage}</p>
+					<div class="w-full max-w-xs">
+						<div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+							<div
+								class="h-full rounded-full bg-primary transition-all duration-150"
+								style={`width: ${Math.max(0, Math.min(100, uploadProgress))}%`}
+							></div>
+						</div>
+						<p class="mt-1 text-center text-xs text-muted-foreground">
+							{Math.round(uploadProgress)}%
+						</p>
+					</div>
 				</div>
 			{:else}
 				<div class="flex flex-col items-center gap-2">

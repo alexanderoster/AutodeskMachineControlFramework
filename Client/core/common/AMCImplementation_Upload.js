@@ -146,6 +146,26 @@ export default class AMCUpload extends Common.AMCObject {
 			this.itemState.setMessage (this.itemState.progressMessage + " (" + this.getProgressString () + ")");
 		}
 	}
+
+	// Reports the overall upload progress while a single chunk is being sent.
+	// baseOffset is the byte offset of the current chunk within the whole file,
+	// loadedInChunk is the number of bytes of that chunk uploaded so far (from
+	// the axios onUploadProgress event). Together they yield the total percentage.
+	reportChunkProgress (baseOffset, loadedInChunk)
+	{
+		if (!this.itemState)
+			return;
+
+		let uploaded = baseOffset + (loadedInChunk || 0);
+		if (uploaded > this.fileSize)
+			uploaded = this.fileSize;
+
+		let percent = 0.0;
+		if (this.fileSize > 0)
+			percent = uploaded * 100.0 / this.fileSize;
+
+		this.itemState.setProgress (percent);
+	}
 	
 	setStateMessageToWaiting ()
 	{

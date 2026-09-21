@@ -2,6 +2,10 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { usePollTick } from '$lib/amcf/poll.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import Square from '@lucide/svelte/icons/square';
+	import Shapes from '@lucide/svelte/icons/shapes';
+	import Axis3d from '@lucide/svelte/icons/axis-3d';
+	import Info from '@lucide/svelte/icons/info';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
@@ -205,15 +209,79 @@
 	// Live machine/build-plate coordinates under the cursor (mm), shown bottom-right.
 	let mousePosition = $state<{ x: number; y: number } | null>(null);
 
+	// "Properties" hover inspector: when enabled, hovering a hatch/polyline shows
+	// a popup with that segment's laser power, speed, profile, etc.
+	type SegmentProperties = {
+		type?: string;
+		laserpower?: number;
+		laserspeed?: number;
+		profilename?: string;
+		partid?: number;
+		laserindex?: number;
+		lineIndex?: number;
+	};
+	let propertiesMode = $state(false);
+	let hoverSegment = $state<SegmentProperties | null>(null);
+	let hoverScreen = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+	let pendingHover: { x: number; y: number } | null = null;
+	let hoverRAF = 0;
+
 	function updateMousePosition(event: PointerEvent) {
 		if (!containerEl || !layerViewer || typeof layerViewer.screenToMachine !== 'function') return;
 		const box = containerEl.getBoundingClientRect();
 		mousePosition = layerViewer.screenToMachine(event.clientX - box.left, event.clientY - box.top);
 	}
 
+	function updateHoverSegment(clientX: number, clientY: number) {
+		if (!propertiesMode || dragging || !containerEl || !layerViewer ||
+			typeof layerViewer.pickSegmentAtScreenPoint !== 'function') {
+			hoverSegment = null;
+			return;
+		}
+		const box = containerEl.getBoundingClientRect();
+		const localX = clientX - box.left;
+		const localY = clientY - box.top;
+		const result: SegmentProperties | null = layerViewer.pickSegmentAtScreenPoint(localX, localY, 6) ?? null;
+		hoverSegment = result;
+		hoverScreen = { x: localX, y: localY };
+
+		if (typeof layerViewer.setHighlightLine === 'function') {
+			layerViewer.setHighlightLine(result ? (result.lineIndex ?? -1) : -1);
+		}
+	}
+
+	// Segment picking scans every line of the layer, so throttle it to one hit
+	// test per animation frame regardless of how fast pointer events arrive.
+	function scheduleHoverUpdate(clientX: number, clientY: number) {
+		pendingHover = { x: clientX, y: clientY };
+		if (hoverRAF) return;
+		hoverRAF = requestAnimationFrame(() => {
+			hoverRAF = 0;
+			if (pendingHover) updateHoverSegment(pendingHover.x, pendingHover.y);
+		});
+	}
+
+	function clearHover() {
+		pendingHover = null;
+		if (hoverRAF) {
+			cancelAnimationFrame(hoverRAF);
+			hoverRAF = 0;
+		}
+		hoverSegment = null;
+		if (layerViewer && typeof layerViewer.clearHighlight === 'function') {
+			layerViewer.clearHighlight();
+		}
+	}
+
+	function togglePropertiesMode() {
+		propertiesMode = !propertiesMode;
+		if (!propertiesMode) clearHover();
+	}
+
 	function onPointerDown(event: PointerEvent) {
 		if (event.button === 0 || event.button === 1) {
 			dragging = true;
+			clearHover();
 			dragX = event.clientX;
 			dragY = event.clientY;
 			(event.target as HTMLElement).setPointerCapture(event.pointerId);
@@ -222,13 +290,18 @@
 
 	function onPointerMove(event: PointerEvent) {
 		updateMousePosition(event);
-		if (!dragging || !layerViewer) return;
-		const dx = event.clientX - dragX;
-		const dy = event.clientY - dragY;
-		dragX = event.clientX;
-		dragY = event.clientY;
-		layerViewer.Drag(dx, dy);
-		layerViewer.RenderScene(true);
+
+		if (dragging && layerViewer) {
+			const dx = event.clientX - dragX;
+			const dy = event.clientY - dragY;
+			dragX = event.clientX;
+			dragY = event.clientY;
+			layerViewer.Drag(dx, dy);
+			layerViewer.RenderScene(true);
+			return;
+		}
+
+		if (propertiesMode) scheduleHoverUpdate(event.clientX, event.clientY);
 	}
 
 	function onPointerUp() {
@@ -237,6 +310,7 @@
 
 	function onPointerLeave() {
 		mousePosition = null;
+		clearHover();
 	}
 
 	// Frames the build-area rectangle. The origin is the location of machine-zero
@@ -312,6 +386,7 @@
 
 	onDestroy(() => {
 		module.onDataHasChanged = null;
+		clearHover();
 		if (platform) {
 			platform.displayed_layer = 0;
 			platform.displayed_build = 0;
@@ -336,15 +411,34 @@
 
 		<!-- Overlaid toolbar -->
 		<div class="layerview-toolbar">
-			<button class="layerview-btn" onclick={resetView}>Reset View</button>
-			<button class="layerview-btn" onclick={fitToPath}>Fit</button>
+			<button class="layerview-btn" onclick={resetView} title="Frame the build platform" aria-label="Frame the build platform">
+				<Square size={16} />
+				<span>Platform</span>
+			</button>
+			<button class="layerview-btn" onclick={fitToPath} title="Frame the parts" aria-label="Frame the parts">
+				<Shapes size={16} />
+				<span>Parts</span>
+			</button>
 			<button
 				class="layerview-btn"
 				onclick={() => coordinateSystemOverride = !coordinateSystemVisible}
 				title="Toggle coordinate axes"
 				aria-label="Toggle coordinate axes"
 				aria-pressed={coordinateSystemVisible}
-			>Axes</button>
+			>
+				<Axis3d size={16} />
+				<span>Axes</span>
+			</button>
+			<button
+				class="layerview-btn"
+				onclick={togglePropertiesMode}
+				title="Show segment properties on hover"
+				aria-label="Toggle segment properties inspector"
+				aria-pressed={propertiesMode}
+			>
+				<Info size={16} />
+				<span>Properties</span>
+			</button>
 		</div>
 
 		<!-- Layer info overlay -->
@@ -356,7 +450,7 @@
 
 		{#if coordinateSystemVisible}
 			<svg
-				class={['layerview-coordinate-indicator', { 'above-slider': layerCount > 0 }]}
+				class="layerview-coordinate-indicator"
 				viewBox="0 0 64 64"
 				role="img"
 				aria-label={`Machine coordinate axes, rotated ${transformAngle} degrees`}
@@ -385,12 +479,42 @@
 
 		<!-- Live cursor position readout (machine coordinates, mm) -->
 		{#if mousePosition}
-			<div class={['layerview-mouse-pos', { 'above-slider': layerCount > 0 }]}>
+			<div class="layerview-mouse-pos">
 				X: {mousePosition.x.toFixed(2)} &middot; Y: {mousePosition.y.toFixed(2)} mm
 			</div>
 		{/if}
 
-		<!-- Layer slider -->
+		<!-- Segment property inspector popup (Properties toggle) -->
+		{#if propertiesMode && hoverSegment}
+			<div
+				class="layerview-segment-popup"
+				style={`left: ${hoverScreen.x + 14}px; top: ${hoverScreen.y + 14}px;`}
+			>
+				{#if hoverSegment.profilename}
+					<div class="layerview-segment-popup-title">{hoverSegment.profilename}</div>
+				{/if}
+				<dl class="layerview-segment-popup-list">
+					<dt>Laser power</dt>
+					<dd>{Number(hoverSegment.laserpower ?? 0).toLocaleString()} W</dd>
+					<dt>Laser speed</dt>
+					<dd>{Number(hoverSegment.laserspeed ?? 0).toLocaleString()} mm/s</dd>
+					{#if hoverSegment.type}
+						<dt>Type</dt>
+						<dd>{hoverSegment.type}</dd>
+					{/if}
+					{#if hoverSegment.laserindex !== undefined && hoverSegment.laserindex !== null}
+						<dt>Laser</dt>
+						<dd>#{hoverSegment.laserindex}</dd>
+					{/if}
+					{#if hoverSegment.partid !== undefined && hoverSegment.partid !== null}
+						<dt>Part ID</dt>
+						<dd>{hoverSegment.partid}</dd>
+					{/if}
+				</dl>
+			</div>
+		{/if}
+
+		<!-- Layer slider (vertical) -->
 		{#if layerCount > 0}
 			<div class="layerview-slider-wrap">
 				<input
@@ -400,6 +524,8 @@
 					max={layerCount}
 					value={sliderValue}
 					oninput={onSliderChange}
+					aria-label="Layer"
+					aria-orientation="vertical"
 				/>
 			</div>
 		{/if}
@@ -447,12 +573,19 @@
 		z-index: 10;
 	}
 	.layerview-btn {
-		padding: 4px 12px;
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		width: 64px;
+		height: 48px;
+		padding: 6px 4px;
 		border: none;
 		border-radius: 4px;
 		background: rgba(0, 0, 0, 0.65);
 		color: white;
-		font-size: 12px;
+		font-size: 11px;
 		cursor: pointer;
 		transition: background-color 0.2s;
 	}
@@ -484,9 +617,6 @@
 		pointer-events: none;
 		z-index: 9;
 	}
-	.layerview-coordinate-indicator.above-slider {
-		bottom: 36px;
-	}
 	.coordinate-axis-x {
 		fill: #ef4444;
 		stroke: #ef4444;
@@ -512,7 +642,8 @@
 	}
 	.layerview-mouse-pos {
 		position: absolute;
-		right: 8px;
+		/* Shifted left so it clears the vertical layer slider on the right edge. */
+		right: 40px;
 		bottom: 8px;
 		padding: 4px 10px;
 		border-radius: 4px;
@@ -523,18 +654,58 @@
 		pointer-events: none;
 		z-index: 10;
 	}
-	.layerview-mouse-pos.above-slider {
-		bottom: 36px;
+	.layerview-segment-popup {
+		position: absolute;
+		min-width: 150px;
+		max-width: 240px;
+		padding: 8px 10px;
+		border-radius: 6px;
+		background: rgba(0, 0, 0, 0.82);
+		color: white;
+		font-size: 11px;
+		line-height: 1.35;
+		pointer-events: none;
+		z-index: 20;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	}
+	.layerview-segment-popup-title {
+		font-weight: 600;
+		margin-bottom: 4px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.layerview-segment-popup-list {
+		display: grid;
+		grid-template-columns: auto auto;
+		gap: 2px 12px;
+		margin: 0;
+	}
+	.layerview-segment-popup-list dt {
+		color: rgba(255, 255, 255, 0.65);
+	}
+	.layerview-segment-popup-list dd {
+		margin: 0;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
 	}
 	.layerview-slider-wrap {
 		position: absolute;
-		bottom: 8px;
-		left: 8px;
 		right: 8px;
+		/* Anchor between the layer-info badge (top-right) and the bottom edge
+		   so the slider spans nearly the full height of the view. */
+		top: 44px;
+		bottom: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		z-index: 10;
 	}
 	.layerview-slider {
-		width: 100%;
+		writing-mode: vertical-lr;
+		direction: rtl;
+		height: 100%;
+		width: 20px;
 		accent-color: var(--primary, #2563eb);
 	}
 </style>

@@ -232,7 +232,7 @@ export default class AMCApplication extends Common.AMCObject {
         });
     }
 
-    axiosPostFormData(subURL, formData) {
+    axiosPostFormData(subURL, formData, config) {
         let headers = {
             "Content-Type": "multipart/form-data"
         }
@@ -245,7 +245,8 @@ export default class AMCApplication extends Common.AMCObject {
             "method": "POST",
             "url": this.API.baseURL + subURL,
             "headers": headers,
-            "data": formData
+            "data": formData,
+            ...config
         });
     }
 
@@ -1120,7 +1121,9 @@ export default class AMCApplication extends Common.AMCObject {
                         type: uploadObject.getMimeType ()
                     }), uploadObject.getFileName ());
 
-		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData)
+		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData, {
+			onUploadProgress: (progressEvent) => uploadObject.reportChunkProgress (uploadOffset, progressEvent.loaded)
+		})
 			.then(async resultUploadHandle => {
 				
 				if (!uploadObject.checkIfUploadIsActive())
@@ -1248,7 +1251,9 @@ export default class AMCApplication extends Common.AMCObject {
                         type: uploadObject.getMimeType ()
                     }), uploadObject.getFileName ());
 
-		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData)
+		application.axiosPostFormData("/upload/" + uploadObject.streamuuid, formData, {
+			onUploadProgress: (progressEvent) => uploadObject.reportChunkProgress (uploadOffset, progressEvent.loaded)
+		})
 			.then(async resultUploadHandle => {
 				
 				if (!uploadObject.checkIfUploadIsActive())

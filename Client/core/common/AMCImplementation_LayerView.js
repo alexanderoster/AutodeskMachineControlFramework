@@ -42,6 +42,13 @@ const LAYERVIEW_GRIDLOD_LOWER = 0.25;
 const LAYERVIEW_GRIDLOD_UPPER = 1.25;
 const LAYERVIEW_GRIDLOD_RECURSION = 5.0;
 
+// The grid mesh is (re)generated only on viewport resize, but at render time it
+// is scaled by gridScale, which can drop as low as LAYERVIEW_GRIDLOD_LOWER. The
+// mesh must therefore span (viewport / LOWER) model units so it still fills the
+// screen at the coarsest LOD. Deriving it from LOWER keeps the two in sync if
+// the LOD band is ever retuned (e.g. 1 / 0.25 => a 4x-viewport mesh).
+const LAYERVIEW_GRIDMESH_VIEWPORTFACTOR = Math.ceil (1.0 / LAYERVIEW_GRIDLOD_LOWER);
+
 class LayerViewImpl {
 
     constructor(glInstance) {
@@ -130,8 +137,8 @@ class LayerViewImpl {
                 this.glInstance.setup2DView(width, height, 0.1, 100);
             }
 
-            var newWidth = width * 2 + 50;
-            var newHeight = height * 2 + 50;
+            var newWidth = width * LAYERVIEW_GRIDMESH_VIEWPORTFACTOR + 50;
+            var newHeight = height * LAYERVIEW_GRIDMESH_VIEWPORTFACTOR + 50;
 
             if ((this.currentSize.gridWidth < newWidth) || (this.currentSize.gridHeight < newHeight)) {
                 this.currentSize.gridWidth = newWidth;
@@ -242,6 +249,13 @@ class LayerViewImpl {
             // setScaleXY. Negating the angle therefore produces a positive
             // counter-clockwise rotation in machine coordinates.
             layerlinesgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
+        }
+
+        var layerhighlightgeometry = this.glInstance.findElement("layerdata_highlight");
+        if (layerhighlightgeometry) {
+            layerhighlightgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
+            layerhighlightgeometry.setScaleXY(this.transform.scaling,  - this.transform.scaling);
+            layerhighlightgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
         }
 
         var layerpointsgeometry = this.glInstance.findElement("layerdata_points");
@@ -770,6 +784,10 @@ class LayerViewImpl {
 			return;
 		
         this.glInstance.removeElement("layerdata_lines");
+        // The highlighted line references indices into linesCoordinates, which are
+        // about to be regenerated, so drop any stale highlight overlay.
+        this.glInstance.removeElement("layerdata_highlight");
+        this.highlightLineIndex = -1;
 		
 		if (this.layerSegmentsArray && this.toolpathVisible) {
 				
@@ -785,7 +803,14 @@ class LayerViewImpl {
 			for (segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
 				var segment = segmentsArray[segmentIndex];
 				let segmentColor = segment.color;		
-				let segmentData = { laserpower: segment.laserpower, laserspeed: segment.laserspeed, profilename: segment.profilename  }
+				let segmentData = {
+					type: segment.type,
+					laserpower: segment.laserpower,
+					laserspeed: segment.laserspeed,
+					profilename: segment.profilename,
+					partid: segment.partid,
+					laserindex: segment.laserindex
+				}
 
 				if ((segment.type === "loop") || (segment.type === "polyline")) {
 					var pointCount = segment.points.length;
@@ -999,6 +1024,171 @@ class LayerViewImpl {
 			x: (screenX - this.transform.x) / scaling,
 			y: (this.transform.y - screenY) / scaling
 		};
+	}
+
+	// Maps a raw toolpath point (as stored in linesCoordinates, i.e. before the
+	// placement/rotation/origin transform) into machine/build-plate coordinates
+	// in millimeters. This is the exact forward of screenToMachine so that a
+	// cursor position and a segment endpoint can be compared in the same frame.
+	/**
+	 * @param {number} toolpathX
+	 * @param {number} toolpathY
+	 */
+	toolpathPointToMachine (toolpathX, toolpathY)
+	{
+		const angleInRadians = this.transformAngleDegrees * Math.PI / 180.0;
+		const cosine = Math.cos (angleInRadians);
+		const sine = Math.sin (angleInRadians);
+		const placement = this.transformToolpathPoint (0, 0);
+
+		return {
+			x: this.origin.x + placement.x + (toolpathX * cosine + toolpathY * sine),
+			y: this.origin.y + placement.y + (-toolpathX * sine + toolpathY * cosine)
+		};
+	}
+
+	// Squared distance from point (px,py) to the line segment (ax,ay)-(bx,by).
+	static pointSegmentDistanceSq (px, py, ax, ay, bx, by)
+	{
+		const dx = bx - ax;
+		const dy = by - ay;
+		const lengthSq = dx * dx + dy * dy;
+
+		let t = 0.0;
+		if (lengthSq > 0.0) {
+			t = ((px - ax) * dx + (py - ay) * dy) / lengthSq;
+			if (t < 0.0) t = 0.0;
+			if (t > 1.0) t = 1.0;
+		}
+
+		const cx = ax + t * dx;
+		const cy = ay + t * dy;
+		const ex = px - cx;
+		const ey = py - cy;
+		return ex * ex + ey * ey;
+	}
+
+	// Finds the toolpath line segment closest to the given machine coordinate
+	// (mm). Returns the associated segment properties (laser power/speed, profile
+	// name, part/laser index, type) when within toleranceMM, otherwise null.
+	/**
+	 * @param {number} machineX
+	 * @param {number} machineY
+	 * @param {number} toleranceMM
+	 */
+	pickSegmentAtMachinePoint (machineX, machineY, toleranceMM)
+	{
+		if (!this.linesCoordinates || !this.segmentProperties)
+			return null;
+
+		const coords = this.linesCoordinates;
+		const lineCount = Math.floor (coords.length / 4);
+		if (lineCount <= 0)
+			return null;
+
+		const angleInRadians = this.transformAngleDegrees * Math.PI / 180.0;
+		const cosine = Math.cos (angleInRadians);
+		const sine = Math.sin (angleInRadians);
+		const placement = this.transformToolpathPoint (0, 0);
+		const baseX = this.origin.x + placement.x;
+		const baseY = this.origin.y + placement.y;
+
+		let bestDistanceSq = toleranceMM * toleranceMM;
+		let bestIndex = -1;
+
+		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			const arrayIndex = lineIndex * 4;
+			const px1 = coords[arrayIndex];
+			const py1 = coords[arrayIndex + 1];
+			const px2 = coords[arrayIndex + 2];
+			const py2 = coords[arrayIndex + 3];
+
+			const ax = baseX + (px1 * cosine + py1 * sine);
+			const ay = baseY + (-px1 * sine + py1 * cosine);
+			const bx = baseX + (px2 * cosine + py2 * sine);
+			const by = baseY + (-px2 * sine + py2 * cosine);
+
+			const distanceSq = LayerViewImpl.pointSegmentDistanceSq (machineX, machineY, ax, ay, bx, by);
+			if (distanceSq < bestDistanceSq) {
+				bestDistanceSq = distanceSq;
+				bestIndex = lineIndex;
+			}
+		}
+
+		if (bestIndex >= 0 && bestIndex < this.segmentProperties.length)
+			return { ...this.segmentProperties[bestIndex], lineIndex: bestIndex };
+
+		return null;
+	}
+
+	// Draws (or removes, when lineIndex < 0) a highlight overlay on top of a
+	// single toolpath line so the segment currently under the cursor stands out.
+	// The overlay shares the toolpath transform applied in updateTransform().
+	/**
+	 * @param {number} lineIndex
+	 */
+	setHighlightLine (lineIndex)
+	{
+		if (!this.glInstance)
+			return;
+
+		this.glInstance.removeElement ("layerdata_highlight");
+		this.highlightLineIndex = -1;
+
+		if (lineIndex === undefined || lineIndex === null || lineIndex < 0 || !this.linesCoordinates) {
+			this.RenderScene (true);
+			return;
+		}
+
+		const arrayIndex = lineIndex * 4;
+		if (arrayIndex + 3 >= this.linesCoordinates.length) {
+			this.RenderScene (true);
+			return;
+		}
+
+		const highlightCoordinates = [
+			this.linesCoordinates[arrayIndex],
+			this.linesCoordinates[arrayIndex + 1],
+			this.linesCoordinates[arrayIndex + 2],
+			this.linesCoordinates[arrayIndex + 3]
+		];
+
+		// Noticeably thicker than the regular preview lines (lineScaleLevel * 0.3)
+		// and drawn at a higher z so it sits above lines (60) and points (61).
+		const highlightThickness = this.lineScaleLevel * 1.1;
+		const highlightColor = 0x00e5ff;
+
+		this.glInstance.add2DLineGeometry ("layerdata_highlight", highlightCoordinates, 63, highlightThickness, highlightColor, [highlightColor]);
+		this.highlightLineIndex = lineIndex;
+
+		this.updateTransform ();
+		this.RenderScene (true);
+	}
+
+	clearHighlight ()
+	{
+		this.setHighlightLine (-1);
+	}
+
+	// Convenience picker that works directly in viewport pixel space. The pixel
+	// tolerance is converted to millimeters using the current zoom so the hover
+	// hit area stays constant on screen regardless of zoom level.
+	/**
+	 * @param {number} screenX
+	 * @param {number} screenY
+	 * @param {number} [pixelTolerance]
+	 */
+	pickSegmentAtScreenPoint (screenX, screenY, pixelTolerance = 6)
+	{
+		const machine = this.screenToMachine (screenX, screenY);
+		if (!machine)
+			return null;
+
+		const scaling = this.transform.scaling;
+		if (!(scaling > 0))
+			return null;
+
+		return this.pickSegmentAtMachinePoint (machine.x, machine.y, pixelTolerance / scaling);
 	}
 
 	setTransformAngle (angleInDegrees)

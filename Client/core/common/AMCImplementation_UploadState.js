@@ -52,8 +52,23 @@ export default class AMCUploadState extends Common.AMCObject {
 		this.waitMessage = "Waiting for upload to finish..";
 		this.buildMessage = "Processing build..";
 		this.mimeType = "application/binary";
+		this.progress = 0;
 		this._onComplete = null;
 		this._onError = null;
+		this._onProgress = null;
+	}
+
+	// Reports upload progress as a percentage (0..100). Invokes the optional
+	// _onProgress callback so a frontend widget can render a progress bar.
+	setProgress (percent)
+	{
+		let value = Assert.NumberValue (percent);
+		if (value < 0) value = 0;
+		if (value > 100) value = 100;
+		this.progress = value;
+		if (this._onProgress) {
+			try { this._onProgress (value); } catch (_) { /* noop */ }
+		}
 	}
 	
 	generateUploadID ()
@@ -70,11 +85,13 @@ export default class AMCUploadState extends Common.AMCObject {
 		}
 		
 		this.chosenFile = null;
+		this.progress = 0;
 		this.setMessage (this.cancelMessage);
 		if (this._onError) {
 			try { this._onError (); } catch (_) { /* noop */ }
 			this._onComplete = null;
 			this._onError = null;
+			this._onProgress = null;
 		}
 	}
 	
@@ -110,11 +127,13 @@ export default class AMCUploadState extends Common.AMCObject {
 	{
 		this.uploadID = 0;
 		this.chosenFile = null;
+		this.progress = 100;
 		this.setMessage (this.finishMessage);
 		if (this._onComplete) {
 			try { this._onComplete (); } catch (_) { /* noop */ }
 			this._onComplete = null;
 			this._onError = null;
+			this._onProgress = null;
 		}
 	}
 	

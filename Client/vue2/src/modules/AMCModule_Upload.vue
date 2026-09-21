@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <div v-if="module.visible !== false" class="upload-root">
 	<v-file-input v-bind:accept="module.acceptedtypes" show-size full-width v-model="module.state.chosenFile" v-bind:label="module.uploadcaption" v-bind:messages="module.state.messages" @change="uiUploadStart(module)"></v-file-input>
+	<v-progress-linear v-if="module.state.uploadID" v-bind:value="module.state.progress" color="primary" height="6" rounded class="mt-2"></v-progress-linear>
 </div>
 
 </template>
