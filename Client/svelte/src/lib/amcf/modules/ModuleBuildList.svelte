@@ -53,8 +53,8 @@
 </script>
 
 {#if visible}
-	<div class="w-full border rounded-md overflow-hidden">
-		<ScrollArea class="max-h-[500px]">
+	<div class="w-full border rounded-md overflow-hidden flex-1 min-h-0">
+		<ScrollArea class="h-full max-h-[60vh]">
 			<Table.Root>
 				<Table.Header class="sticky top-0 bg-muted z-10">
 					<Table.Row>

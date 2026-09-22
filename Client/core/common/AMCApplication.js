@@ -61,6 +61,7 @@ import AMCApplicationModule_StateMachineGraph from "../modules/AMCModule_StateMa
 import AMCApplicationModule_Paragraph from "../modules/AMCModule_Paragraph.js"
 import AMCApplicationModule_Upload from "../modules/AMCModule_Upload.js"
 import AMCApplicationModule_BuildList from "../modules/AMCModule_BuildList.js"
+import AMCApplicationModule_PartList from "../modules/AMCModule_PartList.js"
 import AMCApplicationModule_ExecutionList from "../modules/AMCModule_ExecutionList.js"
 import AMCApplicationModule_AlertList from "../modules/AMCModule_AlertList.js"
 import AMCApplicationModule_ButtonGroup from "../modules/AMCModule_ButtonGroup.js"
@@ -409,7 +410,7 @@ export default class AMCApplication extends Common.AMCObject {
 	_isLeafModuleType (moduleType)
 	{
 		return (moduleType === "paragraph") || (moduleType === "image") || (moduleType === "chart") || (moduleType === "videostream") ||
-			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "executionlist") ||
+			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "partlist") || (moduleType === "executionlist") ||
 			(moduleType === "alertlist") || (moduleType === "buttongroup") || (moduleType === "parameterlist") ||
 			(moduleType === "statuslist") || (moduleType === "togglepanel") ||
 			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow") || (moduleType === "statemachinegraph");
@@ -787,6 +788,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_Upload (page, def);
 		if (def.type === "buildlist")
 			return new AMCApplicationModule_BuildList (page, def);
+		if (def.type === "partlist")
+			return new AMCApplicationModule_PartList (page, def);
 		if (def.type === "executionlist")
 			return new AMCApplicationModule_ExecutionList (page, def);
 		if (def.type === "alertlist")

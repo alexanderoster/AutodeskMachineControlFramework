@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	import Module_Paragraph     from '../modules/AMCModule_Paragraph.vue';
 	import Module_Upload        from '../modules/AMCModule_Upload.vue';
 	import Module_BuildList     from '../modules/AMCModule_BuildList.vue';
+	import Module_PartList      from '../modules/AMCModule_PartList.vue';
 	import Module_ExecutionList from '../modules/AMCModule_ExecutionList.vue';
 	import Module_AlertList     from '../modules/AMCModule_AlertList.vue';
 	import Module_ButtonGroup   from '../modules/AMCModule_ButtonGroup.vue';
@@ -84,6 +85,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		paragraph:         Module_Paragraph,
 		upload:            Module_Upload,
 		buildlist:         Module_BuildList,
+		partlist:          Module_PartList,
 		executionlist:     Module_ExecutionList,
 		alertlist:         Module_AlertList,
 		buttongroup:       Module_ButtonGroup,

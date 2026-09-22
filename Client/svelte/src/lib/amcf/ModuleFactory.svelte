@@ -15,6 +15,7 @@
 	import ModuleAlertList from './modules/ModuleAlertList.svelte';
 	import ModuleUpload from './modules/ModuleUpload.svelte';
 	import ModuleBuildList from './modules/ModuleBuildList.svelte';
+	import ModulePartList from './modules/ModulePartList.svelte';
 	import ModuleExecutionList from './modules/ModuleExecutionList.svelte';
 	import ModuleConfigurationList from './modules/ModuleConfigurationList.svelte';
 	import ModuleChart from './modules/ModuleChart.svelte';
@@ -46,6 +47,7 @@
 		alertlist: ModuleAlertList,
 		upload: ModuleUpload,
 		buildlist: ModuleBuildList,
+		partlist: ModulePartList,
 		executionlist: ModuleExecutionList,
 		configurationlist: ModuleConfigurationList,
 		chart: ModuleChart,

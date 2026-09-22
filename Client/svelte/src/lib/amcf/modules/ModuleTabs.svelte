@@ -8,15 +8,23 @@
 	const poll = usePollTick();
 
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
-	let tabs = $derived.by(() => { poll.v; return [...(module.tabs || [])]; });
+	// Only show tabs whose (dynamic) visibility is not explicitly false. This lets
+	// a tab be shown/hidden at runtime via a sync:visible expression in the config.
+	let tabs = $derived.by(() => {
+		poll.v;
+		return [...(module.tabs || [])].filter((t: any) => t.visible !== false);
+	});
 	let cardstyle = $derived.by(() => { poll.v; return module.cardstyle || 'none'; });
 	let isCard = $derived(cardstyle === 'elevated' || cardstyle === 'outlined' || cardstyle === 'tinted');
 	let title = $derived.by(() => { poll.v; return module.title || ''; });
 	let subtitle = $derived.by(() => { poll.v; return module.subtitle || ''; });
 	let activeTab = $state('');
 
+	// Keep the active tab valid: pick the first visible tab initially and whenever
+	// the currently-active tab becomes hidden (e.g. it was replaced by another).
 	$effect(() => {
-		if (activeTab === '' && tabs.length > 0) {
+		if (tabs.length === 0) return;
+		if (!tabs.some((t: any) => t.uuid === activeTab)) {
 			activeTab = tabs[0].uuid;
 		}
 	});

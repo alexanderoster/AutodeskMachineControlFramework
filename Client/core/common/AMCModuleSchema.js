@@ -107,6 +107,10 @@ const MODULE_SCHEMAS = {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible', 'headers', 'entries', 'loadingtext', 'entriesperpage', 'selectevent', 'selectionvalueuuid', 'buttonvalueuuid', 'entrybuttons'],
 	},
+	partlist: {
+		required: ['uuid', 'type'],
+		optional: ['caption', 'visible', 'builduuid', 'loadingtext', 'details', 'parts', 'loading', 'errorMessage'],
+	},
 	alertlist: {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible', 'headers', 'entries', 'loadingtext', 'entriesperpage', 'selectevent', 'selectionvalueuuid'],
