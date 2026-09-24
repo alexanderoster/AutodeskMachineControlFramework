@@ -92,6 +92,20 @@ IToolpathLayer * CToolpathAccessor::LoadLayer(const LibMCEnv_uint32 nLayerIndex)
 	return new CToolpathLayer(pToolpathEntity->readLayer (nLayerIndex));
 }
 
+LibMCEnv_uint32 CToolpathAccessor::FindNonEmptyLayer(const LibMCEnv_uint32 nMinLayerIndex, const LibMCEnv_uint32 nMaxLayerIndex, const bool bFromMinToMax)
+{
+	if (nMinLayerIndex > nMaxLayerIndex)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "MinLayerIndex must not be larger than MaxLayerIndex");
+
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
+
+	uint32_t nLayerIndex = 0;
+	if (!pToolpathEntity->findNonEmptyLayer(nMinLayerIndex, nMaxLayerIndex, bFromMinToMax, nLayerIndex))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_NONONEMPTYLAYERFOUND, "no non-empty layer between " + std::to_string(nMinLayerIndex) + " and " + std::to_string(nMaxLayerIndex));
+
+	return nLayerIndex;
+}
+
 LibMCEnv_double CToolpathAccessor::GetUnits()
 {
 	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);

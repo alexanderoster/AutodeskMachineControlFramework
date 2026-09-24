@@ -10148,6 +10148,32 @@ LibMCEnvResult libmcenv_toolpathaccessor_loadlayer(LibMCEnv_ToolpathAccessor pTo
 	}
 }
 
+LibMCEnvResult libmcenv_toolpathaccessor_findnonemptylayer(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nMinLayerIndex, LibMCEnv_uint32 nMaxLayerIndex, bool bFromMinToMax, LibMCEnv_uint32 * pLayerIndex)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
+
+	try {
+		if (pLayerIndex == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathAccessor* pIToolpathAccessor = dynamic_cast<IToolpathAccessor*>(pIBaseClass);
+		if (!pIToolpathAccessor)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pLayerIndex = pIToolpathAccessor->FindNonEmptyLayer(nMinLayerIndex, nMaxLayerIndex, bFromMinToMax);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_toolpathaccessor_getunits(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_double * pUnits)
 {
 	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
@@ -37564,6 +37590,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_registercustomsegmentattribute;
 	if (sProcName == "libmcenv_toolpathaccessor_loadlayer") 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_loadlayer;
+	if (sProcName == "libmcenv_toolpathaccessor_findnonemptylayer") 
+		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_findnonemptylayer;
 	if (sProcName == "libmcenv_toolpathaccessor_getunits") 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getunits;
 	if (sProcName == "libmcenv_toolpathaccessor_getpartcount") 

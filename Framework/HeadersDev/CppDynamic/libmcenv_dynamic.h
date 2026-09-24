@@ -3602,6 +3602,18 @@ typedef LibMCEnvResult (*PLibMCEnvToolpathAccessor_RegisterCustomSegmentAttribut
 typedef LibMCEnvResult (*PLibMCEnvToolpathAccessor_LoadLayerPtr) (LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nLayerIndex, LibMCEnv_ToolpathLayer * pLayerData);
 
 /**
+* Searches a layer range for the first layer that contains at least one segment. The emptiness of each layer is cached for as long as the toolpath is loaded, so repeated searches are cheap. Fails with NONONEMPTYLAYERFOUND if all layers in the range are empty.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[in] nMinLayerIndex - Lower border of the search range (inclusive).
+* @param[in] nMaxLayerIndex - Upper border of the search range (inclusive). Clamped to LayerCount - 1. MUST NOT be smaller than MinLayerIndex.
+* @param[in] bFromMinToMax - If true, the search starts at MinLayerIndex and moves upwards, otherwise it starts at MaxLayerIndex and moves downwards.
+* @param[out] pLayerIndex - Index of the first non-empty layer in search direction.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvToolpathAccessor_FindNonEmptyLayerPtr) (LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nMinLayerIndex, LibMCEnv_uint32 nMaxLayerIndex, bool bFromMinToMax, LibMCEnv_uint32 * pLayerIndex);
+
+/**
 * Retrieves the toolpath units in mm.
 *
 * @param[in] pToolpathAccessor - ToolpathAccessor instance.
@@ -12581,6 +12593,7 @@ typedef struct {
 	PLibMCEnvToolpathAccessor_GetLayerCountPtr m_ToolpathAccessor_GetLayerCount;
 	PLibMCEnvToolpathAccessor_RegisterCustomSegmentAttributePtr m_ToolpathAccessor_RegisterCustomSegmentAttribute;
 	PLibMCEnvToolpathAccessor_LoadLayerPtr m_ToolpathAccessor_LoadLayer;
+	PLibMCEnvToolpathAccessor_FindNonEmptyLayerPtr m_ToolpathAccessor_FindNonEmptyLayer;
 	PLibMCEnvToolpathAccessor_GetUnitsPtr m_ToolpathAccessor_GetUnits;
 	PLibMCEnvToolpathAccessor_GetPartCountPtr m_ToolpathAccessor_GetPartCount;
 	PLibMCEnvToolpathAccessor_GetPartPtr m_ToolpathAccessor_GetPart;

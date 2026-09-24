@@ -3615,6 +3615,18 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_registercustomsegment
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_loadlayer(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nLayerIndex, LibMCEnv_ToolpathLayer * pLayerData);
 
 /**
+* Searches a layer range for the first layer that contains at least one segment. The emptiness of each layer is cached for as long as the toolpath is loaded, so repeated searches are cheap. Fails with NONONEMPTYLAYERFOUND if all layers in the range are empty.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[in] nMinLayerIndex - Lower border of the search range (inclusive).
+* @param[in] nMaxLayerIndex - Upper border of the search range (inclusive). Clamped to LayerCount - 1. MUST NOT be smaller than MinLayerIndex.
+* @param[in] bFromMinToMax - If true, the search starts at MinLayerIndex and moves upwards, otherwise it starts at MaxLayerIndex and moves downwards.
+* @param[out] pLayerIndex - Index of the first non-empty layer in search direction.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_findnonemptylayer(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nMinLayerIndex, LibMCEnv_uint32 nMaxLayerIndex, bool bFromMinToMax, LibMCEnv_uint32 * pLayerIndex);
+
+/**
 * Retrieves the toolpath units in mm.
 *
 * @param[in] pToolpathAccessor - ToolpathAccessor instance.

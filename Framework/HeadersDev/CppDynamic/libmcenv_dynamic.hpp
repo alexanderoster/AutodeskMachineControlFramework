@@ -770,6 +770,7 @@ public:
 			case LIBMCENV_ERROR_INVALIDPAUSETOLERANCE: return "INVALIDPAUSETOLERANCE";
 			case LIBMCENV_ERROR_INVALIDFRAMECACHEDURATION: return "INVALIDFRAMECACHEDURATION";
 			case LIBMCENV_ERROR_VIDEOSTREAMFRAMEENCODINGERROR: return "VIDEOSTREAMFRAMEENCODINGERROR";
+			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "NONONEMPTYLAYERFOUND";
 		}
 		return "UNKNOWN";
 	}
@@ -1039,6 +1040,7 @@ public:
 			case LIBMCENV_ERROR_INVALIDPAUSETOLERANCE: return "Invalid pause tolerance.";
 			case LIBMCENV_ERROR_INVALIDFRAMECACHEDURATION: return "Invalid frame cache duration.";
 			case LIBMCENV_ERROR_VIDEOSTREAMFRAMEENCODINGERROR: return "Video stream frame encoding error.";
+			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "No non-empty layer found in the given layer range.";
 		}
 		return "unknown error";
 	}
@@ -2195,6 +2197,7 @@ public:
 	inline LibMCEnv_uint32 GetLayerCount();
 	inline void RegisterCustomSegmentAttribute(const std::string & sNameSpace, const std::string & sAttributeName, const eToolpathAttributeType eAttributeType);
 	inline PToolpathLayer LoadLayer(const LibMCEnv_uint32 nLayerIndex);
+	inline LibMCEnv_uint32 FindNonEmptyLayer(const LibMCEnv_uint32 nMinLayerIndex, const LibMCEnv_uint32 nMaxLayerIndex, const bool bFromMinToMax);
 	inline LibMCEnv_double GetUnits();
 	inline LibMCEnv_uint32 GetPartCount();
 	inline PToolpathPart GetPart(const LibMCEnv_uint32 nPartIndex);
@@ -4260,6 +4263,7 @@ public:
 		pWrapperTable->m_ToolpathAccessor_GetLayerCount = nullptr;
 		pWrapperTable->m_ToolpathAccessor_RegisterCustomSegmentAttribute = nullptr;
 		pWrapperTable->m_ToolpathAccessor_LoadLayer = nullptr;
+		pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetUnits = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetPartCount = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetPart = nullptr;
@@ -8111,6 +8115,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_ToolpathAccessor_LoadLayer == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer = (PLibMCEnvToolpathAccessor_FindNonEmptyLayerPtr) GetProcAddress(hLibrary, "libmcenv_toolpathaccessor_findnonemptylayer");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer = (PLibMCEnvToolpathAccessor_FindNonEmptyLayerPtr) dlsym(hLibrary, "libmcenv_toolpathaccessor_findnonemptylayer");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16715,6 +16728,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_LoadLayer == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_findnonemptylayer", (void**)&(pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_FindNonEmptyLayer == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getunits", (void**)&(pWrapperTable->m_ToolpathAccessor_GetUnits));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_GetUnits == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -24342,6 +24359,21 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CToolpathLayer>(m_pWrapper, hLayerData);
+	}
+	
+	/**
+	* CToolpathAccessor::FindNonEmptyLayer - Searches a layer range for the first layer that contains at least one segment. The emptiness of each layer is cached for as long as the toolpath is loaded, so repeated searches are cheap. Fails with NONONEMPTYLAYERFOUND if all layers in the range are empty.
+	* @param[in] nMinLayerIndex - Lower border of the search range (inclusive).
+	* @param[in] nMaxLayerIndex - Upper border of the search range (inclusive). Clamped to LayerCount - 1. MUST NOT be smaller than MinLayerIndex.
+	* @param[in] bFromMinToMax - If true, the search starts at MinLayerIndex and moves upwards, otherwise it starts at MaxLayerIndex and moves downwards.
+	* @return Index of the first non-empty layer in search direction.
+	*/
+	LibMCEnv_uint32 CToolpathAccessor::FindNonEmptyLayer(const LibMCEnv_uint32 nMinLayerIndex, const LibMCEnv_uint32 nMaxLayerIndex, const bool bFromMinToMax)
+	{
+		LibMCEnv_uint32 resultLayerIndex = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_FindNonEmptyLayer(m_pHandle, nMinLayerIndex, nMaxLayerIndex, bFromMinToMax, &resultLayerIndex));
+		
+		return resultLayerIndex;
 	}
 	
 	/**

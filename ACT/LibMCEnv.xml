@@ -300,6 +300,7 @@
 		<error name="INVALIDPAUSETOLERANCE" code="10260" description="Invalid pause tolerance." />	
 		<error name="INVALIDFRAMECACHEDURATION" code="10261" description="Invalid frame cache duration." />	
 		<error name="VIDEOSTREAMFRAMEENCODINGERROR" code="10262" description="Video stream frame encoding error." />	
+		<error name="NONONEMPTYLAYERFOUND" code="10263" description="No non-empty layer found in the given layer range." />	
 		
 		
 	</errors>
@@ -2313,6 +2314,13 @@
 		<method name="LoadLayer" description="Reads and returns a layer object.">
 			<param name="LayerIndex" type="uint32" pass="in" description="Layer Index." />
 			<param name="LayerData" type="class" class="ToolpathLayer" pass="return" description="Toolpath layer object." />
+		</method>
+
+		<method name="FindNonEmptyLayer" description="Searches a layer range for the first layer that contains at least one segment. The emptiness of each layer is cached for as long as the toolpath is loaded, so repeated searches are cheap. Fails with NONONEMPTYLAYERFOUND if all layers in the range are empty.">
+			<param name="MinLayerIndex" type="uint32" pass="in" description="Lower border of the search range (inclusive)." />
+			<param name="MaxLayerIndex" type="uint32" pass="in" description="Upper border of the search range (inclusive). Clamped to LayerCount - 1. MUST NOT be smaller than MinLayerIndex." />
+			<param name="FromMinToMax" type="bool" pass="in" description="If true, the search starts at MinLayerIndex and moves upwards, otherwise it starts at MaxLayerIndex and moves downwards." />
+			<param name="LayerIndex" type="uint32" pass="return" description="Index of the first non-empty layer in search direction." />
 		</method>
 		
 		<method name="GetUnits" description="Retrieves the toolpath units in mm.">
