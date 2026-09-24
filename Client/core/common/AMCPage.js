@@ -47,6 +47,7 @@ export default class AMCApplicationPage extends Common.AMCObject {
 		this.name = pageJSON.name;
 		this.uuid = pageJSON.uuid;
 		this.showevent = pageJSON.showevent || "";
+		this.visible = (pageJSON.visible !== false);
 		this.modules = [];
 				
 		for (let moduleDefinitionJSON of pageJSON.modules) {

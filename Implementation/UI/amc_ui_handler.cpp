@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_logger.hpp"
 #include "amc_statesignalhandler.hpp"
 #include "amc_userinformation.hpp"
+#include "amc_api_auth.hpp"
 
 #include "amc_api_constants.hpp"
 
@@ -142,7 +143,7 @@ std::string CUIHandler::getCopyrightString()
     return m_sCopyrightString;
 }
 
-void CUIHandler::addMenuItem_Unsafe(const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sDescription, const std::string& sTargetPage, const std::string& sEventName)
+void CUIHandler::addMenuItem_Unsafe(const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sDescription, const std::string& sTargetPage, const std::string& sEventName, const CUIExpression& visible)
 {
     std::lock_guard<std::mutex> lockGuard(m_Mutex);
 
@@ -152,10 +153,12 @@ void CUIHandler::addMenuItem_Unsafe(const std::string& sID, const std::string& s
     if (!sEventName.empty())
         ensureUIEventExists(sEventName);
 
-    m_MenuItems.push_back(std::make_shared<CUIMenuItem> (sID, sIcon, sCaption, sDescription, sTargetPage, sEventName));
+    auto pMenuItem = std::make_shared<CUIMenuItem>(sID, sIcon, sCaption, sDescription, sTargetPage, sEventName);
+    pMenuItem->setVisibleExpression(visible);
+    m_MenuItems.push_back(pMenuItem);
 }
 
-void CUIHandler::addToolbarItem_Unsafe(const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName)
+void CUIHandler::addToolbarItem_Unsafe(const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName, const CUIExpression& visible)
 {
     std::lock_guard<std::mutex> lockGuard(m_Mutex);
     
@@ -166,6 +169,7 @@ void CUIHandler::addToolbarItem_Unsafe(const std::string& sID, const std::string
         ensureUIEventExists(sEventName);
 
     auto pToolbarItem = std::make_shared<CUIToolbarItem>(sID, sIcon, sCaption, sTargetPage, sEventName);
+    pToolbarItem->setVisibleExpression(visible);
     m_ToolbarItems.push_back(pToolbarItem);
     m_ToolbarItemUUIDMap.insert(std::make_pair (pToolbarItem->getUUID(), pToolbarItem));
 }
@@ -258,6 +262,55 @@ void CUIHandler::setCoreResourcePackage(PResourcePackage pCoreResourcePackage)
 {
     m_pCoreResourcePackage = pCoreResourcePackage;
 
+}
+
+void CUIHandler::loadSessionVariablesFromXML(pugi::xml_node& sessionVariablesNode)
+{
+    auto parameterNodes = sessionVariablesNode.children("parameter");
+    for (pugi::xml_node parameterNode : parameterNodes) {
+        auto nameAttrib = parameterNode.attribute("name");
+        if (nameAttrib.empty())
+            throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGSESSIONVARIABLENAME);
+        std::string sName = nameAttrib.as_string();
+
+        auto typeAttrib = parameterNode.attribute("type");
+        if (typeAttrib.empty())
+            throw ELibMCCustomException(LIBMC_ERROR_MISSINGSESSIONVARIABLETYPE, sName);
+
+        auto descriptionAttrib = parameterNode.attribute("description");
+        auto defaultValueAttrib = parameterNode.attribute("default");
+
+        m_pFrontendDefinition->addSessionVariable(sName, typeAttrib.as_string(), descriptionAttrib.as_string(), defaultValueAttrib.as_string());
+    }
+}
+
+void CUIHandler::validateSessionReferences()
+{
+    std::vector<std::string> references;
+
+    m_pFrontendDefinition->collectSessionReferences(references);
+
+    for (auto& pPage : m_Pages)
+        pPage.second->collectSessionReferences(references);
+    for (auto& pCustomPage : m_CustomPages)
+        pCustomPage.second->collectSessionReferences(references);
+    for (auto& pDialog : m_Dialogs)
+        pDialog.second->collectSessionReferences(references);
+
+    for (auto& pMenuItem : m_MenuItems) {
+        std::string sReference = pMenuItem->getVisibleExpression().getSessionReference();
+        if (!sReference.empty())
+            references.push_back(sReference);
+    }
+    for (auto& pToolbarItem : m_ToolbarItems) {
+        std::string sReference = pToolbarItem->getVisibleExpression().getSessionReference();
+        if (!sReference.empty())
+            references.push_back(sReference);
+    }
+
+    auto pAccessControl = m_pUISystemState->getAccessControl();
+    for (auto& sReference : references)
+        CUIFrontendState::validateSessionReference(sReference, m_pFrontendDefinition.get(), pAccessControl.get());
 }
 
 
@@ -405,6 +458,10 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
             throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDASPECTRATIO, std::to_string(m_dLogoAspectRatio));
     }
 
+    auto sessionVariablesNode = xmlNode.child("sessionvariables");
+    if (!sessionVariablesNode.empty())
+        loadSessionVariablesFromXML(sessionVariablesNode);
+
     auto pageNodes = xmlNode.children("page");
     for (pugi::xml_node pageNode : pageNodes) {
 
@@ -423,6 +480,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         CUIExpression description(pageNode, "description");
 
         auto pPage = addPage_Unsafe(sPageName, icon, caption, description, sShowEvent);
+        pPage->setVisibleExpression(CUIExpression(pageNode, "visible", "1"));
 
         auto pageChildren = pageNode.children();
         for (pugi::xml_node pageChild : pageChildren) {
@@ -455,6 +513,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         
 
         auto pPage = addCustomPage_Unsafe(sPageName, sComponentName, icon, caption, description);
+        pPage->setVisibleExpression(CUIExpression(custompageNode, "visible", "1"));
 
         auto pCustomModuleEnvironment = std::make_shared<CUIModuleEnvironment>(m_pUISystemState, pPage.get(), m_pCoreResourcePackage, m_pFrontendDefinition.get ());
         auto pCustomModule = std::make_shared<CUIModule_Custom>(custompageNode, sPageName, pCustomModuleEnvironment);
@@ -493,6 +552,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         std::string sDialogTitle(dialogTitleAttrib.as_string());
 
         auto pDialog = addDialog_Unsafe(sDialogName, sDialogTitle, icon, caption, description);
+        pDialog->setVisibleExpression(CUIExpression(dialogNode, "visible", "1"));
 
         auto dialogChildren = dialogNode.children();
         for (pugi::xml_node dialogChild : dialogChildren) {
@@ -529,7 +589,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         auto targetPageAttrib = menuItem.attribute("targetpage");
         auto eventNameAttrib = menuItem.attribute("event");
 
-        addMenuItem_Unsafe(idAttrib.as_string(), iconAttrib.as_string(), captionAttrib.as_string(), descriptionAttrib.as_string(), targetPageAttrib.as_string(), eventNameAttrib.as_string ());
+        addMenuItem_Unsafe(idAttrib.as_string(), iconAttrib.as_string(), captionAttrib.as_string(), descriptionAttrib.as_string(), targetPageAttrib.as_string(), eventNameAttrib.as_string (), CUIExpression(menuItem, "visible", "1"));
     }
 
     auto toolbarNode = xmlNode.child("toolbar");
@@ -556,7 +616,7 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         auto targetPageAttrib = toolbarItem.attribute("targetpage");
         auto eventNameAttrib = toolbarItem.attribute("event");
 
-        addToolbarItem_Unsafe(idAttrib.as_string(), iconAttrib.as_string(), captionAttrib.as_string(), targetPageAttrib.as_string(), eventNameAttrib.as_string());
+        addToolbarItem_Unsafe(idAttrib.as_string(), iconAttrib.as_string(), captionAttrib.as_string(), targetPageAttrib.as_string(), eventNameAttrib.as_string(), CUIExpression(toolbarItem, "visible", "1"));
     }
 
     auto pMainPage = findPage (sMainPage);
@@ -569,6 +629,8 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         pCustomPage.second->configurePostLoading();
     for (auto pDialog : m_Dialogs)
         pDialog.second->configurePostLoading();
+
+    validateSessionReferences();
 
 }
 
@@ -1059,8 +1121,14 @@ void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* 
 /////////////////////////////////////////////////////////////////////////////////////
 // New UI Frontend System
 /////////////////////////////////////////////////////////////////////////////////////
-void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState* pFrontendState)
+void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CAPIAuth* pAuth)
 {
+    LibMCAssertNotNull(pAuth);
+
+    auto pFrontendState = pAuth->getFrontendState().get();
+    LibMCAssertNotNull(pFrontendState);
+
+    pFrontendState->setSessionIdentity(pAuth->getSessionUUID(), pAuth->getUserInformation(), m_pUISystemState->getAccessControl());
 
     auto pStateMachineData = m_pUISystemState->getStateMachineData().get ();
 
@@ -1074,6 +1142,7 @@ void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState
         menuItem.addString(AMC_API_KEY_UI_DESCRIPTION, iter->getDescription());
         menuItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
         menuItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        menuItem.addBool(AMC_API_KEY_UI_VISIBLE, iter->getVisibleExpression().evaluateBoolValue(pStateMachineData, pFrontendState));
         menuItems.addObject(menuItem);
     }
     writer.addArray(AMC_API_KEY_UI_MENUITEMS, menuItems);
@@ -1087,6 +1156,7 @@ void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CUIFrontendState
         toolbarItem.addString(AMC_API_KEY_UI_CAPTION, iter->getCaption());
         toolbarItem.addString(AMC_API_KEY_UI_TARGETPAGE, iter->getPageName());
         toolbarItem.addString(AMC_API_KEY_UI_EVENTNAME, iter->getEventName());
+        toolbarItem.addBool(AMC_API_KEY_UI_VISIBLE, iter->getVisibleExpression().evaluateBoolValue(pStateMachineData, pFrontendState));
         toolbarItems.addObject(toolbarItem);
     }
     writer.addArray(AMC_API_KEY_UI_TOOLBARITEMS, toolbarItems);

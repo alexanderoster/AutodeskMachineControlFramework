@@ -167,6 +167,18 @@ public:
 
 	LibMCEnv::eParameterDataType GetParameterGroupParameterType(const std::string& sParameterGroup, const std::string& sParameterName) override;
 
+	bool HasSessionVariable(const std::string& sVariableName) override;
+
+	void SetSessionVariableForAllSessions(const std::string& sVariableName, const std::string& sValue) override;
+
+	void SetSessionVariableForAllSessionsAsUUID(const std::string& sVariableName, const std::string& sValue) override;
+
+	void SetSessionVariableForAllSessionsAsDouble(const std::string& sVariableName, const LibMCEnv_double dValue) override;
+
+	void SetSessionVariableForAllSessionsAsInteger(const std::string& sVariableName, const LibMCEnv_int64 nValue) override;
+
+	void SetSessionVariableForAllSessionsAsBool(const std::string& sVariableName, const bool bValue) override;
+
 	bool HasResourceData(const std::string& sIdentifier) override;
 
 	void LoadResourceData(const std::string& sResourceName, LibMCEnv_uint64 nResourceDataBufferSize, LibMCEnv_uint64* pResourceDataNeededCount, LibMCEnv_uint8* pResourceDataBuffer) override;

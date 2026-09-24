@@ -456,6 +456,8 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	registerNumberAttribute(AMC_API_KEY_UI_SIZEY, sizeY);
 	registerNumberAttribute(AMC_API_KEY_UI_ORIGINX, originX);
 	registerNumberAttribute(AMC_API_KEY_UI_ORIGINY, originY);
+	registerNumberAttribute(AMC_API_KEY_UI_PADDINGX, paddingX);
+	registerNumberAttribute(AMC_API_KEY_UI_PADDINGY, paddingY);
 	registerNumberAttribute(AMC_API_KEY_UI_TRANSFORMANGLE, transformAngle);
 	registerNumberAttribute(AMC_API_KEY_UI_ROTATIONCENTERX, rotationCenterX);
 	registerNumberAttribute(AMC_API_KEY_UI_ROTATIONCENTERY, rotationCenterY);
@@ -505,8 +507,7 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	captionExpr.setFixedValue(m_sCaption);
 	registerStringAttribute("caption", captionExpr);
 
-	CUIExpression visibleExpr;
-	visibleExpr.setFixedValue("1");
+	CUIExpression visibleExpr(xmlNode, "visible", "1");
 	registerBoolAttribute("visible", visibleExpr);
 
 	// Optional card framing (mirrors the "content" module), so a layer view can be

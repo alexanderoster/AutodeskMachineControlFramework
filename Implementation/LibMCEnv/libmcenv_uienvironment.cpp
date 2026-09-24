@@ -72,6 +72,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "amc_logger.hpp"
 #include "amc_statemachinedata.hpp"
 #include "amc_ui_handler.hpp"
+#include "amc_ui_frontendstate.hpp"
 #include "libmcdata_dynamic.hpp"
 
 // Include custom headers here.
@@ -474,6 +475,106 @@ void CUIEnvironment::SetUIPropertyAsBool(const std::string& sElementPath, const 
 
     auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
     pGroup->setBoolParameterValueByName(sPropertyName, bValue);
+}
+
+std::string CUIEnvironment::GetSessionUUID()
+{
+    return m_pAPIAuth->getSessionUUID();
+}
+
+bool CUIEnvironment::HasSessionVariable(const std::string& sVariableName)
+{
+    return m_pUIHandler->getFrontendDefinition()->hasSessionVariable(sVariableName);
+}
+
+std::string CUIEnvironment::GetSessionVariable(const std::string& sVariableName)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return pFrontendState->getSessionVariable(sVariableName);
+}
+
+std::string CUIEnvironment::GetSessionVariableAsUUID(const std::string& sVariableName)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return pFrontendState->getSessionVariableAsUUID(sVariableName);
+}
+
+LibMCEnv_double CUIEnvironment::GetSessionVariableAsDouble(const std::string& sVariableName)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return pFrontendState->getSessionVariableAsDouble(sVariableName);
+}
+
+LibMCEnv_int64 CUIEnvironment::GetSessionVariableAsInteger(const std::string& sVariableName)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return pFrontendState->getSessionVariableAsInteger(sVariableName);
+}
+
+bool CUIEnvironment::GetSessionVariableAsBool(const std::string& sVariableName)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return pFrontendState->getSessionVariableAsBool(sVariableName);
+}
+
+void CUIEnvironment::SetSessionVariable(const std::string& sVariableName, const std::string& sValue)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    pFrontendState->setSessionVariable(sVariableName, sValue);
+}
+
+void CUIEnvironment::SetSessionVariableAsUUID(const std::string& sVariableName, const std::string& sValue)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    pFrontendState->setSessionVariableAsUUID(sVariableName, sValue);
+}
+
+void CUIEnvironment::SetSessionVariableAsDouble(const std::string& sVariableName, const LibMCEnv_double dValue)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    pFrontendState->setSessionVariableAsDouble(sVariableName, dValue);
+}
+
+void CUIEnvironment::SetSessionVariableAsInteger(const std::string& sVariableName, const LibMCEnv_int64 nValue)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    pFrontendState->setSessionVariableAsInteger(sVariableName, nValue);
+}
+
+void CUIEnvironment::SetSessionVariableAsBool(const std::string& sVariableName, const bool bValue)
+{
+    auto pFrontendState = m_pAPIAuth->getFrontendState();
+    if (pFrontendState.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    pFrontendState->setSessionVariableAsBool(sVariableName, bValue);
 }
 
 

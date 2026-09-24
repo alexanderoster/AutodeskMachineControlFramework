@@ -10428,6 +10428,66 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_GetParameterGroupParameterDes
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_GetParameterGroupParameterTypePtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pParameterGroup, const char * pParameterName, LibMCEnv::eParameterDataType * pParameterType);
 
 /**
+* checks if a UI session variable is declared in the user interface configuration.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name.
+* @param[out] pVariableExists - returns true if the session variable is declared.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_HasSessionVariablePtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, bool * pVariableExists);
+
+/**
+* sets a string UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] pValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, const char * pValue);
+
+/**
+* sets a uuid UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] pValue - New value. An empty string sets the null UUID.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsUUIDPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, const char * pValue);
+
+/**
+* sets a double UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] dValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsDoublePtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, LibMCEnv_double dValue);
+
+/**
+* sets an integer UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] nValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsIntegerPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, LibMCEnv_int64 nValue);
+
+/**
+* sets a bool UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] bValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsBoolPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pVariableName, bool bValue);
+
+/**
 * retrieves if the machine resources has data with the given identifier.
 *
 * @param[in] pStateEnvironment - StateEnvironment instance.
@@ -11402,6 +11462,131 @@ typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetUIPropertyAsIntegerPtr) (LibM
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetUIPropertyAsBoolPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pElementPath, const char * pPropertyName, bool bValue);
+
+/**
+* returns the UUID of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] nSessionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSessionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSessionUUIDBuffer -  buffer of Session UUID., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionUUIDPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const LibMCEnv_uint32 nSessionUUIDBufferSize, LibMCEnv_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer);
+
+/**
+* checks if a session variable is declared in the user interface configuration.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name.
+* @param[out] pVariableExists - returns true if the session variable is declared.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_HasSessionVariablePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, bool * pVariableExists);
+
+/**
+* returns a session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Current value., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionVariablePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* returns a uuid session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Current value., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionVariableAsUUIDPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* returns a double session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[out] pValue - Current value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionVariableAsDoublePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, LibMCEnv_double * pValue);
+
+/**
+* returns an integer session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[out] pValue - Current value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionVariableAsIntegerPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, LibMCEnv_int64 * pValue);
+
+/**
+* returns a bool session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[out] pValue - Current value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetSessionVariableAsBoolPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, bool * pValue);
+
+/**
+* sets a session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] pValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetSessionVariablePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, const char * pValue);
+
+/**
+* sets a uuid session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] pValue - New value. An empty string sets the null UUID.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetSessionVariableAsUUIDPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, const char * pValue);
+
+/**
+* sets a double session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] dValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetSessionVariableAsDoublePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, LibMCEnv_double dValue);
+
+/**
+* sets an integer session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] nValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetSessionVariableAsIntegerPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, LibMCEnv_int64 nValue);
+
+/**
+* sets a bool session variable of the client session that triggered the event.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pVariableName - Session variable name. Fails if variable is not declared.
+* @param[in] bValue - New value.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetSessionVariableAsBoolPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pVariableName, bool bValue);
 
 /**
 * creates an empty image object.
@@ -13031,6 +13216,12 @@ typedef struct {
 	PLibMCEnvStateEnvironment_GetParameterGroupParameterNamePtr m_StateEnvironment_GetParameterGroupParameterName;
 	PLibMCEnvStateEnvironment_GetParameterGroupParameterDescriptionPtr m_StateEnvironment_GetParameterGroupParameterDescription;
 	PLibMCEnvStateEnvironment_GetParameterGroupParameterTypePtr m_StateEnvironment_GetParameterGroupParameterType;
+	PLibMCEnvStateEnvironment_HasSessionVariablePtr m_StateEnvironment_HasSessionVariable;
+	PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsPtr m_StateEnvironment_SetSessionVariableForAllSessions;
+	PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsUUIDPtr m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID;
+	PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsDoublePtr m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble;
+	PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsIntegerPtr m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger;
+	PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsBoolPtr m_StateEnvironment_SetSessionVariableForAllSessionsAsBool;
 	PLibMCEnvStateEnvironment_HasResourceDataPtr m_StateEnvironment_HasResourceData;
 	PLibMCEnvStateEnvironment_LoadResourceDataPtr m_StateEnvironment_LoadResourceData;
 	PLibMCEnvStateEnvironment_LoadResourceStringPtr m_StateEnvironment_LoadResourceString;
@@ -13121,6 +13312,18 @@ typedef struct {
 	PLibMCEnvUIEnvironment_SetUIPropertyAsDoublePtr m_UIEnvironment_SetUIPropertyAsDouble;
 	PLibMCEnvUIEnvironment_SetUIPropertyAsIntegerPtr m_UIEnvironment_SetUIPropertyAsInteger;
 	PLibMCEnvUIEnvironment_SetUIPropertyAsBoolPtr m_UIEnvironment_SetUIPropertyAsBool;
+	PLibMCEnvUIEnvironment_GetSessionUUIDPtr m_UIEnvironment_GetSessionUUID;
+	PLibMCEnvUIEnvironment_HasSessionVariablePtr m_UIEnvironment_HasSessionVariable;
+	PLibMCEnvUIEnvironment_GetSessionVariablePtr m_UIEnvironment_GetSessionVariable;
+	PLibMCEnvUIEnvironment_GetSessionVariableAsUUIDPtr m_UIEnvironment_GetSessionVariableAsUUID;
+	PLibMCEnvUIEnvironment_GetSessionVariableAsDoublePtr m_UIEnvironment_GetSessionVariableAsDouble;
+	PLibMCEnvUIEnvironment_GetSessionVariableAsIntegerPtr m_UIEnvironment_GetSessionVariableAsInteger;
+	PLibMCEnvUIEnvironment_GetSessionVariableAsBoolPtr m_UIEnvironment_GetSessionVariableAsBool;
+	PLibMCEnvUIEnvironment_SetSessionVariablePtr m_UIEnvironment_SetSessionVariable;
+	PLibMCEnvUIEnvironment_SetSessionVariableAsUUIDPtr m_UIEnvironment_SetSessionVariableAsUUID;
+	PLibMCEnvUIEnvironment_SetSessionVariableAsDoublePtr m_UIEnvironment_SetSessionVariableAsDouble;
+	PLibMCEnvUIEnvironment_SetSessionVariableAsIntegerPtr m_UIEnvironment_SetSessionVariableAsInteger;
+	PLibMCEnvUIEnvironment_SetSessionVariableAsBoolPtr m_UIEnvironment_SetSessionVariableAsBool;
 	PLibMCEnvUIEnvironment_CreateEmptyImagePtr m_UIEnvironment_CreateEmptyImage;
 	PLibMCEnvUIEnvironment_CreateImageLoaderPtr m_UIEnvironment_CreateImageLoader;
 	PLibMCEnvUIEnvironment_CreateVideoStreamPtr m_UIEnvironment_CreateVideoStream;

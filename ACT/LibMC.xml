@@ -734,6 +734,12 @@
 		<error name="RESOURCEENTRYSIZISMISMATCH" code="709" description="Resource entry size mismatch between index and ZIP content." />
 		<error name="RESOURCEENTRYCHECKSUMMISMATCH" code="710" description="Resource entry SHA256 checksum mismatch." />
 		<error name="INVALIDRESOURCEENTRYSHA256" code="711" description="Invalid resource entry SHA256 value." />
+		<error name="SESSIONVARIABLENOTFOUND" code="712" description="Session variable not found." />
+		<error name="DUPLICATESESSIONVARIABLE" code="713" description="Duplicate session variable." />
+		<error name="INVALIDSESSIONVARIABLENAME" code="714" description="Invalid session variable name." />
+		<error name="MISSINGSESSIONVARIABLENAME" code="715" description="Missing session variable name." />
+		<error name="MISSINGSESSIONVARIABLETYPE" code="716" description="Missing session variable type." />
+		<error name="INVALIDSESSIONREFERENCE" code="717" description="Invalid session reference in UI expression." />
 				
 		
 		

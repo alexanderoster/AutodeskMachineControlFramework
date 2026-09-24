@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_ui_page.hpp"
 #include "amc_ui_module.hpp"
+#include "amc_ui_frontendstate.hpp"
 #include "amc_parameterhandler.hpp"
 #include "libmc_exceptiontypes.hpp"
 #include "common_utils.hpp"
@@ -54,6 +55,7 @@ CUIPage::CUIPage(const std::string& sName, CUIModule_UIEventHandler* pUIEventHan
 
 	m_sUUID = AMCCommon::CUtils::createUUID();
 
+	m_Visible.setFixedValue("1");
 
 }
 
@@ -197,12 +199,13 @@ void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObje
 	pageObject.addString("name", m_sName);
 	pageObject.addString("uuid", AMCCommon::CUtils::normalizeUUIDString(m_sUUID));
 
-	if (!m_Caption.isEmpty (pStateMachineData))
-		pageObject.addString("caption", m_Caption.evaluateStringValue (pStateMachineData));
-	if (!m_Description.isEmpty(pStateMachineData))
-		pageObject.addString("description", m_Description.evaluateStringValue (pStateMachineData));
-	if (!m_Icon.isEmpty(pStateMachineData))
-		pageObject.addString("icon", m_Icon.evaluateStringValue (pStateMachineData));
+	if (!m_Caption.isEmpty (pStateMachineData, pFrontendState))
+		pageObject.addString("caption", m_Caption.evaluateStringValue (pStateMachineData, pFrontendState));
+	if (!m_Description.isEmpty(pStateMachineData, pFrontendState))
+		pageObject.addString("description", m_Description.evaluateStringValue (pStateMachineData, pFrontendState));
+	if (!m_Icon.isEmpty(pStateMachineData, pFrontendState))
+		pageObject.addString("icon", m_Icon.evaluateStringValue (pStateMachineData, pFrontendState));
+	pageObject.addBool("visible", m_Visible.evaluateBoolValue(pStateMachineData, pFrontendState));
 
 	pageObject.addInteger("gridcolumns", m_nGridColumns);
 	pageObject.addInteger("gridrows", m_nGridRows);
@@ -223,5 +226,19 @@ void CUIPage::frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObje
 
 	pageObject.addArray("modules", moduleArray);
 
+}
+
+void CUIPage::setVisibleExpression(const CUIExpression& visibleExpression)
+{
+	m_Visible = visibleExpression;
+}
+
+void CUIPage::collectSessionReferences(std::vector<std::string>& references)
+{
+	for (auto pExpression : { &m_Icon, &m_Caption, &m_Description, &m_Visible }) {
+		std::string sReference = pExpression->getSessionReference();
+		if (!sReference.empty())
+			references.push_back(sReference);
+	}
 }
 

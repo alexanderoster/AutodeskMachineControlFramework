@@ -44,8 +44,8 @@
 	 * Child components access this via usePollTick() context instead of props.
 	 */
 	let status      = $derived.by(() => { poll.v; return app?.AppState?.currentStatus || 'initial'; });
-	let menuItems   = $derived.by(() => { poll.v; return [...(app?.AppContent?.MenuItems || [])]; });
-	let toolbarItems= $derived.by(() => { poll.v; return [...(app?.AppContent?.ToolbarItems || [])]; });
+	let menuItems   = $derived.by(() => { poll.v; return (app?.AppContent?.MenuItems || []).filter((item: any) => app.navigationItemIsVisible(item)); });
+	let toolbarItems= $derived.by(() => { poll.v; return (app?.AppContent?.ToolbarItems || []).filter((item: any) => app.navigationItemIsVisible(item)); });
 	let pages       = $derived.by(() => { poll.v; return [...(app?.AppContent?.Pages || [])]; });
 	let dialogs     = $derived.by(() => { poll.v; return [...(app?.AppContent?.Dialogs || [])]; });
 	// The active dialog is tracked as a reactive scalar (like activePage) rather than reading the

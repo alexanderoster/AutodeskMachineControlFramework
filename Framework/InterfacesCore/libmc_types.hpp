@@ -725,6 +725,12 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_RESOURCEENTRYSIZISMISMATCH 709 /** Resource entry size mismatch between index and ZIP content. */
 #define LIBMC_ERROR_RESOURCEENTRYCHECKSUMMISMATCH 710 /** Resource entry SHA256 checksum mismatch. */
 #define LIBMC_ERROR_INVALIDRESOURCEENTRYSHA256 711 /** Invalid resource entry SHA256 value. */
+#define LIBMC_ERROR_SESSIONVARIABLENOTFOUND 712 /** Session variable not found. */
+#define LIBMC_ERROR_DUPLICATESESSIONVARIABLE 713 /** Duplicate session variable. */
+#define LIBMC_ERROR_INVALIDSESSIONVARIABLENAME 714 /** Invalid session variable name. */
+#define LIBMC_ERROR_MISSINGSESSIONVARIABLENAME 715 /** Missing session variable name. */
+#define LIBMC_ERROR_MISSINGSESSIONVARIABLETYPE 716 /** Missing session variable type. */
+#define LIBMC_ERROR_INVALIDSESSIONREFERENCE 717 /** Invalid session reference in UI expression. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1362,6 +1368,12 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_RESOURCEENTRYSIZISMISMATCH: return "Resource entry size mismatch between index and ZIP content.";
     case LIBMC_ERROR_RESOURCEENTRYCHECKSUMMISMATCH: return "Resource entry SHA256 checksum mismatch.";
     case LIBMC_ERROR_INVALIDRESOURCEENTRYSHA256: return "Invalid resource entry SHA256 value.";
+    case LIBMC_ERROR_SESSIONVARIABLENOTFOUND: return "Session variable not found.";
+    case LIBMC_ERROR_DUPLICATESESSIONVARIABLE: return "Duplicate session variable.";
+    case LIBMC_ERROR_INVALIDSESSIONVARIABLENAME: return "Invalid session variable name.";
+    case LIBMC_ERROR_MISSINGSESSIONVARIABLENAME: return "Missing session variable name.";
+    case LIBMC_ERROR_MISSINGSESSIONVARIABLETYPE: return "Missing session variable type.";
+    case LIBMC_ERROR_INVALIDSESSIONREFERENCE: return "Invalid session reference in UI expression.";
     default: return "unknown error";
   }
 }

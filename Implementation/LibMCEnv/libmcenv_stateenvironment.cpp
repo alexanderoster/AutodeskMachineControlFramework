@@ -576,6 +576,55 @@ LibMCEnv::eParameterDataType CStateEnvironment::GetParameterGroupParameterType(c
 	return parameterDataTypeToEnum(pGroup->getParameterDataTypeByName(sParameterName));
 }
 
+static AMC::PUIFrontendDefinition getFrontendDefinitionOfSystemState(AMC::CSystemState* pSystemState)
+{
+	auto pUIHandler = pSystemState->uiHandler();
+	if (pUIHandler == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+	auto pFrontendDefinition = pUIHandler->getFrontendDefinition();
+	if (pFrontendDefinition.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+	return pFrontendDefinition;
+}
+
+bool CStateEnvironment::HasSessionVariable(const std::string& sVariableName)
+{
+	return getFrontendDefinitionOfSystemState(m_pSystemState.get())->hasSessionVariable(sVariableName);
+}
+
+void CStateEnvironment::SetSessionVariableForAllSessions(const std::string& sVariableName, const std::string& sValue)
+{
+	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariable(sVariableName, sValue);
+}
+
+void CStateEnvironment::SetSessionVariableForAllSessionsAsUUID(const std::string& sVariableName, const std::string& sValue)
+{
+	std::string sNormalizedValue;
+	if (!sValue.empty())
+		sNormalizedValue = AMCCommon::CUtils::normalizeUUIDString(sValue);
+	else
+		sNormalizedValue = AMCCommon::CUtils::createEmptyUUID();
+
+	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariable(sVariableName, sNormalizedValue);
+}
+
+void CStateEnvironment::SetSessionVariableForAllSessionsAsDouble(const std::string& sVariableName, const LibMCEnv_double dValue)
+{
+	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariableAsDouble(sVariableName, dValue);
+}
+
+void CStateEnvironment::SetSessionVariableForAllSessionsAsInteger(const std::string& sVariableName, const LibMCEnv_int64 nValue)
+{
+	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariableAsInteger(sVariableName, nValue);
+}
+
+void CStateEnvironment::SetSessionVariableForAllSessionsAsBool(const std::string& sVariableName, const bool bValue)
+{
+	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariableAsBool(sVariableName, bValue);
+}
+
 bool CStateEnvironment::HasResourceData(const std::string& sIdentifier)
 {
 	auto pUIHandler = m_pSystemState->uiHandler();

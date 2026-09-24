@@ -8057,6 +8057,48 @@ public:
 	virtual LibMCEnv::eParameterDataType GetParameterGroupParameterType(const std::string & sParameterGroup, const std::string & sParameterName) = 0;
 
 	/**
+	* IStateEnvironment::HasSessionVariable - checks if a UI session variable is declared in the user interface configuration.
+	* @param[in] sVariableName - Session variable name.
+	* @return returns true if the session variable is declared.
+	*/
+	virtual bool HasSessionVariable(const std::string & sVariableName) = 0;
+
+	/**
+	* IStateEnvironment::SetSessionVariableForAllSessions - sets a string UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value.
+	*/
+	virtual void SetSessionVariableForAllSessions(const std::string & sVariableName, const std::string & sValue) = 0;
+
+	/**
+	* IStateEnvironment::SetSessionVariableForAllSessionsAsUUID - sets a uuid UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value. An empty string sets the null UUID.
+	*/
+	virtual void SetSessionVariableForAllSessionsAsUUID(const std::string & sVariableName, const std::string & sValue) = 0;
+
+	/**
+	* IStateEnvironment::SetSessionVariableForAllSessionsAsDouble - sets a double UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] dValue - New value.
+	*/
+	virtual void SetSessionVariableForAllSessionsAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue) = 0;
+
+	/**
+	* IStateEnvironment::SetSessionVariableForAllSessionsAsInteger - sets an integer UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] nValue - New value.
+	*/
+	virtual void SetSessionVariableForAllSessionsAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue) = 0;
+
+	/**
+	* IStateEnvironment::SetSessionVariableForAllSessionsAsBool - sets a bool UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] bValue - New value.
+	*/
+	virtual void SetSessionVariableForAllSessionsAsBool(const std::string & sVariableName, const bool bValue) = 0;
+
+	/**
 	* IStateEnvironment::HasResourceData - retrieves if the machine resources has data with the given identifier.
 	* @param[in] sIdentifier - identifier of the binary data in the machine resource package.
 	* @return returns true if the resource exists in the machine resource package.
@@ -8743,6 +8785,89 @@ public:
 	* @param[in] bValue - New property Value
 	*/
 	virtual void SetUIPropertyAsBool(const std::string & sElementPath, const std::string & sPropertyName, const bool bValue) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionUUID - returns the UUID of the client session that triggered the event.
+	* @return Session UUID.
+	*/
+	virtual std::string GetSessionUUID() = 0;
+
+	/**
+	* IUIEnvironment::HasSessionVariable - checks if a session variable is declared in the user interface configuration.
+	* @param[in] sVariableName - Session variable name.
+	* @return returns true if the session variable is declared.
+	*/
+	virtual bool HasSessionVariable(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionVariable - returns a session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	virtual std::string GetSessionVariable(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionVariableAsUUID - returns a uuid session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	virtual std::string GetSessionVariableAsUUID(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionVariableAsDouble - returns a double session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	virtual LibMCEnv_double GetSessionVariableAsDouble(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionVariableAsInteger - returns an integer session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	virtual LibMCEnv_int64 GetSessionVariableAsInteger(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::GetSessionVariableAsBool - returns a bool session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	virtual bool GetSessionVariableAsBool(const std::string & sVariableName) = 0;
+
+	/**
+	* IUIEnvironment::SetSessionVariable - sets a session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value.
+	*/
+	virtual void SetSessionVariable(const std::string & sVariableName, const std::string & sValue) = 0;
+
+	/**
+	* IUIEnvironment::SetSessionVariableAsUUID - sets a uuid session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value. An empty string sets the null UUID.
+	*/
+	virtual void SetSessionVariableAsUUID(const std::string & sVariableName, const std::string & sValue) = 0;
+
+	/**
+	* IUIEnvironment::SetSessionVariableAsDouble - sets a double session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] dValue - New value.
+	*/
+	virtual void SetSessionVariableAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue) = 0;
+
+	/**
+	* IUIEnvironment::SetSessionVariableAsInteger - sets an integer session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] nValue - New value.
+	*/
+	virtual void SetSessionVariableAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue) = 0;
+
+	/**
+	* IUIEnvironment::SetSessionVariableAsBool - sets a bool session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] bValue - New value.
+	*/
+	virtual void SetSessionVariableAsBool(const std::string & sVariableName, const bool bValue) = 0;
 
 	/**
 	* IUIEnvironment::CreateEmptyImage - creates an empty image object.

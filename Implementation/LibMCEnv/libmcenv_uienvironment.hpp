@@ -160,6 +160,30 @@ public:
 
 	void SetUIPropertyAsBool(const std::string& sElementPath, const std::string& sPropertyName, const bool bValue) override;
 
+	std::string GetSessionUUID() override;
+
+	bool HasSessionVariable(const std::string& sVariableName) override;
+
+	std::string GetSessionVariable(const std::string& sVariableName) override;
+
+	std::string GetSessionVariableAsUUID(const std::string& sVariableName) override;
+
+	LibMCEnv_double GetSessionVariableAsDouble(const std::string& sVariableName) override;
+
+	LibMCEnv_int64 GetSessionVariableAsInteger(const std::string& sVariableName) override;
+
+	bool GetSessionVariableAsBool(const std::string& sVariableName) override;
+
+	void SetSessionVariable(const std::string& sVariableName, const std::string& sValue) override;
+
+	void SetSessionVariableAsUUID(const std::string& sVariableName, const std::string& sValue) override;
+
+	void SetSessionVariableAsDouble(const std::string& sVariableName, const LibMCEnv_double dValue) override;
+
+	void SetSessionVariableAsInteger(const std::string& sVariableName, const LibMCEnv_int64 nValue) override;
+
+	void SetSessionVariableAsBool(const std::string& sVariableName, const bool bValue) override;
+
 	IImageData* CreateEmptyImage(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const LibMCEnv::eImagePixelFormat ePixelFormat) override;
 
 	IImageLoader* CreateImageLoader() override;

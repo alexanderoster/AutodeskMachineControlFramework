@@ -139,8 +139,13 @@ namespace AMC {
 		PUIFrontendDefinition m_pFrontendDefinition;
 
 
-		void addMenuItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string & sDescription, const std::string& sTargetPage, const std::string & sEventName);
-		void addToolbarItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName);
+		void addMenuItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string & sDescription, const std::string& sTargetPage, const std::string & sEventName, const CUIExpression& visible);
+		void addToolbarItem_Unsafe (const std::string& sID, const std::string& sIcon, const std::string& sCaption, const std::string& sTargetPage, const std::string& sEventName, const CUIExpression& visible);
+
+		void loadSessionVariablesFromXML(pugi::xml_node& sessionVariablesNode);
+
+		// Ensures that all session references of the loaded UI refer to declared session variables or known permissions.
+		void validateSessionReferences();
 
 		PUIPage addPage_Unsafe (const std::string& sName, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const std::string& sShowEvent);
 
@@ -197,7 +202,7 @@ namespace AMC {
 		/////////////////////////////////////////////////////////////////////////////////////
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
-		void frontendWriteStatusToJSON (CJSONWriter& writer, CUIFrontendState * pFrontendState);
+		void frontendWriteStatusToJSON (CJSONWriter& writer, CAPIAuth * pAuth);
 
 		PUIFrontendDefinition getFrontendDefinition ();
 

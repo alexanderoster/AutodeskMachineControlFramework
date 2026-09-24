@@ -988,6 +988,7 @@ class LayerViewImpl {
 		if (this.glInstance) {
 			if (url) {
 				this.svgImage = this.glInstance.addSVGImage("buildplate", url, 35, true, true);
+				this.updateTransform ();
 			} else {
 				this.glInstance.removeElement ("buildplate");
 			}

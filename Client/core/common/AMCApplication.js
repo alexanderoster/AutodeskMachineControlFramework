@@ -100,6 +100,8 @@ export default class AMCApplication extends Common.AMCObject {
 			unsuccessfulFrontendCounter: 0,
 			frontendState: null,
 			frontendLookup: {},
+			frontendRequestSerial: 0,
+			navigationRequestSerial: 0,
 			userUUID: Common.nullUUID (),
 			userLogin: "",
 			userDescription: "",
@@ -893,10 +895,19 @@ export default class AMCApplication extends Common.AMCObject {
 		if (!this.userIsLoggedIn())
 			return Promise.resolve();
 
+		this.API.frontendRequestSerial++;
+		let requestSerial = this.API.frontendRequestSerial;
+
 		return this.axiosGetRequest("/frontend")
 		.then(resultJSON => {
 			this.API.frontendState = resultJSON.data;
 			this.API.unsuccessfulFrontendCounter = 0;
+
+			this._applyFrontendVisibility(resultJSON.data);
+			// A response to a request issued before the latest navigation may carry stale
+			// visibility, so it must not redirect away from a page or dialog that was just opened.
+			if (requestSerial > this.API.navigationRequestSerial)
+				this._enforceFrontendVisibility();
 
 			// Build a flat uuid -> { moduletype, attributes, submodules } map
 			this.API.frontendLookup = {};
@@ -916,6 +927,87 @@ export default class AMCApplication extends Common.AMCObject {
 				console.warn("[v2 frontend] repeated failure:", this.extractErrorMessage(err));
 			}
 		});
+	}
+
+	// Copies the session-dependent visibility flags of the v2 frontend state onto the
+	// menu items, toolbar items, pages, custom pages and dialogs.
+	_applyFrontendVisibility(data) {
+		if (!data)
+			return;
+
+		let applyItemVisibility = (items, itemsJSON) => {
+			if (!items || !itemsJSON)
+				return;
+			let visibilityMap = new Map();
+			for (let itemJSON of itemsJSON)
+				visibilityMap.set(itemJSON.uuid, itemJSON.visible !== false);
+			for (let item of items) {
+				if (visibilityMap.has(item.uuid))
+					item.visible = visibilityMap.get(item.uuid);
+			}
+		};
+
+		let applyPageVisibility = (pageMap, pagesJSON) => {
+			if (!pageMap || !pagesJSON)
+				return;
+			for (let pageJSON of pagesJSON) {
+				let page = pageMap.get(pageJSON.name);
+				if (page)
+					page.visible = (pageJSON.visible !== false);
+			}
+		};
+
+		applyItemVisibility(this.AppContent.MenuItems, data.menuitems);
+		applyItemVisibility(this.AppContent.ToolbarItems, data.toolbaritems);
+		applyPageVisibility(this.AppContent.PageMap, data.pages);
+		applyPageVisibility(this.AppContent.CustomPageMap, data.custompages);
+		applyPageVisibility(this.AppContent.DialogMap, data.dialogs);
+	}
+
+	// Leaves a page that became hidden and closes dialogs that became hidden.
+	_enforceFrontendVisibility() {
+		let activePageName = this.AppState.activePage;
+		if (activePageName && !this.pageIsVisible(activePageName)) {
+			let fallbackPageName = "";
+			if (this.AppDefinition.MainPage && this.pageIsVisible(this.AppDefinition.MainPage)) {
+				fallbackPageName = this.AppDefinition.MainPage;
+			} else {
+				let firstVisiblePage = this.AppContent.Pages.find(page => page.visible !== false);
+				if (firstVisiblePage)
+					fallbackPageName = firstVisiblePage.name;
+			}
+
+			if (fallbackPageName && fallbackPageName !== activePageName)
+				this.changePage(fallbackPageName);
+		}
+
+		for (let dialog of this.AppContent.Dialogs) {
+			if (dialog.dialogIsActive && dialog.visible === false)
+				dialog.dialogIsActive = false;
+		}
+	}
+
+	pageIsVisible(pageName) {
+		let page = this.AppContent.PageMap.get(pageName) || this.AppContent.CustomPageMap.get(pageName);
+		if (page)
+			return page.visible !== false;
+		return true;
+	}
+
+	dialogIsVisible(dialogName) {
+		let dialog = this.AppContent.DialogMap.get(dialogName);
+		if (dialog)
+			return dialog.visible !== false;
+		return true;
+	}
+
+	// Menu and toolbar items are hidden if they are hidden themselves or if their target page is hidden.
+	navigationItemIsVisible(item) {
+		if (!item || item.visible === false)
+			return false;
+		if (item.targetpage)
+			return this.pageIsVisible(item.targetpage);
+		return true;
 	}
 
 	// Recursively index a v2 module (and its submodules) into frontendLookup by UUID.
@@ -1374,6 +1466,7 @@ export default class AMCApplication extends Common.AMCObject {
 
         let pageString = String(page);
         this.AppState.activePage = pageString;
+		this.API.navigationRequestSerial = this.API.frontendRequestSerial;
 		
 		let pageObject = this.AppContent.PageMap.get(pageString);
 		if(pageObject) {
@@ -1397,6 +1490,7 @@ export default class AMCApplication extends Common.AMCObject {
     showDialog(dialog) {
 
         this.closeAllDialogs();
+		this.API.navigationRequestSerial = this.API.frontendRequestSerial;
 
         if (dialog) {
 

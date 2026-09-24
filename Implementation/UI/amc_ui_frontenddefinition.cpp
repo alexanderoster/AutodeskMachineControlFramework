@@ -29,10 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "amc_ui_frontenddefinition.hpp"
+#include "amc_parametergroup.hpp"
 #include "libmc_exceptiontypes.hpp"
 #include "common_utils.hpp"
 
 using namespace AMC;
+
+#define AMC_UI_SESSIONVARIABLES_GROUPNAME "session"
 
 
 
@@ -59,6 +62,11 @@ eUIFrontendDefinitionAttributeType CUIFrontendDefinitionAttribute::getAttributeT
 	return m_AttributeType;
 }
 
+std::string CUIFrontendDefinitionAttribute::getSessionReference()
+{
+	return "";
+}
+
 CUIFrontendDefinitionExpressionAttribute::CUIFrontendDefinitionExpressionAttribute(const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression& valueExpression)
 	: CUIFrontendDefinitionAttribute(sName, attributeType), m_ValueExpression(valueExpression)
 {
@@ -69,41 +77,46 @@ CUIFrontendDefinitionExpressionAttribute::~CUIFrontendDefinitionExpressionAttrib
 
 }
 
-void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData)
+void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
 {
 
 	switch (getAttributeType()) {
 		case eUIFrontendDefinitionAttributeType::atBoolean: {
-			bool bValue = m_ValueExpression.evaluateBoolValue (pStateMachineData);
+			bool bValue = m_ValueExpression.evaluateBoolValue (pStateMachineData, pSessionContext);
 			attributesObject.addBool(getName(), bValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atString: {
-			std::string sValue = m_ValueExpression.evaluateStringValue(pStateMachineData);
+			std::string sValue = m_ValueExpression.evaluateStringValue(pStateMachineData, pSessionContext);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atNumber: {
-			double dValue = m_ValueExpression.evaluateNumberValue(pStateMachineData);
+			double dValue = m_ValueExpression.evaluateNumberValue(pStateMachineData, pSessionContext);
 			attributesObject.addDouble(getName(), dValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atInteger: {
-			int64_t nValue = m_ValueExpression.evaluateIntegerValue(pStateMachineData);
+			int64_t nValue = m_ValueExpression.evaluateIntegerValue(pStateMachineData, pSessionContext);
 			attributesObject.addInteger(getName(), nValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atUUID: {
-			std::string sValue = m_ValueExpression.evaluateUUIDValue(pStateMachineData);
+			std::string sValue = m_ValueExpression.evaluateUUIDValue(pStateMachineData, pSessionContext);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}
 
 	}
+}
+
+std::string CUIFrontendDefinitionExpressionAttribute::getSessionReference()
+{
+	return m_ValueExpression.getSessionReference();
 }
 
 
@@ -172,12 +185,27 @@ std::string CUIFrontendDefinitionModuleStore::getUUID()
 	return m_sUUID;
 }
 
+void CUIFrontendDefinitionModuleStore::collectSessionReferences(std::vector<std::string>& references)
+{
+	for (auto& attributePair : m_Attributes) {
+		std::string sReference = attributePair.second->getSessionReference();
+		if (!sReference.empty())
+			references.push_back(sReference);
+	}
+
+	for (auto& pChildStore : m_ChildStores)
+		pChildStore->collectSessionReferences(references);
+}
+
 
 CUIFrontendDefinition::CUIFrontendDefinition(AMCCommon::PChrono pGlobalChrono)
-	: m_pGlobalChrono (pGlobalChrono)
+	: m_pGlobalChrono (pGlobalChrono), m_nSessionVariableBroadcastCounter (0)
 {
 	if (pGlobalChrono.get() == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	m_pSessionVariableDeclarations = std::make_shared<CParameterGroup>(AMC_UI_SESSIONVARIABLES_GROUPNAME, "Session variables", pGlobalChrono);
+	m_pSessionVariableBroadcasts = std::make_shared<CParameterGroup>(AMC_UI_SESSIONVARIABLES_GROUPNAME, "Session variable broadcasts", pGlobalChrono);
 }
 
 CUIFrontendDefinition::~CUIFrontendDefinition()
@@ -187,7 +215,9 @@ CUIFrontendDefinition::~CUIFrontendDefinition()
 
 PUIFrontendDefinitionModuleStore CUIFrontendDefinition::registerModuleStore(const std::string& sModuleUUID, const std::string& sPath, const std::string& sModuleType)
 {
-	return std::make_shared<CUIFrontendDefinitionModuleStore>(sModuleUUID, sPath, sModuleType);
+	auto pModuleStore = std::make_shared<CUIFrontendDefinitionModuleStore>(sModuleUUID, sPath, sModuleType);
+	m_ModuleStores.push_back(pModuleStore);
+	return pModuleStore;
 
 }
 
@@ -195,5 +225,94 @@ PUIFrontendDefinitionModuleStore CUIFrontendDefinition::registerModuleStore(cons
 AMCCommon::PChrono CUIFrontendDefinition::getGlobalChrono()
 {
 	return m_pGlobalChrono;
+}
+
+void CUIFrontendDefinition::addSessionVariable(const std::string& sName, const std::string& sType, const std::string& sDescription, const std::string& sDefaultValue)
+{
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_INVALIDSESSIONVARIABLENAME, sName);
+
+	if (m_pSessionVariableDeclarations->hasParameter(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_DUPLICATESESSIONVARIABLE, sName);
+
+	m_pSessionVariableDeclarations->addNewTypedParameter(sName, sType, sDescription, sDefaultValue, "");
+
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	m_pSessionVariableBroadcasts->addNewTypedParameter(sName, sType, sDescription, sDefaultValue, "");
+}
+
+bool CUIFrontendDefinition::hasSessionVariable(const std::string& sName)
+{
+	return m_pSessionVariableDeclarations->hasParameter(sName);
+}
+
+PParameterGroup CUIFrontendDefinition::getSessionVariableDeclarations()
+{
+	return m_pSessionVariableDeclarations;
+}
+
+void CUIFrontendDefinition::broadcastSessionVariable(const std::string& sName, const std::string& sValue)
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	if (!m_pSessionVariableBroadcasts->hasParameter(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_SESSIONVARIABLENOTFOUND, sName);
+
+	m_pSessionVariableBroadcasts->setParameterValueByName(sName, sValue);
+	m_nSessionVariableBroadcastCounter++;
+	m_SessionVariableBroadcastCounters[sName] = m_nSessionVariableBroadcastCounter;
+}
+
+void CUIFrontendDefinition::broadcastSessionVariableAsDouble(const std::string& sName, double dValue)
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	if (!m_pSessionVariableBroadcasts->hasParameter(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_SESSIONVARIABLENOTFOUND, sName);
+
+	m_pSessionVariableBroadcasts->setDoubleParameterValueByName(sName, dValue);
+	m_nSessionVariableBroadcastCounter++;
+	m_SessionVariableBroadcastCounters[sName] = m_nSessionVariableBroadcastCounter;
+}
+
+void CUIFrontendDefinition::broadcastSessionVariableAsInteger(const std::string& sName, int64_t nValue)
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	if (!m_pSessionVariableBroadcasts->hasParameter(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_SESSIONVARIABLENOTFOUND, sName);
+
+	m_pSessionVariableBroadcasts->setIntParameterValueByName(sName, nValue);
+	m_nSessionVariableBroadcastCounter++;
+	m_SessionVariableBroadcastCounters[sName] = m_nSessionVariableBroadcastCounter;
+}
+
+void CUIFrontendDefinition::broadcastSessionVariableAsBool(const std::string& sName, bool bValue)
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	if (!m_pSessionVariableBroadcasts->hasParameter(sName))
+		throw ELibMCCustomException(LIBMC_ERROR_SESSIONVARIABLENOTFOUND, sName);
+
+	m_pSessionVariableBroadcasts->setBoolParameterValueByName(sName, bValue);
+	m_nSessionVariableBroadcastCounter++;
+	m_SessionVariableBroadcastCounters[sName] = m_nSessionVariableBroadcastCounter;
+}
+
+uint64_t CUIFrontendDefinition::getSessionVariableBroadcastCounter()
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	return m_nSessionVariableBroadcastCounter;
+}
+
+void CUIFrontendDefinition::getSessionVariableBroadcastsSince(uint64_t nSinceCounter, std::vector<std::pair<std::string, std::string>>& values)
+{
+	std::lock_guard<std::mutex> lockGuard(m_BroadcastMutex);
+	for (auto& counterPair : m_SessionVariableBroadcastCounters) {
+		if (counterPair.second > nSinceCounter)
+			values.push_back(std::make_pair(counterPair.first, m_pSessionVariableBroadcasts->getParameterValueByName(counterPair.first)));
+	}
+}
+
+void CUIFrontendDefinition::collectSessionReferences(std::vector<std::string>& references)
+{
+	for (auto& pModuleStore : m_ModuleStores)
+		pModuleStore->collectSessionReferences(references);
 }
 

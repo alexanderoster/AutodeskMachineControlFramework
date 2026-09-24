@@ -5695,6 +5695,36 @@
 			<param name="ParameterType" type="enum" class="ParameterDataType" pass="return" description="Data type of the parameter." />
 		</method>
 
+		<method name="HasSessionVariable" description="checks if a UI session variable is declared in the user interface configuration.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name." />
+			<param name="VariableExists" type="bool" pass="return" description="returns true if the session variable is declared." />
+		</method>
+
+		<method name="SetSessionVariableForAllSessions" description="sets a string UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableForAllSessionsAsUUID" description="sets a uuid UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="in" description="New value. An empty string sets the null UUID." />
+		</method>
+
+		<method name="SetSessionVariableForAllSessionsAsDouble" description="sets a double UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="double" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableForAllSessionsAsInteger" description="sets an integer UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="int64" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableForAllSessionsAsBool" description="sets a bool UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="bool" pass="in" description="New value." />
+		</method>
+
 		<method name="HasResourceData" description = "retrieves if the machine resources has data with the given identifier.">
 			<param name="Identifier" type="string" pass="in" description="identifier of the binary data in the machine resource package." />
 			<param name="HasResourceData" type="bool" pass="return" description="returns true if the resource exists in the machine resource package." />
@@ -6189,6 +6219,65 @@
 			<param name="ElementPath" type="string" pass="in" description="Path of UI Element. Fails if element does not exist." />
 			<param name="PropertyName" type="string" pass="in" description="Property name. Fails if property does not exist or is readonly." />
 			<param name="Value" type="bool" pass="in" description="New property Value" />
+		</method>
+
+		<method name="GetSessionUUID" description="returns the UUID of the client session that triggered the event.">
+			<param name="SessionUUID" type="string" pass="return" description="Session UUID." />
+		</method>
+
+		<method name="HasSessionVariable" description="checks if a session variable is declared in the user interface configuration.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name." />
+			<param name="VariableExists" type="bool" pass="return" description="returns true if the session variable is declared." />
+		</method>
+
+		<method name="GetSessionVariable" description="returns a session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="return" description="Current value." />
+		</method>
+
+		<method name="GetSessionVariableAsUUID" description="returns a uuid session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="return" description="Current value." />
+		</method>
+
+		<method name="GetSessionVariableAsDouble" description="returns a double session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="double" pass="return" description="Current value." />
+		</method>
+
+		<method name="GetSessionVariableAsInteger" description="returns an integer session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="int64" pass="return" description="Current value." />
+		</method>
+
+		<method name="GetSessionVariableAsBool" description="returns a bool session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="bool" pass="return" description="Current value." />
+		</method>
+
+		<method name="SetSessionVariable" description="sets a session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableAsUUID" description="sets a uuid session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="string" pass="in" description="New value. An empty string sets the null UUID." />
+		</method>
+
+		<method name="SetSessionVariableAsDouble" description="sets a double session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="double" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableAsInteger" description="sets an integer session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="int64" pass="in" description="New value." />
+		</method>
+
+		<method name="SetSessionVariableAsBool" description="sets a bool session variable of the client session that triggered the event.">
+			<param name="VariableName" type="string" pass="in" description="Session variable name. Fails if variable is not declared." />
+			<param name="Value" type="bool" pass="in" description="New value." />
 		</method>
 		
 		<method name="CreateEmptyImage" description="creates an empty image object.">

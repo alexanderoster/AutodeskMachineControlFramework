@@ -129,7 +129,7 @@ void CAPIHandler_Frontend::handleStatusRequest(CJSONWriter& writer, PAPIAuth pAu
 	if (pAuth.get() == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
-	m_pSystemState->uiHandler()->frontendWriteStatusToJSON(writer, pAuth->getFrontendState().get());
+	m_pSystemState->uiHandler()->frontendWriteStatusToJSON(writer, pAuth.get());
 }
 
 

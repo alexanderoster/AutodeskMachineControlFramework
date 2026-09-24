@@ -3646,6 +3646,12 @@ public:
 	inline std::string GetParameterGroupParameterName(const std::string & sParameterGroup, const LibMCEnv_uint32 nIndex);
 	inline std::string GetParameterGroupParameterDescription(const std::string & sParameterGroup, const LibMCEnv_uint32 nIndex);
 	inline eParameterDataType GetParameterGroupParameterType(const std::string & sParameterGroup, const std::string & sParameterName);
+	inline bool HasSessionVariable(const std::string & sVariableName);
+	inline void SetSessionVariableForAllSessions(const std::string & sVariableName, const std::string & sValue);
+	inline void SetSessionVariableForAllSessionsAsUUID(const std::string & sVariableName, const std::string & sValue);
+	inline void SetSessionVariableForAllSessionsAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue);
+	inline void SetSessionVariableForAllSessionsAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue);
+	inline void SetSessionVariableForAllSessionsAsBool(const std::string & sVariableName, const bool bValue);
 	inline bool HasResourceData(const std::string & sIdentifier);
 	inline void LoadResourceData(const std::string & sResourceName, std::vector<LibMCEnv_uint8> & ResourceDataBuffer);
 	inline std::string LoadResourceString(const std::string & sResourceName);
@@ -3768,6 +3774,18 @@ public:
 	inline void SetUIPropertyAsDouble(const std::string & sElementPath, const std::string & sPropertyName, const LibMCEnv_double dValue);
 	inline void SetUIPropertyAsInteger(const std::string & sElementPath, const std::string & sPropertyName, const LibMCEnv_int64 nValue);
 	inline void SetUIPropertyAsBool(const std::string & sElementPath, const std::string & sPropertyName, const bool bValue);
+	inline std::string GetSessionUUID();
+	inline bool HasSessionVariable(const std::string & sVariableName);
+	inline std::string GetSessionVariable(const std::string & sVariableName);
+	inline std::string GetSessionVariableAsUUID(const std::string & sVariableName);
+	inline LibMCEnv_double GetSessionVariableAsDouble(const std::string & sVariableName);
+	inline LibMCEnv_int64 GetSessionVariableAsInteger(const std::string & sVariableName);
+	inline bool GetSessionVariableAsBool(const std::string & sVariableName);
+	inline void SetSessionVariable(const std::string & sVariableName, const std::string & sValue);
+	inline void SetSessionVariableAsUUID(const std::string & sVariableName, const std::string & sValue);
+	inline void SetSessionVariableAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue);
+	inline void SetSessionVariableAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue);
+	inline void SetSessionVariableAsBool(const std::string & sVariableName, const bool bValue);
 	inline PImageData CreateEmptyImage(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_double dDPIValueX, const LibMCEnv_double dDPIValueY, const eImagePixelFormat ePixelFormat);
 	inline PImageLoader CreateImageLoader();
 	inline PVideoStream CreateVideoStream(const LibMCEnv_uint32 nPixelSizeX, const LibMCEnv_uint32 nPixelSizeY, const LibMCEnv_uint32 nDesiredFrameDurationInMicroseconds, const LibMCEnv_uint32 nPauseToleranceInMicroseconds, const LibMCEnv_uint32 nFrameCacheDurationInMicroseconds);
@@ -4877,6 +4895,12 @@ public:
 		pWrapperTable->m_StateEnvironment_GetParameterGroupParameterName = nullptr;
 		pWrapperTable->m_StateEnvironment_GetParameterGroupParameterDescription = nullptr;
 		pWrapperTable->m_StateEnvironment_GetParameterGroupParameterType = nullptr;
+		pWrapperTable->m_StateEnvironment_HasSessionVariable = nullptr;
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions = nullptr;
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID = nullptr;
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble = nullptr;
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger = nullptr;
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool = nullptr;
 		pWrapperTable->m_StateEnvironment_HasResourceData = nullptr;
 		pWrapperTable->m_StateEnvironment_LoadResourceData = nullptr;
 		pWrapperTable->m_StateEnvironment_LoadResourceString = nullptr;
@@ -4967,6 +4991,18 @@ public:
 		pWrapperTable->m_UIEnvironment_SetUIPropertyAsDouble = nullptr;
 		pWrapperTable->m_UIEnvironment_SetUIPropertyAsInteger = nullptr;
 		pWrapperTable->m_UIEnvironment_SetUIPropertyAsBool = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionUUID = nullptr;
+		pWrapperTable->m_UIEnvironment_HasSessionVariable = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionVariable = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger = nullptr;
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool = nullptr;
+		pWrapperTable->m_UIEnvironment_SetSessionVariable = nullptr;
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID = nullptr;
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble = nullptr;
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger = nullptr;
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateEmptyImage = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateImageLoader = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateVideoStream = nullptr;
@@ -13793,6 +13829,60 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_HasSessionVariable = (PLibMCEnvStateEnvironment_HasSessionVariablePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_hassessionvariable");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_HasSessionVariable = (PLibMCEnvStateEnvironment_HasSessionVariablePtr) dlsym(hLibrary, "libmcenv_stateenvironment_hassessionvariable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_HasSessionVariable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessions");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsPtr) dlsym(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsUUIDPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasuuid");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsUUIDPtr) dlsym(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasdouble");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsDoublePtr) dlsym(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasinteger");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsIntegerPtr) dlsym(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasbool");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool = (PLibMCEnvStateEnvironment_SetSessionVariableForAllSessionsAsBoolPtr) dlsym(hLibrary, "libmcenv_stateenvironment_setsessionvariableforallsessionsasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_HasResourceData = (PLibMCEnvStateEnvironment_HasResourceDataPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_hasresourcedata");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_HasResourceData = (PLibMCEnvStateEnvironment_HasResourceDataPtr) dlsym(hLibrary, "libmcenv_stateenvironment_hasresourcedata");
@@ -14600,6 +14690,114 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_SetUIPropertyAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionUUID = (PLibMCEnvUIEnvironment_GetSessionUUIDPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionuuid");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionUUID = (PLibMCEnvUIEnvironment_GetSessionUUIDPtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_HasSessionVariable = (PLibMCEnvUIEnvironment_HasSessionVariablePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_hassessionvariable");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_HasSessionVariable = (PLibMCEnvUIEnvironment_HasSessionVariablePtr) dlsym(hLibrary, "libmcenv_uienvironment_hassessionvariable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_HasSessionVariable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariable = (PLibMCEnvUIEnvironment_GetSessionVariablePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionvariable");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariable = (PLibMCEnvUIEnvironment_GetSessionVariablePtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionvariable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionVariable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID = (PLibMCEnvUIEnvironment_GetSessionVariableAsUUIDPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionvariableasuuid");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID = (PLibMCEnvUIEnvironment_GetSessionVariableAsUUIDPtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionvariableasuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble = (PLibMCEnvUIEnvironment_GetSessionVariableAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionvariableasdouble");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble = (PLibMCEnvUIEnvironment_GetSessionVariableAsDoublePtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionvariableasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger = (PLibMCEnvUIEnvironment_GetSessionVariableAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionvariableasinteger");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger = (PLibMCEnvUIEnvironment_GetSessionVariableAsIntegerPtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionvariableasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool = (PLibMCEnvUIEnvironment_GetSessionVariableAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getsessionvariableasbool");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool = (PLibMCEnvUIEnvironment_GetSessionVariableAsBoolPtr) dlsym(hLibrary, "libmcenv_uienvironment_getsessionvariableasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariable = (PLibMCEnvUIEnvironment_SetSessionVariablePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setsessionvariable");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariable = (PLibMCEnvUIEnvironment_SetSessionVariablePtr) dlsym(hLibrary, "libmcenv_uienvironment_setsessionvariable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetSessionVariable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID = (PLibMCEnvUIEnvironment_SetSessionVariableAsUUIDPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setsessionvariableasuuid");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID = (PLibMCEnvUIEnvironment_SetSessionVariableAsUUIDPtr) dlsym(hLibrary, "libmcenv_uienvironment_setsessionvariableasuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble = (PLibMCEnvUIEnvironment_SetSessionVariableAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setsessionvariableasdouble");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble = (PLibMCEnvUIEnvironment_SetSessionVariableAsDoublePtr) dlsym(hLibrary, "libmcenv_uienvironment_setsessionvariableasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger = (PLibMCEnvUIEnvironment_SetSessionVariableAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setsessionvariableasinteger");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger = (PLibMCEnvUIEnvironment_SetSessionVariableAsIntegerPtr) dlsym(hLibrary, "libmcenv_uienvironment_setsessionvariableasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool = (PLibMCEnvUIEnvironment_SetSessionVariableAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setsessionvariableasbool");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool = (PLibMCEnvUIEnvironment_SetSessionVariableAsBoolPtr) dlsym(hLibrary, "libmcenv_uienvironment_setsessionvariableasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -19057,6 +19255,30 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetParameterGroupParameterType == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_hassessionvariable", (void**)&(pWrapperTable->m_StateEnvironment_HasSessionVariable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_HasSessionVariable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_setsessionvariableforallsessions", (void**)&(pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessions == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_setsessionvariableforallsessionsasuuid", (void**)&(pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_setsessionvariableforallsessionsasdouble", (void**)&(pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_setsessionvariableforallsessionsasinteger", (void**)&(pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_setsessionvariableforallsessionsasbool", (void**)&(pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_SetSessionVariableForAllSessionsAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_hasresourcedata", (void**)&(pWrapperTable->m_StateEnvironment_HasResourceData));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_HasResourceData == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -19415,6 +19637,54 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_setuipropertyasbool", (void**)&(pWrapperTable->m_UIEnvironment_SetUIPropertyAsBool));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetUIPropertyAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionuuid", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_hassessionvariable", (void**)&(pWrapperTable->m_UIEnvironment_HasSessionVariable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_HasSessionVariable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionvariable", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionVariable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionVariable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionvariableasuuid", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionVariableAsUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionvariableasdouble", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionVariableAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionvariableasinteger", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionVariableAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getsessionvariableasbool", (void**)&(pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetSessionVariableAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setsessionvariable", (void**)&(pWrapperTable->m_UIEnvironment_SetSessionVariable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetSessionVariable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setsessionvariableasuuid", (void**)&(pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetSessionVariableAsUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setsessionvariableasdouble", (void**)&(pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetSessionVariableAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setsessionvariableasinteger", (void**)&(pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetSessionVariableAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setsessionvariableasbool", (void**)&(pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetSessionVariableAsBool == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_createemptyimage", (void**)&(pWrapperTable->m_UIEnvironment_CreateEmptyImage));
@@ -33048,6 +33318,69 @@ public:
 	}
 	
 	/**
+	* CStateEnvironment::HasSessionVariable - checks if a UI session variable is declared in the user interface configuration.
+	* @param[in] sVariableName - Session variable name.
+	* @return returns true if the session variable is declared.
+	*/
+	bool CStateEnvironment::HasSessionVariable(const std::string & sVariableName)
+	{
+		bool resultVariableExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_HasSessionVariable(m_pHandle, sVariableName.c_str(), &resultVariableExists));
+		
+		return resultVariableExists;
+	}
+	
+	/**
+	* CStateEnvironment::SetSessionVariableForAllSessions - sets a string UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value.
+	*/
+	void CStateEnvironment::SetSessionVariableForAllSessions(const std::string & sVariableName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SetSessionVariableForAllSessions(m_pHandle, sVariableName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* CStateEnvironment::SetSessionVariableForAllSessionsAsUUID - sets a uuid UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value. An empty string sets the null UUID.
+	*/
+	void CStateEnvironment::SetSessionVariableForAllSessionsAsUUID(const std::string & sVariableName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SetSessionVariableForAllSessionsAsUUID(m_pHandle, sVariableName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* CStateEnvironment::SetSessionVariableForAllSessionsAsDouble - sets a double UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] dValue - New value.
+	*/
+	void CStateEnvironment::SetSessionVariableForAllSessionsAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SetSessionVariableForAllSessionsAsDouble(m_pHandle, sVariableName.c_str(), dValue));
+	}
+	
+	/**
+	* CStateEnvironment::SetSessionVariableForAllSessionsAsInteger - sets an integer UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] nValue - New value.
+	*/
+	void CStateEnvironment::SetSessionVariableForAllSessionsAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SetSessionVariableForAllSessionsAsInteger(m_pHandle, sVariableName.c_str(), nValue));
+	}
+	
+	/**
+	* CStateEnvironment::SetSessionVariableForAllSessionsAsBool - sets a bool UI session variable in all currently active client sessions. Sessions created afterwards start with the declared default value.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] bValue - New value.
+	*/
+	void CStateEnvironment::SetSessionVariableForAllSessionsAsBool(const std::string & sVariableName, const bool bValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_SetSessionVariableForAllSessionsAsBool(m_pHandle, sVariableName.c_str(), bValue));
+	}
+	
+	/**
 	* CStateEnvironment::HasResourceData - retrieves if the machine resources has data with the given identifier.
 	* @param[in] sIdentifier - identifier of the binary data in the machine resource package.
 	* @return returns true if the resource exists in the machine resource package.
@@ -34351,6 +34684,155 @@ public:
 	void CUIEnvironment::SetUIPropertyAsBool(const std::string & sElementPath, const std::string & sPropertyName, const bool bValue)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetUIPropertyAsBool(m_pHandle, sElementPath.c_str(), sPropertyName.c_str(), bValue));
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionUUID - returns the UUID of the client session that triggered the event.
+	* @return Session UUID.
+	*/
+	std::string CUIEnvironment::GetSessionUUID()
+	{
+		LibMCEnv_uint32 bytesNeededSessionUUID = 0;
+		LibMCEnv_uint32 bytesWrittenSessionUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionUUID(m_pHandle, 0, &bytesNeededSessionUUID, nullptr));
+		std::vector<char> bufferSessionUUID(bytesNeededSessionUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionUUID(m_pHandle, bytesNeededSessionUUID, &bytesWrittenSessionUUID, &bufferSessionUUID[0]));
+		
+		return std::string(&bufferSessionUUID[0]);
+	}
+	
+	/**
+	* CUIEnvironment::HasSessionVariable - checks if a session variable is declared in the user interface configuration.
+	* @param[in] sVariableName - Session variable name.
+	* @return returns true if the session variable is declared.
+	*/
+	bool CUIEnvironment::HasSessionVariable(const std::string & sVariableName)
+	{
+		bool resultVariableExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_HasSessionVariable(m_pHandle, sVariableName.c_str(), &resultVariableExists));
+		
+		return resultVariableExists;
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionVariable - returns a session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	std::string CUIEnvironment::GetSessionVariable(const std::string & sVariableName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariable(m_pHandle, sVariableName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariable(m_pHandle, sVariableName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionVariableAsUUID - returns a uuid session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	std::string CUIEnvironment::GetSessionVariableAsUUID(const std::string & sVariableName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariableAsUUID(m_pHandle, sVariableName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariableAsUUID(m_pHandle, sVariableName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionVariableAsDouble - returns a double session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	LibMCEnv_double CUIEnvironment::GetSessionVariableAsDouble(const std::string & sVariableName)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariableAsDouble(m_pHandle, sVariableName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionVariableAsInteger - returns an integer session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	LibMCEnv_int64 CUIEnvironment::GetSessionVariableAsInteger(const std::string & sVariableName)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariableAsInteger(m_pHandle, sVariableName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::GetSessionVariableAsBool - returns a bool session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @return Current value.
+	*/
+	bool CUIEnvironment::GetSessionVariableAsBool(const std::string & sVariableName)
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetSessionVariableAsBool(m_pHandle, sVariableName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::SetSessionVariable - sets a session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value.
+	*/
+	void CUIEnvironment::SetSessionVariable(const std::string & sVariableName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetSessionVariable(m_pHandle, sVariableName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetSessionVariableAsUUID - sets a uuid session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] sValue - New value. An empty string sets the null UUID.
+	*/
+	void CUIEnvironment::SetSessionVariableAsUUID(const std::string & sVariableName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetSessionVariableAsUUID(m_pHandle, sVariableName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetSessionVariableAsDouble - sets a double session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] dValue - New value.
+	*/
+	void CUIEnvironment::SetSessionVariableAsDouble(const std::string & sVariableName, const LibMCEnv_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetSessionVariableAsDouble(m_pHandle, sVariableName.c_str(), dValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetSessionVariableAsInteger - sets an integer session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] nValue - New value.
+	*/
+	void CUIEnvironment::SetSessionVariableAsInteger(const std::string & sVariableName, const LibMCEnv_int64 nValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetSessionVariableAsInteger(m_pHandle, sVariableName.c_str(), nValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetSessionVariableAsBool - sets a bool session variable of the client session that triggered the event.
+	* @param[in] sVariableName - Session variable name. Fails if variable is not declared.
+	* @param[in] bValue - New value.
+	*/
+	void CUIEnvironment::SetSessionVariableAsBool(const std::string & sVariableName, const bool bValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetSessionVariableAsBool(m_pHandle, sVariableName.c_str(), bValue));
 	}
 	
 	/**

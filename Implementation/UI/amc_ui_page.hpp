@@ -80,6 +80,7 @@ namespace AMC {
 		CUIExpression m_Icon;
 		CUIExpression m_Caption;
 		CUIExpression m_Description;
+		CUIExpression m_Visible;
 		uint32_t m_nGridColumns;
 		uint32_t m_nGridRows;
 
@@ -118,6 +119,11 @@ namespace AMC {
 		// New UI Frontend System
 		/////////////////////////////////////////////////////////////////////////////////////
 		void frontendWritePageStatusToJSON(CJSONWriter& writer, CJSONWriterObject& pageObject, CUIFrontendState* pFrontendState, CStateMachineData * pStateMachineData);
+
+		void setVisibleExpression(const CUIExpression& visibleExpression);
+
+		// Collects the session references of the page level expressions (icon, caption, description, visible).
+		void collectSessionReferences(std::vector<std::string>& references);
 										
 	};
 		

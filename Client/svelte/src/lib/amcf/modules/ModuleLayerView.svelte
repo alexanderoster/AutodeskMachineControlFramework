@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { usePollTick } from '$lib/amcf/poll.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import Square from '@lucide/svelte/icons/square';
@@ -35,11 +35,11 @@
 	];
 	let platform = $derived.by(() => { poll.v; return module.platform || null; });
 	let layerCount = $derived.by(() => { poll.v; return platform?.layercount || 0; });
-	let transformAngle = $derived(Number(platform?.transformangle) || 0);
-	let rotationCenterX = $derived(Number(platform?.rotationcenterx) || 0);
-	let rotationCenterY = $derived(Number(platform?.rotationcentery) || 0);
-	let translationX = $derived(Number(platform?.translationx) || 0);
-	let translationY = $derived(Number(platform?.translationy) || 0);
+	let transformAngle = $derived.by(() => { poll.v; return Number(platform?.transformangle) || 0; });
+	let rotationCenterX = $derived.by(() => { poll.v; return Number(platform?.rotationcenterx) || 0; });
+	let rotationCenterY = $derived.by(() => { poll.v; return Number(platform?.rotationcentery) || 0; });
+	let translationX = $derived.by(() => { poll.v; return Number(platform?.translationx) || 0; });
+	let translationY = $derived.by(() => { poll.v; return Number(platform?.translationy) || 0; });
 	let coordinateTransform = $derived([
 		transformAngle,
 		rotationCenterX,
@@ -50,10 +50,27 @@
 	let sliderValue = $state(0);
 	let appliedColorTheme = $state('');
 	let coordinateSystemOverride: boolean | null = $state(null);
-	let coordinateSystemVisible = $derived(
-		coordinateSystemOverride ?? Boolean(platform?.showcoordinatesystem)
-	);
+	let coordinateSystemVisible = $derived.by(() => {
+		poll.v;
+		return coordinateSystemOverride ?? Boolean(platform?.showcoordinatesystem);
+	});
 	let appliedCoordinateTransform: CoordinateTransform | null = null;
+	// While true, the view keeps framing the platform whenever the viewport or the
+	// platform geometry changes. Cleared once the user pans or zooms; set again by
+	// the "Platform" button.
+	let autoFrame = true;
+	let platformFrameKey = $derived.by(() => {
+		poll.v;
+		return platform
+			? [platform.sizex, platform.sizey, platform.originx, platform.originy, platform.paddingx, platform.paddingy].join('|')
+			: '';
+	});
+
+	$effect(() => {
+		platformFrameKey;
+		if (!initialized || !autoFrame) return;
+		untrack(() => resetView());
+	});
 
 	$effect(() => {
 		poll.v;
@@ -170,8 +187,7 @@
 			.then((layerJSON: any) => {
 				if (layerViewer) {
 					layerViewer.loadLayer(layerJSON.data.segments);
-					layerViewer.RenderScene(true);
-				}
+					layerViewer.RenderScene(true);				}
 			})
 			.catch((err: any) => {
 				console.warn('[LayerView] layer load error:', err?.response || err);
@@ -200,6 +216,7 @@
 		const localX = event.clientX - box.left;
 		const localY = event.clientY - box.top;
 
+		autoFrame = false;
 		layerViewer.ScaleRelative(Math.pow(1.03, -delta * 1.5), localX, localY);
 		layerViewer.RenderScene(true);
 	}
@@ -296,6 +313,7 @@
 			const dy = event.clientY - dragY;
 			dragX = event.clientX;
 			dragY = event.clientY;
+			if (dx !== 0 || dy !== 0) autoFrame = false;
 			layerViewer.Drag(dx, dy);
 			layerViewer.RenderScene(true);
 			return;
@@ -335,6 +353,7 @@
 
 	function resetView() {
 		if (!layerViewer || !platform) return;
+		autoFrame = true;
 		centerOnPlatform();
 		layerViewer.RenderScene(true);
 	}
@@ -348,6 +367,7 @@
 				const right = bounds.center.x + bounds.radius + (platform.originx || 0);
 				const top = bounds.center.y - bounds.radius + (platform.originy || 0);
 				const bottom = bounds.center.y + bounds.radius + (platform.originy || 0);
+				autoFrame = false;
 				layerViewer.CenterOnRectangle(left, top, right, bottom);
 			} else {
 				resetView();
@@ -375,6 +395,7 @@
 				const w = containerEl.clientWidth, h = containerEl.clientHeight;
 				if (w > 0 && h > 0) {
 					layerViewer.updateSize(w, h);
+					if (autoFrame) centerOnPlatform();
 					layerViewer.RenderScene(true);
 				}
 			}

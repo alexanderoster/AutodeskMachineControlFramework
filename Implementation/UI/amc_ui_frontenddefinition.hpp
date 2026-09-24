@@ -40,8 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <map>
 #include <vector>
+#include <mutex>
 
 namespace AMC {
+
+	class CParameterGroup;
+	typedef std::shared_ptr<CParameterGroup> PParameterGroup;
 
 	enum class eUIFrontendDefinitionAttributeType : uint32_t {
 		atUnknown = 0,
@@ -70,7 +74,10 @@ namespace AMC {
 
 		eUIFrontendDefinitionAttributeType getAttributeType();
 
-		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData) = 0;
+		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext) = 0;
+
+		// Returns the session reference of the attribute value, or an empty string.
+		virtual std::string getSessionReference();
 	};
 
 	typedef std::shared_ptr<CUIFrontendDefinitionAttribute> PUIFrontendDefinitionAttribute;
@@ -86,7 +93,9 @@ namespace AMC {
 
 		virtual ~CUIFrontendDefinitionExpressionAttribute();
 
-		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData * pStateMachineData) override;
+		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData * pStateMachineData, CUIExpressionSessionContext* pSessionContext) override;
+
+		virtual std::string getSessionReference() override;
 
 	};
 
@@ -124,13 +133,25 @@ namespace AMC {
 
 		std::string getUUID();
 
+		// Collects the session references of this store and all child stores.
+		void collectSessionReferences(std::vector<std::string>& references);
+
 	};
 
 	class CUIFrontendDefinition {
 	private:
 
-		std::map<std::string, PUIFrontendDefinitionModuleStore> m_ModuleStores;
+		std::vector<PUIFrontendDefinitionModuleStore> m_ModuleStores;
 		AMCCommon::PChrono m_pGlobalChrono;
+
+		// Declared session variables with their default values. Every client session gets a copy.
+		PParameterGroup m_pSessionVariableDeclarations;
+
+		// Values broadcast to all sessions; applied lazily by each session state.
+		std::mutex m_BroadcastMutex;
+		PParameterGroup m_pSessionVariableBroadcasts;
+		std::map<std::string, uint64_t> m_SessionVariableBroadcastCounters;
+		uint64_t m_nSessionVariableBroadcastCounter;
 
 	public:
 
@@ -141,6 +162,26 @@ namespace AMC {
 		PUIFrontendDefinitionModuleStore registerModuleStore (const std::string& sModuleUUID, const std::string& sPath, const std::string& sModuleType = "");
 
 		AMCCommon::PChrono getGlobalChrono();	
+
+		void addSessionVariable(const std::string& sName, const std::string& sType, const std::string& sDescription, const std::string& sDefaultValue);
+
+		bool hasSessionVariable(const std::string& sName);
+
+		PParameterGroup getSessionVariableDeclarations();
+
+		// Sets a session variable in all current sessions. Sessions created afterwards start with the declared default.
+		void broadcastSessionVariable(const std::string& sName, const std::string& sValue);
+		void broadcastSessionVariableAsDouble(const std::string& sName, double dValue);
+		void broadcastSessionVariableAsInteger(const std::string& sName, int64_t nValue);
+		void broadcastSessionVariableAsBool(const std::string& sName, bool bValue);
+
+		uint64_t getSessionVariableBroadcastCounter();
+
+		// Returns all broadcast values that were set after nSinceCounter.
+		void getSessionVariableBroadcastsSince(uint64_t nSinceCounter, std::vector<std::pair<std::string, std::string>>& values);
+
+		// Collects the session references of all registered module attributes.
+		void collectSessionReferences(std::vector<std::string>& references);
 
 	};
 
