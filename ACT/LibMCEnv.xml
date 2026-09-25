@@ -300,7 +300,8 @@
 		<error name="INVALIDPAUSETOLERANCE" code="10260" description="Invalid pause tolerance." />	
 		<error name="INVALIDFRAMECACHEDURATION" code="10261" description="Invalid frame cache duration." />	
 		<error name="VIDEOSTREAMFRAMEENCODINGERROR" code="10262" description="Video stream frame encoding error." />	
-		<error name="NONONEMPTYLAYERFOUND" code="10263" description="No non-empty layer found in the given layer range." />	
+		<error name="NONONEMPTYLAYERFOUND" code="10263" description="No non-empty layer found in the given layer range." />
+		<error name="TOOLPATHPARTNOTFOUND" code="10264" description="Toolpath part not found." />	
 		
 		
 	</errors>
@@ -2004,6 +2005,18 @@
 			<param name="UUID" type="string" pass="return" description="Returns toolpath part uuid." />
 		</method>
 
+		<method name="GetPartNumber" description="Returns the part number of the build item.">
+			<param name="PartNumber" type="string" pass="return" description="Returns the part number. Empty if not set." />
+		</method>
+
+		<method name="GetMeshUUID" description="Returns the UUID of the part's mesh object.">
+			<param name="MeshUUID" type="string" pass="return" description="Returns the mesh object uuid." />
+		</method>
+
+		<method name="IsDisabled" description="Returns if the part has been disabled with Build.DisablePart. Layers loaded through a toolpath accessor do not contain segments of disabled parts.">
+			<param name="IsDisabled" type="bool" pass="return" description="Returns true if the part is disabled." />
+		</method>
+
 		<method name="GetRootComponent" description="Returns the Root Component of the part.">
 			<param name="RootComponent" type="class" class="ModelDataComponentInstance" pass="return" description="Returns root component instance." />
 		</method>
@@ -2694,6 +2707,18 @@
 
 		<method name="CreateToolpathAccessor" description="Creates an accessor object for a toolpath. Toolpath MUST have been loaded with LoadToolpath before.">
 			<param name="ToolpathInstance" type="class" class="ToolpathAccessor" pass="return" description="Toolpath instance." />
+		</method>
+
+		<method name="DisablePart" description="Disables a part of the build. From then on, layers loaded through a toolpath accessor do not contain any segments of this part, so it is no longer exposed. The state is kept in memory until EnableAllParts is called or the server restarts. Toolpath MUST have been loaded with LoadToolpath before.">
+			<param name="PartUUID" type="string" pass="in" description="Build item UUID of the part. Fails with TOOLPATHPARTNOTFOUND if the part does not exist." />
+		</method>
+
+		<method name="PartIsDisabled" description="Returns if a part of the build has been disabled.">
+			<param name="PartUUID" type="string" pass="in" description="Build item UUID of the part." />
+			<param name="IsDisabled" type="bool" pass="return" description="Returns true if the part is disabled." />
+		</method>
+
+		<method name="EnableAllParts" description="Re-enables all disabled parts of the build.">
 		</method>
 
 		<method name="HasAttachment" description="Returns if the Build has an attached data with a certain UUID">

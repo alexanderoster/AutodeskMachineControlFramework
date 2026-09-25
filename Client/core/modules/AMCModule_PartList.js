@@ -45,6 +45,12 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 
 		this.builduuid    = Common.nullUUID ();
 		this.loadingtext  = "Loading build details...";
+		this.showdetails  = true;
+		this.selectevent  = "";
+		this.selectionvalueuuid = "";
+
+		// Changes whenever parts of the build are disabled or re-enabled; triggers a re-fetch.
+		this.partstateversion = 0;
 
 		// Build details (fetched from api/build/<uuid>) and derived part list. The fetch happens
 		// in this model class so both the Svelte and the Vue2 frontends share the same logic.
@@ -54,6 +60,7 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 		this.errorMessage = "";
 
 		this.fetchedUUID    = "";
+		this.fetchedVersion = 0;
 		this.fetchInFlight  = false;
 
 		this.updateFromJSON (moduleJSON);
@@ -68,6 +75,12 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 			this.loadingtext = Assert.StringValue (updateJSON.loadingtext);
 		if (updateJSON.builduuid)
 			this.builduuid = updateJSON.builduuid;
+		if (updateJSON.selectevent !== undefined)
+			this.selectevent = Assert.StringValue (updateJSON.selectevent);
+		if (updateJSON.selectionvalueuuid !== undefined)
+			this.selectionvalueuuid = Assert.StringValue (updateJSON.selectionvalueuuid);
+		if (updateJSON.partstateversion !== undefined)
+			this.partstateversion = Number (updateJSON.partstateversion) || 0;
 
 		this.maybeFetchDetails ();
 	}
@@ -80,12 +93,20 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 
 		if (attrs.loadingtext !== undefined)
 			this.loadingtext = attrs.loadingtext;
+		if (attrs.showdetails !== undefined)
+			this.showdetails = !(attrs.showdetails === false || attrs.showdetails === "0" || attrs.showdetails === "false");
 		if (attrs.caption !== undefined)
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)
 			this.visible = (attrs.visible === "1" || attrs.visible === true || attrs.visible === "true");
 		if (attrs.builduuid !== undefined)
 			this.builduuid = attrs.builduuid;
+		if (attrs.selectevent !== undefined)
+			this.selectevent = attrs.selectevent;
+		if (attrs.selectionvalueuuid !== undefined)
+			this.selectionvalueuuid = attrs.selectionvalueuuid;
+		if (attrs.partstateversion !== undefined)
+			this.partstateversion = Number (attrs.partstateversion) || 0;
 
 		this.maybeFetchDetails ();
 
@@ -94,7 +115,8 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 
 
 	// Fetches the build details (name, layer count, thickness, size, thumbnail and part list)
-	// whenever the selected build changes. A null/empty UUID clears the current details.
+	// whenever the selected build or its part state version changes. A null/empty UUID clears
+	// the current details. A version-only change refreshes silently without a loading state.
 	maybeFetchDetails ()
 	{
 		let uuid = this.builduuid || "";
@@ -105,18 +127,25 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 			this.parts        = [];
 			this.errorMessage = "";
 			this.fetchedUUID  = "";
+			this.fetchedVersion = 0;
 			return;
 		}
 
-		if (uuid === this.fetchedUUID)
+		let version = this.partstateversion;
+		if ((uuid === this.fetchedUUID) && (version === this.fetchedVersion))
 			return;
 		if (this.fetchInFlight)
 			return;
 
-		this.fetchedUUID   = uuid;
-		this.fetchInFlight = true;
-		this.loading       = true;
-		this.errorMessage  = "";
+		let isNewBuild = (uuid !== this.fetchedUUID);
+
+		this.fetchedUUID    = uuid;
+		this.fetchedVersion = version;
+		this.fetchInFlight  = true;
+		if (isNewBuild) {
+			this.loading      = true;
+			this.errorMessage = "";
+		}
 
 		let app = this.page.application;
 
@@ -126,27 +155,33 @@ export default class AMCApplicationModule_PartList extends Common.AMCApplication
 			this.loading = false;
 
 			// Ignore stale responses if the selection changed while loading.
-			if (this.fetchedUUID !== uuid)
-				return;
+			if (this.fetchedUUID === uuid) {
+				let data = (resultJSON && resultJSON.data) ? resultJSON.data : null;
+				this.details = data;
+				this.errorMessage = "";
 
-			let data = (resultJSON && resultJSON.data) ? resultJSON.data : null;
-			this.details = data;
+				let newParts = (data && Array.isArray (data.parts)) ? data.parts : [];
+				let oldCount = this.parts.length;
+				for (let i = 0; i < oldCount; i++) this.parts.pop ();
+				for (let part of newParts) this.parts.push (part);
+			}
 
-			let newParts = (data && Array.isArray (data.parts)) ? data.parts : [];
-			let oldCount = this.parts.length;
-			for (let i = 0; i < oldCount; i++) this.parts.pop ();
-			for (let part of newParts) this.parts.push (part);
+			// Catch up with selection or version changes that arrived while loading.
+			this.maybeFetchDetails ();
 		})
 		.catch (err => {
 			this.fetchInFlight = false;
 			this.loading = false;
-			if (this.fetchedUUID !== uuid)
+			if (this.fetchedUUID !== uuid) {
+				this.maybeFetchDetails ();
 				return;
+			}
 			console.warn ("[PartList] build details load error:", (err && err.response) || err);
 			this.details = null;
 			let oldCount = this.parts.length;
 			for (let i = 0; i < oldCount; i++) this.parts.pop ();
 			this.errorMessage = "Could not load build details.";
+			this.maybeFetchDetails ();
 		});
 	}
 

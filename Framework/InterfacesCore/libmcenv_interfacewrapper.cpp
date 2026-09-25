@@ -8469,6 +8469,128 @@ LibMCEnvResult libmcenv_toolpathpart_getuuid(LibMCEnv_ToolpathPart pToolpathPart
 	}
 }
 
+LibMCEnvResult libmcenv_toolpathpart_getpartnumber(LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nPartNumberBufferSize, LibMCEnv_uint32* pPartNumberNeededChars, char * pPartNumberBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathPart;
+
+	try {
+		if ( (!pPartNumberBuffer) && !(pPartNumberNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sPartNumber("");
+		IToolpathPart* pIToolpathPart = dynamic_cast<IToolpathPart*>(pIBaseClass);
+		if (!pIToolpathPart)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pPartNumberBuffer == nullptr);
+		if (isCacheCall) {
+			sPartNumber = pIToolpathPart->GetPartNumber();
+
+			pIToolpathPart->_setCache (new ParameterCache_1<std::string> (sPartNumber));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIToolpathPart->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sPartNumber);
+			pIToolpathPart->_setCache (nullptr);
+		}
+		
+		if (pPartNumberNeededChars)
+			*pPartNumberNeededChars = (LibMCEnv_uint32) (sPartNumber.size()+1);
+		if (pPartNumberBuffer) {
+			if (sPartNumber.size() >= nPartNumberBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iPartNumber = 0; iPartNumber < sPartNumber.size(); iPartNumber++)
+				pPartNumberBuffer[iPartNumber] = sPartNumber[iPartNumber];
+			pPartNumberBuffer[sPartNumber.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathpart_getmeshuuid(LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nMeshUUIDBufferSize, LibMCEnv_uint32* pMeshUUIDNeededChars, char * pMeshUUIDBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathPart;
+
+	try {
+		if ( (!pMeshUUIDBuffer) && !(pMeshUUIDNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sMeshUUID("");
+		IToolpathPart* pIToolpathPart = dynamic_cast<IToolpathPart*>(pIBaseClass);
+		if (!pIToolpathPart)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pMeshUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			sMeshUUID = pIToolpathPart->GetMeshUUID();
+
+			pIToolpathPart->_setCache (new ParameterCache_1<std::string> (sMeshUUID));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIToolpathPart->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sMeshUUID);
+			pIToolpathPart->_setCache (nullptr);
+		}
+		
+		if (pMeshUUIDNeededChars)
+			*pMeshUUIDNeededChars = (LibMCEnv_uint32) (sMeshUUID.size()+1);
+		if (pMeshUUIDBuffer) {
+			if (sMeshUUID.size() >= nMeshUUIDBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iMeshUUID = 0; iMeshUUID < sMeshUUID.size(); iMeshUUID++)
+				pMeshUUIDBuffer[iMeshUUID] = sMeshUUID[iMeshUUID];
+			pMeshUUIDBuffer[sMeshUUID.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathpart_isdisabled(LibMCEnv_ToolpathPart pToolpathPart, bool * pIsDisabled)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathPart;
+
+	try {
+		if (pIsDisabled == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathPart* pIToolpathPart = dynamic_cast<IToolpathPart*>(pIBaseClass);
+		if (!pIToolpathPart)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pIsDisabled = pIToolpathPart->IsDisabled();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_toolpathpart_getrootcomponent(LibMCEnv_ToolpathPart pToolpathPart, LibMCEnv_ModelDataComponentInstance * pRootComponent)
 {
 	IBase* pIBaseClass = (IBase *)pToolpathPart;
@@ -12727,6 +12849,86 @@ LibMCEnvResult libmcenv_build_createtoolpathaccessor(LibMCEnv_Build pBuild, LibM
 		pBaseToolpathInstance = pIBuild->CreateToolpathAccessor();
 
 		*pToolpathInstance = (IBase*)(pBaseToolpathInstance);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_build_disablepart(LibMCEnv_Build pBuild, const char * pPartUUID)
+{
+	IBase* pIBaseClass = (IBase *)pBuild;
+
+	try {
+		if (pPartUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sPartUUID(pPartUUID);
+		IBuild* pIBuild = dynamic_cast<IBuild*>(pIBaseClass);
+		if (!pIBuild)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIBuild->DisablePart(sPartUUID);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_build_partisdisabled(LibMCEnv_Build pBuild, const char * pPartUUID, bool * pIsDisabled)
+{
+	IBase* pIBaseClass = (IBase *)pBuild;
+
+	try {
+		if (pPartUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pIsDisabled == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sPartUUID(pPartUUID);
+		IBuild* pIBuild = dynamic_cast<IBuild*>(pIBaseClass);
+		if (!pIBuild)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pIsDisabled = pIBuild->PartIsDisabled(sPartUUID);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_build_enableallparts(LibMCEnv_Build pBuild)
+{
+	IBase* pIBaseClass = (IBase *)pBuild;
+
+	try {
+		IBuild* pIBuild = dynamic_cast<IBuild*>(pIBaseClass);
+		if (!pIBuild)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIBuild->EnableAllParts();
+
 		return LIBMCENV_SUCCESS;
 	}
 	catch (ELibMCEnvInterfaceException & Exception) {
@@ -37486,6 +37688,12 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_toolpathpart_getname;
 	if (sProcName == "libmcenv_toolpathpart_getuuid") 
 		*ppProcAddress = (void*) &libmcenv_toolpathpart_getuuid;
+	if (sProcName == "libmcenv_toolpathpart_getpartnumber") 
+		*ppProcAddress = (void*) &libmcenv_toolpathpart_getpartnumber;
+	if (sProcName == "libmcenv_toolpathpart_getmeshuuid") 
+		*ppProcAddress = (void*) &libmcenv_toolpathpart_getmeshuuid;
+	if (sProcName == "libmcenv_toolpathpart_isdisabled") 
+		*ppProcAddress = (void*) &libmcenv_toolpathpart_isdisabled;
 	if (sProcName == "libmcenv_toolpathpart_getrootcomponent") 
 		*ppProcAddress = (void*) &libmcenv_toolpathpart_getrootcomponent;
 	if (sProcName == "libmcenv_toolpathlayer_getlayerdatauuid") 
@@ -37740,6 +37948,12 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_build_toolpathisloaded;
 	if (sProcName == "libmcenv_build_createtoolpathaccessor") 
 		*ppProcAddress = (void*) &libmcenv_build_createtoolpathaccessor;
+	if (sProcName == "libmcenv_build_disablepart") 
+		*ppProcAddress = (void*) &libmcenv_build_disablepart;
+	if (sProcName == "libmcenv_build_partisdisabled") 
+		*ppProcAddress = (void*) &libmcenv_build_partisdisabled;
+	if (sProcName == "libmcenv_build_enableallparts") 
+		*ppProcAddress = (void*) &libmcenv_build_enableallparts;
 	if (sProcName == "libmcenv_build_hasattachment") 
 		*ppProcAddress = (void*) &libmcenv_build_hasattachment;
 	if (sProcName == "libmcenv_build_hasattachmentidentifier") 

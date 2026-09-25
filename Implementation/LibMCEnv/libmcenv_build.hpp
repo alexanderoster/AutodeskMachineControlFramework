@@ -105,6 +105,12 @@ public:
 
 	IToolpathAccessor* CreateToolpathAccessor() override;
 
+	void DisablePart(const std::string& sPartUUID) override;
+
+	bool PartIsDisabled(const std::string& sPartUUID) override;
+
+	void EnableAllParts() override;
+
 	bool HasAttachment(const std::string& sDataUUID) override;
 
 	bool HasAttachmentIdentifier(const std::string& sIdentifier) override;

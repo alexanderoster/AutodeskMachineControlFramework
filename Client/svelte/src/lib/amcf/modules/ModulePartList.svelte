@@ -1,7 +1,9 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { Badge } from '$lib/components/ui/badge/index.js';
 	import Box from '@lucide/svelte/icons/box';
+	import Ban from '@lucide/svelte/icons/ban';
 	import Image from '@lucide/svelte/icons/image';
 
 	import { usePollTick } from '$lib/amcf/poll.svelte';
@@ -15,10 +17,36 @@
 	// selected build changes, so this component only renders what the model exposes.
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
 	let loadingtext = $derived.by(() => { poll.v; return module.loadingtext || 'Loading build details...'; });
+	let showdetails = $derived.by(() => { poll.v; return module.showdetails !== false; });
 	let loading = $derived.by(() => { poll.v; return module.loading === true; });
 	let errorMessage = $derived.by(() => { poll.v; return module.errorMessage || ''; });
 	let details = $derived.by(() => { poll.v; return module.details || null; });
 	let parts = $derived.by(() => { poll.v; return [...(module.parts || [])]; });
+	let selectevent = $derived.by(() => { poll.v; return module.selectevent || ''; });
+	let builduuid = $derived.by(() => { poll.v; return module.builduuid || ''; });
+
+	// Remembered per build, so a newly selected build starts without a selected part.
+	let selection = $state<{ build: string; part: string }>({ build: '', part: '' });
+	let selectedPartUUID = $derived(selection.build === builduuid ? selection.part : '');
+
+	// Clicking the selected row again deselects it and sends the null UUID.
+	function selectPart(part: any) {
+		if (!selectevent || !app || !part?.uuid) return;
+		const deselect = part.uuid === selectedPartUUID;
+		selection = { build: builduuid, part: deselect ? '' : part.uuid };
+
+		const formvalues: Record<string, string> = {};
+		if (module.selectionvalueuuid)
+			formvalues[module.selectionvalueuuid] = deselect ? nullUUID : part.uuid;
+		app.triggerUIEvent(selectevent, module.uuid, formvalues);
+	}
+
+	function onPartKeyDown(event: KeyboardEvent, part: any) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			selectPart(part);
+		}
+	}
 
 	function formatBytes(bytes: number | undefined): string {
 		if (!bytes || bytes <= 0) return '—';
@@ -50,6 +78,7 @@
 		{:else if !details}
 			<p class="text-sm text-muted-foreground">No build selected.</p>
 		{:else}
+			{#if showdetails}
 			<!-- Build detail header -->
 			<div class="flex gap-3">
 				{#if thumbnailURL(details.thumbnail)}
@@ -74,6 +103,7 @@
 					<dd class="tabular-nums">{formatBytes(details.size)}</dd>
 				</dl>
 			</div>
+			{/if}
 
 			<!-- Part list -->
 			<div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -98,11 +128,27 @@
 								</Table.Row>
 							{:else}
 								{#each parts as part, idx (part.uuid || idx)}
-									<Table.Row>
+									<Table.Row
+										class={selectevent ? 'cursor-pointer' : ''}
+										data-state={part.uuid && part.uuid === selectedPartUUID ? 'selected' : undefined}
+										aria-selected={selectevent ? part.uuid === selectedPartUUID : undefined}
+										tabindex={selectevent ? 0 : undefined}
+										onclick={() => selectPart(part)}
+										onkeydown={(event: KeyboardEvent) => onPartKeyDown(event, part)}
+									>
 										<Table.Cell class="py-1.5">
-											<Box class="h-4 w-4 text-muted-foreground" />
+											{#if part.disabled}
+												<Ban class="h-4 w-4 text-destructive" />
+											{:else}
+												<Box class="h-4 w-4 text-muted-foreground" />
+											{/if}
 										</Table.Cell>
-										<Table.Cell class="text-sm py-1.5 font-medium">{part.name || '—'}</Table.Cell>
+										<Table.Cell class="text-sm py-1.5 font-medium">
+											<span class={part.disabled ? 'text-muted-foreground line-through' : ''}>{part.name || '—'}</span>
+											{#if part.disabled}
+												<Badge variant="destructive" class="ml-2 text-[10px] px-1.5 py-0 uppercase">Disabled</Badge>
+											{/if}
+										</Table.Cell>
 										<Table.Cell class="text-sm py-1.5 text-muted-foreground tabular-nums">{part.partnumber || '—'}</Table.Cell>
 									</Table.Row>
 								{/each}

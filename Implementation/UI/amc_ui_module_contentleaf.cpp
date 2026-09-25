@@ -93,7 +93,7 @@ CUIModule_ContentLeaf::CUIModule_ContentLeaf(pugi::xml_node& xmlNode, const std:
 	if (m_sModuleType == "buildlist")
 		m_pItem = CUIModule_ContentBuildList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "partlist")
-		m_pItem = CUIModule_ContentPartList::makeFromXML(xmlNode, m_sName, sPath);
+		m_pItem = CUIModule_ContentPartList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "executionlist")
 		m_pItem = CUIModule_ContentExecutionList::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "alertlist")

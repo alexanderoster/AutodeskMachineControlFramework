@@ -3002,6 +3002,37 @@ typedef LibMCEnvResult (*PLibMCEnvToolpathPart_GetNamePtr) (LibMCEnv_ToolpathPar
 typedef LibMCEnvResult (*PLibMCEnvToolpathPart_GetUUIDPtr) (LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
 
 /**
+* Returns the part number of the build item.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[in] nPartNumberBufferSize - size of the buffer (including trailing 0)
+* @param[out] pPartNumberNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pPartNumberBuffer -  buffer of Returns the part number. Empty if not set., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvToolpathPart_GetPartNumberPtr) (LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nPartNumberBufferSize, LibMCEnv_uint32* pPartNumberNeededChars, char * pPartNumberBuffer);
+
+/**
+* Returns the UUID of the part's mesh object.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[in] nMeshUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pMeshUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pMeshUUIDBuffer -  buffer of Returns the mesh object uuid., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvToolpathPart_GetMeshUUIDPtr) (LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nMeshUUIDBufferSize, LibMCEnv_uint32* pMeshUUIDNeededChars, char * pMeshUUIDBuffer);
+
+/**
+* Returns if the part has been disabled with Build.DisablePart. Layers loaded through a toolpath accessor do not contain segments of disabled parts.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[out] pIsDisabled - Returns true if the part is disabled.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvToolpathPart_IsDisabledPtr) (LibMCEnv_ToolpathPart pToolpathPart, bool * pIsDisabled);
+
+/**
 * Returns the Root Component of the part.
 *
 * @param[in] pToolpathPart - ToolpathPart instance.
@@ -4398,6 +4429,33 @@ typedef LibMCEnvResult (*PLibMCEnvBuild_ToolpathIsLoadedPtr) (LibMCEnv_Build pBu
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvBuild_CreateToolpathAccessorPtr) (LibMCEnv_Build pBuild, LibMCEnv_ToolpathAccessor * pToolpathInstance);
+
+/**
+* Disables a part of the build. From then on, layers loaded through a toolpath accessor do not contain any segments of this part, so it is no longer exposed. The state is kept in memory until EnableAllParts is called or the server restarts. Toolpath MUST have been loaded with LoadToolpath before.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] pPartUUID - Build item UUID of the part. Fails with TOOLPATHPARTNOTFOUND if the part does not exist.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_DisablePartPtr) (LibMCEnv_Build pBuild, const char * pPartUUID);
+
+/**
+* Returns if a part of the build has been disabled.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] pPartUUID - Build item UUID of the part.
+* @param[out] pIsDisabled - Returns true if the part is disabled.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_PartIsDisabledPtr) (LibMCEnv_Build pBuild, const char * pPartUUID, bool * pIsDisabled);
+
+/**
+* Re-enables all disabled parts of the build.
+*
+* @param[in] pBuild - Build instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvBuild_EnableAllPartsPtr) (LibMCEnv_Build pBuild);
 
 /**
 * Returns if the Build has an attached data with a certain UUID
@@ -12541,6 +12599,9 @@ typedef struct {
 	PLibMCEnvSceneHandler_Load3MFFromStreamPtr m_SceneHandler_Load3MFFromStream;
 	PLibMCEnvToolpathPart_GetNamePtr m_ToolpathPart_GetName;
 	PLibMCEnvToolpathPart_GetUUIDPtr m_ToolpathPart_GetUUID;
+	PLibMCEnvToolpathPart_GetPartNumberPtr m_ToolpathPart_GetPartNumber;
+	PLibMCEnvToolpathPart_GetMeshUUIDPtr m_ToolpathPart_GetMeshUUID;
+	PLibMCEnvToolpathPart_IsDisabledPtr m_ToolpathPart_IsDisabled;
 	PLibMCEnvToolpathPart_GetRootComponentPtr m_ToolpathPart_GetRootComponent;
 	PLibMCEnvToolpathLayer_GetLayerDataUUIDPtr m_ToolpathLayer_GetLayerDataUUID;
 	PLibMCEnvToolpathLayer_GetSegmentCountPtr m_ToolpathLayer_GetSegmentCount;
@@ -12668,6 +12729,9 @@ typedef struct {
 	PLibMCEnvBuild_UnloadToolpathPtr m_Build_UnloadToolpath;
 	PLibMCEnvBuild_ToolpathIsLoadedPtr m_Build_ToolpathIsLoaded;
 	PLibMCEnvBuild_CreateToolpathAccessorPtr m_Build_CreateToolpathAccessor;
+	PLibMCEnvBuild_DisablePartPtr m_Build_DisablePart;
+	PLibMCEnvBuild_PartIsDisabledPtr m_Build_PartIsDisabled;
+	PLibMCEnvBuild_EnableAllPartsPtr m_Build_EnableAllParts;
 	PLibMCEnvBuild_HasAttachmentPtr m_Build_HasAttachment;
 	PLibMCEnvBuild_HasAttachmentIdentifierPtr m_Build_HasAttachmentIdentifier;
 	PLibMCEnvBuild_AddBinaryDataPtr m_Build_AddBinaryData;

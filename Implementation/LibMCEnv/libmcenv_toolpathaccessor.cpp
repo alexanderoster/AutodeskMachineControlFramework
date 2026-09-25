@@ -89,7 +89,7 @@ IToolpathLayer * CToolpathAccessor::LoadLayer(const LibMCEnv_uint32 nLayerIndex)
 {
 	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
 
-	return new CToolpathLayer(pToolpathEntity->readLayer (nLayerIndex));
+	return new CToolpathLayer(pToolpathEntity->readLayer (nLayerIndex, m_pToolpathHandler->getDisabledParts (m_sStorageUUID)));
 }
 
 LibMCEnv_uint32 CToolpathAccessor::FindNonEmptyLayer(const LibMCEnv_uint32 nMinLayerIndex, const LibMCEnv_uint32 nMaxLayerIndex, const bool bFromMinToMax)
@@ -124,7 +124,7 @@ IToolpathPart* CToolpathAccessor::GetPart(const LibMCEnv_uint32 nPartIndex)
 	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
 	auto pPart = pToolpathEntity->getPart(nPartIndex);
 
-	return new CToolpathPart(pPart, m_pMeshHandler);
+	return new CToolpathPart(pPart, m_pMeshHandler, m_pToolpathHandler, m_sStorageUUID);
 }
 
 IToolpathPart* CToolpathAccessor::FindPartByUUID(const std::string& sPartUUID)
@@ -132,7 +132,7 @@ IToolpathPart* CToolpathAccessor::FindPartByUUID(const std::string& sPartUUID)
 	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
 	auto pPart = pToolpathEntity->findPartByUUID(sPartUUID);
 	if (pPart.get() != nullptr)
-		return new CToolpathPart(pPart, m_pMeshHandler);
+		return new CToolpathPart(pPart, m_pMeshHandler, m_pToolpathHandler, m_sStorageUUID);
 
 	return nullptr;
 

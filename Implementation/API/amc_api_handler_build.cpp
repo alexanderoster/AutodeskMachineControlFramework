@@ -147,6 +147,7 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 	auto sBuildUUID = jsonRequest.getUUID(AMC_API_KEY_BUILDUUID, LIBMC_ERROR_INVALIDBUILDUUID);
 
 	CJSONWriterArray segmentArray(writer);
+	CJSONWriterArray partArray(writer);
 
 	if (sBuildUUID != AMCCommon::CUtils::createEmptyUUID()) {
 
@@ -162,6 +163,20 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 		auto pToolpath = pToolpathHandler->findToolpathEntity(sStreamUUID, false);
 		if (pToolpath == nullptr) {
 			pToolpath = pToolpathHandler->loadToolpathEntity(sStreamUUID);
+		}
+
+		auto disabledParts = pToolpathHandler->getDisabledParts(sStreamUUID);
+
+		uint32_t nPartCount = pToolpath->getPartCount();
+		for (uint32_t nPartIndex = 0; nPartIndex < nPartCount; nPartIndex++) {
+			auto pToolpathPart = pToolpath->getPart(nPartIndex);
+			auto sPartUUID = AMCCommon::CUtils::normalizeUUIDString(pToolpathPart->getUUID());
+
+			CJSONWriterObject partObject(writer);
+			partObject.addString(AMC_API_KEY_UPLOAD_BUILDPARTUUID, sPartUUID);
+			partObject.addString(AMC_API_KEY_UPLOAD_BUILDPARTNAME, pToolpathPart->getName());
+			partObject.addBool(AMC_API_KEY_PARTDISABLED, disabledParts.find(sPartUUID) != disabledParts.end());
+			partArray.addObject(partObject);
 		}
 
 		auto nLayerCount = pToolpath->getLayerCount();
@@ -187,6 +202,7 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 				double dLaserSpeed = pProfile->getDoubleValueDef("", sLaserSpeedValueName, 0.0);
 				uint32_t nColor = ((pProfile->getProfileIndex () + 1) * 12347328) & 0xFFFFFF;
 				uint32_t nPartID = pLayerData->getSegmentLocalPartID(nSegmentIndex);
+				std::string sPartUUID = pLayerData->getSegmentPartUUID(nSegmentIndex);
 				uint32_t nLaserIndex = pLayerData->getSegmentLaserIndex(nSegmentIndex);
 
 				CJSONWriterObject segmentObject(writer);
@@ -224,6 +240,7 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 					segmentObject.addDouble(AMC_API_KEY_LASERPOWER, dLaserPower);
 					segmentObject.addDouble(AMC_API_KEY_LASERSPEED, dLaserSpeed);
 					segmentObject.addInteger(AMC_API_KEY_PARTID, nPartID);
+					segmentObject.addString(AMC_API_KEY_PARTUUID, sPartUUID);
 					segmentObject.addString(AMC_API_KEY_PROFILENAME, sProfileName);
 					
 					segmentObject.addInteger(AMC_API_KEY_COLOR, nColor);
@@ -239,6 +256,7 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 
 
 	writer.addArray(AMC_API_KEY_SEGMENTS, segmentArray);
+	writer.addArray(AMC_API_KEY_PARTS, partArray);
 }
 
 
@@ -356,22 +374,26 @@ void CAPIHandler_Build::writeJobDetailsEx(CJSONWriter& writer, LibMCData::PBuild
 	}
 
 	uint32_t nPartCount = pToolpath->getPartCount();
+	auto disabledParts = pToolpathHandler->getDisabledParts(sStreamUUID);
 
 	CJSONWriterArray partJSONArray(writer);
 	for (uint32_t nPartIndex = 0; nPartIndex < nPartCount; nPartIndex++) {
 		auto pToolpathPart = pToolpath->getPart(nPartIndex);
+		auto sPartUUID = AMCCommon::CUtils::normalizeUUIDString(pToolpathPart->getUUID());
 
 		CJSONWriterObject partJSON(writer);
-		partJSON.addString(AMC_API_KEY_UPLOAD_BUILDPARTUUID, pToolpathPart->getUUID());
+		partJSON.addString(AMC_API_KEY_UPLOAD_BUILDPARTUUID, sPartUUID);
 		partJSON.addString(AMC_API_KEY_UPLOAD_BUILDPARTNAME, pToolpathPart->getName());
 		partJSON.addString(AMC_API_KEY_UPLOAD_BUILDPARTNUMBER, pToolpathPart->getPartNumber());
 		partJSON.addString(AMC_API_KEY_UPLOAD_BUILDPARTGEOMETRYUUID, pToolpathPart->getMeshUUID());
+		partJSON.addBool(AMC_API_KEY_PARTDISABLED, disabledParts.find(sPartUUID) != disabledParts.end());
 
 		partJSONArray.addObject(partJSON);
 
 	}
 
 	writer.addArray(AMC_API_KEY_UPLOAD_PARTARRAY, partJSONArray);
+	writer.addInteger(AMC_API_KEY_PARTSTATEVERSION, (int64_t)pToolpathHandler->getDisabledPartsVersion(sStreamUUID));
 
 	uint32_t nGlobalLayerThicknessInUnits = 0;
 	bool bLayerThicknessIsVariable = false;

@@ -4,7 +4,9 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import Square from '@lucide/svelte/icons/square';
 	import Shapes from '@lucide/svelte/icons/shapes';
+	import ZoomIn from '@lucide/svelte/icons/zoom-in';
 	import Axis3d from '@lucide/svelte/icons/axis-3d';
+	import Tags from '@lucide/svelte/icons/tags';
 	import Info from '@lucide/svelte/icons/info';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
@@ -12,6 +14,10 @@
 	import LayerViewImpl from '@core/common/AMCImplementation_LayerView.js';
 
 	const ZOOM_MARGIN = 10;
+	// Smaller selections are treated as accidental clicks and do not zoom.
+	const MIN_ZOOM_SELECTION_PX = 5;
+	const PART_MARKER_PX = 5;
+	const NULL_UUID = '00000000-0000-0000-0000-000000000000';
 
 	let { module, app }: { module: any; app: any } = $props();
 	const poll = usePollTick();
@@ -57,7 +63,7 @@
 	let appliedCoordinateTransform: CoordinateTransform | null = null;
 	// While true, the view keeps framing the platform whenever the viewport or the
 	// platform geometry changes. Cleared once the user pans or zooms; set again by
-	// the "Platform" button.
+	// the "Zoom to Platform" button.
 	let autoFrame = true;
 	let platformFrameKey = $derived.by(() => {
 		poll.v;
@@ -136,6 +142,8 @@
 			}
 
 			layerViewer = new LayerViewImpl(glInstance);
+			// Write-only, so effects that pan or zoom do not subscribe to viewVersion.
+			layerViewer.onTransformChanged = () => { viewVersion = ++transformChangeCount; };
 
 			glInstance.setupDOMElement(containerEl);
 			layerViewer.updateSize(w, h);
@@ -174,10 +182,12 @@
 		if (sender.uuid !== module.uuid) return;
 
 		if (platform.displayed_layer !== platform.currentlayer ||
-			platform.displayed_build !== platform.builduuid) {
+			platform.displayed_build !== platform.builduuid ||
+			platform.displayed_partstateversion !== platform.partstateversion) {
 
 			platform.displayed_layer = platform.currentlayer;
 			platform.displayed_build = platform.builduuid;
+			platform.displayed_partstateversion = platform.partstateversion;
 			sliderValue = platform.currentlayer || 0;
 
 			app.axiosPostRequest('/build/toolpath', {
@@ -186,8 +196,9 @@
 			})
 			.then((layerJSON: any) => {
 				if (layerViewer) {
-					layerViewer.loadLayer(layerJSON.data.segments);
-					layerViewer.RenderScene(true);				}
+					layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
+					layerViewer.RenderScene(true);
+				}
 			})
 			.catch((err: any) => {
 				console.warn('[LayerView] layer load error:', err?.response || err);
@@ -196,12 +207,48 @@
 		}
 	}
 
-	function onSliderChange(e: Event) {
-		const val = parseInt((e.target as HTMLInputElement).value);
-		sliderValue = val;
+	function changeLayer(layer: number) {
+		sliderValue = layer;
 		if (platform) {
-			app.triggerWidgetRequest(platform.uuid, 'changelayer', { targetlayer: val });
+			app.triggerWidgetRequest(platform.uuid, 'changelayer', { targetlayer: layer });
 		}
+	}
+
+	function onSliderChange(e: Event) {
+		changeLayer(parseInt((e.target as HTMLInputElement).value));
+	}
+
+	// Clicking the "Layer x / n" badge swaps it for a number field; Enter jumps to the typed
+	// layer (clamped to the slider range), Escape or leaving the field cancels.
+	let layerJumpOpen = $state(false);
+	let layerJumpValue = $state<number | null>(null);
+
+	function openLayerJump() {
+		layerJumpValue = sliderValue;
+		layerJumpOpen = true;
+	}
+
+	function commitLayerJump() {
+		if (!layerJumpOpen) return;
+		layerJumpOpen = false;
+		if (typeof layerJumpValue !== 'number' || !Number.isFinite(layerJumpValue)) return;
+		changeLayer(Math.min(Math.max(Math.round(layerJumpValue), 0), layerCount));
+	}
+
+	function onLayerJumpKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			commitLayerJump();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+			layerJumpOpen = false;
+		}
+	}
+
+	function focusAndSelect(node: HTMLInputElement) {
+		node.focus();
+		node.select();
 	}
 
 	function onWheel(event: WheelEvent) {
@@ -223,6 +270,17 @@
 
 	let dragging = false;
 	let dragX = 0, dragY = 0;
+
+	// "Custom Zoom": while active, a left-button drag draws a selection rectangle
+	// (viewport pixels) instead of panning; releasing it frames that rectangle.
+	let zoomSelectMode = $state(false);
+	let zoomSelection = $state<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+	let zoomRect = $derived(zoomSelection ? {
+		left: Math.min(zoomSelection.startX, zoomSelection.endX),
+		top: Math.min(zoomSelection.startY, zoomSelection.endY),
+		width: Math.abs(zoomSelection.endX - zoomSelection.startX),
+		height: Math.abs(zoomSelection.endY - zoomSelection.startY)
+	} : null);
 	// Live machine/build-plate coordinates under the cursor (mm), shown bottom-right.
 	let mousePosition = $state<{ x: number; y: number } | null>(null);
 
@@ -234,6 +292,8 @@
 		laserspeed?: number;
 		profilename?: string;
 		partid?: number;
+		partname?: string;
+		partdisabled?: boolean;
 		laserindex?: number;
 		lineIndex?: number;
 	};
@@ -242,6 +302,71 @@
 	let hoverScreen = $state<{ x: number; y: number }>({ x: 0, y: 0 });
 	let pendingHover: { x: number; y: number } | null = null;
 	let hoverRAF = 0;
+
+	// "Names": outlines every part of the current layer with its name. The part
+	// given by the per-session platform property highlightpartuuid is always
+	// outlined and emphasized, even while the toggle is off.
+	type PartOverlay = {
+		key: string;
+		label: string;
+		left: number;
+		top: number;
+		width: number;
+		height: number;
+		labelY: number;
+		markers: { x: number; y: number }[];
+		highlighted: boolean;
+		disabled: boolean;
+	};
+	let namesMode = $state(false);
+	let viewVersion = $state(0);
+	let transformChangeCount = 0;
+	let highlightPartUUID = $derived.by(() => {
+		poll.v;
+		const uuid = typeof platform?.highlightpartuuid === 'string' ? platform.highlightpartuuid.toLowerCase() : '';
+		return uuid === NULL_UUID ? '' : uuid;
+	});
+	let partOverlays = $derived.by((): PartOverlay[] => {
+		viewVersion;
+		if (!layerViewer || (!namesMode && !highlightPartUUID)) return [];
+
+		const overlays: PartOverlay[] = [];
+		for (const box of layerViewer.getPartBoundingBoxes()) {
+			const highlighted = highlightPartUUID !== '' && box.uuid === highlightPartUUID;
+			if (!namesMode && !highlighted) continue;
+
+			const topLeft = layerViewer.machineToScreen(box.minx, box.maxy);
+			const bottomRight = layerViewer.machineToScreen(box.maxx, box.miny);
+			if (!topLeft || !bottomRight) continue;
+
+			const left = topLeft.x;
+			const top = topLeft.y;
+			const right = bottomRight.x;
+			const bottom = bottomRight.y;
+			const name = box.name || box.uuid.slice(0, 8);
+			overlays.push({
+				key: box.key,
+				label: box.disabled ? `${name} (disabled)` : name,
+				left,
+				top,
+				width: Math.max(right - left, 1),
+				height: Math.max(bottom - top, 1),
+				// Keep the label readable when the box touches the top edge.
+				labelY: top > 14 ? top - 5 : top + 12,
+				markers: [
+					{ x: left, y: top },
+					{ x: right, y: top },
+					{ x: left, y: bottom },
+					{ x: right, y: bottom },
+					{ x: (left + right) / 2, y: (top + bottom) / 2 }
+				],
+				highlighted,
+				disabled: box.disabled === true
+			});
+		}
+		// Draw the highlighted part last so it stays on top of overlapping boxes.
+		return overlays.sort((a, b) => Number(a.highlighted) - Number(b.highlighted));
+	});
 
 	function updateMousePosition(event: PointerEvent) {
 		if (!containerEl || !layerViewer || typeof layerViewer.screenToMachine !== 'function') return;
@@ -295,7 +420,58 @@
 		if (!propertiesMode) clearHover();
 	}
 
+	function toggleZoomSelectMode() {
+		zoomSelectMode = !zoomSelectMode;
+		zoomSelection = null;
+		if (zoomSelectMode) clearHover();
+	}
+
+	function localViewportPoint(event: PointerEvent): { x: number; y: number } | null {
+		if (!containerEl) return null;
+		const box = containerEl.getBoundingClientRect();
+		// Pointer capture keeps delivering events outside the canvas, so clamp to its bounds.
+		return {
+			x: Math.min(Math.max(event.clientX - box.left, 0), box.width),
+			y: Math.min(Math.max(event.clientY - box.top, 0), box.height)
+		};
+	}
+
+	function finishZoomSelection() {
+		const rect = zoomRect;
+		zoomSelection = null;
+		if (!rect || !layerViewer) return;
+		if (rect.width < MIN_ZOOM_SELECTION_PX || rect.height < MIN_ZOOM_SELECTION_PX) return;
+
+		const corner1 = layerViewer.screenToMachine(rect.left, rect.top);
+		const corner2 = layerViewer.screenToMachine(rect.left + rect.width, rect.top + rect.height);
+		if (!corner1 || !corner2) return;
+
+		autoFrame = false;
+		layerViewer.CenterOnRectangle(
+			Math.min(corner1.x, corner2.x), Math.min(corner1.y, corner2.y),
+			Math.max(corner1.x, corner2.x), Math.max(corner1.y, corner2.y)
+		);
+		layerViewer.RenderScene(true);
+		zoomSelectMode = false;
+	}
+
+	function onWindowKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && zoomSelectMode) {
+			zoomSelectMode = false;
+			zoomSelection = null;
+		}
+	}
+
 	function onPointerDown(event: PointerEvent) {
+		if (zoomSelectMode && event.button === 0) {
+			const point = localViewportPoint(event);
+			if (!point) return;
+			clearHover();
+			zoomSelection = { startX: point.x, startY: point.y, endX: point.x, endY: point.y };
+			(event.target as HTMLElement).setPointerCapture(event.pointerId);
+			return;
+		}
+
 		if (event.button === 0 || event.button === 1) {
 			dragging = true;
 			clearHover();
@@ -308,6 +484,12 @@
 	function onPointerMove(event: PointerEvent) {
 		updateMousePosition(event);
 
+		if (zoomSelection) {
+			const point = localViewportPoint(event);
+			if (point) zoomSelection = { ...zoomSelection, endX: point.x, endY: point.y };
+			return;
+		}
+
 		if (dragging && layerViewer) {
 			const dx = event.clientX - dragX;
 			const dy = event.clientY - dragY;
@@ -319,10 +501,19 @@
 			return;
 		}
 
-		if (propertiesMode) scheduleHoverUpdate(event.clientX, event.clientY);
+		if (propertiesMode && !zoomSelectMode) scheduleHoverUpdate(event.clientX, event.clientY);
 	}
 
 	function onPointerUp() {
+		if (zoomSelection) {
+			finishZoomSelection();
+			return;
+		}
+		dragging = false;
+	}
+
+	function onPointerCancel() {
+		zoomSelection = null;
 		dragging = false;
 	}
 
@@ -415,30 +606,75 @@
 	});
 </script>
 
+<svelte:window onkeydown={onWindowKeyDown} />
+
 {#snippet layerViewBody()}
 	<div class="layerview-container">
 		<!-- WebGL render target — setupDOMElement sets position:relative on this -->
 		<div
 			bind:this={containerEl}
 			class="layerview-canvas"
+			class:zoom-select={zoomSelectMode}
 			role="img"
 			onwheel={onWheel}
 			onpointerdown={onPointerDown}
 			onpointermove={onPointerMove}
 			onpointerup={onPointerUp}
-			onpointercancel={onPointerUp}
+			onpointercancel={onPointerCancel}
 			onpointerleave={onPointerLeave}
 		></div>
 
+		{#if partOverlays.length > 0}
+			<svg class="layerview-part-overlay" aria-hidden="true">
+				{#each partOverlays as part (part.key)}
+					<g
+						class="layerview-part"
+						class:highlighted={part.highlighted}
+						class:dimmed={highlightPartUUID !== '' && !part.highlighted}
+						class:disabled={part.disabled}
+					>
+						<rect class="layerview-part-box" x={part.left} y={part.top} width={part.width} height={part.height} />
+						{#each part.markers as marker, markerIndex (markerIndex)}
+							<rect
+								class="layerview-part-marker"
+								x={marker.x - PART_MARKER_PX / 2}
+								y={marker.y - PART_MARKER_PX / 2}
+								width={PART_MARKER_PX}
+								height={PART_MARKER_PX}
+							/>
+						{/each}
+						<text class="layerview-part-label" x={part.left} y={part.labelY}>{part.label}</text>
+					</g>
+				{/each}
+			</svg>
+		{/if}
+
+		{#if zoomRect}
+			<div
+				class="layerview-zoom-selection"
+				style={`left: ${zoomRect.left}px; top: ${zoomRect.top}px; width: ${zoomRect.width}px; height: ${zoomRect.height}px;`}
+			></div>
+		{/if}
+
 		<!-- Overlaid toolbar -->
 		<div class="layerview-toolbar">
-			<button class="layerview-btn" onclick={resetView} title="Frame the build platform" aria-label="Frame the build platform">
+			<button class="layerview-btn" onclick={resetView} title="Frame the build platform" aria-label="Zoom to platform">
 				<Square size={16} />
-				<span>Platform</span>
+				<span>Zoom to Platform</span>
 			</button>
-			<button class="layerview-btn" onclick={fitToPath} title="Frame the parts" aria-label="Frame the parts">
+			<button class="layerview-btn" onclick={fitToPath} title="Frame the parts" aria-label="Zoom to parts">
 				<Shapes size={16} />
-				<span>Parts</span>
+				<span>Zoom to Parts</span>
+			</button>
+			<button
+				class="layerview-btn"
+				onclick={toggleZoomSelectMode}
+				title="Drag a rectangle to zoom into it (Esc to cancel)"
+				aria-label="Custom zoom: select a rectangle"
+				aria-pressed={zoomSelectMode}
+			>
+				<ZoomIn size={16} />
+				<span>Custom Zoom</span>
 			</button>
 			<button
 				class="layerview-btn"
@@ -449,6 +685,16 @@
 			>
 				<Axis3d size={16} />
 				<span>Axes</span>
+			</button>
+			<button
+				class="layerview-btn"
+				onclick={() => namesMode = !namesMode}
+				title="Show part outlines and names"
+				aria-label="Toggle part outlines and names"
+				aria-pressed={namesMode}
+			>
+				<Tags size={16} />
+				<span>Names</span>
 			</button>
 			<button
 				class="layerview-btn"
@@ -464,9 +710,34 @@
 
 		<!-- Layer info overlay -->
 		{#if layerCount > 0}
-			<div class="layerview-layer-info">
-				Layer {sliderValue} / {layerCount}
-			</div>
+			{#if layerJumpOpen}
+				<div class="layerview-layer-info layerview-layer-jump">
+					<label for="layerjump-{module.uuid}">Layer</label>
+					<input
+						id="layerjump-{module.uuid}"
+						type="number"
+						inputmode="numeric"
+						min="0"
+						max={layerCount}
+						step="1"
+						bind:value={layerJumpValue}
+						onkeydown={onLayerJumpKeyDown}
+						onblur={() => (layerJumpOpen = false)}
+						{@attach focusAndSelect}
+					/>
+					<span>/ {layerCount}</span>
+				</div>
+			{:else}
+				<button
+					type="button"
+					class="layerview-layer-info layerview-layer-info-button"
+					onclick={openLayerJump}
+					title="Click to jump to a layer"
+					aria-label={`Layer ${sliderValue} of ${layerCount}. Click to jump to a layer`}
+				>
+					Layer {sliderValue} / {layerCount}
+				</button>
+			{/if}
 		{/if}
 
 		{#if coordinateSystemVisible}
@@ -527,6 +798,10 @@
 						<dt>Laser</dt>
 						<dd>#{hoverSegment.laserindex}</dd>
 					{/if}
+					{#if hoverSegment.partname}
+						<dt>Part</dt>
+						<dd>{hoverSegment.partname}{hoverSegment.partdisabled ? ' (disabled)' : ''}</dd>
+					{/if}
 					{#if hoverSegment.partid !== undefined && hoverSegment.partid !== null}
 						<dt>Part ID</dt>
 						<dd>{hoverSegment.partid}</dd>
@@ -585,6 +860,70 @@
 		height: 100%;
 		cursor: crosshair;
 	}
+	.layerview-canvas.zoom-select {
+		cursor: zoom-in;
+	}
+	.layerview-zoom-selection {
+		position: absolute;
+		border: 1px dashed var(--primary, #2563eb);
+		background: color-mix(in srgb, var(--primary, #2563eb) 15%, transparent);
+		pointer-events: none;
+		z-index: 9;
+	}
+	.layerview-part-overlay {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 8;
+	}
+	.layerview-part-box {
+		fill: none;
+		stroke: var(--foreground, #333333);
+		stroke-width: 1;
+		stroke-dasharray: 4 3;
+	}
+	.layerview-part-marker {
+		fill: #ef4444;
+	}
+	.layerview-part-label {
+		font-size: 10px;
+		font-weight: 600;
+		fill: var(--foreground, #333333);
+		/* Halo keeps the label legible on top of dense hatching. */
+		paint-order: stroke;
+		stroke: var(--background, #ffffff);
+		stroke-width: 3px;
+		stroke-linejoin: round;
+	}
+	.layerview-part.highlighted .layerview-part-box {
+		stroke: var(--primary, #2563eb);
+		stroke-width: 2;
+		stroke-dasharray: none;
+		fill: color-mix(in srgb, var(--primary, #2563eb) 12%, transparent);
+	}
+	.layerview-part.highlighted .layerview-part-marker {
+		fill: var(--primary, #2563eb);
+	}
+	.layerview-part.highlighted .layerview-part-label {
+		fill: var(--primary, #2563eb);
+		font-size: 11px;
+	}
+	.layerview-part.dimmed {
+		opacity: 0.45;
+	}
+	.layerview-part.disabled .layerview-part-box {
+		stroke: var(--muted-foreground, #888888);
+	}
+	.layerview-part.disabled .layerview-part-marker {
+		fill: var(--muted-foreground, #888888);
+	}
+	.layerview-part.disabled .layerview-part-label {
+		fill: var(--destructive, #dc2626);
+		text-decoration: line-through;
+	}
 	.layerview-toolbar {
 		position: absolute;
 		top: 8px;
@@ -598,9 +937,9 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 4px;
+		gap: 3px;
 		width: 64px;
-		height: 48px;
+		height: 56px;
 		padding: 6px 4px;
 		border: none;
 		border-radius: 4px;
@@ -609,6 +948,11 @@
 		font-size: 11px;
 		cursor: pointer;
 		transition: background-color 0.2s;
+	}
+	/* Two-word captions such as "Zoom to Platform" wrap onto two centered lines. */
+	.layerview-btn span {
+		line-height: 1.15;
+		text-align: center;
 	}
 	.layerview-btn:hover {
 		background-color: rgba(0, 0, 0, 0.85);
@@ -628,6 +972,30 @@
 		font-size: 11px;
 		font-variant-numeric: tabular-nums;
 		z-index: 10;
+	}
+	.layerview-layer-info-button {
+		border: none;
+		cursor: pointer;
+	}
+	.layerview-layer-info-button:hover {
+		background: rgba(0, 0, 0, 0.85);
+	}
+	.layerview-layer-jump {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 2px 6px 2px 10px;
+	}
+	.layerview-layer-jump input {
+		width: 64px;
+		padding: 1px 4px;
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		border-radius: 3px;
+		background: rgba(255, 255, 255, 0.95);
+		color: #111111;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		text-align: right;
 	}
 	.layerview-coordinate-indicator {
 		position: absolute;

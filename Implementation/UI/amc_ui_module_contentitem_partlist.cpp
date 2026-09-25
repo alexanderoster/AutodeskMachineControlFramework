@@ -37,35 +37,57 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_api_constants.hpp"
 #include "Common/common_utils.hpp"
 #include "amc_parameterhandler.hpp"
+#include "amc_ui_module.hpp"
+#include "amc_ui_frontendstate.hpp"
+#include "amc_toolpathhandler.hpp"
+#include "libmc_exceptiontypes.hpp"
+#include "libmcdata_dynamic.hpp"
 
 using namespace AMC;
 
 
-PUIModule_ContentPartList CUIModule_ContentPartList::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath)
+PUIModule_ContentPartList CUIModule_ContentPartList::makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment)
 {
+	LibMCAssertNotNull(pUIModuleEnvironment);
+
 	auto buildUUIDAttrib = xmlNode.attribute("builduuid");
 	CUIExpression buildUUIDExpression(xmlNode, "builduuid", std::string("00000000-0000-0000-0000-000000000000"));
 
 	CUIExpression loadingTextExpression(xmlNode, "loadingtext", std::string("Loading build details..."));
+	CUIExpression showDetailsExpression(xmlNode, "showdetails", std::string("true"));
+
+	std::string sSelectEvent = xmlNode.attribute("selectevent").as_string();
+	if (!sSelectEvent.empty()) {
+		if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sSelectEvent))
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDEVENTNAME, sSelectEvent);
+	}
 
 	return std::make_shared<CUIModule_ContentPartList>(
 		buildUUIDAttrib.as_string(),
 		buildUUIDExpression,
 		loadingTextExpression,
+		showDetailsExpression,
+		sSelectEvent,
 		sItemName,
-		sModulePath
+		sModulePath,
+		pUIModuleEnvironment
 	);
 }
 
 CUIModule_ContentPartList::CUIModule_ContentPartList(
 	const std::string& sBuildUUID, const CUIExpression& buildUUIDExpression,
-	const CUIExpression& loadingText,
-	const std::string& sItemName, const std::string& sModulePath)
+	const CUIExpression& loadingText, const CUIExpression& showDetails, const std::string& sSelectEvent,
+	const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment)
 	: CUIModule_ContentItem(AMCCommon::CUtils::createUUID(), sItemName, sModulePath),
 	  m_sBuildUUID(sBuildUUID),
 	  m_BuildUUIDExpression(buildUUIDExpression),
-	  m_LoadingText(loadingText)
+	  m_LoadingText(loadingText),
+	  m_ShowDetails(showDetails),
+	  m_sSelectEvent(sSelectEvent),
+	  m_sSelectedPartFieldUUID(AMCCommon::CUtils::createUUID()),
+	  m_pUIModuleEnvironment(pUIModuleEnvironment)
 {
+	LibMCAssertNotNull(pUIModuleEnvironment);
 }
 
 CUIModule_ContentPartList::~CUIModule_ContentPartList()
@@ -77,6 +99,41 @@ void CUIModule_ContentPartList::addLegacyContentToJSON(CJSONWriter& writer, CJSO
 	object.addString(AMC_API_KEY_UI_ITEMTYPE, "partlist");
 	object.addString(AMC_API_KEY_UI_ITEMUUID, m_sUUID);
 	object.addString("builduuid", m_sBuildUUID);
+	object.addString(AMC_API_KEY_UI_ITEMSELECTEVENT, m_sSelectEvent);
+	object.addString(AMC_API_KEY_UI_ITEMSELECTIONVALUEUUID, m_sSelectedPartFieldUUID);
+}
+
+void CUIModule_ContentPartList::populateClientVariables(CParameterHandler* pClientVariableHandler)
+{
+	LibMCAssertNotNull(pClientVariableHandler);
+	auto pGroup = pClientVariableHandler->addGroup(getItemPath(), "part list UI element");
+	pGroup->addNewUUIDParameter("selecteduuid", "selected part UUID", AMCCommon::CUtils::createEmptyUUID());
+}
+
+void CUIModule_ContentPartList::setEventPayloadValue(const std::string& sEventName, const std::string& sPayloadUUID, const std::string& sPayloadValue, CParameterHandler* pClientVariableHandler)
+{
+	LibMCAssertNotNull(pClientVariableHandler);
+	if (AMCCommon::CUtils::normalizeUUIDString(sPayloadUUID) == m_sSelectedPartFieldUUID) {
+		auto pGroup = pClientVariableHandler->findGroup(getItemPath(), true);
+		pGroup->setParameterValueByName("selecteduuid", AMCCommon::CUtils::normalizeUUIDString(sPayloadValue));
+	}
+}
+
+std::string CUIModule_ContentPartList::findElementPathByUUID(const std::string& sUUID)
+{
+	if ((sUUID == m_sSelectedPartFieldUUID) || (sUUID == getUUID()))
+		return getItemPath();
+
+	return "";
+}
+
+std::list <std::string> CUIModule_ContentPartList::getReferenceUUIDs()
+{
+	std::list <std::string> sUUIDList;
+	sUUIDList.push_back(m_sSelectedPartFieldUUID);
+	sUUIDList.push_back(getUUID());
+
+	return sUUIDList;
 }
 
 std::string CUIModule_ContentPartList::getItemType()
@@ -88,4 +145,44 @@ void CUIModule_ContentPartList::registerFrontendAttributes()
 {
 	registerItemUUIDAttribute("builduuid", m_BuildUUIDExpression);
 	registerItemStringAttribute("loadingtext", m_LoadingText);
+	registerItemBoolAttribute("showdetails", m_ShowDetails);
+
+	CUIExpression selectEventExpression;
+	selectEventExpression.setFixedValue(m_sSelectEvent);
+	registerItemStringAttribute("selectevent", selectEventExpression);
+
+	CUIExpression selectionValueExpression;
+	selectionValueExpression.setFixedValue(m_sSelectedPartFieldUUID);
+	registerItemStringAttribute("selectionvalueuuid", selectionValueExpression);
+}
+
+void CUIModule_ContentPartList::frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData)
+{
+	if (pFrontendState == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	if (m_pItemModuleStore == nullptr)
+		return;
+
+	std::string sItemType = m_pItemModuleStore->getModuleType();
+	if (sItemType.empty())
+		return;
+
+	itemObject.addString("moduletype", sItemType);
+	itemObject.addString("uuid", m_pItemModuleStore->getUUID());
+
+	CJSONWriterObject attributesObject(writer);
+	pFrontendState->writeModuleAttributesToJSON(writer, attributesObject, m_pItemModuleStore.get(), pStateMachineData);
+
+	uint64_t nPartStateVersion = 0;
+	std::string sBuildUUID = m_BuildUUIDExpression.evaluateStringValue(pStateMachineData, pFrontendState);
+	if (AMCCommon::CUtils::stringIsNonEmptyUUIDString(sBuildUUID)) {
+		auto pBuildJobHandler = m_pUIModuleEnvironment->dataModel()->CreateBuildJobHandler();
+		if (pBuildJobHandler->JobExists(sBuildUUID)) {
+			auto pBuildJob = pBuildJobHandler->RetrieveJob(sBuildUUID);
+			nPartStateVersion = m_pUIModuleEnvironment->toolpathHandler()->getDisabledPartsVersion(pBuildJob->GetStorageStreamUUID());
+		}
+	}
+	attributesObject.addInteger(AMC_API_KEY_PARTSTATEVERSION, (int64_t)nPartStateVersion);
+
+	itemObject.addObject("attributes", attributesObject);
 }

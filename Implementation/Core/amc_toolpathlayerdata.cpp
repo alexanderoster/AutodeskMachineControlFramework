@@ -224,7 +224,7 @@ namespace AMC {
 
 
 
-	CToolpathLayerData::CToolpathLayerData(Lib3MF::PToolpath pToolpath, Lib3MF::PToolpathLayerReader p3MFLayer, double dUnits, int32_t nZValue, const std::string& sDebugName, std::vector<PToolpathCustomSegmentAttribute> customSegmentAttributes)
+	CToolpathLayerData::CToolpathLayerData(Lib3MF::PToolpath pToolpath, Lib3MF::PToolpathLayerReader p3MFLayer, double dUnits, int32_t nZValue, const std::string& sDebugName, std::vector<PToolpathCustomSegmentAttribute> customSegmentAttributes, const std::set<std::string>& excludedPartUUIDs)
 		: m_dUnits (dUnits), m_nZValue (nZValue), m_sDebugName (sDebugName), m_CustomSegmentAttributes (customSegmentAttributes)
 	{
 		LibMCAssertNotNull(p3MFLayer.get());
@@ -251,6 +251,11 @@ namespace AMC {
 			uint32_t nPointCount = 0;
 			p3MFLayer->GetSegmentInfo(nSegmentIndex, eType, nPointCount);
 			std::string sBuildItemUUID = p3MFLayer->GetSegmentBuildItemUUID(nSegmentIndex);
+			if (!excludedPartUUIDs.empty() && AMCCommon::CUtils::stringIsUUIDString(sBuildItemUUID)) {
+				if (excludedPartUUIDs.find(AMCCommon::CUtils::normalizeUUIDString(sBuildItemUUID)) != excludedPartUUIDs.end())
+					continue;
+			}
+
 			std::string sProfileUUID = p3MFLayer->GetSegmentDefaultProfileUUID(nSegmentIndex);
 			uint32_t nLocalPartID = p3MFLayer->GetSegmentPartID(nSegmentIndex);
 			uint32_t nLaserIndex = 0;

@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace AMC {
 
 	amcDeclareDependingClass(CUIModule_ContentPartList, PUIModule_ContentPartList);
+	amcDeclareDependingClass(CUIModuleEnvironment, PUIModuleEnvironment);
 
 
 	// A part-list content item shows the build details (name, layer count, layer
@@ -52,28 +53,47 @@ namespace AMC {
 	// heavy lifting happens on the client, which fetches "api/build/<builduuid>"
 	// whenever the "builduuid" attribute changes; this backend item only exposes
 	// the build UUID (typically driven by a sync: expression) plus a few captions.
+	// showdetails="false" hides the build header and only shows the part table.
+	// Clicking a part row triggers the optional "selectevent"; the event handler reads
+	// the clicked part's build item UUID from the "selecteduuid" UI property.
+	// The "partstateversion" attribute changes whenever parts of the build are disabled
+	// or re-enabled, so the client knows when to re-fetch the part table.
 	class CUIModule_ContentPartList : public CUIModule_ContentItem {
 	protected:
 
 		std::string m_sBuildUUID;
 		CUIExpression m_BuildUUIDExpression;
 		CUIExpression m_LoadingText;
+		CUIExpression m_ShowDetails;
+		std::string m_sSelectEvent;
+		std::string m_sSelectedPartFieldUUID;
+		PUIModuleEnvironment m_pUIModuleEnvironment;
 
 	public:
 
-		static PUIModule_ContentPartList makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath);
+		static PUIModule_ContentPartList makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment);
 
 		CUIModule_ContentPartList(
 			const std::string& sBuildUUID, const CUIExpression& buildUUIDExpression,
-			const CUIExpression& loadingText,
-			const std::string& sItemName, const std::string& sModulePath);
+			const CUIExpression& loadingText, const CUIExpression& showDetails, const std::string& sSelectEvent,
+			const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment);
 
 		virtual ~CUIModule_ContentPartList();
 
 		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
 
+		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler) override;
+
+		virtual void setEventPayloadValue(const std::string& sEventName, const std::string& sPayloadUUID, const std::string& sPayloadValue, CParameterHandler* pClientVariableHandler) override;
+
+		virtual std::string findElementPathByUUID(const std::string& sUUID) override;
+
+		virtual std::list <std::string> getReferenceUUIDs() override;
+
 		virtual std::string getItemType() override;
 		virtual void registerFrontendAttributes() override;
+
+		virtual void frontendWriteItemToJSON(CJSONWriter& writer, CJSONWriterObject& itemObject, CUIFrontendState* pFrontendState, CStateMachineData* pStateMachineData) override;
 
 	};
 

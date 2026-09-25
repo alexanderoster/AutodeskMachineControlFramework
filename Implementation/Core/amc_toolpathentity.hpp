@@ -108,7 +108,7 @@ namespace AMC {
 
 		uint32_t getLayerCount();	
 
-		PToolpathLayerData readLayer(uint32_t nLayerIndex);
+		PToolpathLayerData readLayer(uint32_t nLayerIndex, const std::set<std::string>& excludedPartUUIDs = std::set<std::string>());
 
 		// Returns false if all layers in the range are empty. nMaxLayerIndex is clamped to the layer count.
 		bool findNonEmptyLayer(uint32_t nMinLayerIndex, uint32_t nMaxLayerIndex, bool bFromMinToMax, uint32_t& nFoundLayerIndex);

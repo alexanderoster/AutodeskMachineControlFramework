@@ -771,6 +771,7 @@ public:
 			case LIBMCENV_ERROR_INVALIDFRAMECACHEDURATION: return "INVALIDFRAMECACHEDURATION";
 			case LIBMCENV_ERROR_VIDEOSTREAMFRAMEENCODINGERROR: return "VIDEOSTREAMFRAMEENCODINGERROR";
 			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "NONONEMPTYLAYERFOUND";
+			case LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND: return "TOOLPATHPARTNOTFOUND";
 		}
 		return "UNKNOWN";
 	}
@@ -1041,6 +1042,7 @@ public:
 			case LIBMCENV_ERROR_INVALIDFRAMECACHEDURATION: return "Invalid frame cache duration.";
 			case LIBMCENV_ERROR_VIDEOSTREAMFRAMEENCODINGERROR: return "Video stream frame encoding error.";
 			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "No non-empty layer found in the given layer range.";
+			case LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND: return "Toolpath part not found.";
 		}
 		return "unknown error";
 	}
@@ -2113,6 +2115,9 @@ public:
 	
 	inline std::string GetName();
 	inline std::string GetUUID();
+	inline std::string GetPartNumber();
+	inline std::string GetMeshUUID();
+	inline bool IsDisabled();
 	inline PModelDataComponentInstance GetRootComponent();
 };
 	
@@ -2336,6 +2341,9 @@ public:
 	inline void UnloadToolpath();
 	inline bool ToolpathIsLoaded();
 	inline PToolpathAccessor CreateToolpathAccessor();
+	inline void DisablePart(const std::string & sPartUUID);
+	inline bool PartIsDisabled(const std::string & sPartUUID);
+	inline void EnableAllParts();
 	inline bool HasAttachment(const std::string & sDataUUID);
 	inline bool HasAttachmentIdentifier(const std::string & sIdentifier);
 	inline std::string AddBinaryData(const std::string & sIdentifier, const std::string & sName, const std::string & sMIMEType, const std::string & sUserUUID, const CInputVector<LibMCEnv_uint8> & ContentBuffer);
@@ -4211,6 +4219,9 @@ public:
 		pWrapperTable->m_SceneHandler_Load3MFFromStream = nullptr;
 		pWrapperTable->m_ToolpathPart_GetName = nullptr;
 		pWrapperTable->m_ToolpathPart_GetUUID = nullptr;
+		pWrapperTable->m_ToolpathPart_GetPartNumber = nullptr;
+		pWrapperTable->m_ToolpathPart_GetMeshUUID = nullptr;
+		pWrapperTable->m_ToolpathPart_IsDisabled = nullptr;
 		pWrapperTable->m_ToolpathPart_GetRootComponent = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetLayerDataUUID = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentCount = nullptr;
@@ -4338,6 +4349,9 @@ public:
 		pWrapperTable->m_Build_UnloadToolpath = nullptr;
 		pWrapperTable->m_Build_ToolpathIsLoaded = nullptr;
 		pWrapperTable->m_Build_CreateToolpathAccessor = nullptr;
+		pWrapperTable->m_Build_DisablePart = nullptr;
+		pWrapperTable->m_Build_PartIsDisabled = nullptr;
+		pWrapperTable->m_Build_EnableAllParts = nullptr;
 		pWrapperTable->m_Build_HasAttachment = nullptr;
 		pWrapperTable->m_Build_HasAttachmentIdentifier = nullptr;
 		pWrapperTable->m_Build_AddBinaryData = nullptr;
@@ -7650,6 +7664,33 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_ToolpathPart_GetPartNumber = (PLibMCEnvToolpathPart_GetPartNumberPtr) GetProcAddress(hLibrary, "libmcenv_toolpathpart_getpartnumber");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathPart_GetPartNumber = (PLibMCEnvToolpathPart_GetPartNumberPtr) dlsym(hLibrary, "libmcenv_toolpathpart_getpartnumber");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathPart_GetPartNumber == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathPart_GetMeshUUID = (PLibMCEnvToolpathPart_GetMeshUUIDPtr) GetProcAddress(hLibrary, "libmcenv_toolpathpart_getmeshuuid");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathPart_GetMeshUUID = (PLibMCEnvToolpathPart_GetMeshUUIDPtr) dlsym(hLibrary, "libmcenv_toolpathpart_getmeshuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathPart_GetMeshUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathPart_IsDisabled = (PLibMCEnvToolpathPart_IsDisabledPtr) GetProcAddress(hLibrary, "libmcenv_toolpathpart_isdisabled");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathPart_IsDisabled = (PLibMCEnvToolpathPart_IsDisabledPtr) dlsym(hLibrary, "libmcenv_toolpathpart_isdisabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathPart_IsDisabled == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_ToolpathPart_GetRootComponent = (PLibMCEnvToolpathPart_GetRootComponentPtr) GetProcAddress(hLibrary, "libmcenv_toolpathpart_getrootcomponent");
 		#else // _WIN32
 		pWrapperTable->m_ToolpathPart_GetRootComponent = (PLibMCEnvToolpathPart_GetRootComponentPtr) dlsym(hLibrary, "libmcenv_toolpathpart_getrootcomponent");
@@ -8790,6 +8831,33 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Build_CreateToolpathAccessor == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_DisablePart = (PLibMCEnvBuild_DisablePartPtr) GetProcAddress(hLibrary, "libmcenv_build_disablepart");
+		#else // _WIN32
+		pWrapperTable->m_Build_DisablePart = (PLibMCEnvBuild_DisablePartPtr) dlsym(hLibrary, "libmcenv_build_disablepart");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_DisablePart == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_PartIsDisabled = (PLibMCEnvBuild_PartIsDisabledPtr) GetProcAddress(hLibrary, "libmcenv_build_partisdisabled");
+		#else // _WIN32
+		pWrapperTable->m_Build_PartIsDisabled = (PLibMCEnvBuild_PartIsDisabledPtr) dlsym(hLibrary, "libmcenv_build_partisdisabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_PartIsDisabled == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Build_EnableAllParts = (PLibMCEnvBuild_EnableAllPartsPtr) GetProcAddress(hLibrary, "libmcenv_build_enableallparts");
+		#else // _WIN32
+		pWrapperTable->m_Build_EnableAllParts = (PLibMCEnvBuild_EnableAllPartsPtr) dlsym(hLibrary, "libmcenv_build_enableallparts");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Build_EnableAllParts == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16520,6 +16588,18 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathPart_GetUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_toolpathpart_getpartnumber", (void**)&(pWrapperTable->m_ToolpathPart_GetPartNumber));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathPart_GetPartNumber == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathpart_getmeshuuid", (void**)&(pWrapperTable->m_ToolpathPart_GetMeshUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathPart_GetMeshUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathpart_isdisabled", (void**)&(pWrapperTable->m_ToolpathPart_IsDisabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathPart_IsDisabled == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_toolpathpart_getrootcomponent", (void**)&(pWrapperTable->m_ToolpathPart_GetRootComponent));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathPart_GetRootComponent == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -17026,6 +17106,18 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_build_createtoolpathaccessor", (void**)&(pWrapperTable->m_Build_CreateToolpathAccessor));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Build_CreateToolpathAccessor == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_disablepart", (void**)&(pWrapperTable->m_Build_DisablePart));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_DisablePart == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_partisdisabled", (void**)&(pWrapperTable->m_Build_PartIsDisabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_PartIsDisabled == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_build_enableallparts", (void**)&(pWrapperTable->m_Build_EnableAllParts));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Build_EnableAllParts == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_build_hasattachment", (void**)&(pWrapperTable->m_Build_HasAttachment));
@@ -23604,6 +23696,48 @@ public:
 	}
 	
 	/**
+	* CToolpathPart::GetPartNumber - Returns the part number of the build item.
+	* @return Returns the part number. Empty if not set.
+	*/
+	std::string CToolpathPart::GetPartNumber()
+	{
+		LibMCEnv_uint32 bytesNeededPartNumber = 0;
+		LibMCEnv_uint32 bytesWrittenPartNumber = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathPart_GetPartNumber(m_pHandle, 0, &bytesNeededPartNumber, nullptr));
+		std::vector<char> bufferPartNumber(bytesNeededPartNumber);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathPart_GetPartNumber(m_pHandle, bytesNeededPartNumber, &bytesWrittenPartNumber, &bufferPartNumber[0]));
+		
+		return std::string(&bufferPartNumber[0]);
+	}
+	
+	/**
+	* CToolpathPart::GetMeshUUID - Returns the UUID of the part's mesh object.
+	* @return Returns the mesh object uuid.
+	*/
+	std::string CToolpathPart::GetMeshUUID()
+	{
+		LibMCEnv_uint32 bytesNeededMeshUUID = 0;
+		LibMCEnv_uint32 bytesWrittenMeshUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathPart_GetMeshUUID(m_pHandle, 0, &bytesNeededMeshUUID, nullptr));
+		std::vector<char> bufferMeshUUID(bytesNeededMeshUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathPart_GetMeshUUID(m_pHandle, bytesNeededMeshUUID, &bytesWrittenMeshUUID, &bufferMeshUUID[0]));
+		
+		return std::string(&bufferMeshUUID[0]);
+	}
+	
+	/**
+	* CToolpathPart::IsDisabled - Returns if the part has been disabled with Build.DisablePart. Layers loaded through a toolpath accessor do not contain segments of disabled parts.
+	* @return Returns true if the part is disabled.
+	*/
+	bool CToolpathPart::IsDisabled()
+	{
+		bool resultIsDisabled = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathPart_IsDisabled(m_pHandle, &resultIsDisabled));
+		
+		return resultIsDisabled;
+	}
+	
+	/**
 	* CToolpathPart::GetRootComponent - Returns the Root Component of the part.
 	* @return Returns root component instance.
 	*/
@@ -25438,6 +25572,36 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CToolpathAccessor>(m_pWrapper, hToolpathInstance);
+	}
+	
+	/**
+	* CBuild::DisablePart - Disables a part of the build. From then on, layers loaded through a toolpath accessor do not contain any segments of this part, so it is no longer exposed. The state is kept in memory until EnableAllParts is called or the server restarts. Toolpath MUST have been loaded with LoadToolpath before.
+	* @param[in] sPartUUID - Build item UUID of the part. Fails with TOOLPATHPARTNOTFOUND if the part does not exist.
+	*/
+	void CBuild::DisablePart(const std::string & sPartUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_DisablePart(m_pHandle, sPartUUID.c_str()));
+	}
+	
+	/**
+	* CBuild::PartIsDisabled - Returns if a part of the build has been disabled.
+	* @param[in] sPartUUID - Build item UUID of the part.
+	* @return Returns true if the part is disabled.
+	*/
+	bool CBuild::PartIsDisabled(const std::string & sPartUUID)
+	{
+		bool resultIsDisabled = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_PartIsDisabled(m_pHandle, sPartUUID.c_str(), &resultIsDisabled));
+		
+		return resultIsDisabled;
+	}
+	
+	/**
+	* CBuild::EnableAllParts - Re-enables all disabled parts of the build.
+	*/
+	void CBuild::EnableAllParts()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Build_EnableAllParts(m_pHandle));
 	}
 	
 	/**

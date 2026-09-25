@@ -56,6 +56,10 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		};
 
 		this.dark_baseimageresource = "";
+		this.highlightpartuuid = Common.nullUUID ();
+		// Changes whenever parts of the build are disabled or re-enabled; the displayed layer is reloaded then.
+		this.partstateversion = 0;
+		this.displayed_partstateversion = 0;
 		this.paddingx = 0.0;
 		this.paddingy = 0.0;
 		this.transformangle = 0.0;
@@ -79,6 +83,10 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		this.layercount = Assert.OptionalIntegerValue (updateJSON.layercount);
 		this.builduuid = Assert.OptionalUUIDValue (updateJSON.builduuid);
 		this.scatterplotuuid = Assert.OptionalUUIDValue (updateJSON.scatterplotuuid);
+		if (updateJSON.highlightpartuuid !== undefined)
+			this.highlightpartuuid = Assert.OptionalUUIDValue (updateJSON.highlightpartuuid);
+		if (updateJSON.partstateversion !== undefined)
+			this.partstateversion = Assert.IntegerValue (updateJSON.partstateversion);
 		this.baseimageresource = Assert.OptionalUUIDValue (updateJSON.baseimageresource);
 		this.sizex = Assert.NumberValue (updateJSON.sizex);
 		this.sizey = Assert.NumberValue (updateJSON.sizey);
@@ -128,6 +136,13 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 			this.builduuid = attrs.builduuid;
 		if (attrs.scatterplotuuid !== undefined)
 			this.scatterplotuuid = attrs.scatterplotuuid;
+		if (attrs.highlightpartuuid !== undefined)
+			this.highlightpartuuid = attrs.highlightpartuuid;
+		if (attrs.partstateversion !== undefined) {
+			let partstateversion = parseInt (attrs.partstateversion);
+			if (!isNaN (partstateversion))
+				this.partstateversion = partstateversion;
+		}
 		if (attrs.baseimageresource !== undefined)
 			this.baseimageresource = attrs.baseimageresource;
 		if (attrs.dark_baseimageresource !== undefined)

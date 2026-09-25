@@ -50,6 +50,7 @@ namespace AMC {
 	amcDeclareDependingClass(CStateMachineData, PStateMachineData);
 	amcDeclareDependingClass(CResourcePackage, PResourcePackage);
 	amcDeclareDependingClass(CParameterHandler, PParameterHandler);
+	amcDeclareDependingClass(CParameterGroup, PParameterGroup);
 	amcDeclareDependingClass(CUIModule_LayerViewPlatformItem, PUIModule_LayerViewPlatformItem);
 		
 
@@ -92,6 +93,11 @@ namespace AMC {
 		virtual void addLegacyContentToJSON(CJSONWriter& writer, CJSONWriterObject& object, CParameterHandler* pClientVariableHandler, uint32_t nStateID) override;
 		
 		virtual void populateClientVariables(CParameterHandler* pClientVariableHandler);
+
+		// v2 frontend: applies the synced build references to the per-session client variables.
+		// The synced layer index is only applied when its value changes, so the slider can still
+		// be used to browse other layers in between.
+		void syncFrontendClientVariables(CParameterGroup* pGroup, CStateMachineData* pStateMachineData);
 
 		void handleCustomRequest(PAPIAuth pAuth, const std::string& requestType, const CAPIJSONRequest& requestData, CJSONWriter& response, CUIModule_UIEventHandler* pEventHandler) override;
 

@@ -153,10 +153,12 @@ void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer
 	object.addString(AMC_API_KEY_UI_BUILDUUID, sBuildUUID);
 	object.addString(AMC_API_KEY_UI_EXECUTIONUUID, sExecutionUUID);
 	object.addString(AMC_API_KEY_UI_SCATTERPLOTUUID, sScatterplotUUID);
+	object.addString(AMC_API_KEY_UI_HIGHLIGHTPARTUUID, pGroup->getUUIDParameterValueByName(AMC_API_KEY_UI_HIGHLIGHTPARTUUID));
 	object.addInteger(AMC_API_KEY_UI_CURRENTLAYER, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_CURRENTLAYER));
 	object.addInteger(AMC_API_KEY_UI_CURRENTLAYERCOUNTER, pGroup->getChangeCounterOf(AMC_API_KEY_UI_CURRENTLAYER));
 
 	uint32_t nLayerCount = 0;
+	uint64_t nPartStateVersion = 0;
 	if (AMCCommon::CUtils::stringIsNonEmptyUUIDString (sBuildUUID)) {
 		auto pToolpathHandler = m_pUIModuleEnvironment->toolpathHandler();
 		auto pDataModel = m_pUIModuleEnvironment->dataModel();
@@ -164,14 +166,17 @@ void CUIModule_LayerViewPlatformItem::addLegacyContentToJSON(CJSONWriter& writer
 
 		if (pBuildJobHandler->JobExists(sBuildUUID)) {
 			auto pBuildJob = pBuildJobHandler->RetrieveJob(sBuildUUID);
-			auto pToolpathEntity = pToolpathHandler->findToolpathEntity(pBuildJob->GetStorageStreamUUID(), false);
+			auto sStreamUUID = pBuildJob->GetStorageStreamUUID();
+			auto pToolpathEntity = pToolpathHandler->findToolpathEntity(sStreamUUID, false);
 			if (pToolpathEntity != nullptr) {
 				nLayerCount = pToolpathEntity->getLayerCount();
 			}
+			nPartStateVersion = pToolpathHandler->getDisabledPartsVersion(sStreamUUID);
 		}
 	}
 
 	object.addInteger(AMC_API_KEY_UI_LAYERCOUNT, nLayerCount);
+	object.addInteger(AMC_API_KEY_PARTSTATEVERSION, (int64_t)nPartStateVersion);
 
 	object.addInteger(AMC_API_KEY_UI_LABELVISIBLE, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_LABELVISIBLE));
 	object.addString(AMC_API_KEY_UI_LABELCAPTION, pGroup->getParameterValueByName(AMC_API_KEY_UI_LABELCAPTION));
@@ -237,6 +242,7 @@ void CUIModule_LayerViewPlatformItem::populateClientVariables(CParameterHandler*
 	pGroup->addNewUUIDParameter(AMC_API_KEY_UI_EXECUTIONUUID, "Execution UUID", m_ExecutionUUID.evaluateUUIDValue(pStateMachineData));
 	pGroup->addNewUUIDParameter(AMC_API_KEY_UI_SCATTERPLOTUUID, "Scatterplot UUID", m_ScatterplotUUID.evaluateUUIDValue(pStateMachineData));
 	pGroup->addNewIntParameter(AMC_API_KEY_UI_CURRENTLAYER, "Current layer index", 0);
+	pGroup->addNewUUIDParameter(AMC_API_KEY_UI_HIGHLIGHTPARTUUID, "Highlighted part UUID", AMCCommon::CUtils::createEmptyUUID());
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_SIZEX, "Platform size x", m_SizeX.evaluateNumberValue (pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_SIZEY, "Platform size y", m_SizeY.evaluateNumberValue(pStateMachineData), 1.0);
 	pGroup->addNewDoubleParameter(AMC_API_KEY_UI_ORIGINX, "Platform origin x", m_OriginX.evaluateNumberValue(pStateMachineData), 1.0);
@@ -255,8 +261,30 @@ void CUIModule_LayerViewPlatformItem::populateClientVariables(CParameterHandler*
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_LABELICON, "Label icon", m_LabelIcon.evaluateStringValue(pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_SLIDERCHANGEEVENT, "Slider change event", m_SliderChangeEvent.evaluateStringValue(pStateMachineData));
 	pGroup->addNewIntParameter(AMC_API_KEY_UI_SLIDERFIXED, "Slider is fixed", m_SliderFixed.evaluateIntegerValue(pStateMachineData));
+	pGroup->addNewIntParameter(AMC_API_KEY_UI_SYNCEDLAYERINDEX, "Last applied value of the synced layer index", -1);
 
 
+}
+
+void CUIModule_LayerViewPlatformItem::syncFrontendClientVariables(CParameterGroup* pGroup, CStateMachineData* pStateMachineData)
+{
+	LibMCAssertNotNull(pGroup);
+	LibMCAssertNotNull(pStateMachineData);
+
+	if (m_BuildUUID.needsSync())
+		pGroup->setParameterValueByName(AMC_API_KEY_UI_BUILDUUID, m_BuildUUID.evaluateStringValue(pStateMachineData));
+	if (m_ExecutionUUID.needsSync())
+		pGroup->setParameterValueByName(AMC_API_KEY_UI_EXECUTIONUUID, m_ExecutionUUID.evaluateStringValue(pStateMachineData));
+	if (m_ScatterplotUUID.needsSync())
+		pGroup->setParameterValueByName(AMC_API_KEY_UI_SCATTERPLOTUUID, m_ScatterplotUUID.evaluateStringValue(pStateMachineData));
+
+	if (m_LayerIndex.needsSync()) {
+		int64_t nSyncedLayerIndex = m_LayerIndex.evaluateIntegerValue(pStateMachineData);
+		if (nSyncedLayerIndex != pGroup->getIntParameterValueByName(AMC_API_KEY_UI_SYNCEDLAYERINDEX)) {
+			pGroup->setIntParameterValueByName(AMC_API_KEY_UI_SYNCEDLAYERINDEX, nSyncedLayerIndex);
+			pGroup->setIntParameterValueByName(AMC_API_KEY_UI_CURRENTLAYER, nSyncedLayerIndex);
+		}
+	}
 }
 
 
@@ -369,9 +397,15 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 
 	auto referencesNode = xmlNode.child("references");
 	if (!referencesNode.empty()) {
-		buildUUID = CUIExpression (platformNode, "builduuid", false);
-		executionUUID = CUIExpression (platformNode, "executionuuid", false);
-		scatterplotUUID = CUIExpression (platformNode, "scatterplotuuid", false);
+		// The references are declared on the <references> node; older configurations put them on <platform>.
+		auto readReference = [&](const std::string& sName) -> CUIExpression {
+			bool bOnReferencesNode = !referencesNode.attribute(sName.c_str()).empty() || !referencesNode.attribute(("sync:" + sName).c_str()).empty();
+			return CUIExpression(bOnReferencesNode ? referencesNode : platformNode, sName, false);
+		};
+
+		buildUUID = readReference("builduuid");
+		executionUUID = readReference("executionuuid");
+		scatterplotUUID = readReference("scatterplotuuid");
 
 		m_PlatformItem->setBuildReference(buildUUID, executionUUID, scatterplotUUID);
 
@@ -614,25 +648,32 @@ void CUIModule_LayerView::frontendWriteModuleStatusToJSON(CJSONWriter& writer, C
 		return;
 
 	if (m_PlatformItem != nullptr) {
+		m_PlatformItem->syncFrontendClientVariables(pGroup.get(), pStateMachineData);
+
 		CJSONWriterObject cvObject(writer);
 
 		std::string sBuildUUID = pGroup->getUUIDParameterValueByName(AMC_API_KEY_UI_BUILDUUID);
 		cvObject.addString(AMC_API_KEY_UI_BUILDUUID, sBuildUUID);
+		cvObject.addString(AMC_API_KEY_UI_HIGHLIGHTPARTUUID, pGroup->getUUIDParameterValueByName(AMC_API_KEY_UI_HIGHLIGHTPARTUUID));
 		cvObject.addInteger(AMC_API_KEY_UI_CURRENTLAYER, pGroup->getIntParameterValueByName(AMC_API_KEY_UI_CURRENTLAYER));
 
 		uint32_t nLayerCount = 0;
+		uint64_t nPartStateVersion = 0;
 		if (AMCCommon::CUtils::stringIsNonEmptyUUIDString(sBuildUUID)) {
 			auto pToolpathHandler = m_pUIModuleEnvironment->toolpathHandler();
 			auto pDataModel = m_pUIModuleEnvironment->dataModel();
 			auto pBuildJobHandler = pDataModel->CreateBuildJobHandler();
 			if (pBuildJobHandler->JobExists(sBuildUUID)) {
 				auto pBuildJob = pBuildJobHandler->RetrieveJob(sBuildUUID);
-				auto pToolpathEntity = pToolpathHandler->findToolpathEntity(pBuildJob->GetStorageStreamUUID(), false);
+				auto sStreamUUID = pBuildJob->GetStorageStreamUUID();
+				auto pToolpathEntity = pToolpathHandler->findToolpathEntity(sStreamUUID, false);
 				if (pToolpathEntity != nullptr)
 					nLayerCount = pToolpathEntity->getLayerCount();
+				nPartStateVersion = pToolpathHandler->getDisabledPartsVersion(sStreamUUID);
 			}
 		}
 		cvObject.addInteger(AMC_API_KEY_UI_LAYERCOUNT, nLayerCount);
+		cvObject.addInteger(AMC_API_KEY_PARTSTATEVERSION, (int64_t)nPartStateVersion);
 
 		moduleObject.addObject("clientvariables", cvObject);
 	}

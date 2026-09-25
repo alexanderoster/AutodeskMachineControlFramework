@@ -3015,6 +3015,37 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathpart_getname(LibMCEnv_Toolpath
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathpart_getuuid(LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
 
 /**
+* Returns the part number of the build item.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[in] nPartNumberBufferSize - size of the buffer (including trailing 0)
+* @param[out] pPartNumberNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pPartNumberBuffer -  buffer of Returns the part number. Empty if not set., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathpart_getpartnumber(LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nPartNumberBufferSize, LibMCEnv_uint32* pPartNumberNeededChars, char * pPartNumberBuffer);
+
+/**
+* Returns the UUID of the part's mesh object.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[in] nMeshUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pMeshUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pMeshUUIDBuffer -  buffer of Returns the mesh object uuid., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathpart_getmeshuuid(LibMCEnv_ToolpathPart pToolpathPart, const LibMCEnv_uint32 nMeshUUIDBufferSize, LibMCEnv_uint32* pMeshUUIDNeededChars, char * pMeshUUIDBuffer);
+
+/**
+* Returns if the part has been disabled with Build.DisablePart. Layers loaded through a toolpath accessor do not contain segments of disabled parts.
+*
+* @param[in] pToolpathPart - ToolpathPart instance.
+* @param[out] pIsDisabled - Returns true if the part is disabled.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathpart_isdisabled(LibMCEnv_ToolpathPart pToolpathPart, bool * pIsDisabled);
+
+/**
 * Returns the Root Component of the part.
 *
 * @param[in] pToolpathPart - ToolpathPart instance.
@@ -4411,6 +4442,33 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_toolpathisloaded(LibMCEnv_Build 
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_createtoolpathaccessor(LibMCEnv_Build pBuild, LibMCEnv_ToolpathAccessor * pToolpathInstance);
+
+/**
+* Disables a part of the build. From then on, layers loaded through a toolpath accessor do not contain any segments of this part, so it is no longer exposed. The state is kept in memory until EnableAllParts is called or the server restarts. Toolpath MUST have been loaded with LoadToolpath before.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] pPartUUID - Build item UUID of the part. Fails with TOOLPATHPARTNOTFOUND if the part does not exist.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_disablepart(LibMCEnv_Build pBuild, const char * pPartUUID);
+
+/**
+* Returns if a part of the build has been disabled.
+*
+* @param[in] pBuild - Build instance.
+* @param[in] pPartUUID - Build item UUID of the part.
+* @param[out] pIsDisabled - Returns true if the part is disabled.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_partisdisabled(LibMCEnv_Build pBuild, const char * pPartUUID, bool * pIsDisabled);
+
+/**
+* Re-enables all disabled parts of the build.
+*
+* @param[in] pBuild - Build instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_build_enableallparts(LibMCEnv_Build pBuild);
 
 /**
 * Returns if the Build has an attached data with a certain UUID

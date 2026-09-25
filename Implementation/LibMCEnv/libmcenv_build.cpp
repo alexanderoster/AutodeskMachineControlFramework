@@ -219,6 +219,43 @@ IToolpathAccessor * CBuild::CreateToolpathAccessor()
 	return new CToolpathAccessor(sStreamUUID, pBuildJob->GetUUID(), m_pToolpathHandler, m_pMeshHandler);
 }
 
+void CBuild::DisablePart(const std::string& sPartUUID)
+{
+	if (!AMCCommon::CUtils::stringIsUUIDString(sPartUUID))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "invalid part uuid: " + sPartUUID);
+
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+	auto sStreamUUID = pBuildJob->GetStorageStreamUUID();
+
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(sStreamUUID, false);
+	if (pToolpathEntity == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHNOTLOADED);
+
+	auto pPart = pToolpathEntity->findPartByUUID(sPartUUID);
+	if (pPart.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND, sPartUUID);
+
+	m_pToolpathHandler->disablePart(sStreamUUID, pPart->getUUID());
+}
+
+bool CBuild::PartIsDisabled(const std::string& sPartUUID)
+{
+	if (!AMCCommon::CUtils::stringIsUUIDString(sPartUUID))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "invalid part uuid: " + sPartUUID);
+
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+	return m_pToolpathHandler->partIsDisabled(pBuildJob->GetStorageStreamUUID(), sPartUUID);
+}
+
+void CBuild::EnableAllParts()
+{
+	auto pBuildJobHandler = m_pDataModel->CreateBuildJobHandler();
+	auto pBuildJob = pBuildJobHandler->RetrieveJob(m_sBuildJobUUID);
+	m_pToolpathHandler->enableAllParts(pBuildJob->GetStorageStreamUUID());
+}
+
 
 void CBuild::LoadToolpath()
 {

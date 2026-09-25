@@ -2641,6 +2641,24 @@ public:
 	virtual std::string GetUUID() = 0;
 
 	/**
+	* IToolpathPart::GetPartNumber - Returns the part number of the build item.
+	* @return Returns the part number. Empty if not set.
+	*/
+	virtual std::string GetPartNumber() = 0;
+
+	/**
+	* IToolpathPart::GetMeshUUID - Returns the UUID of the part's mesh object.
+	* @return Returns the mesh object uuid.
+	*/
+	virtual std::string GetMeshUUID() = 0;
+
+	/**
+	* IToolpathPart::IsDisabled - Returns if the part has been disabled with Build.DisablePart. Layers loaded through a toolpath accessor do not contain segments of disabled parts.
+	* @return Returns true if the part is disabled.
+	*/
+	virtual bool IsDisabled() = 0;
+
+	/**
 	* IToolpathPart::GetRootComponent - Returns the Root Component of the part.
 	* @return Returns root component instance.
 	*/
@@ -3638,6 +3656,24 @@ public:
 	* @return Toolpath instance.
 	*/
 	virtual IToolpathAccessor * CreateToolpathAccessor() = 0;
+
+	/**
+	* IBuild::DisablePart - Disables a part of the build. From then on, layers loaded through a toolpath accessor do not contain any segments of this part, so it is no longer exposed. The state is kept in memory until EnableAllParts is called or the server restarts. Toolpath MUST have been loaded with LoadToolpath before.
+	* @param[in] sPartUUID - Build item UUID of the part. Fails with TOOLPATHPARTNOTFOUND if the part does not exist.
+	*/
+	virtual void DisablePart(const std::string & sPartUUID) = 0;
+
+	/**
+	* IBuild::PartIsDisabled - Returns if a part of the build has been disabled.
+	* @param[in] sPartUUID - Build item UUID of the part.
+	* @return Returns true if the part is disabled.
+	*/
+	virtual bool PartIsDisabled(const std::string & sPartUUID) = 0;
+
+	/**
+	* IBuild::EnableAllParts - Re-enables all disabled parts of the build.
+	*/
+	virtual void EnableAllParts() = 0;
 
 	/**
 	* IBuild::HasAttachment - Returns if the Build has an attached data with a certain UUID

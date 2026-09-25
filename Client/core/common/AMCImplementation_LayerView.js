@@ -32,6 +32,9 @@ const LAYERVIEW_MINSCALING = 0.4;
 const LAYERVIEW_MAXSCALING = 4000.0;
 const LAYERVIEW_MINVELOCITYRANGE = 1.0;
 
+// Segments of parts that have been disabled are still drawn, but in this neutral gray.
+const LAYERVIEW_DISABLEDPARTCOLOR = 0xB4B4B4;
+
 // Grid level-of-detail switch band. The grid geometry is self-similar every 5
 // subdivisions, so the lower/upper bounds MUST keep a 5x ratio for the wrap to
 // stay seamless (LOWER * GRID_LOD_RECURSION === UPPER). Lowering the band
@@ -84,6 +87,13 @@ class LayerViewImpl {
 		this.renderNeedsUpdate = true;
 
 		this.layerSegmentsArray = null;
+		this.layerPartNames = new Map ();
+		this.layerDisabledParts = new Set ();
+		this.partBoundsCache = null;
+		this.partBoundsCacheKey = "";
+
+		// Invoked after every pan/zoom/placement change so screen-space overlays can follow.
+		this.onTransformChanged = null;
 		
 		this.layerPointsMode = "unicolor";
 		this.layerPointsArray = null;
@@ -272,6 +282,9 @@ class LayerViewImpl {
         }
 		
 		this.renderNeedsUpdate = true;
+
+		if (typeof this.onTransformChanged === "function")
+			this.onTransformChanged ();
     }
 	
 	updateLineScaleLevel (newLineScaleLevel)
@@ -318,8 +331,21 @@ class LayerViewImpl {
 	}
 
 
-    loadLayer(segmentsArray) {
+    loadLayer(segmentsArray, partsArray) {
 		this.layerSegmentsArray = segmentsArray;
+		this.layerPartNames = new Map ();
+		this.layerDisabledParts = new Set ();
+		if (Array.isArray (partsArray)) {
+			for (let part of partsArray) {
+				if (part && (typeof part.uuid === "string")) {
+					let partUUID = part.uuid.toLowerCase ();
+					this.layerPartNames.set (partUUID, (typeof part.name === "string") ? part.name : "");
+					if (part.disabled === true)
+						this.layerDisabledParts.add (partUUID);
+				}
+			}
+		}
+		this.partBoundsCache = null;
 		this.updateLoadedLayer ();
 
 		this.updateTransform();
@@ -802,13 +828,18 @@ class LayerViewImpl {
 
 			for (segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
 				var segment = segmentsArray[segmentIndex];
-				let segmentColor = segment.color;		
+				let partUUID = (typeof segment.partuuid === "string") ? segment.partuuid.toLowerCase () : "";
+				let partDisabled = this.layerDisabledParts.has (partUUID);
+				let segmentColor = partDisabled ? LAYERVIEW_DISABLEDPARTCOLOR : segment.color;
 				let segmentData = {
 					type: segment.type,
 					laserpower: segment.laserpower,
 					laserspeed: segment.laserspeed,
 					profilename: segment.profilename,
 					partid: segment.partid,
+					partuuid: partUUID,
+					partname: this.layerPartNames.get (partUUID) || "",
+					partdisabled: partDisabled,
 					laserindex: segment.laserindex
 				}
 
@@ -1046,6 +1077,92 @@ class LayerViewImpl {
 			x: this.origin.x + placement.x + (toolpathX * cosine + toolpathY * sine),
 			y: this.origin.y + placement.y + (-toolpathX * sine + toolpathY * cosine)
 		};
+	}
+
+	// Inverse of screenToMachine: machine coordinates (mm) to viewport pixels.
+	/**
+	 * @param {number} machineX
+	 * @param {number} machineY
+	 */
+	machineToScreen (machineX, machineY)
+	{
+		if (!this.transform)
+			return null;
+
+		return {
+			x: this.transform.x + machineX * this.transform.scaling,
+			y: this.transform.y - machineY * this.transform.scaling
+		};
+	}
+
+	// Returns one axis-aligned bounding box per part of the loaded layer, in
+	// machine coordinates (mm). Parts are identified by their build item UUID
+	// (lower case), which is stable across layers, unlike the layer-local partid.
+	// Segments without a UUID (older servers) are grouped by partid instead;
+	// those boxes have an empty uuid.
+	getPartBoundingBoxes ()
+	{
+		if (!this.layerSegmentsArray || !this.toolpathVisible)
+			return [];
+
+		const cacheKey = [this.transformAngleDegrees, this.rotationCenter.x, this.rotationCenter.y,
+			this.translation.x, this.translation.y, this.origin.x, this.origin.y].join ("|");
+		if (this.partBoundsCache && (this.partBoundsCacheKey === cacheKey))
+			return this.partBoundsCache;
+
+		const angleInRadians = this.transformAngleDegrees * Math.PI / 180.0;
+		const cosine = Math.cos (angleInRadians);
+		const sine = Math.sin (angleInRadians);
+		const placement = this.transformToolpathPoint (0, 0);
+		const offsetX = this.origin.x + placement.x;
+		const offsetY = this.origin.y + placement.y;
+
+		const boxesByKey = new Map ();
+		for (const segment of this.layerSegmentsArray) {
+			if (!segment || !Array.isArray (segment.points))
+				continue;
+
+			let partUUID = (typeof segment.partuuid === "string") ? segment.partuuid.toLowerCase () : "";
+			if (partUUID === "00000000-0000-0000-0000-000000000000")
+				partUUID = "";
+
+			let key;
+			let name;
+			if (partUUID !== "") {
+				key = partUUID;
+				name = this.layerPartNames.get (partUUID) || "";
+			} else if (Number.isInteger (segment.partid)) {
+				key = "partid:" + segment.partid;
+				name = "Part " + segment.partid;
+			} else {
+				continue;
+			}
+
+			let box = boxesByKey.get (key);
+			if (!box) {
+				box = {
+					key: key,
+					uuid: partUUID,
+					name: name,
+					disabled: (partUUID !== "") && this.layerDisabledParts.has (partUUID),
+					minx: Infinity, miny: Infinity, maxx: -Infinity, maxy: -Infinity
+				};
+				boxesByKey.set (key, box);
+			}
+
+			for (const point of segment.points) {
+				const machineX = offsetX + (point.x * cosine + point.y * sine);
+				const machineY = offsetY + (-point.x * sine + point.y * cosine);
+				if (machineX < box.minx) box.minx = machineX;
+				if (machineX > box.maxx) box.maxx = machineX;
+				if (machineY < box.miny) box.miny = machineY;
+				if (machineY > box.maxy) box.maxy = machineY;
+			}
+		}
+
+		this.partBoundsCache = Array.from (boxesByKey.values ()).filter ((box) => (box.minx <= box.maxx) && (box.miny <= box.maxy));
+		this.partBoundsCacheKey = cacheKey;
+		return this.partBoundsCache;
 	}
 
 	// Squared distance from point (px,py) to the line segment (ax,ay)-(bx,by).
