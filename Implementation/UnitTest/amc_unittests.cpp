@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_parameters.hpp"
 #include "amc_unittests_telemetry.hpp"
 #include "amc_unittests_sessionvariables.hpp"
+#include "amc_unittests_uifrontend.hpp"
 
 // LibMCData unit tests
 #include "amc_unittests_libmcdata_storage.hpp"
@@ -108,6 +109,7 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_Parameters>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Telemetry>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_SessionVariables>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_UIFrontend>());
 
 	// LibMCData unit tests
 	registerTestGroup(std::make_shared <CUnitTestGroup_LibMCData_Storage>());

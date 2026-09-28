@@ -59,15 +59,28 @@ namespace AMC {
 
 		std::string m_sTitle;
 
+		// Optional "active" expression. When given (usually as sync:active bound to a machine
+		// parameter), the server decides whether the dialog is open and the client follows it
+		// on every frontend poll. Without it the dialog is only opened by client actions.
+		CUIExpression m_Active;
+
+		// "closable" expression, defaults to true. A non-closable dialog offers no close
+		// button and ignores Escape and clicks outside of it.
+		CUIExpression m_Closable;
+
 	public:
 
-		CUIDialog(const std::string & sName, const std::string& sTitle, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description);
-		
+		CUIDialog(const std::string & sName, const std::string& sTitle, CUIModule_UIEventHandler* pUIEventHandler, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const CUIExpression& active, const CUIExpression& closable);
+
 		virtual ~CUIDialog();
 
 		std::string getTitle ();
 
-		
+		CUIExpression& getActiveExpression ();
+
+		CUIExpression& getClosableExpression ();
+
+
 	};
 		
 }

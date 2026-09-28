@@ -231,7 +231,7 @@ PUICustomPage CUIHandler::addCustomPage_Unsafe(const std::string& sName, const s
 
 }
 
-PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description)
+PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::string& sTitle, const CUIExpression& icon, const CUIExpression& caption, const CUIExpression& description, const CUIExpression& active, const CUIExpression& closable)
 {
     if (sName.empty())
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDDIALOGNAME);
@@ -240,7 +240,7 @@ PUIDialog CUIHandler::addDialog_Unsafe(const std::string& sName, const std::stri
     if (iIterator != m_Dialogs.end())
         throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEDIALOG, sName);
 
-    auto pDialog = std::make_shared<CUIDialog>(sName, sTitle, this, icon, caption, description);
+    auto pDialog = std::make_shared<CUIDialog>(sName, sTitle, this, icon, caption, description, active, closable);
     m_Dialogs.insert(std::make_pair(sName, pDialog));
 
     return pDialog;
@@ -551,7 +551,14 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
         auto dialogTitleAttrib = dialogNode.attribute("title");
         std::string sDialogTitle(dialogTitleAttrib.as_string());
 
-        auto pDialog = addDialog_Unsafe(sDialogName, sDialogTitle, icon, caption, description);
+        // active: optional, server-driven open state (usually sync:active="machine.group.param").
+        // closable: defaults to true; "0" removes every client-side way of closing the dialog.
+        CUIExpression active(dialogNode, "active");
+        CUIExpression closable(dialogNode, "closable", "1");
+        active.checkExpressionSyntax(pStateMachineData);
+        closable.checkExpressionSyntax(pStateMachineData);
+
+        auto pDialog = addDialog_Unsafe(sDialogName, sDialogTitle, icon, caption, description, active, closable);
         pDialog->setVisibleExpression(CUIExpression(dialogNode, "visible", "1"));
 
         auto dialogChildren = dialogNode.children();
@@ -1037,6 +1044,8 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
 
 void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* pLegacyClientVariableHandler)
 {
+    auto pStateMachineData = m_pUISystemState->getStateMachineData();
+
     CJSONWriterArray menuItems(writer);
 
     for (auto iter : m_MenuItems) {
@@ -1105,6 +1114,7 @@ void CUIHandler::writeLegacyStateToJSON(CJSONWriter& writer, CParameterHandler* 
         CJSONWriterObject dialog(writer);
         dialog.addString(AMC_API_KEY_UI_DIALOGNAME, iter.second->getName());
         dialog.addString(AMC_API_KEY_UI_DIALOGTITLE, iter.second->getTitle());
+        dialog.addBool(AMC_API_KEY_UI_DIALOGCLOSABLE, iter.second->getClosableExpression().evaluateBoolValue(pStateMachineData));
 
         CJSONWriterArray modules(writer);
         iter.second->writeLegacyModulesToJSON(writer, modules, pLegacyClientVariableHandler);
@@ -1184,6 +1194,14 @@ void CUIHandler::frontendWriteStatusToJSON(CJSONWriter& writer, CAPIAuth* pAuth)
     for (auto iter : m_Dialogs) {
         CJSONWriterObject dialog(writer);
         dialog.addString(AMC_API_KEY_UI_DIALOGTITLE, iter.second->getTitle());
+
+        // "active" is only emitted for server-driven dialogs, so the client leaves
+        // event-driven dialogs alone and follows the server for the others.
+        auto& activeExpression = iter.second->getActiveExpression();
+        if (!activeExpression.isEmpty(pStateMachineData, pFrontendState))
+            dialog.addBool(AMC_API_KEY_UI_DIALOGACTIVE, activeExpression.evaluateBoolValue(pStateMachineData, pFrontendState));
+        dialog.addBool(AMC_API_KEY_UI_DIALOGCLOSABLE, iter.second->getClosableExpression().evaluateBoolValue(pStateMachineData, pFrontendState));
+
         iter.second->frontendWritePageStatusToJSON(writer, dialog, pFrontendState, pStateMachineData);
         dialogs.addObject(dialog);
     }

@@ -266,9 +266,19 @@
 		if (open) {
 			app.showDialog(dialog.name);
 		} else {
+			// A non-closable dialog is only closed by the server (see
+			// AMCApplication._syncServerDrivenDialogs) or by a client action.
+			if (dialog.closable === false) return;
 			dialog.dialogIsActive = false;
 			bumpTick();
 		}
+	}
+
+	// Read through a poll-tick dependency: closable is a plain property mutation on a
+	// dialog object with stable identity, so it would not re-trigger on its own.
+	function dialogIsClosable (dialog: any): boolean {
+		poll.v;
+		return dialog.closable !== false;
 	}
 </script>
 
@@ -414,10 +424,10 @@
 		{/if}
 
 		<!-- Page content -->
-		<main class="flex-1 min-w-0 min-h-0 relative">
+		<main class="flex-1 min-w-0 min-h-0 overflow-y-auto">
 			{#each pages as page (page.name)}
 				{#if poll.v >= 0 && app.pageIsActive(page)}
-					<div class="absolute inset-2">
+					<div class="h-full p-2 flex flex-col">
 						{#each page.modules || [] as mod (mod.uuid)}
 							<ModuleFactory module={mod} {app} />
 						{/each}
@@ -429,11 +439,17 @@
 
 	<!-- Dialogs -->
 	{#each dialogs as dialog (dialog.name)}
+		{@const closable = dialogIsClosable(dialog)}
 		<Dialog.Root
 			open={dialog.name === activeDialogName}
 			onOpenChange={(open) => setDialogOpen(dialog, open)}
 		>
-			<Dialog.Content class="sm:max-w-[50vw] max-h-[80vh] overflow-hidden flex flex-col">
+			<Dialog.Content
+				class="sm:max-w-[50vw] max-h-[80vh] overflow-hidden flex flex-col"
+				showCloseButton={closable}
+				escapeKeydownBehavior={closable ? 'close' : 'ignore'}
+				interactOutsideBehavior={closable ? 'close' : 'ignore'}
+			>
 				{#if dialog.title}
 					<Dialog.Header class="shrink-0">
 						<Dialog.Title>{dialog.title}</Dialog.Title>
