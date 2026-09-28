@@ -802,14 +802,14 @@
 		clearHover();
 	}
 
-	// Frames the build-area rectangle. The origin is the location of machine-zero
-	// inside the plate (measured from the lower-left corner), so the plate corners in
-	// machine coordinates run from -origin to (size - origin). For origin=(sx/2,sy/2)
-	// this yields a view symmetric around zero, e.g. [-100..100] x [-125..125].
+	// Frames the build-area rectangle. CenterOnRectangle() works in plate coordinates:
+	// the build plate image is drawn from (0, 0) to (sizex, sizey) and the toolpath is
+	// shifted by the origin (see LayerViewImpl.setOrigin / updateTransform), so the
+	// frame is the plate itself, not "-origin .. size - origin". Framing with the origin
+	// subtracted (as the Vue 2 client does since "Layer Viewer updates") puts the plate
+	// corner into the view center for origin = (sizex/2, sizey/2).
 	function centerOnPlatform() {
 		if (!layerViewer || !platform) return;
-		const ox = platform.originx || 0;
-		const oy = platform.originy || 0;
 		const sx = platform.sizex || 300;
 		const sy = platform.sizey || 300;
 		// Optional per-axis padding (in mm) that enlarges the reset zoom window,
@@ -817,8 +817,8 @@
 		const px = platform.paddingx || 0;
 		const py = platform.paddingy || 0;
 		layerViewer.CenterOnRectangle(
-			-ox - ZOOM_MARGIN - px, -oy - ZOOM_MARGIN - py,
-			(sx - ox) + ZOOM_MARGIN + px, (sy - oy) + ZOOM_MARGIN + py
+			-ZOOM_MARGIN - px, -ZOOM_MARGIN - py,
+			sx + ZOOM_MARGIN + px, sy + ZOOM_MARGIN + py
 		);
 	}
 
