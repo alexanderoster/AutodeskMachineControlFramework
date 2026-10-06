@@ -1491,6 +1491,80 @@ LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_addtargetpositionstod
 	}
 }
 
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_startlistwithrecording(LibMCDriver_ScanLab_RTCRecording pRTCRecording)
+{
+	IBase* pIBaseClass = (IBase *)pRTCRecording;
+
+	try {
+		IRTCRecording* pIRTCRecording = dynamic_cast<IRTCRecording*>(pIBaseClass);
+		if (!pIRTCRecording)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCRecording->StartListWithRecording();
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_readrecordeddata(LibMCDriver_ScanLab_RTCRecording pRTCRecording, bool * pRecordingComplete)
+{
+	IBase* pIBaseClass = (IBase *)pRTCRecording;
+
+	try {
+		if (pRecordingComplete == nullptr)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		IRTCRecording* pIRTCRecording = dynamic_cast<IRTCRecording*>(pIBaseClass);
+		if (!pIRTCRecording)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		*pRecordingComplete = pIRTCRecording->ReadRecordedData();
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_discardrecords(LibMCDriver_ScanLab_RTCRecording pRTCRecording)
+{
+	IBase* pIBaseClass = (IBase *)pRTCRecording;
+
+	try {
+		IRTCRecording* pIRTCRecording = dynamic_cast<IRTCRecording*>(pIBaseClass);
+		if (!pIRTCRecording)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCRecording->DiscardRecords();
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for GPIOSequence
@@ -8317,6 +8391,12 @@ LibMCDriver_ScanLabResult LibMCDriver_ScanLab::Impl::LibMCDriver_ScanLab_GetProc
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtcrecording_backtransformrawzcoordinate;
 	if (sProcName == "libmcdriver_scanlab_rtcrecording_addtargetpositionstodatatable") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtcrecording_addtargetpositionstodatatable;
+	if (sProcName == "libmcdriver_scanlab_rtcrecording_startlistwithrecording") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtcrecording_startlistwithrecording;
+	if (sProcName == "libmcdriver_scanlab_rtcrecording_readrecordeddata") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtcrecording_readrecordeddata;
+	if (sProcName == "libmcdriver_scanlab_rtcrecording_discardrecords") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtcrecording_discardrecords;
 	if (sProcName == "libmcdriver_scanlab_gpiosequence_getidentifier") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_gpiosequence_getidentifier;
 	if (sProcName == "libmcdriver_scanlab_gpiosequence_clear") 

@@ -119,9 +119,7 @@ void CDataModel::InitialiseDatabase(const std::string & sDataDirectory, const Li
     m_pStorageState->addAcceptedContent("image/png");
     m_pStorageState->addAcceptedContent("image/jpeg");
     m_pStorageState->addAcceptedContent("application/amcf-discretefield2d");
-
-    m_pStorageState->addAcceptedContent("image/png");
-    m_pStorageState->addAcceptedContent("image/jpeg");
+    m_pStorageState->addAcceptedContent("application/amcf-datatable");
 
     m_pStorageState->addImageContent("image/png");
     m_pStorageState->addImageContent("image/jpeg");

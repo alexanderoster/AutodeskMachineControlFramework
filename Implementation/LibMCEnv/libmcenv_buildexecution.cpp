@@ -41,6 +41,9 @@ Abstract: This is a stub class definition of CBuildExecution
 #include "libmcenv_streamreader.hpp"
 #include "libmcenv_datatable.hpp"
 #include "libmcenv_tempstreamwriter.hpp"
+#include "libmcenv_datacapture.hpp"
+#include "libmcenv_datacaptureoptions.hpp"
+#include "libmcenv_datatablereader.hpp"
 #include "libmcenv_journalhandler_historic.hpp"
 #include "libmcenv_journalhandler_current.hpp"
 
@@ -526,4 +529,93 @@ IJournalHandler* CBuildExecution::LoadAttachedJournal(const LibMCEnv_uint32 nCac
 
 	}
 
+}
+
+
+IDataCaptureOptions* CBuildExecution::CreateDataCaptureOptions()
+{
+	return new CDataCaptureOptions();
+}
+
+IDataCapture* CBuildExecution::CreateDataCapture(const std::string& sIdentifier, const std::string& sName, IDataCaptureOptions* pOptions, const std::string& sUserUUID)
+{
+	if (sName.empty())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EMPTYDATACAPTURENAME);
+	if (sIdentifier.empty())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EMPTYDATACAPTUREIDENTIFIER);
+	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sIdentifier))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATACAPTUREIDENTIFIER, "invalid data capture identifier: " + sIdentifier);
+
+	// A capture belongs to a running execution and ends with it.
+	if (m_pExecution->GetStatus() != LibMCData::eBuildJobExecutionStatus::InProcess)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DATACAPTUREEXECUTIONNOTINPROCESS);
+
+	sDataCaptureSettings settings;
+	if (pOptions != nullptr) {
+		auto pOptionsImpl = dynamic_cast<CDataCaptureOptions*> (pOptions);
+		if (pOptionsImpl == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+
+		settings = pOptionsImpl->getSettings();
+	}
+
+	std::string sNormalizedUserUUID;
+	if (!sUserUUID.empty())
+		sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
+	else
+		sNormalizedUserUUID = AMCCommon::CUtils::createEmptyUUID();
+
+	auto nAbsoluteTimeStamp = m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
+
+	auto pManifest = m_pExecution->CreateDataCapture(sIdentifier, sName, sNormalizedUserUUID, nAbsoluteTimeStamp);
+	auto pInstance = std::make_shared<CDataCaptureInstance>(m_pDataModel, pManifest, settings, m_pGlobalChrono, sNormalizedUserUUID);
+
+	return new CDataCapture(pInstance);
+}
+
+bool CBuildExecution::HasDataCapture(const std::string& sIdentifier)
+{
+	return m_pExecution->HasDataCapture(sIdentifier);
+}
+
+LibMCEnv_uint64 CBuildExecution::GetDataCaptureRowCount(const std::string& sIdentifier)
+{
+	auto pManifest = m_pExecution->RetrieveDataCapture(sIdentifier);
+	return pManifest->GetRowCount();
+}
+
+LibMCEnv_uint32 CBuildExecution::GetDataCaptureSegmentCount(const std::string& sIdentifier)
+{
+	auto pManifest = m_pExecution->RetrieveDataCapture(sIdentifier);
+	return pManifest->GetSegmentCount();
+}
+
+IDataTable* CBuildExecution::LoadDataCaptureSegment(const std::string& sIdentifier, const LibMCEnv_uint32 nSegmentIndex)
+{
+	auto pManifest = m_pExecution->RetrieveDataCapture(sIdentifier);
+
+	if (nSegmentIndex >= pManifest->GetSegmentCount())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATACAPTURESEGMENTINDEX, "invalid data capture segment index: " + std::to_string(nSegmentIndex));
+
+	std::string sStreamUUID;
+	uint64_t nFirstRow = 0;
+	uint64_t nRowCount = 0;
+	uint64_t nSizeInBytes = 0;
+	bool bIsPurged = false;
+	pManifest->GetSegmentInformation(nSegmentIndex, sStreamUUID, nFirstRow, nRowCount, nSizeInBytes, bIsPurged);
+
+	if (bIsPurged)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED, "data capture segment has been deleted by retention: " + std::to_string(nSegmentIndex));
+
+	auto pStorage = m_pDataModel->CreateStorage();
+	auto pStorageStream = pStorage->RetrieveStream(sStreamUUID);
+
+	auto pStreamReader = std::make_unique<CStreamReader>(pStorage, pStorageStream);
+	return CDataTable::makeFromStream(pStreamReader.get(), m_pToolpathHandler);
+}
+
+IDataTableReader* CBuildExecution::OpenDataCaptureReader(const std::string& sIdentifier)
+{
+	auto pManifest = m_pExecution->RetrieveDataCapture(sIdentifier);
+	return CDataTableReader::makeFromManifest(m_pDataModel, pManifest, m_pToolpathHandler);
 }

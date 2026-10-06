@@ -1401,6 +1401,15 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_hascolumn(LibMCEnv_DataTable
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getrowcount(LibMCEnv_DataTable pDataTable, LibMCEnv_uint32 * pRowCount);
 
 /**
+* Returns the current row count as 64 bit value. GetRowCount is kept for ABI compatibility and truncates large row counts.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getrowcount64(LibMCEnv_DataTable pDataTable, LibMCEnv_uint64 * pRowCount);
+
+/**
 * Returns the current column count.
 *
 * @param[in] pDataTable - DataTable instance.
@@ -1517,6 +1526,42 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getuint32columnvalues(LibMCE
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getuint64columnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer);
 
 /**
+* Returns the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - single  buffer of Value array of a column.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getfloatcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer);
+
+/**
+* Returns the values of a bool column as bytes (0 = false, 1 = true). Will fail if column does not exist or type is not bool.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - uint8  buffer of Value array of a column. Each entry is 0 or 1.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_getboolcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer);
+
+/**
+* Returns the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - uint64  buffer of Value array of a column. Timestamps in microseconds.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_gettimestampcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer);
+
+/**
 * Sets the values of a double column. Will fail if column does not exist or type is not double.
 *
 * @param[in] pDataTable - DataTable instance.
@@ -1570,6 +1615,39 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_setuint32columnvalues(LibMCE
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_setuint64columnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer);
+
+/**
+* Sets the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - single buffer of New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_setfloatcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer);
+
+/**
+* Sets the values of a bool column from bytes (0 = false, nonzero = true). Will fail if column does not exist or type is not bool.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint8 buffer of New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_setboolcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer);
+
+/**
+* Sets the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+*
+* @param[in] pDataTable - DataTable instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint64 buffer of New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_settimestampcolumnvalues(LibMCEnv_DataTable pDataTable, const char * pIdentifier, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer);
 
 /**
 * Creates a Write Option.
@@ -1636,6 +1714,690 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_createscatterplotoptions(Lib
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatable_calculatescatterplot(LibMCEnv_DataTable pDataTable, LibMCEnv_DataTableScatterPlotOptions pScatterPlotOptions, LibMCEnv_ScatterPlot * pScatterPlot);
+
+/*************************************************************************************************************************
+ Class definition for DataCaptureOptions
+**************************************************************************************************************************/
+
+/**
+* Sets the number of rows a chunk can hold. Default is 65536.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] nChunkRowCount - Rows per chunk. MUST be between 1 and 16777216.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setchunkrowcount(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint32 nChunkRowCount);
+
+/**
+* Returns the number of rows a chunk can hold.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pChunkRowCount - Rows per chunk.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getchunkrowcount(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint32 * pChunkRowCount);
+
+/**
+* Sets the size at which the capture rolls over into a new segment stream. Default is 1 GB.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] nSegmentSizeInBytes - Maximum segment size in bytes. 0 means the capture never rolls over. A segment always holds at least one chunk.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setsegmentsizeinbytes(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint64 nSegmentSizeInBytes);
+
+/**
+* Returns the size at which the capture rolls over into a new segment stream.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pSegmentSizeInBytes - Maximum segment size in bytes. 0 means the capture never rolls over.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getsegmentsizeinbytes(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint64 * pSegmentSizeInBytes);
+
+/**
+* Sets the maximum number of committed chunks that may wait for the writer thread. Default is 16.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] nMaxQueuedChunks - Queue depth. MUST be between 1 and 1024.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setmaxqueuedchunks(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint32 nMaxQueuedChunks);
+
+/**
+* Returns the maximum number of committed chunks that may wait for the writer thread.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pMaxQueuedChunks - Queue depth.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getmaxqueuedchunks(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint32 * pMaxQueuedChunks);
+
+/**
+* Sets what happens when the producer is faster than the disk. Default is Block.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] eBackpressureMode - Block waits for the writer, DropOldest discards the oldest queued chunk, Fail raises an error.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setbackpressuremode(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv::eDataCaptureBackpressureMode eBackpressureMode);
+
+/**
+* Returns what happens when the producer is faster than the disk.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pBackpressureMode - Backpressure mode.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getbackpressuremode(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv::eDataCaptureBackpressureMode * pBackpressureMode);
+
+/**
+* Sets the retention limit for all data capture segments stored on this machine. When it is exceeded after a segment has been finalized, the oldest stored segments are deleted first. Default is 0.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] nStorageLimitInBytes - Total size limit in bytes. 0 disables retention.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setstoragelimitinbytes(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint64 nStorageLimitInBytes);
+
+/**
+* Returns the retention limit for all data capture segments stored on this machine.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pStorageLimitInBytes - Total size limit in bytes. 0 means retention is disabled.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getstoragelimitinbytes(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv_uint64 * pStorageLimitInBytes);
+
+/**
+* Sets the codec the pages of the capture are compressed with. Default is LZ4. A page is stored uncompressed if the codec does not make it smaller.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] eCompression - None, LZ4 or Deflate. Deflate is meant for cold data, it costs considerably more processing time than LZ4.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setcompression(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv::eDataCaptureCompression eCompression);
+
+/**
+* Returns the codec the pages of the capture are compressed with.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[out] pCompression - Compression codec.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_getcompression(LibMCEnv_DataCaptureOptions pDataCaptureOptions, LibMCEnv::eDataCaptureCompression * pCompression);
+
+/**
+* Sets the encoding of a column. Default is Automatic, which uses Delta for integer and timestamp columns, BitPack for bool columns and Plain for float and double columns. The column MUST exist when the capture starts recording and the encoding MUST fit its type.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] pColumnIdentifier - Identifier of the column.
+* @param[in] eEncoding - Automatic, Plain, Delta or BitPack.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setcolumnencoding(LibMCEnv_DataCaptureOptions pDataCaptureOptions, const char * pColumnIdentifier, LibMCEnv::eDataCaptureEncoding eEncoding);
+
+/**
+* Opts a double column into lossy storage: values are stored as integer multiples of the step with Delta encoding. Columns that are not quantised stay bit-exact. The step is recorded in the capture and the column MUST be a double column.
+*
+* @param[in] pDataCaptureOptions - DataCaptureOptions instance.
+* @param[in] pColumnIdentifier - Identifier of the column.
+* @param[in] dStep - Quantisation step. MUST be positive. 0 removes the quantisation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacaptureoptions_setdoublequantization(LibMCEnv_DataCaptureOptions pDataCaptureOptions, const char * pColumnIdentifier, LibMCEnv_double dStep);
+
+/*************************************************************************************************************************
+ Class definition for DataCaptureChunk
+**************************************************************************************************************************/
+
+/**
+* Returns the number of rows the chunk can hold.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[out] pCapacity - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_getcapacity(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 * pCapacity);
+
+/**
+* Returns the number of rows in the chunk. This is the row count of the longest column.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_getrowcount(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 * pRowCount);
+
+/**
+* Returns if the chunk has reached its capacity.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[out] pFull - Returns true if no more rows fit into the chunk.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_isfull(LibMCEnv_DataCaptureChunk pDataCaptureChunk, bool * pFull);
+
+/**
+* Sets all rows of a double column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - double buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setdoublecolumnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_double * pValuesBuffer);
+
+/**
+* Sets all rows of an int32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - int32 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setint32columnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_int32 * pValuesBuffer);
+
+/**
+* Sets all rows of an uint32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint32 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setuint32columnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint32 * pValuesBuffer);
+
+/**
+* Sets all rows of an int64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - int64 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setint64columnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_int64 * pValuesBuffer);
+
+/**
+* Sets all rows of an uint64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint64 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setuint64columnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer);
+
+/**
+* Sets all rows of a float (32 bit) column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - single buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setfloatcolumnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer);
+
+/**
+* Sets all rows of a bool column in this chunk from bytes (0 = false, nonzero = true). Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint8 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setboolcolumnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer);
+
+/**
+* Sets all rows of a timestamp column in this chunk in microseconds. Fails if the column type does not match or the capacity is exceeded.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[in] pValuesBuffer - uint64 buffer of Values of the column. All columns of a chunk MUST have the same length on commit.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_settimestampcolumnvalues(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer);
+
+/**
+* Starts a new row at the end of the chunk. This is the convenience path for low-rate producers. Fails if the chunk is full, a row is open or the columns have different row counts.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_beginrow(LibMCEnv_DataCaptureChunk pDataCaptureChunk);
+
+/**
+* Sets a value of the open row. The column MUST be of type double or float.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] dValue - Value to set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setrowdoublevalue(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_double dValue);
+
+/**
+* Sets a value of the open row. The column MUST be of an integer, bool or timestamp type and the value MUST be in its range.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nValue - Value to set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_setrowintegervalue(LibMCEnv_DataCaptureChunk pDataCaptureChunk, LibMCEnv_uint32 nColumnIndex, LibMCEnv_int64 nValue);
+
+/**
+* Finishes the open row. Columns that have not been set in this row are zero.
+*
+* @param[in] pDataCaptureChunk - DataCaptureChunk instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapturechunk_endrow(LibMCEnv_DataCaptureChunk pDataCaptureChunk);
+
+/*************************************************************************************************************************
+ Class definition for DataCapture
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID of the capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID of the capture., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getuuid(LibMCEnv_DataCapture pDataCapture, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
+* Returns the identifier of the capture. It is unique within the build execution.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pIdentifierBuffer -  buffer of Identifier of the capture., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getidentifier(LibMCEnv_DataCapture pDataCapture, const LibMCEnv_uint32 nIdentifierBufferSize, LibMCEnv_uint32* pIdentifierNeededChars, char * pIdentifierBuffer);
+
+/**
+* Returns the human readable name of the capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name of the capture., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getname(LibMCEnv_DataCapture pDataCapture, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the status of the capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pStatus - Status of the capture.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getstatus(LibMCEnv_DataCapture pDataCapture, LibMCEnv::eDataCaptureStatus * pStatus);
+
+/**
+* Adds a column to the capture. The schema is frozen with the first call to BeginChunk.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] pIdentifier - Identifier of the column. MUST be unique, alphanumeric and not empty.
+* @param[in] pDescription - Description of the column.
+* @param[in] eColumnType - Data type of the column.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_addcolumn(LibMCEnv_DataCapture pDataCapture, const char * pIdentifier, const char * pDescription, LibMCEnv::eDataTableColumnType eColumnType);
+
+/**
+* Returns the number of columns of the capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pColumnCount - Number of columns.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getcolumncount(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint32 * pColumnCount);
+
+/**
+* Borrows an empty chunk from the chunk pool. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pChunkInstance - Chunk to fill.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_beginchunk(LibMCEnv_DataCapture pDataCapture, LibMCEnv_DataCaptureChunk * pChunkInstance);
+
+/**
+* Hands a filled chunk over to the writer thread and returns immediately. All columns MUST have the same row count. The chunk instance MUST NOT be used afterwards.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] pChunkInstance - Chunk that has been returned by BeginChunk.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_commitchunk(LibMCEnv_DataCapture pDataCapture, LibMCEnv_DataCaptureChunk pChunkInstance);
+
+/**
+* Blocks until all committed chunks have been written to storage.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_flush(LibMCEnv_DataCapture pDataCapture);
+
+/**
+* Returns the number of rows that have been committed and not dropped.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getcapturedrowcount(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint64 * pRowCount);
+
+/**
+* Returns the number of bytes that have been written to storage so far.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pSizeInBytes - Size in bytes.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getstoragesizeinbytes(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint64 * pSizeInBytes);
+
+/**
+* Returns the number of segment streams that have been opened so far.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pSegmentCount - Number of segments.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getsegmentcount(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint32 * pSegmentCount);
+
+/**
+* Returns the number of committed chunks that are waiting for the writer thread.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pQueuedChunkCount - Number of queued chunks.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getqueuedchunkcount(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint32 * pQueuedChunkCount);
+
+/**
+* Returns the number of rows that have been discarded by the DropOldest backpressure mode.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pDroppedRowCount - Number of dropped rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_getdroppedrowcount(LibMCEnv_DataCapture pDataCapture, LibMCEnv_uint64 * pDroppedRowCount);
+
+/**
+* Writes all committed chunks, closes the last segment and marks the capture as finished. Fails if a chunk is uncommitted.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nCaptureUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pCaptureUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pCaptureUUIDBuffer -  buffer of UUID of the capture., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_finish(LibMCEnv_DataCapture pDataCapture, const LibMCEnv_uint32 nCaptureUUIDBufferSize, LibMCEnv_uint32* pCaptureUUIDNeededChars, char * pCaptureUUIDBuffer);
+
+/**
+* Stops the capture and deletes all its segments.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_abort(LibMCEnv_DataCapture pDataCapture);
+
+/**
+* Adds one column to the capture for every column of a data table, with the same identifier, description and type and in the same order. Fails if the schema is frozen or an identifier already exists.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] pDataTable - Data table whose columns describe the schema. Its rows are not read.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_addcolumnsfromdatatable(LibMCEnv_DataCapture pDataCapture, LibMCEnv_DataTable pDataTable);
+
+/**
+* Appends all rows of a data table to the capture and splits them into chunks. Every column of the capture MUST exist in the table with the same identifier and type, and these columns MUST have the same row count. Further columns of the table are ignored. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies. Fails if a chunk is uncommitted.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] pDataTable - Data table that holds the rows to append.
+* @param[out] pRowCount - Number of rows that have been appended.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datacapture_appenddatatable(LibMCEnv_DataCapture pDataCapture, LibMCEnv_DataTable pDataTable, LibMCEnv_uint64 * pRowCount);
+
+/*************************************************************************************************************************
+ Class definition for DataTableReader
+**************************************************************************************************************************/
+
+/**
+* Returns the number of rows of the capture, including rows in segments that have been deleted by retention.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getrowcount(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 * pRowCount);
+
+/**
+* Returns the index of the first row that is still stored. Rows before it have been deleted by retention.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[out] pFirstAvailableRow - Row index. Equal to the row count if nothing is stored.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getfirstavailablerow(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 * pFirstAvailableRow);
+
+/**
+* Returns the number of columns.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[out] pColumnCount - Number of columns.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getcolumncount(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint32 * pColumnCount);
+
+/**
+* Returns if a column exists.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[out] pColumnExists - Returns if the column exists.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_hascolumn(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, bool * pColumnExists);
+
+/**
+* Returns the schema information of a column. Fails if the index is out of bounds.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] nColumnIndex - Index of column. 0-based.
+* @param[in] nIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pIdentifierBuffer -  buffer of Identifier of the column., may be NULL
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description of the column., may be NULL
+* @param[out] pColumnType - Data type of the column.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getcolumninformation(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint32 nIdentifierBufferSize, LibMCEnv_uint32* pIdentifierNeededChars, char * pIdentifierBuffer, const LibMCEnv_uint32 nDescriptionBufferSize, LibMCEnv_uint32* pDescriptionNeededChars, char * pDescriptionBuffer, LibMCEnv::eDataTableColumnType * pColumnType);
+
+/**
+* Returns the quantisation step of a column. Values of a quantised column are exact to half a step.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[out] pStep - Quantisation step. 0 if the column is not quantised.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getcolumnquantization(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_double * pStep);
+
+/**
+* Returns the number of segments of the capture, including deleted ones.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[out] pSegmentCount - Number of segments.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getsegmentcount(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint32 * pSegmentCount);
+
+/**
+* Returns the row range and the size of a segment. Fails if the index is out of bounds.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] nSegmentIndex - Index of the segment. 0-based.
+* @param[out] pFirstRow - Index of the first row of the segment.
+* @param[out] pRowCount - Number of rows in the segment.
+* @param[out] pSizeInBytes - Size of the segment stream in bytes.
+* @param[out] pIsAvailable - Returns false if the segment has been deleted by retention.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getsegmentinformation(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 * pFirstRow, LibMCEnv_uint64 * pRowCount, LibMCEnv_uint64 * pSizeInBytes, bool * pIsAvailable);
+
+/**
+* Returns the number of chunks of the capture, including chunks in deleted segments.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[out] pChunkCount - Number of chunks.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getchunkcount(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 * pChunkCount);
+
+/**
+* Returns the position of a chunk. Fails if the index is out of bounds.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] nChunkIndex - Index of the chunk. 0-based.
+* @param[out] pSegmentIndex - Index of the segment that holds the chunk.
+* @param[out] pFirstRow - Index of the first row of the chunk. For a chunk in a deleted segment this is the first row of the segment.
+* @param[out] pRowCount - Number of rows in the chunk. 0 for a chunk in a deleted segment.
+* @param[out] pIsAvailable - Returns false if the chunk has been deleted by retention.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getchunkinformation(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 nChunkIndex, LibMCEnv_uint32 * pSegmentIndex, LibMCEnv_uint64 * pFirstRow, LibMCEnv_uint64 * pRowCount, bool * pIsAvailable);
+
+/**
+* Returns the minimum and maximum of a column in a chunk from the page directory, without reading the chunk.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] nChunkIndex - Index of the chunk. 0-based.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[out] pMinValue - Minimum value of the column in the chunk.
+* @param[out] pMaxValue - Maximum value of the column in the chunk.
+* @param[out] pHasStatistics - Returns false if the chunk has been deleted or holds no comparable value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_getchunkstatistics(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 nChunkIndex, const char * pIdentifier, LibMCEnv_double * pMinValue, LibMCEnv_double * pMaxValue, bool * pHasStatistics);
+
+/**
+* Reads a row range of a column as doubles. Works for every column type. Only the pages that overlap the range are read.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nFromRow - Index of the first row to read.
+* @param[in] nRowCount - Number of rows to read.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - double  buffer of Values of the row range.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_readdoublecolumnrange(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_double * pValuesBuffer);
+
+/**
+* Reads a row range of a float or double column as floats.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nFromRow - Index of the first row to read.
+* @param[in] nRowCount - Number of rows to read.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - single  buffer of Values of the row range.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_readfloatcolumnrange(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer);
+
+/**
+* Reads a row range of an integer, bool or timestamp column as 64 bit integers.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nFromRow - Index of the first row to read.
+* @param[in] nRowCount - Number of rows to read.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - int64  buffer of Values of the row range.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_readint64columnrange(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_int64 * pValuesBuffer);
+
+/**
+* Reads a row range of a bool column as bytes (0 = false, 1 = true).
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nFromRow - Index of the first row to read.
+* @param[in] nRowCount - Number of rows to read.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - uint8  buffer of Values of the row range.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_readboolcolumnrange(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer);
+
+/**
+* Reduces a row range of a column to at most TargetPoints buckets without materialising the range. Stride returns the first value of each bucket, Average the mean and MinMax the minimum followed by the maximum of each bucket, which preserves the envelope of the signal.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] nFromRow - Index of the first row of the range.
+* @param[in] nRowCount - Number of rows of the range.
+* @param[in] nTargetPoints - Maximum number of buckets. MUST be positive.
+* @param[in] eMode - Stride, MinMax or Average.
+* @param[in] nValuesBufferSize - Number of elements in buffer
+* @param[out] pValuesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pValuesBuffer - double  buffer of One value per bucket, or two values per bucket in MinMax mode. The number of buckets is the smaller of TargetPoints and RowCount.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_readcolumndownsampled(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, LibMCEnv_uint32 nTargetPoints, LibMCEnv::eDataTableDownsampleMode eMode, const LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_double * pValuesBuffer);
+
+/**
+* Finds the chunks whose value range of a column overlaps a given range. Only the page directory is used, no chunk is read.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] dMinValue - Lower bound of the value range.
+* @param[in] dMaxValue - Upper bound of the value range.
+* @param[in] nChunkIndicesBufferSize - Number of elements in buffer
+* @param[out] pChunkIndicesNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pChunkIndicesBuffer - uint64  buffer of Indices of the chunks that may hold a value in the range.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_findchunksinvaluerange(LibMCEnv_DataTableReader pDataTableReader, const char * pIdentifier, LibMCEnv_double dMinValue, LibMCEnv_double dMaxValue, const LibMCEnv_uint64 nChunkIndicesBufferSize, LibMCEnv_uint64* pChunkIndicesNeededCount, LibMCEnv_uint64 * pChunkIndicesBuffer);
+
+/**
+* Materialises a row range as an ordinary in-memory data table.
+*
+* @param[in] pDataTableReader - DataTableReader instance.
+* @param[in] nFromRow - Index of the first row of the range.
+* @param[in] nRowCount - Number of rows of the range.
+* @param[in] pColumnIdentifiers - Comma separated identifiers of the columns to extract. An empty string extracts all columns.
+* @param[out] pDataTableInstance - Data table instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_datatablereader_extractdatatable(LibMCEnv_DataTableReader pDataTableReader, LibMCEnv_uint64 nFromRow, LibMCEnv_uint64 nRowCount, const char * pColumnIdentifiers, LibMCEnv_DataTable * pDataTableInstance);
 
 /*************************************************************************************************************************
  Class definition for DataSeries
@@ -4384,6 +5146,79 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_getmetadatastring(LibMC
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_loadattachedjournal(LibMCEnv_BuildExecution pBuildExecution, LibMCEnv_uint32 nCacheMemoryQuotaInMegabytes, LibMCEnv_JournalHandler * pJournalHandler);
+
+/**
+* Creates an options object for a data capture with default values.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[out] pOptions - Data capture options instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_createdatacaptureoptions(LibMCEnv_BuildExecution pBuildExecution, LibMCEnv_DataCaptureOptions * pOptions);
+
+/**
+* Creates a streaming data capture in this build execution. The execution MUST be in process.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Unique identifier of the capture in this execution. Fails if the identifier already exists or is invalid.
+* @param[in] pName - Human readable name of the capture.
+* @param[in] pOptions - Data capture options. Defaults are used if not given.
+* @param[in] pUserUUID - User UUID of the user that this data comes from. Empty string means no user attached.
+* @param[out] pDataCaptureInstance - Data capture instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_createdatacapture(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, const char * pName, LibMCEnv_DataCaptureOptions pOptions, const char * pUserUUID, LibMCEnv_DataCapture * pDataCaptureInstance);
+
+/**
+* Returns if the execution has a data capture with a certain identifier.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pCaptureExists - Returns true if the capture exists.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_hasdatacapture(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, bool * pCaptureExists);
+
+/**
+* Returns the number of rows of a data capture that have been stored in segments. Fails if the capture does not exist.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_getdatacapturerowcount(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, LibMCEnv_uint64 * pRowCount);
+
+/**
+* Returns the number of stored segments of a data capture. Fails if the capture does not exist.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pSegmentCount - Number of segments.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_getdatacapturesegmentcount(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, LibMCEnv_uint32 * pSegmentCount);
+
+/**
+* Loads one segment of a data capture as in-memory data table. Fails if the capture or the segment does not exist or the segment has been deleted by retention.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[in] nSegmentIndex - Index of the segment. 0-based.
+* @param[out] pDataTableInstance - Loaded data table instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_loaddatacapturesegment(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_DataTable * pDataTableInstance);
+
+/**
+* Opens a reader on the stored segments of a data capture. Fails if the capture does not exist.
+*
+* @param[in] pBuildExecution - BuildExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pReaderInstance - Reader instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_buildexecution_opendatacapturereader(LibMCEnv_BuildExecution pBuildExecution, const char * pIdentifier, LibMCEnv_DataTableReader * pReaderInstance);
 
 /*************************************************************************************************************************
  Class definition for BuildExecutionIterator

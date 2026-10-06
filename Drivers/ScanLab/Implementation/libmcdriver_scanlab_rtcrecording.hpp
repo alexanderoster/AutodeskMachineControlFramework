@@ -91,6 +91,12 @@ public:
 
 	void ExecuteListWithRecording() override;
 
+	void StartListWithRecording() override;
+
+	bool ReadRecordedData() override;
+
+	void DiscardRecords() override;
+
 	void AddRecordsToDataTable(const std::string & sChannelName, LibMCEnv::PDataTable pDataTable, const std::string & sColumnIdentifier, const std::string & sColumnDescription) override;
 
 	void AddScaledRecordsToDataTable(const std::string & sChannelName, LibMCEnv::PDataTable pDataTable, const std::string & sColumnIdentifier, const std::string & sColumnDescription, const LibMCDriver_ScanLab_double dScaleFactor, const LibMCDriver_ScanLab_double dOffset) override;

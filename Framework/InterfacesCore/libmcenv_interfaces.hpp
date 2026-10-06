@@ -76,6 +76,10 @@ class IScatterPlotDataChannel;
 class IScatterPlotDataChannelIterator;
 class IDataTableScatterPlotOptions;
 class IDataTable;
+class IDataCaptureOptions;
+class IDataCaptureChunk;
+class IDataCapture;
+class IDataTableReader;
 class IDataSeries;
 class IDateTimeDifference;
 class IDateTime;
@@ -1493,6 +1497,12 @@ public:
 	virtual LibMCEnv_uint32 GetRowCount() = 0;
 
 	/**
+	* IDataTable::GetRowCount64 - Returns the current row count as 64 bit value. GetRowCount is kept for ABI compatibility and truncates large row counts.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint64 GetRowCount64() = 0;
+
+	/**
 	* IDataTable::GetColumnCount - Returns the current column count.
 	* @return Number of columns.
 	*/
@@ -1573,6 +1583,33 @@ public:
 	virtual void GetUint64ColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer) = 0;
 
 	/**
+	* IDataTable::GetFloatColumnValues - Returns the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - single buffer of Value array of a column.
+	*/
+	virtual void GetFloatColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer) = 0;
+
+	/**
+	* IDataTable::GetBoolColumnValues - Returns the values of a bool column as bytes (0 = false, 1 = true). Will fail if column does not exist or type is not bool.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - uint8 buffer of Value array of a column. Each entry is 0 or 1.
+	*/
+	virtual void GetBoolColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer) = 0;
+
+	/**
+	* IDataTable::GetTimestampColumnValues - Returns the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - uint64 buffer of Value array of a column. Timestamps in microseconds.
+	*/
+	virtual void GetTimestampColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer) = 0;
+
+	/**
 	* IDataTable::SetDoubleColumnValues - Sets the values of a double column. Will fail if column does not exist or type is not double.
 	* @param[in] sIdentifier - Identifier of the column.
 	* @param[in] nValuesBufferSize - Number of elements in buffer
@@ -1611,6 +1648,30 @@ public:
 	* @param[in] pValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
 	*/
 	virtual void SetUint64ColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) = 0;
+
+	/**
+	* IDataTable::SetFloatColumnValues - Sets the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	virtual void SetFloatColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer) = 0;
+
+	/**
+	* IDataTable::SetBoolColumnValues - Sets the values of a bool column from bytes (0 = false, nonzero = true). Will fail if column does not exist or type is not bool.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	virtual void SetBoolColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer) = 0;
+
+	/**
+	* IDataTable::SetTimestampColumnValues - Sets the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	virtual void SetTimestampColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) = 0;
 
 	/**
 	* IDataTable::CreateWriteOptions - Creates a Write Option.
@@ -1660,6 +1721,511 @@ public:
 };
 
 typedef IBaseSharedPtr<IDataTable> PIDataTable;
+
+
+/*************************************************************************************************************************
+ Class interface for DataCaptureOptions 
+**************************************************************************************************************************/
+
+class IDataCaptureOptions : public virtual IBase {
+public:
+	/**
+	* IDataCaptureOptions::SetChunkRowCount - Sets the number of rows a chunk can hold. Default is 65536.
+	* @param[in] nChunkRowCount - Rows per chunk. MUST be between 1 and 16777216.
+	*/
+	virtual void SetChunkRowCount(const LibMCEnv_uint32 nChunkRowCount) = 0;
+
+	/**
+	* IDataCaptureOptions::GetChunkRowCount - Returns the number of rows a chunk can hold.
+	* @return Rows per chunk.
+	*/
+	virtual LibMCEnv_uint32 GetChunkRowCount() = 0;
+
+	/**
+	* IDataCaptureOptions::SetSegmentSizeInBytes - Sets the size at which the capture rolls over into a new segment stream. Default is 1 GB.
+	* @param[in] nSegmentSizeInBytes - Maximum segment size in bytes. 0 means the capture never rolls over. A segment always holds at least one chunk.
+	*/
+	virtual void SetSegmentSizeInBytes(const LibMCEnv_uint64 nSegmentSizeInBytes) = 0;
+
+	/**
+	* IDataCaptureOptions::GetSegmentSizeInBytes - Returns the size at which the capture rolls over into a new segment stream.
+	* @return Maximum segment size in bytes. 0 means the capture never rolls over.
+	*/
+	virtual LibMCEnv_uint64 GetSegmentSizeInBytes() = 0;
+
+	/**
+	* IDataCaptureOptions::SetMaxQueuedChunks - Sets the maximum number of committed chunks that may wait for the writer thread. Default is 16.
+	* @param[in] nMaxQueuedChunks - Queue depth. MUST be between 1 and 1024.
+	*/
+	virtual void SetMaxQueuedChunks(const LibMCEnv_uint32 nMaxQueuedChunks) = 0;
+
+	/**
+	* IDataCaptureOptions::GetMaxQueuedChunks - Returns the maximum number of committed chunks that may wait for the writer thread.
+	* @return Queue depth.
+	*/
+	virtual LibMCEnv_uint32 GetMaxQueuedChunks() = 0;
+
+	/**
+	* IDataCaptureOptions::SetBackpressureMode - Sets what happens when the producer is faster than the disk. Default is Block.
+	* @param[in] eBackpressureMode - Block waits for the writer, DropOldest discards the oldest queued chunk, Fail raises an error.
+	*/
+	virtual void SetBackpressureMode(const LibMCEnv::eDataCaptureBackpressureMode eBackpressureMode) = 0;
+
+	/**
+	* IDataCaptureOptions::GetBackpressureMode - Returns what happens when the producer is faster than the disk.
+	* @return Backpressure mode.
+	*/
+	virtual LibMCEnv::eDataCaptureBackpressureMode GetBackpressureMode() = 0;
+
+	/**
+	* IDataCaptureOptions::SetStorageLimitInBytes - Sets the retention limit for all data capture segments stored on this machine. When it is exceeded after a segment has been finalized, the oldest stored segments are deleted first. Default is 0.
+	* @param[in] nStorageLimitInBytes - Total size limit in bytes. 0 disables retention.
+	*/
+	virtual void SetStorageLimitInBytes(const LibMCEnv_uint64 nStorageLimitInBytes) = 0;
+
+	/**
+	* IDataCaptureOptions::GetStorageLimitInBytes - Returns the retention limit for all data capture segments stored on this machine.
+	* @return Total size limit in bytes. 0 means retention is disabled.
+	*/
+	virtual LibMCEnv_uint64 GetStorageLimitInBytes() = 0;
+
+	/**
+	* IDataCaptureOptions::SetCompression - Sets the codec the pages of the capture are compressed with. Default is LZ4. A page is stored uncompressed if the codec does not make it smaller.
+	* @param[in] eCompression - None, LZ4 or Deflate. Deflate is meant for cold data, it costs considerably more processing time than LZ4.
+	*/
+	virtual void SetCompression(const LibMCEnv::eDataCaptureCompression eCompression) = 0;
+
+	/**
+	* IDataCaptureOptions::GetCompression - Returns the codec the pages of the capture are compressed with.
+	* @return Compression codec.
+	*/
+	virtual LibMCEnv::eDataCaptureCompression GetCompression() = 0;
+
+	/**
+	* IDataCaptureOptions::SetColumnEncoding - Sets the encoding of a column. Default is Automatic, which uses Delta for integer and timestamp columns, BitPack for bool columns and Plain for float and double columns. The column MUST exist when the capture starts recording and the encoding MUST fit its type.
+	* @param[in] sColumnIdentifier - Identifier of the column.
+	* @param[in] eEncoding - Automatic, Plain, Delta or BitPack.
+	*/
+	virtual void SetColumnEncoding(const std::string & sColumnIdentifier, const LibMCEnv::eDataCaptureEncoding eEncoding) = 0;
+
+	/**
+	* IDataCaptureOptions::SetDoubleQuantization - Opts a double column into lossy storage: values are stored as integer multiples of the step with Delta encoding. Columns that are not quantised stay bit-exact. The step is recorded in the capture and the column MUST be a double column.
+	* @param[in] sColumnIdentifier - Identifier of the column.
+	* @param[in] dStep - Quantisation step. MUST be positive. 0 removes the quantisation.
+	*/
+	virtual void SetDoubleQuantization(const std::string & sColumnIdentifier, const LibMCEnv_double dStep) = 0;
+
+};
+
+typedef IBaseSharedPtr<IDataCaptureOptions> PIDataCaptureOptions;
+
+
+/*************************************************************************************************************************
+ Class interface for DataCaptureChunk 
+**************************************************************************************************************************/
+
+class IDataCaptureChunk : public virtual IBase {
+public:
+	/**
+	* IDataCaptureChunk::GetCapacity - Returns the number of rows the chunk can hold.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint32 GetCapacity() = 0;
+
+	/**
+	* IDataCaptureChunk::GetRowCount - Returns the number of rows in the chunk. This is the row count of the longest column.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint32 GetRowCount() = 0;
+
+	/**
+	* IDataCaptureChunk::IsFull - Returns if the chunk has reached its capacity.
+	* @return Returns true if no more rows fit into the chunk.
+	*/
+	virtual bool IsFull() = 0;
+
+	/**
+	* IDataCaptureChunk::SetDoubleColumnValues - Sets all rows of a double column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetDoubleColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_double * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetInt32ColumnValues - Sets all rows of an int32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetInt32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_int32 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetUint32ColumnValues - Sets all rows of an uint32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetUint32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint32 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetInt64ColumnValues - Sets all rows of an int64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetInt64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_int64 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetUint64ColumnValues - Sets all rows of an uint64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetUint64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetFloatColumnValues - Sets all rows of a float (32 bit) column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetFloatColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetBoolColumnValues - Sets all rows of a bool column in this chunk from bytes (0 = false, nonzero = true). Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetBoolColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::SetTimestampColumnValues - Sets all rows of a timestamp column in this chunk in microseconds. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[in] pValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	virtual void SetTimestampColumnValues(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) = 0;
+
+	/**
+	* IDataCaptureChunk::BeginRow - Starts a new row at the end of the chunk. This is the convenience path for low-rate producers. Fails if the chunk is full, a row is open or the columns have different row counts.
+	*/
+	virtual void BeginRow() = 0;
+
+	/**
+	* IDataCaptureChunk::SetRowDoubleValue - Sets a value of the open row. The column MUST be of type double or float.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] dValue - Value to set.
+	*/
+	virtual void SetRowDoubleValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_double dValue) = 0;
+
+	/**
+	* IDataCaptureChunk::SetRowIntegerValue - Sets a value of the open row. The column MUST be of an integer, bool or timestamp type and the value MUST be in its range.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValue - Value to set.
+	*/
+	virtual void SetRowIntegerValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_int64 nValue) = 0;
+
+	/**
+	* IDataCaptureChunk::EndRow - Finishes the open row. Columns that have not been set in this row are zero.
+	*/
+	virtual void EndRow() = 0;
+
+};
+
+typedef IBaseSharedPtr<IDataCaptureChunk> PIDataCaptureChunk;
+
+
+/*************************************************************************************************************************
+ Class interface for DataCapture 
+**************************************************************************************************************************/
+
+class IDataCapture : public virtual IBase {
+public:
+	/**
+	* IDataCapture::GetUUID - Returns the UUID of the capture.
+	* @return UUID of the capture.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IDataCapture::GetIdentifier - Returns the identifier of the capture. It is unique within the build execution.
+	* @return Identifier of the capture.
+	*/
+	virtual std::string GetIdentifier() = 0;
+
+	/**
+	* IDataCapture::GetName - Returns the human readable name of the capture.
+	* @return Name of the capture.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IDataCapture::GetStatus - Returns the status of the capture.
+	* @return Status of the capture.
+	*/
+	virtual LibMCEnv::eDataCaptureStatus GetStatus() = 0;
+
+	/**
+	* IDataCapture::AddColumn - Adds a column to the capture. The schema is frozen with the first call to BeginChunk.
+	* @param[in] sIdentifier - Identifier of the column. MUST be unique, alphanumeric and not empty.
+	* @param[in] sDescription - Description of the column.
+	* @param[in] eColumnType - Data type of the column.
+	*/
+	virtual void AddColumn(const std::string & sIdentifier, const std::string & sDescription, const LibMCEnv::eDataTableColumnType eColumnType) = 0;
+
+	/**
+	* IDataCapture::GetColumnCount - Returns the number of columns of the capture.
+	* @return Number of columns.
+	*/
+	virtual LibMCEnv_uint32 GetColumnCount() = 0;
+
+	/**
+	* IDataCapture::BeginChunk - Borrows an empty chunk from the chunk pool. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies.
+	* @return Chunk to fill.
+	*/
+	virtual IDataCaptureChunk * BeginChunk() = 0;
+
+	/**
+	* IDataCapture::CommitChunk - Hands a filled chunk over to the writer thread and returns immediately. All columns MUST have the same row count. The chunk instance MUST NOT be used afterwards.
+	* @param[in] pChunkInstance - Chunk that has been returned by BeginChunk.
+	*/
+	virtual void CommitChunk(IDataCaptureChunk* pChunkInstance) = 0;
+
+	/**
+	* IDataCapture::Flush - Blocks until all committed chunks have been written to storage.
+	*/
+	virtual void Flush() = 0;
+
+	/**
+	* IDataCapture::GetCapturedRowCount - Returns the number of rows that have been committed and not dropped.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint64 GetCapturedRowCount() = 0;
+
+	/**
+	* IDataCapture::GetStorageSizeInBytes - Returns the number of bytes that have been written to storage so far.
+	* @return Size in bytes.
+	*/
+	virtual LibMCEnv_uint64 GetStorageSizeInBytes() = 0;
+
+	/**
+	* IDataCapture::GetSegmentCount - Returns the number of segment streams that have been opened so far.
+	* @return Number of segments.
+	*/
+	virtual LibMCEnv_uint32 GetSegmentCount() = 0;
+
+	/**
+	* IDataCapture::GetQueuedChunkCount - Returns the number of committed chunks that are waiting for the writer thread.
+	* @return Number of queued chunks.
+	*/
+	virtual LibMCEnv_uint32 GetQueuedChunkCount() = 0;
+
+	/**
+	* IDataCapture::GetDroppedRowCount - Returns the number of rows that have been discarded by the DropOldest backpressure mode.
+	* @return Number of dropped rows.
+	*/
+	virtual LibMCEnv_uint64 GetDroppedRowCount() = 0;
+
+	/**
+	* IDataCapture::Finish - Writes all committed chunks, closes the last segment and marks the capture as finished. Fails if a chunk is uncommitted.
+	* @return UUID of the capture.
+	*/
+	virtual std::string Finish() = 0;
+
+	/**
+	* IDataCapture::Abort - Stops the capture and deletes all its segments.
+	*/
+	virtual void Abort() = 0;
+
+	/**
+	* IDataCapture::AddColumnsFromDataTable - Adds one column to the capture for every column of a data table, with the same identifier, description and type and in the same order. Fails if the schema is frozen or an identifier already exists.
+	* @param[in] pDataTable - Data table whose columns describe the schema. Its rows are not read.
+	*/
+	virtual void AddColumnsFromDataTable(IDataTable* pDataTable) = 0;
+
+	/**
+	* IDataCapture::AppendDataTable - Appends all rows of a data table to the capture and splits them into chunks. Every column of the capture MUST exist in the table with the same identifier and type, and these columns MUST have the same row count. Further columns of the table are ignored. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies. Fails if a chunk is uncommitted.
+	* @param[in] pDataTable - Data table that holds the rows to append.
+	* @return Number of rows that have been appended.
+	*/
+	virtual LibMCEnv_uint64 AppendDataTable(IDataTable* pDataTable) = 0;
+
+};
+
+typedef IBaseSharedPtr<IDataCapture> PIDataCapture;
+
+
+/*************************************************************************************************************************
+ Class interface for DataTableReader 
+**************************************************************************************************************************/
+
+class IDataTableReader : public virtual IBase {
+public:
+	/**
+	* IDataTableReader::GetRowCount - Returns the number of rows of the capture, including rows in segments that have been deleted by retention.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint64 GetRowCount() = 0;
+
+	/**
+	* IDataTableReader::GetFirstAvailableRow - Returns the index of the first row that is still stored. Rows before it have been deleted by retention.
+	* @return Row index. Equal to the row count if nothing is stored.
+	*/
+	virtual LibMCEnv_uint64 GetFirstAvailableRow() = 0;
+
+	/**
+	* IDataTableReader::GetColumnCount - Returns the number of columns.
+	* @return Number of columns.
+	*/
+	virtual LibMCEnv_uint32 GetColumnCount() = 0;
+
+	/**
+	* IDataTableReader::HasColumn - Returns if a column exists.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @return Returns if the column exists.
+	*/
+	virtual bool HasColumn(const std::string & sIdentifier) = 0;
+
+	/**
+	* IDataTableReader::GetColumnInformation - Returns the schema information of a column. Fails if the index is out of bounds.
+	* @param[in] nColumnIndex - Index of column. 0-based.
+	* @param[out] sIdentifier - Identifier of the column.
+	* @param[out] sDescription - Description of the column.
+	* @param[out] eColumnType - Data type of the column.
+	*/
+	virtual void GetColumnInformation(const LibMCEnv_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, LibMCEnv::eDataTableColumnType & eColumnType) = 0;
+
+	/**
+	* IDataTableReader::GetColumnQuantization - Returns the quantisation step of a column. Values of a quantised column are exact to half a step.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @return Quantisation step. 0 if the column is not quantised.
+	*/
+	virtual LibMCEnv_double GetColumnQuantization(const std::string & sIdentifier) = 0;
+
+	/**
+	* IDataTableReader::GetSegmentCount - Returns the number of segments of the capture, including deleted ones.
+	* @return Number of segments.
+	*/
+	virtual LibMCEnv_uint32 GetSegmentCount() = 0;
+
+	/**
+	* IDataTableReader::GetSegmentInformation - Returns the row range and the size of a segment. Fails if the index is out of bounds.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[out] nFirstRow - Index of the first row of the segment.
+	* @param[out] nRowCount - Number of rows in the segment.
+	* @param[out] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[out] bIsAvailable - Returns false if the segment has been deleted by retention.
+	*/
+	virtual void GetSegmentInformation(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, LibMCEnv_uint64 & nSizeInBytes, bool & bIsAvailable) = 0;
+
+	/**
+	* IDataTableReader::GetChunkCount - Returns the number of chunks of the capture, including chunks in deleted segments.
+	* @return Number of chunks.
+	*/
+	virtual LibMCEnv_uint64 GetChunkCount() = 0;
+
+	/**
+	* IDataTableReader::GetChunkInformation - Returns the position of a chunk. Fails if the index is out of bounds.
+	* @param[in] nChunkIndex - Index of the chunk. 0-based.
+	* @param[out] nSegmentIndex - Index of the segment that holds the chunk.
+	* @param[out] nFirstRow - Index of the first row of the chunk. For a chunk in a deleted segment this is the first row of the segment.
+	* @param[out] nRowCount - Number of rows in the chunk. 0 for a chunk in a deleted segment.
+	* @param[out] bIsAvailable - Returns false if the chunk has been deleted by retention.
+	*/
+	virtual void GetChunkInformation(const LibMCEnv_uint64 nChunkIndex, LibMCEnv_uint32 & nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, bool & bIsAvailable) = 0;
+
+	/**
+	* IDataTableReader::GetChunkStatistics - Returns the minimum and maximum of a column in a chunk from the page directory, without reading the chunk.
+	* @param[in] nChunkIndex - Index of the chunk. 0-based.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[out] dMinValue - Minimum value of the column in the chunk.
+	* @param[out] dMaxValue - Maximum value of the column in the chunk.
+	* @return Returns false if the chunk has been deleted or holds no comparable value.
+	*/
+	virtual bool GetChunkStatistics(const LibMCEnv_uint64 nChunkIndex, const std::string & sIdentifier, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue) = 0;
+
+	/**
+	* IDataTableReader::ReadDoubleColumnRange - Reads a row range of a column as doubles. Works for every column type. Only the pages that overlap the range are read.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - double buffer of Values of the row range.
+	*/
+	virtual void ReadDoubleColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_double * pValuesBuffer) = 0;
+
+	/**
+	* IDataTableReader::ReadFloatColumnRange - Reads a row range of a float or double column as floats.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - single buffer of Values of the row range.
+	*/
+	virtual void ReadFloatColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer) = 0;
+
+	/**
+	* IDataTableReader::ReadInt64ColumnRange - Reads a row range of an integer, bool or timestamp column as 64 bit integers.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - int64 buffer of Values of the row range.
+	*/
+	virtual void ReadInt64ColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_int64 * pValuesBuffer) = 0;
+
+	/**
+	* IDataTableReader::ReadBoolColumnRange - Reads a row range of a bool column as bytes (0 = false, 1 = true).
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - uint8 buffer of Values of the row range.
+	*/
+	virtual void ReadBoolColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer) = 0;
+
+	/**
+	* IDataTableReader::ReadColumnDownsampled - Reduces a row range of a column to at most TargetPoints buckets without materialising the range. Stride returns the first value of each bucket, Average the mean and MinMax the minimum followed by the maximum of each bucket, which preserves the envelope of the signal.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row of the range.
+	* @param[in] nRowCount - Number of rows of the range.
+	* @param[in] nTargetPoints - Maximum number of buckets. MUST be positive.
+	* @param[in] eMode - Stride, MinMax or Average.
+	* @param[in] nValuesBufferSize - Number of elements in buffer
+	* @param[out] pValuesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pValuesBuffer - double buffer of One value per bucket, or two values per bucket in MinMax mode. The number of buckets is the smaller of TargetPoints and RowCount.
+	*/
+	virtual void ReadColumnDownsampled(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const LibMCEnv_uint32 nTargetPoints, const LibMCEnv::eDataTableDownsampleMode eMode, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_double * pValuesBuffer) = 0;
+
+	/**
+	* IDataTableReader::FindChunksInValueRange - Finds the chunks whose value range of a column overlaps a given range. Only the page directory is used, no chunk is read.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] dMinValue - Lower bound of the value range.
+	* @param[in] dMaxValue - Upper bound of the value range.
+	* @param[in] nChunkIndicesBufferSize - Number of elements in buffer
+	* @param[out] pChunkIndicesNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pChunkIndicesBuffer - uint64 buffer of Indices of the chunks that may hold a value in the range.
+	*/
+	virtual void FindChunksInValueRange(const std::string & sIdentifier, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue, LibMCEnv_uint64 nChunkIndicesBufferSize, LibMCEnv_uint64* pChunkIndicesNeededCount, LibMCEnv_uint64 * pChunkIndicesBuffer) = 0;
+
+	/**
+	* IDataTableReader::ExtractDataTable - Materialises a row range as an ordinary in-memory data table.
+	* @param[in] nFromRow - Index of the first row of the range.
+	* @param[in] nRowCount - Number of rows of the range.
+	* @param[in] sColumnIdentifiers - Comma separated identifiers of the columns to extract. An empty string extracts all columns.
+	* @return Data table instance.
+	*/
+	virtual IDataTable * ExtractDataTable(const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const std::string & sColumnIdentifiers) = 0;
+
+};
+
+typedef IBaseSharedPtr<IDataTableReader> PIDataTableReader;
 
 
 /*************************************************************************************************************************
@@ -3627,6 +4193,58 @@ public:
 	* @return Journal instance.
 	*/
 	virtual IJournalHandler * LoadAttachedJournal(const LibMCEnv_uint32 nCacheMemoryQuotaInMegabytes) = 0;
+
+	/**
+	* IBuildExecution::CreateDataCaptureOptions - Creates an options object for a data capture with default values.
+	* @return Data capture options instance.
+	*/
+	virtual IDataCaptureOptions * CreateDataCaptureOptions() = 0;
+
+	/**
+	* IBuildExecution::CreateDataCapture - Creates a streaming data capture in this build execution. The execution MUST be in process.
+	* @param[in] sIdentifier - Unique identifier of the capture in this execution. Fails if the identifier already exists or is invalid.
+	* @param[in] sName - Human readable name of the capture.
+	* @param[in] pOptions - Data capture options. Defaults are used if not given.
+	* @param[in] sUserUUID - User UUID of the user that this data comes from. Empty string means no user attached.
+	* @return Data capture instance.
+	*/
+	virtual IDataCapture * CreateDataCapture(const std::string & sIdentifier, const std::string & sName, IDataCaptureOptions* pOptions, const std::string & sUserUUID) = 0;
+
+	/**
+	* IBuildExecution::HasDataCapture - Returns if the execution has a data capture with a certain identifier.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Returns true if the capture exists.
+	*/
+	virtual bool HasDataCapture(const std::string & sIdentifier) = 0;
+
+	/**
+	* IBuildExecution::GetDataCaptureRowCount - Returns the number of rows of a data capture that have been stored in segments. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Number of rows.
+	*/
+	virtual LibMCEnv_uint64 GetDataCaptureRowCount(const std::string & sIdentifier) = 0;
+
+	/**
+	* IBuildExecution::GetDataCaptureSegmentCount - Returns the number of stored segments of a data capture. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Number of segments.
+	*/
+	virtual LibMCEnv_uint32 GetDataCaptureSegmentCount(const std::string & sIdentifier) = 0;
+
+	/**
+	* IBuildExecution::LoadDataCaptureSegment - Loads one segment of a data capture as in-memory data table. Fails if the capture or the segment does not exist or the segment has been deleted by retention.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @return Loaded data table instance.
+	*/
+	virtual IDataTable * LoadDataCaptureSegment(const std::string & sIdentifier, const LibMCEnv_uint32 nSegmentIndex) = 0;
+
+	/**
+	* IBuildExecution::OpenDataCaptureReader - Opens a reader on the stored segments of a data capture. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Reader instance.
+	*/
+	virtual IDataTableReader * OpenDataCaptureReader(const std::string & sIdentifier) = 0;
 
 };
 

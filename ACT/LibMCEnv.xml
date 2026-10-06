@@ -307,6 +307,41 @@
 		<error name="FORMULAEVALUATIONFAILED" code="10267" description="Formula evaluation failed." />
 		<error name="FORMULASESSIONREFERENCESNOTAVAILABLE" code="10268" description="Session and user references are only available in formulas of the UI environment." />
 		<error name="INVALIDFORMULAREFERENCEINDEX" code="10269" description="Invalid formula reference index." />			
+		<error name="COLUMNISNOTOFTYPEFLOAT" code="10270" description="Column is not of type float." />
+		<error name="COLUMNISNOTOFTYPEBOOL" code="10271" description="Column is not of type bool." />
+		<error name="COLUMNISNOTOFTYPETIMESTAMP" code="10272" description="Column is not of type timestamp." />
+		<error name="UNSUPPORTEDDATATABLEVERSION" code="10273" description="Unsupported datatable format version." />
+		<error name="UNSUPPORTEDDATATABLEENCODING" code="10274" description="Unsupported datatable column encoding." />
+		<error name="INVALIDDATATABLECOLUMNHEADER" code="10275" description="Invalid datatable column header." />
+		<error name="DATACAPTURENOTCONFIGURABLE" code="10276" description="Data capture schema is frozen and can not be changed anymore." />
+		<error name="DATACAPTURENOTRECORDING" code="10277" description="Data capture is not recording." />
+		<error name="DATACAPTURECHUNKALREADYOPEN" code="10278" description="Data capture has an uncommitted chunk already." />
+		<error name="DATACAPTURECHUNKINVALID" code="10279" description="Data capture chunk is invalid or has been committed already." />
+		<error name="DATACAPTURECHUNKINCOMPLETE" code="10280" description="Data capture chunk columns have different row counts." />
+		<error name="DATACAPTURECHUNKOVERFLOW" code="10281" description="Data capture chunk capacity exceeded." />
+		<error name="DATACAPTUREQUEUEFULL" code="10282" description="Data capture queue is full." />
+		<error name="DATACAPTUREWRITERFAILED" code="10283" description="Data capture writer failed." />
+		<error name="INVALIDDATACAPTUREOPTION" code="10284" description="Invalid data capture option." />
+		<error name="DATACAPTUREROWNOTOPEN" code="10285" description="Data capture chunk has no open row." />
+		<error name="DATACAPTUREROWALREADYOPEN" code="10286" description="Data capture chunk has an open row already." />
+		<error name="DATACAPTUREVALUEOUTOFRANGE" code="10287" description="Data capture value is out of range for the column type." />
+		<error name="DATACAPTURESEGMENTPURGED" code="10288" description="Data capture segment has been deleted by retention." />
+		<error name="EMPTYDATACAPTURENAME" code="10289" description="Empty data capture name." />
+		<error name="EMPTYDATACAPTUREIDENTIFIER" code="10290" description="Empty data capture identifier." />
+		<error name="INVALIDDATACAPTUREIDENTIFIER" code="10291" description="Invalid data capture identifier." />
+		<error name="DATACAPTUREEXECUTIONNOTINPROCESS" code="10292" description="Data captures can only be created while the build execution is in process." />
+		<error name="DATATABLESEGMENTTRUNCATED" code="10293" description="Datatable segment is truncated and has no footer." />
+		<error name="UNSUPPORTEDDATATABLECODEC" code="10294" description="Unsupported datatable page codec." />
+		<error name="INVALIDDATATABLESEGMENT" code="10295" description="Invalid datatable segment." />
+		<error name="DATACAPTURECHUNKOUTSTANDING" code="10296" description="Data capture has an uncommitted chunk." />
+		<error name="DATACAPTURECOLUMNTYPEMISMATCH" code="10297" description="Data capture column has a different type." />
+		<error name="INVALIDDATACAPTURESEGMENTINDEX" code="10298" description="Invalid data capture segment index." />
+		<error name="DATACAPTURECOLUMNNOTFOUND" code="10299" description="Data capture column not found." />
+		<error name="INVALIDDATATABLEROWRANGE" code="10300" description="Invalid datatable row range." />
+		<error name="INVALIDDOWNSAMPLEPARAMETERS" code="10301" description="Invalid downsample parameters." />
+		<error name="DATATABLECOLUMNTYPEMISMATCH" code="10302" description="Datatable column can not be read as the requested type." />
+		<error name="INVALIDDATATABLECHUNKINDEX" code="10303" description="Invalid datatable chunk index." />
+		
 		
 	</errors>
 
@@ -457,8 +492,49 @@
 		<option name="Uint32Column" value="3" />
 		<option name="Int64Column" value="4" />
 		<option name="Uint64Column" value="5" />
+		<option name="FloatColumn" value="6" />
+		<option name="BoolColumn" value="7" />
+		<option name="TimestampColumn" value="8" />
 	</enum>
 	
+	<enum name="DataCaptureBackpressureMode">
+		<option name="Unknown" value="0" />
+		<option name="Block" value="1" />
+		<option name="DropOldest" value="2" />
+		<option name="Fail" value="3" />
+	</enum>
+
+	<enum name="DataCaptureCompression">
+		<option name="Unknown" value="0" />
+		<option name="None" value="1" />
+		<option name="LZ4" value="2" />
+		<option name="Deflate" value="3" />
+	</enum>
+
+	<enum name="DataCaptureEncoding">
+		<option name="Unknown" value="0" />
+		<option name="Automatic" value="1" />
+		<option name="Plain" value="2" />
+		<option name="Delta" value="3" />
+		<option name="BitPack" value="4" />
+	</enum>
+
+	<enum name="DataTableDownsampleMode">
+		<option name="Unknown" value="0" />
+		<option name="Stride" value="1" />
+		<option name="MinMax" value="2" />
+		<option name="Average" value="3" />
+	</enum>
+
+	<enum name="DataCaptureStatus">
+		<option name="Unknown" value="0" />
+		<option name="Configuring" value="1" />
+		<option name="Recording" value="2" />
+		<option name="Finished" value="3" />
+		<option name="Aborted" value="4" />
+		<option name="Failed" value="5" />
+	</enum>
+
 	<enum name="TelemetryChannelType">
 		<option name="Unknown" value="0"/>
 		<option name="CustomMarker" value="1"/>
@@ -1253,6 +1329,10 @@
 			<param name="RowCount" type="uint32" pass="return" description="Number of rows." />
 		</method>
 
+		<method name="GetRowCount64" description="Returns the current row count as 64 bit value. GetRowCount is kept for ABI compatibility and truncates large row counts.">
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows." />
+		</method>
+
 		<method name="GetColumnCount" description="Returns the current column count.">
 			<param name="ColumnCount" type="uint32" pass="return" description="Number of columns." />
 		</method>
@@ -1303,6 +1383,21 @@
 			<param name="Values" type="basicarray" class="uint64" pass="out" description="Value array of a column." />
 		</method>
 
+		<method name="GetFloatColumnValues" description="Returns the values of a float (32 bit) column. Will fail if column does not exist or type is not float.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="single" pass="out" description="Value array of a column." />
+		</method>
+
+		<method name="GetBoolColumnValues" description="Returns the values of a bool column as bytes (0 = false, 1 = true). Will fail if column does not exist or type is not bool.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="uint8" pass="out" description="Value array of a column. Each entry is 0 or 1." />
+		</method>
+
+		<method name="GetTimestampColumnValues" description="Returns the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="uint64" pass="out" description="Value array of a column. Timestamps in microseconds." />
+		</method>
+
 		<method name="SetDoubleColumnValues" description="Sets the values of a double column. Will fail if column does not exist or type is not double.">
 			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
 			<param name="Values" type="basicarray" class="double" pass="in" description="New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount." />
@@ -1324,6 +1419,21 @@
 		</method>
 
 		<method name="SetUint64ColumnValues" description="Sets the double columns. Will fail if column does not exist or type is not uint64.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="uint64" pass="in" description="New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount." />
+		</method>
+
+		<method name="SetFloatColumnValues" description="Sets the values of a float (32 bit) column. Will fail if column does not exist or type is not float.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="single" pass="in" description="New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount." />
+		</method>
+
+		<method name="SetBoolColumnValues" description="Sets the values of a bool column from bytes (0 = false, nonzero = true). Will fail if column does not exist or type is not bool.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Values" type="basicarray" class="uint8" pass="in" description="New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount." />
+		</method>
+
+		<method name="SetTimestampColumnValues" description="Sets the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.">
 			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
 			<param name="Values" type="basicarray" class="uint64" pass="in" description="New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount." />
 		</method>
@@ -1359,6 +1469,333 @@
 			<param name="ScatterPlot" type="class" class="ScatterPlot" pass="return" description="ScatterPlot Instance" />
 		</method>
 		
+	</class>
+
+	<class name="DataCaptureOptions" parent="Base" description="Configuration of a streaming data capture. The options are copied when the capture is created.">
+
+		<method name="SetChunkRowCount" description="Sets the number of rows a chunk can hold. Default is 65536.">
+			<param name="ChunkRowCount" type="uint32" pass="in" description="Rows per chunk. MUST be between 1 and 16777216." />
+		</method>
+
+		<method name="GetChunkRowCount" description="Returns the number of rows a chunk can hold.">
+			<param name="ChunkRowCount" type="uint32" pass="return" description="Rows per chunk." />
+		</method>
+
+		<method name="SetSegmentSizeInBytes" description="Sets the size at which the capture rolls over into a new segment stream. Default is 1 GB.">
+			<param name="SegmentSizeInBytes" type="uint64" pass="in" description="Maximum segment size in bytes. 0 means the capture never rolls over. A segment always holds at least one chunk." />
+		</method>
+
+		<method name="GetSegmentSizeInBytes" description="Returns the size at which the capture rolls over into a new segment stream.">
+			<param name="SegmentSizeInBytes" type="uint64" pass="return" description="Maximum segment size in bytes. 0 means the capture never rolls over." />
+		</method>
+
+		<method name="SetMaxQueuedChunks" description="Sets the maximum number of committed chunks that may wait for the writer thread. Default is 16.">
+			<param name="MaxQueuedChunks" type="uint32" pass="in" description="Queue depth. MUST be between 1 and 1024." />
+		</method>
+
+		<method name="GetMaxQueuedChunks" description="Returns the maximum number of committed chunks that may wait for the writer thread.">
+			<param name="MaxQueuedChunks" type="uint32" pass="return" description="Queue depth." />
+		</method>
+
+		<method name="SetBackpressureMode" description="Sets what happens when the producer is faster than the disk. Default is Block.">
+			<param name="BackpressureMode" type="enum" class="DataCaptureBackpressureMode" pass="in" description="Block waits for the writer, DropOldest discards the oldest queued chunk, Fail raises an error." />
+		</method>
+
+		<method name="GetBackpressureMode" description="Returns what happens when the producer is faster than the disk.">
+			<param name="BackpressureMode" type="enum" class="DataCaptureBackpressureMode" pass="return" description="Backpressure mode." />
+		</method>
+
+		<method name="SetStorageLimitInBytes" description="Sets the retention limit for all data capture segments stored on this machine. When it is exceeded after a segment has been finalized, the oldest stored segments are deleted first. Default is 0.">
+			<param name="StorageLimitInBytes" type="uint64" pass="in" description="Total size limit in bytes. 0 disables retention." />
+		</method>
+
+		<method name="GetStorageLimitInBytes" description="Returns the retention limit for all data capture segments stored on this machine.">
+			<param name="StorageLimitInBytes" type="uint64" pass="return" description="Total size limit in bytes. 0 means retention is disabled." />
+		</method>
+
+		<method name="SetCompression" description="Sets the codec the pages of the capture are compressed with. Default is LZ4. A page is stored uncompressed if the codec does not make it smaller.">
+			<param name="Compression" type="enum" class="DataCaptureCompression" pass="in" description="None, LZ4 or Deflate. Deflate is meant for cold data, it costs considerably more processing time than LZ4." />
+		</method>
+
+		<method name="GetCompression" description="Returns the codec the pages of the capture are compressed with.">
+			<param name="Compression" type="enum" class="DataCaptureCompression" pass="return" description="Compression codec." />
+		</method>
+
+		<method name="SetColumnEncoding" description="Sets the encoding of a column. Default is Automatic, which uses Delta for integer and timestamp columns, BitPack for bool columns and Plain for float and double columns. The column MUST exist when the capture starts recording and the encoding MUST fit its type.">
+			<param name="ColumnIdentifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Encoding" type="enum" class="DataCaptureEncoding" pass="in" description="Automatic, Plain, Delta or BitPack." />
+		</method>
+
+		<method name="SetDoubleQuantization" description="Opts a double column into lossy storage: values are stored as integer multiples of the step with Delta encoding. Columns that are not quantised stay bit-exact. The step is recorded in the capture and the column MUST be a double column.">
+			<param name="ColumnIdentifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Step" type="double" pass="in" description="Quantisation step. MUST be positive. 0 removes the quantisation." />
+		</method>
+
+	</class>
+
+	<class name="DataCaptureChunk" parent="Base" description="One block of rows of a data capture. The producer owns exactly one chunk at a time, fills it and commits it.">
+
+		<method name="GetCapacity" description="Returns the number of rows the chunk can hold.">
+			<param name="Capacity" type="uint32" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="GetRowCount" description="Returns the number of rows in the chunk. This is the row count of the longest column.">
+			<param name="RowCount" type="uint32" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="IsFull" description="Returns if the chunk has reached its capacity.">
+			<param name="Full" type="bool" pass="return" description="Returns true if no more rows fit into the chunk." />
+		</method>
+
+		<method name="SetDoubleColumnValues" description="Sets all rows of a double column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="double" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetInt32ColumnValues" description="Sets all rows of an int32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="int32" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetUint32ColumnValues" description="Sets all rows of an uint32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="uint32" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetInt64ColumnValues" description="Sets all rows of an int64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="int64" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetUint64ColumnValues" description="Sets all rows of an uint64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="uint64" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetFloatColumnValues" description="Sets all rows of a float (32 bit) column in this chunk. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="single" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetBoolColumnValues" description="Sets all rows of a bool column in this chunk from bytes (0 = false, nonzero = true). Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="uint8" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="SetTimestampColumnValues" description="Sets all rows of a timestamp column in this chunk in microseconds. Fails if the column type does not match or the capacity is exceeded.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Values" type="basicarray" class="uint64" pass="in" description="Values of the column. All columns of a chunk MUST have the same length on commit." />
+		</method>
+
+		<method name="BeginRow" description="Starts a new row at the end of the chunk. This is the convenience path for low-rate producers. Fails if the chunk is full, a row is open or the columns have different row counts.">
+		</method>
+
+		<method name="SetRowDoubleValue" description="Sets a value of the open row. The column MUST be of type double or float.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Value" type="double" pass="in" description="Value to set." />
+		</method>
+
+		<method name="SetRowIntegerValue" description="Sets a value of the open row. The column MUST be of an integer, bool or timestamp type and the value MUST be in its range.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Value" type="int64" pass="in" description="Value to set." />
+		</method>
+
+		<method name="EndRow" description="Finishes the open row. Columns that have not been set in this row are zero.">
+		</method>
+
+	</class>
+
+	<class name="DataCapture" parent="Base" description="A streaming data capture of a build execution. Committed chunks are written to segmented storage streams by a background thread, so that memory use does not grow with the capture length.">
+
+		<method name="GetUUID" description="Returns the UUID of the capture.">
+			<param name="UUID" type="string" pass="return" description="UUID of the capture." />
+		</method>
+
+		<method name="GetIdentifier" description="Returns the identifier of the capture. It is unique within the build execution.">
+			<param name="Identifier" type="string" pass="return" description="Identifier of the capture." />
+		</method>
+
+		<method name="GetName" description="Returns the human readable name of the capture.">
+			<param name="Name" type="string" pass="return" description="Name of the capture." />
+		</method>
+
+		<method name="GetStatus" description="Returns the status of the capture.">
+			<param name="Status" type="enum" class="DataCaptureStatus" pass="return" description="Status of the capture." />
+		</method>
+
+		<method name="AddColumn" description="Adds a column to the capture. The schema is frozen with the first call to BeginChunk.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column. MUST be unique, alphanumeric and not empty." />
+			<param name="Description" type="string" pass="in" description="Description of the column." />
+			<param name="ColumnType" type="enum" class="DataTableColumnType" pass="in" description="Data type of the column." />
+		</method>
+
+		<method name="GetColumnCount" description="Returns the number of columns of the capture.">
+			<param name="ColumnCount" type="uint32" pass="return" description="Number of columns." />
+		</method>
+
+		<method name="BeginChunk" description="Borrows an empty chunk from the chunk pool. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies.">
+			<param name="ChunkInstance" type="class" class="DataCaptureChunk" pass="return" description="Chunk to fill." />
+		</method>
+
+		<method name="CommitChunk" description="Hands a filled chunk over to the writer thread and returns immediately. All columns MUST have the same row count. The chunk instance MUST NOT be used afterwards.">
+			<param name="ChunkInstance" type="class" class="DataCaptureChunk" pass="in" description="Chunk that has been returned by BeginChunk." />
+		</method>
+
+		<method name="Flush" description="Blocks until all committed chunks have been written to storage.">
+		</method>
+
+		<method name="GetCapturedRowCount" description="Returns the number of rows that have been committed and not dropped.">
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="GetStorageSizeInBytes" description="Returns the number of bytes that have been written to storage so far.">
+			<param name="SizeInBytes" type="uint64" pass="return" description="Size in bytes." />
+		</method>
+
+		<method name="GetSegmentCount" description="Returns the number of segment streams that have been opened so far.">
+			<param name="SegmentCount" type="uint32" pass="return" description="Number of segments." />
+		</method>
+
+		<method name="GetQueuedChunkCount" description="Returns the number of committed chunks that are waiting for the writer thread.">
+			<param name="QueuedChunkCount" type="uint32" pass="return" description="Number of queued chunks." />
+		</method>
+
+		<method name="GetDroppedRowCount" description="Returns the number of rows that have been discarded by the DropOldest backpressure mode.">
+			<param name="DroppedRowCount" type="uint64" pass="return" description="Number of dropped rows." />
+		</method>
+
+		<method name="Finish" description="Writes all committed chunks, closes the last segment and marks the capture as finished. Fails if a chunk is uncommitted.">
+			<param name="CaptureUUID" type="string" pass="return" description="UUID of the capture." />
+		</method>
+
+		<method name="Abort" description="Stops the capture and deletes all its segments.">
+		</method>
+
+		<method name="AddColumnsFromDataTable" description="Adds one column to the capture for every column of a data table, with the same identifier, description and type and in the same order. Fails if the schema is frozen or an identifier already exists.">
+			<param name="DataTable" type="class" class="DataTable" pass="in" description="Data table whose columns describe the schema. Its rows are not read." />
+		</method>
+
+		<method name="AppendDataTable" description="Appends all rows of a data table to the capture and splits them into chunks. Every column of the capture MUST exist in the table with the same identifier and type, and these columns MUST have the same row count. Further columns of the table are ignored. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies. Fails if a chunk is uncommitted.">
+			<param name="DataTable" type="class" class="DataTable" pass="in" description="Data table that holds the rows to append." />
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows that have been appended." />
+		</method>
+
+	</class>
+
+	<class name="DataTableReader" parent="Base" description="Reads a data capture selectively: single columns, row ranges and downsampled ranges are resolved to the pages that overlap the request, across all segments of the capture. A reader instance MUST only be used in a single thread.">
+
+		<method name="GetRowCount" description="Returns the number of rows of the capture, including rows in segments that have been deleted by retention.">
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="GetFirstAvailableRow" description="Returns the index of the first row that is still stored. Rows before it have been deleted by retention.">
+			<param name="FirstAvailableRow" type="uint64" pass="return" description="Row index. Equal to the row count if nothing is stored." />
+		</method>
+
+		<method name="GetColumnCount" description="Returns the number of columns.">
+			<param name="ColumnCount" type="uint32" pass="return" description="Number of columns." />
+		</method>
+
+		<method name="HasColumn" description="Returns if a column exists.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="ColumnExists" type="bool" pass="return" description="Returns if the column exists." />
+		</method>
+
+		<method name="GetColumnInformation" description="Returns the schema information of a column. Fails if the index is out of bounds.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of column. 0-based." />
+			<param name="Identifier" type="string" pass="out" description="Identifier of the column." />
+			<param name="Description" type="string" pass="out" description="Description of the column." />
+			<param name="ColumnType" type="enum" class="DataTableColumnType" pass="out" description="Data type of the column." />
+		</method>
+
+		<method name="GetColumnQuantization" description="Returns the quantisation step of a column. Values of a quantised column are exact to half a step.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Step" type="double" pass="return" description="Quantisation step. 0 if the column is not quantised." />
+		</method>
+
+		<method name="GetSegmentCount" description="Returns the number of segments of the capture, including deleted ones.">
+			<param name="SegmentCount" type="uint32" pass="return" description="Number of segments." />
+		</method>
+
+		<method name="GetSegmentInformation" description="Returns the row range and the size of a segment. Fails if the index is out of bounds.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index of the segment. 0-based." />
+			<param name="FirstRow" type="uint64" pass="out" description="Index of the first row of the segment." />
+			<param name="RowCount" type="uint64" pass="out" description="Number of rows in the segment." />
+			<param name="SizeInBytes" type="uint64" pass="out" description="Size of the segment stream in bytes." />
+			<param name="IsAvailable" type="bool" pass="out" description="Returns false if the segment has been deleted by retention." />
+		</method>
+
+		<method name="GetChunkCount" description="Returns the number of chunks of the capture, including chunks in deleted segments.">
+			<param name="ChunkCount" type="uint64" pass="return" description="Number of chunks." />
+		</method>
+
+		<method name="GetChunkInformation" description="Returns the position of a chunk. Fails if the index is out of bounds.">
+			<param name="ChunkIndex" type="uint64" pass="in" description="Index of the chunk. 0-based." />
+			<param name="SegmentIndex" type="uint32" pass="out" description="Index of the segment that holds the chunk." />
+			<param name="FirstRow" type="uint64" pass="out" description="Index of the first row of the chunk. For a chunk in a deleted segment this is the first row of the segment." />
+			<param name="RowCount" type="uint64" pass="out" description="Number of rows in the chunk. 0 for a chunk in a deleted segment." />
+			<param name="IsAvailable" type="bool" pass="out" description="Returns false if the chunk has been deleted by retention." />
+		</method>
+
+		<method name="GetChunkStatistics" description="Returns the minimum and maximum of a column in a chunk from the page directory, without reading the chunk.">
+			<param name="ChunkIndex" type="uint64" pass="in" description="Index of the chunk. 0-based." />
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="MinValue" type="double" pass="out" description="Minimum value of the column in the chunk." />
+			<param name="MaxValue" type="double" pass="out" description="Maximum value of the column in the chunk." />
+			<param name="HasStatistics" type="bool" pass="return" description="Returns false if the chunk has been deleted or holds no comparable value." />
+		</method>
+
+		<method name="ReadDoubleColumnRange" description="Reads a row range of a column as doubles. Works for every column type. Only the pages that overlap the range are read.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row to read." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows to read." />
+			<param name="Values" type="basicarray" class="double" pass="out" description="Values of the row range." />
+		</method>
+
+		<method name="ReadFloatColumnRange" description="Reads a row range of a float or double column as floats.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row to read." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows to read." />
+			<param name="Values" type="basicarray" class="single" pass="out" description="Values of the row range." />
+		</method>
+
+		<method name="ReadInt64ColumnRange" description="Reads a row range of an integer, bool or timestamp column as 64 bit integers.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row to read." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows to read." />
+			<param name="Values" type="basicarray" class="int64" pass="out" description="Values of the row range." />
+		</method>
+
+		<method name="ReadBoolColumnRange" description="Reads a row range of a bool column as bytes (0 = false, 1 = true).">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row to read." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows to read." />
+			<param name="Values" type="basicarray" class="uint8" pass="out" description="Values of the row range." />
+		</method>
+
+		<method name="ReadColumnDownsampled" description="Reduces a row range of a column to at most TargetPoints buckets without materialising the range. Stride returns the first value of each bucket, Average the mean and MinMax the minimum followed by the maximum of each bucket, which preserves the envelope of the signal.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row of the range." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows of the range." />
+			<param name="TargetPoints" type="uint32" pass="in" description="Maximum number of buckets. MUST be positive." />
+			<param name="Mode" type="enum" class="DataTableDownsampleMode" pass="in" description="Stride, MinMax or Average." />
+			<param name="Values" type="basicarray" class="double" pass="out" description="One value per bucket, or two values per bucket in MinMax mode. The number of buckets is the smaller of TargetPoints and RowCount." />
+		</method>
+
+		<method name="FindChunksInValueRange" description="Finds the chunks whose value range of a column overlaps a given range. Only the page directory is used, no chunk is read.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="MinValue" type="double" pass="in" description="Lower bound of the value range." />
+			<param name="MaxValue" type="double" pass="in" description="Upper bound of the value range." />
+			<param name="ChunkIndices" type="basicarray" class="uint64" pass="out" description="Indices of the chunks that may hold a value in the range." />
+		</method>
+
+		<method name="ExtractDataTable" description="Materialises a row range as an ordinary in-memory data table.">
+			<param name="FromRow" type="uint64" pass="in" description="Index of the first row of the range." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows of the range." />
+			<param name="ColumnIdentifiers" type="string" pass="in" description="Comma separated identifiers of the columns to extract. An empty string extracts all columns." />
+			<param name="DataTableInstance" type="class" class="DataTable" pass="return" description="Data table instance." />
+		</method>
+
 	</class>
 
 	<class name="DataSeries" parent="Base" description="A data series of points.">
@@ -2695,6 +3132,44 @@
 			<param name="JournalHandler" type="class" class="JournalHandler" pass="return" description="Journal instance." />
 		</method>	
 		
+
+		<method name="CreateDataCaptureOptions" description="Creates an options object for a data capture with default values.">
+			<param name="Options" type="class" class="DataCaptureOptions" pass="return" description="Data capture options instance." />
+		</method>
+
+		<method name="CreateDataCapture" description="Creates a streaming data capture in this build execution. The execution MUST be in process.">
+			<param name="Identifier" type="string" pass="in" description="Unique identifier of the capture in this execution. Fails if the identifier already exists or is invalid." />
+			<param name="Name" type="string" pass="in" description="Human readable name of the capture." />
+			<param name="Options" type="optionalclass" class="DataCaptureOptions" pass="in" description="Data capture options. Defaults are used if not given." />
+			<param name="UserUUID" type="string" pass="in" description="User UUID of the user that this data comes from. Empty string means no user attached." />
+			<param name="DataCaptureInstance" type="class" class="DataCapture" pass="return" description="Data capture instance." />
+		</method>
+
+		<method name="HasDataCapture" description="Returns if the execution has a data capture with a certain identifier.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="CaptureExists" type="bool" pass="return" description="Returns true if the capture exists." />
+		</method>
+
+		<method name="GetDataCaptureRowCount" description="Returns the number of rows of a data capture that have been stored in segments. Fails if the capture does not exist.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="GetDataCaptureSegmentCount" description="Returns the number of stored segments of a data capture. Fails if the capture does not exist.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="SegmentCount" type="uint32" pass="return" description="Number of segments." />
+		</method>
+
+		<method name="LoadDataCaptureSegment" description="Loads one segment of a data capture as in-memory data table. Fails if the capture or the segment does not exist or the segment has been deleted by retention.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index of the segment. 0-based." />
+			<param name="DataTableInstance" type="class" class="DataTable" pass="return" description="Loaded data table instance." />
+		</method>
+
+		<method name="OpenDataCaptureReader" description="Opens a reader on the stored segments of a data capture. Fails if the capture does not exist.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="ReaderInstance" type="class" class="DataTableReader" pass="return" description="Reader instance." />
+		</method>
 
 	</class>
 	

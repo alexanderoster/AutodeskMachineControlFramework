@@ -218,6 +218,8 @@
 		<error name="UNSUPPORTEDPROFILEMODIFIER" code="1166" description="Toolpath profile has a modifier that the driver cannot execute." />
 		<error name="MODIFIEDLASERPOWEROUTOFRANGE" code="1167" description="Modified laser power is outside of the calibrated laser power range." />
 
+		<error name="RECORDINGREADOUTNOTSTARTED" code="1168" description="The incremental readout of the recording has not been started." />
+							
 	</errors>
 
 
@@ -639,7 +641,17 @@ Custom implementation
 			<param name="ColumnIdentifierY" type="string" pass="in" description="Identifier of the X Column." />
 			<param name="ColumnDescriptionY" type="string" pass="in" description="Description of the X Column." />
 		</method>
-		
+
+		<method name="StartListWithRecording" description="Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.">
+		</method>
+
+		<method name="ReadRecordedData" description="Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.">
+			<param name="RecordingComplete" type="bool" pass="return" description="True if the list has finished and all recorded data has been read." />
+		</method>
+
+		<method name="DiscardRecords" description="Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.">
+		</method>
+
 	</class>
 
 

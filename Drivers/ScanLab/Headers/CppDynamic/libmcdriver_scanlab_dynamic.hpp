@@ -380,6 +380,7 @@ public:
 			case LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE: return "MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE";
 			case LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER: return "UNSUPPORTEDPROFILEMODIFIER";
 			case LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE: return "MODIFIEDLASERPOWEROUTOFRANGE";
+			case LIBMCDRIVER_SCANLAB_ERROR_RECORDINGREADOUTNOTSTARTED: return "RECORDINGREADOUTNOTSTARTED";
 		}
 		return "UNKNOWN";
 	}
@@ -562,6 +563,7 @@ public:
 			case LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE: return "Minimum jump distance provided twice in profile.";
 			case LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER: return "Toolpath profile has a modifier that the driver cannot execute.";
 			case LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE: return "Modified laser power is outside of the calibrated laser power range.";
+			case LIBMCDRIVER_SCANLAB_ERROR_RECORDINGREADOUTNOTSTARTED: return "The incremental readout of the recording has not been started.";
 		}
 		return "unknown error";
 	}
@@ -865,6 +867,9 @@ public:
 	inline void AddBacktransformedZPositionsToDataTable(classParam<LibMCEnv::CDataTable> pDataTable, const std::string & sColumnIdentifierZ, const std::string & sColumnDescriptionZ);
 	inline LibMCDriver_ScanLab_double BacktransformRawZCoordinate(const LibMCDriver_ScanLab_int32 nRawCoordinateZ);
 	inline void AddTargetPositionsToDataTable(classParam<LibMCEnv::CDataTable> pDataTable, const std::string & sColumnIdentifierX, const std::string & sColumnDescriptionX, const std::string & sColumnIdentifierY, const std::string & sColumnDescriptionY);
+	inline void StartListWithRecording();
+	inline bool ReadRecordedData();
+	inline void DiscardRecords();
 };
 	
 /*************************************************************************************************************************
@@ -1415,6 +1420,9 @@ public:
 		pWrapperTable->m_RTCRecording_AddBacktransformedZPositionsToDataTable = nullptr;
 		pWrapperTable->m_RTCRecording_BacktransformRawZCoordinate = nullptr;
 		pWrapperTable->m_RTCRecording_AddTargetPositionsToDataTable = nullptr;
+		pWrapperTable->m_RTCRecording_StartListWithRecording = nullptr;
+		pWrapperTable->m_RTCRecording_ReadRecordedData = nullptr;
+		pWrapperTable->m_RTCRecording_DiscardRecords = nullptr;
 		pWrapperTable->m_GPIOSequence_GetIdentifier = nullptr;
 		pWrapperTable->m_GPIOSequence_Clear = nullptr;
 		pWrapperTable->m_GPIOSequence_AddOutput = nullptr;
@@ -2144,6 +2152,33 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCRecording_AddTargetPositionsToDataTable == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCRecording_StartListWithRecording = (PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcrecording_startlistwithrecording");
+		#else // _WIN32
+		pWrapperTable->m_RTCRecording_StartListWithRecording = (PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcrecording_startlistwithrecording");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCRecording_StartListWithRecording == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCRecording_ReadRecordedData = (PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcrecording_readrecordeddata");
+		#else // _WIN32
+		pWrapperTable->m_RTCRecording_ReadRecordedData = (PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcrecording_readrecordeddata");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCRecording_ReadRecordedData == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCRecording_DiscardRecords = (PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtcrecording_discardrecords");
+		#else // _WIN32
+		pWrapperTable->m_RTCRecording_DiscardRecords = (PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtcrecording_discardrecords");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCRecording_DiscardRecords == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4672,6 +4707,18 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_AddTargetPositionsToDataTable == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_startlistwithrecording", (void**)&(pWrapperTable->m_RTCRecording_StartListWithRecording));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_StartListWithRecording == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_readrecordeddata", (void**)&(pWrapperTable->m_RTCRecording_ReadRecordedData));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_ReadRecordedData == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtcrecording_discardrecords", (void**)&(pWrapperTable->m_RTCRecording_DiscardRecords));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCRecording_DiscardRecords == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_gpiosequence_getidentifier", (void**)&(pWrapperTable->m_GPIOSequence_GetIdentifier));
 		if ( (eLookupError != 0) || (pWrapperTable->m_GPIOSequence_GetIdentifier == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6269,6 +6316,34 @@ public:
 	{
 		LibMCEnvHandle hDataTable = pDataTable.GetHandle();
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_AddTargetPositionsToDataTable(m_pHandle, hDataTable, sColumnIdentifierX.c_str(), sColumnDescriptionX.c_str(), sColumnIdentifierY.c_str(), sColumnDescriptionY.c_str()));
+	}
+	
+	/**
+	* CRTCRecording::StartListWithRecording - Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.
+	*/
+	void CRTCRecording::StartListWithRecording()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_StartListWithRecording(m_pHandle));
+	}
+	
+	/**
+	* CRTCRecording::ReadRecordedData - Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.
+	* @return True if the list has finished and all recorded data has been read.
+	*/
+	bool CRTCRecording::ReadRecordedData()
+	{
+		bool resultRecordingComplete = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_ReadRecordedData(m_pHandle, &resultRecordingComplete));
+		
+		return resultRecordingComplete;
+	}
+	
+	/**
+	* CRTCRecording::DiscardRecords - Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.
+	*/
+	void CRTCRecording::DiscardRecords()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCRecording_DiscardRecords(m_pHandle));
 	}
 	
 	/**

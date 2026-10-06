@@ -38,6 +38,7 @@ Abstract: This is a stub class definition of CBuildJobExecution
 #include "libmcdata_buildjobexecutiondata.hpp"
 #include "libmcdata_buildjobexecutiondataiterator.hpp"
 #include "libmcdata_buildjob.hpp"
+#include "libmcdata_datacapture.hpp"
 #include "common_utils.hpp"
 #include "common_chrono.hpp"
 
@@ -653,4 +654,30 @@ LibMCData::eBuildJobExecutionStatus CBuildJobExecution::convertStringToBuildJobE
 		return LibMCData::eBuildJobExecutionStatus::Unknown;
 
 	throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDBUILDJOBEXECUTIONSTATUS);
+}
+
+
+IDataCapture* CBuildJobExecution::CreateDataCapture(const std::string& sIdentifier, const std::string& sName, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
+{
+	return CDataCapture::createInDatabase(m_pSQLHandler, m_pStorageState, m_sExecutionUUID, sIdentifier, sName, sUserUUID, nAbsoluteTimeStamp);
+}
+
+bool CBuildJobExecution::HasDataCapture(const std::string& sIdentifier)
+{
+	return CDataCapture::existsInDatabase(m_pSQLHandler, m_sExecutionUUID, sIdentifier);
+}
+
+IDataCapture* CBuildJobExecution::RetrieveDataCapture(const std::string& sIdentifier)
+{
+	return CDataCapture::makeFromDatabase(m_pSQLHandler, m_pStorageState, m_sExecutionUUID, sIdentifier);
+}
+
+LibMCData_uint32 CBuildJobExecution::GetDataCaptureCount()
+{
+	return CDataCapture::countInExecution(m_pSQLHandler, m_sExecutionUUID);
+}
+
+IDataCapture* CBuildJobExecution::RetrieveDataCaptureByIndex(const LibMCData_uint32 nIndex)
+{
+	return CDataCapture::makeFromExecutionIndex(m_pSQLHandler, m_pStorageState, m_sExecutionUUID, nIndex);
 }

@@ -453,6 +453,18 @@
 		<error name="JOBNAMETOOLONG" code="451" description="Job name exceeds maximum allowed length" />
 		<error name="STRINGPARAMETERTOOLONG" code="452" description="String parameter exceeds maximum allowed length" />
 		<error name="TELEMETRYSETTINGAFTERINITIALISATION" code="453" description="Telemetry setting changed after database initialisation" />
+		<error name="DATACAPTURENOTFOUND" code="454" description="Data capture not found." />
+		<error name="DUPLICATEDATACAPTUREIDENTIFIER" code="455" description="Duplicate data capture identifier." />
+		<error name="INVALIDDATACAPTUREIDENTIFIER" code="456" description="Invalid data capture identifier." />
+		<error name="INVALIDDATACAPTURENAME" code="457" description="Invalid data capture name." />
+		<error name="DATACAPTURENOTRECORDING" code="458" description="Data capture is not recording." />
+		<error name="INVALIDDATACAPTURESTATUS" code="459" description="Invalid data capture status." />
+		<error name="INVALIDDATACAPTURECOLUMNINDEX" code="460" description="Invalid data capture column index." />
+		<error name="INVALIDDATACAPTURESEGMENTINDEX" code="461" description="Invalid data capture segment index." />
+		<error name="DUPLICATEDATACAPTURESEGMENT" code="462" description="Duplicate data capture segment." />
+		<error name="DUPLICATEDATACAPTURECOLUMN" code="463" description="Duplicate data capture column." />
+		<error name="DATACAPTUREALREADYABORTED" code="464" description="Data capture has already been aborted." />
+		<error name="RANDOMWRITESTREAMNOTFOUND" code="465" description="Random write stream not found." />
 
 	</errors>
 	
@@ -536,6 +548,13 @@
 		<option name="IntervalEndMarker" value="3"/>
 	</enum>		
 	
+	<enum name="DataCaptureStatus">
+		<option name="Unknown" value="0" />
+		<option name="Recording" value="1" />
+		<option name="Finished" value="2" />
+		<option name="Aborted" value="3" />
+	</enum>
+
 	<enum name="BuildJobExecutionStatus">
 		<option name="Unknown" value="0" />
 		<option name="InProcess" value="1" />
@@ -1257,6 +1276,19 @@
 			<param name="JournalUUID" type="string" pass="in" description="UUID of journal. Call fails if journal does not exist." />	
 		</method>	
 
+		<method name="DiscardRandomWriteStream" description="Discards an unfinished random write stream. The data on disk and the stream entry are deleted.">
+			<param name="UUID" type="string" pass="in" description="UUID of storage stream. MUST have been created with BeginRandomWriteStream first and MUST NOT be finished." />
+		</method>
+
+		<method name="GetDataCaptureStorageSize" description="Returns the size of all data capture segments that are stored on disk.">
+			<param name="SizeInBytes" type="uint64" pass="return" description="Size in bytes." />
+		</method>
+
+		<method name="EnforceDataCaptureStorageLimit" description="Deletes the oldest stored data capture segments until the total stored size is within the limit.">
+			<param name="LimitInBytes" type="uint64" pass="in" description="Maximum total size of all stored data capture segments in bytes." />
+			<param name="PurgedSegmentCount" type="uint32" pass="return" description="Number of segments that have been deleted." />
+		</method>
+
 	</class>
 
 
@@ -1346,6 +1378,97 @@
 
 
     <!-- The BuildJobExecution class is not thread safe and MUST ONLY be used in a single thread context... -->
+	<class name="DataCapture" parent="Base" description="Manifest of a streaming data capture that belongs to a build job execution. It ties the segment streams of the capture together.">
+
+		<method name="GetUUID" description="returns the uuid of the data capture.">
+			<param name="UUID" type="string" pass="return" description="UUID String" />
+		</method>
+
+		<method name="GetExecutionUUID" description="returns the uuid of the build job execution the capture belongs to.">
+			<param name="ExecutionUUID" type="string" pass="return" description="UUID String" />
+		</method>
+
+		<method name="GetIdentifier" description="returns the identifier of the data capture. It is unique within the build job execution.">
+			<param name="Identifier" type="string" pass="return" description="Identifier String" />
+		</method>
+
+		<method name="GetName" description="returns the human readable name of the data capture.">
+			<param name="Name" type="string" pass="return" description="Name String" />
+		</method>
+
+		<method name="GetStatus" description="returns the current status of the data capture.">
+			<param name="Status" type="enum" class="DataCaptureStatus" pass="return" description="Status Value" />
+		</method>
+
+		<method name="GetTimeStamp" description="returns the time stamp when the data capture was created.">
+			<param name="TimeStamp" type="string" pass="return" description="Timestamp in ISO8601 UTC format" />
+		</method>
+
+		<method name="AddColumn" description="Registers a column of the capture schema. Fails if the capture is not recording or the column index already exists.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Identifier" type="string" pass="in" description="Identifier of the column." />
+			<param name="Description" type="string" pass="in" description="Description of the column." />
+			<param name="ColumnType" type="uint32" pass="in" description="Data type of the column as numeric data table column type." />
+		</method>
+
+		<method name="GetColumnCount" description="returns the number of columns of the capture schema.">
+			<param name="ColumnCount" type="uint32" pass="return" description="Number of columns." />
+		</method>
+
+		<method name="GetColumnInformation" description="returns the schema information of a column. Fails if the index does not exist.">
+			<param name="ColumnIndex" type="uint32" pass="in" description="Index of the column. 0-based." />
+			<param name="Identifier" type="string" pass="out" description="Identifier of the column." />
+			<param name="Description" type="string" pass="out" description="Description of the column." />
+			<param name="ColumnType" type="uint32" pass="out" description="Data type of the column as numeric data table column type." />
+		</method>
+
+		<method name="AddSegment" description="Registers a finished segment stream of the capture. Fails if the capture is not recording or the segment index already exists.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index of the segment. 0-based." />
+			<param name="StreamUUID" type="string" pass="in" description="UUID of the storage stream that holds the segment. The stream MUST exist." />
+			<param name="FirstRow" type="uint64" pass="in" description="Index of the first row of the segment within the capture." />
+			<param name="RowCount" type="uint64" pass="in" description="Number of rows in the segment." />
+			<param name="ChunkCount" type="uint32" pass="in" description="Number of chunks in the segment." />
+			<param name="SizeInBytes" type="uint64" pass="in" description="Size of the segment stream in bytes." />
+			<param name="StartTimeStamp" type="uint64" pass="in" description="Absolute time stamp in microseconds since 1970 when the segment was opened." />
+			<param name="EndTimeStamp" type="uint64" pass="in" description="Absolute time stamp in microseconds since 1970 when the segment was closed." />
+		</method>
+
+		<method name="GetSegmentCount" description="returns the number of registered segments, including purged ones.">
+			<param name="SegmentCount" type="uint32" pass="return" description="Number of segments." />
+		</method>
+
+		<method name="GetSegmentInformation" description="returns the manifest entry of a segment. Fails if the index does not exist.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index of the segment. 0-based." />
+			<param name="StreamUUID" type="string" pass="out" description="UUID of the storage stream that holds the segment." />
+			<param name="FirstRow" type="uint64" pass="out" description="Index of the first row of the segment within the capture." />
+			<param name="RowCount" type="uint64" pass="out" description="Number of rows in the segment." />
+			<param name="SizeInBytes" type="uint64" pass="out" description="Size of the segment stream in bytes." />
+			<param name="IsPurged" type="bool" pass="out" description="Returns true if the segment data has been deleted by retention or abort." />
+		</method>
+
+		<method name="GetSegmentChunkCount" description="returns the number of chunks of a segment. Fails if the index does not exist.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index of the segment. 0-based." />
+			<param name="ChunkCount" type="uint32" pass="return" description="Number of chunks in the segment." />
+		</method>
+
+		<method name="GetRowCount" description="returns the number of rows in all registered segments, including purged ones.">
+			<param name="RowCount" type="uint64" pass="return" description="Number of rows." />
+		</method>
+
+		<method name="GetStoredSizeInBytes" description="returns the size of all segments of the capture that are still stored on disk.">
+			<param name="SizeInBytes" type="uint64" pass="return" description="Size in bytes." />
+		</method>
+
+		<method name="Finish" description="Marks the capture as finished. Fails if the capture is not recording.">
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+		</method>
+
+		<method name="Abort" description="Deletes all stored segments of the capture and marks it as aborted. Fails if the capture has been aborted before.">
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+		</method>
+
+	</class>
+
 	<class name="BuildJobExecution" parent="Base" description="Build Job Execution instance, handling a specific execution of the build job.">
 
 		<method name="GetExecutionUUID" description="returns the uuid of a build job execution.">
@@ -1468,6 +1591,33 @@
 		<method name="GetMetaDataString" description="Gets a metadata string of a build execution. Fails if Meta Data does not exist.">
 			<param name="Key" type="string" pass="in" description="Unique key of value. Fails if Key already exists." />
 			<param name="Value" type="string" pass="return" description="Return value." />
+		</method>
+
+		<method name="CreateDataCapture" description="Creates the manifest of a new data capture in recording state. Fails if the identifier already exists in this execution.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture. MUST be unique within the execution, alphanumeric and not empty." />
+			<param name="Name" type="string" pass="in" description="Human readable name of the capture. MUST NOT be empty." />
+			<param name="UserUUID" type="string" pass="in" description="UUID of the user that started the capture. Use 00000000-0000-0000-0000-000000000000 if no user shall be recorded." />
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+			<param name="DataCaptureInstance" type="class" class="DataCapture" pass="return" description="Data capture manifest instance." />
+		</method>
+
+		<method name="HasDataCapture" description="Returns if a data capture with a specific identifier exists in this execution.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="HasDataCapture" type="bool" pass="return" description="Returns true, if the data capture exists." />
+		</method>
+
+		<method name="RetrieveDataCapture" description="Retrieves the manifest of a data capture by its identifier. Fails if the identifier does not exist.">
+			<param name="Identifier" type="string" pass="in" description="Identifier of the capture." />
+			<param name="DataCaptureInstance" type="class" class="DataCapture" pass="return" description="Data capture manifest instance." />
+		</method>
+
+		<method name="GetDataCaptureCount" description="Returns the number of data captures of this execution.">
+			<param name="DataCaptureCount" type="uint32" pass="return" description="Number of data captures." />
+		</method>
+
+		<method name="RetrieveDataCaptureByIndex" description="Retrieves the manifest of a data capture of this execution by its index. Captures are ordered by their creation time.">
+			<param name="Index" type="uint32" pass="in" description="Index of the capture. 0-based. Fails if the index is out of bounds." />
+			<param name="DataCaptureInstance" type="class" class="DataCapture" pass="return" description="Data capture manifest instance." />
 		</method>
 
 	</class>
@@ -1730,6 +1880,11 @@
 			<param name="IteratorInstance" type="class" class="BuildJobExecutionIterator" pass="return" description="Returns the list of execution instances that changed. List may be empty." />
 		</method>
 			
+		<method name="RetrieveDataCapture" description="Retrieves the manifest of a data capture by its uuid. Fails if the capture does not exist.">
+			<param name="DataCaptureUUID" type="string" pass="in" description="UUID of the data capture." />
+			<param name="DataCaptureInstance" type="class" class="DataCapture" pass="return" description="Data capture manifest instance." />
+		</method>
+
 	</class>
 
 

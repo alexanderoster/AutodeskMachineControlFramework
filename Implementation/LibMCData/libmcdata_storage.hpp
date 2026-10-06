@@ -115,6 +115,12 @@ public:
     void RequestDownloadTicket(const std::string& sTicketUUID, const std::string& sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp, std::string& sStreamUUID, std::string& sClientFileName, std::string& sSessionUUID, std::string& sUserUUID) override;
 
     void AttachStreamToJournal(const std::string& sStreamUUID, const std::string& sJournalUUID) override;
+
+    void DiscardRandomWriteStream(const std::string& sUUID) override;
+
+    LibMCData_uint64 GetDataCaptureStorageSize() override;
+
+    LibMCData_uint32 EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes) override;
 };
 
 } // namespace Impl

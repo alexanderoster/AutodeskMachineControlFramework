@@ -571,6 +571,31 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcre
 */
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_addtargetpositionstodatatable(LibMCDriver_ScanLab_RTCRecording pRTCRecording, LibMCEnv_DataTable pDataTable, const char * pColumnIdentifierX, const char * pColumnDescriptionX, const char * pColumnIdentifierY, const char * pColumnDescriptionY);
 
+/**
+* Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_startlistwithrecording(LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
+/**
+* Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @param[out] pRecordingComplete - True if the list has finished and all recorded data has been read.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_readrecordeddata(LibMCDriver_ScanLab_RTCRecording pRTCRecording, bool * pRecordingComplete);
+
+/**
+* Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcrecording_discardrecords(LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
 /*************************************************************************************************************************
  Class definition for GPIOSequence
 **************************************************************************************************************************/

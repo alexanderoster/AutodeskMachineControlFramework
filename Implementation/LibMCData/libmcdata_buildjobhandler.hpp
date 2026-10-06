@@ -104,6 +104,8 @@ public:
 
     LibMCData_uint64 GetExecutionListHeadID() override;
 
+    IDataCapture* RetrieveDataCapture(const std::string& sDataCaptureUUID) override;
+
 };
 
 } // namespace Impl

@@ -150,6 +150,16 @@ public:
 
 	std::string GetMetaDataString(const std::string& sKey) override;
 
+	IDataCapture* CreateDataCapture(const std::string& sIdentifier, const std::string& sName, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp) override;
+
+	bool HasDataCapture(const std::string& sIdentifier) override;
+
+	IDataCapture* RetrieveDataCapture(const std::string& sIdentifier) override;
+
+	LibMCData_uint32 GetDataCaptureCount() override;
+
+	IDataCapture* RetrieveDataCaptureByIndex(const LibMCData_uint32 nIndex) override;
+
 	static std::string convertBuildJobExecutionStatusToString(const LibMCData::eBuildJobExecutionStatus eStatus);
 	static LibMCData::eBuildJobExecutionStatus convertStringToBuildJobExecutionStatus(const std::string& sValue);
 

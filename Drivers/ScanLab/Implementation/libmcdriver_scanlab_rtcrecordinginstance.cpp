@@ -116,6 +116,11 @@ int32_t* CRTCRecordingChunk::reserveDataBuffer(uint32_t nCount, uint32_t& nEntri
 	return &m_Buffer.at(nResultOffset);
 }
 
+void CRTCRecordingChunk::resetWriteOffset()
+{
+	m_nWriteOffset = 0;
+}
+
 
 CRTCRecordingChannel::CRTCRecordingChannel(const std::string& sChannelName, uint32_t nRTCChannelID, const LibMCDriver_ScanLab::eRTCChannelType eChannelType, size_t nChunkSize)
 	: m_sChannelName (sChannelName), 
@@ -169,6 +174,21 @@ int32_t* CRTCRecordingChannel::reserveDataBuffer(uint32_t nCount, uint32_t& nEnt
 
 	return pBuffer;
 
+}
+
+void CRTCRecordingChannel::discardRecords()
+{
+	m_nEntryCount = 0;
+
+	// The first chunk starts at entry 0 and is reused, so that the next piece does not allocate.
+	if (!m_Chunks.empty()) {
+		m_Chunks.resize(1);
+		m_pCurrentChunk = m_Chunks.front();
+		m_pCurrentChunk->resetWriteOffset();
+	}
+	else {
+		m_pCurrentChunk = nullptr;
+	}
 }
 
 uint32_t CRTCRecordingChannel::getRTCChannelID()
@@ -404,7 +424,12 @@ CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabS
 	m_nChunkSize (nChunkSize),
 	m_bEnableScanheadFeedback (bEnableScanheadFeedback),
 	m_bEnableBacktransformation (bEnableBacktransformation),
-	m_pListExecutionAlreadyStarted (pListExecutionAlreadyStarted)
+	m_pListExecutionAlreadyStarted (pListExecutionAlreadyStarted),
+	m_bReadoutActive (false),
+	m_bMeasurementStarted (false),
+	m_nReadoutLastPosition (0),
+	m_bReadoutStepPending (false),
+	m_nReadoutLastBusy (0)
 
 {
 	if (pSDK.get() == nullptr)
@@ -696,9 +721,18 @@ void CRTCRecordingInstance::readRecordedDataBlockFromRTC(uint32_t DataStart, uin
 
 void CRTCRecordingInstance::executeListWithRecording()
 {
+	startListWithRecording();
+
+	// Blockwise data polling, until the job has finished executing and all data has been read.
+	while (!readRecordedData())
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+}
+
+void CRTCRecordingInstance::startListWithRecording()
+{
 	// The streamed microvector download (CRTCContext::AddMicrovectorMovement) may have started
 	// list execution already; a second execute_list_pos would fail with RTC6_BUSY. In that case
-	// only the measurement readout loop below is needed.
+	// only the measurement readout is needed.
 	bool bAlreadyStarted = (m_pListExecutionAlreadyStarted.get() != nullptr)
 		&& m_pListExecutionAlreadyStarted->exchange(false);
 
@@ -707,60 +741,94 @@ void CRTCRecordingInstance::executeListWithRecording()
 		m_pSDK->checkError(m_pSDK->n_get_last_error(m_CardNo));
 	}
 
+	m_bReadoutActive = true;
+	m_bMeasurementStarted = false;
+	m_nReadoutLastPosition = 0;
+	m_bReadoutStepPending = false;
+	m_nReadoutLastBusy = 0;
+}
+
+bool CRTCRecordingInstance::readRecordedData()
+{
+	if (!m_bReadoutActive)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_RECORDINGREADOUTNOTSTARTED);
+
 	uint32_t Busy, Position, MesBusy, MesPosition;
-	uint32_t LastPosition = 0;
-	uint32_t Increment = 100000;
+	const uint32_t Increment = 100000;
+	const uint32_t nMaxMESPosition = (1UL << 22) - 1;
 
-	uint32_t nMaxMESPosition = (1UL << 22) - 1;
-
-	do // Wait for measurement to start
-	{
+	if (!m_bMeasurementStarted) {
+		// Wait for measurement to start
 		m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	} while ((MesBusy == 0) && (MesPosition == (uint32_t)-1));
+		if ((MesBusy == 0) && (MesPosition == (uint32_t)-1))
+			return false;
 
-	do   //blockwise data polling
-	{
+		m_bMeasurementStarted = true;
+		return false;
+	}
 
-		m_pSDK->n_get_status(m_CardNo, &Busy, &Position);
+	// The previous step has read its block. The measurement position is taken again after the
+	// pause of the caller, so that samples that arrived in between are not missed.
+	if (m_bReadoutStepPending) {
+		m_bReadoutStepPending = false;
+
 		m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
-		if (MesPosition > LastPosition + Increment)
-		{
-			readRecordedDataBlockFromRTC(LastPosition, LastPosition + Increment);
-			LastPosition += Increment;
+
+		// The job has finished executing and the readout has caught up with the measurement.
+		if (!(m_nReadoutLastBusy || (MesPosition != m_nReadoutLastPosition))) {
+		//if (!(MesBusy || (MesPosition != m_nReadoutLastPosition))) {
+			m_bReadoutActive = false;
+			return true;
 		}
-		else if (MesPosition < LastPosition)
-		{
-			if (MesPosition > nMaxMESPosition)
-				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGOVERFLOW, "data recording interval overflow: MesPosition exceeds Max MES Position");
+	}
 
-			uint32_t nBytesToRead = nMaxMESPosition - LastPosition;
-			if (nBytesToRead > Increment) {
-				readRecordedDataBlockFromRTC(LastPosition, LastPosition + Increment);
-				LastPosition += Increment;
-			}
-			else {
-				readRecordedDataBlockFromRTC(LastPosition, nMaxMESPosition);
-				LastPosition = 0;
+	// Blockwise data polling
+	m_pSDK->n_get_status(m_CardNo, &Busy, &Position);
+	m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
+	if (MesPosition > m_nReadoutLastPosition + Increment)
+	{
+		readRecordedDataBlockFromRTC(m_nReadoutLastPosition, m_nReadoutLastPosition + Increment);
+		m_nReadoutLastPosition += Increment;
+	}
+	else if (MesPosition < m_nReadoutLastPosition)
+	{
+		if (MesPosition > nMaxMESPosition)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGOVERFLOW, "data recording interval overflow: MesPosition exceeds Max MES Position");
 
-			}
-
+		uint32_t nBytesToRead = nMaxMESPosition - m_nReadoutLastPosition;
+		if (nBytesToRead > Increment) {
+			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, m_nReadoutLastPosition + Increment);
+			m_nReadoutLastPosition += Increment;
 		}
 		else {
-			//if (!MesBusy) {
-			if (!Busy) {
-				readRecordedDataBlockFromRTC(LastPosition, MesPosition);
-				LastPosition = MesPosition;
-			}
+			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, nMaxMESPosition);
+			m_nReadoutLastPosition = 0;
+
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+	else {
+		//if (!MesBusy) {
+		if (!Busy) {
+			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, MesPosition);
+			m_nReadoutLastPosition = MesPosition;
+		}
+	}
 
-		m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
+	m_nReadoutLastBusy = Busy;
+	m_bReadoutStepPending = true;
 
-	} while (Busy || (MesPosition != LastPosition));           // Wait for the job to be finished executing
-	//} while (MesBusy || (MesPosition != LastPosition));           // Wait for the job to be finished executing
+	return false;
+}
 
+void CRTCRecordingInstance::discardRecords()
+{
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+	for (auto pChannel : m_Channels) {
+		if (pChannel.get() != nullptr)
+			pChannel->discardRecords();
+	}
 }
 
 void CRTCRecordingInstance::addRecordsToDataTable(const std::string& sChannelName, LibMCEnv::PDataTable pDataTable, const std::string& sColumnIdentifier, const std::string& sColumnDescription)

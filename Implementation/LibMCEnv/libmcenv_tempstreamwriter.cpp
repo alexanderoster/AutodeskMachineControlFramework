@@ -74,6 +74,15 @@ CTempStreamWriter::~CTempStreamWriter()
 }
 
 
+void CTempStreamWriter::Discard()
+{
+    if (m_bIsFinished)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM, "a finished stream can not be discarded");
+
+    m_pStorage->DiscardRandomWriteStream(m_sUUID);
+    m_bIsFinished = true;
+}
+
 std::string CTempStreamWriter::GetUUID()
 {
     return m_sUUID;

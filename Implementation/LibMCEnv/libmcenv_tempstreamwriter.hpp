@@ -79,6 +79,10 @@ public:
 
 	virtual ~CTempStreamWriter();
 
+	// Discards the unfinished stream: the data on disk and the stream entry are deleted.
+	// The writer MUST NOT be used afterwards. Not part of the external API.
+	void Discard();
+
 	std::string GetUUID() override;
 
 	std::string GetName() override;

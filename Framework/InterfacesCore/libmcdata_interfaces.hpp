@@ -75,6 +75,7 @@ class IBuildJobData;
 class IBuildJobDataIterator;
 class IBuildJobExecutionData;
 class IBuildJobExecutionDataIterator;
+class IDataCapture;
 class IBuildJobExecution;
 class IBuildJobExecutionIterator;
 class IBuildJob;
@@ -1346,6 +1347,25 @@ public:
 	*/
 	virtual void AttachStreamToJournal(const std::string & sStreamUUID, const std::string & sJournalUUID) = 0;
 
+	/**
+	* IStorage::DiscardRandomWriteStream - Discards an unfinished random write stream. The data on disk and the stream entry are deleted.
+	* @param[in] sUUID - UUID of storage stream. MUST have been created with BeginRandomWriteStream first and MUST NOT be finished.
+	*/
+	virtual void DiscardRandomWriteStream(const std::string & sUUID) = 0;
+
+	/**
+	* IStorage::GetDataCaptureStorageSize - Returns the size of all data capture segments that are stored on disk.
+	* @return Size in bytes.
+	*/
+	virtual LibMCData_uint64 GetDataCaptureStorageSize() = 0;
+
+	/**
+	* IStorage::EnforceDataCaptureStorageLimit - Deletes the oldest stored data capture segments until the total stored size is within the limit.
+	* @param[in] nLimitInBytes - Maximum total size of all stored data capture segments in bytes.
+	* @return Number of segments that have been deleted.
+	*/
+	virtual LibMCData_uint32 EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes) = 0;
+
 };
 
 typedef IBaseSharedPtr<IStorage> PIStorage;
@@ -1500,6 +1520,138 @@ public:
 };
 
 typedef IBaseSharedPtr<IBuildJobExecutionDataIterator> PIBuildJobExecutionDataIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for DataCapture 
+**************************************************************************************************************************/
+
+class IDataCapture : public virtual IBase {
+public:
+	/**
+	* IDataCapture::GetUUID - returns the uuid of the data capture.
+	* @return UUID String
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IDataCapture::GetExecutionUUID - returns the uuid of the build job execution the capture belongs to.
+	* @return UUID String
+	*/
+	virtual std::string GetExecutionUUID() = 0;
+
+	/**
+	* IDataCapture::GetIdentifier - returns the identifier of the data capture. It is unique within the build job execution.
+	* @return Identifier String
+	*/
+	virtual std::string GetIdentifier() = 0;
+
+	/**
+	* IDataCapture::GetName - returns the human readable name of the data capture.
+	* @return Name String
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IDataCapture::GetStatus - returns the current status of the data capture.
+	* @return Status Value
+	*/
+	virtual LibMCData::eDataCaptureStatus GetStatus() = 0;
+
+	/**
+	* IDataCapture::GetTimeStamp - returns the time stamp when the data capture was created.
+	* @return Timestamp in ISO8601 UTC format
+	*/
+	virtual std::string GetTimeStamp() = 0;
+
+	/**
+	* IDataCapture::AddColumn - Registers a column of the capture schema. Fails if the capture is not recording or the column index already exists.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] sDescription - Description of the column.
+	* @param[in] nColumnType - Data type of the column as numeric data table column type.
+	*/
+	virtual void AddColumn(const LibMCData_uint32 nColumnIndex, const std::string & sIdentifier, const std::string & sDescription, const LibMCData_uint32 nColumnType) = 0;
+
+	/**
+	* IDataCapture::GetColumnCount - returns the number of columns of the capture schema.
+	* @return Number of columns.
+	*/
+	virtual LibMCData_uint32 GetColumnCount() = 0;
+
+	/**
+	* IDataCapture::GetColumnInformation - returns the schema information of a column. Fails if the index does not exist.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[out] sIdentifier - Identifier of the column.
+	* @param[out] sDescription - Description of the column.
+	* @param[out] nColumnType - Data type of the column as numeric data table column type.
+	*/
+	virtual void GetColumnInformation(const LibMCData_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, LibMCData_uint32 & nColumnType) = 0;
+
+	/**
+	* IDataCapture::AddSegment - Registers a finished segment stream of the capture. Fails if the capture is not recording or the segment index already exists.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[in] sStreamUUID - UUID of the storage stream that holds the segment. The stream MUST exist.
+	* @param[in] nFirstRow - Index of the first row of the segment within the capture.
+	* @param[in] nRowCount - Number of rows in the segment.
+	* @param[in] nChunkCount - Number of chunks in the segment.
+	* @param[in] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[in] nStartTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was opened.
+	* @param[in] nEndTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was closed.
+	*/
+	virtual void AddSegment(const LibMCData_uint32 nSegmentIndex, const std::string & sStreamUUID, const LibMCData_uint64 nFirstRow, const LibMCData_uint64 nRowCount, const LibMCData_uint32 nChunkCount, const LibMCData_uint64 nSizeInBytes, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp) = 0;
+
+	/**
+	* IDataCapture::GetSegmentCount - returns the number of registered segments, including purged ones.
+	* @return Number of segments.
+	*/
+	virtual LibMCData_uint32 GetSegmentCount() = 0;
+
+	/**
+	* IDataCapture::GetSegmentInformation - returns the manifest entry of a segment. Fails if the index does not exist.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[out] sStreamUUID - UUID of the storage stream that holds the segment.
+	* @param[out] nFirstRow - Index of the first row of the segment within the capture.
+	* @param[out] nRowCount - Number of rows in the segment.
+	* @param[out] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[out] bIsPurged - Returns true if the segment data has been deleted by retention or abort.
+	*/
+	virtual void GetSegmentInformation(const LibMCData_uint32 nSegmentIndex, std::string & sStreamUUID, LibMCData_uint64 & nFirstRow, LibMCData_uint64 & nRowCount, LibMCData_uint64 & nSizeInBytes, bool & bIsPurged) = 0;
+
+	/**
+	* IDataCapture::GetSegmentChunkCount - returns the number of chunks of a segment. Fails if the index does not exist.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @return Number of chunks in the segment.
+	*/
+	virtual LibMCData_uint32 GetSegmentChunkCount(const LibMCData_uint32 nSegmentIndex) = 0;
+
+	/**
+	* IDataCapture::GetRowCount - returns the number of rows in all registered segments, including purged ones.
+	* @return Number of rows.
+	*/
+	virtual LibMCData_uint64 GetRowCount() = 0;
+
+	/**
+	* IDataCapture::GetStoredSizeInBytes - returns the size of all segments of the capture that are still stored on disk.
+	* @return Size in bytes.
+	*/
+	virtual LibMCData_uint64 GetStoredSizeInBytes() = 0;
+
+	/**
+	* IDataCapture::Finish - Marks the capture as finished. Fails if the capture is not recording.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	virtual void Finish(const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IDataCapture::Abort - Deletes all stored segments of the capture and marks it as aborted. Fails if the capture has been aborted before.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	virtual void Abort(const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+};
+
+typedef IBaseSharedPtr<IDataCapture> PIDataCapture;
 
 
 /*************************************************************************************************************************
@@ -1681,6 +1833,43 @@ public:
 	* @return Return value.
 	*/
 	virtual std::string GetMetaDataString(const std::string & sKey) = 0;
+
+	/**
+	* IBuildJobExecution::CreateDataCapture - Creates the manifest of a new data capture in recording state. Fails if the identifier already exists in this execution.
+	* @param[in] sIdentifier - Identifier of the capture. MUST be unique within the execution, alphanumeric and not empty.
+	* @param[in] sName - Human readable name of the capture. MUST NOT be empty.
+	* @param[in] sUserUUID - UUID of the user that started the capture. Use 00000000-0000-0000-0000-000000000000 if no user shall be recorded.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return Data capture manifest instance.
+	*/
+	virtual IDataCapture * CreateDataCapture(const std::string & sIdentifier, const std::string & sName, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IBuildJobExecution::HasDataCapture - Returns if a data capture with a specific identifier exists in this execution.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Returns true, if the data capture exists.
+	*/
+	virtual bool HasDataCapture(const std::string & sIdentifier) = 0;
+
+	/**
+	* IBuildJobExecution::RetrieveDataCapture - Retrieves the manifest of a data capture by its identifier. Fails if the identifier does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Data capture manifest instance.
+	*/
+	virtual IDataCapture * RetrieveDataCapture(const std::string & sIdentifier) = 0;
+
+	/**
+	* IBuildJobExecution::GetDataCaptureCount - Returns the number of data captures of this execution.
+	* @return Number of data captures.
+	*/
+	virtual LibMCData_uint32 GetDataCaptureCount() = 0;
+
+	/**
+	* IBuildJobExecution::RetrieveDataCaptureByIndex - Retrieves the manifest of a data capture of this execution by its index. Captures are ordered by their creation time.
+	* @param[in] nIndex - Index of the capture. 0-based. Fails if the index is out of bounds.
+	* @return Data capture manifest instance.
+	*/
+	virtual IDataCapture * RetrieveDataCaptureByIndex(const LibMCData_uint32 nIndex) = 0;
 
 };
 
@@ -2072,6 +2261,13 @@ public:
 	* @return Returns the list of execution instances that changed. List may be empty.
 	*/
 	virtual IBuildJobExecutionIterator * ListJobExecutionsChangedSince(const LibMCData_uint64 nIncrementalID) = 0;
+
+	/**
+	* IBuildJobHandler::RetrieveDataCapture - Retrieves the manifest of a data capture by its uuid. Fails if the capture does not exist.
+	* @param[in] sDataCaptureUUID - UUID of the data capture.
+	* @return Data capture manifest instance.
+	*/
+	virtual IDataCapture * RetrieveDataCapture(const std::string & sDataCaptureUUID) = 0;
 
 };
 

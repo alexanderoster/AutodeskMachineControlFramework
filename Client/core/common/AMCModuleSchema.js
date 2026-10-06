@@ -135,6 +135,10 @@ const MODULE_SCHEMAS = {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible', 'severity', 'title', 'description'],
 	},
+	datacapture: {
+		required: ['uuid', 'type'],
+		optional: ['caption', 'visible', 'title', 'captureuuid', 'defaultcolumns'],
+	},
 	custom: {
 		required: ['uuid', 'type'],
 		optional: ['caption', 'visible'],

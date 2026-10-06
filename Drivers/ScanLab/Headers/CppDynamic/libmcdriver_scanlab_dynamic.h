@@ -558,6 +558,31 @@ typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_Backtransfo
 */
 typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_AddTargetPositionsToDataTablePtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording, LibMCEnv_DataTable pDataTable, const char * pColumnIdentifierX, const char * pColumnDescriptionX, const char * pColumnIdentifierY, const char * pColumnDescriptionY);
 
+/**
+* Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
+/**
+* Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @param[out] pRecordingComplete - True if the list has finished and all recorded data has been read.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording, bool * pRecordingComplete);
+
+/**
+* Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
 /*************************************************************************************************************************
  Class definition for GPIOSequence
 **************************************************************************************************************************/
@@ -3278,6 +3303,9 @@ typedef struct {
 	PLibMCDriver_ScanLabRTCRecording_AddBacktransformedZPositionsToDataTablePtr m_RTCRecording_AddBacktransformedZPositionsToDataTable;
 	PLibMCDriver_ScanLabRTCRecording_BacktransformRawZCoordinatePtr m_RTCRecording_BacktransformRawZCoordinate;
 	PLibMCDriver_ScanLabRTCRecording_AddTargetPositionsToDataTablePtr m_RTCRecording_AddTargetPositionsToDataTable;
+	PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr m_RTCRecording_StartListWithRecording;
+	PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr m_RTCRecording_ReadRecordedData;
+	PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr m_RTCRecording_DiscardRecords;
 	PLibMCDriver_ScanLabGPIOSequence_GetIdentifierPtr m_GPIOSequence_GetIdentifier;
 	PLibMCDriver_ScanLabGPIOSequence_ClearPtr m_GPIOSequence_Clear;
 	PLibMCDriver_ScanLabGPIOSequence_AddOutputPtr m_GPIOSequence_AddOutput;

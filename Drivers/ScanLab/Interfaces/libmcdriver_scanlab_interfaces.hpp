@@ -786,6 +786,22 @@ public:
 	*/
 	virtual void AddTargetPositionsToDataTable(LibMCEnv::PDataTable pDataTable, const std::string & sColumnIdentifierX, const std::string & sColumnDescriptionX, const std::string & sColumnIdentifierY, const std::string & sColumnDescriptionY) = 0;
 
+	/**
+	* IRTCRecording::StartListWithRecording - Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.
+	*/
+	virtual void StartListWithRecording() = 0;
+
+	/**
+	* IRTCRecording::ReadRecordedData - Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.
+	* @return True if the list has finished and all recorded data has been read.
+	*/
+	virtual bool ReadRecordedData() = 0;
+
+	/**
+	* IRTCRecording::DiscardRecords - Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.
+	*/
+	virtual void DiscardRecords() = 0;
+
 };
 
 typedef IBaseSharedPtr<IRTCRecording> PIRTCRecording;

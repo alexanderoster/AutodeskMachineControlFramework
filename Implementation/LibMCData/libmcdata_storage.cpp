@@ -36,6 +36,7 @@ Abstract: This is a stub class definition of CStorage
 #include "libmcdata_interfaceexception.hpp"
 
 #include "libmcdata_storagezipwriter.hpp"
+#include "libmcdata_datacapture.hpp"
 
 // Include custom headers here.
 #include "common_utils.hpp"
@@ -527,4 +528,49 @@ void CStorage::AttachStreamToJournal(const std::string& sStreamUUID, const std::
     }
 
     pTransaction->commit();
+}
+
+
+void CStorage::DiscardRandomWriteStream(const std::string& sUUID)
+{
+    std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
+
+    {
+        auto pWriter = m_pStorageState->findPartialWriter(sParsedUUID, false);
+        if (pWriter == nullptr)
+            throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND, "random write stream not found: " + sParsedUUID);
+
+        auto pRandomAccessWriter = dynamic_cast<AMCData::CStorageWriter_RandomAccess*> (pWriter.get());
+        if (pRandomAccessWriter == nullptr)
+            throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STORAGESTREAMNOTRANDOMACCESS, "storage stream is not random access: " + sParsedUUID);
+
+        m_pStorageState->deletePartialWriter(sParsedUUID);
+
+        // An unfinished writer deletes its file when the last reference is released at the end of this scope.
+    }
+
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    auto pLinkStatement = pTransaction->prepareStatement("DELETE FROM journal_tempstreams WHERE streamuuid=?");
+    pLinkStatement->setString(1, sParsedUUID);
+    pLinkStatement->execute();
+    pLinkStatement = nullptr;
+
+    auto pStreamStatement = pTransaction->prepareStatement("DELETE FROM storage_streams WHERE uuid=? AND status=?");
+    pStreamStatement->setString(1, sParsedUUID);
+    pStreamStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssNew));
+    pStreamStatement->execute();
+    pStreamStatement = nullptr;
+
+    pTransaction->commit();
+}
+
+LibMCData_uint64 CStorage::GetDataCaptureStorageSize()
+{
+    return CDataCapture::getTotalStoredSize(m_pSQLHandler);
+}
+
+LibMCData_uint32 CStorage::EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes)
+{
+    return CDataCapture::enforceStorageLimit(m_pSQLHandler, m_pStorageState, nLimitInBytes);
 }
