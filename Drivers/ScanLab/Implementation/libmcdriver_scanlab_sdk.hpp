@@ -117,6 +117,12 @@ namespace LibMCDriver_ScanLab {
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_long_delay) (uint32_t nCardNo, uint32_t nDelay);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_get_status) (uint32_t nCardNo, uint32_t * pnStatus, uint32_t * pnPos);
 		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_get_input_pointer) (uint32_t nCardNo);
+		// List handling for the alternating List1/List2 microvector download (RTC6 manual p. 482, 483, 504, 599, 702).
+		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_load_list) (uint32_t nCardNo, uint32_t nListNo, uint32_t nPos);
+		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_read_status) (uint32_t nCardNo);
+		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_get_list_space) (uint32_t nCardNo);
+		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_get_list_pointer) (uint32_t nCardNo, uint32_t * pnListNo, uint32_t * pnPos);
+		typedef uint32_t(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_get_out_pointer) (uint32_t nCardNo);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_set_laser_delays) (uint32_t nCardNo, int32_t nLaserOnDelay, uint32_t nLaserOffDelay);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_set_start_list_pos) (uint32_t nCardNo, uint32_t nListNo, uint32_t nListPos);
 		typedef void(SCANLAB_CALLINGCONVENTION* PScanLabPtr_n_set_defocus_list) (uint32_t nCardNo, int32_t nShift);
@@ -321,6 +327,11 @@ namespace LibMCDriver_ScanLab {
 			PScanLabPtr_n_long_delay ptr_n_long_delay = nullptr;
 			PScanLabPtr_n_get_status ptr_n_get_status = nullptr;
 			PScanLabPtr_n_get_input_pointer ptr_n_get_input_pointer = nullptr;
+			PScanLabPtr_n_load_list ptr_n_load_list = nullptr;
+			PScanLabPtr_n_read_status ptr_n_read_status = nullptr;
+			PScanLabPtr_n_get_list_space ptr_n_get_list_space = nullptr;
+			PScanLabPtr_n_get_list_pointer ptr_n_get_list_pointer = nullptr;
+			PScanLabPtr_n_get_out_pointer ptr_n_get_out_pointer = nullptr;
 			PScanLabPtr_n_set_laser_delays ptr_n_set_laser_delays = nullptr;
 			PScanLabPtr_n_set_start_list_pos ptr_n_set_start_list_pos = nullptr;
 			PScanLabPtr_n_set_defocus_list ptr_n_set_defocus_list = nullptr;
@@ -488,6 +499,16 @@ namespace LibMCDriver_ScanLab {
 			void n_long_delay (uint32_t nCardNo, uint32_t nDelay);
 			void n_get_status (uint32_t nCardNo, uint32_t* pnStatus, uint32_t* pnPos);
 			uint32_t n_get_input_pointer (uint32_t nCardNo);
+			// Returns the number of the opened list (1 or 2) or 0 if no list could be opened (manual p. 599).
+			uint32_t n_load_list (uint32_t nCardNo, uint32_t nListNo, uint32_t nPos);
+			// LOAD/READY/BUSY/USED list status bits of both lists (manual p. 702).
+			uint32_t n_read_status (uint32_t nCardNo);
+			// Free list positions from the input pointer to the end of the open list (manual p. 483).
+			uint32_t n_get_list_space (uint32_t nCardNo);
+			// List number and list-relative position of the input pointer (manual p. 482).
+			void n_get_list_pointer (uint32_t nCardNo, uint32_t* pnListNo, uint32_t* pnPos);
+			// List-relative position of the output pointer (manual p. 504).
+			uint32_t n_get_out_pointer (uint32_t nCardNo);
 			void n_set_laser_delays (uint32_t nCardNo, int32_t nLaserOnDelay, uint32_t nLaserOffDelay);
 			void n_set_start_list_pos (uint32_t nCardNo, uint32_t nListNo, uint32_t nListPos);
 			void n_set_defocus_list (uint32_t nCardNo, int32_t nShift);

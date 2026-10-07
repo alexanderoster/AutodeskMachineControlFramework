@@ -3730,6 +3730,62 @@ LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setmicrovectorstreaming
 	}
 }
 
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled(LibMCDriver_ScanLab_RTCContext pRTCContext, bool bEnabled, LibMCDriver_ScanLab_uint32 nListCapacityLimit, LibMCDriver_ScanLab_uint32 nTailReserve)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCContext->SetMicrovectorListSwitchingEnabled(bEnabled, nListCapacityLimit, nTailReserve);
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pSegmentCount, LibMCDriver_ScanLab_uint32 * pFallbackCount, LibMCDriver_ScanLab_uint64 * pMinMargin, LibMCDriver_ScanLab_uint64 * pMaxListWaitInMS)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		if (!pSegmentCount)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		if (!pFallbackCount)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		if (!pMinMargin)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		if (!pMaxListWaitInMS)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCContext->GetMicrovectorListSwitchingStatistics(*pSegmentCount, *pFallbackCount, *pMinMargin, *pMaxListWaitInMS);
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getcurrentfreevariable(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nVariableNo, LibMCDriver_ScanLab_uint32 * pValue)
 {
 	IBase* pIBaseClass = (IBase *)pRTCContext;
@@ -8561,6 +8617,10 @@ LibMCDriver_ScanLabResult LibMCDriver_ScanLab::Impl::LibMCDriver_ScanLab_GetProc
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_addmicrovectormovement;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_getcurrentfreevariable") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_getcurrentfreevariable;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_gettimestamp") 

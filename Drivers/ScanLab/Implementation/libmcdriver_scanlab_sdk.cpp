@@ -235,6 +235,11 @@ CScanLabSDK::CScanLabSDK(const std::string& sDLLNameUTF8)
 	this->ptr_n_long_delay = (PScanLabPtr_n_long_delay)_loadScanLabAddress(hLibrary, "n_long_delay");
 	this->ptr_n_get_status = (PScanLabPtr_n_get_status)_loadScanLabAddress(hLibrary, "n_get_status");
 	this->ptr_n_get_input_pointer = (PScanLabPtr_n_get_input_pointer)_loadScanLabAddress(hLibrary, "n_get_input_pointer");
+	this->ptr_n_load_list = (PScanLabPtr_n_load_list)_loadScanLabAddress(hLibrary, "n_load_list");
+	this->ptr_n_read_status = (PScanLabPtr_n_read_status)_loadScanLabAddress(hLibrary, "n_read_status");
+	this->ptr_n_get_list_space = (PScanLabPtr_n_get_list_space)_loadScanLabAddress(hLibrary, "n_get_list_space");
+	this->ptr_n_get_list_pointer = (PScanLabPtr_n_get_list_pointer)_loadScanLabAddress(hLibrary, "n_get_list_pointer");
+	this->ptr_n_get_out_pointer = (PScanLabPtr_n_get_out_pointer)_loadScanLabAddress(hLibrary, "n_get_out_pointer");
 	this->ptr_n_set_laser_delays = (PScanLabPtr_n_set_laser_delays)_loadScanLabAddress(hLibrary, "n_set_laser_delays");
 	this->ptr_n_set_start_list_pos = (PScanLabPtr_n_set_start_list_pos)_loadScanLabAddress(hLibrary, "n_set_start_list_pos");
 	this->ptr_n_set_defocus_list = (PScanLabPtr_n_set_defocus_list)_loadScanLabAddress(hLibrary, "n_set_defocus_list");
@@ -457,6 +462,11 @@ void CScanLabSDK::resetFunctionPtrs()
 	ptr_n_long_delay = nullptr;
 	ptr_n_get_status = nullptr;
 	ptr_n_get_input_pointer = nullptr;
+	ptr_n_load_list = nullptr;
+	ptr_n_read_status = nullptr;
+	ptr_n_get_list_space = nullptr;
+	ptr_n_get_list_pointer = nullptr;
+	ptr_n_get_out_pointer = nullptr;
 	ptr_n_set_laser_delays = nullptr;
 	ptr_n_set_start_list_pos = nullptr;
 	ptr_n_set_defocus_list = nullptr;
@@ -972,6 +982,46 @@ uint32_t CScanLabSDK::n_get_input_pointer(uint32_t nCardNo)
 		m_pLogJournal->logCall("n_get_input_pointer", std::to_string(nCardNo));
 
 	return ptr_n_get_input_pointer(nCardNo);
+}
+
+uint32_t CScanLabSDK::n_load_list(uint32_t nCardNo, uint32_t nListNo, uint32_t nPos)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_load_list", std::to_string(nCardNo) + ", " + std::to_string(nListNo) + ", " + std::to_string(nPos));
+
+	return ptr_n_load_list(nCardNo, nListNo, nPos);
+}
+
+uint32_t CScanLabSDK::n_read_status(uint32_t nCardNo)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_read_status", std::to_string(nCardNo));
+
+	return ptr_n_read_status(nCardNo);
+}
+
+uint32_t CScanLabSDK::n_get_list_space(uint32_t nCardNo)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_get_list_space", std::to_string(nCardNo));
+
+	return ptr_n_get_list_space(nCardNo);
+}
+
+void CScanLabSDK::n_get_list_pointer(uint32_t nCardNo, uint32_t* pnListNo, uint32_t* pnPos)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_get_list_pointer", std::to_string(nCardNo) + ", &" + m_pLogJournal->defineUint32Variable("nListNo") + ", &" + m_pLogJournal->defineUint32Variable("nListPos"));
+
+	ptr_n_get_list_pointer(nCardNo, pnListNo, pnPos);
+}
+
+uint32_t CScanLabSDK::n_get_out_pointer(uint32_t nCardNo)
+{
+	if (m_pLogJournal.get() != nullptr)
+		m_pLogJournal->logCall("n_get_out_pointer", std::to_string(nCardNo));
+
+	return ptr_n_get_out_pointer(nCardNo);
 }
 
 void CScanLabSDK::n_set_laser_delays(uint32_t nCardNo, int32_t nLaserOnDelay, uint32_t nLaserOffDelay)

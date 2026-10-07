@@ -1016,6 +1016,8 @@ public:
 	inline void AddFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo, const LibMCDriver_ScanLab_uint32 nValue);
 	inline void AddMicrovectorMovement(const CInputVector<sMicroVector> & MicrovectorArrayBuffer);
 	inline void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction);
+	inline void SetMicrovectorListSwitchingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nListCapacityLimit, const LibMCDriver_ScanLab_uint32 nTailReserve);
+	inline void GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS);
 	inline LibMCDriver_ScanLab_uint32 GetCurrentFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo);
 	inline LibMCDriver_ScanLab_uint32 GetTimeStamp();
 	inline LibMCDriver_ScanLab_int32 GetRTCChannel(const eRTCChannelType eChannelType);
@@ -1505,6 +1507,8 @@ public:
 		pWrapperTable->m_RTCContext_AddFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_AddMicrovectorMovement = nullptr;
 		pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled = nullptr;
+		pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled = nullptr;
+		pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics = nullptr;
 		pWrapperTable->m_RTCContext_GetCurrentFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_GetTimeStamp = nullptr;
 		pWrapperTable->m_RTCContext_GetRTCChannel = nullptr;
@@ -2917,6 +2921,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled = (PLibMCDriver_ScanLabRTCContext_SetMicrovectorListSwitchingEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled = (PLibMCDriver_ScanLabRTCContext_SetMicrovectorListSwitchingEnabledPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics = (PLibMCDriver_ScanLabRTCContext_GetMicrovectorListSwitchingStatisticsPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics = (PLibMCDriver_ScanLabRTCContext_GetMicrovectorListSwitchingStatisticsPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -5045,6 +5067,14 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setmicrovectorstreamingenabled", (void**)&(pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled", (void**)&(pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics", (void**)&(pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getcurrentfreevariable", (void**)&(pWrapperTable->m_RTCContext_GetCurrentFreeVariable));
@@ -7234,6 +7264,29 @@ public:
 	void CRTCContext::SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetMicrovectorStreamingEnabled(m_pHandle, bEnabled, nMinLayerSize, dPrebufferFraction));
+	}
+	
+	/**
+	* CRTCContext::SetMicrovectorListSwitchingEnabled - Enables alternating List1/List2 execution for microvector layers that do not fit into one RTC6 list. AddMicrovectorMovement then splits the layer into segments, closes each full list with set_end_of_list, arms an automatic list change and continues in the other list while the laser keeps marking. Requires the streamed download (SetMicrovectorStreamingEnabled). Default is disabled.
+	* @param[in] bEnabled - True to execute oversized layers alternately from List1 and List2.
+	* @param[in] nListCapacityLimit - Test aid: maximum list positions used per segment, 0 = full configured list size. Values below 84096 (four check blocks in the worst case plus the tail reserve) are clamped to it.
+	* @param[in] nTailReserve - List positions kept free at the end of every segment for set_end_of_list and the layer epilogue. 0 = built-in default of 4096.
+	*/
+	void CRTCContext::SetMicrovectorListSwitchingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nListCapacityLimit, const LibMCDriver_ScanLab_uint32 nTailReserve)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_SetMicrovectorListSwitchingEnabled(m_pHandle, bEnabled, nListCapacityLimit, nTailReserve));
+	}
+	
+	/**
+	* CRTCContext::GetMicrovectorListSwitchingStatistics - Returns counters of the last AddMicrovectorMovement call: number of segments the layer was split into, number of segments that had to be started explicitly because the card had already finished the previous one, the minimum observed download margin and the longest wait for a list to become free.
+	* @param[out] nSegmentCount - Segments written (1 = no list switch).
+	* @param[out] nFallbackCount - Segments started explicitly instead of by automatic list change.
+	* @param[out] nMinMargin - Minimum observed distance between input and output pointer in list positions.
+	* @param[out] nMaxListWaitInMS - Longest wait for the previous list to be consumed before it could be reused, in milliseconds.
+	*/
+	void CRTCContext::GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetMicrovectorListSwitchingStatistics(m_pHandle, &nSegmentCount, &nFallbackCount, &nMinMargin, &nMaxListWaitInMS));
 	}
 	
 	/**

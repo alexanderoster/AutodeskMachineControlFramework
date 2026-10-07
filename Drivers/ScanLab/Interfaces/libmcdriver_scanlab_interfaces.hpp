@@ -1433,6 +1433,23 @@ public:
 	virtual void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction) = 0;
 
 	/**
+	* IRTCContext::SetMicrovectorListSwitchingEnabled - Enables alternating List1/List2 execution for microvector layers that do not fit into one RTC6 list. AddMicrovectorMovement then splits the layer into segments, closes each full list with set_end_of_list, arms an automatic list change and continues in the other list while the laser keeps marking. Requires the streamed download (SetMicrovectorStreamingEnabled). Default is disabled.
+	* @param[in] bEnabled - True to execute oversized layers alternately from List1 and List2.
+	* @param[in] nListCapacityLimit - Test aid: maximum list positions used per segment, 0 = full configured list size. Values below 84096 (four check blocks in the worst case plus the tail reserve) are clamped to it.
+	* @param[in] nTailReserve - List positions kept free at the end of every segment for set_end_of_list and the layer epilogue. 0 = built-in default of 4096.
+	*/
+	virtual void SetMicrovectorListSwitchingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nListCapacityLimit, const LibMCDriver_ScanLab_uint32 nTailReserve) = 0;
+
+	/**
+	* IRTCContext::GetMicrovectorListSwitchingStatistics - Returns counters of the last AddMicrovectorMovement call: number of segments the layer was split into, number of segments that had to be started explicitly because the card had already finished the previous one, the minimum observed download margin and the longest wait for a list to become free.
+	* @param[out] nSegmentCount - Segments written (1 = no list switch).
+	* @param[out] nFallbackCount - Segments started explicitly instead of by automatic list change.
+	* @param[out] nMinMargin - Minimum observed distance between input and output pointer in list positions.
+	* @param[out] nMaxListWaitInMS - Longest wait for the previous list to be consumed before it could be reused, in milliseconds.
+	*/
+	virtual void GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS) = 0;
+
+	/**
 	* IRTCContext::GetCurrentFreeVariable - Returns the currently set free variable.
 	* @param[in] nVariableNo - Number of the variable (0-7).
 	* @return Value to return.
