@@ -1778,6 +1778,13 @@ public:
 	inline LibMCData_uint64 GetStartTimeStampInMicroseconds();
 	inline LibMCData_uint64 GetEndTimeStampInMicroseconds();
 	inline LibMCData_uint64 ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure);
+	inline eBuildJobExecutionStatus GetLoadedStatus();
+	inline std::string GetLoadedStatusString();
+	inline std::string GetLoadedDescription();
+	inline LibMCData_uint64 GetLoadedEndTimeStampInMicroseconds();
+	inline LibMCData_uint64 ComputeLoadedElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure);
+	inline bool JobHasThumbnailStream();
+	inline std::string GetJobThumbnailStreamUUID();
 	inline std::string AddJobExecutionData(const std::string & sIdentifier, const std::string & sName, classParam<CStorageStream> pStream, const eCustomDataType eDataType, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline PBuildJobExecutionDataIterator ListJobExecutionDataByType(const eCustomDataType eDataType);
 	inline PBuildJobExecutionDataIterator ListJobExecutionData();
@@ -2471,6 +2478,13 @@ public:
 		pWrapperTable->m_BuildJobExecution_GetStartTimeStampInMicroseconds = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetEndTimeStampInMicroseconds = nullptr;
 		pWrapperTable->m_BuildJobExecution_ComputeElapsedTimeInMicroseconds = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatus = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatusString = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetLoadedDescription = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds = nullptr;
+		pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds = nullptr;
+		pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID = nullptr;
 		pWrapperTable->m_BuildJobExecution_AddJobExecutionData = nullptr;
 		pWrapperTable->m_BuildJobExecution_ListJobExecutionDataByType = nullptr;
 		pWrapperTable->m_BuildJobExecution_ListJobExecutionData = nullptr;
@@ -4024,6 +4038,69 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobExecution_ComputeElapsedTimeInMicroseconds == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatus = (PLibMCDataBuildJobExecution_GetLoadedStatusPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getloadedstatus");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatus = (PLibMCDataBuildJobExecution_GetLoadedStatusPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getloadedstatus");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetLoadedStatus == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatusString = (PLibMCDataBuildJobExecution_GetLoadedStatusStringPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getloadedstatusstring");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedStatusString = (PLibMCDataBuildJobExecution_GetLoadedStatusStringPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getloadedstatusstring");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetLoadedStatusString == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedDescription = (PLibMCDataBuildJobExecution_GetLoadedDescriptionPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getloadeddescription");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedDescription = (PLibMCDataBuildJobExecution_GetLoadedDescriptionPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getloadeddescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetLoadedDescription == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds = (PLibMCDataBuildJobExecution_GetLoadedEndTimeStampInMicrosecondsPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getloadedendtimestampinmicroseconds");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds = (PLibMCDataBuildJobExecution_GetLoadedEndTimeStampInMicrosecondsPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getloadedendtimestampinmicroseconds");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds = (PLibMCDataBuildJobExecution_ComputeLoadedElapsedTimeInMicrosecondsPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_computeloadedelapsedtimeinmicroseconds");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds = (PLibMCDataBuildJobExecution_ComputeLoadedElapsedTimeInMicrosecondsPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_computeloadedelapsedtimeinmicroseconds");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream = (PLibMCDataBuildJobExecution_JobHasThumbnailStreamPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_jobhasthumbnailstream");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream = (PLibMCDataBuildJobExecution_JobHasThumbnailStreamPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_jobhasthumbnailstream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID = (PLibMCDataBuildJobExecution_GetJobThumbnailStreamUUIDPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getjobthumbnailstreamuuid");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID = (PLibMCDataBuildJobExecution_GetJobThumbnailStreamUUIDPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getjobthumbnailstreamuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6266,6 +6343,34 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_computeelapsedtimeinmicroseconds", (void**)&(pWrapperTable->m_BuildJobExecution_ComputeElapsedTimeInMicroseconds));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_ComputeElapsedTimeInMicroseconds == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getloadedstatus", (void**)&(pWrapperTable->m_BuildJobExecution_GetLoadedStatus));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetLoadedStatus == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getloadedstatusstring", (void**)&(pWrapperTable->m_BuildJobExecution_GetLoadedStatusString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetLoadedStatusString == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getloadeddescription", (void**)&(pWrapperTable->m_BuildJobExecution_GetLoadedDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetLoadedDescription == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getloadedendtimestampinmicroseconds", (void**)&(pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_computeloadedelapsedtimeinmicroseconds", (void**)&(pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_jobhasthumbnailstream", (void**)&(pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_JobHasThumbnailStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getjobthumbnailstreamuuid", (void**)&(pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetJobThumbnailStreamUUID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_addjobexecutiondata", (void**)&(pWrapperTable->m_BuildJobExecution_AddJobExecutionData));
@@ -9138,6 +9243,101 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_ComputeElapsedTimeInMicroseconds(m_pHandle, nGlobalTimerInMicroseconds, bThrowExceptionInFailure, &resultElapsedTimeInMicroseconds));
 		
 		return resultElapsedTimeInMicroseconds;
+	}
+	
+	/**
+	* CBuildJobExecution::GetLoadedStatus - returns the build job execution status as loaded when this instance was created (for example by ListJobExecutions). Does not query the database; use GetStatus for the current value.
+	* @return Status Value
+	*/
+	eBuildJobExecutionStatus CBuildJobExecution::GetLoadedStatus()
+	{
+		eBuildJobExecutionStatus resultExecutionStatus = (eBuildJobExecutionStatus) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedStatus(m_pHandle, &resultExecutionStatus));
+		
+		return resultExecutionStatus;
+	}
+	
+	/**
+	* CBuildJobExecution::GetLoadedStatusString - returns the build job execution status as string, as loaded when this instance was created. Does not query the database; use GetStatusString for the current value.
+	* @return Status Value
+	*/
+	std::string CBuildJobExecution::GetLoadedStatusString()
+	{
+		LibMCData_uint32 bytesNeededExecutionStatus = 0;
+		LibMCData_uint32 bytesWrittenExecutionStatus = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedStatusString(m_pHandle, 0, &bytesNeededExecutionStatus, nullptr));
+		std::vector<char> bufferExecutionStatus(bytesNeededExecutionStatus);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedStatusString(m_pHandle, bytesNeededExecutionStatus, &bytesWrittenExecutionStatus, &bufferExecutionStatus[0]));
+		
+		return std::string(&bufferExecutionStatus[0]);
+	}
+	
+	/**
+	* CBuildJobExecution::GetLoadedDescription - returns the build job execution description as loaded when this instance was created. Does not query the database; use GetDescription for the current value.
+	* @return Description at load time.
+	*/
+	std::string CBuildJobExecution::GetLoadedDescription()
+	{
+		LibMCData_uint32 bytesNeededDescription = 0;
+		LibMCData_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedDescription(m_pHandle, 0, &bytesNeededDescription, nullptr));
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedDescription(m_pHandle, bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0]));
+		
+		return std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* CBuildJobExecution::GetLoadedEndTimeStampInMicroseconds - Returns the end time stamp of the build execution as loaded when this instance was created. Loaded status MUST BE Finished or Failed. Does not query the database; use GetEndTimeStampInMicroseconds for the current value.
+	* @return TimeStamp when the build ended in Microseconds.
+	*/
+	LibMCData_uint64 CBuildJobExecution::GetLoadedEndTimeStampInMicroseconds()
+	{
+		LibMCData_uint64 resultTimeStampInMicroseconds = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetLoadedEndTimeStampInMicroseconds(m_pHandle, &resultTimeStampInMicroseconds));
+		
+		return resultTimeStampInMicroseconds;
+	}
+	
+	/**
+	* CBuildJobExecution::ComputeLoadedElapsedTimeInMicroseconds - Same as ComputeElapsedTimeInMicroseconds, but based on the status and end time stamp loaded when this instance was created. Does not query the database.
+	* @param[in] nGlobalTimerInMicroseconds - The current session global timer.
+	* @param[in] bThrowExceptionInFailure - If true, the method will throw exceptions in any error case. If false, it will just return 0 in any error case.
+	* @return Elapsed time in Microseconds.
+	*/
+	LibMCData_uint64 CBuildJobExecution::ComputeLoadedElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure)
+	{
+		LibMCData_uint64 resultElapsedTimeInMicroseconds = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_ComputeLoadedElapsedTimeInMicroseconds(m_pHandle, nGlobalTimerInMicroseconds, bThrowExceptionInFailure, &resultElapsedTimeInMicroseconds));
+		
+		return resultElapsedTimeInMicroseconds;
+	}
+	
+	/**
+	* CBuildJobExecution::JobHasThumbnailStream - returns if the parent build job had a thumbnail attached when this instance was loaded. Does not query the database.
+	* @return Returns true, if the parent build job has an attached thumbnail.
+	*/
+	bool CBuildJobExecution::JobHasThumbnailStream()
+	{
+		bool resultHasThumbnail = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_JobHasThumbnailStream(m_pHandle, &resultHasThumbnail));
+		
+		return resultHasThumbnail;
+	}
+	
+	/**
+	* CBuildJobExecution::GetJobThumbnailStreamUUID - returns the UUID of the thumbnail stream of the parent build job, as loaded when this instance was created. Does not query the database.
+	* @return Thumbnail UUID. 00000000-0000-0000-0000-000000000000, if no thumbnail is assigned or the parent build job does not exist.
+	*/
+	std::string CBuildJobExecution::GetJobThumbnailStreamUUID()
+	{
+		LibMCData_uint32 bytesNeededUUID = 0;
+		LibMCData_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobThumbnailStreamUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetJobThumbnailStreamUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
 	}
 	
 	/**

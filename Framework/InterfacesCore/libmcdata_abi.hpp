@@ -1741,6 +1741,77 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getendtimestampin
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_computeelapsedtimeinmicroseconds(LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint64 nGlobalTimerInMicroseconds, bool bThrowExceptionInFailure, LibMCData_uint64 * pElapsedTimeInMicroseconds);
 
 /**
+* returns the build job execution status as loaded when this instance was created (for example by ListJobExecutions). Does not query the database; use GetStatus for the current value.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pExecutionStatus - Status Value
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getloadedstatus(LibMCData_BuildJobExecution pBuildJobExecution, LibMCData::eBuildJobExecutionStatus * pExecutionStatus);
+
+/**
+* returns the build job execution status as string, as loaded when this instance was created. Does not query the database; use GetStatusString for the current value.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nExecutionStatusBufferSize - size of the buffer (including trailing 0)
+* @param[out] pExecutionStatusNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pExecutionStatusBuffer -  buffer of Status Value, may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getloadedstatusstring(LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nExecutionStatusBufferSize, LibMCData_uint32* pExecutionStatusNeededChars, char * pExecutionStatusBuffer);
+
+/**
+* returns the build job execution description as loaded when this instance was created. Does not query the database; use GetDescription for the current value.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description at load time., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getloadeddescription(LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nDescriptionBufferSize, LibMCData_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
+
+/**
+* Returns the end time stamp of the build execution as loaded when this instance was created. Loaded status MUST BE Finished or Failed. Does not query the database; use GetEndTimeStampInMicroseconds for the current value.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pTimeStampInMicroseconds - TimeStamp when the build ended in Microseconds.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getloadedendtimestampinmicroseconds(LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint64 * pTimeStampInMicroseconds);
+
+/**
+* Same as ComputeElapsedTimeInMicroseconds, but based on the status and end time stamp loaded when this instance was created. Does not query the database.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nGlobalTimerInMicroseconds - The current session global timer.
+* @param[in] bThrowExceptionInFailure - If true, the method will throw exceptions in any error case. If false, it will just return 0 in any error case.
+* @param[out] pElapsedTimeInMicroseconds - Elapsed time in Microseconds.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_computeloadedelapsedtimeinmicroseconds(LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint64 nGlobalTimerInMicroseconds, bool bThrowExceptionInFailure, LibMCData_uint64 * pElapsedTimeInMicroseconds);
+
+/**
+* returns if the parent build job had a thumbnail attached when this instance was loaded. Does not query the database.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pHasThumbnail - Returns true, if the parent build job has an attached thumbnail.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_jobhasthumbnailstream(LibMCData_BuildJobExecution pBuildJobExecution, bool * pHasThumbnail);
+
+/**
+* returns the UUID of the thumbnail stream of the parent build job, as loaded when this instance was created. Does not query the database.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of Thumbnail UUID. 00000000-0000-0000-0000-000000000000, if no thumbnail is assigned or the parent build job does not exist., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_buildjobexecution_getjobthumbnailstreamuuid(LibMCData_BuildJobExecution pBuildJobExecution, const LibMCData_uint32 nUUIDBufferSize, LibMCData_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
 * Adds additional data to the Job Execution.
 *
 * @param[in] pBuildJobExecution - BuildJobExecution instance.

@@ -41,6 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 #include <chrono>
+#include <map>
+#include <set>
+#include <functional>
 
 namespace AMCUnitTest {
 
@@ -122,6 +125,12 @@ namespace AMCUnitTest {
 			// Metadata lookups must not scan the whole metadata table
 			registerTest("MetaDataLookupsUseIndex", "Job and execution metadata lookups are planned via an index", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testMetaDataLookupsUseIndex, this));
 			registerTest("MetaDataIndicesAddedOnStart", "A database from before the metadata indices gets them on the next start", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testMetaDataIndicesAddedOnStart, this));
+
+			// Build history list: values loaded by the single ListJobExecutions query
+			registerTest("ListExecsLoadedValues", "ListJobExecutions (and the other execution queries) load status, description, end, elapsed, thumbnail and deleted flag", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsLoadedValues, this));
+			registerTest("ListExecsLoadedIsSnapshot", "Loaded getters keep list values, fresh getters read the database", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsLoadedIsSnapshot, this));
+			registerTest("ListExecsMalformedJobRow", "Execution lists tolerate an unparseable job status and a malformed thumbnail UUID", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsMalformedJobRow, this));
+			registerTest("ListExecsOrphanedExecution", "Execution lists tolerate executions whose build job row is missing", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsOrphanedExecution, this));
 		}
 
 		void initializeTests() override {
@@ -1289,6 +1298,395 @@ namespace AMCUnitTest {
 			auto pRestartedHandler = pRestartedModel->CreateBuildJobHandler();
 			assertTrue(pRestartedHandler->RetrieveJob(sJobUUID)->GetMetaDataString("jobkey") == "jobvalue", "job metadata still readable");
 			assertTrue(pRestartedHandler->RetrieveJobExecution(sExecUUID)->GetMetaDataString("execkey") == "execvalue", "execution metadata still readable");
+		}
+
+		// ============= Build history list (ListJobExecutions loaded values) =============
+
+		struct SExpectedExecution {
+			std::string m_sJobUUID;
+			std::string m_sJobName;
+			uint32_t m_nLayerCount;
+			LibMCData::eBuildJobExecutionStatus m_Status;
+			std::string m_sStatusString;
+			std::string m_sDescription;
+			uint64_t m_nStart;
+			uint64_t m_nEnd; // 0 while in process
+			uint64_t m_nExpectedElapsed;
+			bool m_bJobDeleted;
+			std::string m_sThumbnailUUID;
+		};
+
+		static constexpr uint64_t nSeedBaseTimeStamp = 1700000000000000ULL; // 2023-11-14, fixed
+		static constexpr uint64_t nSeedGlobalTimer = nSeedBaseTimeStamp + 100000000000ULL; // after every seeded start
+
+		bool endNotAvailableIsThrown(std::function<void()> callback)
+		{
+			try {
+				callback();
+			}
+			catch (LibMCData::ELibMCDataException& E) {
+				return E.getErrorCode() == LIBMCDATA_ERROR_BUILDJOBEXECUTIONENDNOTAVAILABLE;
+			}
+			return false;
+		}
+
+		// Loaded values of an execution that was not read through ListJobExecutions.
+		void assertLoadedValuesMatchSeed(LibMCData::PBuildJobExecution pExec, const SExpectedExecution& entry, const std::string& sContext)
+		{
+			std::string sExecUUID = pExec->GetExecutionUUID();
+			assertTrue(pExec->GetLoadedStatus() == entry.m_Status, sContext + ": loaded status " + sExecUUID);
+			assertTrue(pExec->GetLoadedDescription() == entry.m_sDescription, sContext + ": loaded description " + sExecUUID);
+			assertTrue(pExec->ComputeLoadedElapsedTimeInMicroseconds(nSeedGlobalTimer, true) == entry.m_nExpectedElapsed, sContext + ": loaded elapsed " + sExecUUID);
+			if (entry.m_nEnd != 0)
+				assertTrue(pExec->GetLoadedEndTimeStampInMicroseconds() == entry.m_nEnd, sContext + ": loaded end " + sExecUUID);
+			assertTrue(pExec->GetJobName() == entry.m_sJobName, sContext + ": job name " + sExecUUID);
+			assertTrue(pExec->GetJobLayerCount() == entry.m_nLayerCount, sContext + ": layer count " + sExecUUID);
+			assertTrue((pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted) == entry.m_bJobDeleted, sContext + ": deleted flag " + sExecUUID);
+			assertTrue(pExec->GetJobThumbnailStreamUUID() == entry.m_sThumbnailUUID, sContext + ": thumbnail " + sExecUUID);
+		}
+
+		// Seeds 12 jobs with 5 executions each: finished, failed and in-process executions,
+		// jobs with and without thumbnail, and deleted jobs.
+		std::map<std::string, SExpectedExecution> seedBuildHistory(SBuildJobsFixture& fixture)
+		{
+			std::map<std::string, SExpectedExecution> expected;
+			const std::string sEmptyUUID = AMCCommon::CUtils::createEmptyUUID();
+
+			for (uint32_t nJob = 0; nJob < 12; nJob++) {
+				std::string sJobName = "Seed Job " + std::to_string(nJob);
+				uint32_t nLayerCount = 100 + nJob;
+				auto pJob = createValidatedJob(fixture, sJobName, nLayerCount);
+
+				std::string sThumbnailUUID = sEmptyUUID;
+				if (nJob % 3 == 0) {
+					sThumbnailUUID = createTestStream(fixture, "thumbnail " + std::to_string(nJob));
+					pJob->SetThumbnailStreamUUID(sThumbnailUUID);
+				}
+
+				std::vector<std::string> jobExecutionUUIDs;
+				for (uint32_t nExec = 0; nExec < 5; nExec++) {
+					uint32_t nIndex = nJob * 5 + nExec;
+					SExpectedExecution entry;
+					entry.m_sJobUUID = pJob->GetUUID();
+					entry.m_sJobName = sJobName;
+					entry.m_nLayerCount = nLayerCount;
+					entry.m_sDescription = "Seed execution " + std::to_string(nJob) + "-" + std::to_string(nExec);
+					entry.m_nStart = nSeedBaseTimeStamp + (uint64_t)nIndex * 60000000ULL;
+					entry.m_sThumbnailUUID = sThumbnailUUID;
+					entry.m_bJobDeleted = false;
+
+					auto pExec = pJob->CreateBuildJobExecution(entry.m_sDescription, fixture.m_sUserUUID, entry.m_nStart);
+
+					uint64_t nDuration = 1000000ULL * (10 + nIndex);
+					switch (nIndex % 7) {
+					case 5:
+						entry.m_Status = LibMCData::eBuildJobExecutionStatus::Failed;
+						entry.m_sStatusString = "failed";
+						entry.m_nEnd = entry.m_nStart + nDuration;
+						entry.m_nExpectedElapsed = nDuration;
+						pExec->ChangeStatus(entry.m_Status, entry.m_nEnd);
+						break;
+					case 6:
+						// Started in the current journal session, still running.
+						entry.m_Status = LibMCData::eBuildJobExecutionStatus::InProcess;
+						entry.m_sStatusString = "inprocess";
+						entry.m_nEnd = 0;
+						entry.m_nExpectedElapsed = nSeedGlobalTimer - entry.m_nStart;
+						break;
+					default:
+						entry.m_Status = LibMCData::eBuildJobExecutionStatus::Finished;
+						entry.m_sStatusString = "finished";
+						entry.m_nEnd = entry.m_nStart + nDuration;
+						entry.m_nExpectedElapsed = nDuration;
+						pExec->ChangeStatus(entry.m_Status, entry.m_nEnd);
+						break;
+					}
+
+					jobExecutionUUIDs.push_back(pExec->GetExecutionUUID());
+					expected[pExec->GetExecutionUUID()] = entry;
+				}
+
+				bool bDeleted = (nJob % 2 == 1);
+				if (bDeleted) {
+					pJob->ArchiveJob();
+					pJob->DeleteJob();
+				}
+				for (auto& sExecutionUUID : jobExecutionUUIDs)
+					expected[sExecutionUUID].m_bJobDeleted = bDeleted;
+			}
+
+			return expected;
+		}
+
+		void testListExecsLoadedValues()
+		{
+			auto fixture = createFixture("list_execs_loaded");
+			auto expected = seedBuildHistory(fixture);
+			assertTrue(expected.size() == 60, "seeded 60 executions");
+
+			auto pIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			assertTrue(pIterator->Count() == 60, "list returns all executions");
+
+			uint64_t nPreviousStart = UINT64_MAX;
+			uint32_t nRows = 0, nDeletedRows = 0, nThumbnailRows = 0, nDeletedThumbnailRows = 0, nInProcessRows = 0;
+			while (pIterator->MoveNext()) {
+				auto pExec = pIterator->GetCurrentJobExecution();
+				std::string sExecUUID = pExec->GetExecutionUUID();
+				auto iter = expected.find(sExecUUID);
+				assertTrue(iter != expected.end(), "listed execution was seeded: " + sExecUUID);
+				auto& entry = iter->second;
+				nRows++;
+
+				// Newest first
+				assertTrue(pExec->GetStartTimeStampInMicroseconds() == entry.m_nStart, "start timestamp " + sExecUUID);
+				assertTrue(entry.m_nStart < nPreviousStart, "list is ordered by start descending");
+				nPreviousStart = entry.m_nStart;
+
+				// Loaded values match what was seeded
+				assertTrue(pExec->GetLoadedStatus() == entry.m_Status, "loaded status " + sExecUUID);
+				assertTrue(pExec->GetLoadedStatusString() == entry.m_sStatusString, "loaded status string " + sExecUUID);
+				assertTrue(pExec->GetLoadedDescription() == entry.m_sDescription, "loaded description " + sExecUUID);
+				assertTrue(pExec->ComputeLoadedElapsedTimeInMicroseconds(nSeedGlobalTimer, true) == entry.m_nExpectedElapsed, "loaded elapsed " + sExecUUID);
+				if (entry.m_nEnd != 0) {
+					assertTrue(pExec->GetLoadedEndTimeStampInMicroseconds() == entry.m_nEnd, "loaded end " + sExecUUID);
+				}
+				else {
+					nInProcessRows++;
+					assertTrue(endNotAvailableIsThrown([&]() { pExec->GetLoadedEndTimeStampInMicroseconds(); }), "loaded end not available while in process " + sExecUUID);
+				}
+				assertTrue(pExec->GetJobName() == entry.m_sJobName, "job name " + sExecUUID);
+				assertTrue(pExec->GetJobLayerCount() == entry.m_nLayerCount, "layer count " + sExecUUID);
+				assertTrue((pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted) == entry.m_bJobDeleted, "deleted flag " + sExecUUID);
+				assertTrue(pExec->GetJobThumbnailStreamUUID() == entry.m_sThumbnailUUID, "thumbnail " + sExecUUID);
+				assertTrue(pExec->JobHasThumbnailStream() == (entry.m_sThumbnailUUID != AMCCommon::CUtils::createEmptyUUID()), "has thumbnail " + sExecUUID);
+
+				// Loaded values equal what the per-row queries used by the build history return
+				assertTrue(pExec->GetLoadedStatus() == pExec->GetStatus(), "loaded status equals fresh " + sExecUUID);
+				assertTrue(pExec->GetLoadedStatusString() == pExec->GetStatusString(), "loaded status string equals fresh " + sExecUUID);
+				assertTrue(pExec->GetLoadedDescription() == pExec->GetDescription(), "loaded description equals fresh " + sExecUUID);
+				assertTrue(pExec->ComputeLoadedElapsedTimeInMicroseconds(nSeedGlobalTimer, false) == pExec->ComputeElapsedTimeInMicroseconds(nSeedGlobalTimer, false), "loaded elapsed equals fresh " + sExecUUID);
+				if (entry.m_nEnd != 0)
+					assertTrue(pExec->GetLoadedEndTimeStampInMicroseconds() == pExec->GetEndTimeStampInMicroseconds(), "loaded end equals fresh " + sExecUUID);
+
+				auto pJob = fixture.m_pBuildJobHandler->RetrieveJob(pExec->GetJobUUID());
+				assertTrue(pJob->GetStatus() == pExec->GetJobStatus(), "job status equals RetrieveJob " + sExecUUID);
+				assertTrue(pJob->HasThumbnailStream() == pExec->JobHasThumbnailStream(), "has thumbnail equals RetrieveJob " + sExecUUID);
+				assertTrue(pJob->GetThumbnailStreamUUID() == pExec->GetJobThumbnailStreamUUID(), "thumbnail equals RetrieveJob " + sExecUUID);
+
+				if (entry.m_bJobDeleted)
+					nDeletedRows++;
+				if (pExec->JobHasThumbnailStream())
+					nThumbnailRows++;
+				if (entry.m_bJobDeleted && pExec->JobHasThumbnailStream())
+					nDeletedThumbnailRows++;
+			}
+
+			// The seed covers every case the build history renders
+			assertTrue(nRows == 60, "iterated all rows");
+			assertTrue(nDeletedRows == 30, "deleted job rows");
+			assertTrue(nThumbnailRows == 20, "thumbnail rows");
+			assertTrue(nDeletedThumbnailRows == 10, "deleted job rows that keep a thumbnail");
+			assertTrue(nInProcessRows > 0, "in-process rows");
+
+			// The other queries that build executions share the same SELECT: the incremental
+			// execution list (delta), RetrieveJobExecution and the per-job lists.
+			auto pDeltaIterator = fixture.m_pBuildJobHandler->ListJobExecutionsChangedSince(0);
+			assertTrue(pDeltaIterator->Count() == 60, "delta from 0 returns all executions");
+			while (pDeltaIterator->MoveNext()) {
+				auto pExec = pDeltaIterator->GetCurrentJobExecution();
+				auto iter = expected.find(pExec->GetExecutionUUID());
+				assertTrue(iter != expected.end(), "delta execution was seeded");
+				assertLoadedValuesMatchSeed(pExec, iter->second, "delta");
+			}
+
+			std::set<std::string> jobUUIDs;
+			for (auto& iter : expected) {
+				auto pExec = fixture.m_pBuildJobHandler->RetrieveJobExecution(iter.first);
+				assertLoadedValuesMatchSeed(pExec, iter.second, "retrieved");
+				jobUUIDs.insert(iter.second.m_sJobUUID);
+			}
+
+			uint32_t nPerJobRows = 0, nPerJobFinishedRows = 0;
+			for (auto& sJobUUID : jobUUIDs) {
+				auto pJob = fixture.m_pBuildJobHandler->RetrieveJob(sJobUUID);
+				auto pJobExecIterator = pJob->RetrieveBuildJobExecutions("");
+				while (pJobExecIterator->MoveNext()) {
+					auto pExec = pJobExecIterator->GetCurrentJobExecution();
+					assertLoadedValuesMatchSeed(pExec, expected.at(pExec->GetExecutionUUID()), "per job");
+					nPerJobRows++;
+				}
+				auto pFinishedIterator = pJob->RetrieveBuildJobExecutionsByStatus(LibMCData::eBuildJobExecutionStatus::Finished, "");
+				while (pFinishedIterator->MoveNext()) {
+					auto pExec = pFinishedIterator->GetCurrentJobExecution();
+					assertTrue(pExec->GetLoadedStatus() == LibMCData::eBuildJobExecutionStatus::Finished, "per job by status: loaded status");
+					assertLoadedValuesMatchSeed(pExec, expected.at(pExec->GetExecutionUUID()), "per job by status");
+					nPerJobFinishedRows++;
+				}
+			}
+			assertTrue(nPerJobRows == 60, "per job lists return all executions");
+			assertTrue(nPerJobFinishedRows > 0, "per job by status returns finished executions");
+		}
+
+		void testListExecsLoadedIsSnapshot()
+		{
+			auto fixture = createFixture("list_execs_snapshot");
+
+			auto pJob = createValidatedJob(fixture, "Snapshot Job");
+			uint64_t nStart = nSeedBaseTimeStamp;
+			auto pWriter = pJob->CreateBuildJobExecution("before", fixture.m_sUserUUID, nStart);
+
+			auto pIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			assertTrue(pIterator->MoveNext(), "list has the execution");
+			auto pListed = pIterator->GetCurrentJobExecution();
+
+			pWriter->SetDescription("after");
+			pWriter->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Finished, nStart + 5000000ULL);
+
+			// Loaded getters keep what the list query returned
+			assertTrue(pListed->GetLoadedDescription() == "before", "loaded description is a snapshot");
+			assertTrue(pListed->GetLoadedStatus() == LibMCData::eBuildJobExecutionStatus::InProcess, "loaded status is a snapshot");
+			assertTrue(endNotAvailableIsThrown([&]() { pListed->GetLoadedEndTimeStampInMicroseconds(); }), "loaded end is a snapshot");
+
+			// Existing getters still read from the database
+			assertTrue(pListed->GetDescription() == "after", "GetDescription reads fresh");
+			assertTrue(pListed->GetStatus() == LibMCData::eBuildJobExecutionStatus::Finished, "GetStatus reads fresh");
+			assertTrue(pListed->GetEndTimeStampInMicroseconds() == nStart + 5000000ULL, "GetEndTimeStamp reads fresh");
+		}
+
+		void testListExecsOrphanedExecution()
+		{
+			auto fixture = createFixture("list_execs_orphan");
+
+			auto pKeptJob = createValidatedJob(fixture, "Kept Job", 7);
+			pKeptJob->CreateBuildJobExecution("kept", fixture.m_sUserUUID, nSeedBaseTimeStamp);
+
+			auto pLostJob = createValidatedJob(fixture, "Lost Job", 9);
+			auto pLostExec = pLostJob->CreateBuildJobExecution("orphan", fixture.m_sUserUUID, nSeedBaseTimeStamp + 1000000ULL);
+			pLostExec->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Finished, nSeedBaseTimeStamp + 3000000ULL);
+			std::string sOrphanUUID = pLostExec->GetExecutionUUID();
+
+			// Nothing in LibMCData removes a buildjobs row; simulate a database where it is gone.
+			{
+				AMCData::CSQLHandler_SQLite sqlHandler(fixture.m_sBasePath + "/buildjobs.db");
+				auto pStatement = sqlHandler.prepareStatement("DELETE FROM buildjobs WHERE uuid=?");
+				pStatement->setString(1, pLostJob->GetUUID());
+				pStatement->execute();
+			}
+
+			// The whole list must still load; the orphan is shown as a deleted job.
+			auto pIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			assertTrue(pIterator->Count() == 2, "both executions are listed");
+
+			bool bFoundOrphan = false;
+			bool bFoundKept = false;
+			while (pIterator->MoveNext()) {
+				auto pExec = pIterator->GetCurrentJobExecution();
+				if (pExec->GetExecutionUUID() == sOrphanUUID) {
+					bFoundOrphan = true;
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted, "orphan job reported as deleted");
+					assertTrue(pExec->GetJobName() == "", "orphan job has no name");
+					assertTrue(pExec->GetJobLayerCount() == 0, "orphan job has no layers");
+					assertFalse(pExec->JobHasThumbnailStream(), "orphan job has no thumbnail");
+					assertTrue(pExec->GetJobThumbnailStreamUUID() == AMCCommon::CUtils::createEmptyUUID(), "orphan thumbnail is the empty UUID");
+					assertTrue(pExec->GetLoadedDescription() == "orphan", "orphan description");
+					assertTrue(pExec->GetLoadedStatus() == LibMCData::eBuildJobExecutionStatus::Finished, "orphan status");
+					assertTrue(pExec->GetLoadedEndTimeStampInMicroseconds() == nSeedBaseTimeStamp + 3000000ULL, "orphan end");
+				}
+				else {
+					bFoundKept = true;
+					assertTrue(pExec->GetJobName() == "Kept Job", "kept job name");
+					assertTrue(pExec->GetJobLayerCount() == 7, "kept job layer count");
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Validated, "kept job status");
+				}
+			}
+			assertTrue(bFoundOrphan && bFoundKept, "found both rows");
+
+			// Retrieving the orphan by UUID works as well
+			auto pRetrieved = fixture.m_pBuildJobHandler->RetrieveJobExecution(sOrphanUUID);
+			assertTrue(pRetrieved->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted, "retrieved orphan reported as deleted");
+
+			// The incremental list must not freeze on it either.
+			bool bDeltaFoundOrphan = false;
+			auto pDeltaIterator = fixture.m_pBuildJobHandler->ListJobExecutionsChangedSince(0);
+			assertTrue(pDeltaIterator->Count() == 2, "both executions are in the delta");
+			while (pDeltaIterator->MoveNext()) {
+				auto pExec = pDeltaIterator->GetCurrentJobExecution();
+				if (pExec->GetExecutionUUID() == sOrphanUUID) {
+					bDeltaFoundOrphan = true;
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted, "delta orphan reported as deleted");
+				}
+			}
+			assertTrue(bDeltaFoundOrphan, "delta contains the orphan");
+		}
+
+		void corruptBuildJobColumn(SBuildJobsFixture& fixture, const std::string& sJobUUID, const std::string& sColumn, const std::string& sValue)
+		{
+			// LibMCData never writes such values; simulate a database that was edited or damaged by hand.
+			AMCData::CSQLHandler_SQLite sqlHandler(fixture.m_sBasePath + "/buildjobs.db");
+			auto pStatement = sqlHandler.prepareStatement("UPDATE buildjobs SET " + sColumn + "=? WHERE uuid=?");
+			pStatement->setString(1, sValue);
+			pStatement->setString(2, sJobUUID);
+			pStatement->execute();
+		}
+
+		void testListExecsMalformedJobRow()
+		{
+			auto fixture = createFixture("list_execs_malformed");
+
+			auto pKeptJob = createValidatedJob(fixture, "Kept Job", 7);
+			std::string sKeptThumbnailUUID = createTestStream(fixture, "kept thumbnail");
+			pKeptJob->SetThumbnailStreamUUID(sKeptThumbnailUUID);
+			std::string sKeptExecUUID = pKeptJob->CreateBuildJobExecution("kept", fixture.m_sUserUUID, nSeedBaseTimeStamp)->GetExecutionUUID();
+
+			auto pBadStatusJob = createValidatedJob(fixture, "Bad Status Job", 8);
+			std::string sBadStatusExecUUID = pBadStatusJob->CreateBuildJobExecution("bad status", fixture.m_sUserUUID, nSeedBaseTimeStamp + 1000000ULL)->GetExecutionUUID();
+			corruptBuildJobColumn(fixture, pBadStatusJob->GetUUID(), "status", "no-such-status");
+
+			auto pBadThumbnailJob = createValidatedJob(fixture, "Bad Thumbnail Job", 9);
+			std::string sBadThumbnailExecUUID = pBadThumbnailJob->CreateBuildJobExecution("bad thumbnail", fixture.m_sUserUUID, nSeedBaseTimeStamp + 2000000ULL)->GetExecutionUUID();
+			corruptBuildJobColumn(fixture, pBadThumbnailJob->GetUUID(), "thumbnailuuid", "");
+
+			// One malformed job row must not fail the whole list.
+			auto pIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			assertTrue(pIterator->Count() == 3, "all executions are listed");
+
+			std::set<std::string> foundUUIDs;
+			while (pIterator->MoveNext()) {
+				auto pExec = pIterator->GetCurrentJobExecution();
+				std::string sExecUUID = pExec->GetExecutionUUID();
+				foundUUIDs.insert(sExecUUID);
+
+				if (sExecUUID == sBadStatusExecUUID) {
+					// Same as a missing job row: the job can no longer be used, so it is shown as deleted.
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted, "unparseable job status reported as deleted");
+					assertTrue(pExec->GetJobName() == "Bad Status Job", "job name kept despite bad status");
+					assertTrue(pExec->GetJobLayerCount() == 8, "layer count kept despite bad status");
+				}
+				else if (sExecUUID == sBadThumbnailExecUUID) {
+					// Only the thumbnail is lost; the rest of the row is unaffected.
+					assertFalse(pExec->JobHasThumbnailStream(), "malformed thumbnail reported as no thumbnail");
+					assertTrue(pExec->GetJobThumbnailStreamUUID() == AMCCommon::CUtils::createEmptyUUID(), "malformed thumbnail is the empty UUID");
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Validated, "job status kept despite bad thumbnail");
+					assertTrue(pExec->GetJobName() == "Bad Thumbnail Job", "job name kept despite bad thumbnail");
+				}
+				else {
+					assertTrue(sExecUUID == sKeptExecUUID, "third row is the intact one");
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Validated, "intact job status");
+					assertTrue(pExec->GetJobThumbnailStreamUUID() == AMCCommon::CUtils::normalizeUUIDString(sKeptThumbnailUUID), "intact thumbnail");
+				}
+			}
+			assertTrue(foundUUIDs.size() == 3, "found all rows");
+
+			// The incremental list must not freeze on them either.
+			auto pDeltaIterator = fixture.m_pBuildJobHandler->ListJobExecutionsChangedSince(0);
+			assertTrue(pDeltaIterator->Count() == 3, "all executions are in the delta");
+			while (pDeltaIterator->MoveNext()) {
+				auto pExec = pDeltaIterator->GetCurrentJobExecution();
+				if (pExec->GetExecutionUUID() == sBadStatusExecUUID)
+					assertTrue(pExec->GetJobStatus() == LibMCData::eBuildJobStatus::Deleted, "delta: unparseable job status reported as deleted");
+				if (pExec->GetExecutionUUID() == sBadThumbnailExecUUID)
+					assertFalse(pExec->JobHasThumbnailStream(), "delta: malformed thumbnail reported as no thumbnail");
+			}
 		}
 	};
 
