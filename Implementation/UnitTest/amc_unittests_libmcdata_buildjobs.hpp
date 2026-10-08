@@ -36,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common_utils.hpp"
 #include "libmcdata_dynamic.hpp"
 #include "amcdata_sqlhandler_sqlite.hpp"
+#include "amc_api_executionlistentry.hpp"
+#include "common_chrono.hpp"
+#include "RapidJSON/document.h"
 
 #include <cstdint>
 #include <string>
@@ -131,6 +134,7 @@ namespace AMCUnitTest {
 			registerTest("ListExecsLoadedIsSnapshot", "Loaded getters keep list values, fresh getters read the database", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsLoadedIsSnapshot, this));
 			registerTest("ListExecsMalformedJobRow", "Execution lists tolerate an unparseable job status and a malformed thumbnail UUID", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsMalformedJobRow, this));
 			registerTest("ListExecsOrphanedExecution", "Execution lists tolerate executions whose build job row is missing", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsOrphanedExecution, this));
+			registerTest("ListExecsJSONEntry", "/api/executions entry JSON: thumbnail omission, end time stamp and duration, from list-loaded values", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_BuildJobs::testListExecsJSONEntry, this));
 		}
 
 		void initializeTests() override {
@@ -1687,6 +1691,164 @@ namespace AMCUnitTest {
 				if (pExec->GetExecutionUUID() == sBadThumbnailExecUUID)
 					assertFalse(pExec->JobHasThumbnailStream(), "delta: malformed thumbnail reported as no thumbnail");
 			}
+		}
+		// Writes one listed execution the way /api/executions does and returns it as JSON text.
+		std::string writeListEntry(LibMCData::PBuildJobExecution pExecution, uint64_t nGlobalTimer)
+		{
+			AMC::CJSONWriter writer;
+			AMC::CJSONWriterObject entryObject(writer);
+			AMC::writeExecutionListEntryToJSON(entryObject, pExecution, nGlobalTimer);
+			writer.addObject("entry", entryObject);
+			return writer.saveToString();
+		}
+
+		struct SListEntry {
+			std::map<std::string, std::string> m_Strings;
+			std::vector<std::string> m_Keys;
+			int64_t m_nDuration = -1;
+			int64_t m_nLayerCount = -1;
+		};
+
+		SListEntry parseListEntry(const std::string& sJSON)
+		{
+			rapidjson::Document doc;
+			doc.Parse(sJSON.c_str());
+			assertTrue(doc.IsObject() && doc.HasMember("entry") && doc["entry"].IsObject(), "entry is a JSON object");
+
+			SListEntry entry;
+			for (auto& member : doc["entry"].GetObject()) {
+				entry.m_Keys.push_back(member.name.GetString());
+				if (member.value.IsString())
+					entry.m_Strings[member.name.GetString()] = member.value.GetString();
+			}
+			entry.m_nDuration = doc["entry"]["executionduration"].GetInt64();
+			entry.m_nLayerCount = doc["entry"]["executionlayercount"].GetInt64();
+			return entry;
+		}
+
+		void testListExecsJSONEntry()
+		{
+			auto fixture = createFixture("list_execs_json");
+			const std::vector<std::string> baseKeys = { "executionuuid", "executionname", "executiondescription", "executionstarttimestamp",
+				"executionendtimestamp", "executionduration", "executionstatus", "executionbuildstatus", "executionlayercount", "jobuuid" };
+			std::vector<std::string> thumbnailKeys = baseKeys;
+			thumbnailKeys.push_back("executionthumbnail");
+
+			// Deleted job that keeps its thumbnail, with a finished execution of 5 seconds.
+			auto pDeletedJob = createValidatedJob(fixture, "Bracket", 120);
+			std::string sDeletedThumbnailUUID = createTestStream(fixture, "bracket thumbnail");
+			pDeletedJob->SetThumbnailStreamUUID(sDeletedThumbnailUUID);
+			auto pFinished = pDeletedJob->CreateBuildJobExecution("first run", fixture.m_sUserUUID, nSeedBaseTimeStamp);
+			pFinished->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Finished, nSeedBaseTimeStamp + 5000000ULL);
+			pDeletedJob->ArchiveJob();
+			pDeletedJob->DeleteJob();
+
+			// Job with thumbnail and a failed (aborted) execution of 7 seconds: it has an end time stamp too.
+			auto pFailedJob = createValidatedJob(fixture, "Gear", 90);
+			std::string sFailedThumbnailUUID = createTestStream(fixture, "gear thumbnail");
+			pFailedJob->SetThumbnailStreamUUID(sFailedThumbnailUUID);
+			auto pFailed = pFailedJob->CreateBuildJobExecution("aborted run", fixture.m_sUserUUID, nSeedBaseTimeStamp + 20000000ULL);
+			pFailed->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Failed, nSeedBaseTimeStamp + 27000000ULL);
+
+			// Job without thumbnail, with an execution of this session that started 60 seconds before the timer.
+			auto pRunningJob = createValidatedJob(fixture, "Housing", 80);
+			auto pRunning = pRunningJob->CreateBuildJobExecution("second run", fixture.m_sUserUUID, nSeedBaseTimeStamp + 40000000ULL);
+			uint64_t nGlobalTimer = nSeedBaseTimeStamp + 100000000ULL;
+
+			// Execution whose job row is missing (damaged database).
+			auto pLostJob = createValidatedJob(fixture, "Lost", 70);
+			pLostJob->SetThumbnailStreamUUID(createTestStream(fixture, "lost thumbnail"));
+			auto pOrphan = pLostJob->CreateBuildJobExecution("orphan run", fixture.m_sUserUUID, nSeedBaseTimeStamp + 60000000ULL);
+			pOrphan->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Finished, nSeedBaseTimeStamp + 63000000ULL);
+			{
+				AMCData::CSQLHandler_SQLite sqlHandler(fixture.m_sBasePath + "/buildjobs.db");
+				auto pStatement = sqlHandler.prepareStatement("DELETE FROM buildjobs WHERE uuid=?");
+				pStatement->setString(1, pLostJob->GetUUID());
+				pStatement->execute();
+			}
+
+			const std::string sNoEndTimeStamp = AMCCommon::CChrono::convertToISO8601TimeUTC(0);
+
+			std::map<std::string, std::string> fullListJSON;
+			auto pIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			while (pIterator->MoveNext()) {
+				auto pExec = pIterator->GetCurrentJobExecution();
+				std::string sExecUUID = pExec->GetExecutionUUID();
+				std::string sJSON = writeListEntry(pExec, nGlobalTimer);
+				fullListJSON[sExecUUID] = sJSON;
+				auto entry = parseListEntry(sJSON);
+
+				assertTrue(entry.m_Strings["executionuuid"] == sExecUUID, "execution UUID");
+				assertTrue(entry.m_Strings["jobuuid"] == pExec->GetJobUUID(), "job UUID");
+				assertTrue(AMCCommon::CChrono::parseISO8601TimeUTC(entry.m_Strings["executionstarttimestamp"]) == (int64_t)pExec->GetStartTimeStampInMicroseconds(), "start time stamp");
+
+				if (sExecUUID == pFinished->GetExecutionUUID()) {
+					assertTrue(entry.m_Keys == thumbnailKeys, "finished: keys in order");
+					assertTrue(entry.m_Strings["executionname"] == "Bracket", "deleted job name");
+					assertTrue(entry.m_Strings["executionthumbnail"] == AMCCommon::CUtils::normalizeUUIDString(sDeletedThumbnailUUID), "deleted job keeps its thumbnail");
+					assertTrue(entry.m_Strings["executiondescription"] == "first run", "description");
+					assertTrue(entry.m_Strings["executionstatus"] == "finished", "execution status");
+					assertTrue(entry.m_Strings["executionbuildstatus"] == "deleted", "build status");
+					assertTrue(AMCCommon::CChrono::parseISO8601TimeUTC(entry.m_Strings["executionendtimestamp"]) == (int64_t)(nSeedBaseTimeStamp + 5000000ULL), "end time stamp");
+					assertTrue(entry.m_nDuration == 5, "duration in seconds");
+					assertTrue(entry.m_nLayerCount == 120, "layer count");
+				}
+				else if (sExecUUID == pFailed->GetExecutionUUID()) {
+					assertTrue(entry.m_Keys == thumbnailKeys, "failed: keys in order");
+					assertTrue(entry.m_Strings["executionname"] == "Gear", "job name");
+					assertTrue(entry.m_Strings["executionthumbnail"] == AMCCommon::CUtils::normalizeUUIDString(sFailedThumbnailUUID), "job thumbnail");
+					assertTrue(entry.m_Strings["executionstatus"] == "failed", "execution status");
+					assertTrue(entry.m_Strings["executionbuildstatus"] == "validated", "build status");
+					assertTrue(AMCCommon::CChrono::parseISO8601TimeUTC(entry.m_Strings["executionendtimestamp"]) == (int64_t)(nSeedBaseTimeStamp + 27000000ULL), "failed execution has an end time stamp");
+					assertTrue(entry.m_nDuration == 7, "failed duration in seconds");
+					assertTrue(entry.m_nLayerCount == 90, "layer count");
+				}
+				else if (sExecUUID == pRunning->GetExecutionUUID()) {
+					assertTrue(entry.m_Keys == baseKeys, "in process: no thumbnail key without job thumbnail");
+					assertTrue(entry.m_Strings["executionname"] == "Housing", "job name");
+					assertTrue(entry.m_Strings["executionstatus"] == "inprocess", "execution status");
+					assertTrue(entry.m_Strings["executionbuildstatus"] == "validated", "build status");
+					assertTrue(entry.m_Strings["executionendtimestamp"] == sNoEndTimeStamp, "no end time stamp while in process");
+					assertTrue(entry.m_nDuration == 60, "duration in seconds while in process");
+					assertTrue(entry.m_nLayerCount == 80, "layer count");
+				}
+				else {
+					assertTrue(sExecUUID == pOrphan->GetExecutionUUID(), "fourth row is the orphan");
+					assertTrue(entry.m_Keys == baseKeys, "orphan: no thumbnail key");
+					assertTrue(entry.m_Strings["executionname"] == "", "orphan has no job name");
+					assertTrue(entry.m_Strings["executionbuildstatus"] == "deleted", "orphan build status");
+					assertTrue(entry.m_Strings["executionstatus"] == "finished", "orphan execution status");
+					assertTrue(entry.m_Strings["executiondescription"] == "orphan run", "orphan description");
+					assertTrue(entry.m_nDuration == 3, "orphan duration");
+					assertTrue(entry.m_nLayerCount == 0, "orphan layer count");
+				}
+			}
+			assertTrue(fullListJSON.size() == 4, "all rows written");
+
+			// The delta path writes the same entries.
+			auto pDeltaIterator = fixture.m_pBuildJobHandler->ListJobExecutionsChangedSince(0);
+			uint32_t nDeltaRows = 0;
+			while (pDeltaIterator->MoveNext()) {
+				auto pExec = pDeltaIterator->GetCurrentJobExecution();
+				assertTrue(writeListEntry(pExec, nGlobalTimer) == fullListJSON.at(pExec->GetExecutionUUID()), "delta entry equals full list entry");
+				nDeltaRows++;
+			}
+			assertTrue(nDeltaRows == 4, "delta has all rows");
+
+			// The entry is written from the values loaded by the list query alone: changes made
+			// after listing do not show up, because the writer does not query the database.
+			auto pSnapshotIterator = fixture.m_pBuildJobHandler->ListJobExecutions("", "", "");
+			std::vector<LibMCData::PBuildJobExecution> listedExecutions;
+			while (pSnapshotIterator->MoveNext())
+				listedExecutions.push_back(pSnapshotIterator->GetCurrentJobExecution());
+
+			pRunning->SetDescription("changed");
+			pRunning->ChangeStatus(LibMCData::eBuildJobExecutionStatus::Finished, nSeedBaseTimeStamp + 50000000ULL);
+			pRunningJob->ArchiveJob();
+			pFailedJob->SetThumbnailStreamUUID("");
+
+			for (auto& pExec : listedExecutions)
+				assertTrue(writeListEntry(pExec, nGlobalTimer) == fullListJSON.at(pExec->GetExecutionUUID()), "entry is written from list-loaded values");
 		}
 	};
 

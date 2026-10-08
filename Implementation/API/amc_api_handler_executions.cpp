@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMCIMPL_API_CONSTANTS
 
 #include "amc_api_handler_executions.hpp"
+#include "amc_api_executionlistentry.hpp"
 #include "amc_api_constants.hpp"
 #include "libmc_interfaceexception.hpp"
 #include "libmcdata_dynamic.hpp"
@@ -79,44 +80,12 @@ void CAPIHandler_Executions::handleListExecutionsRequest(CJSONWriter& writer, CA
 
 	CJSONWriterArray executionArray(writer);
 
+	// Every entry is written from the values the list query loaded, so the list costs one query
+	// regardless of its length. One timer value for all entries keeps their durations consistent.
+	uint64_t nGlobalTimer = pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
 	while (pExecutionIterator->MoveNext()) {
-		auto pExecution = pExecutionIterator->GetCurrentJobExecution();
-
-		LibMCData::eBuildJobExecutionStatus status = pExecution->GetStatus();
-		std::string sStatusString = pExecution->GetStatusString();
-
-		uint64_t nStartTimeStamp = pExecution->GetStartTimeStampInMicroseconds();
-		uint64_t nEndTimeStamp = 0;
-		// Failed (e.g. aborted) executions also have an end time stamp.
-		if ((status == LibMCData::eBuildJobExecutionStatus::Finished) || (status == LibMCData::eBuildJobExecutionStatus::Failed)) {
-			nEndTimeStamp = pExecution->GetEndTimeStampInMicroseconds();
-		}
-
-		int64_t nDurationInSeconds = pExecution->ComputeElapsedTimeInMicroseconds(pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970(), false) / 1000000LL;
-
 		CJSONWriterObject entryObject(writer);
-		entryObject.addString("executionuuid", pExecution->GetExecutionUUID());
-		entryObject.addString("executionname", pExecution->GetJobName());
-		entryObject.addString("executiondescription", pExecution->GetDescription());
-		entryObject.addString("executionstarttimestamp", AMCCommon::CChrono::convertToISO8601TimeUTC(nStartTimeStamp));
-		entryObject.addString("executionendtimestamp", AMCCommon::CChrono::convertToISO8601TimeUTC(nEndTimeStamp));
-		entryObject.addInteger("executionduration", nDurationInSeconds);
-		entryObject.addString("executionstatus", sStatusString);
-		entryObject.addString("executionbuildstatus", pExecution->GetJobStatusString());
-		entryObject.addInteger("executionlayercount", pExecution->GetJobLayerCount());
-
-		std::string sJobUUID = pExecution->GetJobUUID();
-		entryObject.addString("jobuuid", sJobUUID);
-
-		try {
-			auto pBuildJob = pBuildJobHandler->RetrieveJob(sJobUUID);
-			if (pBuildJob->HasThumbnailStream())
-				entryObject.addString("executionthumbnail", pBuildJob->GetThumbnailStreamUUID());
-		}
-		catch (...) {
-			// Job may have been deleted; skip thumbnail
-		}
-
+		writeExecutionListEntryToJSON(entryObject, pExecutionIterator->GetCurrentJobExecution(), nGlobalTimer);
 		executionArray.addObject(entryObject);
 	}
 
