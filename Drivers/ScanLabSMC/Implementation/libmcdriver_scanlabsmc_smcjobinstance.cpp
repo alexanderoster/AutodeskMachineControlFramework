@@ -47,6 +47,8 @@ Abstract: This is a stub class definition of CSMCJob
 #include <cmath>
 #include <cstring>
 #include <chrono>
+#include <filesystem>
+#include <system_error>
 
 using namespace LibMCDriver_ScanLabSMC::Impl;
 
@@ -54,16 +56,17 @@ using namespace LibMCDriver_ScanLabSMC::Impl;
  Class definition of CSMCJob
 **************************************************************************************************************************/
 
-CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts)
-    : m_pContextHandle(pContextHandle), 
+CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, bool bSimulationFileOutputEnabled, double dMaxPowerInWatts)
+    : m_pContextHandle(pContextHandle),
     m_pDriverEnvironment(pDriverEnvironment),
-    m_pWorkingDirectory (pWorkingDirectory), 
+    m_pWorkingDirectory (pWorkingDirectory),
     m_sSimulationSubDirectory (sSimulationSubDirectory),
     m_JobID(0),
     m_bIsFinalized(false),
     m_bHasJobDuration (false),
     m_dJobDuration (0.0),
     m_bSendToHardware (bSendToHardware),
+    m_bSimulationFileOutputEnabled (bSimulationFileOutputEnabled),
     m_dMaxPowerInWatts (dMaxPowerInWatts)
 {
     if (m_pWorkingDirectory.get() == nullptr)
@@ -73,7 +76,12 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDr
     if (m_pDriverEnvironment.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
-    m_pSDK = m_pContextHandle->getSDK();    
+    m_pSDK = m_pContextHandle->getSDK();
+
+    // Same layout as SimOutputFileDirectory in CSMCConfiguration::buildConfigurationXML.
+    m_sSimulationOutputDirectory = m_pWorkingDirectory->GetAbsoluteFilePath();
+    if (!m_sSimulationSubDirectory.empty())
+        m_sSimulationOutputDirectory += "/" + m_sSimulationSubDirectory;
 
     auto contextHandle = m_pContextHandle->getHandle();
 
@@ -114,7 +122,126 @@ CSMCJobInstance::CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDr
 
 CSMCJobInstance::~CSMCJobInstance()
 {
+    // Safety net for jobs whose data was never read (exception in the plugin, context re-creation
+    // after an error, simulation output enabled but LoadSimulationData not called). The helpers
+    // report failures as warnings instead of throwing; only the logging itself can still throw.
+    try {
+        deleteWorkingFileQuietly(m_tmpSimulationFile, "simulation module file");
+        resolveSimulationOutputFilePrefix();
+        deleteSimulationOutputFilesQuietly();
+    }
+    catch (const std::exception& E) {
+        m_pDriverEnvironment->LogWarning(std::string("could not clean up temporary files of SMC job: ") + E.what());
+    }
+}
 
+void CSMCJobInstance::deleteWorkingFileQuietly(LibMCEnv::PWorkingFile& pFile, const std::string& sPurpose)
+{
+    if (pFile.get() == nullptr)
+        return;
+
+    std::string sFileName = pFile->GetAbsoluteFileName();
+
+    if (pFile->FileExists()) {
+        // DeleteFromDisk reports a failure (e.g. SMC still holding the handle) as false and does not throw.
+        // The file stays managed, so the working directory cleanup removes it at the latest.
+        if (pFile->DeleteFromDisk()) {
+            m_pDriverEnvironment->LogMessage("Deleted " + sPurpose + ": " + sFileName);
+        }
+        else {
+            m_pDriverEnvironment->LogWarning("Could not delete " + sPurpose + ", it will be removed with the working directory: " + sFileName);
+        }
+    }
+
+    pFile = nullptr;
+}
+
+void CSMCJobInstance::resolveSimulationOutputFilePrefix()
+{
+    if (!m_sSimulationOutputFilePrefix.empty())
+        return;
+    if (m_bSendToHardware || !m_bSimulationFileOutputEnabled)
+        return;
+
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    std::vector<char> buffer;
+    buffer.resize(16384);
+    uint32_t nErrorCode = m_pSDK->slsc_ctrl_get_simulation_filename(contextHandle, m_JobID, buffer.data(), buffer.size());
+    if (nErrorCode != 0) {
+        m_pDriverEnvironment->LogWarning("SMC did not report a simulation output file name for job " + std::to_string(m_JobID) + " (error " + std::to_string(nErrorCode) + "), its simulation output files will stay in the working directory.");
+        return;
+    }
+    buffer.at(buffer.size() - 1) = 0;
+
+    std::string sSimulationFileName(buffer.data());
+    if (sSimulationFileName.empty())
+        return;
+
+    // SMC rotates the output into <base>.csv, <base>.1.csv, ... and writes <base>.xml, so only the
+    // base name without extension is kept.
+    size_t nDotPosition = sSimulationFileName.rfind('.');
+    if ((nDotPosition != std::string::npos) && (nDotPosition > 0))
+        m_sSimulationOutputFilePrefix = sSimulationFileName.substr(0, nDotPosition);
+    else
+        m_sSimulationOutputFilePrefix = sSimulationFileName;
+}
+
+std::string CSMCJobInstance::getSimulationOutputFileName()
+{
+    auto contextHandle = m_pContextHandle->getHandle();
+
+    std::vector<char> buffer;
+    buffer.resize(16384);
+    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_get_simulation_filename(contextHandle, m_JobID, buffer.data(), buffer.size()));
+    buffer.at(buffer.size() - 1) = 0;
+
+    std::string sSimulationFileName(buffer.data());
+
+    return m_sSimulationOutputDirectory + "/" + sSimulationFileName;
+}
+
+void CSMCJobInstance::deleteSimulationOutputFilesQuietly()
+{
+    if (m_sSimulationOutputFilePrefix.empty())
+        return;
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+
+    fs::path simulationDirectory = fs::u8path(m_sSimulationOutputDirectory);
+    if (!fs::is_directory(simulationDirectory, ec)) {
+        m_sSimulationOutputFilePrefix.clear();
+        return;
+    }
+
+    // The prefix contains job ID and timestamp; the dot keeps Simulation_ID_1_TS_x. apart from Simulation_ID_10_TS_y.
+    const std::string sMatch = m_sSimulationOutputFilePrefix + ".";
+    uint32_t nDeletedCount = 0;
+
+    for (const auto& entry : fs::directory_iterator(simulationDirectory, ec)) {
+        if (!entry.is_regular_file(ec))
+            continue;
+
+        std::string sFileName = entry.path().filename().u8string();
+        if (sFileName.compare(0, sMatch.size(), sMatch) != 0)
+            continue;
+
+        std::error_code removeError;
+        if (fs::remove(entry.path(), removeError) && !removeError) {
+            nDeletedCount++;
+        }
+        else {
+            m_pDriverEnvironment->LogWarning("Could not delete SMC simulation output file " + sFileName + ": " + removeError.message());
+        }
+    }
+
+    if (ec)
+        m_pDriverEnvironment->LogWarning("Could not enumerate SMC simulation output directory " + m_sSimulationOutputDirectory + ": " + ec.message());
+
+    m_pDriverEnvironment->LogMessage("Deleted " + std::to_string(nDeletedCount) + " SMC simulation output file(s) for " + m_sSimulationOutputFilePrefix);
+
+    m_sSimulationOutputFilePrefix.clear();
 }
 
 LibMCDriver_ScanLabSMC_uint64 CSMCJobInstance::GetJobID()
@@ -435,6 +562,10 @@ void CSMCJobInstance::Execute(const bool bBlocking)
     } 
 
     m_pDriverEnvironment->LogMessage("Execution finished");
+
+    // SMC has closed its simulation output files now; remember their name so that the destructor
+    // can delete them even if nobody calls LoadSimulationData.
+    resolveSimulationOutputFilePrefix();
 }
 
 bool CSMCJobInstance::IsExecuting()
@@ -715,6 +846,11 @@ void CSMCJobInstance::ExecuteLaserShutdownSequence()
 
 void CSMCJobInstance::ReadSimulationFile(LibMCEnv::PDataTable pDataTable)
 {
+    // In simulation mode the data comes from the SMC simulation output files, which the
+    // configuration may have switched off. The hardware log record does not depend on them.
+    if (!m_bSendToHardware && !m_bSimulationFileOutputEnabled)
+        throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONFILEOUTPUTDISABLED);
+
     slsc_VersionInfo version = m_pSDK->slsc_cfg_get_scanmotioncontrol_version();
 
     if (version.m_nMajor == 0) {
@@ -744,20 +880,8 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v0_8(LibMCEnv::PDataTable pDataTabl
     if (pDataTable.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
-    auto contextHandle = m_pContextHandle->getHandle();
-
-    std::vector<char> buffer;
-    buffer.resize(16384);
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_get_simulation_filename(contextHandle, m_JobID, buffer.data (), buffer.size ()));
-    buffer.at(buffer.size() - 1) = 0;
-
-    std::string sSimulationFileName(buffer.data());
-
-    std::string sSimulationDirectory = m_pWorkingDirectory->GetAbsoluteFilePath() + "/";
-    if (!m_sSimulationSubDirectory.empty ())
-        sSimulationDirectory += m_sSimulationSubDirectory + "/";
-
-    CSMCSimulationParser parser(sSimulationDirectory + sSimulationFileName);
+    resolveSimulationOutputFilePrefix();
+    std::string sSimulationFileName = getSimulationOutputFileName();
 
     pDataTable->AddColumn("timestamp", "Timestamp", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
@@ -767,23 +891,31 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v0_8(LibMCEnv::PDataTable pDataTabl
     pDataTable->AddColumn("active2", "Active Channel 2", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("cmdindex", "Command Index", LibMCEnv::eDataTableColumnType::Int32Column);
 
-    std::vector<double> timestampValues;
-    parser.readTimestampValues(timestampValues);
-    pDataTable->SetDoubleColumnValues("timestamp", timestampValues);
-    timestampValues.resize(0);
+    {
+        // Scoped so that the parser has released the file before it is deleted below.
+        CSMCSimulationParser parser(sSimulationFileName);
 
-    std::vector<double> xValues;
-    parser.readXValues(xValues);
-    pDataTable->SetDoubleColumnValues("x", xValues);
-    xValues.resize(0);
+        std::vector<double> timestampValues;
+        parser.readTimestampValues(timestampValues);
+        pDataTable->SetDoubleColumnValues("timestamp", timestampValues);
+        timestampValues.resize(0);
 
-    std::vector<double> yValues;
-    parser.readYValues(yValues);
-    pDataTable->SetDoubleColumnValues("y", yValues);
-    yValues.resize(0);
+        std::vector<double> xValues;
+        parser.readXValues(xValues);
+        pDataTable->SetDoubleColumnValues("x", xValues);
+        xValues.resize(0);
 
-    m_dJobDuration = (double)parser.getCount() / (double)SCANLABSMC_MICROSTEPSPERSECOND;
-    m_bHasJobDuration = true;
+        std::vector<double> yValues;
+        parser.readYValues(yValues);
+        pDataTable->SetDoubleColumnValues("y", yValues);
+        yValues.resize(0);
+
+        m_dJobDuration = (double)parser.getCount() / (double)SCANLABSMC_MICROSTEPSPERSECOND;
+        m_bHasJobDuration = true;
+    }
+
+    // The table holds everything; the simulation output is not needed any more.
+    deleteSimulationOutputFilesQuietly();
 }
 
 void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTable)
@@ -791,20 +923,8 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
     if (pDataTable.get() == nullptr)
         throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
 
-    auto contextHandle = m_pContextHandle->getHandle();
-
-    std::vector<char> buffer;
-    buffer.resize(16384);
-    m_pSDK->checkError(contextHandle, m_pSDK->slsc_ctrl_get_simulation_filename(contextHandle, m_JobID, buffer.data(), buffer.size()));
-    buffer.at(buffer.size() - 1) = 0;
-
-    std::string sSimulationFileName(buffer.data());
-
-    std::string sSimulationDirectory = m_pWorkingDirectory->GetAbsoluteFilePath() + "/";
-    if (!m_sSimulationSubDirectory.empty())
-        sSimulationDirectory += m_sSimulationSubDirectory + "/";
-
-    CSMCCSVParser parser(sSimulationDirectory + sSimulationFileName, ';');
+    resolveSimulationOutputFilePrefix();
+    std::string sSimulationFileName = getSimulationOutputFileName();
 
     std::vector<double>     scanheadX;            // DisplacedX_Galvo_1
     std::vector<double>     scanheadY;            // DisplacedY_Galvo_1
@@ -832,13 +952,11 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
         {{CSMCCSVParser::FieldParserType::Timestamp,CSMCCSVParser::FieldProcessingStep::Nop}, &timestampValues}
     };
 
-    parser.Parse(bindings);
-
-#if NOT_IMPLEMENTED
-    const auto& headers = parser.getHeader();
-    const auto& types = parser.getColumnTypes();
-    const auto& rows = parser.getRows();
-#endif
+    {
+        // Scoped so that the parser has released the file before it is deleted at the end.
+        CSMCCSVParser parser(sSimulationFileName, ';');
+        parser.Parse(bindings);
+    }
 
     pDataTable->AddColumn("timestamp", "Timestamp", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
@@ -867,7 +985,10 @@ void CSMCJobInstance::ReadSimulationFile_SMC_v1_0(LibMCEnv::PDataTable pDataTabl
     activeChannel0.resize(0);
 
     pDataTable->SetDoubleColumnValues("active1", activeChannel1);
-    activeChannel1.resize(0);    
+    activeChannel1.resize(0);
+
+    // The table holds everything; the simulation output is not needed any more.
+    deleteSimulationOutputFilesQuietly();
 }
 
 void CSMCJobInstance::ReadLogRecordFile(LibMCEnv::PDataTable pDataTable)
@@ -879,19 +1000,25 @@ void CSMCJobInstance::ReadLogRecordFile(LibMCEnv::PDataTable pDataTable)
 
     auto pLogRecordFile = m_pWorkingDirectory->AddManagedTempFile("csv");
 
-    //if(!pLogRecordFile->FileExists())
-    //    throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+    // The log record is only an intermediate: once parsed into the table it is deleted, on the
+    // normal path as well as when the parser or the table throws.
+    struct CLogRecordFileGuard {
+        CSMCJobInstance* m_pJob;
+        LibMCEnv::PWorkingFile& m_pFile;
+        ~CLogRecordFileGuard()
+        {
+            m_pJob->deleteWorkingFileQuietly(m_pFile, "RTC log record file");
+        }
+    } logRecordFileGuard{ this, pLogRecordFile };
 
     auto sLogRecordAbsoluteFileName = pLogRecordFile->GetAbsoluteFileName();
 
-    //auto eTransformationStep = slsc_TransformationStep::slsc_TransformationStep_Rtc; // needs scaling and rotation 
+    //auto eTransformationStep = slsc_TransformationStep::slsc_TransformationStep_Rtc; // needs scaling and rotation
     auto eTransformationStep = slsc_TransformationStep::slsc_TransformationStep_Corrected;
 
     m_pSDK->slsc_ctrl_log_record(m_pContextHandle->getHandle(), sLogRecordAbsoluteFileName.c_str(), eTransformationStep);
 
     //-----------------------------------
-
-    CSMCCSVParser parser(sLogRecordAbsoluteFileName, ';');
 
     std::vector<double> timestampValues;
     std::vector<double> scanheadX;
@@ -905,15 +1032,11 @@ void CSMCJobInstance::ReadLogRecordFile(LibMCEnv::PDataTable pDataTable)
         {{CSMCCSVParser::FieldParserType::Timestamp,CSMCCSVParser::FieldProcessingStep::Nop}, &timestampValues}
     };
 
-    auto start = std::chrono::high_resolution_clock::now();
-
-    parser.Parse(bindings);
-
-#if NOT_IMPLEMENTED
-    const auto& headers = parser.getHeader();
-    const auto& types = parser.getColumnTypes();
-    const auto& rows = parser.getRows();
-#endif
+    {
+        // Scoped so that the parser has released the file before the guard deletes it.
+        CSMCCSVParser parser(sLogRecordAbsoluteFileName, ';');
+        parser.Parse(bindings);
+    }
 
     pDataTable->AddColumn("timestamp", "Timestamp", LibMCEnv::eDataTableColumnType::DoubleColumn);
     pDataTable->AddColumn("x", "X", LibMCEnv::eDataTableColumnType::DoubleColumn);
@@ -1072,7 +1195,10 @@ void CSMCJobInstance::LoadRawSimulationData(LibMCDriver_ScanLabSMC_uint64 nDataB
     *pDataNeededCount = nDataSize;
 
     if (pDataBuffer)
-    {		
+    {
+        if (nDataBufferSize < nDataSize)
+            throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_BUFFERTOOSMALL);
+
         std::vector<LibMCEnv_uint8> tmpFileContentBuffer;
         m_tmpSimulationFile->ReadContent(tmpFileContentBuffer);
 
@@ -1081,5 +1207,9 @@ void CSMCJobInstance::LoadRawSimulationData(LibMCDriver_ScanLabSMC_uint64 nDataB
 
         if (tmpFileContentBuffer.size () > 0)
             memcpy(pDataBuffer, tmpFileContentBuffer.data(), tmpFileContentBuffer.size());
+
+        // The caller owns the content now. The module file can be several GB per layer, so it is
+        // deleted right here instead of with the working directory. A second read is not possible.
+        deleteWorkingFileQuietly(m_tmpSimulationFile, "simulation module file");
     }
 }

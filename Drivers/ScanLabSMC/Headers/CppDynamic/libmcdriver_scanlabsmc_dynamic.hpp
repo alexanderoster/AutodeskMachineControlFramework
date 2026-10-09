@@ -246,6 +246,7 @@ public:
 			case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE: return "INVALIDMAXPOWERVALUE";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED: return "SIMULATIONWORKINGFILEISNOTINITIALIZED";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILESIZEMISMATCH: return "SIMULATIONWORKINGFILESIZEMISMATCH";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONFILEOUTPUTDISABLED: return "SIMULATIONFILEOUTPUTDISABLED";
 		}
 		return "UNKNOWN";
 	}
@@ -322,6 +323,7 @@ public:
 			case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE: return "Invalid max power value.";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED: return "Simulation working file is not initialized.";
 			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILESIZEMISMATCH: return "Simulation working file size mismatch.";
+			case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONFILEOUTPUTDISABLED: return "Simulation file output has been disabled in the SMC configuration, LoadSimulationData is not available.";
 		}
 		return "unknown error";
 	}
@@ -587,6 +589,8 @@ public:
 	inline eBlendMode GetBlendMode();
 	inline void SetSendToHardware(const bool bSendToHardware);
 	inline bool GetSendToHardware();
+	inline void SetSimulationFileOutputEnabled(const bool bEnabled);
+	inline bool GetSimulationFileOutputEnabled();
 	inline void SetSerialNumber(const LibMCDriver_ScanLabSMC_uint32 nValue);
 	inline LibMCDriver_ScanLabSMC_uint32 GetSerialNumber();
 	inline void SetIPAddress(const std::string & sValue);
@@ -816,6 +820,8 @@ public:
 		pWrapperTable->m_SMCConfiguration_GetBlendMode = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetSendToHardware = nullptr;
 		pWrapperTable->m_SMCConfiguration_GetSendToHardware = nullptr;
+		pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled = nullptr;
+		pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetSerialNumber = nullptr;
 		pWrapperTable->m_SMCConfiguration_GetSerialNumber = nullptr;
 		pWrapperTable->m_SMCConfiguration_SetIPAddress = nullptr;
@@ -1200,6 +1206,24 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_SMCConfiguration_GetSendToHardware == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled = (PLibMCDriver_ScanLabSMCSMCConfiguration_SetSimulationFileOutputEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled");
+		#else // _WIN32
+		pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled = (PLibMCDriver_ScanLabSMCSMCConfiguration_SetSimulationFileOutputEnabledPtr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled == nullptr)
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled = (PLibMCDriver_ScanLabSMCSMCConfiguration_GetSimulationFileOutputEnabledPtr) GetProcAddress(hLibrary, "libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled");
+		#else // _WIN32
+		pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled = (PLibMCDriver_ScanLabSMCSMCConfiguration_GetSimulationFileOutputEnabledPtr) dlsym(hLibrary, "libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled == nullptr)
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -1778,6 +1802,14 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCConfiguration_GetSendToHardware == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled", (void**)&(pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCConfiguration_SetSimulationFileOutputEnabled == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled", (void**)&(pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_SMCConfiguration_GetSimulationFileOutputEnabled == nullptr) )
+			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdriver_scanlabsmc_smcconfiguration_setserialnumber", (void**)&(pWrapperTable->m_SMCConfiguration_SetSerialNumber));
 		if ( (eLookupError != 0) || (pWrapperTable->m_SMCConfiguration_SetSerialNumber == nullptr) )
 			return LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -2197,7 +2229,7 @@ public:
 	}
 	
 	/**
-	* CSMCJob::LoadSimulationData - Reads the SMC Simulation data into a data table.
+	* CSMCJob::LoadSimulationData - Reads the SMC Simulation data into a data table. Can be called once per job: after a successful read the simulation output files (or the RTC log record file in hardware mode) are deleted. Fails with SIMULATIONFILEOUTPUTDISABLED if the configuration disabled the simulation file output.
 	* @param[in] pSimulationDataTable - Data table object to read the simulation into.
 	*/
 	void CSMCJob::LoadSimulationData(classParam<LibMCEnv::CDataTable> pSimulationDataTable)
@@ -2207,7 +2239,7 @@ public:
 	}
 	
 	/**
-	* CSMCJob::LoadRawSimulationData - Returns raw simulation data.
+	* CSMCJob::LoadRawSimulationData - Returns raw simulation data. Can be called once per job (one size query followed by one data read): after a successful read the temporary module file is deleted.
 	* @param[out] DataBuffer - Raw binary simulation data.
 	*/
 	void CSMCJob::LoadRawSimulationData(std::vector<LibMCDriver_ScanLabSMC_uint8> & DataBuffer)
@@ -2346,6 +2378,27 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_SMCConfiguration_GetSendToHardware(m_pHandle, &resultSendToHardware));
 		
 		return resultSendToHardware;
+	}
+	
+	/**
+	* CSMCConfiguration::SetSimulationFileOutputEnabled - Sets if SMC shall write its simulation output files (SimOutputFileDirectory) during job execution. Default is true. Set to false if LoadSimulationData is never called: this saves several GB of disk space and minutes of planning time per large layer.
+	* @param[in] bEnabled - Flag, if the simulation output files shall be written.
+	*/
+	void CSMCConfiguration::SetSimulationFileOutputEnabled(const bool bEnabled)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCConfiguration_SetSimulationFileOutputEnabled(m_pHandle, bEnabled));
+	}
+	
+	/**
+	* CSMCConfiguration::GetSimulationFileOutputEnabled - Returns if SMC shall write its simulation output files during job execution.
+	* @return Flag, if the simulation output files shall be written.
+	*/
+	bool CSMCConfiguration::GetSimulationFileOutputEnabled()
+	{
+		bool resultEnabled = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_SMCConfiguration_GetSimulationFileOutputEnabled(m_pHandle, &resultEnabled));
+		
+		return resultEnabled;
 	}
 	
 	/**

@@ -244,7 +244,7 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_WaitForExec
 typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_StopExecutionPtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
 
 /**
-* Reads the SMC Simulation data into a data table.
+* Reads the SMC Simulation data into a data table. Can be called once per job: after a successful read the simulation output files (or the RTC log record file in hardware mode) are deleted. Fails with SIMULATIONFILEOUTPUTDISABLED if the configuration disabled the simulation file output.
 *
 * @param[in] pSMCJob - SMCJob instance.
 * @param[in] pSimulationDataTable - Data table object to read the simulation into.
@@ -253,7 +253,7 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_StopExecuti
 typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCJob_LoadSimulationDataPtr) (LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
 
 /**
-* Returns raw simulation data.
+* Returns raw simulation data. Can be called once per job (one size query followed by one data read): after a successful read the temporary module file is deleted.
 *
 * @param[in] pSMCJob - SMCJob instance.
 * @param[in] nDataBufferSize - Number of elements in buffer
@@ -373,6 +373,24 @@ typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCConfiguration_S
 * @return error code or 0 (success)
 */
 typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCConfiguration_GetSendToHardwarePtr) (LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pSendToHardware);
+
+/**
+* Sets if SMC shall write its simulation output files (SimOutputFileDirectory) during job execution. Default is true. Set to false if LoadSimulationData is never called: this saves several GB of disk space and minutes of planning time per large layer.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[in] bEnabled - Flag, if the simulation output files shall be written.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCConfiguration_SetSimulationFileOutputEnabledPtr) (LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool bEnabled);
+
+/**
+* Returns if SMC shall write its simulation output files during job execution.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[out] pEnabled - Flag, if the simulation output files shall be written.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabSMCResult (*PLibMCDriver_ScanLabSMCSMCConfiguration_GetSimulationFileOutputEnabledPtr) (LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pEnabled);
 
 /**
 * Sets the RTC Serial number. MUST be larger than 0.
@@ -898,6 +916,8 @@ typedef struct {
 	PLibMCDriver_ScanLabSMCSMCConfiguration_GetBlendModePtr m_SMCConfiguration_GetBlendMode;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetSendToHardwarePtr m_SMCConfiguration_SetSendToHardware;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_GetSendToHardwarePtr m_SMCConfiguration_GetSendToHardware;
+	PLibMCDriver_ScanLabSMCSMCConfiguration_SetSimulationFileOutputEnabledPtr m_SMCConfiguration_SetSimulationFileOutputEnabled;
+	PLibMCDriver_ScanLabSMCSMCConfiguration_GetSimulationFileOutputEnabledPtr m_SMCConfiguration_GetSimulationFileOutputEnabled;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetSerialNumberPtr m_SMCConfiguration_SetSerialNumber;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_GetSerialNumberPtr m_SMCConfiguration_GetSerialNumber;
 	PLibMCDriver_ScanLabSMCSMCConfiguration_SetIPAddressPtr m_SMCConfiguration_SetIPAddress;

@@ -92,7 +92,8 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 	m_pDriverEnvironment (pDriverEnvironment), 
 	m_sContextName (sContextName), 
 	m_nSerialNumber (0),
-	m_bSendToHardware (false)
+	m_bSendToHardware (false),
+	m_bSimulationFileOutputEnabled (true)
 {
 	if (pSDK.get() == nullptr)
 		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
@@ -115,7 +116,8 @@ CSMCContextInstance::CSMCContextInstance(const std::string& sContextName, ISMCCo
 
 	m_sIPAddress = pSMCConfiguration->GetIPAddress();
 
-	m_bSendToHardware = pSMCConfiguration->GetSendToHardware();	
+	m_bSendToHardware = pSMCConfiguration->GetSendToHardware();
+	m_bSimulationFileOutputEnabled = pSMCConfiguration->GetSimulationFileOutputEnabled();
 
 	eSMCConfigVersion configVersion = eSMCConfigVersion::Unknown;
 	auto versionInfo = m_pSDK->slsc_cfg_get_scanmotioncontrol_version();
@@ -232,7 +234,7 @@ std::string CSMCContextInstance::GetSimulationSubDirectory()
 
 PSMCJobInstance CSMCContextInstance::BeginJob(const double dStartPositionX, const double dStartPositionY, const double dMaxPowerInWatts)
 {
-	return std::make_shared<CSMCJobInstance> (m_pContextHandle, m_pDriverEnvironment, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory, m_bSendToHardware, dMaxPowerInWatts);
+	return std::make_shared<CSMCJobInstance> (m_pContextHandle, m_pDriverEnvironment, dStartPositionX, dStartPositionY, m_pWorkingDirectory, m_sSimulationSubDirectory, m_bSendToHardware, m_bSimulationFileOutputEnabled, dMaxPowerInWatts);
 }
 
 PSMCJobInstance CSMCContextInstance::GetUnfinishedJob()

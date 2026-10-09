@@ -257,7 +257,7 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_stopexecution(LibMCDriver_ScanLabSMC_SMCJob pSMCJob);
 
 /**
-* Reads the SMC Simulation data into a data table.
+* Reads the SMC Simulation data into a data table. Can be called once per job: after a successful read the simulation output files (or the RTC log record file in hardware mode) are deleted. Fails with SIMULATIONFILEOUTPUTDISABLED if the configuration disabled the simulation file output.
 *
 * @param[in] pSMCJob - SMCJob instance.
 * @param[in] pSimulationDataTable - Data table object to read the simulation into.
@@ -266,7 +266,7 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcjob_loadsimulationdata(LibMCDriver_ScanLabSMC_SMCJob pSMCJob, LibMCEnv_DataTable pSimulationDataTable);
 
 /**
-* Returns raw simulation data.
+* Returns raw simulation data. Can be called once per job (one size query followed by one data read): after a successful read the temporary module file is deleted.
 *
 * @param[in] pSMCJob - SMCJob instance.
 * @param[in] nDataBufferSize - Number of elements in buffer
@@ -386,6 +386,24 @@ LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlab
 * @return error code or 0 (success)
 */
 LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getsendtohardware(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pSendToHardware);
+
+/**
+* Sets if SMC shall write its simulation output files (SimOutputFileDirectory) during job execution. Default is true. Set to false if LoadSimulationData is never called: this saves several GB of disk space and minutes of planning time per large layer.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[in] bEnabled - Flag, if the simulation output files shall be written.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool bEnabled);
+
+/**
+* Returns if SMC shall write its simulation output files during job execution.
+*
+* @param[in] pSMCConfiguration - SMCConfiguration instance.
+* @param[out] pEnabled - Flag, if the simulation output files shall be written.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLABSMC_DECLSPEC LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pEnabled);
 
 /**
 * Sets the RTC Serial number. MUST be larger than 0.

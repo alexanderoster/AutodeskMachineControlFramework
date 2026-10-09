@@ -65,6 +65,7 @@ private:
 	uint32_t m_nSerialNumber;
 
 	bool m_bSendToHardware;
+	bool m_bSimulationFileOutputEnabled;
 
 public:
 

@@ -430,13 +430,13 @@ public:
 	virtual void StopExecution() = 0;
 
 	/**
-	* ISMCJob::LoadSimulationData - Reads the SMC Simulation data into a data table.
+	* ISMCJob::LoadSimulationData - Reads the SMC Simulation data into a data table. Can be called once per job: after a successful read the simulation output files (or the RTC log record file in hardware mode) are deleted. Fails with SIMULATIONFILEOUTPUTDISABLED if the configuration disabled the simulation file output.
 	* @param[in] pSimulationDataTable - Data table object to read the simulation into.
 	*/
 	virtual void LoadSimulationData(LibMCEnv::PDataTable pSimulationDataTable) = 0;
 
 	/**
-	* ISMCJob::LoadRawSimulationData - Returns raw simulation data.
+	* ISMCJob::LoadRawSimulationData - Returns raw simulation data. Can be called once per job (one size query followed by one data read): after a successful read the temporary module file is deleted.
 	* @param[in] nDataBufferSize - Number of elements in buffer
 	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
 	* @param[out] pDataBuffer - uint8 buffer of Raw binary simulation data.
@@ -524,6 +524,18 @@ public:
 	* @return Flag, if the computation shall be sent to the hardware.
 	*/
 	virtual bool GetSendToHardware() = 0;
+
+	/**
+	* ISMCConfiguration::SetSimulationFileOutputEnabled - Sets if SMC shall write its simulation output files (SimOutputFileDirectory) during job execution. Default is true. Set to false if LoadSimulationData is never called: this saves several GB of disk space and minutes of planning time per large layer.
+	* @param[in] bEnabled - Flag, if the simulation output files shall be written.
+	*/
+	virtual void SetSimulationFileOutputEnabled(const bool bEnabled) = 0;
+
+	/**
+	* ISMCConfiguration::GetSimulationFileOutputEnabled - Returns if SMC shall write its simulation output files during job execution.
+	* @return Flag, if the simulation output files shall be written.
+	*/
+	virtual bool GetSimulationFileOutputEnabled() = 0;
 
 	/**
 	* ISMCConfiguration::SetSerialNumber - Sets the RTC Serial number. MUST be larger than 0.

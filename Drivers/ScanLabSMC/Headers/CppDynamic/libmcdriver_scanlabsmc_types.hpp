@@ -164,6 +164,7 @@ typedef void * LibMCDriver_ScanLabSMC_pvoid;
 #define LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE 1056 /** Invalid max power value. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED 1057 /** Simulation working file is not initialized. */
 #define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILESIZEMISMATCH 1058 /** Simulation working file size mismatch. */
+#define LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONFILEOUTPUTDISABLED 1059 /** Simulation file output has been disabled in the SMC configuration, LoadSimulationData is not available. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLabSMC
@@ -240,6 +241,7 @@ inline const char * LIBMCDRIVER_SCANLABSMC_GETERRORSTRING (LibMCDriver_ScanLabSM
     case LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDMAXPOWERVALUE: return "Invalid max power value.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILEISNOTINITIALIZED: return "Simulation working file is not initialized.";
     case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONWORKINGFILESIZEMISMATCH: return "Simulation working file size mismatch.";
+    case LIBMCDRIVER_SCANLABSMC_ERROR_SIMULATIONFILEOUTPUTDISABLED: return "Simulation file output has been disabled in the SMC configuration, LoadSimulationData is not available.";
     default: return "unknown error";
   }
 }

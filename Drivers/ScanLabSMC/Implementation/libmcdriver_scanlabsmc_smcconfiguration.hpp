@@ -79,6 +79,7 @@ private:
     std::string m_sSimulationSubDirectory;
 
     bool m_bSendToHardware;
+    bool m_bSimulationFileOutputEnabled;
 
 public:
 
@@ -103,6 +104,10 @@ public:
     void SetSendToHardware(const bool bSendToHardware) override;
 
     bool GetSendToHardware() override;
+
+    void SetSimulationFileOutputEnabled(const bool bEnabled) override;
+
+    bool GetSimulationFileOutputEnabled() override;
 
 	std::string GetIPAddress() override;
 

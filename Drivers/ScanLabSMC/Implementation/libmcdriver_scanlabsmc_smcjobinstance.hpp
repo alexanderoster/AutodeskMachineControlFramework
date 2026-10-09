@@ -64,9 +64,34 @@ private:
 	double m_dJobDuration;
 
 	bool m_bSendToHardware;
+	bool m_bSimulationFileOutputEnabled;
 	double m_dMaxPowerInWatts;
 
+	// Module recording of the planned layer (simulation mode only). Deleted as soon as
+	// LoadRawSimulationData has handed the content to the caller, or in the destructor.
 	LibMCEnv::PWorkingFile m_tmpSimulationFile;
+
+	// Absolute path of the directory SMC writes its simulation output into (no trailing slash).
+	std::string m_sSimulationOutputDirectory;
+
+	// Base name of the SMC simulation output without extension, e.g. Simulation_ID_1_TS_1791536807083.
+	// SMC rotates its output into <base>.csv, <base>.1.csv, <base>.2.csv, ... plus <base>.xml, so the
+	// whole set is deleted by this prefix. Empty while unknown or if the file output is disabled.
+	std::string m_sSimulationOutputFilePrefix;
+
+	// Deletes a managed working file if it exists. A failure is logged as a warning and never thrown:
+	// the file stays managed and is removed with the working directory at the latest.
+	void deleteWorkingFileQuietly(LibMCEnv::PWorkingFile& pFile, const std::string& sPurpose);
+
+	// Asks SMC for the simulation output file name of this job. Never throws; an SMC error leaves the
+	// prefix empty. Idempotent.
+	void resolveSimulationOutputFilePrefix();
+
+	// Absolute name of the SMC simulation output file as reported by SMC (for the parsers).
+	std::string getSimulationOutputFileName();
+
+	// Deletes every simulation output file of this job (see m_sSimulationOutputFilePrefix). Never throws.
+	void deleteSimulationOutputFilesQuietly();
 
 	void drawPolylineEx(slscHandle contextHandle, const uint64_t nPointsBufferSize, const LibMCDriver_ScanLabSMC::sPoint2D* pPointsBuffer, bool bIsClosed, double dPowerInWatts);
 	void drawHatchesEx(const LibMCDriver_ScanLabSMC_uint64 nHatchesBufferSize, const LibMCDriver_ScanLabSMC::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLabSMC_double dMarkSpeed, const LibMCDriver_ScanLabSMC_double dJumpSpeed, const LibMCDriver_ScanLabSMC_double dPowerInWatts, const LibMCDriver_ScanLabSMC_double dZValue);
@@ -75,7 +100,7 @@ private:
 
 public:
 
-	CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, double dMaxPowerInWatts);
+	CSMCJobInstance(PSMCContextHandle pContextHandle, LibMCEnv::PDriverEnvironment pDriverEnvironment, double dStartPositionX, double dStartPositionY, LibMCEnv::PWorkingDirectory pWorkingDirectory, std::string sSimulationSubDirectory, bool bSendToHardware, bool bSimulationFileOutputEnabled, double dMaxPowerInWatts);
 
 	virtual ~CSMCJobInstance();
 
