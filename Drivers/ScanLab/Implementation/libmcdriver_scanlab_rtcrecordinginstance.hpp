@@ -176,6 +176,11 @@ private:
 	// May be nullptr (no streaming-aware context).
 	std::shared_ptr<std::atomic<bool>> m_pListExecutionAlreadyStarted;
 
+	// Shared with the owning CRTCContext. Set while a stepwise microvector download is in
+	// progress: the readout then runs in parallel to the download and must not take a BUSY drop
+	// between two segments (fallback start) for the end of the layer. May be nullptr.
+	std::shared_ptr<std::atomic<bool>> m_pMicrovectorDownloadActive;
+
 	// State of the incremental readout between startListWithRecording() and the call of
 	// readRecordedData() that reports completion.
 	bool m_bReadoutActive;
@@ -193,7 +198,7 @@ private:
 
 public:
 
-	CRTCRecordingInstance(const std::string & sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted);
+	CRTCRecordingInstance(const std::string & sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted, std::shared_ptr<std::atomic<bool>> pMicrovectorDownloadActive);
 
 	virtual ~CRTCRecordingInstance();
 	

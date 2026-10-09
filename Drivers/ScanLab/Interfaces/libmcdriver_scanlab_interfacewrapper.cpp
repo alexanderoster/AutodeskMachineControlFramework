@@ -3786,6 +3786,84 @@ LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getmicrovectorlistswitc
 	}
 }
 
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const sLibMCDriver_ScanLabMicroVector * pMicrovectorArrayBuffer, bool * pExecutionStarted)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		if ( (!pMicrovectorArrayBuffer) && (nMicrovectorArrayBufferSize>0))
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		if (pExecutionStarted == nullptr)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		*pExecutionStarted = pIRTCContext->BeginMicrovectorStreaming(nMicrovectorArrayBufferSize, pMicrovectorArrayBuffer);
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nTimeBudgetInMS, bool * pComplete)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		if (pComplete == nullptr)
+			throw ELibMCDriver_ScanLabInterfaceException (LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		*pComplete = pIRTCContext->ContinueMicrovectorStreaming(nTimeBudgetInMS);
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext)
+{
+	IBase* pIBaseClass = (IBase *)pRTCContext;
+
+	try {
+		IRTCContext* pIRTCContext = dynamic_cast<IRTCContext*>(pIBaseClass);
+		if (!pIRTCContext)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDCAST);
+		
+		pIRTCContext->AbortMicrovectorStreaming();
+
+		return LIBMCDRIVER_SCANLAB_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getcurrentfreevariable(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nVariableNo, LibMCDriver_ScanLab_uint32 * pValue)
 {
 	IBase* pIBaseClass = (IBase *)pRTCContext;
@@ -8621,6 +8699,12 @@ LibMCDriver_ScanLabResult LibMCDriver_ScanLab::Impl::LibMCDriver_ScanLab_GetProc
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_setmicrovectorlistswitchingenabled;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming;
+	if (sProcName == "libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming") 
+		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_getcurrentfreevariable") 
 		*ppProcAddress = (void*) &libmcdriver_scanlab_rtccontext_getcurrentfreevariable;
 	if (sProcName == "libmcdriver_scanlab_rtccontext_gettimestamp") 

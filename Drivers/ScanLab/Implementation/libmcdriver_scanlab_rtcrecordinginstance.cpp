@@ -415,7 +415,7 @@ void CRTCRecordingChannel::getAllScaledRecordEntries(uint64_t nValuesBufferSize,
 /*************************************************************************************************************************
  Class definition of CRTCRecording 
 **************************************************************************************************************************/
-CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted)
+CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted, std::shared_ptr<std::atomic<bool>> pMicrovectorDownloadActive)
 	: m_pSDK (pSDK),
 	m_sUUID (sUUID),
 	m_CardNo (cardNo),
@@ -425,6 +425,7 @@ CRTCRecordingInstance::CRTCRecordingInstance(const std::string& sUUID, PScanLabS
 	m_bEnableScanheadFeedback (bEnableScanheadFeedback),
 	m_bEnableBacktransformation (bEnableBacktransformation),
 	m_pListExecutionAlreadyStarted (pListExecutionAlreadyStarted),
+	m_pMicrovectorDownloadActive (pMicrovectorDownloadActive),
 	m_bReadoutActive (false),
 	m_bMeasurementStarted (false),
 	m_nReadoutLastPosition (0),
@@ -755,7 +756,14 @@ bool CRTCRecordingInstance::readRecordedData()
 
 	uint32_t Busy, Position, MesBusy, MesPosition;
 	const uint32_t Increment = 100000;
-	const uint32_t nMaxMESPosition = (1UL << 22) - 1;
+
+	// Entries of the measurement memory per channel. The measurement runs in ring buffer mode
+	// (RTC6_BITFLAG_SETTRIGGER_ROUNDTRIP), so MesPosition wraps to 0 at this size and the last
+	// block before the wrap ends here. Confirmed on hardware 2026-10-07: a get_waveform_offset
+	// block crossing 4194304 fails with RTC error 16 (parameter error), so the value must not
+	// be raised. A wrap with a readout position beyond this size is a hard error below.
+	const uint32_t nMeasurementMemorySize = (1UL << 22);
+	const uint32_t nMaxMESPosition = nMeasurementMemorySize - 1;
 
 	if (!m_bMeasurementStarted) {
 		// Wait for measurement to start
@@ -775,8 +783,10 @@ bool CRTCRecordingInstance::readRecordedData()
 		m_pSDK->n_measurement_status(m_CardNo, &MesBusy, &MesPosition);
 
 		// The job has finished executing and the readout has caught up with the measurement.
-		if (!(m_nReadoutLastBusy || (MesPosition != m_nReadoutLastPosition))) {
-		//if (!(MesBusy || (MesPosition != m_nReadoutLastPosition))) {
+		// While the stepwise microvector download is still running this is not the end of the
+		// layer: the card may be idle between two segments (fallback start of a segment).
+		bool bDownloadActive = (m_pMicrovectorDownloadActive.get() != nullptr) && m_pMicrovectorDownloadActive->load();
+		if (!(m_nReadoutLastBusy || (MesPosition != m_nReadoutLastPosition)) && !bDownloadActive) {
 			m_bReadoutActive = false;
 			return true;
 		}
@@ -792,16 +802,20 @@ bool CRTCRecordingInstance::readRecordedData()
 	}
 	else if (MesPosition < m_nReadoutLastPosition)
 	{
+		// The measurement has wrapped around. Read the rest of the memory up to its end, then
+		// continue from 0 in the next step.
 		if (MesPosition > nMaxMESPosition)
 			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGOVERFLOW, "data recording interval overflow: MesPosition exceeds Max MES Position");
+		if (m_nReadoutLastPosition >= nMeasurementMemorySize)
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_DATARECORDINGOVERFLOW, "data recording interval overflow: readout position " + std::to_string(m_nReadoutLastPosition) + " is beyond the measurement memory");
 
-		uint32_t nBytesToRead = nMaxMESPosition - m_nReadoutLastPosition;
-		if (nBytesToRead > Increment) {
+		uint32_t nEntriesToRead = nMeasurementMemorySize - m_nReadoutLastPosition;
+		if (nEntriesToRead > Increment) {
 			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, m_nReadoutLastPosition + Increment);
 			m_nReadoutLastPosition += Increment;
 		}
 		else {
-			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, nMaxMESPosition);
+			readRecordedDataBlockFromRTC(m_nReadoutLastPosition, nMeasurementMemorySize);
 			m_nReadoutLastPosition = 0;
 
 		}

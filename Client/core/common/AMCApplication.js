@@ -75,6 +75,9 @@ import AMCApplicationDialog from "./AMCDialog.js"
 
 const CONFIG_REQUEST_TIMEOUT_MS = 2000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+// UI events run plugin code on the server (loading a recording of 60M rows for the SMC Viewer
+// takes 10-50 s), so they get a much longer timeout than plain status requests.
+const EVENT_REQUEST_TIMEOUT_MS = 120000;
 const EVENT_ERROR_SNACKBAR_TIMEOUT_MS = 8000;
 const MAX_CONSECUTIVE_FAILURES = 5;
 
@@ -2215,7 +2218,7 @@ export default class AMCApplication extends Common.AMCObject {
         if (eventParameters)
             requestBody["parameters"] = eventParameters;
 
-        this.axiosPostRequest("/event", requestBody)
+        this.axiosPostRequest("/event", requestBody, { timeout: EVENT_REQUEST_TIMEOUT_MS })
         .then(resultHandleEvent => {
 
 			// A failed event carries no actions and must not run the success callback

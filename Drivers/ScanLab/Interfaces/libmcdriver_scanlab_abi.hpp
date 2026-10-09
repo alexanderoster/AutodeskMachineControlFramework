@@ -1474,6 +1474,35 @@ LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtcco
 LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pSegmentCount, LibMCDriver_ScanLab_uint32 * pFallbackCount, LibMCDriver_ScanLab_uint64 * pMinMargin, LibMCDriver_ScanLab_uint64 * pMaxListWaitInMS);
 
 /**
+* Stepwise variant of AddMicrovectorMovement, same semantics and configuration. Writes the first part of the layer and, on the streamed path, starts list execution. The rest is written by ContinueMicrovectorStreaming calls; between two calls the caller is free to do other work, e.g. read out the RTC recording while the card is marking. The microvector buffer MUST stay valid and unchanged until ContinueMicrovectorStreaming has returned true or AbortMicrovectorStreaming has been called. Small layers and the sequential download are written completely by this call.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+* @param[in] pMicrovectorArrayBuffer - MicroVector buffer of Microvector array to execute. Must outlive the streaming session.
+* @param[out] pExecutionStarted - True if this call has started list execution (streamed download). False if the layer was written without starting execution; the caller executes the list as usual afterwards.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer, bool * pExecutionStarted);
+
+/**
+* Writes the next part of the layer passed to BeginMicrovectorStreaming. Returns as soon as the time budget is used up, the download has to wait for the card to free a list, or the layer is complete. Never waits for the card. Fails if no streaming session has been begun.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] nTimeBudgetInMS - Upper bound for the time spent writing in this call, in milliseconds. 0 writes a single block.
+* @param[out] pComplete - True once all microvectors have been written. The session is finished then; further calls return true without doing anything.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nTimeBudgetInMS, bool * pComplete);
+
+/**
+* Ends a streaming session before completion, e.g. when the caller fails between two ContinueMicrovectorStreaming calls. Stops list execution, consumes an armed list change and resets the segmentation state. Does nothing if no session is active.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_SCANLAB_DECLSPEC LibMCDriver_ScanLabResult libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming(LibMCDriver_ScanLab_RTCContext pRTCContext);
+
+/**
 * Returns the currently set free variable.
 *
 * @param[in] pRTCContext - RTCContext instance.

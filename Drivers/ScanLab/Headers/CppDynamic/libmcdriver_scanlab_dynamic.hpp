@@ -1018,6 +1018,9 @@ public:
 	inline void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction);
 	inline void SetMicrovectorListSwitchingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nListCapacityLimit, const LibMCDriver_ScanLab_uint32 nTailReserve);
 	inline void GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS);
+	inline bool BeginMicrovectorStreaming(const CInputVector<sMicroVector> & MicrovectorArrayBuffer);
+	inline bool ContinueMicrovectorStreaming(const LibMCDriver_ScanLab_uint32 nTimeBudgetInMS);
+	inline void AbortMicrovectorStreaming();
 	inline LibMCDriver_ScanLab_uint32 GetCurrentFreeVariable(const LibMCDriver_ScanLab_uint32 nVariableNo);
 	inline LibMCDriver_ScanLab_uint32 GetTimeStamp();
 	inline LibMCDriver_ScanLab_int32 GetRTCChannel(const eRTCChannelType eChannelType);
@@ -1509,6 +1512,9 @@ public:
 		pWrapperTable->m_RTCContext_SetMicrovectorStreamingEnabled = nullptr;
 		pWrapperTable->m_RTCContext_SetMicrovectorListSwitchingEnabled = nullptr;
 		pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics = nullptr;
+		pWrapperTable->m_RTCContext_BeginMicrovectorStreaming = nullptr;
+		pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming = nullptr;
+		pWrapperTable->m_RTCContext_AbortMicrovectorStreaming = nullptr;
 		pWrapperTable->m_RTCContext_GetCurrentFreeVariable = nullptr;
 		pWrapperTable->m_RTCContext_GetTimeStamp = nullptr;
 		pWrapperTable->m_RTCContext_GetRTCChannel = nullptr;
@@ -2939,6 +2945,33 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_BeginMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_BeginMicrovectorStreamingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_BeginMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_BeginMicrovectorStreamingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_BeginMicrovectorStreaming == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_ContinueMicrovectorStreamingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_ContinueMicrovectorStreamingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming == nullptr)
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_RTCContext_AbortMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_AbortMicrovectorStreamingPtr) GetProcAddress(hLibrary, "libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming");
+		#else // _WIN32
+		pWrapperTable->m_RTCContext_AbortMicrovectorStreaming = (PLibMCDriver_ScanLabRTCContext_AbortMicrovectorStreamingPtr) dlsym(hLibrary, "libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_RTCContext_AbortMicrovectorStreaming == nullptr)
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -5075,6 +5108,18 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getmicrovectorlistswitchingstatistics", (void**)&(pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics));
 		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_GetMicrovectorListSwitchingStatistics == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_beginmicrovectorstreaming", (void**)&(pWrapperTable->m_RTCContext_BeginMicrovectorStreaming));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_BeginMicrovectorStreaming == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_continuemicrovectorstreaming", (void**)&(pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_ContinueMicrovectorStreaming == nullptr) )
+			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_abortmicrovectorstreaming", (void**)&(pWrapperTable->m_RTCContext_AbortMicrovectorStreaming));
+		if ( (eLookupError != 0) || (pWrapperTable->m_RTCContext_AbortMicrovectorStreaming == nullptr) )
 			return LIBMCDRIVER_SCANLAB_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_scanlab_rtccontext_getcurrentfreevariable", (void**)&(pWrapperTable->m_RTCContext_GetCurrentFreeVariable));
@@ -7287,6 +7332,40 @@ public:
 	void CRTCContext::GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_GetMicrovectorListSwitchingStatistics(m_pHandle, &nSegmentCount, &nFallbackCount, &nMinMargin, &nMaxListWaitInMS));
+	}
+	
+	/**
+	* CRTCContext::BeginMicrovectorStreaming - Stepwise variant of AddMicrovectorMovement, same semantics and configuration. Writes the first part of the layer and, on the streamed path, starts list execution. The rest is written by ContinueMicrovectorStreaming calls; between two calls the caller is free to do other work, e.g. read out the RTC recording while the card is marking. The microvector buffer MUST stay valid and unchanged until ContinueMicrovectorStreaming has returned true or AbortMicrovectorStreaming has been called. Small layers and the sequential download are written completely by this call.
+	* @param[in] MicrovectorArrayBuffer - Microvector array to execute. Must outlive the streaming session.
+	* @return True if this call has started list execution (streamed download). False if the layer was written without starting execution; the caller executes the list as usual afterwards.
+	*/
+	bool CRTCContext::BeginMicrovectorStreaming(const CInputVector<sMicroVector> & MicrovectorArrayBuffer)
+	{
+		bool resultExecutionStarted = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_BeginMicrovectorStreaming(m_pHandle, (LibMCDriver_ScanLab_uint64)MicrovectorArrayBuffer.size(), MicrovectorArrayBuffer.data(), &resultExecutionStarted));
+		
+		return resultExecutionStarted;
+	}
+	
+	/**
+	* CRTCContext::ContinueMicrovectorStreaming - Writes the next part of the layer passed to BeginMicrovectorStreaming. Returns as soon as the time budget is used up, the download has to wait for the card to free a list, or the layer is complete. Never waits for the card. Fails if no streaming session has been begun.
+	* @param[in] nTimeBudgetInMS - Upper bound for the time spent writing in this call, in milliseconds. 0 writes a single block.
+	* @return True once all microvectors have been written. The session is finished then; further calls return true without doing anything.
+	*/
+	bool CRTCContext::ContinueMicrovectorStreaming(const LibMCDriver_ScanLab_uint32 nTimeBudgetInMS)
+	{
+		bool resultComplete = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_ContinueMicrovectorStreaming(m_pHandle, nTimeBudgetInMS, &resultComplete));
+		
+		return resultComplete;
+	}
+	
+	/**
+	* CRTCContext::AbortMicrovectorStreaming - Ends a streaming session before completion, e.g. when the caller fails between two ContinueMicrovectorStreaming calls. Stops list execution, consumes an armed list change and resets the segmentation state. Does nothing if no session is active.
+	*/
+	void CRTCContext::AbortMicrovectorStreaming()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_RTCContext_AbortMicrovectorStreaming(m_pHandle));
 	}
 	
 	/**

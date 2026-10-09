@@ -1450,6 +1450,26 @@ public:
 	virtual void GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32 & nSegmentCount, LibMCDriver_ScanLab_uint32 & nFallbackCount, LibMCDriver_ScanLab_uint64 & nMinMargin, LibMCDriver_ScanLab_uint64 & nMaxListWaitInMS) = 0;
 
 	/**
+	* IRTCContext::BeginMicrovectorStreaming - Stepwise variant of AddMicrovectorMovement, same semantics and configuration. Writes the first part of the layer and, on the streamed path, starts list execution. The rest is written by ContinueMicrovectorStreaming calls; between two calls the caller is free to do other work, e.g. read out the RTC recording while the card is marking. The microvector buffer MUST stay valid and unchanged until ContinueMicrovectorStreaming has returned true or AbortMicrovectorStreaming has been called. Small layers and the sequential download are written completely by this call.
+	* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+	* @param[in] pMicrovectorArrayBuffer - Microvector array to execute. Must outlive the streaming session.
+	* @return True if this call has started list execution (streamed download). False if the layer was written without starting execution; the caller executes the list as usual afterwards.
+	*/
+	virtual bool BeginMicrovectorStreaming(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer) = 0;
+
+	/**
+	* IRTCContext::ContinueMicrovectorStreaming - Writes the next part of the layer passed to BeginMicrovectorStreaming. Returns as soon as the time budget is used up, the download has to wait for the card to free a list, or the layer is complete. Never waits for the card. Fails if no streaming session has been begun.
+	* @param[in] nTimeBudgetInMS - Upper bound for the time spent writing in this call, in milliseconds. 0 writes a single block.
+	* @return True once all microvectors have been written. The session is finished then; further calls return true without doing anything.
+	*/
+	virtual bool ContinueMicrovectorStreaming(const LibMCDriver_ScanLab_uint32 nTimeBudgetInMS) = 0;
+
+	/**
+	* IRTCContext::AbortMicrovectorStreaming - Ends a streaming session before completion, e.g. when the caller fails between two ContinueMicrovectorStreaming calls. Stops list execution, consumes an armed list change and resets the segmentation state. Does nothing if no session is active.
+	*/
+	virtual void AbortMicrovectorStreaming() = 0;
+
+	/**
 	* IRTCContext::GetCurrentFreeVariable - Returns the currently set free variable.
 	* @param[in] nVariableNo - Number of the variable (0-7).
 	* @return Value to return.
