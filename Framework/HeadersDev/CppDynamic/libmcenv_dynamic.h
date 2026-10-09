@@ -11435,6 +11435,54 @@ typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetMachineParameterGroupParamete
 typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetMachineParameterGroupParameterTypePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, const char * pParameterGroup, const char * pParameterName, LibMCEnv::eParameterDataType * pParameterType);
 
 /**
+* sets a string parameter of a state machine
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pMachineInstance - State machine instance name
+* @param[in] pParameterGroup - Parameter Group
+* @param[in] pParameterName - Parameter Name
+* @param[in] pValue - New Parameter Value
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetMachineParameterPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, const char * pParameterGroup, const char * pParameterName, const char * pValue);
+
+/**
+* sets a double parameter of a state machine
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pMachineInstance - State machine instance name
+* @param[in] pParameterGroup - Parameter Group
+* @param[in] pParameterName - Parameter Name
+* @param[in] dValue - New Parameter Value
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetMachineParameterAsDoublePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, const char * pParameterGroup, const char * pParameterName, LibMCEnv_double dValue);
+
+/**
+* sets an integer parameter of a state machine
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pMachineInstance - State machine instance name
+* @param[in] pParameterGroup - Parameter Group
+* @param[in] pParameterName - Parameter Name
+* @param[in] nValue - New Parameter Value
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetMachineParameterAsIntegerPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, const char * pParameterGroup, const char * pParameterName, LibMCEnv_int64 nValue);
+
+/**
+* sets a boolean parameter of a state machine
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pMachineInstance - State machine instance name
+* @param[in] pParameterGroup - Parameter Group
+* @param[in] pParameterName - Parameter Name
+* @param[in] bValue - New Parameter Value
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_SetMachineParameterAsBoolPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, const char * pParameterGroup, const char * pParameterName, bool bValue);
+
+/**
 * returns a string property of a UI element on the client
 *
 * @param[in] pUIEnvironment - UIEnvironment instance.
@@ -13395,6 +13443,10 @@ typedef struct {
 	PLibMCEnvUIEnvironment_GetMachineParameterGroupParameterNamePtr m_UIEnvironment_GetMachineParameterGroupParameterName;
 	PLibMCEnvUIEnvironment_GetMachineParameterGroupParameterDescriptionPtr m_UIEnvironment_GetMachineParameterGroupParameterDescription;
 	PLibMCEnvUIEnvironment_GetMachineParameterGroupParameterTypePtr m_UIEnvironment_GetMachineParameterGroupParameterType;
+	PLibMCEnvUIEnvironment_SetMachineParameterPtr m_UIEnvironment_SetMachineParameter;
+	PLibMCEnvUIEnvironment_SetMachineParameterAsDoublePtr m_UIEnvironment_SetMachineParameterAsDouble;
+	PLibMCEnvUIEnvironment_SetMachineParameterAsIntegerPtr m_UIEnvironment_SetMachineParameterAsInteger;
+	PLibMCEnvUIEnvironment_SetMachineParameterAsBoolPtr m_UIEnvironment_SetMachineParameterAsBool;
 	PLibMCEnvUIEnvironment_GetUIPropertyPtr m_UIEnvironment_GetUIProperty;
 	PLibMCEnvUIEnvironment_GetUIPropertyAsUUIDPtr m_UIEnvironment_GetUIPropertyAsUUID;
 	PLibMCEnvUIEnvironment_GetUIPropertyAsDoublePtr m_UIEnvironment_GetUIPropertyAsDouble;

@@ -3778,6 +3778,10 @@ public:
 	inline std::string GetMachineParameterGroupParameterName(const std::string & sMachineInstance, const std::string & sParameterGroup, const LibMCEnv_uint32 nIndex);
 	inline std::string GetMachineParameterGroupParameterDescription(const std::string & sMachineInstance, const std::string & sParameterGroup, const LibMCEnv_uint32 nIndex);
 	inline eParameterDataType GetMachineParameterGroupParameterType(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName);
+	inline void SetMachineParameter(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue);
+	inline void SetMachineParameterAsDouble(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_double dValue);
+	inline void SetMachineParameterAsInteger(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_int64 nValue);
+	inline void SetMachineParameterAsBool(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const bool bValue);
 	inline std::string GetUIProperty(const std::string & sElementPath, const std::string & sPropertyName);
 	inline std::string GetUIPropertyAsUUID(const std::string & sElementPath, const std::string & sPropertyName);
 	inline LibMCEnv_double GetUIPropertyAsDouble(const std::string & sElementPath, const std::string & sPropertyName);
@@ -5003,6 +5007,10 @@ public:
 		pWrapperTable->m_UIEnvironment_GetMachineParameterGroupParameterName = nullptr;
 		pWrapperTable->m_UIEnvironment_GetMachineParameterGroupParameterDescription = nullptr;
 		pWrapperTable->m_UIEnvironment_GetMachineParameterGroupParameterType = nullptr;
+		pWrapperTable->m_UIEnvironment_SetMachineParameter = nullptr;
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble = nullptr;
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger = nullptr;
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool = nullptr;
 		pWrapperTable->m_UIEnvironment_GetUIProperty = nullptr;
 		pWrapperTable->m_UIEnvironment_GetUIPropertyAsUUID = nullptr;
 		pWrapperTable->m_UIEnvironment_GetUIPropertyAsDouble = nullptr;
@@ -14697,6 +14705,42 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameter = (PLibMCEnvUIEnvironment_SetMachineParameterPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setmachineparameter");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameter = (PLibMCEnvUIEnvironment_SetMachineParameterPtr) dlsym(hLibrary, "libmcenv_uienvironment_setmachineparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetMachineParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble = (PLibMCEnvUIEnvironment_SetMachineParameterAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setmachineparameterasdouble");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble = (PLibMCEnvUIEnvironment_SetMachineParameterAsDoublePtr) dlsym(hLibrary, "libmcenv_uienvironment_setmachineparameterasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger = (PLibMCEnvUIEnvironment_SetMachineParameterAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setmachineparameterasinteger");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger = (PLibMCEnvUIEnvironment_SetMachineParameterAsIntegerPtr) dlsym(hLibrary, "libmcenv_uienvironment_setmachineparameterasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool = (PLibMCEnvUIEnvironment_SetMachineParameterAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_setmachineparameterasbool");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool = (PLibMCEnvUIEnvironment_SetMachineParameterAsBoolPtr) dlsym(hLibrary, "libmcenv_uienvironment_setmachineparameterasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_UIEnvironment_GetUIProperty = (PLibMCEnvUIEnvironment_GetUIPropertyPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getuiproperty");
 		#else // _WIN32
 		pWrapperTable->m_UIEnvironment_GetUIProperty = (PLibMCEnvUIEnvironment_GetUIPropertyPtr) dlsym(hLibrary, "libmcenv_uienvironment_getuiproperty");
@@ -19723,6 +19767,22 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_getmachineparametergroupparametertype", (void**)&(pWrapperTable->m_UIEnvironment_GetMachineParameterGroupParameterType));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetMachineParameterGroupParameterType == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setmachineparameter", (void**)&(pWrapperTable->m_UIEnvironment_SetMachineParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetMachineParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setmachineparameterasdouble", (void**)&(pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetMachineParameterAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setmachineparameterasinteger", (void**)&(pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetMachineParameterAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_setmachineparameterasbool", (void**)&(pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_SetMachineParameterAsBool == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_getuiproperty", (void**)&(pWrapperTable->m_UIEnvironment_GetUIProperty));
@@ -34785,6 +34845,54 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetMachineParameterGroupParameterType(m_pHandle, sMachineInstance.c_str(), sParameterGroup.c_str(), sParameterName.c_str(), &resultParameterType));
 		
 		return resultParameterType;
+	}
+	
+	/**
+	* CUIEnvironment::SetMachineParameter - sets a string parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] sValue - New Parameter Value
+	*/
+	void CUIEnvironment::SetMachineParameter(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetMachineParameter(m_pHandle, sMachineInstance.c_str(), sParameterGroup.c_str(), sParameterName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* CUIEnvironment::SetMachineParameterAsDouble - sets a double parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] dValue - New Parameter Value
+	*/
+	void CUIEnvironment::SetMachineParameterAsDouble(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetMachineParameterAsDouble(m_pHandle, sMachineInstance.c_str(), sParameterGroup.c_str(), sParameterName.c_str(), dValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetMachineParameterAsInteger - sets an integer parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] nValue - New Parameter Value
+	*/
+	void CUIEnvironment::SetMachineParameterAsInteger(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const LibMCEnv_int64 nValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetMachineParameterAsInteger(m_pHandle, sMachineInstance.c_str(), sParameterGroup.c_str(), sParameterName.c_str(), nValue));
+	}
+	
+	/**
+	* CUIEnvironment::SetMachineParameterAsBool - sets a boolean parameter of a state machine
+	* @param[in] sMachineInstance - State machine instance name
+	* @param[in] sParameterGroup - Parameter Group
+	* @param[in] sParameterName - Parameter Name
+	* @param[in] bValue - New Parameter Value
+	*/
+	void CUIEnvironment::SetMachineParameterAsBool(const std::string & sMachineInstance, const std::string & sParameterGroup, const std::string & sParameterName, const bool bValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_SetMachineParameterAsBool(m_pHandle, sMachineInstance.c_str(), sParameterGroup.c_str(), sParameterName.c_str(), bValue));
 	}
 	
 	/**
