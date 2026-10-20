@@ -32,6 +32,7 @@ Abstract: This is a stub class definition of CStorageZIPWriter
 */
 
 #include "libmcdata_storagezipwriter.hpp"
+#include "common_utils.hpp"
 #include "libmcdata_interfaceexception.hpp"
 
 // Include custom headers here.
@@ -44,44 +45,88 @@ using namespace LibMCData::Impl;
 **************************************************************************************************************************/
 
 
-CStorageZIPWriter::CStorageZIPWriter(AMCData::PStorageWriter_ZIPStream pStorageWriter, AMCData::PSQLHandler pSQLHandler)
-	: m_pStorageWriter (pStorageWriter), m_pSQLHandler (pSQLHandler)
+CStorageZIPWriter::CStorageZIPWriter(AMCData::PStorageWriter_ZIPStream pStorageWriter, AMCData::PSQLHandler pSQLHandler, AMCData::PStorageState pStorageState)
+	: m_pStorageWriter (pStorageWriter), m_pSQLHandler (pSQLHandler), m_pStorageState (pStorageState)
 {
 	if (pStorageWriter.get () == nullptr)
 		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
 	if (pSQLHandler.get() == nullptr)
-		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);	
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+	if (pStorageState.get() == nullptr)
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
 
 }
 
 CStorageZIPWriter::~CStorageZIPWriter()
 {
+	if ((m_pStorageWriter.get() != nullptr) && (!m_pStorageWriter->isFinalized()))
+		m_pStorageState->deletePartialWriter(m_pStorageWriter->getUUID());
+
 	m_pStorageWriter = nullptr;
+}
+
+AMCData::CStorageWriter_ZIPStream* CStorageZIPWriter::getWriter()
+{
+	if (m_pStorageWriter.get() == nullptr)
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_ZIPWRITINGALREADYFINISHED, "ZIP stream has been discarded");
+
+	return m_pStorageWriter.get();
+}
+
+void CStorageZIPWriter::Discard()
+{
+	if (m_pStorageWriter.get() == nullptr)
+		return;
+
+	if (m_pStorageWriter->isFinalized())
+		throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED, "ZIP stream has already been finished: " + m_pStorageWriter->getUUID());
+
+	std::string sUUID = m_pStorageWriter->getUUID();
+	m_pStorageState->deletePartialWriter(sUUID);
+
+	// The last reference closes the file; an unfinished writer deletes it.
+	m_pStorageWriter = nullptr;
+	AMCCommon::CUtils::deleteFileFromDisk(m_pStorageState->getStreamPath(sUUID), false);
+
+	auto pTransaction = m_pSQLHandler->beginTransaction();
+
+	auto pLinkStatement = pTransaction->prepareStatement("DELETE FROM journal_tempstreams WHERE streamuuid=?");
+	pLinkStatement->setString(1, sUUID);
+	pLinkStatement->execute();
+	pLinkStatement = nullptr;
+
+	auto pStreamStatement = pTransaction->prepareStatement("DELETE FROM storage_streams WHERE uuid=? AND status=?");
+	pStreamStatement->setString(1, sUUID);
+	pStreamStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssNew));
+	pStreamStatement->execute();
+	pStreamStatement = nullptr;
+
+	pTransaction->commit();
 }
 
 LibMCData_uint32 CStorageZIPWriter::StartNewEntry(const std::string & sFileName, const LibMCData_uint64 nAbsoluteTimeStamp)
 {
-	return m_pStorageWriter->startNewEntry(sFileName, nAbsoluteTimeStamp);
+	return getWriter()->startNewEntry(sFileName, nAbsoluteTimeStamp);
 }
 
 void CStorageZIPWriter::FinishCurrentEntry()
 {
-	m_pStorageWriter->finishCurrentEntry();
+	getWriter()->finishCurrentEntry();
 }
 
 LibMCData_uint32 CStorageZIPWriter::GetOpenEntryID()
 {
-	return m_pStorageWriter->getOpenEntryID();
+	return getWriter()->getOpenEntryID();
 }
 
 void CStorageZIPWriter::WriteData(const LibMCData_uint32 nEntryID, const LibMCData_uint64 nDataBufferSize, const LibMCData_uint8 * pDataBuffer)
 {
-	m_pStorageWriter->writeToCurrentEntry(nEntryID, pDataBuffer, nDataBufferSize);
+	getWriter()->writeToCurrentEntry(nEntryID, pDataBuffer, nDataBufferSize);
 }
 
 LibMCData_uint64 CStorageZIPWriter::GetEntrySize(const LibMCData_uint32 nEntryID)
 {
-	return m_pStorageWriter->getEntrySize(nEntryID);
+	return getWriter()->getEntrySize(nEntryID);
 }
 
 void CStorageZIPWriter::Finish()
@@ -89,9 +134,9 @@ void CStorageZIPWriter::Finish()
 	std::string sCalculatedSHA256;
 	std::string sCalculatedBlockSHA256;
 	
-	m_pStorageWriter->finalize (sCalculatedSHA256, sCalculatedBlockSHA256);
+	getWriter()->finalize (sCalculatedSHA256, sCalculatedBlockSHA256);
 
-	uint64_t nSize = m_pStorageWriter->getZIPStreamSize();
+	uint64_t nSize = getWriter()->getZIPStreamSize();
 
 	std::string sUpdateQuery = "UPDATE storage_streams SET size=?, status=?, sha2=?, sha256_block64k=? WHERE uuid=? AND status=?";
 	auto pUpdateStatement = m_pSQLHandler->prepareStatement(sUpdateQuery);
@@ -99,19 +144,21 @@ void CStorageZIPWriter::Finish()
 	pUpdateStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssValidated));
 	pUpdateStatement->setString(3, sCalculatedSHA256);
 	pUpdateStatement->setString(4, sCalculatedBlockSHA256);
-	pUpdateStatement->setString(5, m_pStorageWriter->getUUID ());
+	pUpdateStatement->setString(5, getWriter()->getUUID ());
 	pUpdateStatement->setString(6, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssNew));
 	pUpdateStatement->execute();
 	pUpdateStatement = nullptr;
 
+	// The finished writer is no longer a partial writer; keeping it would hold the file reference forever.
+	m_pStorageState->deletePartialWriter(m_pStorageWriter->getUUID());
 }
 
 bool CStorageZIPWriter::IsFinished()
 {
-	return m_pStorageWriter->isFinalized ();
+	return getWriter()->isFinalized ();
 }
 
 LibMCData_uint64 CStorageZIPWriter::GetZIPStreamSize()
 {
-	return m_pStorageWriter->getZIPStreamSize();
+	return getWriter()->getZIPStreamSize();
 }

@@ -51,6 +51,7 @@ Abstract: This is the class declaration of CAPIRequestHandler
 
 // Include custom headers here.
 #include <map>
+#include <vector>
 
 namespace LibMC {
 namespace Impl {
@@ -77,6 +78,12 @@ protected:
 
 	AMC::PLogger m_pLogger;
 
+	// Chunk read by ReadResultStreamChunk when the caller asked for the size, handed out with the second call.
+	std::vector<uint8_t> m_ChunkBuffer;
+	uint64_t m_nChunkOffset;
+
+	AMC::CAPIStorageStreamResponse* getStreamResponse();
+
 public:
 
 	CAPIRequestHandler(AMC::PAPI pAPI, const std::string& sURI, const AMC::eAPIRequestType eRequestType, AMC::PAPIAuth pAuth, AMC::PLogger pLogger);
@@ -98,7 +105,17 @@ public:
 	void SetRequestParameter(const std::string& sName, const std::string& sValue) override;
 
 	std::string GetContentDispositionName() override;
-	
+
+	void SetClientAddress(const std::string& sAddress) override;
+
+	bool HasStreamResult() override;
+
+	void GetResultStreamInfo(LibMC_uint64& nSize, std::string& sETag, std::string& sLastModified) override;
+
+	void ReadResultStreamChunk(const LibMC_uint64 nOffset, const LibMC_uint64 nLength, LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8* pDataBuffer) override;
+
+	void FinishStreamResult(const bool bSuccess) override;
+
 };
 
 } // namespace Impl

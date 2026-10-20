@@ -341,7 +341,10 @@
 		<error name="INVALIDDOWNSAMPLEPARAMETERS" code="10301" description="Invalid downsample parameters." />
 		<error name="DATATABLECOLUMNTYPEMISMATCH" code="10302" description="Datatable column can not be read as the requested type." />
 		<error name="INVALIDDATATABLECHUNKINDEX" code="10303" description="Invalid datatable chunk index." />
-		
+		<error name="STREAMHASACTIVEDOWNLOADS" code="10304" description="Storage stream has active downloads." />
+		<error name="ZIPSTREAMALREADYFINISHED" code="10305" description="ZIP stream has already been finished." />
+		<error name="SESSIONHANDLERNOTAVAILABLE" code="10306" description="Session handler is not available." />
+
 		
 	</errors>
 
@@ -5052,9 +5055,12 @@
 			<param name="FileName" type="string" pass="in" description="File Name for the new entry in the ZIP file. Entry MUST not exist yet." />
 			<param name="StreamReader" type="class" class="StreamReader" pass="in" description="Stream to read from." />
 		</method>
-		
+
+		<method name="Discard" description="Discards the unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.">
+		</method>
+
 	</class>
-	
+
 	
 	<class name="StreamReader" parent="Base" description="A reader class that allows to access a storage stream.">
 	
@@ -6625,6 +6631,37 @@
 		<method name="EvaluateFormulaAsBool" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.">
 			<param name="Formula" type="string" pass="in" description="Formula text." />
 			<param name="Value" type="bool" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="StartStreamDownloadForSession" description="Starts a stream download in the browser of a client session. Creates a download ticket for the user of the session and queues the download action for delivery to the session. Returns false if the session does not exist or is not authorized.">
+			<param name="SessionUUID" type="string" pass="in" description="UUID of the client session." />
+			<param name="StreamUUID" type="string" pass="in" description="Storage stream. Fails if the stream does not exist or is not finished." />
+			<param name="FileName" type="string" pass="in" description="File name offered to the browser. Fails if empty." />
+			<param name="Success" type="bool" pass="return" description="True if the download action was queued for the session." />
+		</method>
+
+		<method name="GetStreamDownloadProgress" description="Returns the delivery progress of all downloads of a storage stream.">
+			<param name="StreamUUID" type="string" pass="in" description="Storage stream." />
+			<param name="ActiveConnections" type="uint32" pass="out" description="Connections that are sending the stream right now." />
+			<param name="DeliveredBytes" type="uint64" pass="out" description="Bytes from the start of the stream that were sent without a gap." />
+			<param name="TotalBytes" type="uint64" pass="out" description="Size of the stream." />
+			<param name="Completed" type="bool" pass="out" description="The last byte was sent and its connection ended successfully." />
+			<param name="MillisecondsSinceActivity" type="uint64" pass="out" description="Time since the last chunk was sent or since the download was handed over." />
+		</method>
+
+		<method name="CancelStreamDownloads" description="Stops all running downloads of a storage stream, revokes its download tickets and drops its unclaimed download actions. Does nothing if the stream was already delivered completely.">
+			<param name="StreamUUID" type="string" pass="in" description="Storage stream." />
+			<param name="Cancelled" type="bool" pass="return" description="False if the download had already completed and nothing was cancelled." />
+		</method>
+
+		<method name="DeleteStorageStream" description="Deletes a finished storage stream from disk and database, including its download tickets. Fails if the stream does not exist, is still being written or is being downloaded right now.">
+			<param name="UUID" type="string" pass="in" description="UUID of the storage stream." />
+		</method>
+
+		<method name="EnforceStreamRetention" description="Deletes all finished streams with the given name except the newest ones. Streams with running downloads or pending download actions are kept. Returns the number of deleted streams.">
+			<param name="Name" type="string" pass="in" description="Name of the streams." />
+			<param name="KeepCount" type="uint32" pass="in" description="Number of newest streams to keep." />
+			<param name="DeletedCount" type="uint32" pass="return" description="Number of deleted streams." />
 		</method>
 
 	</class>

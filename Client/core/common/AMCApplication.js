@@ -187,6 +187,11 @@ export default class AMCApplication extends Common.AMCObject {
 		}
 
 		// mode is one of "off" / "connecting" / "stream" / "polling".
+		// Senders whose event request is still running (double-send guard of triggerUIEvent).
+		this.PendingEventSenders = new Set ();
+		// Session client actions this tab has claimed or tried to claim.
+		this.ClaimedClientActions = new Set ();
+
 		this.FrontendUpdates = {
 			// Identifies this tab within the session's event stream, which serves each tab its active pages and dialogs.
 			clientID: this._createFrontendClientID (),
@@ -1215,6 +1220,9 @@ export default class AMCApplication extends Common.AMCObject {
 	}
 
 	_setFrontendState(data, scope) {
+		if (data && Array.isArray (data.pendingactions))
+			this._handlePendingClientActions (data.pendingactions);
+
 		this.API.frontendState = data;
 		this.API.frontendScope = scope;
 		this.API.frontendRevision = Number.isSafeInteger (data.revision) ? data.revision : 0;
@@ -1548,6 +1556,7 @@ export default class AMCApplication extends Common.AMCObject {
 			updates.source = source;
 			source.addEventListener ("snapshot", event => this._onFrontendStreamEvent (generation, "snapshot", event));
 			source.addEventListener ("patch", event => this._onFrontendStreamEvent (generation, "patch", event));
+			source.addEventListener ("actions", event => this._onFrontendActionsEvent (generation, event));
 			source.onerror = () => this._onFrontendStreamError (generation);
 		})
 		.catch (err => {
@@ -1593,6 +1602,23 @@ export default class AMCApplication extends Common.AMCObject {
 			updates.reconnectTimer = null;
 			this._connectFrontendStream ();
 		}, delayMS);
+	}
+
+	_onFrontendActionsEvent(generation, event) {
+		let updates = this.FrontendUpdates;
+		if ((generation !== updates.generation) || !updates.enabled)
+			return;
+
+		let data;
+		try {
+			data = JSON.parse (event.data);
+		}
+		catch (err) {
+			console.warn ("[frontend updates] malformed actions event:", err);
+			return;
+		}
+		if (data && (typeof data === "object"))
+			this._handlePendingClientActions (data.pendingactions);
 	}
 
 	_onFrontendStreamEvent(generation, eventType, event) {
@@ -2173,20 +2199,19 @@ export default class AMCApplication extends Common.AMCObject {
 		
     }
 	
-	streamDownload (downloadticketuuid) 
+	streamDownload (downloadticketuuid, downloadfilename)
 	{
-				
-	
-		/*// Start download in Browser
-		const a = document.createElement('a');
-		a.href = this.getDownloadURL (downloadticketuuid);
-		a.download = downloadfilename;
-		document.body.appendChild(a);    
-		a.click();
-		document.body.removeChild(a); */
-			
-		window.open (this.getDownloadURL (downloadticketuuid), "_blank");
-		
+		// Hand the download over to the browser download manager: it streams the file to disk, shows
+		// progress and can pause and resume. Large files must never be loaded into page memory, and a
+		// programmatic link click is not blocked by the popup blocker like window.open is.
+		const link = document.createElement ("a");
+		link.href = this.getDownloadURL (downloadticketuuid);
+		if (downloadfilename)
+			link.download = downloadfilename;
+		link.rel = "noopener";
+		document.body.appendChild (link);
+		link.click ();
+		document.body.removeChild (link);
 	}
 
     getImageURL(uuid) {
@@ -2218,6 +2243,17 @@ export default class AMCApplication extends Common.AMCObject {
         if (eventParameters)
             requestBody["parameters"] = eventParameters;
 
+        // A sender whose previous event is still running (usually 50-200 ms) does not send a second one:
+        // the second click of a double click would otherwise reach the server as a new command.
+        let pendingKey = senderuuid ? String (senderuuid) : null;
+        if (pendingKey) {
+            if (this.PendingEventSenders.has (pendingKey)) {
+                console.info ("[events] ignoring " + eventname + ": the previous event of this sender is still running");
+                return;
+            }
+            this.PendingEventSenders.add (pendingKey);
+        }
+
         this.axiosPostRequest("/event", requestBody, { timeout: EVENT_REQUEST_TIMEOUT_MS })
         .then(resultHandleEvent => {
 
@@ -2227,37 +2263,80 @@ export default class AMCApplication extends Common.AMCObject {
 				return;
 			}
 
-			if (resultHandleEvent.data.actions) {
-				if (Array.isArray(resultHandleEvent.data.actions)) {
-					let action;
-					for (action of resultHandleEvent.data.actions) {
-						if (action.action === "activatemodaldialog") {
-							this.showDialog(action.dialogname);
-						}
-						if (action.action === "activatepage") {
-							this.changePage(action.pagename);
-						}
-						if (action.action === "closemodaldialog") {
-							this.closeAllDialogs();
-						}
-						if (action.action === "streamdownload") {
-							this.streamDownload(action.downloadticket);
-						}
-						
-						//this.updateContentItemResult(item.uuid, item);
-					}
-				}
-			}
-			
+			this.executeClientActions (resultHandleEvent.data.actions);
+
 			if (executionCallback) {
 				executionCallback ();
-			}				
-			
+			}
+
         })
         .catch(err => {
             console.log(err);
             this.showEventError(eventname, this.extractErrorMessage(err));
+        })
+        .finally(() => {
+            if (pendingKey)
+                this.PendingEventSenders.delete (pendingKey);
         });
+    }
+
+    // Runs the client actions of an event response, a widget response or the session's pending action queue.
+    executeClientActions(actions) {
+        if (!Array.isArray (actions))
+            return;
+
+        for (let action of actions) {
+            if (!action || (typeof action !== "object"))
+                continue;
+            if (action.action === "activatemodaldialog") {
+                this.showDialog(action.dialogname);
+            }
+            if (action.action === "activatepage") {
+                this.changePage(action.pagename);
+            }
+            if (action.action === "closemodaldialog") {
+                this.closeAllDialogs();
+            }
+            if (action.action === "streamdownload") {
+                this.streamDownload(action.downloadticket, action.downloadfilename);
+            }
+        }
+    }
+
+    // Actions that the server queued for this session (for example a download prepared by a state
+    // machine) arrive through the event stream or the polling response. Several tabs of one session
+    // receive the same list; the first tab that claims an action executes it, the others get 409.
+    _handlePendingClientActions(actions) {
+        if (!Array.isArray (actions))
+            return;
+
+        for (let action of actions) {
+            if (!action || (typeof action !== "object") || !action.actionuuid)
+                continue;
+
+            let actionUUID = String (action.actionuuid);
+            if (this.ClaimedClientActions.has (actionUUID))
+                continue;
+            this.ClaimedClientActions.add (actionUUID);
+
+            this.axiosPostRequest ("/frontend/actions/" + actionUUID + "/claim", {})
+            .then (resultJSON => {
+                if (resultJSON.data && resultJSON.data.errorcode) {
+                    console.info ("[frontend updates] client action " + actionUUID + " was claimed by another tab");
+                    return;
+                }
+                this.executeClientActions ([action]);
+            })
+            .catch (err => {
+                let status = (err && err.response) ? err.response.status : 0;
+                if (status === 409) {
+                    console.info ("[frontend updates] client action " + actionUUID + " was claimed by another tab");
+                    return;
+                }
+                console.warn ("[frontend updates] claiming client action " + actionUUID + " failed:", this.extractErrorMessage (err));
+                this.ClaimedClientActions.delete (actionUUID);
+            });
+        }
     }
 
     // Sets every snack bar field, so a caller never inherits the color or timeout of a previous message.
@@ -2282,28 +2361,8 @@ export default class AMCApplication extends Common.AMCObject {
         this.axiosPostRequest("/widget/" + Assert.UUIDValue (widgetuuid) + "/" + Assert.StringValue (requestType), Assert.ObjectValue (requestJSON))
         .then(resultHandleWidgetRequest => {
 			
-			if (resultHandleWidgetRequest.data.actions) {
-				if (Array.isArray(resultHandleWidgetRequest.data.actions)) {
-					let action;
-					for (action of resultHandleWidgetRequest.data.actions) {
-						if (action.action === "activatemodaldialog") {
-							this.showDialog(action.dialogname);
-						}
-						if (action.action === "activatepage") {
-							this.changePage(action.pagename);
-						}
-						if (action.action === "closemodaldialog") {
-							this.closeAllDialogs();
-						}
-						if (action.action === "streamdownload") {
-							this.streamDownload(action.downloadticket);
-						}
-						
-						//this.updateContentItemResult(item.uuid, item);
-					}
-				}
-			}
-			
+			this.executeClientActions (resultHandleWidgetRequest.data.actions);
+
 			if (executionCallback) {
 				executionCallback ();
 			}

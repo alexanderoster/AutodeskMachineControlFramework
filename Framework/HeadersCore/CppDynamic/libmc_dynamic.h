@@ -227,6 +227,61 @@ typedef LibMCResult (*PLibMCAPIRequestHandler_GetResultDataPtr) (LibMC_APIReques
 */
 typedef LibMCResult (*PLibMCAPIRequestHandler_GetContentDispositionNamePtr) (LibMC_APIRequestHandler pAPIRequestHandler, const LibMC_uint32 nContentDispositionNameBufferSize, LibMC_uint32* pContentDispositionNameNeededChars, char * pContentDispositionNameBuffer);
 
+/**
+* Sets the network address of the client that sent the request. Call before Handle().
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] pAddress - Network address of the client.
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_SetClientAddressPtr) (LibMC_APIRequestHandler pAPIRequestHandler, const char * pAddress);
+
+/**
+* Returns true if the result is a storage stream that must be sent in chunks with ReadResultStreamChunk instead of a buffer. Call only after Handle().
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[out] pHasStream - Result is a stream.
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_HasStreamResultPtr) (LibMC_APIRequestHandler pAPIRequestHandler, bool * pHasStream);
+
+/**
+* Returns size and validators of the result stream. Fails if the result is not a stream.
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[out] pSize - Stream size in bytes.
+* @param[in] nETagBufferSize - size of the buffer (including trailing 0)
+* @param[out] pETagNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pETagBuffer -  buffer of Strong entity tag of the stream, without quotes., may be NULL
+* @param[in] nLastModifiedBufferSize - size of the buffer (including trailing 0)
+* @param[out] pLastModifiedNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pLastModifiedBuffer -  buffer of Creation time of the stream as HTTP date., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_GetResultStreamInfoPtr) (LibMC_APIRequestHandler pAPIRequestHandler, LibMC_uint64 * pSize, const LibMC_uint32 nETagBufferSize, LibMC_uint32* pETagNeededChars, char * pETagBuffer, const LibMC_uint32 nLastModifiedBufferSize, LibMC_uint32* pLastModifiedNeededChars, char * pLastModifiedBuffer);
+
+/**
+* Reads a part of the result stream and records it as sent. Fails if the range is outside the stream, the length exceeds 16 MiB or the download was cancelled.
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] nOffset - Start position in bytes.
+* @param[in] nLength - Number of bytes to read.
+* @param[in] nDataBufferSize - Number of elements in buffer
+* @param[out] pDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pDataBuffer - uint8  buffer of Data that was read.
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_ReadResultStreamChunkPtr) (LibMC_APIRequestHandler pAPIRequestHandler, LibMC_uint64 nOffset, LibMC_uint64 nLength, const LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8 * pDataBuffer);
+
+/**
+* Reports that sending the result stream has ended. May be called more than once and without any chunk having been read.
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] bSuccess - All requested bytes were sent.
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_FinishStreamResultPtr) (LibMC_APIRequestHandler pAPIRequestHandler, bool bSuccess);
+
 /*************************************************************************************************************************
  Class definition for MCContext
 **************************************************************************************************************************/
@@ -457,6 +512,11 @@ typedef struct {
 	PLibMCAPIRequestHandler_HandlePtr m_APIRequestHandler_Handle;
 	PLibMCAPIRequestHandler_GetResultDataPtr m_APIRequestHandler_GetResultData;
 	PLibMCAPIRequestHandler_GetContentDispositionNamePtr m_APIRequestHandler_GetContentDispositionName;
+	PLibMCAPIRequestHandler_SetClientAddressPtr m_APIRequestHandler_SetClientAddress;
+	PLibMCAPIRequestHandler_HasStreamResultPtr m_APIRequestHandler_HasStreamResult;
+	PLibMCAPIRequestHandler_GetResultStreamInfoPtr m_APIRequestHandler_GetResultStreamInfo;
+	PLibMCAPIRequestHandler_ReadResultStreamChunkPtr m_APIRequestHandler_ReadResultStreamChunk;
+	PLibMCAPIRequestHandler_FinishStreamResultPtr m_APIRequestHandler_FinishStreamResult;
 	PLibMCMCContext_RegisterLibraryPathPtr m_MCContext_RegisterLibraryPath;
 	PLibMCMCContext_SetTempBasePathPtr m_MCContext_SetTempBasePath;
 	PLibMCMCContext_ParseConfigurationPtr m_MCContext_ParseConfiguration;

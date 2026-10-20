@@ -53,6 +53,16 @@ namespace AMC {
 
 	}
 
+	void CAPIFormFields::setClientAddress(const std::string& sClientAddress)
+	{
+		m_sClientAddress = sClientAddress;
+	}
+
+	std::string CAPIFormFields::getClientAddress()
+	{
+		return m_sClientAddress;
+	}
+
 	void CAPIFormFields::addDataField (const std::string& sName, std::shared_ptr<std::vector<uint8_t>> pData)
 	{
 		m_FileData.insert(std::make_pair (sName, pData));

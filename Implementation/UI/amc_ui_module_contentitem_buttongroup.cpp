@@ -44,12 +44,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUIModule_ContentButton::CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData)
-	: m_sUUID(AMCCommon::CUtils::createUUID()), 
-	 m_CaptionExpression(Caption), 
-	m_TargetPageExpression(TargetPage), 
-	m_EventExpression (Event), 
+CUIModule_ContentButton::CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const CUIExpression& Hint, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData)
+	: m_sUUID(AMCCommon::CUtils::createUUID()),
+	 m_CaptionExpression(Caption),
+	m_TargetPageExpression(TargetPage),
+	m_EventExpression (Event),
 	m_IconExpression(IconName),
+	m_HintExpression(Hint),
 	m_DisabledExpression (DisabledExpression),
 	m_VisibleExpression (VisibleExpression),
 	m_sEventFormValueSetting(sEventFormValueSetting), 
@@ -158,7 +159,8 @@ PParameterGroup CUIModule_ContentButton::registerClientVariableGroup(CParameterH
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONTARGETPAGE, "button target page", m_TargetPageExpression.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONEVENT, "button event", m_EventExpression.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONICON, "button icon", m_IconExpression.evaluateStringValue(m_pStateMachineData));
-	// Readable by event handlers via GetUIProperty(sender, "tags"). Always registered
+	pGroup->addNewStringParameter(AMC_API_KEY_UI_BUTTONHINT, "button hint", m_HintExpression.evaluateStringValue(m_pStateMachineData));
+	// Readable by event handlers via GetUIProperty(sender, "tags").Always registered
 	// (empty when unset) so the lookup never throws for untagged buttons.
 	pGroup->addNewStringParameter("tags", "button tags", m_sTags);
 
@@ -184,6 +186,7 @@ void CUIModule_ContentButton::writeVariablesToJSON(CJSONWriter& writer, CJSONWri
 	object.addString(AMC_API_KEY_UI_BUTTONTARGETPAGE, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONTARGETPAGE));
 	object.addString(AMC_API_KEY_UI_BUTTONEVENT, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONEVENT));
 	object.addString(AMC_API_KEY_UI_BUTTONICON, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONICON));
+	object.addString(AMC_API_KEY_UI_BUTTONHINT, pGroup->getParameterValueByName(AMC_API_KEY_UI_BUTTONHINT));
 
 	// Static toolbar layout metadata.
 	object.addString("kind", m_sKind);
@@ -211,6 +214,8 @@ void CUIModule_ContentButton::syncClientVariables(CParameterHandler* pClientVari
 			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONEVENT, m_EventExpression.evaluateStringValue(m_pStateMachineData));
 		if (m_IconExpression.needsSync())
 			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONICON, m_IconExpression.evaluateStringValue(m_pStateMachineData));
+		if (m_HintExpression.needsSync())
+			pGroup->setParameterValueByName(AMC_API_KEY_UI_BUTTONHINT, m_HintExpression.evaluateStringValue(m_pStateMachineData));
 
 	}
 
@@ -228,6 +233,8 @@ void CUIModule_ContentButton::registerFrontendAttributes(PUIFrontendDefinitionMo
 	pStore->registerValue("event", eUIFrontendDefinitionAttributeType::atString, m_EventExpression);
 	pStore->registerValue("targetpage", eUIFrontendDefinitionAttributeType::atString, m_TargetPageExpression);
 	pStore->registerValue("icon", eUIFrontendDefinitionAttributeType::atString, m_IconExpression);
+	// Tooltip of the button; it may be bound to a state machine parameter with sync:hint.
+	pStore->registerValue("hint", eUIFrontendDefinitionAttributeType::atString, m_HintExpression);
 
 	// Static toolbar layout metadata registered as fixed-value attributes.
 	CUIExpression kindExpr; kindExpr.setFixedValue(m_sKind);
@@ -322,8 +329,9 @@ PUIModule_ContentButtonGroup CUIModule_ContentButtonGroup::makeFromXML(const pug
 		// Per-button visibility; defaults to visible ("1") when neither "visible" nor
 		// "sync:visible" is specified, so existing buttons are unaffected.
 		CUIExpression visibleExpression(childNode, "visible", "1");
+		CUIExpression hintExpression(childNode, "hint", "");
 
-		auto pButton = pButtonGroup->addButton(captionExpression, targetPageExpression, eventExpression, sButtonName, iconExpression, disabledExpression, visibleExpression, formvaluesAttrib.as_string());
+		auto pButton = pButtonGroup->addButton(captionExpression, targetPageExpression, eventExpression, sButtonName, iconExpression, disabledExpression, visibleExpression, hintExpression, formvaluesAttrib.as_string());
 
 		pButton->setKind(sKind);
 
@@ -374,9 +382,9 @@ CUIModule_ContentButtonGroup::~CUIModule_ContentButtonGroup()
 }
 
 
-PUIModule_ContentButton CUIModule_ContentButtonGroup::addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting)
+PUIModule_ContentButton CUIModule_ContentButtonGroup::addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const CUIExpression& HintExpression, const std::string& sEventFormValueSetting)
 {
-	auto pButton = std::make_shared<CUIModule_ContentButton>(m_sItemPath, Caption, TargetPage, Event, sButtonName, IconName, DisabledExpression, VisibleExpression, sEventFormValueSetting, m_pStateMachineData);
+	auto pButton = std::make_shared<CUIModule_ContentButton>(m_sItemPath, Caption, TargetPage, Event, sButtonName, IconName, DisabledExpression, VisibleExpression, HintExpression, sEventFormValueSetting, m_pStateMachineData);
 	m_Buttons.push_back(pButton);
 	m_ButtonMap.insert(std::make_pair (pButton->getUUID (), pButton));
 

@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMCIMPL_UI_MODULE
 
 #include "amc_ui_frontendstate.hpp"
+#include "amc_ui_clientaction.hpp"
+#include "amc_jsoneventstreaminstance.hpp"
 #include "amc_parametergroup.hpp"
 #include "amc_userinformation.hpp"
 #include "amc_accesscontrol.hpp"
@@ -43,7 +45,7 @@ using namespace AMC;
 #define AMC_UI_SESSIONREFERENCE_PERMISSIONPREFIX "$user.permission."
 
 CUIFrontendState::CUIFrontendState(PUIFrontendDefinition pFrontendDefinition)
-	: m_pFrontendDefinition(pFrontendDefinition), m_nAppliedBroadcastCounter (0)
+	: m_pFrontendDefinition(pFrontendDefinition), m_nAppliedBroadcastCounter (0), m_nClientActionsRevision (0)
 {
 	if (pFrontendDefinition.get () == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -108,6 +110,145 @@ void CUIFrontendState::endEventStream()
 
 	if (pEventStream.get() != nullptr)
 		pEventStream->endStream();
+}
+
+void CUIFrontendState::notifyEventStream()
+{
+	PJSONEventStreamInstance pEventStream;
+	{
+		std::lock_guard<std::mutex> lockGuard(m_EventStreamMutex);
+		pEventStream = m_pEventStream;
+	}
+
+	if (pEventStream.get() != nullptr)
+		pEventStream->notifyChange();
+}
+
+bool CUIFrontendState::removeExpiredClientActionsNoLock(std::chrono::steady_clock::time_point now)
+{
+	bool bRemoved = false;
+	for (auto iter = m_PendingClientActions.begin(); iter != m_PendingClientActions.end(); ) {
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - iter->m_CreationTime).count() >= AMC_UI_CLIENTACTION_EXPIRY_MS) {
+			iter = m_PendingClientActions.erase(iter);
+			bRemoved = true;
+		}
+		else {
+			++iter;
+		}
+	}
+
+	if (bRemoved)
+		m_nClientActionsRevision++;
+
+	return bRemoved;
+}
+
+std::string CUIFrontendState::enqueueClientAction(PUIClientAction pAction, const std::string& sStreamUUID)
+{
+	if (pAction.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	sPendingClientAction pendingAction;
+	pendingAction.m_sActionUUID = AMCCommon::CUtils::createUUID();
+	pendingAction.m_pAction = pAction;
+	pendingAction.m_sStreamUUID = sStreamUUID.empty() ? std::string() : AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+	pendingAction.m_CreationTime = std::chrono::steady_clock::now();
+
+	{
+		std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+		removeExpiredClientActionsNoLock(pendingAction.m_CreationTime);
+		m_PendingClientActions.push_back(pendingAction);
+		m_nClientActionsRevision++;
+	}
+
+	notifyEventStream();
+
+	return pendingAction.m_sActionUUID;
+}
+
+bool CUIFrontendState::claimClientAction(const std::string& sActionUUID)
+{
+	std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sActionUUID);
+	bool bClaimed = false;
+
+	{
+		std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+		removeExpiredClientActionsNoLock(std::chrono::steady_clock::now());
+		for (auto iter = m_PendingClientActions.begin(); iter != m_PendingClientActions.end(); ++iter) {
+			if (iter->m_sActionUUID == sNormalizedUUID) {
+				m_PendingClientActions.erase(iter);
+				m_nClientActionsRevision++;
+				bClaimed = true;
+				break;
+			}
+		}
+	}
+
+	if (bClaimed)
+		notifyEventStream();
+
+	return bClaimed;
+}
+
+void CUIFrontendState::removeClientActionsOfStream(const std::string& sStreamUUID)
+{
+	std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+	bool bRemoved = false;
+
+	{
+		std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+		for (auto iter = m_PendingClientActions.begin(); iter != m_PendingClientActions.end(); ) {
+			if (iter->m_sStreamUUID == sNormalizedUUID) {
+				iter = m_PendingClientActions.erase(iter);
+				bRemoved = true;
+			}
+			else {
+				++iter;
+			}
+		}
+		if (bRemoved)
+			m_nClientActionsRevision++;
+	}
+
+	if (bRemoved)
+		notifyEventStream();
+}
+
+bool CUIFrontendState::hasClientActionsOfStream(const std::string& sStreamUUID)
+{
+	std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+
+	std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+	removeExpiredClientActionsNoLock(std::chrono::steady_clock::now());
+	for (auto& pendingAction : m_PendingClientActions) {
+		if (pendingAction.m_sStreamUUID == sNormalizedUUID)
+			return true;
+	}
+
+	return false;
+}
+
+uint64_t CUIFrontendState::getClientActionsRevision()
+{
+	std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+	removeExpiredClientActionsNoLock(std::chrono::steady_clock::now());
+	return m_nClientActionsRevision;
+}
+
+void CUIFrontendState::writePendingClientActionsToJSON(CJSONWriter& writer)
+{
+	std::lock_guard<std::mutex> lockGuard(m_ClientActionsMutex);
+	removeExpiredClientActionsNoLock(std::chrono::steady_clock::now());
+
+	CJSONWriterArray actionsArray(writer);
+	for (auto& pendingAction : m_PendingClientActions) {
+		CJSONWriterObject actionObject(writer);
+		actionObject.addString(AMC_UI_CLIENTACTION_UUIDJSONKEY, pendingAction.m_sActionUUID);
+		pendingAction.m_pAction->writeToJSON(writer, actionObject);
+		actionsArray.addObject(actionObject);
+	}
+
+	writer.addArray(AMC_UI_CLIENTACTIONS_JSONKEY, actionsArray);
 }
 
 CParameterGroup* CUIFrontendState::getSessionVariables()

@@ -37,7 +37,7 @@ Abstract: This is the class definition of CJSONEventStreamInstance.
 using namespace AMC;
 
 sJSONEventStreamCursor::sJSONEventStreamCursor()
-	: m_nLastEventID(0), m_nChangeCounter(0), m_bStarted(false), m_nDataChangeCounter(0), m_LastBuildTime(std::chrono::steady_clock::now())
+	: m_nLastEventID(0), m_nChangeCounter(0), m_bStarted(false), m_nDataChangeCounter(0), m_LastBuildTime(std::chrono::steady_clock::now()), m_nActionsRevision(0)
 {
 }
 

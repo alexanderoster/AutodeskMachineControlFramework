@@ -123,6 +123,8 @@ eAPIRequestType CAPI::getRequestTypeFromString(const std::string& sRequestType)
 		return AMC::eAPIRequestType::rtPost;
 	if (sLowerCaseType == "put")
 		return AMC::eAPIRequestType::rtPut;
+	if (sLowerCaseType == "head")
+		return AMC::eAPIRequestType::rtHead;
 
 	throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDAPIREQUESTTYPE);
 }

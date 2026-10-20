@@ -707,6 +707,9 @@ public:
 			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN: return "DUPLICATEDATACAPTURECOLUMN";
 			case LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED: return "DATACAPTUREALREADYABORTED";
 			case LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND: return "RANDOMWRITESTREAMNOTFOUND";
+			case LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND: return "DOWNLOADENTRYNOTFOUND";
+			case LIBMCDATA_ERROR_STREAMHASACTIVEWRITER: return "STREAMHASACTIVEWRITER";
+			case LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIPSTREAMALREADYFINISHED";
 		}
 		return "UNKNOWN";
 	}
@@ -1109,6 +1112,9 @@ public:
 			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN: return "Duplicate data capture column.";
 			case LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED: return "Data capture has already been aborted.";
 			case LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND: return "Random write stream not found.";
+			case LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND: return "Download access log entry not found.";
+			case LIBMCDATA_ERROR_STREAMHASACTIVEWRITER: return "Storage stream is still being written.";
+			case LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIP stream has already been finished and can not be discarded.";
 		}
 		return "unknown error";
 	}
@@ -1645,6 +1651,7 @@ public:
 	inline LibMCData_uint64 GetZIPStreamSize();
 	inline void Finish();
 	inline bool IsFinished();
+	inline void Discard();
 };
 	
 /*************************************************************************************************************************
@@ -1678,6 +1685,13 @@ public:
 	inline bool StreamIsImage(const std::string & sUUID);
 	inline void CreateDownloadTicket(const std::string & sTicketUUID, const std::string & sStreamUUID, const std::string & sClientFileName, const std::string & sSessionUUID, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline void RequestDownloadTicket(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID);
+	inline void GetDownloadTicketDetails(const std::string & sTicketUUID, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID, LibMCData_uint64 & nCreationTimeStamp, bool & bRevoked);
+	inline LibMCData_uint32 RevokeDownloadTicketsOfStream(const std::string & sStreamUUID);
+	inline std::string LogDownloadStart(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void LogDownloadFinish(const std::string & sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void DeleteStream(const std::string & sUUID);
+	inline LibMCData_uint32 DiscardUnfinishedZIPStreams();
+	inline std::string ListStreamUUIDsByName(const std::string & sName);
 	inline void AttachStreamToJournal(const std::string & sStreamUUID, const std::string & sJournalUUID);
 	inline void DiscardRandomWriteStream(const std::string & sUUID);
 	inline LibMCData_uint64 GetDataCaptureStorageSize();
@@ -2492,6 +2506,7 @@ public:
 		pWrapperTable->m_StorageZIPWriter_GetZIPStreamSize = nullptr;
 		pWrapperTable->m_StorageZIPWriter_Finish = nullptr;
 		pWrapperTable->m_StorageZIPWriter_IsFinished = nullptr;
+		pWrapperTable->m_StorageZIPWriter_Discard = nullptr;
 		pWrapperTable->m_Storage_StreamIsReady = nullptr;
 		pWrapperTable->m_Storage_RetrieveStream = nullptr;
 		pWrapperTable->m_Storage_StoreNewStream = nullptr;
@@ -2509,6 +2524,13 @@ public:
 		pWrapperTable->m_Storage_StreamIsImage = nullptr;
 		pWrapperTable->m_Storage_CreateDownloadTicket = nullptr;
 		pWrapperTable->m_Storage_RequestDownloadTicket = nullptr;
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = nullptr;
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = nullptr;
+		pWrapperTable->m_Storage_LogDownloadStart = nullptr;
+		pWrapperTable->m_Storage_LogDownloadFinish = nullptr;
+		pWrapperTable->m_Storage_DeleteStream = nullptr;
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = nullptr;
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = nullptr;
 		pWrapperTable->m_Storage_AttachStreamToJournal = nullptr;
 		pWrapperTable->m_Storage_DiscardRandomWriteStream = nullptr;
 		pWrapperTable->m_Storage_GetDataCaptureStorageSize = nullptr;
@@ -3674,6 +3696,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StorageZIPWriter_Discard = (PLibMCDataStorageZIPWriter_DiscardPtr) GetProcAddress(hLibrary, "libmcdata_storagezipwriter_discard");
+		#else // _WIN32
+		pWrapperTable->m_StorageZIPWriter_Discard = (PLibMCDataStorageZIPWriter_DiscardPtr) dlsym(hLibrary, "libmcdata_storagezipwriter_discard");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StorageZIPWriter_Discard == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Storage_StreamIsReady = (PLibMCDataStorage_StreamIsReadyPtr) GetProcAddress(hLibrary, "libmcdata_storage_streamisready");
 		#else // _WIN32
 		pWrapperTable->m_Storage_StreamIsReady = (PLibMCDataStorage_StreamIsReadyPtr) dlsym(hLibrary, "libmcdata_storage_streamisready");
@@ -3824,6 +3855,69 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Storage_RequestDownloadTicket == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = (PLibMCDataStorage_GetDownloadTicketDetailsPtr) GetProcAddress(hLibrary, "libmcdata_storage_getdownloadticketdetails");
+		#else // _WIN32
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = (PLibMCDataStorage_GetDownloadTicketDetailsPtr) dlsym(hLibrary, "libmcdata_storage_getdownloadticketdetails");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_GetDownloadTicketDetails == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = (PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr) GetProcAddress(hLibrary, "libmcdata_storage_revokedownloadticketsofstream");
+		#else // _WIN32
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = (PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr) dlsym(hLibrary, "libmcdata_storage_revokedownloadticketsofstream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_LogDownloadStart = (PLibMCDataStorage_LogDownloadStartPtr) GetProcAddress(hLibrary, "libmcdata_storage_logdownloadstart");
+		#else // _WIN32
+		pWrapperTable->m_Storage_LogDownloadStart = (PLibMCDataStorage_LogDownloadStartPtr) dlsym(hLibrary, "libmcdata_storage_logdownloadstart");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_LogDownloadStart == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_LogDownloadFinish = (PLibMCDataStorage_LogDownloadFinishPtr) GetProcAddress(hLibrary, "libmcdata_storage_logdownloadfinish");
+		#else // _WIN32
+		pWrapperTable->m_Storage_LogDownloadFinish = (PLibMCDataStorage_LogDownloadFinishPtr) dlsym(hLibrary, "libmcdata_storage_logdownloadfinish");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_LogDownloadFinish == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_DeleteStream = (PLibMCDataStorage_DeleteStreamPtr) GetProcAddress(hLibrary, "libmcdata_storage_deletestream");
+		#else // _WIN32
+		pWrapperTable->m_Storage_DeleteStream = (PLibMCDataStorage_DeleteStreamPtr) dlsym(hLibrary, "libmcdata_storage_deletestream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_DeleteStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = (PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr) GetProcAddress(hLibrary, "libmcdata_storage_discardunfinishedzipstreams");
+		#else // _WIN32
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = (PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr) dlsym(hLibrary, "libmcdata_storage_discardunfinishedzipstreams");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = (PLibMCDataStorage_ListStreamUUIDsByNamePtr) GetProcAddress(hLibrary, "libmcdata_storage_liststreamuuidsbyname");
+		#else // _WIN32
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = (PLibMCDataStorage_ListStreamUUIDsByNamePtr) dlsym(hLibrary, "libmcdata_storage_liststreamuuidsbyname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_ListStreamUUIDsByName == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6399,6 +6493,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StorageZIPWriter_IsFinished == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_storagezipwriter_discard", (void**)&(pWrapperTable->m_StorageZIPWriter_Discard));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StorageZIPWriter_Discard == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_storage_streamisready", (void**)&(pWrapperTable->m_Storage_StreamIsReady));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_StreamIsReady == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6465,6 +6563,34 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_storage_requestdownloadticket", (void**)&(pWrapperTable->m_Storage_RequestDownloadTicket));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_RequestDownloadTicket == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_getdownloadticketdetails", (void**)&(pWrapperTable->m_Storage_GetDownloadTicketDetails));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_GetDownloadTicketDetails == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_revokedownloadticketsofstream", (void**)&(pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_logdownloadstart", (void**)&(pWrapperTable->m_Storage_LogDownloadStart));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_LogDownloadStart == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_logdownloadfinish", (void**)&(pWrapperTable->m_Storage_LogDownloadFinish));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_LogDownloadFinish == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_deletestream", (void**)&(pWrapperTable->m_Storage_DeleteStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_DeleteStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_discardunfinishedzipstreams", (void**)&(pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_liststreamuuidsbyname", (void**)&(pWrapperTable->m_Storage_ListStreamUUIDsByName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_ListStreamUUIDsByName == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_storage_attachstreamtojournal", (void**)&(pWrapperTable->m_Storage_AttachStreamToJournal));
@@ -8854,6 +8980,14 @@ public:
 	}
 	
 	/**
+	* CStorageZIPWriter::Discard - Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+	*/
+	void CStorageZIPWriter::Discard()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StorageZIPWriter_Discard(m_pHandle));
+	}
+	
+	/**
 	 * Method definitions for class CStorage
 	 */
 	
@@ -9092,6 +9226,118 @@ public:
 		sClientFileName = std::string(&bufferClientFileName[0]);
 		sSessionUUID = std::string(&bufferSessionUUID[0]);
 		sUserUUID = std::string(&bufferUserUUID[0]);
+	}
+	
+	/**
+	* CStorage::GetDownloadTicketDetails - Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[out] sStreamUUID - UUID of storage stream.
+	* @param[out] sClientFileName - ClientFileName of the ticket.
+	* @param[out] sSessionUUID - UUID of user session.
+	* @param[out] sUserUUID - UUID of user that created the ticket.
+	* @param[out] nCreationTimeStamp - Creation time of the ticket in microseconds since 1970.
+	* @param[out] bRevoked - True if the ticket has been revoked.
+	*/
+	void CStorage::GetDownloadTicketDetails(const std::string & sTicketUUID, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID, LibMCData_uint64 & nCreationTimeStamp, bool & bRevoked)
+	{
+		LibMCData_uint32 bytesNeededStreamUUID = 0;
+		LibMCData_uint32 bytesWrittenStreamUUID = 0;
+		LibMCData_uint32 bytesNeededClientFileName = 0;
+		LibMCData_uint32 bytesWrittenClientFileName = 0;
+		LibMCData_uint32 bytesNeededSessionUUID = 0;
+		LibMCData_uint32 bytesWrittenSessionUUID = 0;
+		LibMCData_uint32 bytesNeededUserUUID = 0;
+		LibMCData_uint32 bytesWrittenUserUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_GetDownloadTicketDetails(m_pHandle, sTicketUUID.c_str(), 0, &bytesNeededStreamUUID, nullptr, 0, &bytesNeededClientFileName, nullptr, 0, &bytesNeededSessionUUID, nullptr, 0, &bytesNeededUserUUID, nullptr, &nCreationTimeStamp, &bRevoked));
+		std::vector<char> bufferStreamUUID(bytesNeededStreamUUID);
+		std::vector<char> bufferClientFileName(bytesNeededClientFileName);
+		std::vector<char> bufferSessionUUID(bytesNeededSessionUUID);
+		std::vector<char> bufferUserUUID(bytesNeededUserUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_GetDownloadTicketDetails(m_pHandle, sTicketUUID.c_str(), bytesNeededStreamUUID, &bytesWrittenStreamUUID, &bufferStreamUUID[0], bytesNeededClientFileName, &bytesWrittenClientFileName, &bufferClientFileName[0], bytesNeededSessionUUID, &bytesWrittenSessionUUID, &bufferSessionUUID[0], bytesNeededUserUUID, &bytesWrittenUserUUID, &bufferUserUUID[0], &nCreationTimeStamp, &bRevoked));
+		sStreamUUID = std::string(&bufferStreamUUID[0]);
+		sClientFileName = std::string(&bufferClientFileName[0]);
+		sSessionUUID = std::string(&bufferSessionUUID[0]);
+		sUserUUID = std::string(&bufferUserUUID[0]);
+	}
+	
+	/**
+	* CStorage::RevokeDownloadTicketsOfStream - Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.
+	* @param[in] sStreamUUID - UUID of storage stream.
+	* @return Number of tickets that were revoked by this call.
+	*/
+	LibMCData_uint32 CStorage::RevokeDownloadTicketsOfStream(const std::string & sStreamUUID)
+	{
+		LibMCData_uint32 resultRevokedCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_RevokeDownloadTicketsOfStream(m_pHandle, sStreamUUID.c_str(), &resultRevokedCount));
+		
+		return resultRevokedCount;
+	}
+	
+	/**
+	* CStorage::LogDownloadStart - Creates an entry in the download access log of a ticket and returns the UUID of the entry.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[in] sIPAddress - IP Address where the request came from.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return UUID of the access log entry.
+	*/
+	std::string CStorage::LogDownloadStart(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		LibMCData_uint32 bytesNeededDownloadUUID = 0;
+		LibMCData_uint32 bytesWrittenDownloadUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadStart(m_pHandle, sTicketUUID.c_str(), sIPAddress.c_str(), nAbsoluteTimeStamp, 0, &bytesNeededDownloadUUID, nullptr));
+		std::vector<char> bufferDownloadUUID(bytesNeededDownloadUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadStart(m_pHandle, sTicketUUID.c_str(), sIPAddress.c_str(), nAbsoluteTimeStamp, bytesNeededDownloadUUID, &bytesWrittenDownloadUUID, &bufferDownloadUUID[0]));
+		
+		return std::string(&bufferDownloadUUID[0]);
+	}
+	
+	/**
+	* CStorage::LogDownloadFinish - Records the result of a download in its access log entry. Fails if the entry does not exist.
+	* @param[in] sDownloadUUID - UUID of the access log entry.
+	* @param[in] nSentBytes - Number of bytes that were sent to the client.
+	* @param[in] bSuccess - True if all requested bytes were sent.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	void CStorage::LogDownloadFinish(const std::string & sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadFinish(m_pHandle, sDownloadUUID.c_str(), nSentBytes, bSuccess, nAbsoluteTimeStamp));
+	}
+	
+	/**
+	* CStorage::DeleteStream - Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.
+	* @param[in] sUUID - UUID of storage stream.
+	*/
+	void CStorage::DeleteStream(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_DeleteStream(m_pHandle, sUUID.c_str()));
+	}
+	
+	/**
+	* CStorage::DiscardUnfinishedZIPStreams - Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.
+	* @return Number of deleted streams.
+	*/
+	LibMCData_uint32 CStorage::DiscardUnfinishedZIPStreams()
+	{
+		LibMCData_uint32 resultDeletedCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_DiscardUnfinishedZIPStreams(m_pHandle, &resultDeletedCount));
+		
+		return resultDeletedCount;
+	}
+	
+	/**
+	* CStorage::ListStreamUUIDsByName - Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.
+	* @param[in] sName - Name of the streams.
+	* @return Comma separated list of stream UUIDs. Empty if there is none.
+	*/
+	std::string CStorage::ListStreamUUIDsByName(const std::string & sName)
+	{
+		LibMCData_uint32 bytesNeededUUIDList = 0;
+		LibMCData_uint32 bytesWrittenUUIDList = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_ListStreamUUIDsByName(m_pHandle, sName.c_str(), 0, &bytesNeededUUIDList, nullptr));
+		std::vector<char> bufferUUIDList(bytesNeededUUIDList);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_ListStreamUUIDsByName(m_pHandle, sName.c_str(), bytesNeededUUIDList, &bytesWrittenUUIDList, &bufferUUIDList[0]));
+		
+		return std::string(&bufferUUIDList[0]);
 	}
 	
 	/**

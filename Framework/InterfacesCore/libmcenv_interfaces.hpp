@@ -7029,6 +7029,11 @@ public:
 	*/
 	virtual void CreateZIPEntryFromStream(const std::string & sFileName, IStreamReader* pStreamReader) = 0;
 
+	/**
+	* IZIPStreamWriter::Discard - Discards the unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+	*/
+	virtual void Discard() = 0;
+
 };
 
 typedef IBaseSharedPtr<IZIPStreamWriter> PIZIPStreamWriter;
@@ -9330,6 +9335,47 @@ public:
 	* @return Result of the formula.
 	*/
 	virtual bool EvaluateFormulaAsBool(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::StartStreamDownloadForSession - Starts a stream download in the browser of a client session. Creates a download ticket for the user of the session and queues the download action for delivery to the session. Returns false if the session does not exist or is not authorized.
+	* @param[in] sSessionUUID - UUID of the client session.
+	* @param[in] sStreamUUID - Storage stream. Fails if the stream does not exist or is not finished.
+	* @param[in] sFileName - File name offered to the browser. Fails if empty.
+	* @return True if the download action was queued for the session.
+	*/
+	virtual bool StartStreamDownloadForSession(const std::string & sSessionUUID, const std::string & sStreamUUID, const std::string & sFileName) = 0;
+
+	/**
+	* IStateEnvironment::GetStreamDownloadProgress - Returns the delivery progress of all downloads of a storage stream.
+	* @param[in] sStreamUUID - Storage stream.
+	* @param[out] nActiveConnections - Connections that are sending the stream right now.
+	* @param[out] nDeliveredBytes - Bytes from the start of the stream that were sent without a gap.
+	* @param[out] nTotalBytes - Size of the stream.
+	* @param[out] bCompleted - The last byte was sent and its connection ended successfully.
+	* @param[out] nMillisecondsSinceActivity - Time since the last chunk was sent or since the download was handed over.
+	*/
+	virtual void GetStreamDownloadProgress(const std::string & sStreamUUID, LibMCEnv_uint32 & nActiveConnections, LibMCEnv_uint64 & nDeliveredBytes, LibMCEnv_uint64 & nTotalBytes, bool & bCompleted, LibMCEnv_uint64 & nMillisecondsSinceActivity) = 0;
+
+	/**
+	* IStateEnvironment::CancelStreamDownloads - Stops all running downloads of a storage stream, revokes its download tickets and drops its unclaimed download actions. Does nothing if the stream was already delivered completely.
+	* @param[in] sStreamUUID - Storage stream.
+	* @return False if the download had already completed and nothing was cancelled.
+	*/
+	virtual bool CancelStreamDownloads(const std::string & sStreamUUID) = 0;
+
+	/**
+	* IStateEnvironment::DeleteStorageStream - Deletes a finished storage stream from disk and database, including its download tickets. Fails if the stream does not exist, is still being written or is being downloaded right now.
+	* @param[in] sUUID - UUID of the storage stream.
+	*/
+	virtual void DeleteStorageStream(const std::string & sUUID) = 0;
+
+	/**
+	* IStateEnvironment::EnforceStreamRetention - Deletes all finished streams with the given name except the newest ones. Streams with running downloads or pending download actions are kept. Returns the number of deleted streams.
+	* @param[in] sName - Name of the streams.
+	* @param[in] nKeepCount - Number of newest streams to keep.
+	* @return Number of deleted streams.
+	*/
+	virtual LibMCEnv_uint32 EnforceStreamRetention(const std::string & sName, const LibMCEnv_uint32 nKeepCount) = 0;
 
 };
 

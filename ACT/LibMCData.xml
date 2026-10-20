@@ -465,6 +465,9 @@
 		<error name="DUPLICATEDATACAPTURECOLUMN" code="463" description="Duplicate data capture column." />
 		<error name="DATACAPTUREALREADYABORTED" code="464" description="Data capture has already been aborted." />
 		<error name="RANDOMWRITESTREAMNOTFOUND" code="465" description="Random write stream not found." />
+		<error name="DOWNLOADENTRYNOTFOUND" code="466" description="Download access log entry not found." />
+		<error name="STREAMHASACTIVEWRITER" code="467" description="Storage stream is still being written." />
+		<error name="ZIPSTREAMALREADYFINISHED" code="468" description="ZIP stream has already been finished and can not be discarded." />
 
 	</errors>
 	
@@ -1155,7 +1158,10 @@
 		<method name="IsFinished" description="Returns if the stream writing has already been finished.">
 			<param name="Finished" type="bool" pass="return" description="If true, writing into the stream is not possible anymore." />
 		</method>
-		
+
+		<method name="Discard" description="Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.">
+		</method>
+
 	</class>
 
 
@@ -1270,6 +1276,48 @@
 			<param name="SessionUUID" type="string" pass="out" description="UUID of user session." />	
 			<param name="UserUUID" type="string" pass="out" description="UUID of user that created the ticket." />	
 		</method>	
+
+		<method name="GetDownloadTicketDetails" description="Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.">
+			<param name="TicketUUID" type="string" pass="in" description="UUID of download ticket." />
+			<param name="StreamUUID" type="string" pass="out" description="UUID of storage stream." />
+			<param name="ClientFileName" type="string" pass="out" description="ClientFileName of the ticket." />
+			<param name="SessionUUID" type="string" pass="out" description="UUID of user session." />
+			<param name="UserUUID" type="string" pass="out" description="UUID of user that created the ticket." />
+			<param name="CreationTimeStamp" type="uint64" pass="out" description="Creation time of the ticket in microseconds since 1970." />
+			<param name="Revoked" type="bool" pass="out" description="True if the ticket has been revoked." />
+		</method>
+
+		<method name="RevokeDownloadTicketsOfStream" description="Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.">
+			<param name="StreamUUID" type="string" pass="in" description="UUID of storage stream." />
+			<param name="RevokedCount" type="uint32" pass="return" description="Number of tickets that were revoked by this call." />
+		</method>
+
+		<method name="LogDownloadStart" description="Creates an entry in the download access log of a ticket and returns the UUID of the entry.">
+			<param name="TicketUUID" type="string" pass="in" description="UUID of download ticket." />
+			<param name="IPAddress" type="string" pass="in" description="IP Address where the request came from." />
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+			<param name="DownloadUUID" type="string" pass="return" description="UUID of the access log entry." />
+		</method>
+
+		<method name="LogDownloadFinish" description="Records the result of a download in its access log entry. Fails if the entry does not exist.">
+			<param name="DownloadUUID" type="string" pass="in" description="UUID of the access log entry." />
+			<param name="SentBytes" type="uint64" pass="in" description="Number of bytes that were sent to the client." />
+			<param name="Success" type="bool" pass="in" description="True if all requested bytes were sent." />
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+		</method>
+
+		<method name="DeleteStream" description="Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.">
+			<param name="UUID" type="string" pass="in" description="UUID of storage stream." />
+		</method>
+
+		<method name="DiscardUnfinishedZIPStreams" description="Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.">
+			<param name="DeletedCount" type="uint32" pass="return" description="Number of deleted streams." />
+		</method>
+
+		<method name="ListStreamUUIDsByName" description="Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.">
+			<param name="Name" type="string" pass="in" description="Name of the streams." />
+			<param name="UUIDList" type="string" pass="return" description="Comma separated list of stream UUIDs. Empty if there is none." />
+		</method>
 
 		<method name="AttachStreamToJournal" description="Attaches a stream to a journal as temporary stream.">
 			<param name="StreamUUID" type="string" pass="in" description="UUID of stream. Call fails if stream does not exist." />	

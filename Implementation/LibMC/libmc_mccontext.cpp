@@ -101,6 +101,15 @@ CMCContext::CMCContext(LibMCData::PDataModel pDataModel)
     m_pAPI = std::make_shared<AMC::CAPI>(pGlobalChrono, pDataModel);
     CAPIFactory factory (m_pAPI, m_pSystemState, m_InstanceList);
 
+    // State machines address client sessions through the system state, for example to hand a download over.
+    m_pSystemState->setSessionHandler(m_pAPI->getSessionHandler());
+
+    // ZIP streams of exports that a crash or a forced stop interrupted can not be resumed; their files only
+    // hold disk space and are removed before the state machines start.
+    uint32_t nDiscardedZIPStreams = pDataModel->CreateStorage()->DiscardUnfinishedZIPStreams();
+    if (nDiscardedZIPStreams > 0)
+        m_pSystemState->logger()->logMessage("Discarded " + std::to_string(nDiscardedZIPStreams) + " unfinished ZIP stream(s) from an earlier run", "system", AMC::eLogLevel::Message);
+
     // Create API Documentation handler
     m_pAPIDocumentationHandler = std::make_shared <CAPIHandler_APIDocs>(m_pSystemState->getClientHash());
     m_pAPI->registerHandler(m_pAPIDocumentationHandler);

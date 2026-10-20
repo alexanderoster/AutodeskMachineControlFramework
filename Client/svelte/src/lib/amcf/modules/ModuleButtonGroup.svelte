@@ -54,6 +54,8 @@
 					variant={btn.variant === 'primary' ? 'default' : 'outline'}
 					style={isEqual ? '' : buttoncssstyle}
 					disabled={btn.disabled}
+					title={btn.hint || undefined}
+					aria-label={btn.hint || undefined}
 					onclick={() => handleClick(btn)}
 					class="{widthClass(btn)} {isEqual && !widthClass(btn) ? 'flex-1' : ''} {hasIcon ? 'h-auto flex-col gap-1 py-2' : ''}"
 				>

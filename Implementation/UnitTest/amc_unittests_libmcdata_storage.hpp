@@ -75,6 +75,9 @@ namespace AMCUnitTest {
 			registerTest("AttachStreamToJournal", "Attach stream to journal", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testAttachStreamToJournal, this));
 			registerTest("DownloadTicket", "Create download ticket", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testDownloadTicket, this));
 			registerTest("RequestDownloadTicket", "Request download ticket", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testRequestDownloadTicket, this));
+			registerTest("DownloadTicketDetailsAndRevoke", "Ticket details, revocation and the download access log", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testDownloadTicketDetailsAndRevoke, this));
+			registerTest("ZIPStreamDiscard", "Discarding an unfinished ZIP stream removes file and entry", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testZIPStreamDiscard, this));
+			registerTest("DeleteStreamAndListByName", "Deleting finished streams and listing them by name", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testDeleteStreamAndListByName, this));
 			
 			// Additional tests to reach 100
 			registerTest("StoreEmptyStream", "Store empty stream", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Storage::testStoreEmptyStream, this));
@@ -644,8 +647,167 @@ namespace AMCUnitTest {
 			// Request the valid ticket
 			std::string sStreamOut, sFileOut, sSessionOut, sUserOut;
 			fixture.m_pStorage->RequestDownloadTicket(sTicketUUID, "127.0.0.1", getCurrentTimestamp(), sStreamOut, sFileOut, sSessionOut, sUserOut);
-			
+
 			assertTrue(sStreamOut == sStreamUUID, "Stream UUID should match");
+		}
+
+		void testDownloadTicketDetailsAndRevoke()
+		{
+			auto fixture = createFixture("ticket_revoke");
+
+			auto pLoginHandler = fixture.m_pDataModel->CreateLoginHandler();
+			std::string sSalt = "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4";
+			std::string sHashedPassword = "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5";
+			pLoginHandler->CreateUser("revokeuser", "admin", sSalt, sHashedPassword, "Revoke User");
+			std::string sUserUUID, sDesc, sRole, sLang;
+			pLoginHandler->GetUserProperties("revokeuser", sUserUUID, sDesc, sRole, sLang);
+
+			std::string sStreamUUID = AMCCommon::CUtils::createUUID();
+			std::string sSessionUUID = AMCCommon::CUtils::createUUID();
+			std::vector<uint8_t> buffer = { 0x01, 0x02, 0x03 };
+			fixture.m_pStorage->StoreNewStream(sStreamUUID, "revoke.bin", "application/octet-stream", buffer, sUserUUID, getCurrentTimestamp());
+
+			uint64_t nCreated = getCurrentTimestamp();
+			std::string sTicketUUID = AMCCommon::CUtils::createUUID();
+			fixture.m_pStorage->CreateDownloadTicket(sTicketUUID, sStreamUUID, "revoke_download.bin", sSessionUUID, sUserUUID, nCreated);
+
+			std::string sStreamOut, sFileOut, sSessionOut, sUserOut;
+			uint64_t nCreationOut = 0;
+			bool bRevoked = true;
+			fixture.m_pStorage->GetDownloadTicketDetails(sTicketUUID, sStreamOut, sFileOut, sSessionOut, sUserOut, nCreationOut, bRevoked);
+			assertTrue(sStreamOut == sStreamUUID, "Ticket details: stream");
+			assertTrue(sFileOut == "revoke_download.bin", "Ticket details: file name");
+			assertTrue(sSessionOut == sSessionUUID, "Ticket details: session");
+			assertTrue(sUserOut == sUserUUID, "Ticket details: user");
+			assertFalse(bRevoked, "A new ticket is not revoked");
+			// The time stamp is stored with microsecond precision.
+			assertTrue((nCreationOut >= nCreated - 1000000) && (nCreationOut <= nCreated + 1000000), "Ticket details: creation time");
+
+			// The access log records start and end of a download.
+			std::string sDownloadUUID = fixture.m_pStorage->LogDownloadStart(sTicketUUID, "127.0.0.1", getCurrentTimestamp());
+			assertTrue(AMCCommon::CUtils::stringIsUUIDString(sDownloadUUID), "Download log entry UUID");
+			fixture.m_pStorage->LogDownloadFinish(sDownloadUUID, 3, true, getCurrentTimestamp());
+
+			bool bThrown = false;
+			try {
+				fixture.m_pStorage->LogDownloadFinish(AMCCommon::CUtils::createUUID(), 0, false, getCurrentTimestamp());
+			}
+			catch (LibMCData::ELibMCDataException&) {
+				bThrown = true;
+			}
+			assertTrue(bThrown, "Finishing an unknown download entry fails");
+
+			assertTrue(fixture.m_pStorage->RevokeDownloadTicketsOfStream(sStreamUUID) == 1, "One ticket revoked");
+			assertTrue(fixture.m_pStorage->RevokeDownloadTicketsOfStream(sStreamUUID) == 0, "Second revocation changes nothing");
+			fixture.m_pStorage->GetDownloadTicketDetails(sTicketUUID, sStreamOut, sFileOut, sSessionOut, sUserOut, nCreationOut, bRevoked);
+			assertTrue(bRevoked, "Ticket is revoked");
+		}
+
+		void testZIPStreamDiscard()
+		{
+			auto fixture = createFixture("zip_discard");
+
+			std::string sUUID = AMCCommon::CUtils::createUUID();
+			std::string sUserUUID = AMCCommon::CUtils::createUUID();
+			auto pWriter = fixture.m_pStorage->CreateZIPStream(sUUID, "discard.zip", sUserUUID, getCurrentTimestamp());
+			uint32_t nEntryID = pWriter->StartNewEntry("entry.txt", getCurrentTimestamp());
+			std::vector<uint8_t> data = { 'a', 'b', 'c' };
+			pWriter->WriteData(nEntryID, data);
+			pWriter->FinishCurrentEntry();
+
+			std::string sPath = fixture.m_sBasePath + "/" + sUUID + ".stream";
+			assertTrue(AMCCommon::CUtils::fileOrPathExistsOnDisk(sPath), "ZIP file exists while writing: " + sPath);
+			assertFalse(pWriter->IsFinished(), "ZIP stream is not finished");
+
+			pWriter->Discard();
+			assertFalse(AMCCommon::CUtils::fileOrPathExistsOnDisk(sPath), "ZIP file is deleted by Discard");
+			assertFalse(fixture.m_pStorage->StreamIsReady(sUUID), "Discarded stream is not ready");
+
+			bool bThrown = false;
+			try {
+				pWriter->StartNewEntry("after.txt", getCurrentTimestamp());
+			}
+			catch (LibMCData::ELibMCDataException&) {
+				bThrown = true;
+			}
+			assertTrue(bThrown, "Writing after Discard fails");
+
+			// A finished stream can not be discarded, and a new stream of the same name can be created.
+			std::string sUUID2 = AMCCommon::CUtils::createUUID();
+			auto pWriter2 = fixture.m_pStorage->CreateZIPStream(sUUID2, "discard.zip", sUserUUID, getCurrentTimestamp());
+			uint32_t nEntryID2 = pWriter2->StartNewEntry("entry.txt", getCurrentTimestamp());
+			pWriter2->WriteData(nEntryID2, data);
+			pWriter2->Finish();
+			assertTrue(fixture.m_pStorage->StreamIsReady(sUUID2), "Finished stream is ready");
+			bThrown = false;
+			try {
+				pWriter2->Discard();
+			}
+			catch (LibMCData::ELibMCDataException&) {
+				bThrown = true;
+			}
+			assertTrue(bThrown, "Discard of a finished stream fails");
+
+			// An unfinished stream without a writer (as after a crash) is removed at startup.
+			std::string sUUID3 = AMCCommon::CUtils::createUUID();
+			auto pWriter3 = fixture.m_pStorage->CreateZIPStream(sUUID3, "crashed.zip", sUserUUID, getCurrentTimestamp());
+			uint32_t nEntryID3 = pWriter3->StartNewEntry("entry.txt", getCurrentTimestamp());
+			pWriter3->WriteData(nEntryID3, data);
+			pWriter3 = nullptr;
+			assertTrue(fixture.m_pStorage->DiscardUnfinishedZIPStreams() == 1, "One unfinished ZIP stream discarded");
+			assertTrue(fixture.m_pStorage->DiscardUnfinishedZIPStreams() == 0, "Nothing left to discard");
+			assertFalse(AMCCommon::CUtils::fileOrPathExistsOnDisk(fixture.m_sBasePath + "/" + sUUID3 + ".stream"), "Crashed ZIP file is deleted");
+		}
+
+		void testDeleteStreamAndListByName()
+		{
+			auto fixture = createFixture("delete_list");
+			std::string sUserUUID = AMCCommon::CUtils::createUUID();
+			std::vector<uint8_t> buffer = { 0x01, 0x02 };
+
+			std::string sUUIDA = AMCCommon::CUtils::createUUID();
+			std::string sUUIDB = AMCCommon::CUtils::createUUID();
+			std::string sUUIDOther = AMCCommon::CUtils::createUUID();
+			fixture.m_pStorage->StoreNewStream(sUUIDA, "archive.zip", "application/zip", buffer, sUserUUID, getCurrentTimestamp());
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			fixture.m_pStorage->StoreNewStream(sUUIDB, "archive.zip", "application/zip", buffer, sUserUUID, getCurrentTimestamp());
+			fixture.m_pStorage->StoreNewStream(sUUIDOther, "other.zip", "application/zip", buffer, sUserUUID, getCurrentTimestamp());
+
+			std::string sList = fixture.m_pStorage->ListStreamUUIDsByName("archive.zip");
+			assertTrue(sList == sUUIDB + "," + sUUIDA, "Newest first: " + sList);
+			assertTrue(fixture.m_pStorage->ListStreamUUIDsByName("missing.zip").empty(), "Unknown name lists nothing");
+
+			std::string sTicketUUID = AMCCommon::CUtils::createUUID();
+			auto pLoginHandler = fixture.m_pDataModel->CreateLoginHandler();
+			std::string sSalt = "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4";
+			std::string sHashedPassword = "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5";
+			pLoginHandler->CreateUser("deleteuser", "admin", sSalt, sHashedPassword, "Delete User");
+			std::string sRealUserUUID, sDesc, sRole, sLang;
+			pLoginHandler->GetUserProperties("deleteuser", sRealUserUUID, sDesc, sRole, sLang);
+			fixture.m_pStorage->CreateDownloadTicket(sTicketUUID, sUUIDA, "archive.zip", AMCCommon::CUtils::createUUID(), sRealUserUUID, getCurrentTimestamp());
+
+			std::string sPathA = fixture.m_sBasePath + "/" + sUUIDA + ".stream";
+			assertTrue(AMCCommon::CUtils::fileOrPathExistsOnDisk(sPathA), "Stream file exists before delete");
+			fixture.m_pStorage->DeleteStream(sUUIDA);
+			assertFalse(AMCCommon::CUtils::fileOrPathExistsOnDisk(sPathA), "Stream file deleted");
+			assertFalse(fixture.m_pStorage->StreamIsReady(sUUIDA), "Deleted stream is not ready");
+			assertTrue(fixture.m_pStorage->ListStreamUUIDsByName("archive.zip") == sUUIDB, "Only the remaining stream is listed");
+
+			// The tickets of a deleted stream are revoked.
+			std::string sStreamOut, sFileOut, sSessionOut, sUserOut;
+			uint64_t nCreationOut = 0;
+			bool bRevoked = false;
+			fixture.m_pStorage->GetDownloadTicketDetails(sTicketUUID, sStreamOut, sFileOut, sSessionOut, sUserOut, nCreationOut, bRevoked);
+			assertTrue(bRevoked, "Ticket of a deleted stream is revoked");
+
+			bool bThrown = false;
+			try {
+				fixture.m_pStorage->DeleteStream(sUUIDA);
+			}
+			catch (LibMCData::ELibMCDataException&) {
+				bThrown = true;
+			}
+			assertTrue(bThrown, "Deleting a missing stream fails");
 		}
 		
 		// ============= Additional tests to reach 100 =============

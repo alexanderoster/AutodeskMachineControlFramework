@@ -33,12 +33,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_api_response.hpp"
 #include "amc_api_constants.hpp"
 #include "libmc_interfaceexception.hpp"
+#include "amc_streamdownloadregistry.hpp"
+#include "common_httprange.hpp"
+#include "common_utils.hpp"
+
+#include <cstring>
 
 using namespace AMC;
 
 
 CAPIResponse::CAPIResponse(uint32_t nHTTPCode, const std::string& sContentType)
 	: m_sContentType (sContentType), m_nHTTPCode (nHTTPCode)
+{
+
+}
+
+CAPIResponse::~CAPIResponse()
 {
 
 }
@@ -144,4 +154,129 @@ void CAPIFixedFloatBufferResponse::addFloat(float fValue)
 
 
 
+}
+
+
+CAPIStorageStreamResponse::CAPIStorageStreamResponse(LibMCData::PStorage pStorage, LibMCData::PStorageStream pStream, PStreamDownloadRegistry pRegistry, AMCCommon::PChrono pGlobalChrono, bool bHeadOnly)
+	: CAPIResponse(AMC_API_HTTP_SUCCESS, "application/octet-stream"),
+	m_pStorage(pStorage), m_pStream(pStream), m_pRegistry(pRegistry), m_pGlobalChrono(pGlobalChrono),
+	m_nSize(0), m_bHeadOnly(bHeadOnly), m_bSlotReserved(false), m_bRegistered(false), m_bFinished(false), m_nSentBytes(0)
+{
+	if (pStorage.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	if (pStream.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	if (pRegistry.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	if (pGlobalChrono.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	m_sStreamUUID = AMCCommon::CUtils::normalizeUUIDString(pStream->GetUUID());
+	m_nSize = pStream->GetSize();
+	m_sContentType = pStream->GetMIMEType();
+	m_sETag = pStream->GetSHA2();
+
+	std::string sTimeStamp = pStream->GetTimeStamp();
+	if (!sTimeStamp.empty())
+		m_sLastModified = AMCCommon::CHTTPRange::formatHTTPDate(AMCCommon::CChrono::parseISO8601TimeUTC(sTimeStamp));
+}
+
+CAPIStorageStreamResponse::~CAPIStorageStreamResponse()
+{
+	if (m_bRegistered && (!m_bFinished))
+		m_pRegistry->connectionEnded(m_sStreamUUID, false);
+
+	if (m_bSlotReserved)
+		m_pRegistry->releaseSlot();
+}
+
+bool CAPIStorageStreamResponse::reserveSlot()
+{
+	if (m_bSlotReserved)
+		return true;
+
+	m_bSlotReserved = m_pRegistry->reserveSlot();
+	return m_bSlotReserved;
+}
+
+void CAPIStorageStreamResponse::setDownloadUUID(const std::string& sDownloadUUID)
+{
+	m_sDownloadUUID = sDownloadUUID;
+}
+
+std::string CAPIStorageStreamResponse::getStreamUUID() const
+{
+	return m_sStreamUUID;
+}
+
+uint64_t CAPIStorageStreamResponse::getSize() const
+{
+	return m_nSize;
+}
+
+std::string CAPIStorageStreamResponse::getETag() const
+{
+	return m_sETag;
+}
+
+std::string CAPIStorageStreamResponse::getLastModified() const
+{
+	return m_sLastModified;
+}
+
+void CAPIStorageStreamResponse::readChunk(uint64_t nOffset, uint64_t nLength, std::vector<uint8_t>& buffer)
+{
+	if (m_bHeadOnly)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDSTREAMCHUNK, "a HEAD response has no body");
+	if ((nLength == 0) || (nLength > AMC_API_DOWNLOADCHUNK_MAXLENGTH))
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDSTREAMCHUNK, "invalid chunk length: " + std::to_string(nLength));
+	if ((nOffset >= m_nSize) || (nLength > m_nSize - nOffset))
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDSTREAMCHUNK, "chunk outside of stream: " + std::to_string(nOffset) + "+" + std::to_string(nLength));
+
+	if (!m_bRegistered) {
+		m_pRegistry->connectionStarted(m_sStreamUUID, m_nSize);
+		m_bRegistered = true;
+	}
+
+	if (m_pRegistry->isCancelled(m_sStreamUUID))
+		throw ELibMCInterfaceException(LIBMC_ERROR_DOWNLOADCANCELLED, "download cancelled: " + m_sStreamUUID);
+
+	void* pReadCallback = nullptr;
+	void* pSeekCallback = nullptr;
+	void* pStreamHandle = nullptr;
+	m_pStream->GetCallbacks(pReadCallback, pSeekCallback, pStreamHandle);
+	if ((pReadCallback == nullptr) || (pSeekCallback == nullptr) || (pStreamHandle == nullptr))
+		throw ELibMCInterfaceException(LIBMC_ERROR_INTERNALERROR, "storage stream has no read callbacks");
+
+	buffer.resize((size_t)nLength);
+
+	uint32_t nSeekErrorCode = 0;
+	((LibMCData::StreamSeekCallback)pSeekCallback)(nOffset, pStreamHandle, &nSeekErrorCode);
+	if (nSeekErrorCode != 0)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INTERNALERROR, "seeking the storage stream failed with error " + std::to_string(nSeekErrorCode));
+
+	uint32_t nReadErrorCode = 0;
+	((LibMCData::StreamReadCallback)pReadCallback)(buffer.data(), nLength, pStreamHandle, &nReadErrorCode);
+	if (nReadErrorCode != 0)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INTERNALERROR, "reading the storage stream failed with error " + std::to_string(nReadErrorCode));
+
+	// Recorded before the socket write: a chunk that fails to send ends the connection without success,
+	// so the completion flag can not be set by an unsent chunk.
+	if (!m_pRegistry->chunkSent(m_sStreamUUID, nOffset, nLength))
+		throw ELibMCInterfaceException(LIBMC_ERROR_DOWNLOADCANCELLED, "download cancelled: " + m_sStreamUUID);
+
+	m_nSentBytes += nLength;
+}
+
+void CAPIStorageStreamResponse::finish(bool bSuccess)
+{
+	if (m_bFinished)
+		return;
+	m_bFinished = true;
+
+	if (m_bRegistered)
+		m_pRegistry->connectionEnded(m_sStreamUUID, bSuccess);
+
+	if ((!m_bHeadOnly) && (!m_sDownloadUUID.empty()))
+		m_pStorage->LogDownloadFinish(m_sDownloadUUID, m_nSentBytes, bSuccess, m_pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970());
 }

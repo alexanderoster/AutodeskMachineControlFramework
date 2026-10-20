@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Libraries/cpp-httplib/httplib.h"
 
 #include "amc_server.hpp"
+#include "common_httprange.hpp"
 #include "common_utils.hpp"
 #include <iostream>
 
@@ -46,6 +47,11 @@ using namespace AMC;
 #define PEMMAXLENGTH (1024 * 1024)
 
 #define AMC_SERVER_THREADPOOLSIZE 64
+// Streamed downloads are read from disk and written to the socket in chunks of this size.
+#define AMC_SERVER_DOWNLOADCHUNKSIZE (4 * 1024 * 1024)
+// Timeout of one socket write. It also bounds how long a cancel needs to reach a connection whose
+// client paused reading; a slower client is cut off and resumes with a range request.
+#define AMC_SERVER_WRITETIMEOUT_SEC 30
 #define AMC_SERVER_MAXEVENTSTREAMS 32
 #define AMC_SERVER_EVENTSTREAM_RETRY_MS 3000
 #define AMC_SERVER_EVENTSTREAM_MAXEVENTIDLENGTH 18
@@ -527,8 +533,9 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 					uint32_t nHttpCode;
 
 					auto pHandler = m_pContext->CreateAPIRequestHandler(sURL, sMethod, sAuthorization);
+					pHandler->SetClientAddress(req.remote_addr);
 
-					if (req.method == "GET") {
+					if ((req.method == "GET") || (req.method == "HEAD")) {
 						// In case of a get request, we can use the query parameters
 						for (auto iParamIter : req.params) {
 							pHandler->SetRequestParameter(iParamIter.first, iParamIter.second);
@@ -565,7 +572,6 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 
 					pHandler->Handle(Buffer, sContentType, nHttpCode);
 
-					pHandler->GetResultData(ResultBuffer);
 					std::string sContentDispositionName = pHandler->GetContentDispositionName();
 
 					if (!sContentDispositionName.empty()) {
@@ -585,17 +591,108 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 						}
 					}
 
-					if (!ResultBuffer.empty()) {
-						std::string sResult(reinterpret_cast<char*>(ResultBuffer.data()), ResultBuffer.size());
+					if (pHandler->HasStreamResult()) {
+						// The body is a storage stream on disk; it is sent in chunks through a content provider,
+						// so neither the file size nor the 2 GiB limit of one socket write matters.
+						LibMC_uint64 nStreamSize = 0;
+						std::string sETag, sLastModified;
+						pHandler->GetResultStreamInfo(nStreamSize, sETag, sLastModified);
 
-						res.set_content(sResult, sContentType.c_str());
+						res.set_header("Accept-Ranges", "bytes");
+						res.set_header("ETag", "\"" + sETag + "\"");
+						if (!sLastModified.empty())
+							res.set_header("Last-Modified", sLastModified);
+						res.set_header("Cache-Control", "no-store");
 
+						bool bSendBody = true;
+						if (!req.ranges.empty()) {
+							std::string sIfRange = req.get_header_value("If-Range");
+							if (!AMCCommon::CHTTPRange::ifRangeMatches(sIfRange, sETag, sLastModified)) {
+								// A stale validator means the whole body (RFC 7233). The HTTP library keeps the
+								// parsed ranges in the request, which belongs to this thread's call; they are
+								// cleared in place, since the library offers no other way to ignore them.
+								const_cast<httplib::Request&>(req).ranges.clear();
+							}
+							else {
+								// The HTTP library validates ranges only for bodies in memory; for a content
+								// provider it would pass an unsatisfiable range through.
+								std::vector<AMCCommon::CHTTPRange::Range> ranges;
+								for (auto& range : req.ranges)
+									ranges.push_back(AMCCommon::CHTTPRange::Range((int64_t)range.first, (int64_t)range.second));
+
+								if (!AMCCommon::CHTTPRange::normalizeRanges(ranges, nStreamSize)) {
+									res.status = 416;
+									res.set_header("Content-Range", "bytes */" + std::to_string(nStreamSize));
+									res.set_content("", "text/plain");
+									bSendBody = false;
+								}
+								else {
+									auto& mutableRanges = const_cast<httplib::Request&>(req).ranges;
+									mutableRanges[0].first = (decltype(mutableRanges[0].first))ranges[0].first;
+									mutableRanges[0].second = (decltype(mutableRanges[0].second))ranges[0].second;
+								}
+							}
+						}
+
+						if (bSendBody) {
+							// The provider runs after this handler returns; the lambdas keep the handler alive.
+							// The registry learns about the connection with the first chunk, so HEAD requests and
+							// failures before the first byte never count as downloads.
+							res.set_content_provider((size_t)nStreamSize, sContentType.c_str(),
+								[this, pHandler](size_t nOffset, size_t nLength, httplib::DataSink& sink) -> bool {
+									try {
+										size_t nChunkLength = nLength;
+										if (nChunkLength > AMC_SERVER_DOWNLOADCHUNKSIZE)
+											nChunkLength = AMC_SERVER_DOWNLOADCHUNKSIZE;
+
+										std::vector<LibMC_uint8> Chunk;
+										pHandler->ReadResultStreamChunk(nOffset, nChunkLength, Chunk);
+										if (Chunk.empty())
+											return false;
+
+										return sink.write(reinterpret_cast<const char*>(Chunk.data()), Chunk.size());
+									}
+									catch (const std::exception& E) {
+										// Returning false closes the connection; the browser can resume with a range request.
+										this->log("Download stream read failed: " + std::string(E.what()));
+										return false;
+									}
+								},
+								[this, pHandler](bool bSuccess) {
+									// Called from the response destructor for every response, also for HEAD.
+									try {
+										pHandler->FinishStreamResult(bSuccess);
+									}
+									catch (const std::exception& E) {
+										this->log("Download stream finish failed: " + std::string(E.what()));
+									}
+								});
+							// res.status stays unset: the HTTP library answers 200, or 206 with Content-Range for a range.
+						}
 					}
 					else {
-						res.set_content("", sContentType.c_str());
-					}
+						// Byte ranges only apply to streamed downloads. For every other response, among them the
+						// error document of a revoked download ticket, the HTTP library would otherwise cut the
+						// small body to the requested range and replace the status by 206 or 416.
+						if (!req.ranges.empty())
+							const_cast<httplib::Request&>(req).ranges.clear();
 
-					res.status = nHttpCode;
+						pHandler->GetResultData(ResultBuffer);
+
+						if (!ResultBuffer.empty()) {
+							std::string sResult(reinterpret_cast<char*>(ResultBuffer.data()), ResultBuffer.size());
+
+							res.set_content(sResult, sContentType.c_str());
+
+						}
+						else {
+							res.set_content("", sContentType.c_str());
+						}
+
+						res.status = nHttpCode;
+						if (nHttpCode == 503)
+							res.set_header("Retry-After", "5");
+					}
 
 				}
 				catch (std::exception& E) {
@@ -626,6 +723,7 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 					httplib::SSLServer sslsvr(serverCertificate.getCertificate(), privateKey.getPrivateKey());
 
 					sslsvr.new_task_queue = [] { return new httplib::ThreadPool(AMC_SERVER_THREADPOOLSIZE); };
+					sslsvr.set_write_timeout(AMC_SERVER_WRITETIMEOUT_SEC, 0);
 					sslsvr.Get("^/stream/.*", streamHandler);
 					sslsvr.Get("(.*?)", requestHandler);
 					sslsvr.Post("(.*?)", requestHandler);
@@ -665,6 +763,7 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 
 					httplib::Server svr;
 					svr.new_task_queue = [] { return new httplib::ThreadPool(AMC_SERVER_THREADPOOLSIZE); };
+					svr.set_write_timeout(AMC_SERVER_WRITETIMEOUT_SEC, 0);
 					svr.Get("^/stream/.*", streamHandler);
 					svr.Get("(.*?)", requestHandler);
 					svr.Post("(.*?)", requestHandler);

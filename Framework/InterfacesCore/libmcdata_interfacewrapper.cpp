@@ -3452,6 +3452,30 @@ LibMCDataResult libmcdata_storagezipwriter_isfinished(LibMCData_StorageZIPWriter
 	}
 }
 
+LibMCDataResult libmcdata_storagezipwriter_discard(LibMCData_StorageZIPWriter pStorageZIPWriter)
+{
+	IBase* pIBaseClass = (IBase *)pStorageZIPWriter;
+
+	try {
+		IStorageZIPWriter* pIStorageZIPWriter = dynamic_cast<IStorageZIPWriter*>(pIBaseClass);
+		if (!pIStorageZIPWriter)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pIStorageZIPWriter->Discard();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for Storage
@@ -4036,6 +4060,311 @@ LibMCDataResult libmcdata_storage_requestdownloadticket(LibMCData_Storage pStora
 			for (size_t iUserUUID = 0; iUserUUID < sUserUUID.size(); iUserUUID++)
 				pUserUUIDBuffer[iUserUUID] = sUserUUID[iUserUUID];
 			pUserUUIDBuffer[sUserUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_getdownloadticketdetails(LibMCData_Storage pStorage, const char * pTicketUUID, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, const LibMCData_uint32 nClientFileNameBufferSize, LibMCData_uint32* pClientFileNameNeededChars, char * pClientFileNameBuffer, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer, LibMCData_uint64 * pCreationTimeStamp, bool * pRevoked)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pTicketUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pStreamUUIDBuffer) && !(pStreamUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pClientFileNameBuffer) && !(pClientFileNameNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pSessionUUIDBuffer) && !(pSessionUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pUserUUIDBuffer) && !(pUserUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (!pCreationTimeStamp)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (!pRevoked)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sTicketUUID(pTicketUUID);
+		std::string sStreamUUID("");
+		std::string sClientFileName("");
+		std::string sSessionUUID("");
+		std::string sUserUUID("");
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pStreamUUIDBuffer == nullptr) || (pClientFileNameBuffer == nullptr) || (pSessionUUIDBuffer == nullptr) || (pUserUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			pIStorage->GetDownloadTicketDetails(sTicketUUID, sStreamUUID, sClientFileName, sSessionUUID, sUserUUID, *pCreationTimeStamp, *pRevoked);
+
+			pIStorage->_setCache (new ParameterCache_6<std::string, std::string, std::string, std::string, LibMCData_uint64, bool> (sStreamUUID, sClientFileName, sSessionUUID, sUserUUID, *pCreationTimeStamp, *pRevoked));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_6<std::string, std::string, std::string, std::string, LibMCData_uint64, bool>*> (pIStorage->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sStreamUUID, sClientFileName, sSessionUUID, sUserUUID, *pCreationTimeStamp, *pRevoked);
+			pIStorage->_setCache (nullptr);
+		}
+		
+		if (pStreamUUIDNeededChars)
+			*pStreamUUIDNeededChars = (LibMCData_uint32) (sStreamUUID.size()+1);
+		if (pStreamUUIDBuffer) {
+			if (sStreamUUID.size() >= nStreamUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iStreamUUID = 0; iStreamUUID < sStreamUUID.size(); iStreamUUID++)
+				pStreamUUIDBuffer[iStreamUUID] = sStreamUUID[iStreamUUID];
+			pStreamUUIDBuffer[sStreamUUID.size()] = 0;
+		}
+		if (pClientFileNameNeededChars)
+			*pClientFileNameNeededChars = (LibMCData_uint32) (sClientFileName.size()+1);
+		if (pClientFileNameBuffer) {
+			if (sClientFileName.size() >= nClientFileNameBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iClientFileName = 0; iClientFileName < sClientFileName.size(); iClientFileName++)
+				pClientFileNameBuffer[iClientFileName] = sClientFileName[iClientFileName];
+			pClientFileNameBuffer[sClientFileName.size()] = 0;
+		}
+		if (pSessionUUIDNeededChars)
+			*pSessionUUIDNeededChars = (LibMCData_uint32) (sSessionUUID.size()+1);
+		if (pSessionUUIDBuffer) {
+			if (sSessionUUID.size() >= nSessionUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iSessionUUID = 0; iSessionUUID < sSessionUUID.size(); iSessionUUID++)
+				pSessionUUIDBuffer[iSessionUUID] = sSessionUUID[iSessionUUID];
+			pSessionUUIDBuffer[sSessionUUID.size()] = 0;
+		}
+		if (pUserUUIDNeededChars)
+			*pUserUUIDNeededChars = (LibMCData_uint32) (sUserUUID.size()+1);
+		if (pUserUUIDBuffer) {
+			if (sUserUUID.size() >= nUserUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iUserUUID = 0; iUserUUID < sUserUUID.size(); iUserUUID++)
+				pUserUUIDBuffer[iUserUUID] = sUserUUID[iUserUUID];
+			pUserUUIDBuffer[sUserUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_revokedownloadticketsofstream(LibMCData_Storage pStorage, const char * pStreamUUID, LibMCData_uint32 * pRevokedCount)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pStreamUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pRevokedCount == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStreamUUID(pStreamUUID);
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pRevokedCount = pIStorage->RevokeDownloadTicketsOfStream(sStreamUUID);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_logdownloadstart(LibMCData_Storage pStorage, const char * pTicketUUID, const char * pIPAddress, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nDownloadUUIDBufferSize, LibMCData_uint32* pDownloadUUIDNeededChars, char * pDownloadUUIDBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pTicketUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pIPAddress == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pDownloadUUIDBuffer) && !(pDownloadUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sTicketUUID(pTicketUUID);
+		std::string sIPAddress(pIPAddress);
+		std::string sDownloadUUID("");
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pDownloadUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			sDownloadUUID = pIStorage->LogDownloadStart(sTicketUUID, sIPAddress, nAbsoluteTimeStamp);
+
+			pIStorage->_setCache (new ParameterCache_1<std::string> (sDownloadUUID));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIStorage->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sDownloadUUID);
+			pIStorage->_setCache (nullptr);
+		}
+		
+		if (pDownloadUUIDNeededChars)
+			*pDownloadUUIDNeededChars = (LibMCData_uint32) (sDownloadUUID.size()+1);
+		if (pDownloadUUIDBuffer) {
+			if (sDownloadUUID.size() >= nDownloadUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iDownloadUUID = 0; iDownloadUUID < sDownloadUUID.size(); iDownloadUUID++)
+				pDownloadUUIDBuffer[iDownloadUUID] = sDownloadUUID[iDownloadUUID];
+			pDownloadUUIDBuffer[sDownloadUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_logdownloadfinish(LibMCData_Storage pStorage, const char * pDownloadUUID, LibMCData_uint64 nSentBytes, bool bSuccess, LibMCData_uint64 nAbsoluteTimeStamp)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pDownloadUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sDownloadUUID(pDownloadUUID);
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pIStorage->LogDownloadFinish(sDownloadUUID, nSentBytes, bSuccess, nAbsoluteTimeStamp);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_deletestream(LibMCData_Storage pStorage, const char * pUUID)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUUID(pUUID);
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pIStorage->DeleteStream(sUUID);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_discardunfinishedzipstreams(LibMCData_Storage pStorage, LibMCData_uint32 * pDeletedCount)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pDeletedCount == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pDeletedCount = pIStorage->DiscardUnfinishedZIPStreams();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_storage_liststreamuuidsbyname(LibMCData_Storage pStorage, const char * pName, const LibMCData_uint32 nUUIDListBufferSize, LibMCData_uint32* pUUIDListNeededChars, char * pUUIDListBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pStorage;
+
+	try {
+		if (pName == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if ( (!pUUIDListBuffer) && !(pUUIDListNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sName(pName);
+		std::string sUUIDList("");
+		IStorage* pIStorage = dynamic_cast<IStorage*>(pIBaseClass);
+		if (!pIStorage)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pUUIDListBuffer == nullptr);
+		if (isCacheCall) {
+			sUUIDList = pIStorage->ListStreamUUIDsByName(sName);
+
+			pIStorage->_setCache (new ParameterCache_1<std::string> (sUUIDList));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIStorage->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sUUIDList);
+			pIStorage->_setCache (nullptr);
+		}
+		
+		if (pUUIDListNeededChars)
+			*pUUIDListNeededChars = (LibMCData_uint32) (sUUIDList.size()+1);
+		if (pUUIDListBuffer) {
+			if (sUUIDList.size() >= nUUIDListBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iUUIDList = 0; iUUIDList < sUUIDList.size(); iUUIDList++)
+				pUUIDListBuffer[iUUIDList] = sUUIDList[iUUIDList];
+			pUUIDListBuffer[sUUIDList.size()] = 0;
 		}
 		return LIBMCDATA_SUCCESS;
 	}
@@ -12843,6 +13172,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_storagezipwriter_finish;
 	if (sProcName == "libmcdata_storagezipwriter_isfinished") 
 		*ppProcAddress = (void*) &libmcdata_storagezipwriter_isfinished;
+	if (sProcName == "libmcdata_storagezipwriter_discard") 
+		*ppProcAddress = (void*) &libmcdata_storagezipwriter_discard;
 	if (sProcName == "libmcdata_storage_streamisready") 
 		*ppProcAddress = (void*) &libmcdata_storage_streamisready;
 	if (sProcName == "libmcdata_storage_retrievestream") 
@@ -12877,6 +13208,20 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_storage_createdownloadticket;
 	if (sProcName == "libmcdata_storage_requestdownloadticket") 
 		*ppProcAddress = (void*) &libmcdata_storage_requestdownloadticket;
+	if (sProcName == "libmcdata_storage_getdownloadticketdetails") 
+		*ppProcAddress = (void*) &libmcdata_storage_getdownloadticketdetails;
+	if (sProcName == "libmcdata_storage_revokedownloadticketsofstream") 
+		*ppProcAddress = (void*) &libmcdata_storage_revokedownloadticketsofstream;
+	if (sProcName == "libmcdata_storage_logdownloadstart") 
+		*ppProcAddress = (void*) &libmcdata_storage_logdownloadstart;
+	if (sProcName == "libmcdata_storage_logdownloadfinish") 
+		*ppProcAddress = (void*) &libmcdata_storage_logdownloadfinish;
+	if (sProcName == "libmcdata_storage_deletestream") 
+		*ppProcAddress = (void*) &libmcdata_storage_deletestream;
+	if (sProcName == "libmcdata_storage_discardunfinishedzipstreams") 
+		*ppProcAddress = (void*) &libmcdata_storage_discardunfinishedzipstreams;
+	if (sProcName == "libmcdata_storage_liststreamuuidsbyname") 
+		*ppProcAddress = (void*) &libmcdata_storage_liststreamuuidsbyname;
 	if (sProcName == "libmcdata_storage_attachstreamtojournal") 
 		*ppProcAddress = (void*) &libmcdata_storage_attachstreamtojournal;
 	if (sProcName == "libmcdata_storage_discardrandomwritestream") 

@@ -41,7 +41,8 @@ namespace AMC {
 		rtUnknown = 0,
 		rtGet = 1,
 		rtPost = 2,
-		rtPut = 3
+		rtPut = 3,
+		rtHead = 4
 	};
 
 

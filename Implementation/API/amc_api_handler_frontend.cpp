@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_api_handler_frontend.hpp"
 #include "amc_api_jsonrequest.hpp"
+#include "amc_api.hpp"
 #include "amc_api_frontendeventstream.hpp"
 #include "amc_streamregistry.hpp"
 #include "amc_statemachinedata.hpp"
@@ -138,6 +139,22 @@ APIHandler_FrontendType CAPIHandler_Frontend::parseRequest(const std::string& sU
 		if ((sParameterString == "/streamscope") || (sParameterString == "/streamscope/"))
 			return APIHandler_FrontendType::ftStreamScope;
 
+		// /actions/{uuid}/claim
+		std::string sActionsPrefix = "/actions/";
+		std::string sClaimSuffix = "/claim";
+		if (sParameterString.rfind(sActionsPrefix, 0) == 0) {
+			std::string sRemainder = sParameterString.substr(sActionsPrefix.length());
+			if ((!sRemainder.empty()) && (sRemainder.back() == '/'))
+				sRemainder.pop_back();
+			if ((sRemainder.length() > sClaimSuffix.length()) && (sRemainder.compare(sRemainder.length() - sClaimSuffix.length(), sClaimSuffix.length(), sClaimSuffix) == 0)) {
+				sRemainder = sRemainder.substr(0, sRemainder.length() - sClaimSuffix.length());
+				if (AMCCommon::CUtils::stringIsUUIDString(sRemainder)) {
+					sParameterUUID = AMCCommon::CUtils::normalizeUUIDString(sRemainder);
+					return APIHandler_FrontendType::ftClaimAction;
+				}
+			}
+		}
+
 	}
 
 	return APIHandler_FrontendType::ftUnknown;
@@ -229,6 +246,8 @@ std::string CAPIHandler_Frontend::handleStatusRequest(CAPIFormFields& pFormField
 		uint64_t nBuildEnd = pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
 		double dBuildTimeMS = (double)(nBuildEnd - nBuildStart) / 1000.0;
 		writer.addDouble(AMC_API_KEY_FRONTEND_SERVERTIME, dBuildTimeMS);
+		// Polling clients receive the session's pending client actions with every status.
+		pFrontendState->writePendingClientActionsToJSON(writer);
 	};
 
 	if (publishResult.m_bPatchAvailable) {
@@ -399,6 +418,26 @@ void CAPIHandler_Frontend::handleStreamScopeRequest(CJSONWriter& writer, const u
 	applyStreamScope(pEventStream, pBodyData, nBodyDataSize, true);
 }
 
+PAPIResponse CAPIHandler_Frontend::handleClaimActionRequest(const std::string& sActionUUID, PAPIAuth pAuth)
+{
+	if (pAuth.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	auto pFrontendState = pAuth->getFrontendState();
+	if (pFrontendState.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	if (!pFrontendState->claimClientAction(sActionUUID))
+		return CAPI::makeError(AMC_API_HTTP_CONFLICT, LIBMC_ERROR_CLIENTACTIONALREADYCLAIMED, "client action is unknown or has already been claimed: " + sActionUUID);
+
+	CJSONWriter writer;
+	writeJSONHeader(writer, AMC_API_PROTOCOL_FRONTEND);
+	writer.addString(AMC_API_KEY_FRONTEND_ACTIONUUID, sActionUUID);
+	writer.addBoolean(AMC_API_KEY_FRONTEND_CLAIMED, true);
+
+	return std::make_shared<CAPIStringResponse>(AMC_API_HTTP_SUCCESS, AMC_API_CONTENTTYPE, writer.saveToString());
+}
+
 
 PAPIResponse CAPIHandler_Frontend::handleRequest(const std::string& sURI, const eAPIRequestType requestType, CAPIFormFields & pFormFields, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth)
 {
@@ -408,6 +447,9 @@ PAPIResponse CAPIHandler_Frontend::handleRequest(const std::string& sURI, const 
 
 	if (uiType == APIHandler_FrontendType::ftStatus)
 		return std::make_shared<CAPIStringResponse>(AMC_API_HTTP_SUCCESS, AMC_API_CONTENTTYPE, handleStatusRequest(pFormFields, pAuth));
+
+	if (uiType == APIHandler_FrontendType::ftClaimAction)
+		return handleClaimActionRequest(sParameterUUID, pAuth);
 
 	CJSONWriter writer;
 	writeJSONHeader(writer, AMC_API_PROTOCOL_FRONTEND);

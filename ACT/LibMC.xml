@@ -744,6 +744,16 @@
 		<error name="INVALIDTOOLPATHPROFILEINDEX" code="719" description="Invalid toolpath profile index." />
 		<error name="INVALIDTOOLPATHMODIFIERINDEX" code="720" description="Invalid toolpath modifier index." />
 				
+		<error name="NOSTREAMRESULT" code="721" description="API response is not a stream." />
+		<error name="DOWNLOADCANCELLED" code="722" description="Download was cancelled." />
+		<error name="INVALIDSTREAMCHUNK" code="723" description="Invalid stream chunk range." />
+		<error name="DOWNLOADTICKETEXPIRED" code="724" description="Download ticket has expired or has been revoked." />
+		<error name="TOOMANYDOWNLOADS" code="725" description="Too many concurrent downloads." />
+		<error name="CLIENTACTIONNOTFOUND" code="726" description="Client action not found." />
+		<error name="CLIENTACTIONALREADYCLAIMED" code="727" description="Client action has already been claimed." />
+		<error name="STREAMHASACTIVEDOWNLOADS" code="728" description="Storage stream has active downloads." />
+		<error name="SESSIONHANDLERNOTAVAILABLE" code="729" description="Session handler is not available." />
+
 		
 		
 		
@@ -866,9 +876,33 @@
 		</method>
 		
 		<method name="GetContentDispositionName" description="returns the cached stream content disposition string of the resulting data. Call only after Handle().">
-			<param name="ContentDispositionName" type="string" pass="return" description="Returns non-empty string if content disposition header should be added." />	
+			<param name="ContentDispositionName" type="string" pass="return" description="Returns non-empty string if content disposition header should be added." />
 		</method>
-		
+
+		<method name="SetClientAddress" description="Sets the network address of the client that sent the request. Call before Handle().">
+			<param name="Address" type="string" pass="in" description="Network address of the client." />
+		</method>
+
+		<method name="HasStreamResult" description="Returns true if the result is a storage stream that must be sent in chunks with ReadResultStreamChunk instead of a buffer. Call only after Handle().">
+			<param name="HasStream" type="bool" pass="return" description="Result is a stream." />
+		</method>
+
+		<method name="GetResultStreamInfo" description="Returns size and validators of the result stream. Fails if the result is not a stream.">
+			<param name="Size" type="uint64" pass="out" description="Stream size in bytes." />
+			<param name="ETag" type="string" pass="out" description="Strong entity tag of the stream, without quotes." />
+			<param name="LastModified" type="string" pass="out" description="Creation time of the stream as HTTP date." />
+		</method>
+
+		<method name="ReadResultStreamChunk" description="Reads a part of the result stream and records it as sent. Fails if the range is outside the stream, the length exceeds 16 MiB or the download was cancelled.">
+			<param name="Offset" type="uint64" pass="in" description="Start position in bytes." />
+			<param name="Length" type="uint64" pass="in" description="Number of bytes to read." />
+			<param name="Data" type="basicarray" class="uint8" pass="out" description="Data that was read." />
+		</method>
+
+		<method name="FinishStreamResult" description="Reports that sending the result stream has ended. May be called more than once and without any chunk having been read.">
+			<param name="Success" type="bool" pass="in" description="All requested bytes were sent." />
+		</method>
+
 	</class>
 
 

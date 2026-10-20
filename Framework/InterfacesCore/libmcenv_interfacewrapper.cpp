@@ -26427,6 +26427,30 @@ LibMCEnvResult libmcenv_zipstreamwriter_createzipentryfromstream(LibMCEnv_ZIPStr
 	}
 }
 
+LibMCEnvResult libmcenv_zipstreamwriter_discard(LibMCEnv_ZIPStreamWriter pZIPStreamWriter)
+{
+	IBase* pIBaseClass = (IBase *)pZIPStreamWriter;
+
+	try {
+		IZIPStreamWriter* pIZIPStreamWriter = dynamic_cast<IZIPStreamWriter*>(pIBaseClass);
+		if (!pIZIPStreamWriter)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIZIPStreamWriter->Discard();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for StreamReader
@@ -36484,6 +36508,163 @@ LibMCEnvResult libmcenv_stateenvironment_evaluateformulaasbool(LibMCEnv_StateEnv
 	}
 }
 
+LibMCEnvResult libmcenv_stateenvironment_startstreamdownloadforsession(LibMCEnv_StateEnvironment pStateEnvironment, const char * pSessionUUID, const char * pStreamUUID, const char * pFileName, bool * pSuccess)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pSessionUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pStreamUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pFileName == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pSuccess == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sSessionUUID(pSessionUUID);
+		std::string sStreamUUID(pStreamUUID);
+		std::string sFileName(pFileName);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pSuccess = pIStateEnvironment->StartStreamDownloadForSession(sSessionUUID, sStreamUUID, sFileName);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_getstreamdownloadprogress(LibMCEnv_StateEnvironment pStateEnvironment, const char * pStreamUUID, LibMCEnv_uint32 * pActiveConnections, LibMCEnv_uint64 * pDeliveredBytes, LibMCEnv_uint64 * pTotalBytes, bool * pCompleted, LibMCEnv_uint64 * pMillisecondsSinceActivity)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pStreamUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pActiveConnections)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pDeliveredBytes)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pTotalBytes)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pCompleted)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pMillisecondsSinceActivity)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sStreamUUID(pStreamUUID);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIStateEnvironment->GetStreamDownloadProgress(sStreamUUID, *pActiveConnections, *pDeliveredBytes, *pTotalBytes, *pCompleted, *pMillisecondsSinceActivity);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_cancelstreamdownloads(LibMCEnv_StateEnvironment pStateEnvironment, const char * pStreamUUID, bool * pCancelled)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pStreamUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pCancelled == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sStreamUUID(pStreamUUID);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pCancelled = pIStateEnvironment->CancelStreamDownloads(sStreamUUID);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_deletestoragestream(LibMCEnv_StateEnvironment pStateEnvironment, const char * pUUID)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pUUID == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sUUID(pUUID);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIStateEnvironment->DeleteStorageStream(sUUID);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_stateenvironment_enforcestreamretention(LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_uint32 nKeepCount, LibMCEnv_uint32 * pDeletedCount)
+{
+	IBase* pIBaseClass = (IBase *)pStateEnvironment;
+
+	try {
+		if (pName == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (pDeletedCount == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sName(pName);
+		IStateEnvironment* pIStateEnvironment = dynamic_cast<IStateEnvironment*>(pIBaseClass);
+		if (!pIStateEnvironment)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pDeletedCount = pIStateEnvironment->EnforceStreamRetention(sName, nKeepCount);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for UIItem
@@ -42244,6 +42425,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_zipstreamwriter_createzipentry;
 	if (sProcName == "libmcenv_zipstreamwriter_createzipentryfromstream") 
 		*ppProcAddress = (void*) &libmcenv_zipstreamwriter_createzipentryfromstream;
+	if (sProcName == "libmcenv_zipstreamwriter_discard") 
+		*ppProcAddress = (void*) &libmcenv_zipstreamwriter_discard;
 	if (sProcName == "libmcenv_streamreader_getuuid") 
 		*ppProcAddress = (void*) &libmcenv_streamreader_getuuid;
 	if (sProcName == "libmcenv_streamreader_getname") 
@@ -42826,6 +43009,16 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_evaluateformulaasinteger;
 	if (sProcName == "libmcenv_stateenvironment_evaluateformulaasbool") 
 		*ppProcAddress = (void*) &libmcenv_stateenvironment_evaluateformulaasbool;
+	if (sProcName == "libmcenv_stateenvironment_startstreamdownloadforsession") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_startstreamdownloadforsession;
+	if (sProcName == "libmcenv_stateenvironment_getstreamdownloadprogress") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_getstreamdownloadprogress;
+	if (sProcName == "libmcenv_stateenvironment_cancelstreamdownloads") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_cancelstreamdownloads;
+	if (sProcName == "libmcenv_stateenvironment_deletestoragestream") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_deletestoragestream;
+	if (sProcName == "libmcenv_stateenvironment_enforcestreamretention") 
+		*ppProcAddress = (void*) &libmcenv_stateenvironment_enforcestreamretention;
 	if (sProcName == "libmcenv_uiitem_getname") 
 		*ppProcAddress = (void*) &libmcenv_uiitem_getname;
 	if (sProcName == "libmcenv_uiitem_getpath") 

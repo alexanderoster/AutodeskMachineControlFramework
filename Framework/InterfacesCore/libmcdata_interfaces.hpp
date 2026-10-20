@@ -1184,6 +1184,11 @@ public:
 	*/
 	virtual bool IsFinished() = 0;
 
+	/**
+	* IStorageZIPWriter::Discard - Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+	*/
+	virtual void Discard() = 0;
+
 };
 
 typedef IBaseSharedPtr<IStorageZIPWriter> PIStorageZIPWriter;
@@ -1339,6 +1344,62 @@ public:
 	* @param[out] sUserUUID - UUID of user that created the ticket.
 	*/
 	virtual void RequestDownloadTicket(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID) = 0;
+
+	/**
+	* IStorage::GetDownloadTicketDetails - Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[out] sStreamUUID - UUID of storage stream.
+	* @param[out] sClientFileName - ClientFileName of the ticket.
+	* @param[out] sSessionUUID - UUID of user session.
+	* @param[out] sUserUUID - UUID of user that created the ticket.
+	* @param[out] nCreationTimeStamp - Creation time of the ticket in microseconds since 1970.
+	* @param[out] bRevoked - True if the ticket has been revoked.
+	*/
+	virtual void GetDownloadTicketDetails(const std::string & sTicketUUID, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID, LibMCData_uint64 & nCreationTimeStamp, bool & bRevoked) = 0;
+
+	/**
+	* IStorage::RevokeDownloadTicketsOfStream - Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.
+	* @param[in] sStreamUUID - UUID of storage stream.
+	* @return Number of tickets that were revoked by this call.
+	*/
+	virtual LibMCData_uint32 RevokeDownloadTicketsOfStream(const std::string & sStreamUUID) = 0;
+
+	/**
+	* IStorage::LogDownloadStart - Creates an entry in the download access log of a ticket and returns the UUID of the entry.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[in] sIPAddress - IP Address where the request came from.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return UUID of the access log entry.
+	*/
+	virtual std::string LogDownloadStart(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IStorage::LogDownloadFinish - Records the result of a download in its access log entry. Fails if the entry does not exist.
+	* @param[in] sDownloadUUID - UUID of the access log entry.
+	* @param[in] nSentBytes - Number of bytes that were sent to the client.
+	* @param[in] bSuccess - True if all requested bytes were sent.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	virtual void LogDownloadFinish(const std::string & sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IStorage::DeleteStream - Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.
+	* @param[in] sUUID - UUID of storage stream.
+	*/
+	virtual void DeleteStream(const std::string & sUUID) = 0;
+
+	/**
+	* IStorage::DiscardUnfinishedZIPStreams - Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.
+	* @return Number of deleted streams.
+	*/
+	virtual LibMCData_uint32 DiscardUnfinishedZIPStreams() = 0;
+
+	/**
+	* IStorage::ListStreamUUIDsByName - Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.
+	* @param[in] sName - Name of the streams.
+	* @return Comma separated list of stream UUIDs. Empty if there is none.
+	*/
+	virtual std::string ListStreamUUIDsByName(const std::string & sName) = 0;
 
 	/**
 	* IStorage::AttachStreamToJournal - Attaches a stream to a journal as temporary stream.

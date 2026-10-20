@@ -75,6 +75,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_alerthandler.hpp"
 #include "amc_dataserieshandler.hpp"
 #include "amc_streamregistry.hpp"
+#include "amc_streamdownloadregistry.hpp"
+#include "amc_api_sessionhandler.hpp"
+#include "amc_ui_clientaction.hpp"
 
 #include "common_chrono.hpp"
 #include <thread> 
@@ -1233,6 +1236,129 @@ IStreamReader* CStateEnvironment::LoadStream(const std::string& sUUID, const boo
 
 	return nullptr;
 
+}
+
+
+#define STATEENV_DOWNLOADFILENAME_MAXLENGTH 256
+
+bool CStateEnvironment::StartStreamDownloadForSession(const std::string& sSessionUUID, const std::string& sStreamUUID, const std::string& sFileName)
+{
+	std::string sNormalizedSessionUUID = AMCCommon::CUtils::normalizeUUIDString(sSessionUUID);
+	std::string sNormalizedStreamUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+
+	if (sFileName.empty())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EMPTYDOWNLOADSTREAMFILENAME);
+	if (sFileName.size() > STATEENV_DOWNLOADFILENAME_MAXLENGTH)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME);
+	if (!AMCCommon::CUtils::stringIsValidFileName(sFileName))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDOWNLOADSTREAMFILENAME, "invalid download stream filename: " + sFileName);
+
+	auto pSessionHandler = m_pSystemState->getSessionHandler();
+	if (pSessionHandler.get() == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_SESSIONHANDLERNOTAVAILABLE);
+
+	// The ticket belongs to the user of the session, exactly as a download started from a UI event.
+	std::string sUserUUID;
+	if (!pSessionHandler->getAuthorizedUserForSession(sNormalizedSessionUUID, sUserUUID))
+		return false;
+
+	auto pStorage = m_pSystemState->getDataModelInstance()->CreateStorage();
+	if (!pStorage->StreamIsReady(sNormalizedStreamUUID))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DOWNLOADSTREAMDOESNOTEXIST, "Download stream does not exist: " + sNormalizedStreamUUID);
+
+	auto pStream = pStorage->RetrieveStream(sNormalizedStreamUUID);
+	uint64_t nSize = pStream->GetSize();
+
+	auto pChrono = m_pSystemState->getGlobalChronoInstance();
+	std::string sTicketUUID = AMCCommon::CUtils::createUUID();
+	pStorage->CreateDownloadTicket(sTicketUUID, sNormalizedStreamUUID, sFileName, sNormalizedSessionUUID, sUserUUID, pChrono->getUTCTimeStampInMicrosecondsSince1970());
+
+	m_pSystemState->getStreamDownloadRegistryInstance()->prepareDownload(sNormalizedStreamUUID, nSize);
+
+	auto pAction = std::make_shared<AMC::CUIClientAction_StreamDownload>(sTicketUUID, sFileName);
+	return pSessionHandler->enqueueClientActionForSession(sNormalizedSessionUUID, pAction, sNormalizedStreamUUID);
+}
+
+void CStateEnvironment::GetStreamDownloadProgress(const std::string& sStreamUUID, LibMCEnv_uint32& nActiveConnections, LibMCEnv_uint64& nDeliveredBytes, LibMCEnv_uint64& nTotalBytes, bool& bCompleted, LibMCEnv_uint64& nMillisecondsSinceActivity)
+{
+	std::string sNormalizedStreamUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+
+	auto progress = m_pSystemState->getStreamDownloadRegistryInstance()->getProgress(sNormalizedStreamUUID);
+	nActiveConnections = progress.m_nActiveConnections;
+	nDeliveredBytes = progress.m_nDeliveredBytes;
+	nTotalBytes = progress.m_nTotalBytes;
+	bCompleted = progress.m_bCompleted;
+	nMillisecondsSinceActivity = progress.m_nMillisecondsSinceActivity;
+}
+
+bool CStateEnvironment::CancelStreamDownloads(const std::string& sStreamUUID)
+{
+	std::string sNormalizedStreamUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+
+	// The registry flag stops every running connection with its next chunk; revoked tickets make a resume
+	// fail with 410; dropped actions keep a download from starting after the cancel.
+	if (!m_pSystemState->getStreamDownloadRegistryInstance()->cancel(sNormalizedStreamUUID))
+		return false;
+
+	auto pStorage = m_pSystemState->getDataModelInstance()->CreateStorage();
+	pStorage->RevokeDownloadTicketsOfStream(sNormalizedStreamUUID);
+
+	auto pSessionHandler = m_pSystemState->getSessionHandler();
+	if (pSessionHandler.get() != nullptr)
+		pSessionHandler->removeClientActionsOfStream(sNormalizedStreamUUID);
+
+	return true;
+}
+
+void CStateEnvironment::DeleteStorageStream(const std::string& sUUID)
+{
+	std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
+
+	if (m_pSystemState->getStreamDownloadRegistryInstance()->hasActiveConnections(sNormalizedUUID))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS, "storage stream is being downloaded: " + sNormalizedUUID);
+
+	auto pSessionHandler = m_pSystemState->getSessionHandler();
+	if ((pSessionHandler.get() != nullptr) && pSessionHandler->hasUnclaimedClientActionsOfStream(sNormalizedUUID))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS, "storage stream has a pending download: " + sNormalizedUUID);
+
+	auto pStorage = m_pSystemState->getDataModelInstance()->CreateStorage();
+	pStorage->DeleteStream(sNormalizedUUID);
+}
+
+LibMCEnv_uint32 CStateEnvironment::EnforceStreamRetention(const std::string& sName, const LibMCEnv_uint32 nKeepCount)
+{
+	if (sName.empty())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+	auto pStorage = m_pSystemState->getDataModelInstance()->CreateStorage();
+	auto pRegistry = m_pSystemState->getStreamDownloadRegistryInstance();
+	auto pSessionHandler = m_pSystemState->getSessionHandler();
+
+	std::vector<std::string> streamUUIDs;
+	AMCCommon::CUtils::splitString(pStorage->ListStreamUUIDsByName(sName), ",", streamUUIDs);
+
+	uint32_t nDeleted = 0;
+	uint32_t nKept = 0;
+	for (auto& sStreamUUID : streamUUIDs) {
+		if (sStreamUUID.empty())
+			continue;
+
+		if (nKept < nKeepCount) {
+			nKept++;
+			continue;
+		}
+
+		// A stream that is being downloaded or waits for a browser to fetch it is kept for this round.
+		if (pRegistry->hasActiveConnections(sStreamUUID))
+			continue;
+		if ((pSessionHandler.get() != nullptr) && pSessionHandler->hasUnclaimedClientActionsOfStream(sStreamUUID))
+			continue;
+
+		pStorage->DeleteStream(sStreamUUID);
+		nDeleted++;
+	}
+
+	return nDeleted;
 }
 
 

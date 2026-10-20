@@ -9003,6 +9003,14 @@ typedef LibMCEnvResult (*PLibMCEnvZIPStreamWriter_CreateZIPEntryPtr) (LibMCEnv_Z
 */
 typedef LibMCEnvResult (*PLibMCEnvZIPStreamWriter_CreateZIPEntryFromStreamPtr) (LibMCEnv_ZIPStreamWriter pZIPStreamWriter, const char * pFileName, LibMCEnv_StreamReader pStreamReader);
 
+/**
+* Discards the unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+*
+* @param[in] pZIPStreamWriter - ZIPStreamWriter instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvZIPStreamWriter_DiscardPtr) (LibMCEnv_ZIPStreamWriter pZIPStreamWriter);
+
 /*************************************************************************************************************************
  Class definition for StreamReader
 **************************************************************************************************************************/
@@ -12169,6 +12177,62 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr) 
 */
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, bool * pValue);
 
+/**
+* Starts a stream download in the browser of a client session. Creates a download ticket for the user of the session and queues the download action for delivery to the session. Returns false if the session does not exist or is not authorized.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pSessionUUID - UUID of the client session.
+* @param[in] pStreamUUID - Storage stream. Fails if the stream does not exist or is not finished.
+* @param[in] pFileName - File name offered to the browser. Fails if empty.
+* @param[out] pSuccess - True if the download action was queued for the session.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_StartStreamDownloadForSessionPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pSessionUUID, const char * pStreamUUID, const char * pFileName, bool * pSuccess);
+
+/**
+* Returns the delivery progress of all downloads of a storage stream.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pStreamUUID - Storage stream.
+* @param[out] pActiveConnections - Connections that are sending the stream right now.
+* @param[out] pDeliveredBytes - Bytes from the start of the stream that were sent without a gap.
+* @param[out] pTotalBytes - Size of the stream.
+* @param[out] pCompleted - The last byte was sent and its connection ended successfully.
+* @param[out] pMillisecondsSinceActivity - Time since the last chunk was sent or since the download was handed over.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_GetStreamDownloadProgressPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pStreamUUID, LibMCEnv_uint32 * pActiveConnections, LibMCEnv_uint64 * pDeliveredBytes, LibMCEnv_uint64 * pTotalBytes, bool * pCompleted, LibMCEnv_uint64 * pMillisecondsSinceActivity);
+
+/**
+* Stops all running downloads of a storage stream, revokes its download tickets and drops its unclaimed download actions. Does nothing if the stream was already delivered completely.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pStreamUUID - Storage stream.
+* @param[out] pCancelled - False if the download had already completed and nothing was cancelled.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_CancelStreamDownloadsPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pStreamUUID, bool * pCancelled);
+
+/**
+* Deletes a finished storage stream from disk and database, including its download tickets. Fails if the stream does not exist, is still being written or is being downloaded right now.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pUUID - UUID of the storage stream.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_DeleteStorageStreamPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pUUID);
+
+/**
+* Deletes all finished streams with the given name except the newest ones. Streams with running downloads or pending download actions are kept. Returns the number of deleted streams.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pName - Name of the streams.
+* @param[in] nKeepCount - Number of newest streams to keep.
+* @param[out] pDeletedCount - Number of deleted streams.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EnforceStreamRetentionPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pName, LibMCEnv_uint32 nKeepCount, LibMCEnv_uint32 * pDeletedCount);
+
 /*************************************************************************************************************************
  Class definition for UIItem
 **************************************************************************************************************************/
@@ -14348,6 +14412,7 @@ typedef struct {
 	PLibMCEnvTempStreamWriter_CopyFromPtr m_TempStreamWriter_CopyFrom;
 	PLibMCEnvZIPStreamWriter_CreateZIPEntryPtr m_ZIPStreamWriter_CreateZIPEntry;
 	PLibMCEnvZIPStreamWriter_CreateZIPEntryFromStreamPtr m_ZIPStreamWriter_CreateZIPEntryFromStream;
+	PLibMCEnvZIPStreamWriter_DiscardPtr m_ZIPStreamWriter_Discard;
 	PLibMCEnvStreamReader_GetUUIDPtr m_StreamReader_GetUUID;
 	PLibMCEnvStreamReader_GetNamePtr m_StreamReader_GetName;
 	PLibMCEnvStreamReader_GetMIMETypePtr m_StreamReader_GetMIMEType;
@@ -14639,6 +14704,11 @@ typedef struct {
 	PLibMCEnvStateEnvironment_EvaluateFormulaAsDoublePtr m_StateEnvironment_EvaluateFormulaAsDouble;
 	PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr m_StateEnvironment_EvaluateFormulaAsInteger;
 	PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr m_StateEnvironment_EvaluateFormulaAsBool;
+	PLibMCEnvStateEnvironment_StartStreamDownloadForSessionPtr m_StateEnvironment_StartStreamDownloadForSession;
+	PLibMCEnvStateEnvironment_GetStreamDownloadProgressPtr m_StateEnvironment_GetStreamDownloadProgress;
+	PLibMCEnvStateEnvironment_CancelStreamDownloadsPtr m_StateEnvironment_CancelStreamDownloads;
+	PLibMCEnvStateEnvironment_DeleteStorageStreamPtr m_StateEnvironment_DeleteStorageStream;
+	PLibMCEnvStateEnvironment_EnforceStreamRetentionPtr m_StateEnvironment_EnforceStreamRetention;
 	PLibMCEnvUIItem_GetNamePtr m_UIItem_GetName;
 	PLibMCEnvUIItem_GetPathPtr m_UIItem_GetPath;
 	PLibMCEnvUIItem_GetUUIDPtr m_UIItem_GetUUID;

@@ -1169,6 +1169,14 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storagezipwriter_finish(LibMCData_S
 */
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storagezipwriter_isfinished(LibMCData_StorageZIPWriter pStorageZIPWriter, bool * pFinished);
 
+/**
+* Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+*
+* @param[in] pStorageZIPWriter - StorageZIPWriter instance.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storagezipwriter_discard(LibMCData_StorageZIPWriter pStorageZIPWriter);
+
 /*************************************************************************************************************************
  Class definition for Storage
 **************************************************************************************************************************/
@@ -1376,6 +1384,95 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_createdownloadticket(LibMCD
 * @return error code or 0 (success)
 */
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_requestdownloadticket(LibMCData_Storage pStorage, const char * pTicketUUID, const char * pIPAddress, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, const LibMCData_uint32 nClientFileNameBufferSize, LibMCData_uint32* pClientFileNameNeededChars, char * pClientFileNameBuffer, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
+
+/**
+* Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pTicketUUID - UUID of download ticket.
+* @param[in] nStreamUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pStreamUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pStreamUUIDBuffer -  buffer of UUID of storage stream., may be NULL
+* @param[in] nClientFileNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pClientFileNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pClientFileNameBuffer -  buffer of ClientFileName of the ticket., may be NULL
+* @param[in] nSessionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSessionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSessionUUIDBuffer -  buffer of UUID of user session., may be NULL
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of UUID of user that created the ticket., may be NULL
+* @param[out] pCreationTimeStamp - Creation time of the ticket in microseconds since 1970.
+* @param[out] pRevoked - True if the ticket has been revoked.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_getdownloadticketdetails(LibMCData_Storage pStorage, const char * pTicketUUID, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, const LibMCData_uint32 nClientFileNameBufferSize, LibMCData_uint32* pClientFileNameNeededChars, char * pClientFileNameBuffer, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer, LibMCData_uint64 * pCreationTimeStamp, bool * pRevoked);
+
+/**
+* Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pStreamUUID - UUID of storage stream.
+* @param[out] pRevokedCount - Number of tickets that were revoked by this call.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_revokedownloadticketsofstream(LibMCData_Storage pStorage, const char * pStreamUUID, LibMCData_uint32 * pRevokedCount);
+
+/**
+* Creates an entry in the download access log of a ticket and returns the UUID of the entry.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pTicketUUID - UUID of download ticket.
+* @param[in] pIPAddress - IP Address where the request came from.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @param[in] nDownloadUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDownloadUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDownloadUUIDBuffer -  buffer of UUID of the access log entry., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_logdownloadstart(LibMCData_Storage pStorage, const char * pTicketUUID, const char * pIPAddress, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nDownloadUUIDBufferSize, LibMCData_uint32* pDownloadUUIDNeededChars, char * pDownloadUUIDBuffer);
+
+/**
+* Records the result of a download in its access log entry. Fails if the entry does not exist.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pDownloadUUID - UUID of the access log entry.
+* @param[in] nSentBytes - Number of bytes that were sent to the client.
+* @param[in] bSuccess - True if all requested bytes were sent.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_logdownloadfinish(LibMCData_Storage pStorage, const char * pDownloadUUID, LibMCData_uint64 nSentBytes, bool bSuccess, LibMCData_uint64 nAbsoluteTimeStamp);
+
+/**
+* Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pUUID - UUID of storage stream.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_deletestream(LibMCData_Storage pStorage, const char * pUUID);
+
+/**
+* Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.
+*
+* @param[in] pStorage - Storage instance.
+* @param[out] pDeletedCount - Number of deleted streams.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_discardunfinishedzipstreams(LibMCData_Storage pStorage, LibMCData_uint32 * pDeletedCount);
+
+/**
+* Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pName - Name of the streams.
+* @param[in] nUUIDListBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDListNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDListBuffer -  buffer of Comma separated list of stream UUIDs. Empty if there is none., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_storage_liststreamuuidsbyname(LibMCData_Storage pStorage, const char * pName, const LibMCData_uint32 nUUIDListBufferSize, LibMCData_uint32* pUUIDListNeededChars, char * pUUIDListBuffer);
 
 /**
 * Attaches a stream to a journal as temporary stream.

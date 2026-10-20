@@ -108,7 +108,17 @@ namespace AMCData {
 				pTransaction->executeStatement(sStreamsQuery);
 				break;
 			}
-		}
+
+			case 24: {
+				// Download tickets can be revoked (a cancelled download must not be resumable) and the
+				// access log records how a download ended.
+				pTransaction->executeStatement("ALTER TABLE `storage_downloadtickets` ADD `revoked` integer DEFAULT 0;");
+				pTransaction->executeStatement("ALTER TABLE `storage_downloads` ADD `sentbytes` integer DEFAULT 0;");
+				pTransaction->executeStatement("ALTER TABLE `storage_downloads` ADD `success` integer DEFAULT 0;");
+				pTransaction->executeStatement("ALTER TABLE `storage_downloads` ADD `finishedtimestamp` varchar (64) DEFAULT '';");
+				break;
+			}
+}
 	}
 
 

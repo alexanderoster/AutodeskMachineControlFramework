@@ -43,6 +43,7 @@ Abstract: This is a stub class definition of CStorage
 #include "amcdata_storagestate.hpp"
 
 #include "common_chrono.hpp"
+#include <vector>
 #include "PicoSHA2/picosha2.h"
 
 using namespace LibMCData::Impl;
@@ -317,7 +318,7 @@ IStorageZIPWriter* CStorage::CreateZIPStream(const std::string& sUUID, const std
         auto pWriter = std::make_shared<AMCData::CStorageWriter_ZIPStream>(sParsedUUID, m_pStorageState->getStreamPath(sUUID));
         m_pStorageState->addPartialWriter(pWriter);
 
-        return new CStorageZIPWriter(pWriter, m_pSQLHandler);
+        return new CStorageZIPWriter(pWriter, m_pSQLHandler, m_pStorageState);
     }
 
 }
@@ -573,4 +574,202 @@ LibMCData_uint64 CStorage::GetDataCaptureStorageSize()
 LibMCData_uint32 CStorage::EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes)
 {
     return CDataCapture::enforceStorageLimit(m_pSQLHandler, m_pStorageState, nLimitInBytes);
+}
+
+void CStorage::GetDownloadTicketDetails(const std::string& sTicketUUID, std::string& sStreamUUID, std::string& sClientFileName, std::string& sSessionUUID, std::string& sUserUUID, LibMCData_uint64& nCreationTimeStamp, bool& bRevoked)
+{
+    std::string sNormalizedTicketUUID = AMCCommon::CUtils::normalizeUUIDString(sTicketUUID);
+
+    std::string sTicketQuery = "SELECT streamuuid, clientfilename, sessionuuid, useruuid, timestamp, revoked FROM storage_downloadtickets WHERE ticketuuid=?";
+    auto pTicketStatement = m_pSQLHandler->prepareStatement(sTicketQuery);
+    pTicketStatement->setString(1, sNormalizedTicketUUID);
+    if (!pTicketStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_DOWNLOADTICKETNOTFOUND, "download ticket not found: " + sNormalizedTicketUUID);
+
+    sStreamUUID = pTicketStatement->getColumnString(1);
+    sClientFileName = pTicketStatement->getColumnString(2);
+    sSessionUUID = pTicketStatement->getColumnString(3);
+    sUserUUID = pTicketStatement->getColumnString(4);
+    std::string sTimestamp = pTicketStatement->getColumnString(5);
+    bRevoked = (pTicketStatement->getColumnInt(6) != 0);
+    pTicketStatement = nullptr;
+
+    nCreationTimeStamp = 0;
+    if (!sTimestamp.empty())
+        nCreationTimeStamp = AMCCommon::CChrono::parseISO8601TimeUTC(sTimestamp);
+}
+
+LibMCData_uint32 CStorage::RevokeDownloadTicketsOfStream(const std::string& sStreamUUID)
+{
+    std::string sNormalizedStreamUUID = AMCCommon::CUtils::normalizeUUIDString(sStreamUUID);
+
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    uint32_t nCount = 0;
+    auto pCountStatement = pTransaction->prepareStatement("SELECT COUNT(*) FROM storage_downloadtickets WHERE streamuuid=? AND revoked=0");
+    pCountStatement->setString(1, sNormalizedStreamUUID);
+    if (pCountStatement->nextRow())
+        nCount = (uint32_t)pCountStatement->getColumnInt64(1);
+    pCountStatement = nullptr;
+
+    auto pUpdateStatement = pTransaction->prepareStatement("UPDATE storage_downloadtickets SET revoked=1 WHERE streamuuid=? AND revoked=0");
+    pUpdateStatement->setString(1, sNormalizedStreamUUID);
+    pUpdateStatement->execute();
+    pUpdateStatement = nullptr;
+
+    pTransaction->commit();
+
+    return nCount;
+}
+
+std::string CStorage::LogDownloadStart(const std::string& sTicketUUID, const std::string& sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp)
+{
+    std::string sNormalizedTicketUUID = AMCCommon::CUtils::normalizeUUIDString(sTicketUUID);
+    std::string sTimestamp = AMCCommon::CChrono::convertToISO8601TimeUTC(nAbsoluteTimeStamp);
+    std::string sDownloadUUID = AMCCommon::CUtils::createUUID();
+
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    auto pTicketStatement = pTransaction->prepareStatement("SELECT ticketuuid FROM storage_downloadtickets WHERE ticketuuid=?");
+    pTicketStatement->setString(1, sNormalizedTicketUUID);
+    if (!pTicketStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_DOWNLOADTICKETNOTFOUND, "download ticket not found: " + sNormalizedTicketUUID);
+    pTicketStatement = nullptr;
+
+    auto pDownloadStatement = pTransaction->prepareStatement("INSERT INTO storage_downloads (downloaduuid, ticketuuid, ipaddress, timestamp) VALUES (?, ?, ?, ?)");
+    pDownloadStatement->setString(1, sDownloadUUID);
+    pDownloadStatement->setString(2, sNormalizedTicketUUID);
+    pDownloadStatement->setString(3, sIPAddress);
+    pDownloadStatement->setString(4, sTimestamp);
+    pDownloadStatement->execute();
+    pDownloadStatement = nullptr;
+
+    pTransaction->commit();
+
+    return sDownloadUUID;
+}
+
+void CStorage::LogDownloadFinish(const std::string& sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp)
+{
+    std::string sNormalizedDownloadUUID = AMCCommon::CUtils::normalizeUUIDString(sDownloadUUID);
+    std::string sTimestamp = AMCCommon::CChrono::convertToISO8601TimeUTC(nAbsoluteTimeStamp);
+
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    auto pSelectStatement = pTransaction->prepareStatement("SELECT downloaduuid FROM storage_downloads WHERE downloaduuid=?");
+    pSelectStatement->setString(1, sNormalizedDownloadUUID);
+    if (!pSelectStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND, "download entry not found: " + sNormalizedDownloadUUID);
+    pSelectStatement = nullptr;
+
+    auto pUpdateStatement = pTransaction->prepareStatement("UPDATE storage_downloads SET sentbytes=?, success=?, finishedtimestamp=? WHERE downloaduuid=?");
+    pUpdateStatement->setInt64(1, (int64_t)nSentBytes);
+    pUpdateStatement->setInt(2, bSuccess ? 1 : 0);
+    pUpdateStatement->setString(3, sTimestamp);
+    pUpdateStatement->setString(4, sNormalizedDownloadUUID);
+    pUpdateStatement->execute();
+    pUpdateStatement = nullptr;
+
+    pTransaction->commit();
+}
+
+void CStorage::deleteStreamInternal(const std::string& sNormalizedUUID, bool bOnlyIfNew)
+{
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    auto pLinkStatement = pTransaction->prepareStatement("DELETE FROM journal_tempstreams WHERE streamuuid=?");
+    pLinkStatement->setString(1, sNormalizedUUID);
+    pLinkStatement->execute();
+    pLinkStatement = nullptr;
+
+    auto pTicketStatement = pTransaction->prepareStatement("UPDATE storage_downloadtickets SET revoked=1 WHERE streamuuid=?");
+    pTicketStatement->setString(1, sNormalizedUUID);
+    pTicketStatement->execute();
+    pTicketStatement = nullptr;
+
+    if (bOnlyIfNew) {
+        auto pStreamStatement = pTransaction->prepareStatement("DELETE FROM storage_streams WHERE uuid=? AND status=?");
+        pStreamStatement->setString(1, sNormalizedUUID);
+        pStreamStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssNew));
+        pStreamStatement->execute();
+        pStreamStatement = nullptr;
+    }
+    else {
+        auto pStreamStatement = pTransaction->prepareStatement("DELETE FROM storage_streams WHERE uuid=?");
+        pStreamStatement->setString(1, sNormalizedUUID);
+        pStreamStatement->execute();
+        pStreamStatement = nullptr;
+    }
+
+    pTransaction->commit();
+
+    AMCCommon::CUtils::deleteFileFromDisk(m_pStorageState->getStreamPath(sNormalizedUUID), false);
+}
+
+void CStorage::DeleteStream(const std::string& sUUID)
+{
+    std::string sParsedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
+
+    if (m_pStorageState->hasPartialWriter(sParsedUUID))
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STREAMHASACTIVEWRITER, "storage stream is still being written: " + sParsedUUID);
+
+    auto pStreamStatement = m_pSQLHandler->prepareStatement("SELECT uuid FROM storage_streams WHERE uuid=?");
+    pStreamStatement->setString(1, sParsedUUID);
+    if (!pStreamStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_STORAGESTREAMNOTFOUND, "storage stream not found: " + sParsedUUID);
+    pStreamStatement = nullptr;
+
+    // Streams that belong to a build job or a build execution are part of that data and are never deleted here.
+    auto pJobDataStatement = m_pSQLHandler->prepareStatement("SELECT uuid FROM buildjobdata WHERE storagestreamuuid=?");
+    pJobDataStatement->setString(1, sParsedUUID);
+    if (pJobDataStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM, "storage stream is attached to a build job: " + sParsedUUID);
+    pJobDataStatement = nullptr;
+
+    auto pExecutionDataStatement = m_pSQLHandler->prepareStatement("SELECT uuid FROM buildjobexecutiondata WHERE storagestreamuuid=?");
+    pExecutionDataStatement->setString(1, sParsedUUID);
+    if (pExecutionDataStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM, "storage stream is attached to a build execution: " + sParsedUUID);
+    pExecutionDataStatement = nullptr;
+
+    deleteStreamInternal(sParsedUUID, false);
+}
+
+LibMCData_uint32 CStorage::DiscardUnfinishedZIPStreams()
+{
+    std::vector<std::string> streamUUIDs;
+
+    auto pStatement = m_pSQLHandler->prepareStatement("SELECT uuid FROM storage_streams WHERE mimetype=? AND status=?");
+    pStatement->setString(1, "application/zip");
+    pStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssNew));
+    while (pStatement->nextRow()) {
+        std::string sStreamUUID = pStatement->getColumnString(1);
+        if (!m_pStorageState->hasPartialWriter(sStreamUUID))
+            streamUUIDs.push_back(sStreamUUID);
+    }
+    pStatement = nullptr;
+
+    for (auto& sStreamUUID : streamUUIDs)
+        deleteStreamInternal(sStreamUUID, true);
+
+    return (uint32_t)streamUUIDs.size();
+}
+
+std::string CStorage::ListStreamUUIDsByName(const std::string& sName)
+{
+    if (sName.empty())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
+
+    std::string sResult;
+
+    auto pStatement = m_pSQLHandler->prepareStatement("SELECT uuid FROM storage_streams WHERE name=? AND status=? ORDER BY timestamp DESC");
+    pStatement->setString(1, sName);
+    pStatement->setString(2, AMCData::CStorageState::storageStreamStatusToString(AMCData::eStorageStreamStatus::sssValidated));
+    while (pStatement->nextRow()) {
+        if (!sResult.empty())
+            sResult += ",";
+        sResult += pStatement->getColumnString(1);
+    }
+
+    return sResult;
 }

@@ -121,6 +121,25 @@ public:
     LibMCData_uint64 GetDataCaptureStorageSize() override;
 
     LibMCData_uint32 EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes) override;
+
+    void GetDownloadTicketDetails(const std::string& sTicketUUID, std::string& sStreamUUID, std::string& sClientFileName, std::string& sSessionUUID, std::string& sUserUUID, LibMCData_uint64& nCreationTimeStamp, bool& bRevoked) override;
+
+    LibMCData_uint32 RevokeDownloadTicketsOfStream(const std::string& sStreamUUID) override;
+
+    std::string LogDownloadStart(const std::string& sTicketUUID, const std::string& sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp) override;
+
+    void LogDownloadFinish(const std::string& sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp) override;
+
+    void DeleteStream(const std::string& sUUID) override;
+
+    LibMCData_uint32 DiscardUnfinishedZIPStreams() override;
+
+    std::string ListStreamUUIDsByName(const std::string& sName) override;
+
+private:
+
+    // Removes the database entries of a stream and its file. The caller has checked that no writer is active.
+    void deleteStreamInternal(const std::string& sNormalizedUUID, bool bOnlyIfNew);
 };
 
 } // namespace Impl
