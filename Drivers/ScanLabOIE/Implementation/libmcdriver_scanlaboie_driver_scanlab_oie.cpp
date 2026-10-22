@@ -373,7 +373,7 @@ IOIEDevice* CDriver_ScanLab_OIE::AddDevice(const std::string& sName, const std::
 		}
 	}
 
-	auto pDeviceInstance = std::make_shared<COIEDeviceInstance>(m_pOIESDK, m_pInstance, sName, sHostName, nPort, nResponseTimeOut, pDeviceConfig, correctionData,  m_pWorkingDirectory);
+	auto pDeviceInstance = std::make_shared<COIEDeviceInstance>(m_pOIESDK, m_pInstance, sName, sHostName, nPort, nResponseTimeOut, pDeviceConfig, correctionData,  m_pWorkingDirectory, m_pDriverEnvironment);
 	m_Devices.insert(std::make_pair(sName, pDeviceInstance));
 
 	return new COIEDevice(pDeviceInstance);

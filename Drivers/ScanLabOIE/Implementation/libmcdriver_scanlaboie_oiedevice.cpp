@@ -37,7 +37,6 @@ Abstract: This is a stub class definition of COIEDevice
 
 #include <array>
 #include <algorithm>
-#include <iostream>
 #include <cstring>
 #include <sstream>
 #include <limits>
@@ -100,7 +99,7 @@ void oieErrorListener(oie_device device, oie_error error, int32_t value, void* u
 	}
 }
 
-COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pInstance, const std::string& sDeviceName, const std::string& sHostName, const LibMCDriver_ScanLabOIE_uint32 nPort, uint32_t nResponseTimeOut, IDeviceConfiguration* pDeviceConfiguration, std::vector<uint8_t>& correctionFileData, LibMCEnv::PWorkingDirectory pWorkingDirectory)
+COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pInstance, const std::string& sDeviceName, const std::string& sHostName, const LibMCDriver_ScanLabOIE_uint32 nPort, uint32_t nResponseTimeOut, IDeviceConfiguration* pDeviceConfiguration, std::vector<uint8_t>& correctionFileData, LibMCEnv::PWorkingDirectory pWorkingDirectory, LibMCEnv::PDriverEnvironment pDriverEnvironment)
 	: m_pOIESDK (pOIESDK), 
 	  m_pInstance (pInstance), 
 	  m_pDevice (nullptr), 
@@ -121,7 +120,22 @@ COIEDeviceInstance::COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pIns
 	  m_nPacketRecordedCounter(0),
 	  m_nPacketSkippedCounter(0),
 	  m_DeviceDriverType(eOIEDeviceDriverType::Unknown),
-	  m_RecordingFrequency(LibMCDriver_ScanLabOIE::eOIERecordingFrequency::Record100kHz)
+	  m_RecordingFrequency(LibMCDriver_ScanLabOIE::eOIERecordingFrequency::Record100kHz),
+	  m_pDriverEnvironment(pDriverEnvironment),
+	  m_nXYFallbackCount(0),
+	  m_nSignalCountMismatchCount(0),
+	  m_nPacketExceptionCount(0),
+	  m_nPacketUnknownExceptionCount(0),
+	  m_nErrorEventCount(0),
+	  m_nFirstErrorEventCode(0),
+	  m_nFirstErrorEventValue(0),
+	  m_nLastErrorEventCode(0),
+	  m_nLastErrorEventValue(0),
+	  m_nReportedXYFallbacks(0),
+	  m_nReportedSignalCountMismatches(0),
+	  m_nReportedPacketExceptions(0),
+	  m_nReportedPacketUnknownExceptions(0),
+	  m_nReportedErrorEvents(0)
 
 {
 	if ((pOIESDK.get() == nullptr) || (pInstance == nullptr) || (pWorkingDirectory.get () == nullptr) || (pDeviceConfiguration == nullptr))
@@ -509,13 +523,15 @@ void COIEDeviceInstance::startAppEx(const std::string& sName, const int32_t nMaj
 		m_pCurrentDataRecording = std::make_shared<CDataRecordingInstance>(m_nSensorSignalCount, m_nRTCSignalCount, m_nAdditionalSignalCount, nBufferSizeInRecords);
 	}
 
-	std::cout << "OIE-DIAG startAppEx: driverType=" << (uint32_t)m_DeviceDriverType
-		<< " recordingFrequency=" << (uint32_t)m_RecordingFrequency
-		<< " packetSkipCounter=" << m_nPacketReceiveSkipCounter
-		<< " rtcSignals=" << m_nRTCSignalCount
-		<< " sensorSignals=" << m_nSensorSignalCount
-		<< " additionalSignals=" << m_nAdditionalSignalCount
-		<< std::endl;
+	{
+		std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+		resetDiagnostics();
+	}
+
+	logDriverInfo("OIE device " + m_sDeviceName + ": app " + sName + " started, driver type " + std::to_string((uint32_t)m_DeviceDriverType)
+		+ ", recording frequency " + std::to_string((uint32_t)m_RecordingFrequency) + ", packet skip counter " + std::to_string(m_nPacketReceiveSkipCounter)
+		+ ", " + std::to_string(m_nRTCSignalCount) + " rtc signals, " + std::to_string(m_nSensorSignalCount) + " sensor signals, "
+		+ std::to_string(m_nAdditionalSignalCount) + " additional signals.");
 
 }
 
@@ -635,8 +651,8 @@ void COIEDeviceInstance::SetRecordingFrequency(const LibMCDriver_ScanLabOIE::eOI
 		}
 
 		m_RecordingFrequency = eFrequency;
-		std::cout << "OIE-DIAG SetRecordingFrequency: eFrequency=" << (uint32_t)eFrequency
-			<< " packetSkipCounter=" << m_nPacketReceiveSkipCounter << std::endl;
+		logDriverInfo("OIE device " + m_sDeviceName + ": recording frequency set to " + std::to_string((uint32_t)eFrequency)
+			+ ", packet skip counter " + std::to_string(m_nPacketReceiveSkipCounter) + ".");
 
 	}
 	else {
@@ -771,10 +787,8 @@ void COIEDeviceInstance::onPacketEvent(oie_device device, const oie_pkt* pkt)
 					if (m_bHasCorrectionData) {
 						oie_error nXYError = m_pOIESDK->oie_pkt_get_xy(pkt, &dX, &dY);
 						if (nXYError != 0) {
-							static uint64_t nXYFallbackCounter = 0;
-							nXYFallbackCounter++;
-
-							if ((nXYFallbackCounter <= 20) || ((nXYFallbackCounter % 1000) == 0)) {
+							// Counted only; the first case is kept for the report of the plugin thread.
+							if (m_nXYFallbackCount.fetch_add(1) == 0) {
 								std::string sXYError = "unknown OIE xy error";
 								if (m_pOIESDK->oie_get_error != nullptr) {
 									const size_t nXYErrorBufferSize = 1024;
@@ -785,12 +799,10 @@ void COIEDeviceInstance::onPacketEvent(oie_device device, const oie_pkt* pkt)
 									sXYError = std::string(buffer.data());
 								}
 
-								std::cout << "OIE-DIAG xy fallback #" << nXYFallbackCounter
-									<< " packet=" << *pPacketNumber
-									<< " tag=" << *pMeasurementTag
-									<< " error=" << sXYError
-									<< " (" << nXYError << ")"
-									<< std::endl;
+								std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+								m_FirstXYFallback.m_nPacket = *pPacketNumber;
+								m_FirstXYFallback.m_nTag = *pMeasurementTag;
+								m_FirstXYFallback.m_sText = sXYError + " (" + std::to_string(nXYError) + ")";
 							}
 
 							dX = 0.0;
@@ -847,16 +859,16 @@ void COIEDeviceInstance::onPacketEvent(oie_device device, const oie_pkt* pkt)
 					//std::cout << "Additional signal count" << additionalSignalCount << " (packetNr " << *pPacketNumber << ")" << std::endl;
 
 					if ((sensorSignalCount != nExpectedSensorSignalCount) || (rtcSignalCount != nExpectedRTCSignalCount) || (additionalSignalCount != nExpectedAdditionalSignalCount)) {
-						static uint64_t nSignalCountMismatchCounter = 0;
-						nSignalCountMismatchCounter++;
-
-						if ((nSignalCountMismatchCounter <= 20) || ((nSignalCountMismatchCounter % 1000) == 0)) {
-							std::cout << "OIE-DIAG packet signal-count mismatch #" << nSignalCountMismatchCounter
-								<< " packet=" << *pPacketNumber
-								<< " tag=" << *pMeasurementTag
-								<< " expected[s/r/a]=" << nExpectedSensorSignalCount << "/" << nExpectedRTCSignalCount << "/" << nExpectedAdditionalSignalCount
-								<< " got[s/r/a]=" << sensorSignalCount << "/" << rtcSignalCount << "/" << additionalSignalCount
-								<< std::endl;
+						if (m_nSignalCountMismatchCount.fetch_add(1) == 0) {
+							std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+							m_FirstSignalCountMismatch.m_nPacket = *pPacketNumber;
+							m_FirstSignalCountMismatch.m_nTag = *pMeasurementTag;
+							m_FirstSignalCountMismatch.m_nExpected[0] = nExpectedSensorSignalCount;
+							m_FirstSignalCountMismatch.m_nExpected[1] = nExpectedRTCSignalCount;
+							m_FirstSignalCountMismatch.m_nExpected[2] = nExpectedAdditionalSignalCount;
+							m_FirstSignalCountMismatch.m_nGot[0] = sensorSignalCount;
+							m_FirstSignalCountMismatch.m_nGot[1] = rtcSignalCount;
+							m_FirstSignalCountMismatch.m_nGot[2] = additionalSignalCount;
 						}
 					}
 
@@ -889,71 +901,79 @@ void COIEDeviceInstance::onPacketEvent(oie_device device, const oie_pkt* pkt)
 
 		} */
 	}
-	catch (std::exception& E) {
-		static uint64_t nPacketExceptionCounter = 0;
-		nPacketExceptionCounter++;
-		if ((nPacketExceptionCounter <= 20) || ((nPacketExceptionCounter % 1000) == 0)) {
-			std::cout << "OIE-DIAG packet exception #" << nPacketExceptionCounter << ": " << E.what() << std::endl;
+	catch (const std::exception& E) {
+		// Counted and reported by the plugin thread; the callback must not throw into the SDK.
+		if (m_nPacketExceptionCount.fetch_add(1) == 0) {
+			std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+			m_FirstPacketException.m_nPacket = 0;
+			m_FirstPacketException.m_nTag = 0;
+			m_FirstPacketException.m_sText = E.what();
 		}
 	}
 	catch (...) {
-		static uint64_t nPacketUnknownExceptionCounter = 0;
-		nPacketUnknownExceptionCounter++;
-		if ((nPacketUnknownExceptionCounter <= 20) || ((nPacketUnknownExceptionCounter % 1000) == 0)) {
-			std::cout << "OIE-DIAG packet unknown exception #" << nPacketUnknownExceptionCounter << std::endl;
-		}
+		m_nPacketUnknownExceptionCount++;
 	}
 }
 
 void COIEDeviceInstance::onErrorEvent(oie_device device, oie_error error, int32_t value)
 {
-	try {
-		if (device == m_pDevice) {
-			//std::cout << "Error event: " << error << " value: " << value << std::endl;
-		}
-	}
-	catch (...)
-	{
+	if (device != m_pDevice)
+		return;
 
+	// Callback of the OIE SDK: only counted here (atomics, nothing that could throw), reported by
+	// the next RetrieveCurrentRecording of the plugin thread.
+	if (m_nErrorEventCount.fetch_add(1) == 0) {
+		m_nFirstErrorEventCode = (int32_t)error;
+		m_nFirstErrorEventValue = value;
 	}
+	m_nLastErrorEventCode = (int32_t)error;
+	m_nLastErrorEventValue = value;
 }
 
 
 PDataRecordingInstance COIEDeviceInstance::RetrieveCurrentRecording()
 {
-	std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
+	PDataRecordingInstance pOldRecording;
 
-	if (m_pCurrentDataRecording.get() != nullptr) {
+	{
+		std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
 
-		auto pOldRecording = m_pCurrentDataRecording;
+		if (m_pCurrentDataRecording.get() == nullptr)
+			throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_NODATARECORDINGAVAILABLE);
+
+		pOldRecording = m_pCurrentDataRecording;
 		m_pCurrentDataRecording = nullptr;
 		m_pCurrentDataRecording = pOldRecording->createEmptyDuplicate();
-
-		std::cout << "OIE-DIAG retrieve: records=" << pOldRecording->getRecordCount()
-			<< " callbacks=" << m_nPacketCallbackCounter.load()
-			<< " recorded=" << m_nPacketRecordedCounter.load()
-			<< " skipped=" << m_nPacketSkippedCounter.load()
-			<< " skipCounter=" << m_nPacketReceiveSkipCounter
-			<< std::endl;
-
-		return pOldRecording;
-	}
-	else {
-		throw ELibMCDriver_ScanLabOIEInterfaceException(LIBMCDRIVER_SCANLABOIE_ERROR_NODATARECORDINGAVAILABLE);
 	}
 
+	// Outside of the recording lock: the log goes to the database of the server.
+	reportDiagnosticsIncrease();
 
+	return pOldRecording;
 }
 
 
 
 void COIEDeviceInstance::ClearCurrentRecording()
 {
-	std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
-	if (m_pCurrentDataRecording.get() != nullptr) {
+	std::string sSummary;
+
+	{
+		std::lock_guard<std::mutex> lockGuard(m_RecordingMutex);
+		if (m_pCurrentDataRecording.get() == nullptr)
+			return;
+
 		auto pOldRecording = m_pCurrentDataRecording;
 		m_pCurrentDataRecording = nullptr;
 		m_pCurrentDataRecording = pOldRecording->createEmptyDuplicate();
+
+		// The summary describes the time since the previous clear, i.e. the previous layer: the
+		// driver does not know when a layer ends. The packets that were not retrieved arrived
+		// after the last retrieval of that layer, normally during the pause between the layers.
+		sSummary = "OIE device " + m_sDeviceName + ": recording cleared, " + std::to_string(pOldRecording->getRecordCount())
+			+ " packets not retrieved; since the previous clear: " + std::to_string(m_nPacketCallbackCounter.load()) + " packets ("
+			+ std::to_string(m_nPacketRecordedCounter.load()) + " recorded, " + std::to_string(m_nPacketSkippedCounter.load()) + " skipped), "
+			+ describeDiagnostics() + ", last measurement tag " + std::to_string(n_LastReceivedMeasurementTag.load()) + ".";
 
 		n_LastReceivedMeasurementTag = 0;
 		m_nPacketReceiveCounter = 0;
@@ -961,7 +981,111 @@ void COIEDeviceInstance::ClearCurrentRecording()
 		m_nPacketRecordedCounter = 0;
 		m_nPacketSkippedCounter = 0;
 
+		std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+		resetDiagnostics();
 	}
+
+	logDriverMessage(sSummary);
+}
+
+void COIEDeviceInstance::resetDiagnostics()
+{
+	// Called under m_DiagnosticsMutex.
+	m_nXYFallbackCount = 0;
+	m_nSignalCountMismatchCount = 0;
+	m_nPacketExceptionCount = 0;
+	m_nPacketUnknownExceptionCount = 0;
+	m_nErrorEventCount = 0;
+	m_FirstXYFallback = sFirstPacketIssue();
+	m_FirstPacketException = sFirstPacketIssue();
+	m_FirstSignalCountMismatch = sFirstSignalCountMismatch();
+	m_nFirstErrorEventCode = 0;
+	m_nFirstErrorEventValue = 0;
+	m_nLastErrorEventCode = 0;
+	m_nLastErrorEventValue = 0;
+	m_nReportedXYFallbacks = 0;
+	m_nReportedSignalCountMismatches = 0;
+	m_nReportedPacketExceptions = 0;
+	m_nReportedPacketUnknownExceptions = 0;
+	m_nReportedErrorEvents = 0;
+}
+
+std::string COIEDeviceInstance::describeDiagnostics()
+{
+	std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+	return std::to_string(m_nXYFallbackCount.load()) + " xy fallbacks, " + std::to_string(m_nSignalCountMismatchCount.load()) + " signal-count mismatches, "
+		+ std::to_string(m_nPacketExceptionCount.load() + m_nPacketUnknownExceptionCount.load()) + " packet exceptions, "
+		+ std::to_string(m_nErrorEventCount.load()) + " error events";
+}
+
+void COIEDeviceInstance::reportDiagnosticsIncrease()
+{
+	if (m_pDriverEnvironment.get() == nullptr)
+		return;
+
+	std::vector<std::string> warnings;
+
+	{
+		std::lock_guard<std::mutex> diagnosticsLock(m_DiagnosticsMutex);
+		std::string sPrefix = "OIE device " + m_sDeviceName + ": ";
+
+		uint64_t nXYFallbacks = m_nXYFallbackCount.load();
+		if (nXYFallbacks > m_nReportedXYFallbacks) {
+			warnings.push_back(sPrefix + std::to_string(nXYFallbacks - m_nReportedXYFallbacks) + " xy fallbacks since the last report, first at packet "
+				+ std::to_string(m_FirstXYFallback.m_nPacket) + " (tag " + std::to_string(m_FirstXYFallback.m_nTag) + "): " + m_FirstXYFallback.m_sText + ".");
+			m_nReportedXYFallbacks = nXYFallbacks;
+		}
+
+		uint64_t nMismatches = m_nSignalCountMismatchCount.load();
+		if (nMismatches > m_nReportedSignalCountMismatches) {
+			warnings.push_back(sPrefix + std::to_string(nMismatches - m_nReportedSignalCountMismatches) + " signal-count mismatches since the last report, first at packet "
+				+ std::to_string(m_FirstSignalCountMismatch.m_nPacket) + " (tag " + std::to_string(m_FirstSignalCountMismatch.m_nTag) + "): expected sensor/rtc/additional "
+				+ std::to_string(m_FirstSignalCountMismatch.m_nExpected[0]) + "/" + std::to_string(m_FirstSignalCountMismatch.m_nExpected[1]) + "/" + std::to_string(m_FirstSignalCountMismatch.m_nExpected[2])
+				+ ", got " + std::to_string(m_FirstSignalCountMismatch.m_nGot[0]) + "/" + std::to_string(m_FirstSignalCountMismatch.m_nGot[1]) + "/" + std::to_string(m_FirstSignalCountMismatch.m_nGot[2]) + ".");
+			m_nReportedSignalCountMismatches = nMismatches;
+		}
+
+		uint64_t nExceptions = m_nPacketExceptionCount.load();
+		if (nExceptions > m_nReportedPacketExceptions) {
+			warnings.push_back(sPrefix + std::to_string(nExceptions - m_nReportedPacketExceptions) + " packet callbacks failed since the last report, first: " + m_FirstPacketException.m_sText + ".");
+			m_nReportedPacketExceptions = nExceptions;
+		}
+
+		uint64_t nUnknownExceptions = m_nPacketUnknownExceptionCount.load();
+		if (nUnknownExceptions > m_nReportedPacketUnknownExceptions) {
+			warnings.push_back(sPrefix + std::to_string(nUnknownExceptions - m_nReportedPacketUnknownExceptions) + " packet callbacks failed with an unknown exception since the last report.");
+			m_nReportedPacketUnknownExceptions = nUnknownExceptions;
+		}
+
+		uint64_t nErrorEvents = m_nErrorEventCount.load();
+		if (nErrorEvents > m_nReportedErrorEvents) {
+			warnings.push_back(sPrefix + std::to_string(nErrorEvents - m_nReportedErrorEvents) + " error events since the last report, first error "
+				+ std::to_string(m_nFirstErrorEventCode.load()) + " (value " + std::to_string(m_nFirstErrorEventValue.load()) + "), last error "
+				+ std::to_string(m_nLastErrorEventCode.load()) + " (value " + std::to_string(m_nLastErrorEventValue.load()) + ").");
+			m_nReportedErrorEvents = nErrorEvents;
+		}
+	}
+
+	for (auto& sWarning : warnings)
+		logDriverWarning(sWarning);
+}
+
+void COIEDeviceInstance::logDriverMessage(const std::string& sMessage)
+{
+	if (m_pDriverEnvironment.get() != nullptr)
+		m_pDriverEnvironment->LogMessage(sMessage);
+}
+
+void COIEDeviceInstance::logDriverWarning(const std::string& sMessage)
+{
+	if (m_pDriverEnvironment.get() != nullptr)
+		m_pDriverEnvironment->LogWarning(sMessage);
+}
+
+void COIEDeviceInstance::logDriverInfo(const std::string& sMessage)
+{
+	if (m_pDriverEnvironment.get() != nullptr)
+		m_pDriverEnvironment->LogInfo(sMessage);
 }
 
 
