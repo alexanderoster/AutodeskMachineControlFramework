@@ -178,6 +178,8 @@ public:
 
     static std::string convertBuildJobStatusToString(const LibMCData::eBuildJobStatus eStatus);
     static LibMCData::eBuildJobStatus convertStringToBuildJobStatus(const std::string& sValue);
+    // True unless the (normalized) thumbnail stream UUID is the empty UUID.
+    static bool thumbnailStreamUUIDIsSet(const std::string& sThumbnailStreamUUID);
 
     
 
