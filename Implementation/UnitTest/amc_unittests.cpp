@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_xmldocumentnode.hpp"
 #include "amc_unittests_xmldocumentattribute.hpp"
 #include "amc_unittests_xmldocumentnamespace.hpp"
+#include "amc_unittests_xmlattributerange.hpp"
 
 #include "amc_unittests_accesscontrol.hpp"
 #include "amc_unittests_accessrole.hpp"
@@ -89,6 +90,7 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_XMLDocumentNode>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_XMLDocumentAttribute>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_XMLDocumentNamespace>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_XMLAttributeRange>());
 
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessControl>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessRole>());
