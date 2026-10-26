@@ -107,18 +107,18 @@ bool CXMLDocumentAttribute::IsValidInteger(const LibMCEnv_int64 nMinValue, const
 LibMCEnv_int64 CXMLDocumentAttribute::GetIntegerValue(const LibMCEnv_int64 nMinValue, const LibMCEnv_int64 nMaxValue)
 {
 	std::string sValue = m_pAttributeInstance->getValue();
+	int64_t nValue;
 	try {
-		int64_t nValue = std::stoll(sValue);
-
-		if ((nValue < nMinValue) && (nValue > nMaxValue))
-			throw ELibMCCustomException(LIBMCENV_ERROR_INTEGERVALUEATTRIBUTEOUTOFRANGE, sValue);
-
-		return nValue;
-
+		nValue = std::stoll(sValue);
 	}
 	catch (...) {
 		throw ELibMCCustomException(LIBMCENV_ERROR_INVALIDINTEGERVALUEATTRIBUTE, sValue);
 	}
+
+	if ((nValue < nMinValue) || (nValue > nMaxValue))
+		throw ELibMCCustomException(LIBMCENV_ERROR_INTEGERVALUEATTRIBUTEOUTOFRANGE, sValue);
+
+	return nValue;
 }
 
 bool CXMLDocumentAttribute::IsValidDouble(const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue)
@@ -137,18 +137,18 @@ bool CXMLDocumentAttribute::IsValidDouble(const LibMCEnv_double dMinValue, const
 LibMCEnv_double CXMLDocumentAttribute::GetDoubleValue(const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue)
 {
 	std::string sValue = m_pAttributeInstance->getValue();
+	double dValue;
 	try {
-		double dValue = std::stod(sValue);
-
-		if ((dValue < dMinValue) && (dValue > dMaxValue))
-			throw ELibMCCustomException(LIBMCENV_ERROR_DOUBLEVALUEATTRIBUTEOUTOFRANGE, sValue);
-
-		return dValue;
-
+		dValue = std::stod(sValue);
 	}
 	catch (...) {
 		throw ELibMCCustomException(LIBMCENV_ERROR_INVALIDDOUBLEVALUEATTRIBUTE, sValue);
 	}
+
+	if ((dValue < dMinValue) || (dValue > dMaxValue))
+		throw ELibMCCustomException(LIBMCENV_ERROR_DOUBLEVALUEATTRIBUTEOUTOFRANGE, sValue);
+
+	return dValue;
 }
 
 bool CXMLDocumentAttribute::IsValidBool()
