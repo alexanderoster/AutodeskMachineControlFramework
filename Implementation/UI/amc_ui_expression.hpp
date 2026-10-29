@@ -33,9 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __AMC_UI_EXPRESSION
 
 #include "header_protection.hpp"
+#include "amc_parametertype.hpp"
+#include "amc_ui_formula.hpp"
 
+#include <exception>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <pugixml.hpp>
 
@@ -63,8 +67,16 @@ namespace AMC {
 		virtual bool evaluateSessionReferenceAsBool(const std::string& sReference) = 0;
 		virtual int64_t evaluateSessionReferenceAsInteger(const std::string& sReference) = 0;
 		virtual double evaluateSessionReferenceAsNumber(const std::string& sReference) = 0;
+
+		// Used by formulas to pick the value type of a session reference.
+		virtual eParameterDataType getSessionReferenceDataType(const std::string&)
+		{
+			return eParameterDataType::String;
+		}
 	};
 
+	// Sync values are formulas. A formula that is a single (optionally negated) reference is evaluated
+	// directly; any other formula is compiled once and evaluated with fail-soft semantics.
 	class CUIExpression {
 	private:
 		std::string m_sFixedValue;
@@ -72,9 +84,17 @@ namespace AMC {
 
 		std::string m_sFormatString;
 
+		PUIFormula m_pFormula;
+		bool m_bHasSessionReferences;
+
 		void readFromXML(const pugi::xml_node& xmlNode, const std::string& attributeName, const std::string& defaultValue, bool bValueMustExist);
 
+		void compileSyncValue();
+
 		std::string evaluateValueEx(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext);
+
+		CUIFormulaValue evaluateFormula(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext);
+		void reportFormulaError(CStateMachineData* pStateMachineData, const std::exception& error);
 	public:
 
 		// Returns true if the (trimmed, non-inverted) reference is resolved by a session context
@@ -109,9 +129,18 @@ namespace AMC {
 		bool isEmpty(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext = nullptr);
 		bool isEmpty(PStateMachineData pStateMachineData, CUIExpressionSessionContext* pSessionContext = nullptr);
 
-		// Returns the session reference of a sync expression (without a leading "!"),
+		// Returns the first session reference of a sync expression (without a leading "!"),
 		// or an empty string if the expression does not reference the session.
 		std::string getSessionReference();
+
+		// Appends all session references of a sync expression.
+		void getSessionReferences(std::vector<std::string>& references);
+
+		// True if the value can differ between client sessions.
+		bool hasSessionReferences();
+
+		// True if the sync value is a formula other than a single reference.
+		bool isFormula();
 
 	};
 	

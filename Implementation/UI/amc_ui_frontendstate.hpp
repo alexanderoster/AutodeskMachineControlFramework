@@ -114,6 +114,7 @@ namespace AMC {
 		virtual bool evaluateSessionReferenceAsBool(const std::string& sReference) override;
 		virtual int64_t evaluateSessionReferenceAsInteger(const std::string& sReference) override;
 		virtual double evaluateSessionReferenceAsNumber(const std::string& sReference) override;
+		virtual eParameterDataType getSessionReferenceDataType(const std::string& sReference) override;
 
 		// Throws if a session reference is malformed, refers to an undeclared session variable or an unknown permission.
 		static void validateSessionReference(const std::string& sReference, CUIFrontendDefinition* pFrontendDefinition, CAccessControl* pAccessControl);

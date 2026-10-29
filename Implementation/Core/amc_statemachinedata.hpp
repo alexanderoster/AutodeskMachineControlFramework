@@ -47,6 +47,7 @@ namespace AMC {
 	class CStateMachineData;
 	typedef std::shared_ptr<CStateMachineData> PStateMachineData;
 
+	typedef std::function<void(const std::string& sMessage)> StateMachineDataWarningHandler;
 
 	class CStateMachineData {
 	private:
@@ -57,6 +58,8 @@ namespace AMC {
 
 		PFrontendChangeCounter m_pFrontendChangeCounter;
 
+		StateMachineDataWarningHandler m_WarningHandler;
+
 		std::mutex m_Mutex;
 		
 	public:
@@ -66,6 +69,10 @@ namespace AMC {
 
 		// Bumped by state changes and by the parameter groups the frontend displays.
 		PFrontendChangeCounter getFrontendChangeCounter();
+
+		// Receives warnings of consumers that must not fail, e.g. UI formulas that cannot be evaluated.
+		void setWarningHandler(StateMachineDataWarningHandler warningHandler);
+		void reportWarning(const std::string& sMessage);
 
 		void registerParameterHandler (const std::string & sInstanceName, PParameterHandler pParameterHandler, AMCCommon::PChrono pChrono);
 		PParameterHandler getParameterHandler (const std::string& sInstanceName);

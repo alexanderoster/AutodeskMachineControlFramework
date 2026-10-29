@@ -298,16 +298,10 @@ void CUIHandler::validateSessionReferences()
     for (auto& pDialog : m_Dialogs)
         pDialog.second->collectSessionReferences(references);
 
-    for (auto& pMenuItem : m_MenuItems) {
-        std::string sReference = pMenuItem->getVisibleExpression().getSessionReference();
-        if (!sReference.empty())
-            references.push_back(sReference);
-    }
-    for (auto& pToolbarItem : m_ToolbarItems) {
-        std::string sReference = pToolbarItem->getVisibleExpression().getSessionReference();
-        if (!sReference.empty())
-            references.push_back(sReference);
-    }
+    for (auto& pMenuItem : m_MenuItems)
+        pMenuItem->getVisibleExpression().getSessionReferences(references);
+    for (auto& pToolbarItem : m_ToolbarItems)
+        pToolbarItem->getVisibleExpression().getSessionReferences(references);
 
     auto pAccessControl = m_pUISystemState->getAccessControl();
     for (auto& sReference : references)

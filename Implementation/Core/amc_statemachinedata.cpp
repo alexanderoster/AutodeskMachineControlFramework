@@ -53,6 +53,24 @@ namespace AMC {
 		return m_pFrontendChangeCounter;
 	}
 
+	void CStateMachineData::setWarningHandler(StateMachineDataWarningHandler warningHandler)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		m_WarningHandler = warningHandler;
+	}
+
+	void CStateMachineData::reportWarning(const std::string& sMessage)
+	{
+		StateMachineDataWarningHandler warningHandler;
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			warningHandler = m_WarningHandler;
+		}
+
+		if (warningHandler)
+			warningHandler(sMessage);
+	}
+
 
 	void CStateMachineData::registerParameterHandler(const std::string& sInstanceName, PParameterHandler pParameterHandler, AMCCommon::PChrono pGlobalChrono)
 	{

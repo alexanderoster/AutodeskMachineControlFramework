@@ -260,6 +260,19 @@ double CUIFrontendState::evaluateSessionReferenceAsNumber(const std::string& sRe
 	return evaluateSessionReferenceAsBool(sReference) ? 1.0 : 0.0;
 }
 
+eParameterDataType CUIFrontendState::getSessionReferenceDataType(const std::string& sReference)
+{
+	if (sReference.rfind(AMC_UI_SESSIONREFERENCE_VARIABLEPREFIX, 0) == 0) {
+		std::string sName = sReference.substr(std::string(AMC_UI_SESSIONREFERENCE_VARIABLEPREFIX).length());
+		return findSessionVariableGroup(sName)->getParameterDataTypeByName(sName);
+	}
+
+	if (sReference.rfind(AMC_UI_SESSIONREFERENCE_PERMISSIONPREFIX, 0) == 0)
+		return eParameterDataType::Bool;
+
+	return eParameterDataType::String;
+}
+
 void CUIFrontendState::validateSessionReference(const std::string& sReference, CUIFrontendDefinition* pFrontendDefinition, CAccessControl* pAccessControl)
 {
 	LibMCAssertNotNull(pFrontendDefinition);

@@ -116,9 +116,8 @@ eUIFrontendDefinitionAttributeType CUIFrontendDefinitionAttribute::getAttributeT
 	return m_AttributeType;
 }
 
-std::string CUIFrontendDefinitionAttribute::getSessionReference()
+void CUIFrontendDefinitionAttribute::collectSessionReferences(std::vector<std::string>& references)
 {
-	return "";
 }
 
 CUIFrontendDefinitionExpressionAttribute::CUIFrontendDefinitionExpressionAttribute(const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression& valueExpression)
@@ -169,14 +168,14 @@ void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& 
 	}
 }
 
-std::string CUIFrontendDefinitionExpressionAttribute::getSessionReference()
+void CUIFrontendDefinitionExpressionAttribute::collectSessionReferences(std::vector<std::string>& references)
 {
-	return m_ValueExpression.getSessionReference();
+	m_ValueExpression.getSessionReferences(references);
 }
 
 bool CUIFrontendDefinitionExpressionAttribute::isSessionScoped()
 {
-	return !m_ValueExpression.getSessionReference().empty();
+	return m_ValueExpression.hasSessionReferences();
 }
 
 
@@ -336,11 +335,8 @@ std::string CUIFrontendDefinitionModuleStore::getPath()
 
 void CUIFrontendDefinitionModuleStore::collectSessionReferences(std::vector<std::string>& references)
 {
-	for (auto& attributePair : m_Attributes) {
-		std::string sReference = attributePair.second->getSessionReference();
-		if (!sReference.empty())
-			references.push_back(sReference);
-	}
+	for (auto& attributePair : m_Attributes)
+		attributePair.second->collectSessionReferences(references);
 }
 
 

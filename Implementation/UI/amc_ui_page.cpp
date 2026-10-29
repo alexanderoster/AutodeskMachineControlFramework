@@ -233,10 +233,7 @@ bool CUIPage::isVisible(CUIFrontendState* pFrontendState, CStateMachineData* pSt
 
 void CUIPage::collectSessionReferences(std::vector<std::string>& references)
 {
-	for (auto pExpression : { &m_Icon, &m_Caption, &m_Description, &m_Visible }) {
-		std::string sReference = pExpression->getSessionReference();
-		if (!sReference.empty())
-			references.push_back(sReference);
-	}
+	for (auto pExpression : { &m_Icon, &m_Caption, &m_Description, &m_Visible })
+		pExpression->getSessionReferences(references);
 }
 

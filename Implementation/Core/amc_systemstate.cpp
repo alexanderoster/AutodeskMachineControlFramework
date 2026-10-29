@@ -100,6 +100,10 @@ namespace AMC {
 		m_pToolpathHandler = std::make_shared<CToolpathHandler>(m_pDataModel);
 		m_pStreamRegistry = std::make_shared<CStreamRegistry>();
 		m_pStateMachineData = std::make_shared<CStateMachineData>();
+		PLogger pWarningLogger = m_pLogger;
+		m_pStateMachineData->setWarningHandler([pWarningLogger](const std::string& sMessage) {
+			pWarningLogger->logMessage(sMessage, "ui", eLogLevel::Warning);
+		});
 		m_pDriverHandler = std::make_shared<CDriverHandler>(pEnvWrapper, m_pToolpathHandler, m_pMeshHandler, m_pLogger, m_pDataModel, m_pGlobalChrono, m_pStateJournal, m_pTelemetryHandler, m_pStreamRegistry, m_pStateMachineData->getFrontendChangeCounter());
 		m_pSignalHandler = std::make_shared<CStateSignalHandler>(m_pTelemetryHandler);
 		m_pLanguageHandler = std::make_shared<CLanguageHandler>();

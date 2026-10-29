@@ -37,27 +37,93 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
+namespace AMC {
+
+	class CUIExpressionFormulaResolver : public CUIFormulaResolver {
+	private:
+		CStateMachineData* m_pStateMachineData;
+		CUIExpressionSessionContext* m_pSessionContext;
+
+	public:
+
+		CUIExpressionFormulaResolver(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
+			: m_pStateMachineData(pStateMachineData), m_pSessionContext(pSessionContext)
+		{
+		}
+
+		CUIFormulaValue resolveReference(const sUIFormulaReference& reference) override
+		{
+			switch (reference.m_Type) {
+			case eUIFormulaReferenceType::Session: {
+				if (m_pSessionContext == nullptr)
+					return CUIFormulaValue::fromString("");
+
+				switch (m_pSessionContext->getSessionReferenceDataType(reference.m_sPath)) {
+				case eParameterDataType::Bool:
+					return CUIFormulaValue::fromBool(m_pSessionContext->evaluateSessionReferenceAsBool(reference.m_sPath));
+				case eParameterDataType::Integer:
+					return CUIFormulaValue::fromInteger(m_pSessionContext->evaluateSessionReferenceAsInteger(reference.m_sPath));
+				case eParameterDataType::Double:
+					return CUIFormulaValue::fromDouble(m_pSessionContext->evaluateSessionReferenceAsNumber(reference.m_sPath));
+				default:
+					return CUIFormulaValue::fromString(m_pSessionContext->evaluateSessionReference(reference.m_sPath));
+				}
+			}
+
+			case eUIFormulaReferenceType::StateName:
+				LibMCAssertNotNull(m_pStateMachineData);
+				return CUIFormulaValue::fromString(m_pStateMachineData->getInstanceStateName(reference.m_sInstanceName));
+
+			case eUIFormulaReferenceType::Parameter: {
+				LibMCAssertNotNull(m_pStateMachineData);
+				auto pParameterGroup = m_pStateMachineData->getParameterHandler(reference.m_sInstanceName)->findGroup(reference.m_sGroupName, true);
+
+				switch (pParameterGroup->getParameterDataTypeByName(reference.m_sParameterName)) {
+				case eParameterDataType::Bool:
+					return CUIFormulaValue::fromBool(pParameterGroup->getBoolParameterValueByName(reference.m_sParameterName));
+				case eParameterDataType::Integer:
+					return CUIFormulaValue::fromInteger(pParameterGroup->getIntParameterValueByName(reference.m_sParameterName));
+				case eParameterDataType::Double:
+					return CUIFormulaValue::fromDouble(pParameterGroup->getDoubleParameterValueByName(reference.m_sParameterName));
+				default:
+					return CUIFormulaValue::fromString(pParameterGroup->getParameterValueByName(reference.m_sParameterName));
+				}
+			}
+
+			default:
+				throw ELibMCCustomException(LIBMC_ERROR_INVALIDEXPRESSIONVALUE, reference.m_sPath);
+			}
+		}
+	};
+
+}
+
 CUIExpression::CUIExpression()
+	: m_bHasSessionReferences(false)
 {
 
 }
 
 CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& attributeName, bool bValueMustExist)
+	: m_bHasSessionReferences(false)
 {
 	readFromXML(xmlNode, attributeName, "", bValueMustExist);
 }
 
 CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& attributeName)
+	: m_bHasSessionReferences(false)
 {
 	readFromXML(xmlNode, attributeName, "", false);
 }
 
 CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& attributeName, const std::string& defaultValue)
+	: m_bHasSessionReferences(false)
 {
 	readFromXML(xmlNode, attributeName, defaultValue, false);
 }
 
 CUIExpression::CUIExpression(const pugi::xml_node& xmlNode, const std::string& attributeName, const char* defaultValue)
+	: m_bHasSessionReferences(false)
 {
 	readFromXML(xmlNode, attributeName, (defaultValue != nullptr) ? defaultValue : "", false);
 }
@@ -66,12 +132,53 @@ void CUIExpression::setFixedValue(const std::string& sValue)
 {
 	m_sFixedValue = sValue;
 	m_sExpressionValue = "";
+	compileSyncValue();
 }
 
 void CUIExpression::setSyncValue(const std::string& sValue)
 {
 	m_sExpressionValue = sValue;
 	m_sFixedValue = "";
+	compileSyncValue();
+}
+
+void CUIExpression::compileSyncValue()
+{
+	m_pFormula = nullptr;
+	m_bHasSessionReferences = false;
+
+	if (AMCCommon::CUtils::trimString(m_sExpressionValue).empty())
+		return;
+
+	auto pFormula = std::make_shared<CUIFormula>(m_sExpressionValue);
+
+	bool bIsNegated = false;
+	if (pFormula->isSingleReference(bIsNegated)) {
+		auto& reference = pFormula->getReferences().at(0);
+		m_sExpressionValue = (bIsNegated ? "!" : "") + reference.m_sPath;
+		m_bHasSessionReferences = (reference.m_Type == eUIFormulaReferenceType::Session);
+	}
+	else {
+		m_pFormula = pFormula;
+		for (auto& reference : pFormula->getReferences()) {
+			if (reference.m_Type == eUIFormulaReferenceType::Session)
+				m_bHasSessionReferences = true;
+		}
+	}
+}
+
+CUIFormulaValue CUIExpression::evaluateFormula(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
+{
+	LibMCAssertNotNull(m_pFormula.get());
+
+	CUIExpressionFormulaResolver resolver(pStateMachineData, pSessionContext);
+	return m_pFormula->evaluate(&resolver);
+}
+
+void CUIExpression::reportFormulaError(CStateMachineData* pStateMachineData, const std::exception& error)
+{
+	if ((pStateMachineData != nullptr) && (m_pFormula.get() != nullptr) && m_pFormula->markRuntimeErrorReported())
+		pStateMachineData->reportWarning("UI formula \"" + m_pFormula->getFormula() + "\" could not be evaluated: " + error.what() + ". Further errors of this formula are not logged.");
 }
 
 void CUIExpression::readFromXML(const pugi::xml_node& xmlNode, const std::string& attributeName, const std::string& defaultValue, bool bValueMustExist)
@@ -89,6 +196,7 @@ void CUIExpression::readFromXML(const pugi::xml_node& xmlNode, const std::string
 
 	if (!sSyncValue.empty()) {
 		m_sExpressionValue = sSyncValue;
+		compileSyncValue();
 	}
 	else {
 		if (!valueAttrib.empty()) {
@@ -111,6 +219,14 @@ bool CUIExpression::isSessionReference(const std::string& sReference)
 
 std::string CUIExpression::getSessionReference()
 {
+	if (m_pFormula.get() != nullptr) {
+		for (auto& reference : m_pFormula->getReferences()) {
+			if (reference.m_Type == eUIFormulaReferenceType::Session)
+				return reference.m_sPath;
+		}
+		return "";
+	}
+
 	std::string sReference = AMCCommon::CUtils::trimString(m_sExpressionValue);
 	if ((!sReference.empty()) && (sReference.at(0) == '!'))
 		sReference = AMCCommon::CUtils::trimString(sReference.substr(1));
@@ -121,8 +237,43 @@ std::string CUIExpression::getSessionReference()
 	return "";
 }
 
+void CUIExpression::getSessionReferences(std::vector<std::string>& references)
+{
+	if (m_pFormula.get() != nullptr) {
+		for (auto& reference : m_pFormula->getReferences()) {
+			if (reference.m_Type == eUIFormulaReferenceType::Session)
+				references.push_back(reference.m_sPath);
+		}
+		return;
+	}
+
+	std::string sReference = getSessionReference();
+	if (!sReference.empty())
+		references.push_back(sReference);
+}
+
+bool CUIExpression::hasSessionReferences()
+{
+	return m_bHasSessionReferences;
+}
+
+bool CUIExpression::isFormula()
+{
+	return (m_pFormula.get() != nullptr);
+}
+
 std::string CUIExpression::evaluateValueEx(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
 {
+	if (m_pFormula.get() != nullptr) {
+		try {
+			return evaluateFormula(pStateMachineData, pSessionContext).toString();
+		}
+		catch (std::exception& error) {
+			reportFormulaError(pStateMachineData, error);
+			return "";
+		}
+	}
+
 	if (!m_sExpressionValue.empty()) {
 		std::string sSessionReference = AMCCommon::CUtils::trimString(m_sExpressionValue);
 		if (isSessionReference(sSessionReference)) {
@@ -247,6 +398,16 @@ std::string CUIExpression::evaluateStringValue(PStateMachineData pStateMachineDa
 
 double CUIExpression::evaluateNumberValue(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
 {
+	if (m_pFormula.get() != nullptr) {
+		try {
+			return evaluateFormula(pStateMachineData, pSessionContext).toDouble();
+		}
+		catch (std::exception& error) {
+			reportFormulaError(pStateMachineData, error);
+			return 0.0;
+		}
+	}
+
 	if (!m_sExpressionValue.empty()) {
 		std::string sSessionReference = AMCCommon::CUtils::trimString(m_sExpressionValue);
 		if (isSessionReference(sSessionReference)) {
@@ -289,6 +450,16 @@ double CUIExpression::evaluateNumberValue(PStateMachineData pStateMachineData, C
 
 int64_t CUIExpression::evaluateIntegerValue(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
 {
+	if (m_pFormula.get() != nullptr) {
+		try {
+			return evaluateFormula(pStateMachineData, pSessionContext).toInteger();
+		}
+		catch (std::exception& error) {
+			reportFormulaError(pStateMachineData, error);
+			return 0;
+		}
+	}
+
 	if (!m_sExpressionValue.empty()) {
 		std::string sSessionReference = AMCCommon::CUtils::trimString(m_sExpressionValue);
 		if (isSessionReference(sSessionReference)) {
@@ -331,6 +502,16 @@ int64_t CUIExpression::evaluateIntegerValue(PStateMachineData pStateMachineData,
 
 bool CUIExpression::evaluateBoolValue(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
 {
+	if (m_pFormula.get() != nullptr) {
+		try {
+			return evaluateFormula(pStateMachineData, pSessionContext).toBool();
+		}
+		catch (std::exception& error) {
+			reportFormulaError(pStateMachineData, error);
+			return false;
+		}
+	}
+
 	if (!m_sExpressionValue.empty()) {
 		std::string sTrimmedExpression = AMCCommon::CUtils::trimString(m_sExpressionValue);
 
@@ -436,6 +617,19 @@ std::string CUIExpression::evaluateUUIDValue(PStateMachineData pStateMachineData
 
 void CUIExpression::checkExpressionSyntax(CStateMachineData* pStateMachineData)
 {
+	if (m_pFormula.get() != nullptr) {
+		LibMCAssertNotNull(pStateMachineData);
+
+		CUIExpressionFormulaResolver resolver(pStateMachineData, nullptr);
+		for (auto& reference : m_pFormula->getReferences()) {
+			if (reference.m_Type == eUIFormulaReferenceType::StateName)
+				pStateMachineData->getParameterHandler(reference.m_sInstanceName);
+			else if (reference.m_Type == eUIFormulaReferenceType::Parameter)
+				resolver.resolveReference(reference);
+		}
+		return;
+	}
+
 	// Session references are validated against the declared session variables after the UI is loaded.
 	if (!getSessionReference().empty())
 		return;

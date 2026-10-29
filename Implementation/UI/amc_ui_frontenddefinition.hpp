@@ -117,8 +117,8 @@ namespace AMC {
 		// result is shared by all sessions.
 		void writeToFrontendJSONForEpoch(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData, CUIFrontendState* pFrontendState, const sUIFrontendBuildEpoch& epoch);
 
-		// Returns the session reference of the attribute value, or an empty string.
-		virtual std::string getSessionReference();
+		// Appends the session references of the attribute value.
+		virtual void collectSessionReferences(std::vector<std::string>& references);
 
 		// Returns true if the value can differ between client sessions.
 		virtual bool isSessionScoped() = 0;
@@ -139,7 +139,7 @@ namespace AMC {
 
 		virtual void writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData * pStateMachineData, CUIFrontendState* pFrontendState) override;
 
-		virtual std::string getSessionReference() override;
+		virtual void collectSessionReferences(std::vector<std::string>& references) override;
 
 		virtual bool isSessionScoped() override;
 
