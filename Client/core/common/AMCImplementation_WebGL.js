@@ -155,6 +155,8 @@ class WebGLLinesElement extends WebGLElement {
 		const colors = [];
 
         const lineCount = lineData.length / 4;
+		// Vertex count after each input line; degenerate lines add no vertices.
+		this.vertexEndOfLine = new Uint32Array (lineCount);
 
         for (let i = 0; i < lineCount; i++) {
 
@@ -187,6 +189,8 @@ class WebGLLinesElement extends WebGLElement {
 					}
 				}
             }
+
+			this.vertexEndOfLine[i] = positions.length / 3;
         }
 
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -197,6 +201,15 @@ class WebGLLinesElement extends WebGLElement {
 
         this.glelement = new THREE.Mesh(geometry, material);
     }
+
+	// Only the first lineCount input lines are rendered.
+	setVisibleLineCount (lineCount) {
+		if (!this.glelement)
+			return;
+		const count = Math.min (Math.max (Math.floor (lineCount), 0), this.vertexEndOfLine.length);
+		const vertexCount = (count > 0) ? this.vertexEndOfLine[count - 1] : 0;
+		this.glelement.geometry.setDrawRange (0, vertexCount);
+	}
 	
 	intersectRay (mouseX, mouseY, raycaster) {
 		if (!raycaster)
@@ -468,6 +481,178 @@ class WebGLLocalizedPointsElement extends WebGLElement {
 
 	}
 
+}
+
+
+const SCREENPOINTS_VERTEXSHADER = `
+	uniform float uPointSize;
+	attribute vec3 pointColor;
+	varying vec3 vColor;
+	void main() {
+		vColor = pointColor;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		gl_PointSize = uPointSize;
+	}
+`;
+
+// Round points with a one pixel wide smooth edge.
+const SCREENPOINTS_FRAGMENTSHADER = `
+	uniform float uPointSize;
+	varying vec3 vColor;
+	void main() {
+		float radius = length(gl_PointCoord * 2.0 - 1.0);
+		float edgeWidth = 2.0 / max(uPointSize, 1.0);
+		float alpha = 1.0 - smoothstep(1.0 - edgeWidth, 1.0, radius);
+		if (alpha <= 0.0)
+			discard;
+		gl_FragColor = vec4(vColor, alpha);
+	}
+`;
+
+const SCREENPOINTS_GRIDRESOLUTION = 256;
+
+// Points with a constant on-screen size in pixels, independent of the element scale.
+// Colours are 0xRRGGBB values written to the framebuffer unchanged.
+class WebGLScreenPointsElement extends WebGLElement {
+
+	constructor(pointsData, zValue, pointPixelSize, pointsColor, vertexcolors) {
+		super();
+
+		this.pointsData = pointsData;
+		this.pointCount = Math.floor (pointsData.length / 2);
+		this.drawCount = this.pointCount;
+		this.pointPixelSize = pointPixelSize;
+
+		const positions = new Float32Array (this.pointCount * 3);
+		const colors = new Float32Array (this.pointCount * 3);
+		for (let i = 0; i < this.pointCount; i++) {
+			positions[i * 3] = pointsData[i * 2];
+			positions[i * 3 + 1] = pointsData[i * 2 + 1];
+			positions[i * 3 + 2] = zValue;
+
+			const color = (vertexcolors && (vertexcolors[i] !== undefined)) ? vertexcolors[i] : pointsColor;
+			colors[i * 3] = ((color >> 16) & 255) / 255.0;
+			colors[i * 3 + 1] = ((color >> 8) & 255) / 255.0;
+			colors[i * 3 + 2] = (color & 255) / 255.0;
+		}
+
+		this.geometry = new THREE.BufferGeometry();
+		this.geometry.setAttribute ('position', new THREE.BufferAttribute (positions, 3));
+		this.geometry.setAttribute ('pointColor', new THREE.BufferAttribute (colors, 3));
+		this.geometry.computeBoundingSphere ();
+
+		this.material = new THREE.ShaderMaterial ({
+			uniforms: { uPointSize: { value: pointPixelSize } },
+			vertexShader: SCREENPOINTS_VERTEXSHADER,
+			fragmentShader: SCREENPOINTS_FRAGMENTSHADER,
+			transparent: true,
+			depthWrite: false
+		});
+
+		this.glelement = new THREE.Points (this.geometry, this.material);
+		this.glelement.frustumCulled = false;
+
+		this.buildSpatialGrid ();
+	}
+
+	setPointPixelSize (pointPixelSize) {
+		this.pointPixelSize = pointPixelSize;
+		this.material.uniforms.uPointSize.value = pointPixelSize;
+	}
+
+	// Only the first drawCount points are rendered and pickable.
+	setDrawCount (drawCount) {
+		this.drawCount = Math.min (Math.max (Math.floor (drawCount), 0), this.pointCount);
+		this.geometry.setDrawRange (0, this.drawCount);
+	}
+
+	buildSpatialGrid () {
+		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+		for (let i = 0; i < this.pointCount; i++) {
+			const x = this.pointsData[i * 2];
+			const y = this.pointsData[i * 2 + 1];
+			if (x < minX) minX = x;
+			if (x > maxX) maxX = x;
+			if (y < minY) minY = y;
+			if (y > maxY) maxY = y;
+		}
+
+		this.gridMinX = minX;
+		this.gridMinY = minY;
+		this.gridCellSize = Math.max (maxX - minX, maxY - minY, 1e-6) / SCREENPOINTS_GRIDRESOLUTION;
+		this.gridCountX = Math.max (1, Math.ceil ((maxX - minX) / this.gridCellSize) + 1);
+		this.gridCountY = Math.max (1, Math.ceil ((maxY - minY) / this.gridCellSize) + 1);
+
+		// Counting sort of the point indices by cell.
+		const cellCount = this.gridCountX * this.gridCountY;
+		this.gridCellStart = new Uint32Array (cellCount + 1);
+		const cellOfPoint = new Uint32Array (this.pointCount);
+		for (let i = 0; i < this.pointCount; i++) {
+			const cell = this.cellIndexOf (this.pointsData[i * 2], this.pointsData[i * 2 + 1]);
+			cellOfPoint[i] = cell;
+			this.gridCellStart[cell + 1]++;
+		}
+		for (let cell = 0; cell < cellCount; cell++)
+			this.gridCellStart[cell + 1] += this.gridCellStart[cell];
+
+		const fill = this.gridCellStart.slice (0, cellCount);
+		this.gridPointIndices = new Uint32Array (this.pointCount);
+		for (let i = 0; i < this.pointCount; i++)
+			this.gridPointIndices[fill[cellOfPoint[i]]++] = i;
+	}
+
+	cellIndexOf (x, y) {
+		const cellX = Math.min (Math.max (Math.floor ((x - this.gridMinX) / this.gridCellSize), 0), this.gridCountX - 1);
+		const cellY = Math.min (Math.max (Math.floor ((y - this.gridMinY) / this.gridCellSize), 0), this.gridCountY - 1);
+		return cellX + cellY * this.gridCountX;
+	}
+
+	// Returns the index of the drawn point closest to the world (screen) position within
+	// pixelTolerance plus the point radius, or -1.
+	findNearestPoint (worldX, worldY, pixelTolerance) {
+		if ((this.drawCount <= 0) || !(this.scale.x !== 0) || !(this.scale.y !== 0))
+			return -1;
+
+		const dx = worldX - this.position.x;
+		const dy = worldY - this.position.y;
+		const cosine = Math.cos (-this.rotationZ);
+		const sine = Math.sin (-this.rotationZ);
+		const localX = (dx * cosine - dy * sine) / this.scale.x;
+		const localY = (dx * sine + dy * cosine) / this.scale.y;
+
+		const toleranceLocal = (pixelTolerance + this.pointPixelSize * 0.5) / Math.abs (this.scale.x);
+		let bestDistanceSq = toleranceLocal * toleranceLocal;
+		let bestIndex = -1;
+
+		const cellX1 = Math.max (Math.floor ((localX - toleranceLocal - this.gridMinX) / this.gridCellSize), 0);
+		const cellX2 = Math.min (Math.floor ((localX + toleranceLocal - this.gridMinX) / this.gridCellSize), this.gridCountX - 1);
+		const cellY1 = Math.max (Math.floor ((localY - toleranceLocal - this.gridMinY) / this.gridCellSize), 0);
+		const cellY2 = Math.min (Math.floor ((localY + toleranceLocal - this.gridMinY) / this.gridCellSize), this.gridCountY - 1);
+
+		for (let cellY = cellY1; cellY <= cellY2; cellY++) {
+			for (let cellX = cellX1; cellX <= cellX2; cellX++) {
+				const cell = cellX + cellY * this.gridCountX;
+				for (let entry = this.gridCellStart[cell]; entry < this.gridCellStart[cell + 1]; entry++) {
+					const pointIndex = this.gridPointIndices[entry];
+					if (pointIndex >= this.drawCount)
+						continue;
+					const ex = this.pointsData[pointIndex * 2] - localX;
+					const ey = this.pointsData[pointIndex * 2 + 1] - localY;
+					const distanceSq = ex * ex + ey * ey;
+					if (distanceSq < bestDistanceSq) {
+						bestDistanceSq = distanceSq;
+						bestIndex = pointIndex;
+					}
+				}
+			}
+		}
+
+		return bestIndex;
+	}
+
+	intersectRay (mouseX, mouseY, raycaster) {
+		return this.findNearestPoint (mouseX, mouseY, 2);
+	}
 }
 
 
@@ -1116,6 +1301,23 @@ class WebGLImpl {
         this.addElement(identifier, pointsElement);
 
         return pointsElement;
+    }
+
+    add2DScreenPointsGeometry(identifier, pointsData, zValue, pointPixelSize, pointsColor, vertexcolors) {
+        if (!identifier)
+            return;
+
+		this.removeElement (identifier);
+
+        let pointsElement = new WebGLScreenPointsElement(pointsData, zValue, pointPixelSize, pointsColor, vertexcolors);
+
+        this.addElement(identifier, pointsElement);
+
+        return pointsElement;
+    }
+
+    getPixelRatio() {
+        return this.renderer ? this.renderer.getPixelRatio() : 1.0;
     }
 
     add2DLocalizedPointsGeometry(identifier, pointsData, zValue, pointsRadius, pointsColor, vertexcolors, originx, originy, quadsizex, quadsizey, quadcountx, quadcounty) {

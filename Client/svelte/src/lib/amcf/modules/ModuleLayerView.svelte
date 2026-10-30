@@ -11,6 +11,9 @@
 	import Palette from '@lucide/svelte/icons/palette';
 	import ZapOff from '@lucide/svelte/icons/zap-off';
 	import Route from '@lucide/svelte/icons/route';
+	import SkipBack from '@lucide/svelte/icons/skip-back';
+	import SkipForward from '@lucide/svelte/icons/skip-forward';
+	import Play from '@lucide/svelte/icons/play';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
@@ -22,9 +25,17 @@
 	const PART_MARKER_PX = 5;
 	const NULL_UUID = '00000000-0000-0000-0000-000000000000';
 	const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-	// Scatter plot channel and the columns of it that LayerViewImpl can colour by.
+	// Scatter plot channel and its columns: laseron and power can be coloured by, the others feed
+	// the point inspector and the time slider.
 	const POINT_CHANNEL = 'laser';
-	const POINT_CHANNEL_COLUMNS = ['laseron', 'power'];
+	const POINT_CHANNEL_COLUMNS = ['laseron', 'power', 'time', 'targetx', 'targety', 'actualx', 'actualy'];
+	const POINT_PICK_TOLERANCE_PX = 4;
+	const TIME_SLIDER_STEPS = 1000;
+	const TIMING_SOURCE_CAPTIONS: Record<string, string> = {
+		recording: 'aligned to recording',
+		'recording-approximate': 'approx. aligned to recording',
+		estimate: 'estimated from laser speed'
+	};
 	const POINT_COLOR_MODES = [
 		{ mode: 'unicolor', caption: 'Uniform', column: '' },
 		{ mode: 'time', caption: 'Timing', column: '' },
@@ -85,6 +96,29 @@
 	let pointColorCaption = $derived(
 		POINT_COLOR_MODES.find((entry) => entry.mode === pointColorMode)?.caption ?? 'Uniform'
 	);
+	// Compared as a string so the calibration is only re-applied when a value changes.
+	let pointSizeCalibrationKey = $derived.by(() => {
+		poll.v;
+		if (!platform) return '';
+		return [platform.pointsizebase, platform.pointsizefactor, platform.pointsizemin, platform.pointsizemax].join('|');
+	});
+
+	// Time slider: caps toolpath and points at a fraction of the layer timeline.
+	let showTimeSlider = $derived.by(() => { poll.v; return Boolean(platform?.showtimeslider); });
+	let timeSliderValue = $state(TIME_SLIDER_STEPS);
+	let timelineDuration = $state(0);
+	let timingSource = $state('none');
+	let timingMatchRatio = $state(0);
+	let timingSourceCaption = $derived.by(() => {
+		const caption = TIMING_SOURCE_CAPTIONS[timingSource] ?? '';
+		if (timingSource !== 'recording') return caption;
+		return `${caption} (${(timingMatchRatio * 100).toFixed(0)}% of vectors matched, rest interpolated)`;
+	});
+	let timeCapCaption = $derived.by(() => {
+		const capTime = (timeSliderValue / TIME_SLIDER_STEPS) * timelineDuration;
+		const percent = (timeSliderValue / TIME_SLIDER_STEPS) * 100;
+		return `${capTime.toFixed(1)} / ${timelineDuration.toFixed(1)} ms (${percent.toFixed(1)}%)`;
+	});
 
 	let sliderValue = $state(0);
 	let appliedColorTheme = $state('');
@@ -162,6 +196,75 @@
 		layerViewer.RenderScene(true);
 	});
 
+	$effect(() => {
+		const [base, factor, minimum, maximum] = pointSizeCalibrationKey.split('|');
+		if (!layerViewer || !initialized || !pointSizeCalibrationKey) return;
+		untrack(() => layerViewer.setPointSizeCalibration(base, factor, minimum, maximum));
+	});
+
+	function refreshTimeline() {
+		if (!layerViewer) return;
+		timelineDuration = Number(layerViewer.getTimelineDuration()) || 0;
+		timingSource = String(layerViewer.getTimingSource());
+		timingMatchRatio = Number(layerViewer.getTimingMatchRatio()) || 0;
+	}
+
+	function setTimeSliderValue(value: number) {
+		timeSliderValue = Math.min(Math.max(value, 0), TIME_SLIDER_STEPS);
+		if (layerViewer) layerViewer.setTimeCapFraction(timeSliderValue / TIME_SLIDER_STEPS);
+	}
+
+	function onTimeSliderInput(event: Event) {
+		stopPlayback();
+		clearHover();
+		setTimeSliderValue(parseInt((event.target as HTMLInputElement).value));
+	}
+
+	function moveToStart() {
+		stopPlayback();
+		clearHover();
+		setTimeSliderValue(0);
+	}
+
+	function moveToEnd() {
+		stopPlayback();
+		clearHover();
+		setTimeSliderValue(TIME_SLIDER_STEPS);
+	}
+
+	// Plays the layer in real time; starts over if the slider is already at the end.
+	let playing = $state(false);
+	let playbackFrame = 0;
+	let playbackLastStamp = 0;
+
+	function startPlayback() {
+		if (playing || !layerViewer || timelineDuration <= 0) return;
+		clearHover();
+		if (timeSliderValue >= TIME_SLIDER_STEPS) setTimeSliderValue(0);
+		playing = true;
+		playbackLastStamp = performance.now();
+		playbackFrame = requestAnimationFrame(stepPlayback);
+	}
+
+	function stepPlayback(stamp: number) {
+		if (!playing) return;
+		const elapsed = Math.max(stamp - playbackLastStamp, 0);
+		playbackLastStamp = stamp;
+		const next = timelineDuration > 0 ? timeSliderValue + (elapsed / timelineDuration) * TIME_SLIDER_STEPS : TIME_SLIDER_STEPS;
+		setTimeSliderValue(next);
+		if (next >= TIME_SLIDER_STEPS) {
+			stopPlayback();
+			return;
+		}
+		playbackFrame = requestAnimationFrame(stepPlayback);
+	}
+
+	function stopPlayback() {
+		playing = false;
+		if (playbackFrame) cancelAnimationFrame(playbackFrame);
+		playbackFrame = 0;
+	}
+
 	function ensureInit() {
 		if (initialized || !containerEl || !app) return;
 		const w = containerEl.clientWidth, h = containerEl.clientHeight;
@@ -179,6 +282,7 @@
 			layerViewer.onTransformChanged = () => { viewVersion = ++transformChangeCount; };
 			layerViewer.toolpathVisible = toolpathVisible;
 			layerViewer.showLaserOffPoints = showLaserOffPoints;
+			layerViewer.setTimeCapFraction(timeSliderValue / TIME_SLIDER_STEPS);
 
 			glInstance.setupDOMElement(containerEl);
 			layerViewer.updateSize(w, h);
@@ -221,6 +325,10 @@
 			platform.displayed_build !== platform.builduuid ||
 			platform.displayed_partstateversion !== platform.partstateversion) {
 
+			if (platform.displayed_layer !== platform.currentlayer || platform.displayed_build !== platform.builduuid) {
+				stopPlayback();
+				setTimeSliderValue(TIME_SLIDER_STEPS);
+			}
 			platform.displayed_layer = platform.currentlayer;
 			platform.displayed_build = platform.builduuid;
 			platform.displayed_partstateversion = platform.partstateversion;
@@ -232,7 +340,9 @@
 			})
 			.then((layerJSON: any) => {
 				if (layerViewer) {
+					clearHover();
 					layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
+					refreshTimeline();
 					layerViewer.RenderScene(true);
 				}
 			})
@@ -252,9 +362,11 @@
 	function clearScatterPlot() {
 		pointsLoaded = false;
 		pointColumns = [];
+		hoverPoint = null;
 		if (!layerViewer) return;
 		layerViewer.clearPointsChannelData(POINT_CHANNEL);
 		layerViewer.clearPoints();
+		refreshTimeline();
 		layerViewer.RenderScene(true);
 	}
 
@@ -297,6 +409,8 @@
 			for (const [column, values] of channelColumns) {
 				layerViewer.loadPointsChannelData(POINT_CHANNEL, column, values);
 			}
+			layerViewer.updateTiming();
+			refreshTimeline();
 			pointColumns = channelColumns.map(([column]) => column);
 			pointsLoaded = true;
 
@@ -329,6 +443,7 @@
 	function toggleToolpath() {
 		toolpathVisible = !toolpathVisible;
 		if (!layerViewer) return;
+		clearHover();
 		layerViewer.toolpathVisible = toolpathVisible;
 		layerViewer.updateLoadedLayer();
 		layerViewer.updateTransform();
@@ -425,8 +540,20 @@
 		laserindex?: number;
 		lineIndex?: number;
 	};
+	type PointInfo = {
+		index: number;
+		x: number;
+		y: number;
+		time: number | null;
+		scannerx: number | null;
+		scannery: number | null;
+		laseron: number | null;
+		power: number | null;
+		velocity: number;
+	};
 	let propertiesMode = $state(false);
 	let hoverSegment = $state<SegmentProperties | null>(null);
+	let hoverPoint = $state<PointInfo | null>(null);
 	let hoverScreen = $state<{ x: number; y: number }>({ x: 0, y: 0 });
 	let pendingHover: { x: number; y: number } | null = null;
 	let hoverRAF = 0;
@@ -449,6 +576,13 @@
 	let namesMode = $state(false);
 	let viewVersion = $state(0);
 	let transformChangeCount = 0;
+	// Viewport position of the hovered point, for the marker ring; follows pan and zoom.
+	let hoverPointScreen = $derived.by((): { x: number; y: number } | null => {
+		viewVersion;
+		if (!hoverPoint || !layerViewer) return null;
+		const machine = layerViewer.toolpathPointToMachine(hoverPoint.x, hoverPoint.y);
+		return layerViewer.machineToScreen(machine.x, machine.y);
+	});
 	let highlightPartUUID = $derived.by(() => {
 		poll.v;
 		const uuid = typeof platform?.highlightpartuuid === 'string' ? platform.highlightpartuuid.toLowerCase() : '';
@@ -502,22 +636,40 @@
 		mousePosition = layerViewer.screenToMachine(event.clientX - box.left, event.clientY - box.top);
 	}
 
+	// A recorded point within a few pixels wins over the toolpath segment below it.
 	function updateHoverSegment(clientX: number, clientY: number) {
 		if (!propertiesMode || dragging || !containerEl || !layerViewer ||
 			typeof layerViewer.pickSegmentAtScreenPoint !== 'function') {
 			hoverSegment = null;
+			hoverPoint = null;
 			return;
 		}
 		const box = containerEl.getBoundingClientRect();
 		const localX = clientX - box.left;
 		const localY = clientY - box.top;
+		hoverScreen = { x: localX, y: localY };
+
+		const pointIndex: number = pointsLoaded ? layerViewer.pickPointAtScreenPoint(localX, localY, POINT_PICK_TOLERANCE_PX) : -1;
+		const pointInfo: PointInfo | null = pointIndex >= 0 ? layerViewer.getPointInfo(pointIndex) : null;
+		if (pointInfo) {
+			hoverPoint = pointInfo;
+			hoverSegment = null;
+			layerViewer.setHighlightLine(-1);
+			return;
+		}
+
+		hoverPoint = null;
 		const result: SegmentProperties | null = layerViewer.pickSegmentAtScreenPoint(localX, localY, 6) ?? null;
 		hoverSegment = result;
-		hoverScreen = { x: localX, y: localY };
 
 		if (typeof layerViewer.setHighlightLine === 'function') {
 			layerViewer.setHighlightLine(result ? (result.lineIndex ?? -1) : -1);
 		}
+	}
+
+	function formatMillimeters(x: number | null, y: number | null): string {
+		if (x === null || y === null) return '–';
+		return `${x.toFixed(3)}, ${y.toFixed(3)} mm`;
 	}
 
 	// Segment picking scans every line of the layer, so throttle it to one hit
@@ -538,6 +690,7 @@
 			hoverRAF = 0;
 		}
 		hoverSegment = null;
+		hoverPoint = null;
 		if (layerViewer && typeof layerViewer.clearHighlight === 'function') {
 			layerViewer.clearHighlight();
 		}
@@ -727,6 +880,7 @@
 
 	onDestroy(() => {
 		module.onDataHasChanged = null;
+		stopPlayback();
 		clearHover();
 		pointLoadCounter++;
 		if (platform) {
@@ -830,8 +984,8 @@
 			<button
 				class="layerview-btn"
 				onclick={togglePropertiesMode}
-				title="Show segment properties on hover"
-				aria-label="Toggle segment properties inspector"
+				title="Show segment and recorded point properties on hover"
+				aria-label="Toggle segment and point properties inspector"
 				aria-pressed={propertiesMode}
 			>
 				<Info size={16} />
@@ -939,8 +1093,46 @@
 
 		<!-- Live cursor position readout (machine coordinates, mm) -->
 		{#if mousePosition}
-			<div class="layerview-mouse-pos">
+			<div class="layerview-mouse-pos" class:above-time-slider={showTimeSlider && timelineDuration > 0}>
 				X: {mousePosition.x.toFixed(2)} &middot; Y: {mousePosition.y.toFixed(2)} mm
+			</div>
+		{/if}
+
+		<!-- Recorded point inspector popup (Properties toggle) -->
+		{#if propertiesMode && hoverPoint}
+			{#if hoverPointScreen}
+				<div
+					class="layerview-point-marker"
+					style={`left: ${hoverPointScreen.x}px; top: ${hoverPointScreen.y}px;`}
+				></div>
+			{/if}
+			<div
+				class="layerview-segment-popup"
+				style={`left: ${hoverScreen.x + 14}px; top: ${hoverScreen.y + 14}px;`}
+			>
+				<div class="layerview-segment-popup-title">Sample #{hoverPoint.index}</div>
+				<dl class="layerview-segment-popup-list">
+					{#if hoverPoint.time !== null}
+						<dt>Time</dt>
+						<dd>{hoverPoint.time.toFixed(2)} ms</dd>
+					{/if}
+					<dt>Build X/Y</dt>
+					<dd>{formatMillimeters(hoverPoint.x, hoverPoint.y)}</dd>
+					{#if hoverPoint.scannerx !== null && hoverPoint.scannery !== null}
+						<dt>Scanner X/Y</dt>
+						<dd>{formatMillimeters(hoverPoint.scannerx, hoverPoint.scannery)}</dd>
+					{/if}
+					{#if hoverPoint.laseron !== null}
+						<dt>Laser</dt>
+						<dd>{hoverPoint.laseron !== 0 ? 'On' : 'Off'}</dd>
+					{/if}
+					{#if hoverPoint.power !== null}
+						<dt>Power (raw)</dt>
+						<dd>{Math.round(hoverPoint.power).toLocaleString()}</dd>
+					{/if}
+					<dt>Velocity</dt>
+					<dd>{Math.round(hoverPoint.velocity).toLocaleString()} mm/s</dd>
+				</dl>
 			</div>
 		{/if}
 
@@ -975,6 +1167,39 @@
 						<dd>{hoverSegment.partid}</dd>
 					{/if}
 				</dl>
+			</div>
+		{/if}
+
+		<!-- Time slider (horizontal): caps toolpath and recorded points at a fraction of the layer time -->
+		{#if showTimeSlider && timelineDuration > 0}
+			<div class="layerview-time-wrap">
+				<span class="layerview-time-label" title={timingSourceCaption}>
+					t = {timeCapCaption}
+				</span>
+				<input
+					type="range"
+					class="layerview-time-slider"
+					min="0"
+					max={TIME_SLIDER_STEPS}
+					value={timeSliderValue}
+					oninput={onTimeSliderInput}
+					aria-label="Layer time"
+					aria-valuetext={timeCapCaption}
+				/>
+				<div class="layerview-time-buttons">
+					<button class="layerview-time-btn" onclick={moveToStart} title="Move to the start of the layer" aria-label="Move to start">
+						<SkipBack size={14} />
+					</button>
+					<button class="layerview-time-btn" onclick={moveToEnd} title="Move to the end of the layer" aria-label="Move to end">
+						<SkipForward size={14} />
+					</button>
+					<button class="layerview-time-btn" onclick={startPlayback} disabled={playing} title="Play the layer in real time" aria-label="Start playing">
+						<Play size={14} />
+					</button>
+					<button class="layerview-time-btn" onclick={stopPlayback} disabled={!playing} title="Stop playing" aria-label="Stop playing">
+						<Square size={14} />
+					</button>
+				</div>
 			</div>
 		{/if}
 
@@ -1228,6 +1453,71 @@
 		font-variant-numeric: tabular-nums;
 		pointer-events: none;
 		z-index: 10;
+	}
+	.layerview-mouse-pos.above-time-slider {
+		bottom: 48px;
+	}
+	.layerview-time-wrap {
+		position: absolute;
+		/* Between the coordinate indicator (bottom-left) and the layer slider (right edge). */
+		left: 80px;
+		right: 40px;
+		bottom: 8px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		z-index: 10;
+	}
+	.layerview-time-label {
+		flex: none;
+		min-width: 190px;
+		padding: 4px 10px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.65);
+		color: white;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+	.layerview-time-slider {
+		flex: 1;
+		min-width: 0;
+		accent-color: var(--primary, #2563eb);
+	}
+	.layerview-time-buttons {
+		flex: none;
+		display: flex;
+		gap: 4px;
+	}
+	.layerview-time-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 24px;
+		border: none;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.65);
+		color: white;
+		cursor: pointer;
+	}
+	.layerview-time-btn:hover:not(:disabled) {
+		background: rgba(0, 0, 0, 0.85);
+	}
+	.layerview-time-btn:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+	.layerview-point-marker {
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		margin: -7px 0 0 -7px;
+		border: 2px solid #00e5ff;
+		border-radius: 50%;
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+		pointer-events: none;
+		z-index: 15;
 	}
 	.layerview-segment-popup {
 		position: absolute;

@@ -32,6 +32,22 @@ const LAYERVIEW_MINSCALING = 0.4;
 const LAYERVIEW_MAXSCALING = 4000.0;
 const LAYERVIEW_MINVELOCITYRANGE = 1.0;
 
+// Default scatter point size calibration (pixels = base + factor * pixels per mm, clamped).
+const LAYERVIEW_POINTSIZE_BASE = 2.0;
+const LAYERVIEW_POINTSIZE_FACTOR = 0.08;
+const LAYERVIEW_POINTSIZE_MIN = 2.0;
+const LAYERVIEW_POINTSIZE_MAX = 16.0;
+
+// Fallback marking speed for segments without a laser speed, in mm/s.
+const LAYERVIEW_DEFAULTMARKSPEED = 1000.0;
+
+// Aligning toolpath vectors with a recording: a laser-on run belongs to a vector if its first
+// sample lies within the tolerance (mm) of one of the vector's lines. Runs are searched this
+// far ahead, and only this many lines of long polylines are tested.
+const LAYERVIEW_TIMING_MATCHTOLERANCE = 0.05;
+const LAYERVIEW_TIMING_RUNLOOKAHEAD = 200;
+const LAYERVIEW_TIMING_MAXGROUPLINES = 64;
+
 // Segments of parts that have been disabled are still drawn, but in this neutral gray.
 const LAYERVIEW_DISABLEDPARTCOLOR = 0xB4B4B4;
 
@@ -101,8 +117,25 @@ class LayerViewImpl {
 		this.layerPointsVelocities = [];
 		this.layerPointsMaxVelocity = LAYERVIEW_MINVELOCITYRANGE;
 		this.layerPointsMinVelocity = LAYERVIEW_MINVELOCITYRANGE;
+		this.pointSizeBase = LAYERVIEW_POINTSIZE_BASE;
+		this.pointSizeFactor = LAYERVIEW_POINTSIZE_FACTOR;
+		this.pointSizeMin = LAYERVIEW_POINTSIZE_MIN;
+		this.pointSizeMax = LAYERVIEW_POINTSIZE_MAX;
 		
         this.linesCoordinates = [];
+		this.segmentProperties = [];
+		this.lineGroupIDs = null;
+		this.lineDurations = null;
+
+		// Start time (ms) of every toolpath line on the layer timeline, see updateTiming.
+		this.lineStartTimes = null;
+		this.timelineDuration = 0.0;
+		this.timingSource = "none";
+		this.timingMatchRatio = 0.0;
+		// Fraction (0..1) of the layer timeline that is drawn; 1 shows everything.
+		this.timeCapFraction = 1.0;
+		this.visibleLineCount = 0;
+		this.visiblePointCount = 0;
 		
 		this.toolpathVisible = true;
 		this.pointsVisible = true;
@@ -270,6 +303,8 @@ class LayerViewImpl {
 
         var layerpointsgeometry = this.glInstance.findElement("layerdata_points");
         if (layerpointsgeometry) {
+            if (typeof layerpointsgeometry.setPointPixelSize === "function")
+                layerpointsgeometry.setPointPixelSize(this.computePointPixelSize() * this.glInstance.getPixelRatio());
             layerpointsgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
             layerpointsgeometry.setScaleXY(this.transform.scaling,  - this.transform.scaling);
             layerpointsgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
@@ -613,6 +648,7 @@ class LayerViewImpl {
 		this.computeVelocities ();		
 		this.updateColors ();			
 		this.updateLayerPoints ();		
+		this.updateTiming ();
 	}
 	
 	clearPointsChannelData (pointsChannelName)
@@ -663,6 +699,28 @@ class LayerViewImpl {
 		return false;
 	}
 	
+	// Point diameter in CSS pixels for the current zoom (transform.scaling = pixels per mm).
+	computePointPixelSize ()
+	{
+		const scaling = this.transform.scaling > 0 ? this.transform.scaling : 1.0;
+		const pixelSize = this.pointSizeBase + this.pointSizeFactor * scaling;
+		return Math.min (Math.max (pixelSize, this.pointSizeMin), this.pointSizeMax);
+	}
+
+	setPointSizeCalibration (base, factor, minimum, maximum)
+	{
+		const values = [base, factor, minimum, maximum].map (Number);
+		if (values.some ((value) => !Number.isFinite (value)))
+			return;
+
+		this.pointSizeBase = values[0];
+		this.pointSizeFactor = values[1];
+		this.pointSizeMin = Math.max (values[2], 0.5);
+		this.pointSizeMax = Math.max (values[3], this.pointSizeMin);
+		this.updateTransform ();
+		this.RenderScene (true);
+	}
+
 	updateLayerPoints () {
 		if (!this.glInstance) 
 			return;
@@ -694,10 +752,365 @@ class LayerViewImpl {
 				this.filteredToOriginalIndexMap = indexMap;
 			}
 
-			this.glInstance.add2DLocalizedPointsGeometry("layerdata_points", pointsToRender, 61, this.lineScaleLevel * 0.06, 0x00d0ff, colorsToRender, -200, -200, 2, 2, 400, 400);
+			const pixelSize = this.computePointPixelSize () * this.glInstance.getPixelRatio ();
+			this.glInstance.add2DScreenPointsGeometry("layerdata_points", pointsToRender, 61, pixelSize, 0x00d0ff, colorsToRender);
+			this.applyTimeCap ();
 			this.updateTransform ();
 			this.RenderScene (true);
 		}
+	}
+
+	// Index of the drawn point closest to the viewport position within pixelTolerance, as an
+	// index into the full point array, or -1. Hidden and time-capped points are not picked.
+	/**
+	 * @param {number} screenX
+	 * @param {number} screenY
+	 * @param {number} [pixelTolerance]
+	 */
+	pickPointAtScreenPoint (screenX, screenY, pixelTolerance = 4)
+	{
+		if (!this.glInstance || !this.layerPointsArray || !this.pointsVisible)
+			return -1;
+
+		const pointsElement = this.glInstance.findElement ("layerdata_points");
+		if (!pointsElement || (typeof pointsElement.findNearestPoint !== "function"))
+			return -1;
+
+		const renderedIndex = pointsElement.findNearestPoint (screenX, screenY, pixelTolerance);
+		if (renderedIndex < 0)
+			return -1;
+
+		return this.resolvePointIndex (renderedIndex);
+	}
+
+	getPointChannelValue (columnName, pointIndex)
+	{
+		if (this.laser && this.laser[columnName] && (pointIndex >= 0) && (pointIndex < this.laser[columnName].length))
+			return this.laser[columnName][pointIndex];
+		return null;
+	}
+
+	// Measurement values of one recorded point for the hover inspector.
+	getPointInfo (pointIndex)
+	{
+		const position = this.getPointPosition (pointIndex);
+		if (!position)
+			return null;
+
+		const scannerXColumn = (this.laser && this.laser.targetx) ? "targetx" : "actualx";
+		const scannerYColumn = (this.laser && this.laser.targety) ? "targety" : "actualy";
+
+		return {
+			index: pointIndex,
+			x: position.x,
+			y: position.y,
+			time: this.getPointChannelValue ("time", pointIndex),
+			scannerx: this.getPointChannelValue (scannerXColumn, pointIndex),
+			scannery: this.getPointChannelValue (scannerYColumn, pointIndex),
+			laseron: this.getPointChannelValue ("laseron", pointIndex),
+			power: this.getPointChannelValue ("power", pointIndex),
+			velocity: this.getPointVelocity (pointIndex)
+		};
+	}
+
+	// Number of entries in a sorted array that are smaller than (or equal to, if inclusive) value.
+	static countSortedBelow (sortedArray, value, inclusive)
+	{
+		let low = 0;
+		let high = sortedArray.length;
+		while (low < high) {
+			const middle = (low + high) >> 1;
+			const entry = sortedArray[middle];
+			if ((entry < value) || (inclusive && (entry === value)))
+				low = middle + 1;
+			else
+				high = middle;
+		}
+		return low;
+	}
+
+	// Assigns a start time to every toolpath line on the layer timeline:
+	// - with a recording, the marking vectors are matched to its laser-on runs (alignLinesToRecording);
+	// - if nothing matches, the estimated marking time (length / laser speed) is mapped onto the
+	//   accumulated laser-on time of the recording;
+	// - without a recording, the estimated marking time is used directly (jumps are ignored).
+	updateTiming ()
+	{
+		this.timingMatchRatio = 0.0;
+		const lineCount = this.lineDurations ? this.lineDurations.length : 0;
+		const lineStartTimes = new Float64Array (lineCount);
+
+		let estimatedTotal = 0.0;
+		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			lineStartTimes[lineIndex] = estimatedTotal;
+			estimatedTotal += this.lineDurations[lineIndex];
+		}
+
+		const times = this.laser ? this.laser.time : null;
+		const laserOn = this.laser ? this.laser.laseron : null;
+		const hasRecording = times && (times.length > 1) && this.layerPointsArray;
+
+		if (!hasRecording) {
+			this.lineStartTimes = lineStartTimes;
+			this.timelineDuration = estimatedTotal;
+			this.timingSource = (lineCount > 0) ? "estimate" : "none";
+			this.applyTimeCap ();
+			return;
+		}
+
+		const sampleCount = times.length;
+		this.timelineDuration = times[sampleCount - 1];
+		this.timingSource = "recording";
+
+		if ((lineCount > 0) && laserOn && (laserOn.length === sampleCount) && (this.layerPointsArray.length >= sampleCount * 2)) {
+
+			const alignedStartTimes = this.alignLinesToRecording (times, laserOn);
+			if (alignedStartTimes) {
+				this.lineStartTimes = alignedStartTimes;
+				this.applyTimeCap ();
+				return;
+			}
+
+			// Accumulated laser-on time up to each sample.
+			const onTime = new Float64Array (sampleCount);
+			for (let i = 1; i < sampleCount; i++)
+				onTime[i] = onTime[i - 1] + ((laserOn[i - 1] !== 0) ? (times[i] - times[i - 1]) : 0);
+
+			const totalOnTime = onTime[sampleCount - 1];
+			if ((totalOnTime > 0) && (estimatedTotal > 0)) {
+				for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+					const targetOnTime = lineStartTimes[lineIndex] / estimatedTotal * totalOnTime;
+					const sampleIndex = Math.min (LayerViewImpl.countSortedBelow (onTime, targetOnTime, false), sampleCount - 1);
+					lineStartTimes[lineIndex] = times[sampleIndex];
+				}
+				this.timingSource = "recording-approximate";
+				this.lineStartTimes = lineStartTimes;
+				this.applyTimeCap ();
+				return;
+			}
+		}
+
+		// Recording without laser state: stretch the estimate over the recorded duration.
+		const stretch = estimatedTotal > 0 ? this.timelineDuration / estimatedTotal : 0;
+		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++)
+			lineStartTimes[lineIndex] *= stretch;
+		this.timingSource = "recording-approximate";
+		this.lineStartTimes = lineStartTimes;
+		this.applyTimeCap ();
+	}
+
+	// Matches the marking vectors (hatch lines and polylines, in toolpath order) to the laser-on
+	// runs of the recording. A matched vector starts at the first sample of its run and ends with
+	// the last run that still lies on it (vectors can be split into several runs, e.g. at
+	// corners). Vectors without a run (too short to be sampled) are interpolated between their
+	// matched neighbours by estimated duration. Returns the line start times, or null if no
+	// vector could be matched.
+	alignLinesToRecording (times, laserOn)
+	{
+		const lineCount = this.lineDurations.length;
+		const sampleCount = times.length;
+		const points = this.layerPointsArray;
+		const coords = this.linesCoordinates;
+		const tolerance = LAYERVIEW_TIMING_MATCHTOLERANCE;
+		const toleranceSq = tolerance * tolerance;
+
+		const runStartSamples = [];
+		const runEndSamples = [];
+		for (let i = 0; i < sampleCount; i++) {
+			if ((laserOn[i] !== 0) && ((i === 0) || (laserOn[i - 1] === 0)))
+				runStartSamples.push (i);
+			if ((laserOn[i] !== 0) && ((i === sampleCount - 1) || (laserOn[i + 1] === 0)))
+				runEndSamples.push (i);
+		}
+		const runCount = runStartSamples.length;
+		if (runCount === 0)
+			return null;
+
+		const groupFirstLines = [];
+		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			if ((lineIndex === 0) || (this.lineGroupIDs[lineIndex] !== this.lineGroupIDs[lineIndex - 1]))
+				groupFirstLines.push (lineIndex);
+		}
+		const groupCount = groupFirstLines.length;
+		groupFirstLines.push (lineCount);
+
+		const groupDurations = new Float64Array (groupCount);
+		for (let group = 0; group < groupCount; group++) {
+			for (let lineIndex = groupFirstLines[group]; lineIndex < groupFirstLines[group + 1]; lineIndex++)
+				groupDurations[group] += this.lineDurations[lineIndex];
+		}
+
+		let bounds = null;
+		let boundsGroup = -1;
+		const runLiesOnGroup = (run, group) => {
+			const sample = runStartSamples[run];
+			const px = points[sample * 2];
+			const py = points[sample * 2 + 1];
+			const firstLine = groupFirstLines[group];
+			const lastLine = Math.min (groupFirstLines[group + 1], firstLine + LAYERVIEW_TIMING_MAXGROUPLINES);
+
+			if (boundsGroup !== group) {
+				bounds = { minx: Infinity, miny: Infinity, maxx: -Infinity, maxy: -Infinity };
+				for (let lineIndex = firstLine; lineIndex < lastLine; lineIndex++) {
+					for (let corner = 0; corner < 2; corner++) {
+						const x = coords[lineIndex * 4 + corner * 2];
+						const y = coords[lineIndex * 4 + corner * 2 + 1];
+						bounds.minx = Math.min (bounds.minx, x);
+						bounds.maxx = Math.max (bounds.maxx, x);
+						bounds.miny = Math.min (bounds.miny, y);
+						bounds.maxy = Math.max (bounds.maxy, y);
+					}
+				}
+				boundsGroup = group;
+			}
+			if ((px < bounds.minx - tolerance) || (px > bounds.maxx + tolerance) || (py < bounds.miny - tolerance) || (py > bounds.maxy + tolerance))
+				return false;
+
+			for (let lineIndex = firstLine; lineIndex < lastLine; lineIndex++) {
+				const arrayIndex = lineIndex * 4;
+				if (LayerViewImpl.pointSegmentDistanceSq (px, py, coords[arrayIndex], coords[arrayIndex + 1], coords[arrayIndex + 2], coords[arrayIndex + 3]) < toleranceSq)
+					return true;
+			}
+			return false;
+		};
+
+		const groupStarts = new Float64Array (groupCount).fill (NaN);
+		const groupEnds = new Float64Array (groupCount).fill (NaN);
+		let matchedGroups = 0;
+		let nextRun = 0;
+		for (let group = 0; (group < groupCount) && (nextRun < runCount); group++) {
+			const lastCandidate = Math.min (nextRun + LAYERVIEW_TIMING_RUNLOOKAHEAD, runCount);
+			for (let run = nextRun; run < lastCandidate; run++) {
+				if (!runLiesOnGroup (run, group))
+					continue;
+
+				let lastRun = run;
+				while ((lastRun + 1 < runCount) && runLiesOnGroup (lastRun + 1, group))
+					lastRun++;
+
+				groupStarts[group] = times[runStartSamples[run]];
+				groupEnds[group] = times[runEndSamples[lastRun]];
+				nextRun = lastRun + 1;
+				matchedGroups++;
+				break;
+			}
+		}
+
+		if (matchedGroups === 0)
+			return null;
+
+		// Unmatched vectors share the time between the surrounding matched ones.
+		let previousEnd = times[0];
+		let group = 0;
+		while (group < groupCount) {
+			if (!Number.isNaN (groupStarts[group])) {
+				previousEnd = Math.max (groupEnds[group], previousEnd);
+				group++;
+				continue;
+			}
+
+			let stretchEnd = group;
+			let stretchDuration = 0.0;
+			while ((stretchEnd < groupCount) && Number.isNaN (groupStarts[stretchEnd])) {
+				stretchDuration += groupDurations[stretchEnd];
+				stretchEnd++;
+			}
+			const nextStart = (stretchEnd < groupCount) ? groupStarts[stretchEnd] : times[sampleCount - 1];
+			const available = Math.max (nextStart - previousEnd, 0.0);
+
+			let currentTime = previousEnd;
+			for (let stretchGroup = group; stretchGroup < stretchEnd; stretchGroup++) {
+				const share = (stretchDuration > 0) ? groupDurations[stretchGroup] / stretchDuration : 1.0 / (stretchEnd - group);
+				groupStarts[stretchGroup] = currentTime;
+				currentTime += share * available;
+				groupEnds[stretchGroup] = currentTime;
+			}
+			group = stretchEnd;
+		}
+
+		const lineStartTimes = new Float64Array (lineCount);
+		let latestTime = -Infinity;
+		for (let currentGroup = 0; currentGroup < groupCount; currentGroup++) {
+			const groupDuration = groupDurations[currentGroup];
+			const span = groupEnds[currentGroup] - groupStarts[currentGroup];
+			let elapsed = 0.0;
+			for (let lineIndex = groupFirstLines[currentGroup]; lineIndex < groupFirstLines[currentGroup + 1]; lineIndex++) {
+				const startTime = groupStarts[currentGroup] + ((groupDuration > 0) ? (elapsed / groupDuration) * span : 0.0);
+				// Keep the start times sorted for the binary search in applyTimeCap.
+				latestTime = Math.max (latestTime, startTime);
+				lineStartTimes[lineIndex] = latestTime;
+				elapsed += this.lineDurations[lineIndex];
+			}
+		}
+
+		this.timingMatchRatio = matchedGroups / groupCount;
+		return lineStartTimes;
+	}
+
+	getTimelineDuration ()
+	{
+		return this.timelineDuration;
+	}
+
+	// Share (0..1) of marking vectors that were matched to the recording by updateTiming.
+	getTimingMatchRatio ()
+	{
+		return this.timingMatchRatio;
+	}
+
+	getTimingSource ()
+	{
+		return this.timingSource;
+	}
+
+	// Draws only what happened up to fraction (0..1) of the layer timeline.
+	setTimeCapFraction (fraction)
+	{
+		const value = Number (fraction);
+		this.timeCapFraction = Number.isFinite (value) ? Math.min (Math.max (value, 0.0), 1.0) : 1.0;
+		this.applyTimeCap ();
+
+		if ((this.highlightLineIndex >= 0) && (this.highlightLineIndex >= this.visibleLineCount))
+			this.clearHighlight ();
+		this.RenderScene (true);
+	}
+
+	applyTimeCap ()
+	{
+		if (!this.glInstance)
+			return;
+
+		const capped = this.timeCapFraction < 1.0;
+		const capTime = this.timeCapFraction * this.timelineDuration;
+
+		const lineCount = Math.floor (this.linesCoordinates.length / 4);
+		this.visibleLineCount = lineCount;
+		if (capped && this.lineStartTimes && (this.lineStartTimes.length === lineCount))
+			this.visibleLineCount = LayerViewImpl.countSortedBelow (this.lineStartTimes, capTime, true);
+
+		const linesElement = this.glInstance.findElement ("layerdata_lines");
+		if (linesElement && (typeof linesElement.setVisibleLineCount === "function"))
+			linesElement.setVisibleLineCount (this.visibleLineCount);
+
+		const pointCount = this.layerPointsArray ? Math.floor (this.layerPointsArray.length / 2) : 0;
+		let visibleOriginalPoints = pointCount;
+		if (capped && (pointCount > 0)) {
+			const times = this.laser ? this.laser.time : null;
+			if (times && (times.length === pointCount))
+				visibleOriginalPoints = LayerViewImpl.countSortedBelow (times, capTime, true);
+			else
+				visibleOriginalPoints = Math.round (pointCount * this.timeCapFraction);
+		}
+
+		this.visiblePointCount = this.filteredToOriginalIndexMap
+			? LayerViewImpl.countSortedBelow (this.filteredToOriginalIndexMap, visibleOriginalPoints, false)
+			: visibleOriginalPoints;
+
+		const pointsElement = this.glInstance.findElement ("layerdata_points");
+		if (pointsElement && (typeof pointsElement.setDrawCount === "function"))
+			pointsElement.setDrawCount (this.visiblePointCount);
+
+		this.renderNeedsUpdate = true;
 	}
 
 	resolvePointIndex (filteredIndex)
@@ -727,6 +1140,8 @@ class LayerViewImpl {
 					
 	}
 
+	// Velocity in mm/s from the neighbouring samples. Uses the recorded "time" channel (ms)
+	// when present, otherwise a fixed sample period of 10 microseconds.
 	getPointVelocity (pointIndex)
 	{
 		let dT = 1 / 100000;
@@ -735,6 +1150,12 @@ class LayerViewImpl {
 			if (pointIndex > 0) {
 				let arrayIndex = pointIndex * 2;
 				if (arrayIndex + 3 < this.layerPointsArray.length) {
+					const times = this.laser ? this.laser.time : null;
+					if (times && (pointIndex + 1 < times.length)) {
+						const sampleSpan = (times[pointIndex + 1] - times[pointIndex - 1]) * 0.001;
+						if (sampleSpan > 0)
+							dT = sampleSpan * 0.5;
+					}
 					let vX = (this.layerPointsArray[arrayIndex + 2] - this.layerPointsArray[arrayIndex - 2]) / (2 * dT);
 					let vY = (this.layerPointsArray[arrayIndex + 3] - this.layerPointsArray[arrayIndex - 1]) / (2 * dT);
 					let velocity = Math.sqrt (vX * vX + vY * vY);
@@ -815,16 +1236,29 @@ class LayerViewImpl {
         this.glInstance.removeElement("layerdata_highlight");
         this.highlightLineIndex = -1;
 		
-		if (this.layerSegmentsArray && this.toolpathVisible) {
+		this.linesCoordinates = [];
+		this.segmentProperties = [];
+		this.lineGroupIDs = null;
+		this.lineDurations = null;
+
+		if (this.layerSegmentsArray) {
 				
 			let segmentsArray = this.layerSegmentsArray;
 			var segmentCount = segmentsArray.length;
 			var segmentIndex;
 			
-			this.linesCoordinates = [];
-			this.segmentProperties = [];
-			
 			let vertexcolors = [];
+			// One group per polyline and per hatch line: each is marked with one laser-on run.
+			let lineGroupIDs = [];
+			let lineDurations = [];
+			let groupID = 0;
+			let pushLine = (x1, y1, x2, y2, segmentData, segmentColor, markSpeed) => {
+				this.linesCoordinates.push(x1, y1, x2, y2);
+				this.segmentProperties.push (segmentData);
+				vertexcolors.push (segmentColor);
+				lineGroupIDs.push (groupID);
+				lineDurations.push (Math.hypot (x2 - x1, y2 - y1) / markSpeed * 1000.0);
+			};
 
 			for (segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
 				var segment = segmentsArray[segmentIndex];
@@ -842,6 +1276,7 @@ class LayerViewImpl {
 					partdisabled: partDisabled,
 					laserindex: segment.laserindex
 				}
+				let markSpeed = (Number (segment.laserspeed) > 0) ? Number (segment.laserspeed) : LAYERVIEW_DEFAULTMARKSPEED;
 
 				if ((segment.type === "loop") || (segment.type === "polyline")) {
 					var pointCount = segment.points.length;
@@ -849,6 +1284,7 @@ class LayerViewImpl {
 					
 					var oldx = segment.points[0].x;
 					var oldy = segment.points[0].y;
+					groupID++;
 
 					for (pointIndex = 1; pointIndex < pointCount; pointIndex++) {
 						var x = segment.points[pointIndex].x;
@@ -860,9 +1296,7 @@ class LayerViewImpl {
 							continue;
 						}
 
-						this.linesCoordinates.push(oldx, oldy, x, y);
-						this.segmentProperties.push (segmentData);
-						vertexcolors.push (segmentColor);
+						pushLine (oldx, oldy, x, y, segmentData, segmentColor, markSpeed);
 
 						oldx = x;
 						oldy = y;
@@ -883,25 +1317,23 @@ class LayerViewImpl {
 							continue;
 						}
 
-						this.linesCoordinates.push(x1, y1, x2, y2);
-						this.segmentProperties.push (segmentData);
-						vertexcolors.push (segmentColor);
+						groupID++;
+						pushLine (x1, y1, x2, y2, segmentData, segmentColor, markSpeed);
 					}
 
 				}
 			}
+
+			this.lineGroupIDs = lineGroupIDs;
+			this.lineDurations = lineDurations;
 			
-			var layerLinesObject = this.glInstance.scene.getObjectByName("layerdata_lines");
-			if (layerLinesObject)
-				this.glInstance.scene.remove(layerLinesObject);
-			
-			
-			let thickness = this.lineScaleLevel * 0.3;
-			
-			console.log ("rebulding layer preview with thickness: " + thickness);
-			
-			this.glInstance.add2DLineGeometry("layerdata_lines", this.linesCoordinates, 60, thickness, 0x000000, vertexcolors);
+			if (this.toolpathVisible) {
+				let thickness = this.lineScaleLevel * 0.3;
+				this.glInstance.add2DLineGeometry("layerdata_lines", this.linesCoordinates, 60, thickness, 0x000000, vertexcolors);
+			}
 		}
+
+		this.updateTiming ();
 
 		this.updateTransform();
 		this.RenderScene(true);		
@@ -1102,7 +1534,7 @@ class LayerViewImpl {
 	// those boxes have an empty uuid.
 	getPartBoundingBoxes ()
 	{
-		if (!this.layerSegmentsArray || !this.toolpathVisible)
+		if (!this.layerSegmentsArray)
 			return [];
 
 		const cacheKey = [this.transformAngleDegrees, this.rotationCenter.x, this.rotationCenter.y,
@@ -1196,11 +1628,11 @@ class LayerViewImpl {
 	 */
 	pickSegmentAtMachinePoint (machineX, machineY, toleranceMM)
 	{
-		if (!this.linesCoordinates || !this.segmentProperties)
+		if (!this.toolpathVisible || !this.linesCoordinates || !this.segmentProperties)
 			return null;
 
 		const coords = this.linesCoordinates;
-		const lineCount = Math.floor (coords.length / 4);
+		const lineCount = Math.min (Math.floor (coords.length / 4), this.visibleLineCount);
 		if (lineCount <= 0)
 			return null;
 
@@ -1253,7 +1685,7 @@ class LayerViewImpl {
 		this.glInstance.removeElement ("layerdata_highlight");
 		this.highlightLineIndex = -1;
 
-		if (lineIndex === undefined || lineIndex === null || lineIndex < 0 || !this.linesCoordinates) {
+		if (lineIndex === undefined || lineIndex === null || lineIndex < 0 || !this.linesCoordinates || !this.toolpathVisible) {
 			this.RenderScene (true);
 			return;
 		}

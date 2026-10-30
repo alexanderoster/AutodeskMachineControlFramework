@@ -257,6 +257,13 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	else
 		showCoordinateSystem.setFixedValue("0");
 
+	// Scatter point size in pixels: clamp (pointsizebase + pointsizefactor * zoom in pixels per mm, pointsizemin, pointsizemax).
+	CUIExpression showTimeSlider(platformNode, AMC_API_KEY_UI_SHOWTIMESLIDER, "0");
+	CUIExpression pointSizeBase(platformNode, AMC_API_KEY_UI_POINTSIZEBASE, "2.0");
+	CUIExpression pointSizeFactor(platformNode, AMC_API_KEY_UI_POINTSIZEFACTOR, "0.08");
+	CUIExpression pointSizeMin(platformNode, AMC_API_KEY_UI_POINTSIZEMIN, "2.0");
+	CUIExpression pointSizeMax(platformNode, AMC_API_KEY_UI_POINTSIZEMAX, "16.0");
+
 	CUIExpression buildUUID;
 	CUIExpression executionUUID;
 	CUIExpression scatterplotUUID;
@@ -423,6 +430,11 @@ CUIModule_LayerView::CUIModule_LayerView(pugi::xml_node& xmlNode, const std::str
 	registerNumberAttribute(AMC_API_KEY_UI_TRANSLATIONX, translationX);
 	registerNumberAttribute(AMC_API_KEY_UI_TRANSLATIONY, translationY);
 	registerBoolAttribute(AMC_API_KEY_UI_SHOWCOORDINATESYSTEM, showCoordinateSystem);
+	registerBoolAttribute(AMC_API_KEY_UI_SHOWTIMESLIDER, showTimeSlider);
+	registerNumberAttribute(AMC_API_KEY_UI_POINTSIZEBASE, pointSizeBase);
+	registerNumberAttribute(AMC_API_KEY_UI_POINTSIZEFACTOR, pointSizeFactor);
+	registerNumberAttribute(AMC_API_KEY_UI_POINTSIZEMIN, pointSizeMin);
+	registerNumberAttribute(AMC_API_KEY_UI_POINTSIZEMAX, pointSizeMax);
 	// baseimageresource must be the UUID so the frontend's /image/{uuid} endpoint works.
 	// Resolve the resource name -> UUID once at startup and register as a fixed value.
 	{
