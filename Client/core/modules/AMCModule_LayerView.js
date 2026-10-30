@@ -68,6 +68,12 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		this.translationx = 0.0;
 		this.translationy = 0.0;
 		this.showcoordinatesystem = false;
+		this.showtimeslider = false;
+		// Scatter point size in pixels: clamp (pointsizebase + pointsizefactor * pixels per mm, pointsizemin, pointsizemax).
+		this.pointsizebase = 2.0;
+		this.pointsizefactor = 0.08;
+		this.pointsizemin = 2.0;
+		this.pointsizemax = 16.0;
 		
 		this.updateFromJSON (itemJSON);
 		
@@ -204,6 +210,15 @@ class AMCApplicationItem_LayerView_Platform extends Common.AMCApplicationItem {
 		}
 		if (attrs.showcoordinatesystem !== undefined)
 			this.showcoordinatesystem = (attrs.showcoordinatesystem === true || attrs.showcoordinatesystem === 1 || attrs.showcoordinatesystem === "1" || attrs.showcoordinatesystem === "true");
+		if (attrs.showtimeslider !== undefined)
+			this.showtimeslider = (attrs.showtimeslider === true || attrs.showtimeslider === 1 || attrs.showtimeslider === "1" || attrs.showtimeslider === "true");
+		for (let key of ["pointsizebase", "pointsizefactor", "pointsizemin", "pointsizemax"]) {
+			if (attrs[key] !== undefined) {
+				let value = parseFloat (attrs[key]);
+				if (!isNaN (value))
+					this[key] = value;
+			}
+		}
 		if (attrs.labelvisible !== undefined)
 			this.labelvisible = (attrs.labelvisible === true || attrs.labelvisible === "1" || attrs.labelvisible === "true");
 		if (attrs.labelcaption !== undefined)
