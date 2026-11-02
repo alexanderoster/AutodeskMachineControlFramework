@@ -520,6 +520,7 @@ public:
 	inline void SetCustomSDKResource(const std::string & sResourceName);
 	inline PPylonDevice ConnectToUniqueGenericDevice(const std::string & sIdentifier);
 	inline PPylonDevice ConnectToUniqueGigEDevice(const std::string & sIdentifier);
+	inline PPylonDevice ConnectToUniqueEmulatedDevice(const std::string & sIdentifier);
 	inline bool ConnectionExists(const std::string & sIdentifier);
 	inline PPylonDevice FindDeviceConnection(const std::string & sIdentifier);
 	inline void CloseAllConnections();
@@ -683,6 +684,7 @@ public:
 		pWrapperTable->m_Driver_Pylon_SetCustomSDKResource = nullptr;
 		pWrapperTable->m_Driver_Pylon_ConnectToUniqueGenericDevice = nullptr;
 		pWrapperTable->m_Driver_Pylon_ConnectToUniqueGigEDevice = nullptr;
+		pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice = nullptr;
 		pWrapperTable->m_Driver_Pylon_ConnectionExists = nullptr;
 		pWrapperTable->m_Driver_Pylon_FindDeviceConnection = nullptr;
 		pWrapperTable->m_Driver_Pylon_CloseAllConnections = nullptr;
@@ -1068,6 +1070,15 @@ public:
 			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice = (PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueEmulatedDevicePtr) GetProcAddress(hLibrary, "libmcdriver_pylon_driver_pylon_connecttouniqueemulateddevice");
+		#else // _WIN32
+		pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice = (PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueEmulatedDevicePtr) dlsym(hLibrary, "libmcdriver_pylon_driver_pylon_connecttouniqueemulateddevice");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice == nullptr)
+			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Driver_Pylon_ConnectionExists = (PLibMCDriver_PylonDriver_Pylon_ConnectionExistsPtr) GetProcAddress(hLibrary, "libmcdriver_pylon_driver_pylon_connectionexists");
 		#else // _WIN32
 		pWrapperTable->m_Driver_Pylon_ConnectionExists = (PLibMCDriver_PylonDriver_Pylon_ConnectionExistsPtr) dlsym(hLibrary, "libmcdriver_pylon_driver_pylon_connectionexists");
@@ -1315,6 +1326,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_connecttouniquegigedevice", (void**)&(pWrapperTable->m_Driver_Pylon_ConnectToUniqueGigEDevice));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Pylon_ConnectToUniqueGigEDevice == nullptr) )
+			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_connecttouniqueemulateddevice", (void**)&(pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Driver_Pylon_ConnectToUniqueEmulatedDevice == nullptr) )
 			return LIBMCDRIVER_PYLON_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdriver_pylon_driver_pylon_connectionexists", (void**)&(pWrapperTable->m_Driver_Pylon_ConnectionExists));
@@ -1822,6 +1837,22 @@ public:
 	{
 		LibMCDriver_PylonHandle hDevice = nullptr;
 		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Pylon_ConnectToUniqueGigEDevice(m_pHandle, sIdentifier.c_str(), &hDevice));
+		
+		if (!hDevice) {
+			CheckError(LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CPylonDevice>(m_pWrapper, hDevice);
+	}
+	
+	/**
+	* CDriver_Pylon::ConnectToUniqueEmulatedDevice - Enables the pylon camera emulation for the time of the connection, checks if there is exactly one emulated device and connects to it. Physical cameras are ignored.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing. MUST be non-empty a alpanumerical string with _, up until 64 characters.
+	* @return Device Instance
+	*/
+	PPylonDevice CDriver_Pylon::ConnectToUniqueEmulatedDevice(const std::string & sIdentifier)
+	{
+		LibMCDriver_PylonHandle hDevice = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Driver_Pylon_ConnectToUniqueEmulatedDevice(m_pHandle, sIdentifier.c_str(), &hDevice));
 		
 		if (!hDevice) {
 			CheckError(LIBMCDRIVER_PYLON_ERROR_INVALIDPARAM);

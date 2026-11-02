@@ -444,6 +444,16 @@ LIBMCDRIVER_PYLON_DECLSPEC LibMCDriver_PylonResult libmcdriver_pylon_driver_pylo
 LIBMCDRIVER_PYLON_DECLSPEC LibMCDriver_PylonResult libmcdriver_pylon_driver_pylon_connecttouniquegigedevice(LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice);
 
 /**
+* Enables the pylon camera emulation for the time of the connection, checks if there is exactly one emulated device and connects to it. Physical cameras are ignored.
+*
+* @param[in] pDriver_Pylon - Driver_Pylon instance.
+* @param[in] pIdentifier - Identifier for the connection. Fails if identifier is already existing. MUST be non-empty a alpanumerical string with _, up until 64 characters.
+* @param[out] pDevice - Device Instance
+* @return error code or 0 (success)
+*/
+LIBMCDRIVER_PYLON_DECLSPEC LibMCDriver_PylonResult libmcdriver_pylon_driver_pylon_connecttouniqueemulateddevice(LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice);
+
+/**
 * Checks if a connection exists with a certain identifier.
 *
 * @param[in] pDriver_Pylon - Driver_Pylon instance.

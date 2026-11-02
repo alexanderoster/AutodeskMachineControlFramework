@@ -431,6 +431,16 @@ typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_ConnectToUnique
 typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueGigEDevicePtr) (LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice);
 
 /**
+* Enables the pylon camera emulation for the time of the connection, checks if there is exactly one emulated device and connects to it. Physical cameras are ignored.
+*
+* @param[in] pDriver_Pylon - Driver_Pylon instance.
+* @param[in] pIdentifier - Identifier for the connection. Fails if identifier is already existing. MUST be non-empty a alpanumerical string with _, up until 64 characters.
+* @param[out] pDevice - Device Instance
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_PylonResult (*PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueEmulatedDevicePtr) (LibMCDriver_Pylon_Driver_Pylon pDriver_Pylon, const char * pIdentifier, LibMCDriver_Pylon_PylonDevice * pDevice);
+
+/**
 * Checks if a connection exists with a certain identifier.
 *
 * @param[in] pDriver_Pylon - Driver_Pylon instance.
@@ -570,6 +580,7 @@ typedef struct {
 	PLibMCDriver_PylonDriver_Pylon_SetCustomSDKResourcePtr m_Driver_Pylon_SetCustomSDKResource;
 	PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueGenericDevicePtr m_Driver_Pylon_ConnectToUniqueGenericDevice;
 	PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueGigEDevicePtr m_Driver_Pylon_ConnectToUniqueGigEDevice;
+	PLibMCDriver_PylonDriver_Pylon_ConnectToUniqueEmulatedDevicePtr m_Driver_Pylon_ConnectToUniqueEmulatedDevice;
 	PLibMCDriver_PylonDriver_Pylon_ConnectionExistsPtr m_Driver_Pylon_ConnectionExists;
 	PLibMCDriver_PylonDriver_Pylon_FindDeviceConnectionPtr m_Driver_Pylon_FindDeviceConnection;
 	PLibMCDriver_PylonDriver_Pylon_CloseAllConnectionsPtr m_Driver_Pylon_CloseAllConnections;
