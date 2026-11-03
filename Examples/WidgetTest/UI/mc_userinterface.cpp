@@ -404,6 +404,65 @@ public:
 
 
 /*************************************************************************************************************************
+ CEvent_OnFormulaDemoChange / CEvent_OnFormulaDemoReset
+**************************************************************************************************************************/
+
+#define FORMULADEMO_INPUTFORM "formulademo.fd_inputs.fd_inputform."
+
+// Stores the typed text, so that the bound field shows it unchanged; GetUIPropertyAsDouble rejects non-numeric input.
+static void storeFormulaDemoNumber(LibMCEnv::PUIEnvironment pUIEnvironment, const std::string& sSender, const std::string& sVariableName)
+{
+	std::string sValue = pUIEnvironment->GetUIProperty(sSender, "value");
+	pUIEnvironment->GetUIPropertyAsDouble(sSender, "value");
+	pUIEnvironment->SetSessionVariable(sVariableName, sValue);
+}
+
+class CEvent_OnFormulaDemoChange : public virtual CEvent {
+public:
+	static std::string getEventName() { return "onformulademochange"; }
+
+	// Only the sender's value is current; the other fields of the form are not sent with a change event.
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		auto sSender = pUIEnvironment->RetrieveEventSender();
+
+		try {
+			if (sSender == FORMULADEMO_INPUTFORM "fd_a")
+				storeFormulaDemoNumber(pUIEnvironment, sSender, "formula_a");
+			else if (sSender == FORMULADEMO_INPUTFORM "fd_b")
+				storeFormulaDemoNumber(pUIEnvironment, sSender, "formula_b");
+			else if (sSender == FORMULADEMO_INPUTFORM "fd_level")
+				storeFormulaDemoNumber(pUIEnvironment, sSender, "formula_level");
+			else if (sSender == FORMULADEMO_INPUTFORM "fd_text")
+				pUIEnvironment->SetSessionVariable("formula_text", pUIEnvironment->GetUIProperty(sSender, "value"));
+			else if (sSender == FORMULADEMO_INPUTFORM "fd_flag")
+				pUIEnvironment->SetSessionVariableAsBool("formula_flag", pUIEnvironment->GetUIPropertyAsBool(sSender, "value"));
+			else if (sSender == FORMULADEMO_INPUTFORM "fd_unit")
+				pUIEnvironment->SetSessionVariable("formula_unit", pUIEnvironment->GetUIProperty(sSender, "value"));
+		}
+		catch (std::exception& E) {
+			pUIEnvironment->LogWarning("Formula demonstrator: ignored invalid input of " + sSender + ": " + E.what());
+		}
+	}
+};
+
+class CEvent_OnFormulaDemoReset : public virtual CEvent {
+public:
+	static std::string getEventName() { return "onformulademoreset"; }
+
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		pUIEnvironment->SetSessionVariable("formula_a", "12.5");
+		pUIEnvironment->SetSessionVariable("formula_b", "4");
+		pUIEnvironment->SetSessionVariable("formula_level", "75");
+		pUIEnvironment->SetSessionVariable("formula_text", "WidgetTest");
+		pUIEnvironment->SetSessionVariableAsBool("formula_flag", true);
+		pUIEnvironment->SetSessionVariable("formula_unit", "mm");
+	}
+};
+
+
+/*************************************************************************************************************************
  Event handler factory
 **************************************************************************************************************************/
 
@@ -446,6 +505,10 @@ IEvent* CEventHandler::CreateEvent(const std::string& sEventName, LibMCEnv::PUIE
 	if (createEventInstanceByName<CEvent_ResetCounters>(sEventName, pEventInstance))
 		return pEventInstance;
 	if (createEventInstanceByName<CEvent_GotoBuilds>(sEventName, pEventInstance))
+		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnFormulaDemoChange>(sEventName, pEventInstance))
+		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnFormulaDemoReset>(sEventName, pEventInstance))
 		return pEventInstance;
 
 	throw ELibMCUIInterfaceException(LIBMCUI_ERROR_INVALIDEVENTNAME, "invalid event name: " + sEventName);

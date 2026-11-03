@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<machinedefinition xmlns="http://schemas.autodesk.com/amc/machinedefinitions/2020/02" xmlns:sync="http://schemas.autodesk.com/amc/synchronization/2020/02" xmlns:i18n="http://schemas.autodesk.com/amc/internationalization/2023/08" client="svelte">
+<machinedefinition xmlns="http://schemas.autodesk.com/amc/machinedefinitions/2020/02" xmlns:sync="http://schemas.autodesk.com/amc/synchronization/2020/02" xmlns:i18n="http://schemas.autodesk.com/amc/internationalization/2023/08" xmlns:format="http://schemas.autodesk.com/amc/format/2023/08" client="svelte">
 	<services threadcount="32"/>
 
 	<internationalization default="en">
@@ -139,6 +139,18 @@
 			<color name="accent" red="0.784" green="0.063" blue="0.180"/>
 			<color name="error" red="0.867" green="0.133" blue="0.133"/>
 		</colors>
+
+		<!-- Per-client-session variables. Every browser session has its own copy.
+		     Inputs of the UI formula demonstrator (page "formulademo"), written by the
+		     onformulademochange event and reset to these defaults by onformulademoreset. -->
+		<sessionvariables>
+			<parameter name="formula_a" type="double" default="12.5" description="Formula demonstrator: number A"/>
+			<parameter name="formula_b" type="double" default="4" description="Formula demonstrator: number B"/>
+			<parameter name="formula_level" type="double" default="75" description="Formula demonstrator: level slider in percent"/>
+			<parameter name="formula_text" type="string" default="WidgetTest" description="Formula demonstrator: free text"/>
+			<parameter name="formula_flag" type="bool" default="1" description="Formula demonstrator: flag switch"/>
+			<parameter name="formula_unit" type="string" default="mm" description="Formula demonstrator: selected length unit"/>
+		</sessionvariables>
 
 		<!-- ================================ DIALOGS ================================ -->
 
@@ -684,6 +696,136 @@
 		</page>
 
 
+		<!-- ================================================================== -->
+		<!-- PAGE 12: Formula Demonstrator                                       -->
+		<!-- Tests: formulas in sync: attributes, session variables              -->
+		<!-- ================================================================== -->
+
+		<!-- Every sync: attribute on this page is a formula that the server evaluates; the client
+		     only receives the result. Each example shows the formula as a code paragraph followed by
+		     its live result. The inputs are session variables, so every browser session has its own
+		     values. Formulas over session variables are shown in paragraphs, because form fields and
+		     buttons also evaluate their formulas once without a session.
+		     See Documentation/FormulaDocumentationAndTutorial.html. -->
+		<page name="formulademo">
+			<grid name="formulademogrid" padding="8">
+				<column width="1" unit="free"/>
+				<column width="1" unit="free"/>
+				<column width="1" unit="free"/>
+
+				<row height="1" unit="free"/>
+
+				<content name="fd_inputs" title="Inputs" subtitle="Session variables of this browser session" columnstart="1" rowstart="1" columnend="1" rowend="1" scrollbars="1">
+					<paragraph name="fd_inputsintro" text="Every field writes one session variable (session.formula_a, session.formula_b, session.formula_level, session.formula_text, session.formula_flag, session.formula_unit). Change a value and watch the results update. A second browser keeps its own values."/>
+
+					<form name="fd_inputform">
+						<number name="fd_a" caption="A" sync:value="session.formula_a" step="0.5" changeevent="onformulademochange"/>
+						<number name="fd_b" caption="B" sync:value="session.formula_b" step="0.5" changeevent="onformulademochange"/>
+						<slider name="fd_level" caption="Level" sync:value="session.formula_level" min="-20" max="150" step="1" unit="%" changeevent="onformulademochange"/>
+						<edit name="fd_text" caption="Text" sync:value="session.formula_text" changeevent="onformulademochange"/>
+						<switch name="fd_flag" caption="Flag" sync:value="session.formula_flag" changeevent="onformulademochange"/>
+						<combobox name="fd_unit" caption="Unit" valuetype="string" sync:value="session.formula_unit" changeevent="onformulademochange">
+							<item text="Millimeter (mm)" value="mm"/>
+							<item text="Micrometer (um)" value="um"/>
+							<item text="Inch (in)" value="in"/>
+						</combobox>
+					</form>
+
+					<!-- The button is disabled while all inputs still have their default values. -->
+					<buttongroup name="fd_inputbuttons" distribution="equal">
+						<button name="fd_reset" caption="Reset Inputs" event="onformulademoreset" sync:disabled="session.formula_a == 12.5 and session.formula_b == 4 and session.formula_level == 75 and session.formula_text == 'WidgetTest' and session.formula_flag and session.formula_unit == 'mm'"/>
+					</buttongroup>
+
+					<separator name="fd_sep_style" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_styletitle" variant="label" text="Formulas in other attributes"/>
+					<paragraph name="fd_stylecode" variant="code" text="sync:variant = if(session.formula_flag, 'h2', 'subtext')"/>
+					<paragraph name="fd_styleresult" sync:variant="if(session.formula_flag, 'h2', 'subtext')" sync:text="if(session.formula_flag, 'Flag is on: this paragraph is a heading.', 'Flag is off: this paragraph is small print.')"/>
+					<paragraph name="fd_buttoncode" variant="code" text="Reset button: sync:disabled = session.formula_a == 12.5 and session.formula_b == 4 and ... and session.formula_unit == 'mm'"/>
+				</content>
+
+				<content name="fd_calc" title="Arithmetic, Logic and Text" subtitle="Formulas over the inputs" columnstart="2" rowstart="1" columnend="2" rowend="1" scrollbars="1">
+					<paragraph name="fd_arithtitle" variant="label" text="Arithmetic"/>
+					<paragraph name="fd_precedencecode" variant="code" text="session.formula_a + session.formula_b * 2"/>
+					<paragraph name="fd_precedenceresult" variant="h2" sync:text="concat('= ', session.formula_a + session.formula_b * 2)"/>
+					<paragraph name="fd_parenscode" variant="code" text="(session.formula_a + session.formula_b) * 2"/>
+					<paragraph name="fd_parensresult" variant="h2" sync:text="concat('= ', (session.formula_a + session.formula_b) * 2)"/>
+					<paragraph name="fd_rawdivcode" variant="code" text="session.formula_a / 3"/>
+					<paragraph name="fd_rawdivresult" variant="h2" sync:text="concat('= ', session.formula_a / 3)"/>
+					<paragraph name="fd_fixedcode" variant="code" text="fixed(session.formula_a / 3, 2)"/>
+					<paragraph name="fd_fixedresult" variant="h2" sync:text="concat('= ', fixed(session.formula_a / 3, 2))"/>
+					<paragraph name="fd_minmaxcode" variant="code" text="concat('min ', min(session.formula_a, session.formula_b), ', max ', max(session.formula_a, session.formula_b), ', |A - B| ', abs(session.formula_a - session.formula_b))"/>
+					<paragraph name="fd_minmaxresult" variant="h2" sync:text="concat('min ', min(session.formula_a, session.formula_b), ', max ', max(session.formula_a, session.formula_b), ', |A - B| ', abs(session.formula_a - session.formula_b))"/>
+					<paragraph name="fd_roundcode" variant="code" text="concat(round(session.formula_a), ' / ', floor(session.formula_a), ' / ', ceil(session.formula_a), ' / ', round(session.formula_a / 3, 1))"/>
+					<paragraph name="fd_roundresult" variant="h2" sync:text="concat(round(session.formula_a), ' / ', floor(session.formula_a), ' / ', ceil(session.formula_a), ' / ', round(session.formula_a / 3, 1))"/>
+
+					<separator name="fd_sep_logic" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_logictitle" variant="label" text="Comparison and logic"/>
+					<paragraph name="fd_comparecode" variant="code" text="if(session.formula_a &gt; session.formula_b, 'A is larger', if(session.formula_a == session.formula_b, 'A equals B', 'B is larger'))"/>
+					<paragraph name="fd_compareresult" variant="h2" sync:text="if(session.formula_a &gt; session.formula_b, 'A is larger', if(session.formula_a == session.formula_b, 'A equals B', 'B is larger'))"/>
+					<paragraph name="fd_boolcode" variant="code" text="session.formula_flag and session.formula_level &gt;= 50"/>
+					<paragraph name="fd_boolresult" variant="h2" sync:text="concat('= ', session.formula_flag and session.formula_level &gt;= 50, '   (a boolean becomes 1 or 0 as text)')"/>
+					<paragraph name="fd_betweencode" variant="code" text="if(between(session.formula_level, 0, 100), 'inside 0..100', 'outside 0..100')"/>
+					<paragraph name="fd_betweenresult" variant="h2" sync:text="if(between(session.formula_level, 0, 100), 'inside 0..100', 'outside 0..100')"/>
+					<paragraph name="fd_clampcode" variant="code" text="concat(clamp(session.formula_level, 0, 100), ' %')"/>
+					<paragraph name="fd_clampresult" variant="h2" sync:text="concat(clamp(session.formula_level, 0, 100), ' %')"/>
+					<paragraph name="fd_unitcode" variant="code" text="concat(fixed(if(session.formula_unit == 'um', session.formula_a * 1000, if(session.formula_unit == 'in', session.formula_a / 25.4, session.formula_a)), 3), ' ', session.formula_unit)"/>
+					<paragraph name="fd_unitresult" variant="h2" sync:text="concat(fixed(if(session.formula_unit == 'um', session.formula_a * 1000, if(session.formula_unit == 'in', session.formula_a / 25.4, session.formula_a)), 3), ' ', session.formula_unit)"/>
+					<paragraph name="fd_unithint" variant="subtext" text="A is taken as a length in millimeters and converted into the selected unit."/>
+
+					<separator name="fd_sep_text" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_texttitle" variant="label" text="Text"/>
+					<paragraph name="fd_upperlencode" variant="code" text="concat(upper(session.formula_text), ' has ', len(session.formula_text), ' characters')"/>
+					<paragraph name="fd_upperlenresult" variant="h2" sync:text="concat(upper(session.formula_text), ' has ', len(session.formula_text), ' characters')"/>
+					<paragraph name="fd_containscode" variant="code" text="if(contains(lower(session.formula_text), 'widget'), 'contains widget', if(startswith(session.formula_text, 'A'), 'starts with A', 'no match'))"/>
+					<paragraph name="fd_containsresult" variant="h2" sync:text="if(contains(lower(session.formula_text), 'widget'), 'contains widget', if(startswith(session.formula_text, 'A'), 'starts with A', 'no match'))"/>
+					<paragraph name="fd_coalescecode" variant="code" text="coalesce(session.formula_text, '(no text entered)')"/>
+					<paragraph name="fd_coalesceresult" variant="h2" sync:text="coalesce(session.formula_text, '(no text entered)')"/>
+					<paragraph name="fd_coalescehint" variant="subtext" text="Clear the text field to see the fallback."/>
+				</content>
+
+				<content name="fd_machine" title="Live Machine Values" subtitle="Formulas over state machine parameters" columnstart="3" rowstart="1" columnend="3" rowend="1" scrollbars="1">
+					<statusbanner name="fd_banner"
+						sync:severity="if(main.counters.error_count &gt; 0, 'error', if(main.flags.is_running, 'info', 'ok'))"
+						sync:title="if(main.counters.error_count &gt; 0, concat(main.counters.error_count, ' errors reported'), if(main.flags.is_running, concat('Running: layer ', main.counters.layer_current, ' of ', main.counters.layer_total), 'Process is not running'))"
+						sync:description="concat('State: ', main.$state, ', ', main.display.status_message)"/>
+					<paragraph name="fd_bannerhint" variant="subtext" text="Severity, title and description of the banner above are three formulas over main.counters.*, main.flags.is_running, main.display.status_message and the current state. Start the process on the Dashboard to see them change."/>
+
+					<separator name="fd_sep_form" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_formtitle" variant="label" text="Calculated form fields with format:value"/>
+					<form name="fd_machineform">
+						<calculated name="fd_progress" caption="Build progress" sync:value="if(main.counters.layer_total &gt; 0, main.counters.layer_current * 100 / main.counters.layer_total, 0)" format:value="%.1f" unit="%"/>
+						<calculated name="fd_layers" caption="Layers" sync:value="concat(main.counters.layer_current, ' / ', main.counters.layer_total)"/>
+						<calculated name="fd_pressuredelta" caption="Pressure - 1013.25 hPa" sync:value="main.sensors.pressure - 1013.25" format:value="%.2f" unit="hPa"/>
+						<calculated name="fd_gasperwatt" caption="Gas flow per laser watt" sync:value="if(main.sensors.laser_power &gt; 0, main.sensors.gas_flow / main.sensors.laser_power, 0)" format:value="%.3f" unit="l/min/W"/>
+					</form>
+					<paragraph name="fd_progresscode" variant="code" text="Build progress: if(main.counters.layer_total &gt; 0, main.counters.layer_current * 100 / main.counters.layer_total, 0) with format:value=&quot;%.1f&quot;"/>
+
+					<separator name="fd_sep_mixed" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_mixedtitle" variant="label" text="Machine values combined with the session"/>
+					<paragraph name="fd_mixedcode" variant="code" text="if(main.sensors.temperature &gt;= session.formula_a, 'Temperature is at or above A', concat('Temperature is ', fixed(session.formula_a - main.sensors.temperature, 1), ' C below A'))"/>
+					<paragraph name="fd_mixedresult" variant="h2" sync:text="if(main.sensors.temperature &gt;= session.formula_a, 'Temperature is at or above A', concat('Temperature is ', fixed(session.formula_a - main.sensors.temperature, 1), ' C below A'))"/>
+					<paragraph name="fd_usercode" variant="code" text="concat('Signed in as ', $user.login, ' (role ', $user.role, '), ', if($user.permission.permission_view_builds, 'may view builds', 'may not view builds'))"/>
+					<paragraph name="fd_userresult" variant="h2" sync:text="concat('Signed in as ', $user.login, ' (role ', $user.role, '), ', if($user.permission.permission_view_builds, 'may view builds', 'may not view builds'))"/>
+
+					<separator name="fd_sep_failsoft" orientation="horizontal" variant="light"/>
+
+					<paragraph name="fd_failsofttitle" variant="label" text="Runtime errors fail soft"/>
+					<paragraph name="fd_failsoftcode" variant="code" text="session.formula_a / session.formula_b"/>
+					<paragraph name="fd_failsoftresult" variant="h2" sync:text="concat('= ', session.formula_a / session.formula_b)"/>
+					<paragraph name="fd_failsofthint" variant="subtext" text="Set B to 0: the division fails, the whole formula evaluates to an empty text and the server logs one warning for this formula."/>
+					<paragraph name="fd_guardcode" variant="code" text="if(session.formula_b != 0, fixed(session.formula_a / session.formula_b, 3), 'B is zero')"/>
+					<paragraph name="fd_guardresult" variant="h2" sync:text="if(session.formula_b != 0, fixed(session.formula_a / session.formula_b, 3), 'B is zero')"/>
+					<paragraph name="fd_guardhint" variant="subtext" text="if() only evaluates the selected branch, so a guard avoids the error completely."/>
+				</content>
+			</grid>
+		</page>
+
+
 		<!-- ================================ MENU ================================ -->
 
 		<menu>
@@ -698,6 +840,7 @@
 			<item id="scene3d"       icon="mdi-rotate-3d-variant"  caption="3D Scene"       description="WebGL 3D scene rendering."                           targetpage="scene3d"/>
 			<item id="stress"        icon="mdi-test-tube"          caption="Stress Test"    description="Edge cases, large forms, and concurrent widgets."    targetpage="stress"/>
 			<item id="workfloweditor" icon="mdi-sitemap"           caption="Workflow"       description="Workflow editor with drag-and-drop step management." targetpage="workfloweditor"/>
+			<item id="formulademo"   icon="mdi-function-variant"   caption="Formulas"       description="Interactive examples of UI formulas in sync: attributes." targetpage="formulademo"/>
 		</menu>
 
 		<toolbar logoresource="ui_toolbarlogo">
