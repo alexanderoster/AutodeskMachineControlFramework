@@ -14,10 +14,16 @@
 	import SkipBack from '@lucide/svelte/icons/skip-back';
 	import SkipForward from '@lucide/svelte/icons/skip-forward';
 	import Play from '@lucide/svelte/icons/play';
+	import Paintbrush from '@lucide/svelte/icons/paintbrush';
+	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
 	import LayerViewImpl from '@core/common/AMCImplementation_LayerView.js';
+	// @ts-ignore
+	import { COLORMAP_PRESETS, DEFAULT_COLORMAP, colorMapCSSGradient } from '@core/common/AMCImplementation_ColorMaps.js';
 
 	const ZOOM_MARGIN = 10;
 	// Smaller selections are treated as accidental clicks and do not zoom.
@@ -51,6 +57,15 @@
 		{ mode: 'laseron', caption: 'Laser On', column: 'laseron' },
 		{ mode: 'powerramp', caption: 'Power', column: 'power' }
 	];
+	const TOOLPATH_COLOR_MODES = [
+		{ mode: 'color', caption: 'Color' },
+		{ mode: 'type', caption: 'Type' },
+		{ mode: 'time', caption: 'Time' },
+		{ mode: 'power', caption: 'Power' },
+		{ mode: 'laseron', caption: 'Laser On' }
+	];
+	type ColorRange = { min: number; max: number };
+	type ColorMapPreset = { name: string; caption: string };
 
 	let { module, app }: { module: any; app: any } = $props();
 	const poll = useModuleTick(() => module);
@@ -104,6 +119,51 @@
 	let pointColorCaption = $derived(
 		POINT_COLOR_MODES.find((entry) => entry.mode === pointColorMode)?.caption ?? 'Uniform'
 	);
+
+	// Toolpath display mode. Power and time are mapped onto a color map; the legend in the
+	// bottom left corner selects the map and the value range.
+	let toolpathColorMode = $state('color');
+	let toolpathColorCaption = $derived(
+		TOOLPATH_COLOR_MODES.find((entry) => entry.mode === toolpathColorMode)?.caption ?? 'Color'
+	);
+	let colorMapName = $state(DEFAULT_COLORMAP);
+	let colorMapInverted = $state(false);
+	let colorMapMenuOpen = $state(false);
+	let colorMapPresets = COLORMAP_PRESETS as ColorMapPreset[];
+	let colorMapCaption = $derived(colorMapPresets.find((preset) => preset.name === colorMapName)?.caption ?? '');
+	let colorMapGradient = $derived(colorMapCSSGradient(colorMapName, colorMapInverted));
+	// Laser power range of the build profiles, sent with every toolpath layer.
+	let buildPowerRange = $state.raw<ColorRange | null>(null);
+	let layerPowerRange = $state.raw<ColorRange | null>(null);
+	// Ranges edited in the legend; null follows the default range.
+	let editedPowerRange = $state.raw<ColorRange | null>(null);
+	let editedTimeRange = $state.raw<ColorRange | null>(null);
+	let configuredPowerRange = $derived.by((): ColorRange | null => {
+		poll.v;
+		if (!platform) return null;
+		const minText = String(platform.powerrangemin ?? '').trim();
+		const maxText = String(platform.powerrangemax ?? '').trim();
+		const minimum = Number(minText);
+		const maximum = Number(maxText);
+		if (minText === '' || maxText === '' || !Number.isFinite(minimum) || !Number.isFinite(maximum) || maximum <= minimum) return null;
+		return { min: minimum, max: maximum };
+	});
+	let defaultPowerRange = $derived.by((): ColorRange => {
+		if (configuredPowerRange) return configuredPowerRange;
+		const range = buildPowerRange ?? layerPowerRange;
+		if (!range) return { min: 0, max: 1 };
+		// A single nominal power is shown from zero.
+		if (range.max > range.min) return range;
+		return { min: 0, max: range.max > 0 ? range.max : 1 };
+	});
+	let defaultTimeRange = $derived<ColorRange>({ min: 0, max: timelineDuration > 0 ? timelineDuration : 1 });
+	let powerColorRange = $derived(editedPowerRange ?? defaultPowerRange);
+	let timeColorRange = $derived(editedTimeRange ?? defaultTimeRange);
+	let legendVisible = $derived(toolpathVisible && (toolpathColorMode === 'power' || toolpathColorMode === 'time'));
+	let legendRange = $derived(toolpathColorMode === 'time' ? timeColorRange : powerColorRange);
+	let legendUnit = $derived(toolpathColorMode === 'time' ? 'ms' : 'W');
+	let legendTitle = $derived(toolpathColorMode === 'time' ? 'Start time' : 'Laser power');
+	let legendRangeEdited = $derived(toolpathColorMode === 'time' ? editedTimeRange !== null : editedPowerRange !== null);
 	// Compared as a string so the calibration is only re-applied when a value changes.
 	let pointSizeCalibrationKey = $derived.by(() => {
 		poll.v;
@@ -209,6 +269,68 @@
 		if (!layerViewer || !initialized || !pointSizeCalibrationKey) return;
 		untrack(() => layerViewer.setPointSizeCalibration(base, factor, minimum, maximum));
 	});
+
+	$effect(() => {
+		const mode = toolpathColorMode;
+		if (!layerViewer || !initialized) return;
+		untrack(() => layerViewer.setToolpathColorMode(mode));
+	});
+
+	$effect(() => {
+		const name = colorMapName;
+		const inverted = colorMapInverted;
+		if (!layerViewer || !initialized) return;
+		untrack(() => layerViewer.setColorMap(name, inverted));
+	});
+
+	$effect(() => {
+		const range = powerColorRange;
+		if (!layerViewer || !initialized) return;
+		untrack(() => layerViewer.setColorRange('power', range.min, range.max));
+	});
+
+	$effect(() => {
+		const range = timeColorRange;
+		if (!layerViewer || !initialized) return;
+		untrack(() => layerViewer.setColorRange('time', range.min, range.max));
+	});
+
+	function cycleToolpathColorMode() {
+		const index = TOOLPATH_COLOR_MODES.findIndex((entry) => entry.mode === toolpathColorMode);
+		toolpathColorMode = TOOLPATH_COLOR_MODES[(index + 1) % TOOLPATH_COLOR_MODES.length].mode;
+		colorMapMenuOpen = false;
+	}
+
+	function formatRangeValue(value: number): number {
+		return Number(value.toPrecision(6));
+	}
+
+	function onLegendRangeChange(bound: 'min' | 'max', event: Event) {
+		const value = Number((event.target as HTMLInputElement).value);
+		if (!Number.isFinite(value)) return;
+		const current = legendRange;
+		const range = bound === 'min' ? { min: value, max: current.max } : { min: current.min, max: value };
+		if (toolpathColorMode === 'time') editedTimeRange = range;
+		else editedPowerRange = range;
+	}
+
+	function resetLegendRange() {
+		if (toolpathColorMode === 'time') editedTimeRange = null;
+		else editedPowerRange = null;
+	}
+
+	function selectColorMap(name: string) {
+		colorMapName = name;
+		colorMapMenuOpen = false;
+	}
+
+	function readPowerRange(data: any): ColorRange | null {
+		const minimum = Number(data?.powerrangemin);
+		const maximum = Number(data?.powerrangemax);
+		if (data?.powerrangemin === undefined || data?.powerrangemax === undefined) return null;
+		if (!Number.isFinite(minimum) || !Number.isFinite(maximum)) return null;
+		return { min: minimum, max: maximum };
+	}
 
 	function refreshTimeline() {
 		if (!layerViewer) return;
@@ -336,6 +458,10 @@
 			if (platform.displayed_layer !== platform.currentlayer || platform.displayed_build !== platform.builduuid) {
 				stopPlayback();
 				setTimeSliderValue(TIME_SLIDER_STEPS);
+				editedTimeRange = null;
+			}
+			if (platform.displayed_build !== platform.builduuid) {
+				editedPowerRange = null;
 			}
 			platform.displayed_layer = platform.currentlayer;
 			platform.displayed_build = platform.builduuid;
@@ -349,7 +475,9 @@
 			.then((layerJSON: any) => {
 				if (layerViewer) {
 					clearHover();
+					buildPowerRange = readPowerRange(layerJSON.data);
 					layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
+					layerPowerRange = layerViewer.getLayerPowerRange();
 					refreshTimeline();
 					layerViewer.RenderScene(true);
 				}
@@ -1090,6 +1218,15 @@
 				<Info size={16} />
 				<span>Properties</span>
 			</button>
+			<button
+				class="layerview-btn"
+				onclick={cycleToolpathColorMode}
+				title="Change how the toolpath is coloured: profile color, segment type, start time, laser power or laser on/off"
+				aria-label={`Toolpath colours: ${toolpathColorCaption}. Click to change`}
+			>
+				<Paintbrush size={16} />
+				<span>{toolpathColorCaption}</span>
+			</button>
 			{#if pointsLoaded}
 				<button
 					class="layerview-btn"
@@ -1188,6 +1325,87 @@
 					>Y</text>
 				</g>
 			</svg>
+		{/if}
+
+		<!-- Color map legend of the power and time display modes -->
+		{#if legendVisible}
+			<div
+				class="layerview-legend"
+				class:above-coordinates={coordinateSystemVisible}
+				class:above-time-slider={!coordinateSystemVisible && showTimeSlider && timelineDuration > 0}
+			>
+				<div class="layerview-legend-header">
+					<span class="layerview-legend-title">{legendTitle} [{legendUnit}]</span>
+					<button
+						type="button"
+						class="layerview-legend-btn layerview-legend-preset"
+						onclick={() => (colorMapMenuOpen = !colorMapMenuOpen)}
+						title="Choose a color map"
+						aria-label={`Color map: ${colorMapCaption}. Click to choose`}
+						aria-expanded={colorMapMenuOpen}
+					>
+						<span>{colorMapCaption}</span>
+						<ChevronDown size={12} />
+					</button>
+					<button
+						type="button"
+						class="layerview-legend-btn"
+						onclick={() => (colorMapInverted = !colorMapInverted)}
+						title="Invert the color map"
+						aria-label="Invert the color map"
+						aria-pressed={colorMapInverted}
+					>
+						<ArrowLeftRight size={12} />
+					</button>
+					<button
+						type="button"
+						class="layerview-legend-btn"
+						onclick={resetLegendRange}
+						disabled={!legendRangeEdited}
+						title={toolpathColorMode === 'time' ? 'Reset the range to the layer timeline' : 'Reset the range to the configured or build laser power range'}
+						aria-label="Reset the range"
+					>
+						<RotateCcw size={12} />
+					</button>
+				</div>
+
+				{#if colorMapMenuOpen}
+					<div class="layerview-legend-menu" role="listbox" aria-label="Color maps">
+						{#each colorMapPresets as preset (preset.name)}
+							<button
+								type="button"
+								class="layerview-legend-menu-item"
+								class:selected={preset.name === colorMapName}
+								role="option"
+								aria-selected={preset.name === colorMapName}
+								onclick={() => selectColorMap(preset.name)}
+							>
+								<span class="layerview-legend-menu-preview" style:background={colorMapCSSGradient(preset.name, colorMapInverted)}></span>
+								<span>{preset.caption}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				<div class="layerview-legend-bar" style:background={colorMapGradient}></div>
+				<div class="layerview-legend-range">
+					<input
+						type="number"
+						step="any"
+						value={formatRangeValue(legendRange.min)}
+						onchange={(event) => onLegendRangeChange('min', event)}
+						aria-label={`Minimum ${legendTitle.toLowerCase()} in ${legendUnit}`}
+					/>
+					<span class="layerview-legend-mid">{formatRangeValue((legendRange.min + legendRange.max) / 2)}</span>
+					<input
+						type="number"
+						step="any"
+						value={formatRangeValue(legendRange.max)}
+						onchange={(event) => onLegendRangeChange('max', event)}
+						aria-label={`Maximum ${legendTitle.toLowerCase()} in ${legendUnit}`}
+					/>
+				</div>
+			</div>
 		{/if}
 
 		<!-- Live cursor position readout (machine coordinates, mm) -->
@@ -1590,6 +1808,134 @@
 	}
 	.coordinate-label-y {
 		fill: #22c55e;
+	}
+	.layerview-legend {
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		width: 260px;
+		padding: 6px 8px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.72);
+		color: white;
+		font-size: 11px;
+		z-index: 11;
+	}
+	/* Above the coordinate indicator (bottom 8px + 64px) or the time slider. */
+	.layerview-legend.above-coordinates {
+		bottom: 80px;
+	}
+	.layerview-legend.above-time-slider {
+		bottom: 44px;
+	}
+	.layerview-legend-header {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-bottom: 5px;
+	}
+	.layerview-legend-title {
+		flex: 1;
+		min-width: 0;
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.layerview-legend-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		height: 20px;
+		min-width: 22px;
+		padding: 0 5px;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 3px;
+		background: rgba(255, 255, 255, 0.08);
+		color: white;
+		font-size: 11px;
+		cursor: pointer;
+	}
+	.layerview-legend-btn:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.2);
+	}
+	.layerview-legend-btn:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+	.layerview-legend-btn[aria-pressed='true'] {
+		background-color: var(--primary, #2563eb);
+	}
+	.layerview-legend-preset span {
+		max-width: 110px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.layerview-legend-menu {
+		position: absolute;
+		left: 0;
+		bottom: calc(100% + 4px);
+		width: 100%;
+		padding: 4px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.88);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	}
+	.layerview-legend-menu-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		padding: 4px 6px;
+		border: none;
+		border-radius: 3px;
+		background: transparent;
+		color: white;
+		font-size: 11px;
+		text-align: left;
+		cursor: pointer;
+	}
+	.layerview-legend-menu-item:hover,
+	.layerview-legend-menu-item.selected {
+		background: rgba(255, 255, 255, 0.15);
+	}
+	.layerview-legend-menu-preview {
+		flex: none;
+		width: 90px;
+		height: 10px;
+		border-radius: 2px;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+	}
+	.layerview-legend-bar {
+		height: 12px;
+		border-radius: 2px;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+	}
+	.layerview-legend-range {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		margin-top: 4px;
+	}
+	.layerview-legend-range input {
+		width: 72px;
+		padding: 1px 4px;
+		border: 1px solid rgba(255, 255, 255, 0.35);
+		border-radius: 3px;
+		background: rgba(255, 255, 255, 0.95);
+		color: #111111;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+	}
+	.layerview-legend-range input:last-child {
+		text-align: right;
+	}
+	.layerview-legend-mid {
+		color: rgba(255, 255, 255, 0.75);
+		font-variant-numeric: tabular-nums;
 	}
 	.layerview-mouse-pos {
 		position: absolute;

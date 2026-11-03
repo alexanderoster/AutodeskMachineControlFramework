@@ -134,7 +134,10 @@ class WebGLElement {
 
 class WebGLLinesElement extends WebGLElement {
 
-    constructor(lineData, zValue, lineThickness, lineColor, vertexcolors) {
+	// lineGradients (optional, requires vertexcolors): per line either null or a flat array
+	// [t0, color0, t1, color1, ...] with t increasing from 0 to 1 along the line. Colors are
+	// interpolated linearly between the stops; the line color in vertexcolors is ignored then.
+    constructor(lineData, zValue, lineThickness, lineColor, vertexcolors, lineGradients) {
         super();
 
         let geometry = new THREE.BufferGeometry();
@@ -169,7 +172,39 @@ class WebGLLinesElement extends WebGLElement {
             const dy = y2 - y1;
             const dlen = Math.sqrt(dx * dx + dy * dy);
 
-            if (dlen > 0) {
+			const gradient = (vertexcolors && lineGradients) ? lineGradients[i] : null;
+
+            if ((dlen > 0) && gradient && (gradient.length >= 4)) {
+                const ux =  - dy / dlen * lineThickness * 0.5;
+                const uy = dx / dlen * lineThickness * 0.5;
+
+				let startColor = new THREE.Color(gradient[1]);
+				for (let s = 2; s + 1 < gradient.length; s += 2) {
+					const ta = gradient[s - 2];
+					const tb = gradient[s];
+					const endColor = new THREE.Color(gradient[s + 1]);
+					if (tb > ta) {
+						const xa = x1 + dx * ta;
+						const ya = y1 + dy * ta;
+						const xb = x1 + dx * tb;
+						const yb = y1 + dy * tb;
+						positions.push(xa + ux, ya + uy, zValue);
+						positions.push(xb + ux, yb + uy, zValue);
+						positions.push(xb - ux, yb - uy, zValue);
+						positions.push(xb - ux, yb - uy, zValue);
+						positions.push(xa - ux, ya - uy, zValue);
+						positions.push(xa + ux, ya + uy, zValue);
+
+						colors.push(startColor.r, startColor.g, startColor.b);
+						colors.push(endColor.r, endColor.g, endColor.b);
+						colors.push(endColor.r, endColor.g, endColor.b);
+						colors.push(endColor.r, endColor.g, endColor.b);
+						colors.push(startColor.r, startColor.g, startColor.b);
+						colors.push(startColor.r, startColor.g, startColor.b);
+					}
+					startColor = endColor;
+				}
+            } else if (dlen > 0) {
                 const ux =  - dy / dlen * lineThickness * 0.5;
                 const uy = dx / dlen * lineThickness * 0.5;
 
@@ -1277,13 +1312,13 @@ class WebGLImpl {
         return gridElement;
     }
 
-    add2DLineGeometry(identifier, lineData, zValue, lineThickness, lineColor, vertexcolors) {
+    add2DLineGeometry(identifier, lineData, zValue, lineThickness, lineColor, vertexcolors, lineGradients) {
         if (!identifier)
             return;
 		
 		this.removeElement (identifier);
 
-        let linesElement = new WebGLLinesElement(lineData, zValue, lineThickness, lineColor, vertexcolors);
+        let linesElement = new WebGLLinesElement(lineData, zValue, lineThickness, lineColor, vertexcolors, lineGradients);
 
         this.addElement(identifier, linesElement);
 
