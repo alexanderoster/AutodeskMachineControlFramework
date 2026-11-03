@@ -263,7 +263,7 @@ namespace AMC {
 		void storePointModificationFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pFactorData);
 
 		// Stores the factors at the start and at the end of the line that ends in each segment point.
-		// Constant factors have identical start and end values.
+		// The start is the factor of the previous point, unless the point defines an explicit start/end pair.
 		void storePointModificationFactorRamps(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pStartFactorData, double* pEndFactorData);
 
 		static std::string getValueNameByType(const LibMCEnv::eToolpathProfileValueType eValueType);

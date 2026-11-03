@@ -18,6 +18,7 @@
 	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Spline from '@lucide/svelte/icons/spline';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
@@ -126,6 +127,7 @@
 	let toolpathColorCaption = $derived(
 		TOOLPATH_COLOR_MODES.find((entry) => entry.mode === toolpathColorMode)?.caption ?? 'Color'
 	);
+	let endPointsVisible = $state(false);
 	let colorMapName = $state(DEFAULT_COLORMAP);
 	let colorMapInverted = $state(false);
 	let colorMapMenuOpen = $state(false);
@@ -274,6 +276,12 @@
 		const mode = toolpathColorMode;
 		if (!layerViewer || !initialized) return;
 		untrack(() => layerViewer.setToolpathColorMode(mode));
+	});
+
+	$effect(() => {
+		const visible = endPointsVisible;
+		if (!layerViewer || !initialized) return;
+		untrack(() => layerViewer.setEndPointsVisible(visible));
 	});
 
 	$effect(() => {
@@ -1226,6 +1234,16 @@
 			>
 				<Paintbrush size={16} />
 				<span>{toolpathColorCaption}</span>
+			</button>
+			<button
+				class="layerview-btn"
+				onclick={() => (endPointsVisible = !endPointsVisible)}
+				title="Show the start and end points of the toolpath lines"
+				aria-label="Toggle toolpath end points"
+				aria-pressed={endPointsVisible}
+			>
+				<Spline size={16} />
+				<span>End Points</span>
 			</button>
 			{#if pointsLoaded}
 				<button

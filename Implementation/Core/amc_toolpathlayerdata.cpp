@@ -1121,10 +1121,15 @@ namespace AMC {
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTOVERRIDECOUNT, m_sDebugName);
 			}
 
+			// A point with a single factor ends a line that ramps from the factor of the previous point.
+			// Points with an explicit start/end pair define the ramp of their line themselves.
 			size_t nPointIndex = segment.m_PointStartIndex;
+			double dPreviousEndFactor = pointFactors.empty() ? 0.0 : pointFactors.front().m_Point2Factor;
 			for (auto& pointFactor : pointFactors) {
-				m_StartOverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = pointFactor.m_Point1Factor;
+				bool bHasExplicitStart = (pointFactor.m_Point1Factor != pointFactor.m_Point2Factor);
+				m_StartOverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = bHasExplicitStart ? pointFactor.m_Point1Factor : dPreviousEndFactor;
 				m_OverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = pointFactor.m_Point2Factor;
+				dPreviousEndFactor = pointFactor.m_Point2Factor;
 				nPointIndex++;
 			}
 

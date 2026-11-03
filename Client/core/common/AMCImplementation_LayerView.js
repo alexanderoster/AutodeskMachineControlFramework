@@ -62,6 +62,10 @@ const LAYERVIEW_DEFAULTCONTOURCOLOR = 0x00AA88;
 const LAYERVIEW_DEFAULTTRAVELCOLOR = 0x1E88E5;
 // Jump lines are thinner than marks.
 const LAYERVIEW_JUMPTHICKNESSFACTOR = 0.5;
+// Start and end points of the toolpath lines (diameter in CSS pixels). The color contrasts with the background.
+const LAYERVIEW_ENDPOINTPIXELS = 4.0;
+const LAYERVIEW_ENDPOINTCOLOR_LIGHT = 0x111111;
+const LAYERVIEW_ENDPOINTCOLOR_DARK = 0xf5f5f5;
 
 // Hovered line overlay: color, arrow head at the end point (minimum length in CSS pixels and
 // in line thicknesses, wing thickness relative to the line, half opening angle) and the
@@ -165,6 +169,8 @@ class LayerViewImpl {
 		this.typeColors = { hatch: LAYERVIEW_DEFAULTHATCHCOLOR, polyline: LAYERVIEW_DEFAULTCONTOURCOLOR, travel: LAYERVIEW_DEFAULTTRAVELCOLOR };
 		// Index of the line that each jump leads to, ascending.
 		this.jumpTargetLines = null;
+		this.endPointsVisible = false;
+		this.endPointColor = LAYERVIEW_ENDPOINTCOLOR_LIGHT;
 
 		this.highlightLineIndex = -1;
 		this.highlightScaling = 0.0;
@@ -205,7 +211,15 @@ class LayerViewImpl {
 		};
 		const typeColorsChanged = (typeColors.hatch !== this.typeColors.hatch) || (typeColors.polyline !== this.typeColors.polyline) || (typeColors.travel !== this.typeColors.travel);
 		this.typeColors = typeColors;
-		if (typeColorsChanged && ((this.toolpathColorMode === "type") || (this.toolpathColorMode === "laseron")))
+
+		const background = LayerViewImpl.parseHexColor (colorSet.background, 0xffffff);
+		const luminance = 0.299 * ((background >> 16) & 255) + 0.587 * ((background >> 8) & 255) + 0.114 * (background & 255);
+		const endPointColor = (luminance < 128) ? LAYERVIEW_ENDPOINTCOLOR_DARK : LAYERVIEW_ENDPOINTCOLOR_LIGHT;
+		const endPointColorChanged = endPointColor !== this.endPointColor;
+		this.endPointColor = endPointColor;
+
+		if ((typeColorsChanged && ((this.toolpathColorMode === "type") || (this.toolpathColorMode === "laseron"))) ||
+			(endPointColorChanged && this.endPointsVisible))
 			this.refreshToolpathColors ();
 
         this.rebuildGrid();
@@ -351,7 +365,7 @@ class LayerViewImpl {
             gridgeometry.setScaleXY(gridScale, gridScale);
         }
 
-        for (const identifier of ["layerdata_lines", "layerdata_jumps"]) {
+        for (const identifier of ["layerdata_lines", "layerdata_jumps", "layerdata_endpoints"]) {
             var layerlinesgeometry = this.glInstance.findElement(identifier);
             if (layerlinesgeometry) {
                 layerlinesgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
@@ -1166,6 +1180,10 @@ class LayerViewImpl {
 		if (linesElement && (typeof linesElement.setVisibleLineCount === "function"))
 			linesElement.setVisibleLineCount (this.visibleLineCount);
 
+		const endPointsElement = this.glInstance.findElement ("layerdata_endpoints");
+		if (endPointsElement && (typeof endPointsElement.setDrawCount === "function"))
+			endPointsElement.setDrawCount (this.visibleLineCount * 2);
+
 		const jumpsElement = this.glInstance.findElement ("layerdata_jumps");
 		if (jumpsElement && this.jumpTargetLines && (typeof jumpsElement.setVisibleLineCount === "function"))
 			jumpsElement.setVisibleLineCount (LayerViewImpl.countSortedBelow (this.jumpTargetLines, this.visibleLineCount, false));
@@ -1549,6 +1567,7 @@ class LayerViewImpl {
 
 		this.glInstance.removeElement ("layerdata_lines");
 		this.glInstance.removeElement ("layerdata_jumps");
+		this.glInstance.removeElement ("layerdata_endpoints");
 		this.jumpTargetLines = null;
 
 		const lineCount = this.segmentProperties.length;
@@ -1610,6 +1629,20 @@ class LayerViewImpl {
 
 		if (mode === "laseron")
 			this.buildJumpGeometry (thickness * LAYERVIEW_JUMPTHICKNESSFACTOR);
+
+		// Two points per line, so the time cap shows the points of the first visibleLineCount lines.
+		if (this.endPointsVisible)
+			this.glInstance.add2DScreenPointsGeometry ("layerdata_endpoints", new Float32Array (this.linesCoordinates), 62,
+				LAYERVIEW_ENDPOINTPIXELS * this.glInstance.getPixelRatio (), this.endPointColor, null);
+	}
+
+	setEndPointsVisible (visible)
+	{
+		const newVisible = visible === true;
+		if (newVisible === this.endPointsVisible)
+			return;
+		this.endPointsVisible = newVisible;
+		this.refreshToolpathColors ();
 	}
 
 	// Jumps between marking vectors: from the end of a polyline or hatch line to the start of the next one.
