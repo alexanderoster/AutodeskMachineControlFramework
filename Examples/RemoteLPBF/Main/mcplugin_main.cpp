@@ -148,7 +148,6 @@ static void updateSubsystemErrorFlags(LibMCEnv::PStateEnvironment pStateEnvironm
 
 	pStateEnvironment->SetBoolParameter("ui", "main_haserror", false);
 	pStateEnvironment->SetBoolParameter("ui", "laser_haserror", bLaserError);
-	pStateEnvironment->SetBoolParameter("ui", "system_haserror", bLaserError);
 	pStateEnvironment->SetBoolParameter("execution", "lasterror", bLaserError);
 }
 
@@ -229,7 +228,6 @@ public:
 		// Discard any stale signals left over from a previous run, and clear the error flags.
 		pStateEnvironment->ClearAllUnhandledSignals();
 		pStateEnvironment->SetBoolParameter("ui", "main_haserror", false);
-		pStateEnvironment->SetBoolParameter("ui", "system_haserror", false);
 
 		// Bootstrap and apply the persistent machine configuration.
 		applyMachineConfigurationToRuntime(pStateEnvironment);
@@ -811,7 +809,6 @@ public:
 
 		// Surface the main fault so the recovery button appears.
 		pStateEnvironment->SetBoolParameter("ui", "main_haserror", true);
-		pStateEnvironment->SetBoolParameter("ui", "system_haserror", true);
 
 		// Stay faulted until a recovery request arrives, then re-run full initialisation.
 		auto pSignal = pStateEnvironment->ClaimSignalFromQueue("signal_initialize_again");

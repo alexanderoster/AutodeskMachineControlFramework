@@ -83,9 +83,8 @@
 			<parameter name="executionstatusdisplay" description="Human-readable execution status" default="Idle" type="string"/>
 			<parameter name="build_canbecanceled" description="Execution can be canceled" default="0" type="bool"/>
 			<parameter name="build_canbestarted" description="Execution can be started" default="1" type="bool"/>
-			<!-- Per-subsystem error flags driving the Overview tab's recovery UI. system_haserror
-			     gates the whole recovery section (shown when any subsystem is in error). -->
-			<parameter name="system_haserror" description="Any subsystem reported an error" default="0" type="bool"/>
+			<!-- Per-subsystem error flags driving the Overview tab's recovery UI. The overall
+			     system banner combines them with a UI formula. -->
 			<parameter name="main_haserror" description="Main system reported an error" default="0" type="bool"/>
 			<parameter name="laser_haserror" description="Laser system reported an error" default="0" type="bool"/>
 		</parametergroup>
@@ -613,8 +612,8 @@
 							<row height="1" unit="free"/>
 
 							<content name="ov_banner" columnstart="1" rowstart="1" columnend="2" rowend="1" rowposition="centered">
-								<statusbanner name="ov_ok" severity="ok" title="All systems nominal" description="All subsystems are operating normally." sync:visible="!main.ui.system_haserror"/>
-								<statusbanner name="ov_error" severity="error" title="System error" description="One or more subsystems reported an error. Use the recovery button next to the affected subsystem." sync:visible="main.ui.system_haserror"/>
+								<statusbanner name="ov_ok" severity="ok" title="All systems nominal" description="All subsystems are operating normally." sync:visible="not (main.ui.main_haserror or main.ui.laser_haserror)"/>
+								<statusbanner name="ov_error" severity="error" title="System error" description="One or more subsystems reported an error. Use the recovery button next to the affected subsystem." sync:visible="main.ui.main_haserror or main.ui.laser_haserror"/>
 							</content>
 
 							<content name="ov_mainstatecell" columnstart="1" rowstart="2" columnend="1" rowend="2" rowposition="centered">
@@ -665,8 +664,8 @@
 
 							<content name="ov_watchdogcell" columnstart="1" rowstart="8" columnend="2" rowend="8" rowposition="centered">
 								<form name="ov_watchdogform">
-									<edit name="ov_exposurecount" caption="Layers exposed" sync:value="main.execution.exposurecount" readonly="1"/>
-									<edit name="ov_watchdog" caption="Watchdog remaining (ms)" sync:value="main.execution.watchdogremainingms" readonly="1"/>
+									<edit name="ov_exposurecount" caption="Layers exposed" sync:value="if(main.jobinfo.layercount &gt; 0, concat(main.execution.exposurecount, ' / ', main.jobinfo.layercount), main.execution.exposurecount)" readonly="1"/>
+									<edit name="ov_watchdog" caption="Watchdog remaining" sync:value="if(main.execution.watchdogtimeout &gt; 0, concat(fixed(main.execution.watchdogremainingms / 1000, 1), ' s'), 'disabled')" readonly="1"/>
 								</form>
 							</content>
 
