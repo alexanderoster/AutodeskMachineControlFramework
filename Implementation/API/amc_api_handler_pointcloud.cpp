@@ -84,16 +84,39 @@ PAPIResponse CAPIHandler_PointCloud::handleRequest(const std::string& sURI, cons
 	if (requestType != eAPIRequestType::rtGet)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
-	// Extract UUID from URI: "api/pointcloud/{uuid}"
+	// Extract UUID from URI: "api/pointcloud/{uuid}" or "api/pointcloud/{uuid}/{csv|parquet}"
 	auto sParameterString = sURI.substr(getBaseURI().length());
 	if ((sParameterString.length() < 37) || (sParameterString[0] != '/'))
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	std::string sExportFormat;
+	if (sParameterString.length() > 37) {
+		if (sParameterString[37] != '/')
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+		sExportFormat = AMCCommon::CUtils::toLowerString(sParameterString.substr(38));
+		if ((sExportFormat != AMC_API_POINTCLOUD_EXPORT_CSV) && (sExportFormat != AMC_API_POINTCLOUD_EXPORT_PARQUET))
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+	}
 
 	std::string sScatterplotUUID = AMCCommon::CUtils::normalizeUUIDString(sParameterString.substr(1, 36));
 	auto pToolpathHandler = m_pSystemState->getToolpathHandlerInstance();
 	auto pScatterplot = pToolpathHandler->restoreScatterplot(sScatterplotUUID, false);
 	if (pScatterplot.get() == nullptr)
 		return nullptr;
+
+	if (sExportFormat == AMC_API_POINTCLOUD_EXPORT_CSV) {
+		auto pResponse = std::make_shared<CAPIFixedBufferResponse>(AMC_API_CONTENTTYPE_CSV);
+		pScatterplot->writeCSVToBuffer(pResponse->getBuffer());
+		pResponse->setContentDispositionName("pointcloud_" + sScatterplotUUID + ".csv");
+		return pResponse;
+	}
+
+	if (sExportFormat == AMC_API_POINTCLOUD_EXPORT_PARQUET) {
+		auto pResponse = std::make_shared<CAPIFixedBufferResponse>(AMC_API_CONTENTTYPE_PARQUET);
+		pScatterplot->writeParquetToBuffer(pResponse->getBuffer());
+		pResponse->setContentDispositionName("pointcloud_" + sScatterplotUUID + ".parquet");
+		return pResponse;
+	}
 
 	return std::make_shared<CAPIRenderPointCloudResponse>(pScatterplot.get());
 }

@@ -88,6 +88,12 @@ namespace AMC {
 
 		void computeBoundaries();
 
+		// Exports one row per point with the columns x, y and "<channel>_<column>" for every channel
+		// column. Channel columns shorter than the point list are padded with NaN (an empty CSV cell).
+		void writeCSVToBuffer(std::vector<uint8_t>& buffer);
+
+		void writeParquetToBuffer(std::vector<uint8_t>& buffer);
+
 
 	};
 
