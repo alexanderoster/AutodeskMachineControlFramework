@@ -462,6 +462,57 @@ namespace AMC {
 		modificationFactor = CToolpathLayerData::convertModificationFactor(modificationFactor3MF);
 	}
 
+	bool CToolpathEntity::getProfileValueRange(const std::string& sNameSpace, const std::string& sValueName, double& dMinValue, double& dMaxValue)
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+		dMinValue = 0.0;
+		dMaxValue = 0.0;
+
+		if (m_pToolpath.get() == nullptr)
+			return false;
+
+		bool bFound = false;
+		auto includeValue = [&](double dValue) {
+			if (!bFound) {
+				dMinValue = dValue;
+				dMaxValue = dValue;
+				bFound = true;
+			}
+			else {
+				if (dValue < dMinValue)
+					dMinValue = dValue;
+				if (dValue > dMaxValue)
+					dMaxValue = dValue;
+			}
+		};
+
+		uint32_t nProfileCount = m_pToolpath->GetProfileCount();
+		for (uint32_t nProfileIndex = 0; nProfileIndex < nProfileCount; nProfileIndex++) {
+			auto pProfile = m_pToolpath->GetProfile(nProfileIndex);
+			if (pProfile->HasParameterValue(sNameSpace, sValueName))
+				includeValue(pProfile->GetParameterDoubleValue(sNameSpace, sValueName));
+
+			uint32_t nModifierCount = pProfile->GetModifierCount();
+			for (uint32_t nModifierIndex = 0; nModifierIndex < nModifierCount; nModifierIndex++) {
+				std::string sModifierNameSpace;
+				std::string sModifierValueName;
+				Lib3MF::eToolpathProfileModificationType modificationType3MF = Lib3MF::eToolpathProfileModificationType::NoModification;
+				Lib3MF::eToolpathProfileModificationFactor modificationFactor3MF = Lib3MF::eToolpathProfileModificationFactor::Unknown;
+				double dModifierMin = 0.0;
+				double dModifierMax = 0.0;
+				pProfile->GetModifierInformationByIndex(nModifierIndex, sModifierNameSpace, sModifierValueName, modificationType3MF, modificationFactor3MF, dModifierMin, dModifierMax);
+
+				if ((sModifierNameSpace == sNameSpace) && (sModifierValueName == sValueName) && (modificationType3MF != Lib3MF::eToolpathProfileModificationType::NoModification)) {
+					includeValue(dModifierMin);
+					includeValue(dModifierMax);
+				}
+			}
+		}
+
+		return bFound;
+	}
+
 	void CToolpathEntity::registerCustomSegmentAttribute(const std::string& sNameSpace, const std::string& sAttributeName, const LibMCEnv::eToolpathAttributeType eAttributeType)
 	{
 		std::lock_guard<std::mutex> lockGuard(m_Mutex);

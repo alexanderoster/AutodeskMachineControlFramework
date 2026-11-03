@@ -180,6 +180,8 @@ namespace AMC {
 		std::vector<int64_t> m_SegmentAttributeData;
 		std::vector<LibMCEnv::sPosition2D> m_Points;
 		std::vector<sToolpathLayerOverride> m_OverrideFactors;
+		// Polylines and loops: factor at the start of the line that ends in the point (m_OverrideFactors holds the end).
+		std::vector<sToolpathLayerOverride> m_StartOverrideFactors;
 		std::vector<sToolpathLayerSubinterpolationEntry> m_SubinterpolationTable;
 		std::vector<Lib3MF::sHatchModificationInterpolationData> m_InterpolationData;
 
@@ -203,6 +205,13 @@ namespace AMC {
 		void readHatchOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment);
 		void readPointOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment, bool bIsLoop);
 
+		// Validates and stores the sub-interpolation values of one factor, one table entry per element
+		// (hatch or point). Loops repeat the entry of the first point for the explicitly stored closing point.
+		void storeSubinterpolationTable(sToolpathLayerSegment& segment, uint32_t nFactorIndex, uint32_t nElementCount, bool bRepeatFirstElement,
+			const std::vector<uint32_t>& counts, const std::vector<Lib3MF::sHatchModificationInterpolationData>& values);
+
+		void getSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nElementIndex, const uint32_t nElementCount, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t& nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData*& pSubInterpolationData);
+
 	public:
 
 		// Segments whose build item UUID (normalized) is contained in excludedPartUUIDs are skipped entirely.
@@ -216,6 +225,8 @@ namespace AMC {
 		LibMCEnv::eToolpathSegmentType getSegmentType (const uint32_t nSegmentIndex);
 		uint32_t getSegmentTotalSubinterpolationCount (const uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor);
 		void getHatchSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nHatchIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t & nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData * & pSubInterpolationData);
+		// Sub-interpolation values of the polyline or loop line that ends in the given point.
+		void getPointSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nPointIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t& nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData*& pSubInterpolationData);
 
 		void storePointsToBufferInUnits (const uint32_t nSegmentIndex, LibMCEnv::sPosition2D * pPositionData);
 		void storeHatchesToBufferInUnits (const uint32_t nSegmentIndex, LibMCEnv::sHatch2D* pHatchData);
@@ -250,6 +261,10 @@ namespace AMC {
 
 		// Stores one factor per segment point. The factor of a point applies to the line that ends in this point.
 		void storePointModificationFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pFactorData);
+
+		// Stores the factors at the start and at the end of the line that ends in each segment point.
+		// Constant factors have identical start and end values.
+		void storePointModificationFactorRamps(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pStartFactorData, double* pEndFactorData);
 
 		static std::string getValueNameByType(const LibMCEnv::eToolpathProfileValueType eValueType);
 

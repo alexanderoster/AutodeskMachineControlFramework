@@ -126,6 +126,10 @@ namespace AMC {
 		uint32_t getProfileModifierCount(uint32_t nProfileIndex);
 		void getProfileModifierInfo(uint32_t nProfileIndex, uint32_t nModifierIndex, std::string& sNameSpace, std::string& sValueName, LibMCEnv::eToolpathProfileModificationType& modificationType, LibMCEnv::eToolpathProfileModificationFactor& modificationFactor, double& dMinValue, double& dMaxValue);
 
+		// Range of a profile value over all profiles of the build, including the bounds of its modifiers.
+		// Returns false if no profile defines the value.
+		bool getProfileValueRange(const std::string& sNameSpace, const std::string& sValueName, double& dMinValue, double& dMaxValue);
+
 		uint32_t getLayerZInUnits(uint32_t nLayerIndex);
 		uint32_t getLayerMinZInUnits(uint32_t nLayerIndex);
 

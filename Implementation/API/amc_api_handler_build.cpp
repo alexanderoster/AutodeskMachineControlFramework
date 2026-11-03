@@ -173,27 +173,42 @@ static void writeSegmentPowerModulation(CJSONWriter& writer, CJSONWriterObject& 
 	if (!pLayerData->segmentHasOverrideFactors(nSegmentIndex, modificationFactor))
 		return;
 
-	std::vector<double> factors;
-	factors.resize(nPointCount);
-	pLayerData->storePointModificationFactors(nSegmentIndex, modificationFactor, factors.data());
+	std::vector<double> startFactors;
+	std::vector<double> endFactors;
+	startFactors.resize(nPointCount);
+	endFactors.resize(nPointCount);
+	pLayerData->storePointModificationFactorRamps(nSegmentIndex, modificationFactor, startFactors.data(), endFactors.data());
 
 	CJSONWriterArray powerArray(writer);
-	for (double dFactor : factors)
+	for (double dFactor : endFactors)
 		powerArray.addDouble("", evaluateModifiedValue(dFactor, dMinValue, dMaxValue));
 	segmentObject.addArray(AMC_API_KEY_POWERS, powerArray);
 
+	bool bIsHatch = (segmentType == LibMCEnv::eToolpathSegmentType::Hatch);
+
+	// Polylines: "powers" is the power at the end of the line that ends in a point, "powerstarts" the power at its start.
+	if (!bIsHatch && (modificationType != LibMCEnv::eToolpathProfileModificationType::ConstantModification)) {
+		CJSONWriterArray powerStartArray(writer);
+		for (double dFactor : startFactors)
+			powerStartArray.addDouble("", evaluateModifiedValue(dFactor, dMinValue, dMaxValue));
+		segmentObject.addArray(AMC_API_KEY_POWERSTARTS, powerStartArray);
+	}
+
 	if ((modificationType == LibMCEnv::eToolpathProfileModificationType::NonlinearModification) &&
-		(segmentType == LibMCEnv::eToolpathSegmentType::Hatch) &&
 		(pLayerData->getSegmentTotalSubinterpolationCount(nSegmentIndex, modificationFactor) > 0)) {
 
 		CJSONWriterArray subCountArray(writer);
 		CJSONWriterArray subArray(writer);
 
-		uint32_t nHatchCount = nPointCount / 2;
-		for (uint32_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
+		// One entry per hatch, or one entry per point for the line that ends in the point.
+		uint32_t nElementCount = bIsHatch ? (nPointCount / 2) : nPointCount;
+		for (uint32_t nElementIndex = 0; nElementIndex < nElementCount; nElementIndex++) {
 			uint32_t nSubInterpolationCount = 0;
 			Lib3MF::sHatchModificationInterpolationData* pSubInterpolationData = nullptr;
-			pLayerData->getHatchSubinterpolationData(nSegmentIndex, nHatchIndex, modificationFactor, nSubInterpolationCount, pSubInterpolationData);
+			if (bIsHatch)
+				pLayerData->getHatchSubinterpolationData(nSegmentIndex, nElementIndex, modificationFactor, nSubInterpolationCount, pSubInterpolationData);
+			else
+				pLayerData->getPointSubinterpolationData(nSegmentIndex, nElementIndex, modificationFactor, nSubInterpolationCount, pSubInterpolationData);
 
 			subCountArray.addInteger(nSubInterpolationCount);
 			for (uint32_t nSubIndex = 0; nSubIndex < nSubInterpolationCount; nSubIndex++) {
@@ -249,6 +264,14 @@ void CAPIHandler_Build::handleToolpathRequest(CJSONWriter& writer, const uint8_t
 			partObject.addString(AMC_API_KEY_UPLOAD_BUILDPARTNAME, pToolpathPart->getName());
 			partObject.addBool(AMC_API_KEY_PARTDISABLED, disabledParts.find(sPartUUID) != disabledParts.end());
 			partArray.addObject(partObject);
+		}
+
+		double dPowerRangeMin = 0.0;
+		double dPowerRangeMax = 0.0;
+		std::string sBuildLaserPowerValueName = AMC::CToolpathLayerData::getValueNameByType(LibMCEnv::eToolpathProfileValueType::LaserPower);
+		if (pToolpath->getProfileValueRange("", sBuildLaserPowerValueName, dPowerRangeMin, dPowerRangeMax)) {
+			writer.addDouble(AMC_API_KEY_POWERRANGEMIN, dPowerRangeMin);
+			writer.addDouble(AMC_API_KEY_POWERRANGEMAX, dPowerRangeMax);
 		}
 
 		auto nLayerCount = pToolpath->getLayerCount();

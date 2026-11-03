@@ -357,6 +357,7 @@ namespace AMC {
 		// Read point information
 		m_Points.resize(nTotalPointCount);
 		m_OverrideFactors.resize(nTotalPointCount);
+		m_StartOverrideFactors.resize(nTotalPointCount);
 		for (auto & segment : m_Segments) {
 
 			Lib3MF::eToolpathSegmentType eType = Lib3MF::eToolpathSegmentType::Unknown;
@@ -900,20 +901,32 @@ namespace AMC {
 		if (nSegmentIndex >= m_Segments.size())
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
 
+		getSubinterpolationData(nSegmentIndex, nHatchIndex, m_Segments[nSegmentIndex].m_PointCount / 2, eModificationFactor, nSubInterpolationCount, pSubInterpolationData);
+	}
+
+	void CToolpathLayerData::getPointSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nPointIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t& nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData*& pSubInterpolationData)
+	{
+		if (nSegmentIndex >= m_Segments.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
+
+		getSubinterpolationData(nSegmentIndex, nPointIndex, m_Segments[nSegmentIndex].m_PointCount, eModificationFactor, nSubInterpolationCount, pSubInterpolationData);
+	}
+
+	void CToolpathLayerData::getSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nElementIndex, const uint32_t nElementCount, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t& nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData*& pSubInterpolationData)
+	{
 		pSubInterpolationData = nullptr;
 		nSubInterpolationCount = 0;
 
-		auto pSegment = &m_Segments[nSegmentIndex];
+		auto pSegment = &m_Segments.at(nSegmentIndex);
 		uint32_t nFactorIndex = getOverrideFactorIndex(eModificationFactor);
 		uint32_t nTableStart = pSegment->m_SubinterpolationTableStart[nFactorIndex];
 		if (nTableStart == TOOLPATHSEGMENTNOSUBINTERPOLATIONTABLE)
 			return;
 
-		uint32_t nHatchCount = pSegment->m_PointCount / 2;
-		if (nHatchIndex >= nHatchCount)
+		if (nElementIndex >= nElementCount)
 			throw ELibMCCustomException(LIBMC_ERROR_INVALIDHATCHOVERRIDECOUNT, m_sDebugName);
 
-		auto& entry = m_SubinterpolationTable.at((size_t)nTableStart + nHatchIndex);
+		auto& entry = m_SubinterpolationTable.at((size_t)nTableStart + nElementIndex);
 		if (entry.m_nCount > 0) {
 			if ((size_t)entry.m_nOffset + entry.m_nCount > m_InterpolationData.size())
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
@@ -957,6 +970,24 @@ namespace AMC {
 
 	}
 
+	void CToolpathLayerData::storePointModificationFactorRamps(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pStartFactorData, double* pEndFactorData)
+	{
+		LibMCAssertNotNull(pStartFactorData);
+		LibMCAssertNotNull(pEndFactorData);
+		if (nSegmentIndex >= m_Segments.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDSEGMENTINDEX, m_sDebugName);
+
+		auto pSegment = &m_Segments[nSegmentIndex];
+		uint32_t nFactorIndex = getOverrideFactorIndex(eModificationFactor);
+
+		for (uint32_t nPointIndex = 0; nPointIndex < pSegment->m_PointCount; nPointIndex++) {
+			size_t nStoredIndex = (size_t)pSegment->m_PointStartIndex + nPointIndex;
+			pStartFactorData[nPointIndex] = m_StartOverrideFactors.at(nStoredIndex).m_dFactors[nFactorIndex];
+			pEndFactorData[nPointIndex] = m_OverrideFactors.at(nStoredIndex).m_dFactors[nFactorIndex];
+		}
+
+	}
+
 	void CToolpathLayerData::readHatchOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment)
 	{
 		uint32_t nHatchCount = segment.m_PointCount / 2;
@@ -981,66 +1012,77 @@ namespace AMC {
 			if ((uint32_t)hatchFactors.size() != nHatchCount)
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDHATCHOVERRIDECOUNT, m_sDebugName);
 
-			auto pDstOverride = &m_OverrideFactors.at(segment.m_PointStartIndex);
+			size_t nPointIndex = segment.m_PointStartIndex;
 			for (auto& hatchFactor : hatchFactors) {
-				pDstOverride->m_dFactors[nFactorIndex] = hatchFactor.m_Point1Factor;
-				pDstOverride++;
-				pDstOverride->m_dFactors[nFactorIndex] = hatchFactor.m_Point2Factor;
-				pDstOverride++;
+				m_OverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = hatchFactor.m_Point1Factor;
+				m_StartOverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = hatchFactor.m_Point1Factor;
+				nPointIndex++;
+				m_OverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = hatchFactor.m_Point2Factor;
+				m_StartOverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = hatchFactor.m_Point2Factor;
+				nPointIndex++;
 			}
 
 			std::vector<uint32_t> nonLinearCounts;
 			std::vector<Lib3MF::sHatchModificationInterpolationData> nonLinearValues;
 			p3MFLayer->GetSegmentAllNonlinearHatchesModificationInterpolation(segment.m_3MFSegmentIndex, factorType, nonLinearCounts, nonLinearValues);
 
-			if (nonLinearValues.empty())
-				continue;
+			storeSubinterpolationTable(segment, nFactorIndex, nHatchCount, false, nonLinearCounts, nonLinearValues);
+		}
+	}
 
-			if ((uint32_t)nonLinearCounts.size() != nHatchCount)
+	void CToolpathLayerData::storeSubinterpolationTable(sToolpathLayerSegment& segment, uint32_t nFactorIndex, uint32_t nElementCount, bool bRepeatFirstElement,
+		const std::vector<uint32_t>& counts, const std::vector<Lib3MF::sHatchModificationInterpolationData>& values)
+	{
+		if (values.empty())
+			return;
+
+		if ((uint32_t)counts.size() != nElementCount)
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+
+		const double dMinParameterIncrease = 1e-5;
+		const double dMaxParameter = 1.0 - dMinParameterIncrease;
+
+		uint32_t nInterpolationDataStartIndex = (uint32_t)m_InterpolationData.size();
+		segment.m_SubinterpolationTableStart[nFactorIndex] = (uint32_t)m_SubinterpolationTable.size();
+
+		uint32_t nTotalSubInterpolationCount = 0;
+		for (uint32_t nElementIndex = 0; nElementIndex < nElementCount; nElementIndex++) {
+			uint32_t nSubInterpolationCount = counts.at(nElementIndex);
+			if ((size_t)nTotalSubInterpolationCount + nSubInterpolationCount > values.size())
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
 
-			const double dMinParameterIncrease = 1e-5;
-			const double dMaxParameter = 1.0 - dMinParameterIncrease;
+			double dPreviousParameter = 0.0;
+			for (uint32_t nSubIndex = 0; nSubIndex < nSubInterpolationCount; nSubIndex++) {
+				auto& interpolationData = values.at((size_t)nTotalSubInterpolationCount + nSubIndex);
 
-			uint32_t nInterpolationDataStartIndex = (uint32_t)m_InterpolationData.size();
-			segment.m_SubinterpolationTableStart[nFactorIndex] = (uint32_t)m_SubinterpolationTable.size();
+				if (interpolationData.m_Parameter < dPreviousParameter + dMinParameterIncrease)
+					throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING, std::to_string(interpolationData.m_Parameter) + " in " + m_sDebugName);
 
-			uint32_t nTotalSubInterpolationCount = 0;
-			for (uint32_t nHatchIndex = 0; nHatchIndex < nHatchCount; nHatchIndex++) {
-				uint32_t nSubInterpolationCount = nonLinearCounts.at(nHatchIndex);
-				if ((size_t)nTotalSubInterpolationCount + nSubInterpolationCount > nonLinearValues.size())
-					throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+				if (interpolationData.m_Parameter > dMaxParameter)
+					throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE, std::to_string(interpolationData.m_Parameter) + " in " + m_sDebugName);
 
-				double dPreviousParameter = 0.0;
-				for (uint32_t nSubIndex = 0; nSubIndex < nSubInterpolationCount; nSubIndex++) {
-					auto& interpolationData = nonLinearValues.at((size_t)nTotalSubInterpolationCount + nSubIndex);
+				if (interpolationData.m_Factor < 0.0 || interpolationData.m_Factor > 1.0)
+					throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE, std::to_string(interpolationData.m_Factor) + " in " + m_sDebugName);
 
-					if (interpolationData.m_Parameter < dPreviousParameter + dMinParameterIncrease)
-						throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETERNOTINCREASING, std::to_string(interpolationData.m_Parameter) + " in " + m_sDebugName);
-
-					if (interpolationData.m_Parameter > dMaxParameter)
-						throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEPARAMETEROUTOFRANGE, std::to_string(interpolationData.m_Parameter) + " in " + m_sDebugName);
-
-					if (interpolationData.m_Factor < 0.0 || interpolationData.m_Factor > 1.0)
-						throw ELibMCCustomException(LIBMC_ERROR_NONLINEAROVERRIDEFACTOROUTOFRANGE, std::to_string(interpolationData.m_Factor) + " in " + m_sDebugName);
-
-					dPreviousParameter = interpolationData.m_Parameter;
-				}
-
-				sToolpathLayerSubinterpolationEntry entry;
-				entry.m_nOffset = nInterpolationDataStartIndex + nTotalSubInterpolationCount;
-				entry.m_nCount = nSubInterpolationCount;
-				m_SubinterpolationTable.push_back(entry);
-
-				nTotalSubInterpolationCount += nSubInterpolationCount;
+				dPreviousParameter = interpolationData.m_Parameter;
 			}
 
-			if (nTotalSubInterpolationCount != nonLinearValues.size())
-				throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+			sToolpathLayerSubinterpolationEntry entry;
+			entry.m_nOffset = nInterpolationDataStartIndex + nTotalSubInterpolationCount;
+			entry.m_nCount = nSubInterpolationCount;
+			m_SubinterpolationTable.push_back(entry);
 
-			m_InterpolationData.insert(m_InterpolationData.end(), nonLinearValues.begin(), nonLinearValues.end());
-			segment.m_TotalSubinterpolationCount[nFactorIndex] = nTotalSubInterpolationCount;
+			nTotalSubInterpolationCount += nSubInterpolationCount;
 		}
+
+		if (nTotalSubInterpolationCount != values.size())
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDMODIFIERINTERPOLATIONCOUNT, m_sDebugName);
+
+		if (bRepeatFirstElement && (nElementCount > 0))
+			m_SubinterpolationTable.push_back(m_SubinterpolationTable.at(segment.m_SubinterpolationTableStart[nFactorIndex]));
+
+		m_InterpolationData.insert(m_InterpolationData.end(), values.begin(), values.end());
+		segment.m_TotalSubinterpolationCount[nFactorIndex] = nTotalSubInterpolationCount;
 	}
 
 	void CToolpathLayerData::readPointOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment, bool bIsLoop)
@@ -1063,24 +1105,35 @@ namespace AMC {
 
 			segment.m_HasOverrideFactors |= factorFlag;
 
-			std::vector<double> pointFactors;
-			p3MFLayer->GetSegmentPointModificationFactors(segment.m_3MFSegmentIndex, factorType, pointFactors);
+			std::vector<Lib3MF::sHatch2DFactors> pointFactors;
+			p3MFLayer->GetLinearSegmentPointModificationFactors(segment.m_3MFSegmentIndex, factorType, pointFactors);
 
-			// Loops store the closing point explicitly. The closing line takes the factor of the first point.
+			// Loops store the closing point explicitly. The closing line takes the factors of the first point.
 			uint32_t nListedPointCount = bIsLoop ? (segment.m_PointCount - 1) : segment.m_PointCount;
+			bool bRepeatFirstPoint = false;
 			if ((uint32_t)pointFactors.size() == nListedPointCount) {
-				if (bIsLoop && (nListedPointCount > 0))
+				if (bIsLoop && (nListedPointCount > 0)) {
 					pointFactors.push_back(pointFactors.at(0));
+					bRepeatFirstPoint = true;
+				}
 			}
 			else if (!(bIsLoop && ((uint32_t)pointFactors.size() == segment.m_PointCount))) {
 				throw ELibMCCustomException(LIBMC_ERROR_INVALIDPOINTOVERRIDECOUNT, m_sDebugName);
 			}
 
-			auto pDstOverride = &m_OverrideFactors.at(segment.m_PointStartIndex);
-			for (auto dFactor : pointFactors) {
-				pDstOverride->m_dFactors[nFactorIndex] = dFactor;
-				pDstOverride++;
+			size_t nPointIndex = segment.m_PointStartIndex;
+			for (auto& pointFactor : pointFactors) {
+				m_StartOverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = pointFactor.m_Point1Factor;
+				m_OverrideFactors.at(nPointIndex).m_dFactors[nFactorIndex] = pointFactor.m_Point2Factor;
+				nPointIndex++;
 			}
+
+			std::vector<uint32_t> nonLinearCounts;
+			std::vector<Lib3MF::sHatchModificationInterpolationData> nonLinearValues;
+			p3MFLayer->GetSegmentAllNonlinearPointsModificationInterpolation(segment.m_3MFSegmentIndex, factorType, nonLinearCounts, nonLinearValues);
+
+			uint32_t nSubTableElementCount = bRepeatFirstPoint ? nListedPointCount : (uint32_t)pointFactors.size();
+			storeSubinterpolationTable(segment, nFactorIndex, nSubTableElementCount, bRepeatFirstPoint, nonLinearCounts, nonLinearValues);
 		}
 	}
 
