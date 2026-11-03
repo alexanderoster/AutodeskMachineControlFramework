@@ -30,6 +30,14 @@
 	const POINT_CHANNEL = 'laser';
 	const POINT_CHANNEL_COLUMNS = ['laseron', 'power', 'time', 'targetx', 'targety', 'actualx', 'actualy'];
 	const POINT_PICK_TOLERANCE_PX = 4;
+	const SUPPORT_POINT_PICK_TOLERANCE_PX = 3;
+	const POPUP_PART_NAME_MAX_CHARACTERS = 28;
+	const POWER_MODE_CAPTIONS: Record<string, string> = {
+		'': 'Nominal',
+		constant: 'Constant',
+		linear: 'Linear',
+		nonlinear: 'Non-linear'
+	};
 	const TIME_SLIDER_STEPS = 1000;
 	const TIMING_SOURCE_CAPTIONS: Record<string, string> = {
 		recording: 'aligned to recording',
@@ -539,6 +547,22 @@
 		partdisabled?: boolean;
 		laserindex?: number;
 		lineIndex?: number;
+		powermode?: string;
+		power1?: number | null;
+		power2?: number | null;
+		supportpoints?: { t: number; power: number }[] | null;
+	};
+	// A support point of the highlighted nonlinear power ramp, including both line end points.
+	type RampKnot = { t: number; power: number | null; distance: number };
+	type SupportPointInfo = RampKnot & {
+		lineIndex: number;
+		index: number;
+		count: number;
+		x: number;
+		y: number;
+		length: number;
+		previous: RampKnot | null;
+		next: RampKnot | null;
 	};
 	type PointInfo = {
 		index: number;
@@ -554,6 +578,7 @@
 	let propertiesMode = $state(false);
 	let hoverSegment = $state<SegmentProperties | null>(null);
 	let hoverPoint = $state<PointInfo | null>(null);
+	let hoverSupportPoint = $state<SupportPointInfo | null>(null);
 	let hoverScreen = $state<{ x: number; y: number }>({ x: 0, y: 0 });
 	let pendingHover: { x: number; y: number } | null = null;
 	let hoverRAF = 0;
@@ -582,6 +607,30 @@
 		if (!hoverPoint || !layerViewer) return null;
 		const machine = layerViewer.toolpathPointToMachine(hoverPoint.x, hoverPoint.y);
 		return layerViewer.machineToScreen(machine.x, machine.y);
+	});
+	let hoverSupportPointScreen = $derived.by((): { x: number; y: number } | null => {
+		viewVersion;
+		if (!hoverSupportPoint || !layerViewer) return null;
+		const machine = layerViewer.toolpathPointToMachine(hoverSupportPoint.x, hoverSupportPoint.y);
+		return layerViewer.machineToScreen(machine.x, machine.y);
+	});
+	let hoverSegmentPower = $derived.by(() => {
+		if (!hoverSegment) return null;
+		const nominal = Number(hoverSegment.laserpower ?? 0);
+		const power1 = hoverSegment.power1 ?? null;
+		const power2 = hoverSegment.power2 ?? null;
+		const modulated = power1 !== null && power2 !== null;
+		const knots = hoverSegment.supportpoints ?? [];
+		const values = modulated ? [power1, power2, ...knots.map((knot) => knot.power)] : [nominal];
+		return {
+			mode: POWER_MODE_CAPTIONS[hoverSegment.powermode ?? ''] ?? hoverSegment.powermode ?? '',
+			nominalOnly: !modulated && (hoverSegment.powermode ?? '') !== '',
+			start: modulated ? power1 : nominal,
+			end: modulated ? power2 : nominal,
+			minimum: Math.min(...values),
+			maximum: Math.max(...values),
+			supportPointCount: knots.length
+		};
 	});
 	let highlightPartUUID = $derived.by(() => {
 		poll.v;
@@ -642,12 +691,25 @@
 			typeof layerViewer.pickSegmentAtScreenPoint !== 'function') {
 			hoverSegment = null;
 			hoverPoint = null;
+			hoverSupportPoint = null;
 			return;
 		}
 		const box = containerEl.getBoundingClientRect();
 		const localX = clientX - box.left;
 		const localY = clientY - box.top;
 		hoverScreen = { x: localX, y: localY };
+
+		// Support points of the highlighted ramp are drawn on top, so they win over everything;
+		// the highlight and the hovered segment stay as they are.
+		const supportPoint: SupportPointInfo | null =
+			typeof layerViewer.pickHighlightSupportPoint === 'function'
+				? layerViewer.pickHighlightSupportPoint(localX, localY, SUPPORT_POINT_PICK_TOLERANCE_PX)
+				: null;
+		hoverSupportPoint = supportPoint;
+		if (supportPoint) {
+			hoverPoint = null;
+			return;
+		}
 
 		const pointIndex: number = pointsLoaded ? layerViewer.pickPointAtScreenPoint(localX, localY, POINT_PICK_TOLERANCE_PX) : -1;
 		const pointInfo: PointInfo | null = pointIndex >= 0 ? layerViewer.getPointInfo(pointIndex) : null;
@@ -672,6 +734,42 @@
 		return `${x.toFixed(3)}, ${y.toFixed(3)} mm`;
 	}
 
+	function formatPowerValue(power: number): string {
+		return power.toLocaleString(undefined, { maximumFractionDigits: 1 });
+	}
+
+	function formatWatts(power: number | null): string {
+		if (power === null || !Number.isFinite(power)) return '–';
+		return `${formatPowerValue(power)} W`;
+	}
+
+	function formatPowerRange(start: number | null, end: number | null): string {
+		if (start === null || end === null || !Number.isFinite(start) || !Number.isFinite(end) ||
+			formatPowerValue(start) === formatPowerValue(end))
+			return formatWatts(start);
+		return `${formatPowerValue(start)} → ${formatPowerValue(end)} W`;
+	}
+
+	// One piece of the piecewise linear ramp between two support points.
+	function formatRampPiece(from: RampKnot | null, to: RampKnot | null): string {
+		if (!from || !to) return '–';
+		return `${formatPowerRange(from.power, to.power)} over ${(to.distance - from.distance).toFixed(3)} mm`;
+	}
+
+	function formatRampGradient(from: RampKnot | null, to: RampKnot | null): string {
+		if (!from || !to || from.power === null || to.power === null) return '–';
+		const distance = to.distance - from.distance;
+		if (!(distance > 0)) return '–';
+		const gradient = (to.power - from.power) / distance;
+		return `${gradient >= 0 ? '+' : ''}${gradient.toLocaleString(undefined, { maximumFractionDigits: 1 })} W/mm`;
+	}
+
+	function clipText(text: string, maxCharacters: number): string {
+		const characters = Array.from(text);
+		if (characters.length <= maxCharacters) return text;
+		return `${characters.slice(0, maxCharacters - 1).join('').trimEnd()}…`;
+	}
+
 	// Segment picking scans every line of the layer, so throttle it to one hit
 	// test per animation frame regardless of how fast pointer events arrive.
 	function scheduleHoverUpdate(clientX: number, clientY: number) {
@@ -691,6 +789,7 @@
 		}
 		hoverSegment = null;
 		hoverPoint = null;
+		hoverSupportPoint = null;
 		if (layerViewer && typeof layerViewer.clearHighlight === 'function') {
 			layerViewer.clearHighlight();
 		}
@@ -1136,8 +1235,50 @@
 			</div>
 		{/if}
 
-		<!-- Segment property inspector popup (Properties toggle) -->
-		{#if propertiesMode && hoverSegment}
+		<!-- Support point of the highlighted nonlinear power ramp (Properties toggle) -->
+		{#if propertiesMode && hoverSupportPoint}
+			{#if hoverSupportPointScreen}
+				<div
+					class="layerview-point-marker layerview-support-point-marker"
+					style={`left: ${hoverSupportPointScreen.x}px; top: ${hoverSupportPointScreen.y}px;`}
+				></div>
+			{/if}
+			<div
+				class="layerview-segment-popup"
+				style={`left: ${hoverScreen.x + 14}px; top: ${hoverScreen.y + 14}px;`}
+			>
+				<div class="layerview-segment-popup-title">
+					{#if hoverSupportPoint.index === 0}
+						Start point
+					{:else if hoverSupportPoint.index === hoverSupportPoint.count - 1}
+						End point
+					{:else}
+						Support point {hoverSupportPoint.index} of {hoverSupportPoint.count - 2}
+					{/if}
+				</div>
+				<dl class="layerview-segment-popup-list">
+					<dt>Laser power</dt>
+					<dd>{formatWatts(hoverSupportPoint.power)}</dd>
+					<dt>Parameter t</dt>
+					<dd>{hoverSupportPoint.t.toFixed(3)}</dd>
+					<dt>Distance</dt>
+					<dd>{hoverSupportPoint.distance.toFixed(3)} / {hoverSupportPoint.length.toFixed(3)} mm</dd>
+					{#if hoverSupportPoint.previous}
+						<dt>Incoming</dt>
+						<dd>{formatRampPiece(hoverSupportPoint.previous, hoverSupportPoint)}</dd>
+						<dt>Slope</dt>
+						<dd>{formatRampGradient(hoverSupportPoint.previous, hoverSupportPoint)}</dd>
+					{/if}
+					{#if hoverSupportPoint.next}
+						<dt>Outgoing</dt>
+						<dd>{formatRampPiece(hoverSupportPoint, hoverSupportPoint.next)}</dd>
+						<dt>Slope</dt>
+						<dd>{formatRampGradient(hoverSupportPoint, hoverSupportPoint.next)}</dd>
+					{/if}
+				</dl>
+			</div>
+		{:else if propertiesMode && hoverSegment}
+			<!-- Segment property inspector popup (Properties toggle) -->
 			<div
 				class="layerview-segment-popup"
 				style={`left: ${hoverScreen.x + 14}px; top: ${hoverScreen.y + 14}px;`}
@@ -1146,8 +1287,18 @@
 					<div class="layerview-segment-popup-title">{hoverSegment.profilename}</div>
 				{/if}
 				<dl class="layerview-segment-popup-list">
-					<dt>Laser power</dt>
-					<dd>{Number(hoverSegment.laserpower ?? 0).toLocaleString()} W</dd>
+					{#if hoverSegmentPower}
+						<dt>Power mode</dt>
+						<dd>{hoverSegmentPower.mode}{hoverSegmentPower.nominalOnly ? ' (no factors)' : ''}</dd>
+						<dt>Laser power</dt>
+						<dd>{formatPowerRange(hoverSegmentPower.start, hoverSegmentPower.end)}</dd>
+						{#if hoverSegmentPower.supportPointCount > 0}
+							<dt>Power range</dt>
+							<dd>{formatPowerRange(hoverSegmentPower.minimum, hoverSegmentPower.maximum)}</dd>
+							<dt>Support points</dt>
+							<dd>{hoverSegmentPower.supportPointCount}</dd>
+						{/if}
+					{/if}
 					<dt>Laser speed</dt>
 					<dd>{Number(hoverSegment.laserspeed ?? 0).toLocaleString()} mm/s</dd>
 					{#if hoverSegment.type}
@@ -1160,7 +1311,7 @@
 					{/if}
 					{#if hoverSegment.partname}
 						<dt>Part</dt>
-						<dd>{hoverSegment.partname}{hoverSegment.partdisabled ? ' (disabled)' : ''}</dd>
+						<dd>{clipText(hoverSegment.partname, POPUP_PART_NAME_MAX_CHARACTERS)}{hoverSegment.partdisabled ? ' (disabled)' : ''}</dd>
 					{/if}
 					{#if hoverSegment.partid !== undefined && hoverSegment.partid !== null}
 						<dt>Part ID</dt>
@@ -1519,10 +1670,13 @@
 		pointer-events: none;
 		z-index: 15;
 	}
+	.layerview-support-point-marker {
+		border-color: #ffb300;
+	}
 	.layerview-segment-popup {
 		position: absolute;
 		min-width: 150px;
-		max-width: 240px;
+		max-width: 280px;
 		padding: 8px 10px;
 		border-radius: 6px;
 		background: rgba(0, 0, 0, 0.82);
@@ -1542,16 +1696,21 @@
 	}
 	.layerview-segment-popup-list {
 		display: grid;
-		grid-template-columns: auto auto;
+		grid-template-columns: auto minmax(0, 1fr);
 		gap: 2px 12px;
 		margin: 0;
 	}
 	.layerview-segment-popup-list dt {
 		color: rgba(255, 255, 255, 0.65);
+		white-space: nowrap;
 	}
 	.layerview-segment-popup-list dd {
 		margin: 0;
+		min-width: 0;
+		overflow: hidden;
 		text-align: right;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 	}
 	.layerview-slider-wrap {

@@ -51,6 +51,18 @@ const LAYERVIEW_TIMING_MAXGROUPLINES = 64;
 // Segments of parts that have been disabled are still drawn, but in this neutral gray.
 const LAYERVIEW_DISABLEDPARTCOLOR = 0xB4B4B4;
 
+// Hovered line overlay: color, arrow head at the end point (minimum length in CSS pixels and
+// in line thicknesses, wing thickness relative to the line, half opening angle) and the
+// support points of nonlinear power ramps (diameter in CSS pixels).
+const LAYERVIEW_HIGHLIGHTCOLOR = 0x00e5ff;
+const LAYERVIEW_HIGHLIGHTARROWPIXELS = 10.0;
+const LAYERVIEW_HIGHLIGHTARROWTHICKNESSFACTOR = 2.0;
+const LAYERVIEW_HIGHLIGHTARROWWINGFACTOR = 0.6;
+const LAYERVIEW_HIGHLIGHTARROWANGLE = 28.0 * Math.PI / 180.0;
+const LAYERVIEW_SUPPORTPOINTPIXELS = 9.0;
+const LAYERVIEW_SUPPORTPOINTCOLOR = 0xffb300;
+const LAYERVIEW_SUPPORTENDPOINTCOLOR = 0xffffff;
+
 // Grid level-of-detail switch band. The grid geometry is self-similar every 5
 // subdivisions, so the lower/upper bounds MUST keep a 5x ratio for the wrap to
 // stay seamless (LOWER * GRID_LOD_RECURSION === UPPER). Lowering the band
@@ -126,6 +138,13 @@ class LayerViewImpl {
 		this.segmentProperties = [];
 		this.lineGroupIDs = null;
 		this.lineDurations = null;
+		// Modulated laser power (W) at the start and end of every line, NaN for the nominal power,
+		// and the inner support points {t, power} of nonlinear ramps by line index.
+		this.linePowers = [];
+		this.lineSupportPoints = new Map ();
+		this.highlightLineIndex = -1;
+		this.highlightScaling = 0.0;
+		this.highlightSupportPoints = null;
 
 		// Start time (ms) of every toolpath line on the layer timeline, see updateTiming.
 		this.lineStartTimes = null;
@@ -294,12 +313,10 @@ class LayerViewImpl {
             layerlinesgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
         }
 
-        var layerhighlightgeometry = this.glInstance.findElement("layerdata_highlight");
-        if (layerhighlightgeometry) {
-            layerhighlightgeometry.setPositionXY(toolpathPositionX, toolpathPositionY);
-            layerhighlightgeometry.setScaleXY(this.transform.scaling,  - this.transform.scaling);
-            layerhighlightgeometry.setRotationZ(-this.transformAngleDegrees * Math.PI / 180.0);
-        }
+        // The arrow head is sized in screen pixels, so rebuild the overlay when the zoom changes.
+        if ((this.highlightLineIndex >= 0) && (this.highlightScaling !== this.transform.scaling))
+            this.buildHighlightGeometry ();
+        this.positionHighlightGeometry ();
 
         var layerpointsgeometry = this.glInstance.findElement("layerdata_points");
         if (layerpointsgeometry) {
@@ -1233,13 +1250,15 @@ class LayerViewImpl {
         this.glInstance.removeElement("layerdata_lines");
         // The highlighted line references indices into linesCoordinates, which are
         // about to be regenerated, so drop any stale highlight overlay.
-        this.glInstance.removeElement("layerdata_highlight");
+        this.removeHighlightGeometry ();
         this.highlightLineIndex = -1;
 		
 		this.linesCoordinates = [];
 		this.segmentProperties = [];
 		this.lineGroupIDs = null;
 		this.lineDurations = null;
+		this.linePowers = [];
+		this.lineSupportPoints = new Map ();
 
 		if (this.layerSegmentsArray) {
 				
@@ -1252,12 +1271,18 @@ class LayerViewImpl {
 			let lineGroupIDs = [];
 			let lineDurations = [];
 			let groupID = 0;
-			let pushLine = (x1, y1, x2, y2, segmentData, segmentColor, markSpeed) => {
+			let pushLine = (x1, y1, x2, y2, segmentData, segmentColor, markSpeed, power1, power2, supportPoints) => {
+				if (supportPoints && (supportPoints.length > 0))
+					this.lineSupportPoints.set (this.segmentProperties.length, supportPoints);
 				this.linesCoordinates.push(x1, y1, x2, y2);
 				this.segmentProperties.push (segmentData);
+				this.linePowers.push (power1, power2);
 				vertexcolors.push (segmentColor);
 				lineGroupIDs.push (groupID);
 				lineDurations.push (Math.hypot (x2 - x1, y2 - y1) / markSpeed * 1000.0);
+			};
+			let pointPower = (powers, pointIndex) => {
+				return (powers && (pointIndex < powers.length)) ? Number (powers[pointIndex]) : NaN;
 			};
 
 			for (segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
@@ -1274,9 +1299,11 @@ class LayerViewImpl {
 					partuuid: partUUID,
 					partname: this.layerPartNames.get (partUUID) || "",
 					partdisabled: partDisabled,
-					laserindex: segment.laserindex
+					laserindex: segment.laserindex,
+					powermode: (typeof segment.powermode === "string") ? segment.powermode : ""
 				}
 				let markSpeed = (Number (segment.laserspeed) > 0) ? Number (segment.laserspeed) : LAYERVIEW_DEFAULTMARKSPEED;
+				let powers = Array.isArray (segment.powers) ? segment.powers : null;
 
 				if ((segment.type === "loop") || (segment.type === "polyline")) {
 					var pointCount = segment.points.length;
@@ -1296,7 +1323,9 @@ class LayerViewImpl {
 							continue;
 						}
 
-						pushLine (oldx, oldy, x, y, segmentData, segmentColor, markSpeed);
+						// The factor of a polyline point applies to the line that ends in it.
+						let linePower = pointPower (powers, pointIndex);
+						pushLine (oldx, oldy, x, y, segmentData, segmentColor, markSpeed, linePower, linePower, null);
 
 						oldx = x;
 						oldy = y;
@@ -1306,6 +1335,9 @@ class LayerViewImpl {
 				if (segment.type === "hatch") {
 					var lineCount = segment.points.length / 2;
 					var lineIndex;
+					let subCounts = Array.isArray (segment.powersubcounts) ? segment.powersubcounts : null;
+					let subValues = Array.isArray (segment.powersubs) ? segment.powersubs : null;
+					let subOffset = 0;
 
 					for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
 						var x1 = segment.points[lineIndex * 2].x;
@@ -1313,12 +1345,24 @@ class LayerViewImpl {
 						var x2 = segment.points[lineIndex * 2 + 1].x;
 						var y2 = segment.points[lineIndex * 2 + 1].y;
 
+						let supportPoints = null;
+						let subCount = (subCounts && (lineIndex < subCounts.length)) ? Number (subCounts[lineIndex]) : 0;
+						if ((subCount > 0) && subValues && ((subOffset + subCount) * 2 <= subValues.length)) {
+							supportPoints = [];
+							for (let subIndex = 0; subIndex < subCount; subIndex++) {
+								let valueIndex = (subOffset + subIndex) * 2;
+								supportPoints.push ({ t: Number (subValues[valueIndex]), power: Number (subValues[valueIndex + 1]) });
+							}
+						}
+						subOffset += subCount;
+
 						if ((x1 === x2) && (y1 === y2)) {
 							continue;
 						}
 
 						groupID++;
-						pushLine (x1, y1, x2, y2, segmentData, segmentColor, markSpeed);
+						pushLine (x1, y1, x2, y2, segmentData, segmentColor, markSpeed,
+							pointPower (powers, lineIndex * 2), pointPower (powers, lineIndex * 2 + 1), supportPoints);
 					}
 
 				}
@@ -1665,8 +1709,18 @@ class LayerViewImpl {
 			}
 		}
 
-		if (bestIndex >= 0 && bestIndex < this.segmentProperties.length)
-			return { ...this.segmentProperties[bestIndex], lineIndex: bestIndex };
+		if (bestIndex >= 0 && bestIndex < this.segmentProperties.length) {
+			const power1 = this.linePowers[bestIndex * 2];
+			const power2 = this.linePowers[bestIndex * 2 + 1];
+			const supportPoints = this.lineSupportPoints.get (bestIndex);
+			return {
+				...this.segmentProperties[bestIndex],
+				lineIndex: bestIndex,
+				power1: Number.isFinite (power1) ? power1 : null,
+				power2: Number.isFinite (power2) ? power2 : null,
+				supportpoints: supportPoints ? supportPoints.map ((point) => ({ ...point })) : null
+			};
+		}
 
 		return null;
 	}
@@ -1682,37 +1736,144 @@ class LayerViewImpl {
 		if (!this.glInstance)
 			return;
 
+		if (lineIndex === undefined || lineIndex === null || lineIndex < 0 || !this.linesCoordinates || !this.toolpathVisible ||
+			((lineIndex * 4 + 3) >= this.linesCoordinates.length))
+			lineIndex = -1;
+
+		// Hovering moves along the same line most of the time; keep the overlay then.
+		if ((lineIndex === this.highlightLineIndex) && ((lineIndex < 0) || (this.highlightScaling === this.transform.scaling)))
+			return;
+
+		this.highlightLineIndex = lineIndex;
+		this.buildHighlightGeometry ();
+		this.positionHighlightGeometry ();
+		this.RenderScene (true);
+	}
+
+	removeHighlightGeometry ()
+	{
 		this.glInstance.removeElement ("layerdata_highlight");
-		this.highlightLineIndex = -1;
+		this.glInstance.removeElement ("layerdata_highlightarrow");
+		this.glInstance.removeElement ("layerdata_highlightpoints");
+		this.highlightSupportPoints = null;
+	}
 
-		if (lineIndex === undefined || lineIndex === null || lineIndex < 0 || !this.linesCoordinates || !this.toolpathVisible) {
-			this.RenderScene (true);
-			return;
-		}
+	// Creates the overlay of highlightLineIndex: the line with an arrow head at its end point
+	// (the marking direction) and, for nonlinear power ramps, its support points including
+	// both end points. Uses the toolpath coordinates of linesCoordinates.
+	buildHighlightGeometry ()
+	{
+		this.removeHighlightGeometry ();
+		this.highlightScaling = this.transform.scaling;
 
+		const lineIndex = this.highlightLineIndex;
 		const arrayIndex = lineIndex * 4;
-		if (arrayIndex + 3 >= this.linesCoordinates.length) {
-			this.RenderScene (true);
+		if ((lineIndex < 0) || (arrayIndex + 3 >= this.linesCoordinates.length))
 			return;
-		}
 
-		const highlightCoordinates = [
-			this.linesCoordinates[arrayIndex],
-			this.linesCoordinates[arrayIndex + 1],
-			this.linesCoordinates[arrayIndex + 2],
-			this.linesCoordinates[arrayIndex + 3]
-		];
-
+		const x1 = this.linesCoordinates[arrayIndex];
+		const y1 = this.linesCoordinates[arrayIndex + 1];
+		const x2 = this.linesCoordinates[arrayIndex + 2];
+		const y2 = this.linesCoordinates[arrayIndex + 3];
 		// Noticeably thicker than the regular preview lines (lineScaleLevel * 0.3)
 		// and drawn at a higher z so it sits above lines (60) and points (61).
 		const highlightThickness = this.lineScaleLevel * 1.1;
-		const highlightColor = 0x00e5ff;
+		this.glInstance.add2DLineGeometry ("layerdata_highlight", [x1, y1, x2, y2], 63, highlightThickness, LAYERVIEW_HIGHLIGHTCOLOR, [LAYERVIEW_HIGHLIGHTCOLOR]);
 
-		this.glInstance.add2DLineGeometry ("layerdata_highlight", highlightCoordinates, 63, highlightThickness, highlightColor, [highlightColor]);
-		this.highlightLineIndex = lineIndex;
+		const length = Math.hypot (x2 - x1, y2 - y1);
+		const scaling = (this.transform.scaling > 0) ? this.transform.scaling : 1.0;
+		const arrowLength = Math.min (Math.max (LAYERVIEW_HIGHLIGHTARROWPIXELS / scaling, highlightThickness * LAYERVIEW_HIGHLIGHTARROWTHICKNESSFACTOR), length * 0.5);
+		if (arrowLength > 0) {
+			const backX = (x1 - x2) / length;
+			const backY = (y1 - y2) / length;
+			const cosine = Math.cos (LAYERVIEW_HIGHLIGHTARROWANGLE);
+			const sine = Math.sin (LAYERVIEW_HIGHLIGHTARROWANGLE);
+			const arrowCoordinates = [
+				x2, y2, x2 + arrowLength * (backX * cosine - backY * sine), y2 + arrowLength * (backX * sine + backY * cosine),
+				x2, y2, x2 + arrowLength * (backX * cosine + backY * sine), y2 + arrowLength * (-backX * sine + backY * cosine)
+			];
+			this.glInstance.add2DLineGeometry ("layerdata_highlightarrow", arrowCoordinates, 63, highlightThickness * LAYERVIEW_HIGHLIGHTARROWWINGFACTOR,
+				LAYERVIEW_HIGHLIGHTCOLOR, [LAYERVIEW_HIGHLIGHTCOLOR, LAYERVIEW_HIGHLIGHTCOLOR]);
+		}
 
-		this.updateTransform ();
-		this.RenderScene (true);
+		const supportPoints = this.lineSupportPoints.get (lineIndex);
+		if (!supportPoints)
+			return;
+
+		const knots = [{ t: 0.0, power: this.linePowers[lineIndex * 2] }, ...supportPoints, { t: 1.0, power: this.linePowers[lineIndex * 2 + 1] }];
+		const knotCoordinates = new Float32Array (knots.length * 2);
+		const knotColors = [];
+		knots.forEach ((knot, knotIndex) => {
+			knotCoordinates[knotIndex * 2] = x1 + knot.t * (x2 - x1);
+			knotCoordinates[knotIndex * 2 + 1] = y1 + knot.t * (y2 - y1);
+			knotColors.push (((knotIndex === 0) || (knotIndex === knots.length - 1)) ? LAYERVIEW_SUPPORTENDPOINTCOLOR : LAYERVIEW_SUPPORTPOINTCOLOR);
+		});
+
+		this.glInstance.add2DScreenPointsGeometry ("layerdata_highlightpoints", knotCoordinates, 64,
+			LAYERVIEW_SUPPORTPOINTPIXELS * this.glInstance.getPixelRatio (), LAYERVIEW_SUPPORTPOINTCOLOR, knotColors);
+		this.highlightSupportPoints = { knots, x1, y1, x2, y2, length };
+	}
+
+	positionHighlightGeometry ()
+	{
+		const placementOffset = this.transformToolpathPoint (0, 0);
+		const positionX = this.transform.x + (this.origin.x + placementOffset.x) * this.transform.scaling;
+		const positionY = this.transform.y - (this.origin.y + placementOffset.y) * this.transform.scaling;
+
+		for (const identifier of ["layerdata_highlight", "layerdata_highlightarrow", "layerdata_highlightpoints"]) {
+			const element = this.glInstance.findElement (identifier);
+			if (element) {
+				element.setPositionXY (positionX, positionY);
+				element.setScaleXY (this.transform.scaling, - this.transform.scaling);
+				element.setRotationZ (-this.transformAngleDegrees * Math.PI / 180.0);
+			}
+		}
+	}
+
+	// Support point of the highlighted nonlinear ramp under the viewport position, with its
+	// neighbours, so the piece of the ramp on either side can be shown; null if none.
+	/**
+	 * @param {number} screenX
+	 * @param {number} screenY
+	 * @param {number} [pixelTolerance]
+	 */
+	pickHighlightSupportPoint (screenX, screenY, pixelTolerance = 3)
+	{
+		if (!this.glInstance || !this.highlightSupportPoints)
+			return null;
+
+		const pointsElement = this.glInstance.findElement ("layerdata_highlightpoints");
+		if (!pointsElement || (typeof pointsElement.findNearestPoint !== "function"))
+			return null;
+
+		const knotIndex = pointsElement.findNearestPoint (screenX, screenY, pixelTolerance);
+		const { knots, x1, y1, x2, y2, length } = this.highlightSupportPoints;
+		if ((knotIndex < 0) || (knotIndex >= knots.length))
+			return null;
+
+		const describe = (index) => {
+			if ((index < 0) || (index >= knots.length))
+				return null;
+			const knot = knots[index];
+			return {
+				t: knot.t,
+				power: Number.isFinite (knot.power) ? knot.power : null,
+				distance: knot.t * length
+			};
+		};
+
+		const knot = knots[knotIndex];
+		return {
+			lineIndex: this.highlightLineIndex,
+			index: knotIndex,
+			count: knots.length,
+			x: x1 + knot.t * (x2 - x1),
+			y: y1 + knot.t * (y2 - y1),
+			length,
+			...describe (knotIndex),
+			previous: describe (knotIndex - 1),
+			next: describe (knotIndex + 1)
+		};
 	}
 
 	clearHighlight ()
