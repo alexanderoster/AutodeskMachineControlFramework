@@ -31,6 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 3.10)
 
+# Visual Studio selects the first listed configuration whenever it reloads the regenerated solution.
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+	set(CMAKE_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;MinSizeRel")
+endif()
+
 project(LibMC)
 
 # Use ccache if available for faster rebuilds
@@ -901,7 +906,7 @@ set_target_properties(amc_test
     
 )
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT amc_win32)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT amc_server)
 
 
 #[[++
