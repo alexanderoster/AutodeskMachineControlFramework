@@ -215,6 +215,8 @@
 		<error name="INVALIDMINIMUMJUMPDISTANCE" code="1163" description="Invalid minimum jump distance." />
 		<error name="INVALIDMINIMUMJUMPDISTANCEINPROFILE" code="1164" description="Invalid minimum jump distance in profile." />
 		<error name="MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE" code="1165" description="Minimum jump distance provided twice in profile." />
+		<error name="UNSUPPORTEDPROFILEMODIFIER" code="1166" description="Toolpath profile has a modifier that the driver cannot execute." />
+		<error name="MODIFIEDLASERPOWEROUTOFRANGE" code="1167" description="Modified laser power is outside of the calibrated laser power range." />
 
 	</errors>
 

@@ -92,6 +92,30 @@ IToolpathLayer * CToolpathAccessor::LoadLayer(const LibMCEnv_uint32 nLayerIndex)
 	return new CToolpathLayer(pToolpathEntity->readLayer (nLayerIndex, m_pToolpathHandler->getDisabledParts (m_sStorageUUID)));
 }
 
+LibMCEnv_uint32 CToolpathAccessor::GetProfileCount()
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
+	return pToolpathEntity->getProfileCount();
+}
+
+void CToolpathAccessor::GetProfileInfo(const LibMCEnv_uint32 nProfileIndex, std::string& sUUID, std::string& sName)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
+	pToolpathEntity->getProfileInfo(nProfileIndex, sUUID, sName);
+}
+
+LibMCEnv_uint32 CToolpathAccessor::GetProfileModifierCount(const LibMCEnv_uint32 nProfileIndex)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
+	return pToolpathEntity->getProfileModifierCount(nProfileIndex);
+}
+
+void CToolpathAccessor::GetProfileModifierInfo(const LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nModifierIndex, std::string& sNamespace, std::string& sValueName, LibMCEnv::eToolpathProfileModificationType& eModificationType, LibMCEnv::eToolpathProfileModificationFactor& eModificationFactor, LibMCEnv_double& dMinValue, LibMCEnv_double& dMaxValue)
+{
+	auto pToolpathEntity = m_pToolpathHandler->findToolpathEntity(m_sStorageUUID, true);
+	pToolpathEntity->getProfileModifierInfo(nProfileIndex, nModifierIndex, sNamespace, sValueName, eModificationType, eModificationFactor, dMinValue, dMaxValue);
+}
+
 LibMCEnv_uint32 CToolpathAccessor::FindNonEmptyLayer(const LibMCEnv_uint32 nMinLayerIndex, const LibMCEnv_uint32 nMaxLayerIndex, const bool bFromMinToMax)
 {
 	if (nMinLayerIndex > nMaxLayerIndex)

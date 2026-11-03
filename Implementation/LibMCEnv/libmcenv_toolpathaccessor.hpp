@@ -88,6 +88,14 @@ public:
 
 	IToolpathPart* FindPartByUUID(const std::string& sPartUUID) override;
 
+	LibMCEnv_uint32 GetProfileCount() override;
+
+	void GetProfileInfo(const LibMCEnv_uint32 nProfileIndex, std::string& sUUID, std::string& sName) override;
+
+	LibMCEnv_uint32 GetProfileModifierCount(const LibMCEnv_uint32 nProfileIndex) override;
+
+	void GetProfileModifierInfo(const LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nModifierIndex, std::string& sNamespace, std::string& sValueName, LibMCEnv::eToolpathProfileModificationType& eModificationType, LibMCEnv::eToolpathProfileModificationFactor& eModificationFactor, LibMCEnv_double& dMinValue, LibMCEnv_double& dMaxValue) override;
+
 	LibMCEnv_int32 GetBuildHeightInUnits() override;
 
 	LibMCEnv_int32 GetZValueInUnits(const LibMCEnv_uint32 nLayerIndex) override;

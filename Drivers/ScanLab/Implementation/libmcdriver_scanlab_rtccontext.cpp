@@ -57,6 +57,7 @@ using namespace LibMCDriver_ScanLab::Impl;
 #define RTCCONTEXT_LASERPOWERCALIBRATIONUNITS 0.005
 
 #define RTCCONTEXT_MIN_LINESUBDIVISIONTHRESHOLD 0.001
+#define RTCCONTEXT_POWERRAMP_VALUETOLERANCEINWATTS 0.001
 #define RTCCONTEXT_MAX_LINESUBDIVISIONTHRESHOLD 1000000.0
 
 #define RTCCONTEXT_MAXSEGMENTDELAY_ONEHOURIN100KHZ 3600UL * 100000UL
@@ -1282,6 +1283,32 @@ void CRTCContext::DrawPolyline(const LibMCDriver_ScanLab_uint64 nPointsBufferSiz
 
 void CRTCContext::DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D* pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex)
 {
+	drawPolylineEx(nPointsBufferSize, pPointsBuffer, fMarkSpeed, fJumpSpeed, fPower, fZValue, nOIEPIDControlIndex, nullptr);
+}
+
+void CRTCContext::DrawHatchesOIE(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex)
+{
+	drawHatchesEx(nHatchesBufferSize, pHatchesBuffer, fMarkSpeed, fJumpSpeed, fPower, fZValue, nOIEPIDControlIndex, nullptr);
+}
+
+void CRTCContext::writeDefocusForPower(const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_single fPowerInPercent)
+{
+	// Z Plane - apply optional defocus correction based on laser power
+	double dEffectiveZValue = (double)fZValue;
+	if (m_pDefocusCorrectionByPower != nullptr) {
+		double dPowerInWatts = 0.0;
+		m_pPowerMapping->mapLaserPowerFromPercentToWatts((double)fPowerInPercent, dPowerInWatts);
+		double dDefocusOffset = 0.0;
+		m_pDefocusCorrectionByPower->mapPowerToDefocusOffset(dPowerInWatts, dDefocusOffset);
+		dEffectiveZValue += dDefocusOffset;
+	}
+	double defocusZ = round(dEffectiveZValue * m_dZCorrectionFactor * m_dDefocusFactor);
+	int intDefocusZ = (int)defocusZ;
+	m_pScanLabSDK->n_set_defocus_list(m_CardNo, intDefocusZ);
+}
+
+void CRTCContext::drawPolylineEx(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D* pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex, const double* pLinePowersInPercent)
+{
 
 	if (!pPointsBuffer)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
@@ -1292,18 +1319,8 @@ void CRTCContext::DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBuffer
 	bool bOIEControlFlag = (nOIEPIDControlIndex != 0);
 	writeSpeeds(fMarkSpeed, fJumpSpeed, fPower, bOIEControlFlag);
 
-	// Z Plane - apply optional defocus correction based on laser power
-	double dEffectiveZValue = (double)fZValue;
-	if (m_pDefocusCorrectionByPower != nullptr) {
-		double dPowerInWatts = 0.0;
-		m_pPowerMapping->mapLaserPowerFromPercentToWatts((double)fPower, dPowerInWatts);
-		double dDefocusOffset = 0.0;
-		m_pDefocusCorrectionByPower->mapPowerToDefocusOffset(dPowerInWatts, dDefocusOffset);
-		dEffectiveZValue += dDefocusOffset;
-	}
-	double defocusZ = round(dEffectiveZValue * m_dZCorrectionFactor * m_dDefocusFactor);
-	int intDefocusZ = (int)defocusZ;
-	m_pScanLabSDK->n_set_defocus_list (m_CardNo, intDefocusZ);
+	// The defocus correction stays at the nominal power of the segment.
+	writeDefocusForPower(fZValue, fPower);
 
 	const sPoint2D* pPoint = pPointsBuffer;
 	jumpAbsoluteEx(pPoint->m_X, pPoint->m_Y);
@@ -1312,19 +1329,33 @@ void CRTCContext::DrawPolylineOIE(const LibMCDriver_ScanLab_uint64 nPointsBuffer
 	if (bOIEControlFlag)
 		SetOIEPIDMode(nOIEPIDControlIndex);
 
+	double dCurrentPowerInPercent = (double)fPower;
+
 	for (uint64_t index = 1; index < nPointsBufferSize; index++) {
 		pPoint++;
 
 		sendOIEMeasurementTag((uint32_t)index);
 
-		markAbsoluteEx(pPrevPoint->m_X, pPrevPoint->m_Y, pPoint->m_X, pPoint->m_Y, fPower, bOIEControlFlag);
+		if (pLinePowersInPercent != nullptr) {
+			double dLinePowerInPercent = pLinePowersInPercent[index - 1];
+			if (dLinePowerInPercent != dCurrentPowerInPercent) {
+				writePower(dLinePowerInPercent, bOIEControlFlag, false, false);
+				dCurrentPowerInPercent = dLinePowerInPercent;
+			}
+		}
+
+		markAbsoluteEx(pPrevPoint->m_X, pPrevPoint->m_Y, pPoint->m_X, pPoint->m_Y, dCurrentPowerInPercent, bOIEControlFlag);
 		pPrevPoint = pPoint;
 
 	}
 
+	// Power writes inside the segment skip the error query, see writePower.
+	if (pLinePowersInPercent != nullptr)
+		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
+
 }
 
-void CRTCContext::DrawHatchesOIE(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex)
+void CRTCContext::drawHatchesEx(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex, const CRTCPowerRampList* pPowerRamps)
 {
 	if (!pHatchesBuffer)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
@@ -1332,36 +1363,63 @@ void CRTCContext::DrawHatchesOIE(const LibMCDriver_ScanLab_uint64 nHatchesBuffer
 	if (nHatchesBufferSize == 0)
 		return;
 
+	if ((pPowerRamps != nullptr) && (pPowerRamps->getElementCount() != nHatchesBufferSize))
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM, "power ramp count does not match hatch count");
+
 	bool bOIEControlFlag = (nOIEPIDControlIndex != 0);
 	writeSpeeds(fMarkSpeed, fJumpSpeed, fPower, bOIEControlFlag);
 
-	// Z Plane - apply optional defocus correction based on laser power
-	double dEffectiveZValue = (double)fZValue;
-	if (m_pDefocusCorrectionByPower != nullptr) {
-		double dPowerInWatts = 0.0;
-		m_pPowerMapping->mapLaserPowerFromPercentToWatts((double)fPower, dPowerInWatts);
-		double dDefocusOffset = 0.0;
-		m_pDefocusCorrectionByPower->mapPowerToDefocusOffset(dPowerInWatts, dDefocusOffset);
-		dEffectiveZValue += dDefocusOffset;
-	}
-	double defocusZ = round(dEffectiveZValue * m_dZCorrectionFactor * m_dDefocusFactor);
-	int intDefocusZ = (int)defocusZ;
-	m_pScanLabSDK->n_set_defocus_list(m_CardNo, intDefocusZ);
+	// The defocus correction stays at the nominal power of the segment.
+	writeDefocusForPower(fZValue, fPower);
 
 	if (bOIEControlFlag)
 		SetOIEPIDMode(nOIEPIDControlIndex);
 
 	const sHatch2D* pHatch = pHatchesBuffer;
+	double dCurrentPowerInPercent = (double)fPower;
 
 	for (uint64_t index = 0; index < nHatchesBufferSize; index++) {
 		jumpAbsoluteEx(pHatch->m_X1, pHatch->m_Y1);
 
 		sendOIEMeasurementTag((uint32_t)index);
 
-		markAbsoluteEx(pHatch->m_X1, pHatch->m_Y1, pHatch->m_X2, pHatch->m_Y2, fPower, bOIEControlFlag);
+		size_t nStepCount = 0;
+		const sRTCPowerRampStep* pSteps = nullptr;
+		if (pPowerRamps != nullptr)
+			pSteps = pPowerRamps->getElementSteps((size_t)index, nStepCount);
+
+		if (pSteps == nullptr) {
+			if (dCurrentPowerInPercent != (double)fPower) {
+				writePower((double)fPower, bOIEControlFlag, false, false);
+				dCurrentPowerInPercent = (double)fPower;
+			}
+			markAbsoluteEx(pHatch->m_X1, pHatch->m_Y1, pHatch->m_X2, pHatch->m_Y2, dCurrentPowerInPercent, bOIEControlFlag);
+		}
+		else {
+			double dDeltaX = (double)pHatch->m_X2 - (double)pHatch->m_X1;
+			double dDeltaY = (double)pHatch->m_Y2 - (double)pHatch->m_Y1;
+
+			for (size_t nStepIndex = 0; nStepIndex < nStepCount; nStepIndex++) {
+				auto& step = pSteps[nStepIndex];
+				if (step.m_dValue != dCurrentPowerInPercent) {
+					writePower(step.m_dValue, bOIEControlFlag, false, false);
+					dCurrentPowerInPercent = step.m_dValue;
+				}
+
+				double dStartX = (double)pHatch->m_X1 + step.m_dStartParameter * dDeltaX;
+				double dStartY = (double)pHatch->m_Y1 + step.m_dStartParameter * dDeltaY;
+				double dEndX = (double)pHatch->m_X1 + step.m_dEndParameter * dDeltaX;
+				double dEndY = (double)pHatch->m_Y1 + step.m_dEndParameter * dDeltaY;
+				markAbsoluteEx(dStartX, dStartY, dEndX, dEndY, dCurrentPowerInPercent, bOIEControlFlag);
+			}
+		}
 
 		pHatch++;
 	}
+
+	// Power writes inside the segment skip the error query, see writePower.
+	if (pPowerRamps != nullptr)
+		m_pScanLabSDK->checkLastErrorOfCard(m_CardNo);
 
 }
 
@@ -3355,12 +3413,139 @@ int64_t readSkywritingRunOutPhaseInBits(LibMCEnv::CToolpathLayer* pLayer, uint32
 	}
 }
 
+void CRTCContext::validateProfileModifiersOfLayer(LibMCEnv::CToolpathLayer* pLayer)
+{
+	if (pLayer == nullptr)
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
+
+	int64_t nCurrentLaserIndex = GetLaserIndex();
+
+	std::set<std::string> checkedProfiles;
+	uint32_t nSegmentCount = pLayer->GetSegmentCount();
+	for (uint32_t nSegmentIndex = 0; nSegmentIndex < nSegmentCount; nSegmentIndex++) {
+		std::string sProfileUUID = pLayer->GetSegmentProfileUUID(nSegmentIndex);
+		if (!checkedProfiles.insert(sProfileUUID).second)
+			continue;
+
+		int64_t nLaserIndexOfProfile = (int64_t)round(pLayer->GetSegmentProfileDoubleValueDef(nSegmentIndex, "", "laserindex", 0));
+
+		uint32_t nModifierCount = pLayer->GetSegmentProfileModifierCount(nSegmentIndex);
+		for (uint32_t nModifierIndex = 0; nModifierIndex < nModifierCount; nModifierIndex++) {
+			std::string sNamespace;
+			std::string sValueName;
+			LibMCEnv::eToolpathProfileModificationType modificationType = LibMCEnv::eToolpathProfileModificationType::NoModification;
+			LibMCEnv::eToolpathProfileModificationFactor modificationFactor = LibMCEnv::eToolpathProfileModificationFactor::Unknown;
+			double dMinValue = 0.0;
+			double dMaxValue = 0.0;
+			pLayer->GetSegmentProfileModifierInfo(nSegmentIndex, nModifierIndex, sNamespace, sValueName, modificationType, modificationFactor, dMinValue, dMaxValue);
+
+			if (modificationType == LibMCEnv::eToolpathProfileModificationType::NoModification)
+				continue;
+
+			std::string sAttribute = sNamespace.empty() ? sValueName : (sNamespace + ":" + sValueName);
+			if (!(sNamespace.empty() && (sValueName == "laserpower")))
+				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER, "profile " + sProfileUUID + " modifies " + sAttribute);
+
+			if (modificationFactor == LibMCEnv::eToolpathProfileModificationFactor::Unknown)
+				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER, "profile " + sProfileUUID + " has an unknown modification factor for " + sAttribute);
+
+			// Every modulated value lies between the min and max value of the modifier.
+			if (nLaserIndexOfProfile == nCurrentLaserIndex) {
+				double dPercent = 0.0;
+				if (!m_pPowerMapping->mapLaserPowerFromWattsToPercent(dMinValue, dPercent) || !m_pPowerMapping->mapLaserPowerFromWattsToPercent(dMaxValue, dPercent))
+					throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE, "profile " + sProfileUUID + " modulates the laser power between " + std::to_string(dMinValue) + " W and " + std::to_string(dMaxValue) + " W");
+			}
+		}
+	}
+}
+
+bool CRTCContext::evaluatePolylinePowerModulation(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex, std::vector<double>& linePowersInPercent)
+{
+	linePowersInPercent.clear();
+	if (pLayer->GetSegmentProfileTypedModificationType(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower) == LibMCEnv::eToolpathProfileModificationType::NoModification)
+		return false;
+
+	std::vector<double> linePowersInWatts;
+	pLayer->EvaluateTypedPolylineProfileModifier(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower, linePowersInWatts);
+
+	linePowersInPercent.resize(linePowersInWatts.size());
+	for (size_t nLineIndex = 0; nLineIndex < linePowersInWatts.size(); nLineIndex++)
+		m_pPowerMapping->mapLaserPowerFromWattsToPercent(linePowersInWatts[nLineIndex], linePowersInPercent[nLineIndex]);
+
+	return true;
+}
+
+bool CRTCContext::evaluateHatchPowerModulation(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex, const std::vector<sHatch2D>& hatches, CRTCPowerRampList& powerRamps)
+{
+	powerRamps.clear();
+
+	auto modificationType = pLayer->GetSegmentProfileTypedModificationType(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower);
+	if (modificationType == LibMCEnv::eToolpathProfileModificationType::NoModification)
+		return false;
+
+	std::vector<double> startPowersInWatts;
+	std::vector<double> endPowersInWatts;
+	pLayer->EvaluateTypedHatchProfileModifier(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower, startPowersInWatts, endPowersInWatts);
+	if ((startPowersInWatts.size() != hatches.size()) || (endPowersInWatts.size() != hatches.size()))
+		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT, "hatch power count does not match hatch count");
+
+	std::vector<uint32_t> subInterpolationCounts;
+	std::vector<LibMCEnv::sHatch2DSubInterpolationData> subInterpolationData;
+	if (modificationType == LibMCEnv::eToolpathProfileModificationType::NonlinearModification) {
+		pLayer->EvaluateTypedHatchProfileInterpolation(nSegmentIndex, LibMCEnv::eToolpathProfileValueType::LaserPower, subInterpolationCounts, subInterpolationData);
+		if (!subInterpolationCounts.empty() && (subInterpolationCounts.size() != hatches.size()))
+			throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT, "hatch interpolation count does not match hatch count");
+	}
+
+	std::vector<sRTCPowerRampSupportPoint> supportPoints;
+	std::vector<sRTCPowerRampStep> steps;
+	size_t nSubInterpolationOffset = 0;
+
+	for (size_t nHatchIndex = 0; nHatchIndex < hatches.size(); nHatchIndex++) {
+		supportPoints.clear();
+		if (!subInterpolationCounts.empty()) {
+			size_t nSubInterpolationCount = subInterpolationCounts[nHatchIndex];
+			if (nSubInterpolationOffset + nSubInterpolationCount > subInterpolationData.size())
+				throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT, "hatch interpolation data overflow");
+
+			for (size_t nSubIndex = 0; nSubIndex < nSubInterpolationCount; nSubIndex++) {
+				auto& subData = subInterpolationData[nSubInterpolationOffset + nSubIndex];
+				supportPoints.push_back({ subData.m_Parameter, subData.m_Value });
+			}
+			nSubInterpolationOffset += nSubInterpolationCount;
+		}
+
+		auto& hatch = hatches[nHatchIndex];
+		double dDeltaX = (double)hatch.m_X2 - (double)hatch.m_X1;
+		double dDeltaY = (double)hatch.m_Y2 - (double)hatch.m_Y1;
+		double dLengthInMM = sqrt(dDeltaX * dDeltaX + dDeltaY * dDeltaY);
+
+		CRTCPowerRamp::computeSteps(dLengthInMM, startPowersInWatts[nHatchIndex], endPowersInWatts[nHatchIndex], supportPoints.data(), supportPoints.size(), RTCPOWERRAMP_DEFAULT_STEPLENGTH, RTCCONTEXT_POWERRAMP_VALUETOLERANCEINWATTS, steps);
+
+		for (auto& step : steps) {
+			double dPowerInPercent = 0.0;
+			m_pPowerMapping->mapLaserPowerFromWattsToPercent(step.m_dValue, dPowerInPercent);
+			step.m_dValue = dPowerInPercent;
+		}
+
+		powerRamps.addElement(steps);
+	}
+
+	return true;
+}
+
 void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordingMode oieRecordingMode, uint32_t nAttributeFilterID, int64_t nAttributeFilterValue, bool bFailIfNonAssignedDataExists)
 {
 	if (pLayer.get() == nullptr)
 		throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPARAM);
 
+	// Before the first list command, so that a rejected layer leaves the list untouched.
+	validateProfileModifiersOfLayer(pLayer.get());
+
 	double dUnits = pLayer->GetUnits();
+
+	std::vector<double> linePowersInPercent;
+	CRTCPowerRampList hatchPowerRamps;
 
 	switch (oieRecordingMode) {
 	case eOIERecordingMode::OIEEnableAndContinuousMeasurement:
@@ -3552,7 +3737,14 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 						pContourPoint->m_Y = (float)(Points[nPointIndex].m_Coordinates[1] * dUnits);
 					}
 
-					DrawPolylineOIE(nPointCount, ContourPoints.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float) dPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
+					const double* pLinePowersInPercent = nullptr;
+					if (evaluatePolylinePowerModulation(pLayer.get(), nSegmentIndex, linePowersInPercent)) {
+						if (linePowersInPercent.size() + 1 != ContourPoints.size())
+							throw ELibMCDriver_ScanLabInterfaceException(LIBMCDRIVER_SCANLAB_ERROR_INVALIDPOINTCOUNT, "polyline power count does not match line count");
+						pLinePowersInPercent = linePowersInPercent.data();
+					}
+
+					drawPolylineEx(nPointCount, ContourPoints.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float) dPowerInPercent, fLaserFocus, nOIEPIDControlIndex, pLinePowersInPercent);
 
 					break;
 				}
@@ -3579,7 +3771,11 @@ void CRTCContext::addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordin
 						targetHatch.m_Y2 = (float)(srcHatch.m_Y2 * dUnits);
 					}
 
-					DrawHatchesOIE(RTCHatches.size(), RTCHatches.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float)dPowerInPercent, fLaserFocus, nOIEPIDControlIndex);
+					const CRTCPowerRampList* pHatchPowerRamps = nullptr;
+					if (evaluateHatchPowerModulation(pLayer.get(), nSegmentIndex, RTCHatches, hatchPowerRamps))
+						pHatchPowerRamps = &hatchPowerRamps;
+
+					drawHatchesEx(RTCHatches.size(), RTCHatches.data(), fMarkSpeedInMMPerSecond, fJumpSpeedInMMPerSecond, (float)dPowerInPercent, fLaserFocus, nOIEPIDControlIndex, pHatchPowerRamps);
 
 					break;
 				}

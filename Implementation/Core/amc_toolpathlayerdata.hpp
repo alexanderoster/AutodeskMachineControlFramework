@@ -47,6 +47,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TOOLPATHSEGMENTOVERRIDEFACTOR_F 1
 #define TOOLPATHSEGMENTOVERRIDEFACTOR_G 2
 #define TOOLPATHSEGMENTOVERRIDEFACTOR_H 4
+#define TOOLPATHSEGMENTOVERRIDEFACTOR_E 8
+
+// Factor slots are F, G, H and E, in this order.
+#define TOOLPATHSEGMENTOVERRIDEFACTORCOUNT 4
+#define TOOLPATHSEGMENTNOSUBINTERPOLATIONTABLE 0xffffffff
 
 namespace AMC {
 
@@ -61,16 +66,19 @@ namespace AMC {
 		uint32_t m_LocalPartID;
 		uint32_t m_LaserIndex;
 		uint32_t m_HasOverrideFactors;
-		uint32_t m_TotalSubinterpolationCount;
+		uint32_t m_SubinterpolationTableStart[TOOLPATHSEGMENTOVERRIDEFACTORCOUNT];
+		uint32_t m_TotalSubinterpolationCount[TOOLPATHSEGMENTOVERRIDEFACTORCOUNT];
 		int64_t* m_AttributeData;
 	} sToolpathLayerSegment;
 
 	typedef struct _sToolpathLayerOverride {
-		uint32_t m_nSubInterpolationCount;
-		uint32_t m_nSubInterpolationOffset;
-		//Lib3MF::sHatchModificationInterpolationData * m_pSubInterpolationData;
-		double m_dFactors[3]; // F, G and H
+		double m_dFactors[TOOLPATHSEGMENTOVERRIDEFACTORCOUNT];
 	} sToolpathLayerOverride;
+
+	typedef struct _sToolpathLayerSubinterpolationEntry {
+		uint32_t m_nOffset;
+		uint32_t m_nCount;
+	} sToolpathLayerSubinterpolationEntry;
 
 	class CToolpathCustomSegmentAttribute {
 	private:
@@ -130,6 +138,7 @@ namespace AMC {
 			std::string m_sName;
 			std::map<std::pair<std::string, std::string>, std::string> m_ProfileValues;
 			std::map<std::pair<std::string, std::string>, CToolpathLayerProfileModifier> m_ProfileModifiers;
+			std::vector<std::pair<std::string, std::string>> m_ProfileModifierKeys;
 
 		public:
 
@@ -153,6 +162,9 @@ namespace AMC {
 
 			LibMCEnv::eToolpathProfileModificationType getModificationType(const std::string& sNameSpace, const std::string& sValueName);
 			void getModificationInformation (const std::string& sNameSpace, const std::string& sValueName, LibMCEnv::eToolpathProfileModificationFactor & modificationFactor, double & dMinValue, double & dMaxValue);
+
+			uint32_t getModifierCount();
+			void getModifierInformationByIndex(uint32_t nModifierIndex, std::string& sNameSpace, std::string& sValueName, LibMCEnv::eToolpathProfileModificationType& modificationType, LibMCEnv::eToolpathProfileModificationFactor& modificationFactor, double& dMinValue, double& dMaxValue);
 	};
 
 	typedef std::shared_ptr<CToolpathLayerProfile> PToolpathLayerProfile;
@@ -168,6 +180,7 @@ namespace AMC {
 		std::vector<int64_t> m_SegmentAttributeData;
 		std::vector<LibMCEnv::sPosition2D> m_Points;
 		std::vector<sToolpathLayerOverride> m_OverrideFactors;
+		std::vector<sToolpathLayerSubinterpolationEntry> m_SubinterpolationTable;
 		std::vector<Lib3MF::sHatchModificationInterpolationData> m_InterpolationData;
 
 		std::vector<std::string> m_UUIDs;
@@ -187,6 +200,9 @@ namespace AMC {
 		void storeProfileData(Lib3MF::PToolpath pToolpath, const std::string& sProfileUUID);
 		PToolpathLayerProfile retrieveProfileData(const std::string& sProfileUUID);
 
+		void readHatchOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment);
+		void readPointOverrideFactors(Lib3MF::PToolpathLayerReader p3MFLayer, sToolpathLayerSegment& segment, bool bIsLoop);
+
 	public:
 
 		// Segments whose build item UUID (normalized) is contained in excludedPartUUIDs are skipped entirely.
@@ -198,8 +214,8 @@ namespace AMC {
 		uint32_t getSegmentCount();	
 		uint32_t getSegmentPointCount (const uint32_t nSegmentIndex);
 		LibMCEnv::eToolpathSegmentType getSegmentType (const uint32_t nSegmentIndex);
-		uint32_t getSegmentTotalSubinterpolationCount (const uint32_t nSegmentIndex);
-		void getHatchSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nHatchIndex, uint32_t & nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData * & pSubInterpolationData);
+		uint32_t getSegmentTotalSubinterpolationCount (const uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor);
+		void getHatchSubinterpolationData(const uint32_t nSegmentIndex, const uint32_t nHatchIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, uint32_t & nSubInterpolationCount, Lib3MF::sHatchModificationInterpolationData * & pSubInterpolationData);
 
 		void storePointsToBufferInUnits (const uint32_t nSegmentIndex, LibMCEnv::sPosition2D * pPositionData);
 		void storeHatchesToBufferInUnits (const uint32_t nSegmentIndex, LibMCEnv::sHatch2D* pHatchData);
@@ -230,13 +246,17 @@ namespace AMC {
 
 		bool segmentHasOverrideFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor);
 
-		//void storePointOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor, double * pOverrideData);
-
-		//void storeHatchOverrides(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eOverrideFactor, LibMCEnv::sHatch2DModificationFactors* pOverrideData);
-
 		void getHatchModificationFactors (uint32_t nSegmentIndex, uint32_t nHatchIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double & dFactor1, double & dFactor2);
 
+		// Stores one factor per segment point. The factor of a point applies to the line that ends in this point.
+		void storePointModificationFactors(uint32_t nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, double* pFactorData);
+
 		static std::string getValueNameByType(const LibMCEnv::eToolpathProfileValueType eValueType);
+
+		static uint32_t getOverrideFactorIndex(const LibMCEnv::eToolpathProfileModificationFactor eModificationFactor);
+		static LibMCEnv::eToolpathProfileModificationType convertModificationType(const Lib3MF::eToolpathProfileModificationType eModificationType);
+		// Returns Unknown for factors that LibMCEnv does not know.
+		static LibMCEnv::eToolpathProfileModificationFactor convertModificationFactor(const Lib3MF::eToolpathProfileModificationFactor eModificationFactor);
 
 	};
 

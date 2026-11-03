@@ -268,6 +268,8 @@ typedef void * LibMCDriver_ScanLab_pvoid;
 #define LIBMCDRIVER_SCANLAB_ERROR_INVALIDMINIMUMJUMPDISTANCE 1163 /** Invalid minimum jump distance. */
 #define LIBMCDRIVER_SCANLAB_ERROR_INVALIDMINIMUMJUMPDISTANCEINPROFILE 1164 /** Invalid minimum jump distance in profile. */
 #define LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE 1165 /** Minimum jump distance provided twice in profile. */
+#define LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER 1166 /** Toolpath profile has a modifier that the driver cannot execute. */
+#define LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE 1167 /** Modified laser power is outside of the calibrated laser power range. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLab
@@ -448,6 +450,8 @@ inline const char * LIBMCDRIVER_SCANLAB_GETERRORSTRING (LibMCDriver_ScanLabResul
     case LIBMCDRIVER_SCANLAB_ERROR_INVALIDMINIMUMJUMPDISTANCE: return "Invalid minimum jump distance.";
     case LIBMCDRIVER_SCANLAB_ERROR_INVALIDMINIMUMJUMPDISTANCEINPROFILE: return "Invalid minimum jump distance in profile.";
     case LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE: return "Minimum jump distance provided twice in profile.";
+    case LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER: return "Toolpath profile has a modifier that the driver cannot execute.";
+    case LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE: return "Modified laser power is outside of the calibrated laser power range.";
     default: return "unknown error";
   }
 }

@@ -121,6 +121,11 @@ namespace AMC {
 		PToolpathPart getPart(uint32_t nIndex);
 		PToolpathPart findPartByUUID(const std::string & sUUID);
 
+		uint32_t getProfileCount();
+		void getProfileInfo(uint32_t nProfileIndex, std::string& sUUID, std::string& sName);
+		uint32_t getProfileModifierCount(uint32_t nProfileIndex);
+		void getProfileModifierInfo(uint32_t nProfileIndex, uint32_t nModifierIndex, std::string& sNameSpace, std::string& sValueName, LibMCEnv::eToolpathProfileModificationType& modificationType, LibMCEnv::eToolpathProfileModificationFactor& modificationFactor, double& dMinValue, double& dMaxValue);
+
 		uint32_t getLayerZInUnits(uint32_t nLayerIndex);
 		uint32_t getLayerMinZInUnits(uint32_t nLayerIndex);
 

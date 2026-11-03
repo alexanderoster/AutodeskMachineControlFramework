@@ -37,6 +37,7 @@ Abstract: This is the class declaration of CRTCContext
 
 // Include custom headers here.
 #include "libmcdriver_scanlab_rtcjumpfilter.hpp"
+#include "libmcdriver_scanlab_rtcpowerramp.hpp"
 
 #include <set>
 #include <atomic>
@@ -296,6 +297,21 @@ protected:
 	void addGPIOSequenceToList (const std::string & sSequenceName);
 
 	void addLayerToListEx(LibMCEnv::PToolpathLayer pLayer, eOIERecordingMode oieRecordingMode, uint32_t nAttributeFilterID, int64_t nAttributeFilterValue, bool bFailIfNonAssignedDataExists);
+
+	// Fails if a segment profile has a modifier that the driver cannot execute, or a laser power range outside of the power calibration.
+	void validateProfileModifiersOfLayer(LibMCEnv::CToolpathLayer* pLayer);
+
+	// Returns false if the segment runs with its nominal power. Ramp values are in percent.
+	bool evaluatePolylinePowerModulation(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex, std::vector<double>& linePowersInPercent);
+	bool evaluateHatchPowerModulation(LibMCEnv::CToolpathLayer* pLayer, uint32_t nSegmentIndex, const std::vector<sHatch2D>& hatches, CRTCPowerRampList& powerRamps);
+
+	// pLinePowersInPercent contains one value per line, or is nullptr for the constant power fPower.
+	void drawPolylineEx(const LibMCDriver_ScanLab_uint64 nPointsBufferSize, const LibMCDriver_ScanLab::sPoint2D* pPointsBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex, const double* pLinePowersInPercent);
+
+	// pPowerRamps contains one element per hatch, or is nullptr for the constant power fPower.
+	void drawHatchesEx(const LibMCDriver_ScanLab_uint64 nHatchesBufferSize, const LibMCDriver_ScanLab::sHatch2D* pHatchesBuffer, const LibMCDriver_ScanLab_single fMarkSpeed, const LibMCDriver_ScanLab_single fJumpSpeed, const LibMCDriver_ScanLab_single fPower, const LibMCDriver_ScanLab_single fZValue, const uint32_t nOIEPIDControlIndex, const CRTCPowerRampList* pPowerRamps);
+
+	void writeDefocusForPower(const LibMCDriver_ScanLab_single fZValue, const LibMCDriver_ScanLab_single fPowerInPercent);
 
 	void updateLaserField(double dMinXInMM, double dMaxXInMM, double dMinYInMM, double dMaxYInMM);
 	

@@ -302,8 +302,7 @@
 		<error name="VIDEOSTREAMFRAMEENCODINGERROR" code="10262" description="Video stream frame encoding error." />	
 		<error name="NONONEMPTYLAYERFOUND" code="10263" description="No non-empty layer found in the given layer range." />
 		<error name="TOOLPATHPARTNOTFOUND" code="10264" description="Toolpath part not found." />	
-		<error name="INVALIDCONFIGURATIONVERSIONNAME" code="10265" description="Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters." />	
-		
+		<error name="INVALIDCONFIGURATIONVERSIONNAME" code="10265" description="Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters." />			
 		
 	</errors>
 
@@ -417,6 +416,7 @@
 		<option name="FactorF" value="1" />
 		<option name="FactorG" value="2" />
 		<option name="FactorH" value="3" />
+		<option name="FactorE" value="4" />
 	</enum>
 
 	
@@ -2203,6 +2203,28 @@
 			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom." />
 			<param name="ModificationType" type="enum" class="ToolpathProfileModificationType" pass="return" description="Returns the profile modification type." />
 		</method>
+
+		<method name="GetSegmentProfileModifierCount" description="Retrieves the number of modifiers of the profile assigned to a segment.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ModifierCount" type="uint32" pass="return" description="Number of modifiers of the profile." />
+		</method>
+
+		<method name="GetSegmentProfileModifierInfo" description="Retrieves a modifier of the profile assigned to a segment.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ModifierIndex" type="uint32" pass="in" description="Index of the modifier. Must be between 0 and ModifierCount - 1." />
+			<param name="Namespace" type="string" pass="out" description="Namespace of the modified profile value. Empty for standard values." />
+			<param name="ValueName" type="string" pass="out" description="Name of the modified profile value." />
+			<param name="ModificationType" type="enum" class="ToolpathProfileModificationType" pass="out" description="Modification type." />
+			<param name="ModificationFactor" type="enum" class="ToolpathProfileModificationFactor" pass="out" description="Factor that the layer data uses for this modifier." />
+			<param name="MinValue" type="double" pass="out" description="Value for a factor of 0." />
+			<param name="MaxValue" type="double" pass="out" description="Value for a factor of 1." />
+		</method>
+
+		<method name="SegmentHasModificationFactors" description="Returns if the layer data of a segment carries factors of the given type. Segments without factors are evaluated with the nominal profile value.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ModificationFactor" type="enum" class="ToolpathProfileModificationFactor" pass="in" description="Modification factor to check." />
+			<param name="HasFactors" type="bool" pass="return" description="Returns true if the segment carries factors of the given type." />
+		</method>
 		
 		<method name="GetSegmentPartUUID" description="Retrieves the assigned segment part uuid.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
@@ -2234,7 +2256,7 @@
 			<param name="HatchData" type="structarray" class="FloatHatch2D" pass="out" description="The hatch data array. Positions are absolute in mm." />
 		</method>
 
-		<method name="EvaluateTypedHatchProfileModifier" description="Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.">
+		<method name="EvaluateTypedHatchProfileModifier" description="Evaluates a typed profile value with its modifier factors. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not hatch.">
 			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
 			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom. Fails if value type does not exist." />
 			<param name="EvaluationData1" type="basicarray" class="double" pass="out" description="Evaluated data on the first point on each hatch. Will return HatchCount elements." />
@@ -2246,6 +2268,12 @@
 			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom. Fails if value type does not exist." />
 			<param name="CountArray" type="basicarray" class="uint32" pass="out" description="Number of subinterpolation values per hatch. Will contain HatchCount elements." />
 			<param name="EvaluationData" type="structarray" class="Hatch2DSubInterpolationData" pass="out" description="Evaluated data on evaluation points for the full segment, in hatch order. Will contain the sum of CountArray elements." />
+		</method>
+
+		<method name="EvaluateTypedPolylineProfileModifier" description="Evaluates a typed profile value with its modifier factors for each line of a polyline or loop segment. A line takes the factor of the point it ends in; the closing line of a loop takes the factor of the first point. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not polyline.">
+			<param name="SegmentIndex" type="uint32" pass="in" description="Index. Must be between 0 and Count - 1." />
+			<param name="ValueType" type="enum" class="ToolpathProfileValueType" pass="in" description="Enum to query for. MUST NOT be custom. Fails if value type does not exist." />
+			<param name="EvaluationData" type="basicarray" class="double" pass="out" description="Evaluated value of each line. Will return PointCount - 1 elements." />
 		</method>
 
 
@@ -2354,6 +2382,32 @@
 		<method name="FindPartByUUID" description="Finds the part information of a toolpath.">
 			<param name="PartUUID" type="string" pass="in" description="UUID of part." />
 			<param name="Part" type="optionalclass" class="ToolpathPart" pass="return" description="Part Instance. Returns null if part does not exist." />
+		</method>
+
+		<method name="GetProfileCount" description="Retrieves the number of toolpath profiles.">
+			<param name="ProfileCount" type="uint32" pass="return" description="Number of profiles." />
+		</method>
+
+		<method name="GetProfileInfo" description="Retrieves the UUID and name of a toolpath profile.">
+			<param name="ProfileIndex" type="uint32" pass="in" description="Index of the profile. MUST be between 0 and ProfileCount - 1." />
+			<param name="UUID" type="string" pass="out" description="UUID of the profile." />
+			<param name="Name" type="string" pass="out" description="Name of the profile." />
+		</method>
+
+		<method name="GetProfileModifierCount" description="Retrieves the number of modifiers of a toolpath profile.">
+			<param name="ProfileIndex" type="uint32" pass="in" description="Index of the profile. MUST be between 0 and ProfileCount - 1." />
+			<param name="ModifierCount" type="uint32" pass="return" description="Number of modifiers of the profile." />
+		</method>
+
+		<method name="GetProfileModifierInfo" description="Retrieves a modifier of a toolpath profile. Allows checking all modifiers of a build before it starts.">
+			<param name="ProfileIndex" type="uint32" pass="in" description="Index of the profile. MUST be between 0 and ProfileCount - 1." />
+			<param name="ModifierIndex" type="uint32" pass="in" description="Index of the modifier. MUST be between 0 and ModifierCount - 1." />
+			<param name="Namespace" type="string" pass="out" description="Namespace of the modified profile value. Empty for standard values." />
+			<param name="ValueName" type="string" pass="out" description="Name of the modified profile value." />
+			<param name="ModificationType" type="enum" class="ToolpathProfileModificationType" pass="out" description="Modification type." />
+			<param name="ModificationFactor" type="enum" class="ToolpathProfileModificationFactor" pass="out" description="Factor that the layer data uses for this modifier." />
+			<param name="MinValue" type="double" pass="out" description="Value for a factor of 0." />
+			<param name="MaxValue" type="double" pass="out" description="Value for a factor of 1." />
 		</method>
 		
 		<method name="GetBuildHeightInUnits" description="Retrieves the build height in units.">
