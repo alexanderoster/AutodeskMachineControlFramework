@@ -2165,6 +2165,9 @@ public:
 	inline LibMCEnv_double GetSegmentProfileTypedValue(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType);
 	inline LibMCEnv_double GetSegmentProfileTypedValueDef(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType, const LibMCEnv_double dDefaultValue);
 	inline eToolpathProfileModificationType GetSegmentProfileTypedModificationType(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType);
+	inline LibMCEnv_uint32 GetSegmentProfileModifierCount(const LibMCEnv_uint32 nSegmentIndex);
+	inline void GetSegmentProfileModifierInfo(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, eToolpathProfileModificationType & eModificationType, eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue);
+	inline bool SegmentHasModificationFactors(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileModificationFactor eModificationFactor);
 	inline std::string GetSegmentPartUUID(const LibMCEnv_uint32 nSegmentIndex);
 	inline LibMCEnv_uint32 GetSegmentLocalPartID(const LibMCEnv_uint32 nSegmentIndex);
 	inline void GetSegmentPolylineData(const LibMCEnv_uint32 nSegmentIndex, std::vector<sPosition2D> & PointDataBuffer);
@@ -2173,6 +2176,7 @@ public:
 	inline void GetSegmentHatchDataInMM(const LibMCEnv_uint32 nSegmentIndex, std::vector<sFloatHatch2D> & HatchDataBuffer);
 	inline void EvaluateTypedHatchProfileModifier(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType, std::vector<LibMCEnv_double> & EvaluationData1Buffer, std::vector<LibMCEnv_double> & EvaluationData2Buffer);
 	inline void EvaluateTypedHatchProfileInterpolation(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType, std::vector<LibMCEnv_uint32> & CountArrayBuffer, std::vector<sHatch2DSubInterpolationData> & EvaluationDataBuffer);
+	inline void EvaluateTypedPolylineProfileModifier(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType, std::vector<LibMCEnv_double> & EvaluationDataBuffer);
 	inline LibMCEnv_int32 GetZValue();
 	inline LibMCEnv_double GetZValueInMM();
 	inline LibMCEnv_double GetUnits();
@@ -2209,6 +2213,10 @@ public:
 	inline LibMCEnv_uint32 GetPartCount();
 	inline PToolpathPart GetPart(const LibMCEnv_uint32 nPartIndex);
 	inline PToolpathPart FindPartByUUID(const std::string & sPartUUID);
+	inline LibMCEnv_uint32 GetProfileCount();
+	inline void GetProfileInfo(const LibMCEnv_uint32 nProfileIndex, std::string & sUUID, std::string & sName);
+	inline LibMCEnv_uint32 GetProfileModifierCount(const LibMCEnv_uint32 nProfileIndex);
+	inline void GetProfileModifierInfo(const LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, eToolpathProfileModificationType & eModificationType, eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue);
 	inline LibMCEnv_int32 GetBuildHeightInUnits();
 	inline LibMCEnv_int32 GetZValueInUnits(const LibMCEnv_uint32 nLayerIndex);
 	inline LibMCEnv_double GetBuildHeightInMM();
@@ -4258,6 +4266,9 @@ public:
 		pWrapperTable->m_ToolpathLayer_GetSegmentProfileTypedValue = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentProfileTypedValueDef = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentProfileTypedModificationType = nullptr;
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount = nullptr;
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo = nullptr;
+		pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentPartUUID = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentLocalPartID = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetSegmentPolylineData = nullptr;
@@ -4266,6 +4277,7 @@ public:
 		pWrapperTable->m_ToolpathLayer_GetSegmentHatchDataInMM = nullptr;
 		pWrapperTable->m_ToolpathLayer_EvaluateTypedHatchProfileModifier = nullptr;
 		pWrapperTable->m_ToolpathLayer_EvaluateTypedHatchProfileInterpolation = nullptr;
+		pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetZValue = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetZValueInMM = nullptr;
 		pWrapperTable->m_ToolpathLayer_GetUnits = nullptr;
@@ -4286,6 +4298,10 @@ public:
 		pWrapperTable->m_ToolpathAccessor_GetPartCount = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetPart = nullptr;
 		pWrapperTable->m_ToolpathAccessor_FindPartByUUID = nullptr;
+		pWrapperTable->m_ToolpathAccessor_GetProfileCount = nullptr;
+		pWrapperTable->m_ToolpathAccessor_GetProfileInfo = nullptr;
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount = nullptr;
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetBuildHeightInUnits = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetZValueInUnits = nullptr;
 		pWrapperTable->m_ToolpathAccessor_GetBuildHeightInMM = nullptr;
@@ -7964,6 +7980,33 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount = (PLibMCEnvToolpathLayer_GetSegmentProfileModifierCountPtr) GetProcAddress(hLibrary, "libmcenv_toolpathlayer_getsegmentprofilemodifiercount");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount = (PLibMCEnvToolpathLayer_GetSegmentProfileModifierCountPtr) dlsym(hLibrary, "libmcenv_toolpathlayer_getsegmentprofilemodifiercount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo = (PLibMCEnvToolpathLayer_GetSegmentProfileModifierInfoPtr) GetProcAddress(hLibrary, "libmcenv_toolpathlayer_getsegmentprofilemodifierinfo");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo = (PLibMCEnvToolpathLayer_GetSegmentProfileModifierInfoPtr) dlsym(hLibrary, "libmcenv_toolpathlayer_getsegmentprofilemodifierinfo");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors = (PLibMCEnvToolpathLayer_SegmentHasModificationFactorsPtr) GetProcAddress(hLibrary, "libmcenv_toolpathlayer_segmenthasmodificationfactors");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors = (PLibMCEnvToolpathLayer_SegmentHasModificationFactorsPtr) dlsym(hLibrary, "libmcenv_toolpathlayer_segmenthasmodificationfactors");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_ToolpathLayer_GetSegmentPartUUID = (PLibMCEnvToolpathLayer_GetSegmentPartUUIDPtr) GetProcAddress(hLibrary, "libmcenv_toolpathlayer_getsegmentpartuuid");
 		#else // _WIN32
 		pWrapperTable->m_ToolpathLayer_GetSegmentPartUUID = (PLibMCEnvToolpathLayer_GetSegmentPartUUIDPtr) dlsym(hLibrary, "libmcenv_toolpathlayer_getsegmentpartuuid");
@@ -8033,6 +8076,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_ToolpathLayer_EvaluateTypedHatchProfileInterpolation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier = (PLibMCEnvToolpathLayer_EvaluateTypedPolylineProfileModifierPtr) GetProcAddress(hLibrary, "libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier = (PLibMCEnvToolpathLayer_EvaluateTypedPolylineProfileModifierPtr) dlsym(hLibrary, "libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -8213,6 +8265,42 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_ToolpathAccessor_FindPartByUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileCount = (PLibMCEnvToolpathAccessor_GetProfileCountPtr) GetProcAddress(hLibrary, "libmcenv_toolpathaccessor_getprofilecount");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileCount = (PLibMCEnvToolpathAccessor_GetProfileCountPtr) dlsym(hLibrary, "libmcenv_toolpathaccessor_getprofilecount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathAccessor_GetProfileCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileInfo = (PLibMCEnvToolpathAccessor_GetProfileInfoPtr) GetProcAddress(hLibrary, "libmcenv_toolpathaccessor_getprofileinfo");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileInfo = (PLibMCEnvToolpathAccessor_GetProfileInfoPtr) dlsym(hLibrary, "libmcenv_toolpathaccessor_getprofileinfo");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathAccessor_GetProfileInfo == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount = (PLibMCEnvToolpathAccessor_GetProfileModifierCountPtr) GetProcAddress(hLibrary, "libmcenv_toolpathaccessor_getprofilemodifiercount");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount = (PLibMCEnvToolpathAccessor_GetProfileModifierCountPtr) dlsym(hLibrary, "libmcenv_toolpathaccessor_getprofilemodifiercount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo = (PLibMCEnvToolpathAccessor_GetProfileModifierInfoPtr) GetProcAddress(hLibrary, "libmcenv_toolpathaccessor_getprofilemodifierinfo");
+		#else // _WIN32
+		pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo = (PLibMCEnvToolpathAccessor_GetProfileModifierInfoPtr) dlsym(hLibrary, "libmcenv_toolpathaccessor_getprofilemodifierinfo");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -16773,6 +16861,18 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_GetSegmentProfileTypedModificationType == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_toolpathlayer_getsegmentprofilemodifiercount", (void**)&(pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathlayer_getsegmentprofilemodifierinfo", (void**)&(pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_GetSegmentProfileModifierInfo == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathlayer_segmenthasmodificationfactors", (void**)&(pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_SegmentHasModificationFactors == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_toolpathlayer_getsegmentpartuuid", (void**)&(pWrapperTable->m_ToolpathLayer_GetSegmentPartUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_GetSegmentPartUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -16803,6 +16903,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_toolpathlayer_evaluatetypedhatchprofileinterpolation", (void**)&(pWrapperTable->m_ToolpathLayer_EvaluateTypedHatchProfileInterpolation));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_EvaluateTypedHatchProfileInterpolation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier", (void**)&(pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathLayer_EvaluateTypedPolylineProfileModifier == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_toolpathlayer_getzvalue", (void**)&(pWrapperTable->m_ToolpathLayer_GetZValue));
@@ -16883,6 +16987,22 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_findpartbyuuid", (void**)&(pWrapperTable->m_ToolpathAccessor_FindPartByUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_FindPartByUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getprofilecount", (void**)&(pWrapperTable->m_ToolpathAccessor_GetProfileCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_GetProfileCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getprofileinfo", (void**)&(pWrapperTable->m_ToolpathAccessor_GetProfileInfo));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_GetProfileInfo == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getprofilemodifiercount", (void**)&(pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_GetProfileModifierCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getprofilemodifierinfo", (void**)&(pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ToolpathAccessor_GetProfileModifierInfo == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_toolpathaccessor_getbuildheightinunits", (void**)&(pWrapperTable->m_ToolpathAccessor_GetBuildHeightInUnits));
@@ -24238,6 +24358,58 @@ public:
 	}
 	
 	/**
+	* CToolpathLayer::GetSegmentProfileModifierCount - Retrieves the number of modifiers of the profile assigned to a segment.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @return Number of modifiers of the profile.
+	*/
+	LibMCEnv_uint32 CToolpathLayer::GetSegmentProfileModifierCount(const LibMCEnv_uint32 nSegmentIndex)
+	{
+		LibMCEnv_uint32 resultModifierCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_GetSegmentProfileModifierCount(m_pHandle, nSegmentIndex, &resultModifierCount));
+		
+		return resultModifierCount;
+	}
+	
+	/**
+	* CToolpathLayer::GetSegmentProfileModifierInfo - Retrieves a modifier of the profile assigned to a segment.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] nModifierIndex - Index of the modifier. Must be between 0 and ModifierCount - 1.
+	* @param[out] sNamespace - Namespace of the modified profile value. Empty for standard values.
+	* @param[out] sValueName - Name of the modified profile value.
+	* @param[out] eModificationType - Modification type.
+	* @param[out] eModificationFactor - Factor that the layer data uses for this modifier.
+	* @param[out] dMinValue - Value for a factor of 0.
+	* @param[out] dMaxValue - Value for a factor of 1.
+	*/
+	void CToolpathLayer::GetSegmentProfileModifierInfo(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, eToolpathProfileModificationType & eModificationType, eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue)
+	{
+		LibMCEnv_uint32 bytesNeededNamespace = 0;
+		LibMCEnv_uint32 bytesWrittenNamespace = 0;
+		LibMCEnv_uint32 bytesNeededValueName = 0;
+		LibMCEnv_uint32 bytesWrittenValueName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_GetSegmentProfileModifierInfo(m_pHandle, nSegmentIndex, nModifierIndex, 0, &bytesNeededNamespace, nullptr, 0, &bytesNeededValueName, nullptr, &eModificationType, &eModificationFactor, &dMinValue, &dMaxValue));
+		std::vector<char> bufferNamespace(bytesNeededNamespace);
+		std::vector<char> bufferValueName(bytesNeededValueName);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_GetSegmentProfileModifierInfo(m_pHandle, nSegmentIndex, nModifierIndex, bytesNeededNamespace, &bytesWrittenNamespace, &bufferNamespace[0], bytesNeededValueName, &bytesWrittenValueName, &bufferValueName[0], &eModificationType, &eModificationFactor, &dMinValue, &dMaxValue));
+		sNamespace = std::string(&bufferNamespace[0]);
+		sValueName = std::string(&bufferValueName[0]);
+	}
+	
+	/**
+	* CToolpathLayer::SegmentHasModificationFactors - Returns if the layer data of a segment carries factors of the given type. Segments without factors are evaluated with the nominal profile value.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eModificationFactor - Modification factor to check.
+	* @return Returns true if the segment carries factors of the given type.
+	*/
+	bool CToolpathLayer::SegmentHasModificationFactors(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileModificationFactor eModificationFactor)
+	{
+		bool resultHasFactors = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_SegmentHasModificationFactors(m_pHandle, nSegmentIndex, eModificationFactor, &resultHasFactors));
+		
+		return resultHasFactors;
+	}
+	
+	/**
 	* CToolpathLayer::GetSegmentPartUUID - Retrieves the assigned segment part uuid.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @return Segment Part UUID
@@ -24323,7 +24495,7 @@ public:
 	}
 	
 	/**
-	* CToolpathLayer::EvaluateTypedHatchProfileModifier - Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.
+	* CToolpathLayer::EvaluateTypedHatchProfileModifier - Evaluates a typed profile value with its modifier factors. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not hatch.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
 	* @param[out] EvaluationData1Buffer - Evaluated data on the first point on each hatch. Will return HatchCount elements.
@@ -24358,6 +24530,21 @@ public:
 		CountArrayBuffer.resize((size_t) elementsNeededCountArray);
 		EvaluationDataBuffer.resize((size_t) elementsNeededEvaluationData);
 		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_EvaluateTypedHatchProfileInterpolation(m_pHandle, nSegmentIndex, eValueType, elementsNeededCountArray, &elementsWrittenCountArray, CountArrayBuffer.data(), elementsNeededEvaluationData, &elementsWrittenEvaluationData, EvaluationDataBuffer.data()));
+	}
+	
+	/**
+	* CToolpathLayer::EvaluateTypedPolylineProfileModifier - Evaluates a typed profile value with its modifier factors for each line of a polyline or loop segment. A line takes the factor of the point it ends in; the closing line of a loop takes the factor of the first point. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not polyline.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
+	* @param[out] EvaluationDataBuffer - Evaluated value of each line. Will return PointCount - 1 elements.
+	*/
+	void CToolpathLayer::EvaluateTypedPolylineProfileModifier(const LibMCEnv_uint32 nSegmentIndex, const eToolpathProfileValueType eValueType, std::vector<LibMCEnv_double> & EvaluationDataBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededEvaluationData = 0;
+		LibMCEnv_uint64 elementsWrittenEvaluationData = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_EvaluateTypedPolylineProfileModifier(m_pHandle, nSegmentIndex, eValueType, 0, &elementsNeededEvaluationData, nullptr));
+		EvaluationDataBuffer.resize((size_t) elementsNeededEvaluationData);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathLayer_EvaluateTypedPolylineProfileModifier(m_pHandle, nSegmentIndex, eValueType, elementsNeededEvaluationData, &elementsWrittenEvaluationData, EvaluationDataBuffer.data()));
 	}
 	
 	/**
@@ -24642,6 +24829,76 @@ public:
 		} else {
 			return nullptr;
 		}
+	}
+	
+	/**
+	* CToolpathAccessor::GetProfileCount - Retrieves the number of toolpath profiles.
+	* @return Number of profiles.
+	*/
+	LibMCEnv_uint32 CToolpathAccessor::GetProfileCount()
+	{
+		LibMCEnv_uint32 resultProfileCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileCount(m_pHandle, &resultProfileCount));
+		
+		return resultProfileCount;
+	}
+	
+	/**
+	* CToolpathAccessor::GetProfileInfo - Retrieves the UUID and name of a toolpath profile.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @param[out] sUUID - UUID of the profile.
+	* @param[out] sName - Name of the profile.
+	*/
+	void CToolpathAccessor::GetProfileInfo(const LibMCEnv_uint32 nProfileIndex, std::string & sUUID, std::string & sName)
+	{
+		LibMCEnv_uint32 bytesNeededUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUUID = 0;
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileInfo(m_pHandle, nProfileIndex, 0, &bytesNeededUUID, nullptr, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileInfo(m_pHandle, nProfileIndex, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0], bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		sUUID = std::string(&bufferUUID[0]);
+		sName = std::string(&bufferName[0]);
+	}
+	
+	/**
+	* CToolpathAccessor::GetProfileModifierCount - Retrieves the number of modifiers of a toolpath profile.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @return Number of modifiers of the profile.
+	*/
+	LibMCEnv_uint32 CToolpathAccessor::GetProfileModifierCount(const LibMCEnv_uint32 nProfileIndex)
+	{
+		LibMCEnv_uint32 resultModifierCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileModifierCount(m_pHandle, nProfileIndex, &resultModifierCount));
+		
+		return resultModifierCount;
+	}
+	
+	/**
+	* CToolpathAccessor::GetProfileModifierInfo - Retrieves a modifier of a toolpath profile. Allows checking all modifiers of a build before it starts.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @param[in] nModifierIndex - Index of the modifier. MUST be between 0 and ModifierCount - 1.
+	* @param[out] sNamespace - Namespace of the modified profile value. Empty for standard values.
+	* @param[out] sValueName - Name of the modified profile value.
+	* @param[out] eModificationType - Modification type.
+	* @param[out] eModificationFactor - Factor that the layer data uses for this modifier.
+	* @param[out] dMinValue - Value for a factor of 0.
+	* @param[out] dMaxValue - Value for a factor of 1.
+	*/
+	void CToolpathAccessor::GetProfileModifierInfo(const LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, eToolpathProfileModificationType & eModificationType, eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue)
+	{
+		LibMCEnv_uint32 bytesNeededNamespace = 0;
+		LibMCEnv_uint32 bytesWrittenNamespace = 0;
+		LibMCEnv_uint32 bytesNeededValueName = 0;
+		LibMCEnv_uint32 bytesWrittenValueName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileModifierInfo(m_pHandle, nProfileIndex, nModifierIndex, 0, &bytesNeededNamespace, nullptr, 0, &bytesNeededValueName, nullptr, &eModificationType, &eModificationFactor, &dMinValue, &dMaxValue));
+		std::vector<char> bufferNamespace(bytesNeededNamespace);
+		std::vector<char> bufferValueName(bytesNeededValueName);
+		CheckError(m_pWrapper->m_WrapperTable.m_ToolpathAccessor_GetProfileModifierInfo(m_pHandle, nProfileIndex, nModifierIndex, bytesNeededNamespace, &bytesWrittenNamespace, &bufferNamespace[0], bytesNeededValueName, &bytesWrittenValueName, &bufferValueName[0], &eModificationType, &eModificationFactor, &dMinValue, &dMaxValue));
+		sNamespace = std::string(&bufferNamespace[0]);
+		sValueName = std::string(&bufferValueName[0]);
 	}
 	
 	/**

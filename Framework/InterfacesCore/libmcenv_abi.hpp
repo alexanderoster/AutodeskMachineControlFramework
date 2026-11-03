@@ -3381,6 +3381,47 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofiletypedva
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofiletypedmodificationtype(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv::eToolpathProfileValueType eValueType, LibMCEnv::eToolpathProfileModificationType * pModificationType);
 
 /**
+* Retrieves the number of modifiers of the profile assigned to a segment.
+*
+* @param[in] pToolpathLayer - ToolpathLayer instance.
+* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+* @param[out] pModifierCount - Number of modifiers of the profile.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofilemodifiercount(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint32 * pModifierCount);
+
+/**
+* Retrieves a modifier of the profile assigned to a segment.
+*
+* @param[in] pToolpathLayer - ToolpathLayer instance.
+* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+* @param[in] nModifierIndex - Index of the modifier. Must be between 0 and ModifierCount - 1.
+* @param[in] nNamespaceBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNamespaceNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNamespaceBuffer -  buffer of Namespace of the modified profile value. Empty for standard values., may be NULL
+* @param[in] nValueNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueNameBuffer -  buffer of Name of the modified profile value., may be NULL
+* @param[out] pModificationType - Modification type.
+* @param[out] pModificationFactor - Factor that the layer data uses for this modifier.
+* @param[out] pMinValue - Value for a factor of 0.
+* @param[out] pMaxValue - Value for a factor of 1.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofilemodifierinfo(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint32 nModifierIndex, const LibMCEnv_uint32 nNamespaceBufferSize, LibMCEnv_uint32* pNamespaceNeededChars, char * pNamespaceBuffer, const LibMCEnv_uint32 nValueNameBufferSize, LibMCEnv_uint32* pValueNameNeededChars, char * pValueNameBuffer, LibMCEnv::eToolpathProfileModificationType * pModificationType, LibMCEnv::eToolpathProfileModificationFactor * pModificationFactor, LibMCEnv_double * pMinValue, LibMCEnv_double * pMaxValue);
+
+/**
+* Returns if the layer data of a segment carries factors of the given type. Segments without factors are evaluated with the nominal profile value.
+*
+* @param[in] pToolpathLayer - ToolpathLayer instance.
+* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+* @param[in] eModificationFactor - Modification factor to check.
+* @param[out] pHasFactors - Returns true if the segment carries factors of the given type.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_segmenthasmodificationfactors(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv::eToolpathProfileModificationFactor eModificationFactor, bool * pHasFactors);
+
+/**
 * Retrieves the assigned segment part uuid.
 *
 * @param[in] pToolpathLayer - ToolpathLayer instance.
@@ -3451,7 +3492,7 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmenthatchdata(LibM
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_getsegmenthatchdatainmm(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, const LibMCEnv_uint64 nHatchDataBufferSize, LibMCEnv_uint64* pHatchDataNeededCount, LibMCEnv::sFloatHatch2D * pHatchDataBuffer);
 
 /**
-* Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.
+* Evaluates a typed profile value with its modifier factors. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not hatch.
 *
 * @param[in] pToolpathLayer - ToolpathLayer instance.
 * @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
@@ -3481,6 +3522,19 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_evaluatetypedhatchprofil
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_evaluatetypedhatchprofileinterpolation(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv::eToolpathProfileValueType eValueType, const LibMCEnv_uint64 nCountArrayBufferSize, LibMCEnv_uint64* pCountArrayNeededCount, LibMCEnv_uint32 * pCountArrayBuffer, const LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv::sHatch2DSubInterpolationData * pEvaluationDataBuffer);
+
+/**
+* Evaluates a typed profile value with its modifier factors for each line of a polyline or loop segment. A line takes the factor of the point it ends in; the closing line of a loop takes the factor of the first point. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not polyline.
+*
+* @param[in] pToolpathLayer - ToolpathLayer instance.
+* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
+* @param[in] nEvaluationDataBufferSize - Number of elements in buffer
+* @param[out] pEvaluationDataNeededCount - will be filled with the count of the written elements, or needed buffer size.
+* @param[out] pEvaluationDataBuffer - double  buffer of Evaluated value of each line. Will return PointCount - 1 elements.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv::eToolpathProfileValueType eValueType, const LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv_double * pEvaluationDataBuffer);
 
 /**
 * Retrieves the layers Z Value in units.
@@ -3694,6 +3748,60 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_getpart(LibMCEnv_Tool
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_findpartbyuuid(LibMCEnv_ToolpathAccessor pToolpathAccessor, const char * pPartUUID, LibMCEnv_ToolpathPart * pPart);
+
+/**
+* Retrieves the number of toolpath profiles.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[out] pProfileCount - Number of profiles.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_getprofilecount(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 * pProfileCount);
+
+/**
+* Retrieves the UUID and name of a toolpath profile.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID of the profile., may be NULL
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name of the profile., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_getprofileinfo(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Retrieves the number of modifiers of a toolpath profile.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+* @param[out] pModifierCount - Number of modifiers of the profile.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_getprofilemodifiercount(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, LibMCEnv_uint32 * pModifierCount);
+
+/**
+* Retrieves a modifier of a toolpath profile. Allows checking all modifiers of a build before it starts.
+*
+* @param[in] pToolpathAccessor - ToolpathAccessor instance.
+* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+* @param[in] nModifierIndex - Index of the modifier. MUST be between 0 and ModifierCount - 1.
+* @param[in] nNamespaceBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNamespaceNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNamespaceBuffer -  buffer of Namespace of the modified profile value. Empty for standard values., may be NULL
+* @param[in] nValueNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueNameBuffer -  buffer of Name of the modified profile value., may be NULL
+* @param[out] pModificationType - Modification type.
+* @param[out] pModificationFactor - Factor that the layer data uses for this modifier.
+* @param[out] pMinValue - Value for a factor of 0.
+* @param[out] pMaxValue - Value for a factor of 1.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_toolpathaccessor_getprofilemodifierinfo(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, LibMCEnv_uint32 nModifierIndex, const LibMCEnv_uint32 nNamespaceBufferSize, LibMCEnv_uint32* pNamespaceNeededChars, char * pNamespaceBuffer, const LibMCEnv_uint32 nValueNameBufferSize, LibMCEnv_uint32* pValueNameNeededChars, char * pValueNameBuffer, LibMCEnv::eToolpathProfileModificationType * pModificationType, LibMCEnv::eToolpathProfileModificationFactor * pModificationFactor, LibMCEnv_double * pMinValue, LibMCEnv_double * pMaxValue);
 
 /**
 * Retrieves the build height in units.

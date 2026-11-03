@@ -9530,6 +9530,126 @@ LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofiletypedmodificationtype(Lib
 	}
 }
 
+LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofilemodifiercount(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint32 * pModifierCount)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathLayer;
+
+	try {
+		if (pModifierCount == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathLayer* pIToolpathLayer = dynamic_cast<IToolpathLayer*>(pIBaseClass);
+		if (!pIToolpathLayer)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pModifierCount = pIToolpathLayer->GetSegmentProfileModifierCount(nSegmentIndex);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathlayer_getsegmentprofilemodifierinfo(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint32 nModifierIndex, const LibMCEnv_uint32 nNamespaceBufferSize, LibMCEnv_uint32* pNamespaceNeededChars, char * pNamespaceBuffer, const LibMCEnv_uint32 nValueNameBufferSize, LibMCEnv_uint32* pValueNameNeededChars, char * pValueNameBuffer, eLibMCEnvToolpathProfileModificationType * pModificationType, eLibMCEnvToolpathProfileModificationFactor * pModificationFactor, LibMCEnv_double * pMinValue, LibMCEnv_double * pMaxValue)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathLayer;
+
+	try {
+		if ( (!pNamespaceBuffer) && !(pNamespaceNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if ( (!pValueNameBuffer) && !(pValueNameNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pModificationType)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pModificationFactor)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pMinValue)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pMaxValue)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sNamespace("");
+		std::string sValueName("");
+		IToolpathLayer* pIToolpathLayer = dynamic_cast<IToolpathLayer*>(pIBaseClass);
+		if (!pIToolpathLayer)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pNamespaceBuffer == nullptr) || (pValueNameBuffer == nullptr);
+		if (isCacheCall) {
+			pIToolpathLayer->GetSegmentProfileModifierInfo(nSegmentIndex, nModifierIndex, sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue);
+
+			pIToolpathLayer->_setCache (new ParameterCache_6<std::string, std::string, LibMCEnv::eToolpathProfileModificationType, LibMCEnv::eToolpathProfileModificationFactor, LibMCEnv_double, LibMCEnv_double> (sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_6<std::string, std::string, LibMCEnv::eToolpathProfileModificationType, LibMCEnv::eToolpathProfileModificationFactor, LibMCEnv_double, LibMCEnv_double>*> (pIToolpathLayer->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue);
+			pIToolpathLayer->_setCache (nullptr);
+		}
+		
+		if (pNamespaceNeededChars)
+			*pNamespaceNeededChars = (LibMCEnv_uint32) (sNamespace.size()+1);
+		if (pNamespaceBuffer) {
+			if (sNamespace.size() >= nNamespaceBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iNamespace = 0; iNamespace < sNamespace.size(); iNamespace++)
+				pNamespaceBuffer[iNamespace] = sNamespace[iNamespace];
+			pNamespaceBuffer[sNamespace.size()] = 0;
+		}
+		if (pValueNameNeededChars)
+			*pValueNameNeededChars = (LibMCEnv_uint32) (sValueName.size()+1);
+		if (pValueNameBuffer) {
+			if (sValueName.size() >= nValueNameBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iValueName = 0; iValueName < sValueName.size(); iValueName++)
+				pValueNameBuffer[iValueName] = sValueName[iValueName];
+			pValueNameBuffer[sValueName.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathlayer_segmenthasmodificationfactors(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, eLibMCEnvToolpathProfileModificationFactor eModificationFactor, bool * pHasFactors)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathLayer;
+
+	try {
+		if (pHasFactors == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathLayer* pIToolpathLayer = dynamic_cast<IToolpathLayer*>(pIBaseClass);
+		if (!pIToolpathLayer)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pHasFactors = pIToolpathLayer->SegmentHasModificationFactors(nSegmentIndex, eModificationFactor);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCEnvResult libmcenv_toolpathlayer_getsegmentpartuuid(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, const LibMCEnv_uint32 nPartUUIDBufferSize, LibMCEnv_uint32* pPartUUIDNeededChars, char * pPartUUIDBuffer)
 {
 	IBase* pIBaseClass = (IBase *)pToolpathLayer;
@@ -9750,6 +9870,32 @@ LibMCEnvResult libmcenv_toolpathlayer_evaluatetypedhatchprofileinterpolation(Lib
 			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
 		
 		pIToolpathLayer->EvaluateTypedHatchProfileInterpolation(nSegmentIndex, eValueType, nCountArrayBufferSize, pCountArrayNeededCount, pCountArrayBuffer, nEvaluationDataBufferSize, pEvaluationDataNeededCount, pEvaluationDataBuffer);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier(LibMCEnv_ToolpathLayer pToolpathLayer, LibMCEnv_uint32 nSegmentIndex, eLibMCEnvToolpathProfileValueType eValueType, const LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv_double * pEvaluationDataBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathLayer;
+
+	try {
+		if ((!pEvaluationDataBuffer) && !(pEvaluationDataNeededCount))
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathLayer* pIToolpathLayer = dynamic_cast<IToolpathLayer*>(pIBaseClass);
+		if (!pIToolpathLayer)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		pIToolpathLayer->EvaluateTypedPolylineProfileModifier(nSegmentIndex, eValueType, nEvaluationDataBufferSize, pEvaluationDataNeededCount, pEvaluationDataBuffer);
 
 		return LIBMCENV_SUCCESS;
 	}
@@ -10394,6 +10540,186 @@ LibMCEnvResult libmcenv_toolpathaccessor_findpartbyuuid(LibMCEnv_ToolpathAccesso
 		pBasePart = pIToolpathAccessor->FindPartByUUID(sPartUUID);
 
 		*pPart = (IBase*)(pBasePart);
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathaccessor_getprofilecount(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 * pProfileCount)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
+
+	try {
+		if (pProfileCount == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathAccessor* pIToolpathAccessor = dynamic_cast<IToolpathAccessor*>(pIBaseClass);
+		if (!pIToolpathAccessor)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pProfileCount = pIToolpathAccessor->GetProfileCount();
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathaccessor_getprofileinfo(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
+
+	try {
+		if ( (!pUUIDBuffer) && !(pUUIDNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if ( (!pNameBuffer) && !(pNameNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sUUID("");
+		std::string sName("");
+		IToolpathAccessor* pIToolpathAccessor = dynamic_cast<IToolpathAccessor*>(pIBaseClass);
+		if (!pIToolpathAccessor)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pUUIDBuffer == nullptr) || (pNameBuffer == nullptr);
+		if (isCacheCall) {
+			pIToolpathAccessor->GetProfileInfo(nProfileIndex, sUUID, sName);
+
+			pIToolpathAccessor->_setCache (new ParameterCache_2<std::string, std::string> (sUUID, sName));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_2<std::string, std::string>*> (pIToolpathAccessor->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sUUID, sName);
+			pIToolpathAccessor->_setCache (nullptr);
+		}
+		
+		if (pUUIDNeededChars)
+			*pUUIDNeededChars = (LibMCEnv_uint32) (sUUID.size()+1);
+		if (pUUIDBuffer) {
+			if (sUUID.size() >= nUUIDBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iUUID = 0; iUUID < sUUID.size(); iUUID++)
+				pUUIDBuffer[iUUID] = sUUID[iUUID];
+			pUUIDBuffer[sUUID.size()] = 0;
+		}
+		if (pNameNeededChars)
+			*pNameNeededChars = (LibMCEnv_uint32) (sName.size()+1);
+		if (pNameBuffer) {
+			if (sName.size() >= nNameBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iName = 0; iName < sName.size(); iName++)
+				pNameBuffer[iName] = sName[iName];
+			pNameBuffer[sName.size()] = 0;
+		}
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathaccessor_getprofilemodifiercount(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, LibMCEnv_uint32 * pModifierCount)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
+
+	try {
+		if (pModifierCount == nullptr)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		IToolpathAccessor* pIToolpathAccessor = dynamic_cast<IToolpathAccessor*>(pIBaseClass);
+		if (!pIToolpathAccessor)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		*pModifierCount = pIToolpathAccessor->GetProfileModifierCount(nProfileIndex);
+
+		return LIBMCENV_SUCCESS;
+	}
+	catch (ELibMCEnvInterfaceException & Exception) {
+		return handleLibMCEnvException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCEnvResult libmcenv_toolpathaccessor_getprofilemodifierinfo(LibMCEnv_ToolpathAccessor pToolpathAccessor, LibMCEnv_uint32 nProfileIndex, LibMCEnv_uint32 nModifierIndex, const LibMCEnv_uint32 nNamespaceBufferSize, LibMCEnv_uint32* pNamespaceNeededChars, char * pNamespaceBuffer, const LibMCEnv_uint32 nValueNameBufferSize, LibMCEnv_uint32* pValueNameNeededChars, char * pValueNameBuffer, eLibMCEnvToolpathProfileModificationType * pModificationType, eLibMCEnvToolpathProfileModificationFactor * pModificationFactor, LibMCEnv_double * pMinValue, LibMCEnv_double * pMaxValue)
+{
+	IBase* pIBaseClass = (IBase *)pToolpathAccessor;
+
+	try {
+		if ( (!pNamespaceBuffer) && !(pNamespaceNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if ( (!pValueNameBuffer) && !(pValueNameNeededChars) )
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pModificationType)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pModificationFactor)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pMinValue)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		if (!pMaxValue)
+			throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_INVALIDPARAM);
+		std::string sNamespace("");
+		std::string sValueName("");
+		IToolpathAccessor* pIToolpathAccessor = dynamic_cast<IToolpathAccessor*>(pIBaseClass);
+		if (!pIToolpathAccessor)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pNamespaceBuffer == nullptr) || (pValueNameBuffer == nullptr);
+		if (isCacheCall) {
+			pIToolpathAccessor->GetProfileModifierInfo(nProfileIndex, nModifierIndex, sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue);
+
+			pIToolpathAccessor->_setCache (new ParameterCache_6<std::string, std::string, LibMCEnv::eToolpathProfileModificationType, LibMCEnv::eToolpathProfileModificationFactor, LibMCEnv_double, LibMCEnv_double> (sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_6<std::string, std::string, LibMCEnv::eToolpathProfileModificationType, LibMCEnv::eToolpathProfileModificationFactor, LibMCEnv_double, LibMCEnv_double>*> (pIToolpathAccessor->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCAST);
+			cache->retrieveData (sNamespace, sValueName, *pModificationType, *pModificationFactor, *pMinValue, *pMaxValue);
+			pIToolpathAccessor->_setCache (nullptr);
+		}
+		
+		if (pNamespaceNeededChars)
+			*pNamespaceNeededChars = (LibMCEnv_uint32) (sNamespace.size()+1);
+		if (pNamespaceBuffer) {
+			if (sNamespace.size() >= nNamespaceBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iNamespace = 0; iNamespace < sNamespace.size(); iNamespace++)
+				pNamespaceBuffer[iNamespace] = sNamespace[iNamespace];
+			pNamespaceBuffer[sNamespace.size()] = 0;
+		}
+		if (pValueNameNeededChars)
+			*pValueNameNeededChars = (LibMCEnv_uint32) (sValueName.size()+1);
+		if (pValueNameBuffer) {
+			if (sValueName.size() >= nValueNameBufferSize)
+				throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_BUFFERTOOSMALL);
+			for (size_t iValueName = 0; iValueName < sValueName.size(); iValueName++)
+				pValueNameBuffer[iValueName] = sValueName[iValueName];
+			pValueNameBuffer[sValueName.size()] = 0;
+		}
 		return LIBMCENV_SUCCESS;
 	}
 	catch (ELibMCEnvInterfaceException & Exception) {
@@ -37957,6 +38283,12 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getsegmentprofiletypedvaluedef;
 	if (sProcName == "libmcenv_toolpathlayer_getsegmentprofiletypedmodificationtype") 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getsegmentprofiletypedmodificationtype;
+	if (sProcName == "libmcenv_toolpathlayer_getsegmentprofilemodifiercount") 
+		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getsegmentprofilemodifiercount;
+	if (sProcName == "libmcenv_toolpathlayer_getsegmentprofilemodifierinfo") 
+		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getsegmentprofilemodifierinfo;
+	if (sProcName == "libmcenv_toolpathlayer_segmenthasmodificationfactors") 
+		*ppProcAddress = (void*) &libmcenv_toolpathlayer_segmenthasmodificationfactors;
 	if (sProcName == "libmcenv_toolpathlayer_getsegmentpartuuid") 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getsegmentpartuuid;
 	if (sProcName == "libmcenv_toolpathlayer_getsegmentlocalpartid") 
@@ -37973,6 +38305,8 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_evaluatetypedhatchprofilemodifier;
 	if (sProcName == "libmcenv_toolpathlayer_evaluatetypedhatchprofileinterpolation") 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_evaluatetypedhatchprofileinterpolation;
+	if (sProcName == "libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier") 
+		*ppProcAddress = (void*) &libmcenv_toolpathlayer_evaluatetypedpolylineprofilemodifier;
 	if (sProcName == "libmcenv_toolpathlayer_getzvalue") 
 		*ppProcAddress = (void*) &libmcenv_toolpathlayer_getzvalue;
 	if (sProcName == "libmcenv_toolpathlayer_getzvalueinmm") 
@@ -38013,6 +38347,14 @@ LibMCEnvResult LibMCEnv::Impl::LibMCEnv_GetProcAddress (const char * pProcName, 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getpart;
 	if (sProcName == "libmcenv_toolpathaccessor_findpartbyuuid") 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_findpartbyuuid;
+	if (sProcName == "libmcenv_toolpathaccessor_getprofilecount") 
+		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getprofilecount;
+	if (sProcName == "libmcenv_toolpathaccessor_getprofileinfo") 
+		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getprofileinfo;
+	if (sProcName == "libmcenv_toolpathaccessor_getprofilemodifiercount") 
+		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getprofilemodifiercount;
+	if (sProcName == "libmcenv_toolpathaccessor_getprofilemodifierinfo") 
+		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getprofilemodifierinfo;
 	if (sProcName == "libmcenv_toolpathaccessor_getbuildheightinunits") 
 		*ppProcAddress = (void*) &libmcenv_toolpathaccessor_getbuildheightinunits;
 	if (sProcName == "libmcenv_toolpathaccessor_getzvalueinunits") 

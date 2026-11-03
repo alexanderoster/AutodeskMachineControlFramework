@@ -250,6 +250,31 @@ template <class T1, class T2, class T3, class T4, class T5> class ParameterCache
 		}
 };
 
+template <class T1, class T2, class T3, class T4, class T5, class T6> class ParameterCache_6 : public ParameterCache {
+	private:
+		T1 m_param1;
+		T2 m_param2;
+		T3 m_param3;
+		T4 m_param4;
+		T5 m_param5;
+		T6 m_param6;
+	public:
+		ParameterCache_6 (const T1 & param1, const T2 & param2, const T3 & param3, const T4 & param4, const T5 & param5, const T6 & param6)
+			: m_param1 (param1), m_param2 (param2), m_param3 (param3), m_param4 (param4), m_param5 (param5), m_param6 (param6)
+		{
+		}
+
+		void retrieveData (T1 & param1, T2 & param2, T3 & param3, T4 & param4, T5 & param5, T6 & param6)
+		{
+			param1 = m_param1;
+			param2 = m_param2;
+			param3 = m_param3;
+			param4 = m_param4;
+			param5 = m_param5;
+			param6 = m_param6;
+		}
+};
+
 
 /*************************************************************************************************************************
  Class interface for Base 
@@ -2906,6 +2931,34 @@ public:
 	virtual LibMCEnv::eToolpathProfileModificationType GetSegmentProfileTypedModificationType(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType) = 0;
 
 	/**
+	* IToolpathLayer::GetSegmentProfileModifierCount - Retrieves the number of modifiers of the profile assigned to a segment.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @return Number of modifiers of the profile.
+	*/
+	virtual LibMCEnv_uint32 GetSegmentProfileModifierCount(const LibMCEnv_uint32 nSegmentIndex) = 0;
+
+	/**
+	* IToolpathLayer::GetSegmentProfileModifierInfo - Retrieves a modifier of the profile assigned to a segment.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] nModifierIndex - Index of the modifier. Must be between 0 and ModifierCount - 1.
+	* @param[out] sNamespace - Namespace of the modified profile value. Empty for standard values.
+	* @param[out] sValueName - Name of the modified profile value.
+	* @param[out] eModificationType - Modification type.
+	* @param[out] eModificationFactor - Factor that the layer data uses for this modifier.
+	* @param[out] dMinValue - Value for a factor of 0.
+	* @param[out] dMaxValue - Value for a factor of 1.
+	*/
+	virtual void GetSegmentProfileModifierInfo(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, LibMCEnv::eToolpathProfileModificationType & eModificationType, LibMCEnv::eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue) = 0;
+
+	/**
+	* IToolpathLayer::SegmentHasModificationFactors - Returns if the layer data of a segment carries factors of the given type. Segments without factors are evaluated with the nominal profile value.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eModificationFactor - Modification factor to check.
+	* @return Returns true if the segment carries factors of the given type.
+	*/
+	virtual bool SegmentHasModificationFactors(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileModificationFactor eModificationFactor) = 0;
+
+	/**
 	* IToolpathLayer::GetSegmentPartUUID - Retrieves the assigned segment part uuid.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @return Segment Part UUID
@@ -2956,7 +3009,7 @@ public:
 	virtual void GetSegmentHatchDataInMM(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 nHatchDataBufferSize, LibMCEnv_uint64* pHatchDataNeededCount, LibMCEnv::sFloatHatch2D * pHatchDataBuffer) = 0;
 
 	/**
-	* IToolpathLayer::EvaluateTypedHatchProfileModifier - Evaluates a typed profile value with its modifier factors. Fails if segment type is not hatch.
+	* IToolpathLayer::EvaluateTypedHatchProfileModifier - Evaluates a typed profile value with its modifier factors. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not hatch.
 	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
 	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
 	* @param[in] nEvaluationData1BufferSize - Number of elements in buffer
@@ -2980,6 +3033,16 @@ public:
 	* @param[out] pEvaluationDataBuffer - Hatch2DSubInterpolationData buffer of Evaluated data on evaluation points for the full segment, in hatch order. Will contain the sum of CountArray elements.
 	*/
 	virtual void EvaluateTypedHatchProfileInterpolation(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType, LibMCEnv_uint64 nCountArrayBufferSize, LibMCEnv_uint64* pCountArrayNeededCount, LibMCEnv_uint32 * pCountArrayBuffer, LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv::sHatch2DSubInterpolationData * pEvaluationDataBuffer) = 0;
+
+	/**
+	* IToolpathLayer::EvaluateTypedPolylineProfileModifier - Evaluates a typed profile value with its modifier factors for each line of a polyline or loop segment. A line takes the factor of the point it ends in; the closing line of a loop takes the factor of the first point. Segments without factors of the modifier return the nominal profile value. Fails if segment type is not polyline.
+	* @param[in] nSegmentIndex - Index. Must be between 0 and Count - 1.
+	* @param[in] eValueType - Enum to query for. MUST NOT be custom. Fails if value type does not exist.
+	* @param[in] nEvaluationDataBufferSize - Number of elements in buffer
+	* @param[out] pEvaluationDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pEvaluationDataBuffer - double buffer of Evaluated value of each line. Will return PointCount - 1 elements.
+	*/
+	virtual void EvaluateTypedPolylineProfileModifier(const LibMCEnv_uint32 nSegmentIndex, const LibMCEnv::eToolpathProfileValueType eValueType, LibMCEnv_uint64 nEvaluationDataBufferSize, LibMCEnv_uint64* pEvaluationDataNeededCount, LibMCEnv_double * pEvaluationDataBuffer) = 0;
 
 	/**
 	* IToolpathLayer::GetZValue - Retrieves the layers Z Value in units.
@@ -3132,6 +3195,40 @@ public:
 	* @return Part Instance. Returns null if part does not exist.
 	*/
 	virtual IToolpathPart * FindPartByUUID(const std::string & sPartUUID) = 0;
+
+	/**
+	* IToolpathAccessor::GetProfileCount - Retrieves the number of toolpath profiles.
+	* @return Number of profiles.
+	*/
+	virtual LibMCEnv_uint32 GetProfileCount() = 0;
+
+	/**
+	* IToolpathAccessor::GetProfileInfo - Retrieves the UUID and name of a toolpath profile.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @param[out] sUUID - UUID of the profile.
+	* @param[out] sName - Name of the profile.
+	*/
+	virtual void GetProfileInfo(const LibMCEnv_uint32 nProfileIndex, std::string & sUUID, std::string & sName) = 0;
+
+	/**
+	* IToolpathAccessor::GetProfileModifierCount - Retrieves the number of modifiers of a toolpath profile.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @return Number of modifiers of the profile.
+	*/
+	virtual LibMCEnv_uint32 GetProfileModifierCount(const LibMCEnv_uint32 nProfileIndex) = 0;
+
+	/**
+	* IToolpathAccessor::GetProfileModifierInfo - Retrieves a modifier of a toolpath profile. Allows checking all modifiers of a build before it starts.
+	* @param[in] nProfileIndex - Index of the profile. MUST be between 0 and ProfileCount - 1.
+	* @param[in] nModifierIndex - Index of the modifier. MUST be between 0 and ModifierCount - 1.
+	* @param[out] sNamespace - Namespace of the modified profile value. Empty for standard values.
+	* @param[out] sValueName - Name of the modified profile value.
+	* @param[out] eModificationType - Modification type.
+	* @param[out] eModificationFactor - Factor that the layer data uses for this modifier.
+	* @param[out] dMinValue - Value for a factor of 0.
+	* @param[out] dMaxValue - Value for a factor of 1.
+	*/
+	virtual void GetProfileModifierInfo(const LibMCEnv_uint32 nProfileIndex, const LibMCEnv_uint32 nModifierIndex, std::string & sNamespace, std::string & sValueName, LibMCEnv::eToolpathProfileModificationType & eModificationType, LibMCEnv::eToolpathProfileModificationFactor & eModificationFactor, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue) = 0;
 
 	/**
 	* IToolpathAccessor::GetBuildHeightInUnits - Retrieves the build height in units.

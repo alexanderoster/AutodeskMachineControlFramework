@@ -842,7 +842,8 @@ namespace LibMCEnv {
     Unknown = 0,
     FactorF = 1,
     FactorG = 2,
-    FactorH = 3
+    FactorH = 3,
+    FactorE = 4
   };
   
   enum class eMessageDialogType : LibMCEnv_int32 {

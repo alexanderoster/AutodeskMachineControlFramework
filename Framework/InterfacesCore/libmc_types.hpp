@@ -732,6 +732,8 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_MISSINGSESSIONVARIABLETYPE 716 /** Missing session variable type. */
 #define LIBMC_ERROR_INVALIDSESSIONREFERENCE 717 /** Invalid session reference in UI expression. */
 #define LIBMC_ERROR_INVALIDTELEMETRYSETTING 718 /** Invalid telemetry setting. */
+#define LIBMC_ERROR_INVALIDTOOLPATHPROFILEINDEX 719 /** Invalid toolpath profile index. */
+#define LIBMC_ERROR_INVALIDTOOLPATHMODIFIERINDEX 720 /** Invalid toolpath modifier index. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1376,6 +1378,8 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_MISSINGSESSIONVARIABLETYPE: return "Missing session variable type.";
     case LIBMC_ERROR_INVALIDSESSIONREFERENCE: return "Invalid session reference in UI expression.";
     case LIBMC_ERROR_INVALIDTELEMETRYSETTING: return "Invalid telemetry setting.";
+    case LIBMC_ERROR_INVALIDTOOLPATHPROFILEINDEX: return "Invalid toolpath profile index.";
+    case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERINDEX: return "Invalid toolpath modifier index.";
     default: return "unknown error";
   }
 }
