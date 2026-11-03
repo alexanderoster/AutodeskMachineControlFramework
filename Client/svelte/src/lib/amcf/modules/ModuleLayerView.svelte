@@ -8,7 +8,6 @@
 	import Axis3d from '@lucide/svelte/icons/axis-3d';
 	import Tags from '@lucide/svelte/icons/tags';
 	import Info from '@lucide/svelte/icons/info';
-	import Palette from '@lucide/svelte/icons/palette';
 	import ZapOff from '@lucide/svelte/icons/zap-off';
 	import Route from '@lucide/svelte/icons/route';
 	import SkipBack from '@lucide/svelte/icons/skip-back';
@@ -51,20 +50,21 @@
 		'recording-approximate': 'approx. aligned to recording',
 		estimate: 'estimated from laser speed'
 	};
-	const POINT_COLOR_MODES = [
-		{ mode: 'unicolor', caption: 'Uniform', column: '' },
-		{ mode: 'time', caption: 'Timing', column: '' },
-		{ mode: 'velocity', caption: 'Velocity', column: '' },
-		{ mode: 'laseron', caption: 'Laser On', column: 'laseron' },
-		{ mode: 'powerramp', caption: 'Power', column: 'power' }
-	];
+	// Display modes of the toolpath; the recorded points follow the same mode.
 	const TOOLPATH_COLOR_MODES = [
 		{ mode: 'color', caption: 'Color' },
 		{ mode: 'type', caption: 'Type' },
 		{ mode: 'time', caption: 'Time' },
 		{ mode: 'power', caption: 'Power' },
+		{ mode: 'velocity', caption: 'Velocity' },
 		{ mode: 'laseron', caption: 'Laser On' }
 	];
+	type LegendMode = 'time' | 'power' | 'velocity';
+	const LEGEND_MODES: Record<LegendMode, { title: string; unit: string; resetTitle: string }> = {
+		time: { title: 'Start time', unit: 'ms', resetTitle: 'Reset the range to the layer timeline' },
+		power: { title: 'Laser power', unit: 'W', resetTitle: 'Reset the range to the configured or build laser power range' },
+		velocity: { title: 'Velocity', unit: 'mm/s', resetTitle: 'Reset the range to the laser speeds of the layer' }
+	};
 	type ColorRange = { min: number; max: number };
 	type ColorMapPreset = { name: string; caption: string };
 
@@ -110,19 +110,12 @@
 	// Scatter plot (platform.scatterplotuuid) drawn as points on top of the toolpath.
 	let pointsLoaded = $state(false);
 	let pointColumns = $state.raw<string[]>([]);
-	let pointColorMode = $state('unicolor');
 	let showLaserOffPoints = $state(false);
 	let toolpathVisible = $state(true);
 	let pointLoadCounter = 0;
-	let availableColorModes = $derived(
-		POINT_COLOR_MODES.filter((entry) => entry.column === '' || pointColumns.includes(entry.column))
-	);
-	let pointColorCaption = $derived(
-		POINT_COLOR_MODES.find((entry) => entry.mode === pointColorMode)?.caption ?? 'Uniform'
-	);
 
-	// Toolpath display mode. Power and time are mapped onto a color map; the legend in the
-	// bottom left corner selects the map and the value range.
+	// Display mode of the toolpath and the recorded points. Power, time and velocity are mapped onto
+	// a color map; the legend in the bottom left corner selects the map and the value range.
 	let toolpathColorMode = $state('color');
 	let toolpathColorCaption = $derived(
 		TOOLPATH_COLOR_MODES.find((entry) => entry.mode === toolpathColorMode)?.caption ?? 'Color'
@@ -137,9 +130,11 @@
 	// Laser power range of the build profiles, sent with every toolpath layer.
 	let buildPowerRange = $state.raw<ColorRange | null>(null);
 	let layerPowerRange = $state.raw<ColorRange | null>(null);
+	let layerVelocityRange = $state.raw<ColorRange | null>(null);
 	// Ranges edited in the legend; null follows the default range.
 	let editedPowerRange = $state.raw<ColorRange | null>(null);
 	let editedTimeRange = $state.raw<ColorRange | null>(null);
+	let editedVelocityRange = $state.raw<ColorRange | null>(null);
 	let configuredPowerRange = $derived.by((): ColorRange | null => {
 		poll.v;
 		if (!platform) return null;
@@ -152,20 +147,26 @@
 	});
 	let defaultPowerRange = $derived.by((): ColorRange => {
 		if (configuredPowerRange) return configuredPowerRange;
-		const range = buildPowerRange ?? layerPowerRange;
-		if (!range) return { min: 0, max: 1 };
-		// A single nominal power is shown from zero.
-		if (range.max > range.min) return range;
-		return { min: 0, max: range.max > 0 ? range.max : 1 };
+		return rangeFromZeroIfSingle(buildPowerRange ?? layerPowerRange);
 	});
 	let defaultTimeRange = $derived<ColorRange>({ min: 0, max: timelineDuration > 0 ? timelineDuration : 1 });
-	let powerColorRange = $derived(editedPowerRange ?? defaultPowerRange);
-	let timeColorRange = $derived(editedTimeRange ?? defaultTimeRange);
-	let legendVisible = $derived(toolpathVisible && (toolpathColorMode === 'power' || toolpathColorMode === 'time'));
-	let legendRange = $derived(toolpathColorMode === 'time' ? timeColorRange : powerColorRange);
-	let legendUnit = $derived(toolpathColorMode === 'time' ? 'ms' : 'W');
-	let legendTitle = $derived(toolpathColorMode === 'time' ? 'Start time' : 'Laser power');
-	let legendRangeEdited = $derived(toolpathColorMode === 'time' ? editedTimeRange !== null : editedPowerRange !== null);
+	let defaultVelocityRange = $derived(rangeFromZeroIfSingle(layerVelocityRange));
+	let colorRanges = $derived<Record<LegendMode, ColorRange>>({
+		power: editedPowerRange ?? defaultPowerRange,
+		time: editedTimeRange ?? defaultTimeRange,
+		velocity: editedVelocityRange ?? defaultVelocityRange
+	});
+	let editedRanges = $derived<Record<LegendMode, ColorRange | null>>({
+		power: editedPowerRange,
+		time: editedTimeRange,
+		velocity: editedVelocityRange
+	});
+	let legendMode = $derived(toolpathColorMode in LEGEND_MODES ? (toolpathColorMode as LegendMode) : null);
+	let legendVisible = $derived(legendMode !== null && (toolpathVisible || pointsLoaded));
+	let legendRange = $derived(legendMode ? colorRanges[legendMode] : { min: 0, max: 1 });
+	let legendUnit = $derived(legendMode ? LEGEND_MODES[legendMode].unit : '');
+	let legendTitle = $derived(legendMode ? LEGEND_MODES[legendMode].title : '');
+	let legendRangeEdited = $derived(legendMode ? editedRanges[legendMode] !== null : false);
 	// Compared as a string so the calibration is only re-applied when a value changes.
 	let pointSizeCalibrationKey = $derived.by(() => {
 		poll.v;
@@ -292,16 +293,26 @@
 	});
 
 	$effect(() => {
-		const range = powerColorRange;
+		const ranges = colorRanges;
 		if (!layerViewer || !initialized) return;
-		untrack(() => layerViewer.setColorRange('power', range.min, range.max));
+		untrack(() => {
+			for (const mode of Object.keys(LEGEND_MODES) as LegendMode[])
+				layerViewer.setColorRange(mode, ranges[mode].min, ranges[mode].max);
+		});
 	});
 
-	$effect(() => {
-		const range = timeColorRange;
-		if (!layerViewer || !initialized) return;
-		untrack(() => layerViewer.setColorRange('time', range.min, range.max));
-	});
+	// A single value (for example one nominal power or speed) is shown from zero.
+	function rangeFromZeroIfSingle(range: ColorRange | null): ColorRange {
+		if (!range) return { min: 0, max: 1 };
+		if (range.max > range.min) return range;
+		return { min: 0, max: range.max > 0 ? range.max : 1 };
+	}
+
+	function setEditedRange(mode: LegendMode, range: ColorRange | null) {
+		if (mode === 'time') editedTimeRange = range;
+		else if (mode === 'velocity') editedVelocityRange = range;
+		else editedPowerRange = range;
+	}
 
 	function cycleToolpathColorMode() {
 		const index = TOOLPATH_COLOR_MODES.findIndex((entry) => entry.mode === toolpathColorMode);
@@ -315,16 +326,13 @@
 
 	function onLegendRangeChange(bound: 'min' | 'max', event: Event) {
 		const value = Number((event.target as HTMLInputElement).value);
-		if (!Number.isFinite(value)) return;
+		if (!Number.isFinite(value) || !legendMode) return;
 		const current = legendRange;
-		const range = bound === 'min' ? { min: value, max: current.max } : { min: current.min, max: value };
-		if (toolpathColorMode === 'time') editedTimeRange = range;
-		else editedPowerRange = range;
+		setEditedRange(legendMode, bound === 'min' ? { min: value, max: current.max } : { min: current.min, max: value });
 	}
 
 	function resetLegendRange() {
-		if (toolpathColorMode === 'time') editedTimeRange = null;
-		else editedPowerRange = null;
+		if (legendMode) setEditedRange(legendMode, null);
 	}
 
 	function selectColorMap(name: string) {
@@ -470,6 +478,7 @@
 			}
 			if (platform.displayed_build !== platform.builduuid) {
 				editedPowerRange = null;
+				editedVelocityRange = null;
 			}
 			platform.displayed_layer = platform.currentlayer;
 			platform.displayed_build = platform.builduuid;
@@ -486,6 +495,7 @@
 					buildPowerRange = readPowerRange(layerJSON.data);
 					layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
 					layerPowerRange = layerViewer.getLayerPowerRange();
+					layerVelocityRange = layerViewer.getLayerVelocityRange();
 					refreshTimeline();
 					layerViewer.RenderScene(true);
 				}
@@ -510,6 +520,7 @@
 		if (!layerViewer) return;
 		layerViewer.clearPointsChannelData(POINT_CHANNEL);
 		layerViewer.clearPoints();
+		layerVelocityRange = layerViewer.getLayerVelocityRange();
 		refreshTimeline();
 		layerViewer.RenderScene(true);
 	}
@@ -557,23 +568,14 @@
 			refreshTimeline();
 			pointColumns = channelColumns.map(([column]) => column);
 			pointsLoaded = true;
+			layerVelocityRange = layerViewer.getLayerVelocityRange();
 
-			if (!availableColorModes.some((entry) => entry.mode === pointColorMode)) {
-				pointColorMode = 'unicolor';
-			}
 			layerViewer.showLaserOffPoints = showLaserOffPoints;
-			layerViewer.setColorMode(pointColorMode);
+			layerViewer.setColorMode('toolpath');
 		} catch (err: any) {
 			console.warn('[LayerView] point cloud error:', err?.response || err);
 			if (layerViewer) layerViewer.RenderScene(true);
 		}
-	}
-
-	function cyclePointColorMode() {
-		if (!layerViewer) return;
-		const index = availableColorModes.findIndex((entry) => entry.mode === pointColorMode);
-		pointColorMode = availableColorModes[(index + 1) % availableColorModes.length].mode;
-		layerViewer.setColorMode(pointColorMode);
 	}
 
 	function toggleLaserOffPoints() {
@@ -1229,8 +1231,8 @@
 			<button
 				class="layerview-btn"
 				onclick={cycleToolpathColorMode}
-				title="Change how the toolpath is coloured: profile color, segment type, start time, laser power or laser on/off"
-				aria-label={`Toolpath colours: ${toolpathColorCaption}. Click to change`}
+				title="Change how the toolpath and the recorded points are coloured: profile color, segment type, start time, laser power, velocity or laser on/off"
+				aria-label={`Display mode: ${toolpathColorCaption}. Click to change`}
 			>
 				<Paintbrush size={16} />
 				<span>{toolpathColorCaption}</span>
@@ -1246,15 +1248,6 @@
 				<span>End Points</span>
 			</button>
 			{#if pointsLoaded}
-				<button
-					class="layerview-btn"
-					onclick={cyclePointColorMode}
-					title="Change how the recorded points are coloured"
-					aria-label={`Point colours: ${pointColorCaption}. Click to change`}
-				>
-					<Palette size={16} />
-					<span>{pointColorCaption}</span>
-				</button>
 				{#if pointColumns.includes('laseron')}
 					<button
 						class="layerview-btn"
@@ -1380,7 +1373,7 @@
 						class="layerview-legend-btn"
 						onclick={resetLegendRange}
 						disabled={!legendRangeEdited}
-						title={toolpathColorMode === 'time' ? 'Reset the range to the layer timeline' : 'Reset the range to the configured or build laser power range'}
+						title={legendMode ? LEGEND_MODES[legendMode].resetTitle : ''}
 						aria-label="Reset the range"
 					>
 						<RotateCcw size={12} />
@@ -1423,6 +1416,9 @@
 						aria-label={`Maximum ${legendTitle.toLowerCase()} in ${legendUnit}`}
 					/>
 				</div>
+				{#if legendMode === 'power' && pointsLoaded && pointColumns.includes('power')}
+					<div class="layerview-legend-note">Recorded points: raw power, layer minimum to maximum</div>
+				{/if}
 			</div>
 		{/if}
 
@@ -1954,6 +1950,11 @@
 	.layerview-legend-mid {
 		color: rgba(255, 255, 255, 0.75);
 		font-variant-numeric: tabular-nums;
+	}
+	.layerview-legend-note {
+		margin-top: 4px;
+		color: rgba(255, 255, 255, 0.75);
+		font-size: 10px;
 	}
 	.layerview-mouse-pos {
 		position: absolute;

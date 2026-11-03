@@ -55,7 +55,9 @@ const LAYERVIEW_DISABLEDPARTCOLOR = 0xB4B4B4;
 
 // Toolpath display modes: profile colors, segment type, start time on the layer timeline,
 // laser power (ramps drawn as color gradients) and laser on (marks) / off (jumps).
-export const TOOLPATH_COLOR_MODES = ["color", "type", "time", "power", "laseron"];
+export const TOOLPATH_COLOR_MODES = ["color", "type", "time", "power", "velocity", "laseron"];
+const LAYERVIEW_COLORMAPMODES = ["time", "power", "velocity"];
+const LAYERVIEW_UNIFORMPOINTCOLOR = 0x00d0ff;
 const LAYERVIEW_LASERONCOLOR = 0xE53935;
 const LAYERVIEW_DEFAULTHATCHCOLOR = 0xCC88CC;
 const LAYERVIEW_DEFAULTCONTOURCOLOR = 0x00AA88;
@@ -163,9 +165,9 @@ class LayerViewImpl {
 		this.toolpathColorMode = "color";
 		this.colorMapName = DEFAULT_COLORMAP;
 		this.colorMapInverted = false;
-		// Value range mapped onto the color map: watts in power mode, milliseconds in time mode.
-		// Null takes the range of the loaded layer.
-		this.colorRanges = { power: null, time: null };
+		// Value range mapped onto the color map: watts in power mode, milliseconds in time mode,
+		// mm/s in velocity mode. Null takes the range of the loaded layer.
+		this.colorRanges = { power: null, time: null, velocity: null };
 		this.typeColors = { hatch: LAYERVIEW_DEFAULTHATCHCOLOR, polyline: LAYERVIEW_DEFAULTCONTOURCOLOR, travel: LAYERVIEW_DEFAULTTRAVELCOLOR };
 		// Index of the line that each jump leads to, ascending.
 		this.jumpTargetLines = null;
@@ -221,6 +223,8 @@ class LayerViewImpl {
 		if ((typeColorsChanged && ((this.toolpathColorMode === "type") || (this.toolpathColorMode === "laseron"))) ||
 			(endPointColorChanged && this.endPointsVisible))
 			this.refreshToolpathColors ();
+		if (typeColorsChanged && (this.toolpathColorMode === "laseron"))
+			this.refreshPointColors ();
 
         this.rebuildGrid();
         this.RenderScene(true);
@@ -742,9 +746,67 @@ class LayerViewImpl {
 		this.layerPointsColorArray = null;
 	}
 
+	// Point colors of the "toolpath" point mode: the recorded points follow the toolpath display mode,
+	// color map and value ranges. Recorded power is raw scanner units and uses its own min/max.
+	makeToolpathModeColors ()
+	{
+		this.layerPointsColorArray = null;
+		if (!this.layerPointsArray)
+			return;
+
+		const pointCount = this.layerPointsArray.length / 2;
+		const mode = this.toolpathColorMode;
+
+		if (mode === "laseron") {
+			const laserOn = this.laser ? this.laser.laseron : null;
+			if (!laserOn || (laserOn.length < pointCount))
+				return;
+			const colors = new Array (pointCount);
+			for (let pointIndex = 0; pointIndex < pointCount; pointIndex++)
+				colors[pointIndex] = (laserOn[pointIndex] !== 0) ? LAYERVIEW_LASERONCOLOR : this.typeColors.travel;
+			this.layerPointsColorArray = colors;
+			return;
+		}
+
+		let values = null;
+		let range = null;
+		if (mode === "time") {
+			values = this.laser ? this.laser.time : null;
+			range = this.getEffectiveColorRange ("time");
+		} else if (mode === "velocity") {
+			values = this.layerPointsVelocities;
+			range = this.getEffectiveColorRange ("velocity");
+		} else if (mode === "power") {
+			values = this.laser ? this.laser.power : null;
+			if (values)
+				range = { min: values.min, max: values.max };
+		}
+		if (!values || !range || (values.length < pointCount))
+			return;
+
+		const sampler = new ColorMapSampler (this.colorMapName, this.colorMapInverted);
+		const normalize = LayerViewImpl.makeColorRangeNormalizer (range);
+		const colors = new Array (pointCount);
+		for (let pointIndex = 0; pointIndex < pointCount; pointIndex++)
+			colors[pointIndex] = sampler.colorAt (normalize (values[pointIndex]));
+		this.layerPointsColorArray = colors;
+	}
+
+	refreshPointColors ()
+	{
+		if ((this.layerPointsMode !== "toolpath") || !this.layerPointsArray)
+			return;
+		this.updateColors ();
+		this.updateLayerPoints ();
+	}
+
 	updateColors ()
 	{
 		this.layerPointsColorArray = null;
+
+		if (this.layerPointsMode === "toolpath") {
+			this.makeToolpathModeColors ();
+		}
 
 		if (this.layerPointsMode == "time") {
 			this.makeTimeColors ();
@@ -834,7 +896,7 @@ class LayerViewImpl {
 			}
 
 			const pixelSize = this.computePointPixelSize () * this.glInstance.getPixelRatio ();
-			this.glInstance.add2DScreenPointsGeometry("layerdata_points", pointsToRender, 61, pixelSize, 0x00d0ff, colorsToRender);
+			this.glInstance.add2DScreenPointsGeometry("layerdata_points", pointsToRender, 61, pixelSize, LAYERVIEW_UNIFORMPOINTCOLOR, colorsToRender);
 			this.applyTimeCap ();
 			this.updateTransform ();
 			this.RenderScene (true);
@@ -918,8 +980,10 @@ class LayerViewImpl {
 	updateTiming ()
 	{
 		this.computeTiming ();
-		if (this.toolpathColorMode === "time")
+		if (this.toolpathColorMode === "time") {
 			this.refreshToolpathColors ();
+			this.refreshPointColors ();
+		}
 	}
 
 	computeTiming ()
@@ -1483,6 +1547,7 @@ class LayerViewImpl {
 			return;
 		this.toolpathColorMode = newMode;
 		this.refreshToolpathColors ();
+		this.refreshPointColors ();
 	}
 
 	getToolpathColorMode ()
@@ -1494,11 +1559,13 @@ class LayerViewImpl {
 	{
 		this.colorMapName = name;
 		this.colorMapInverted = inverted === true;
-		if ((this.toolpathColorMode === "power") || (this.toolpathColorMode === "time"))
+		if (LAYERVIEW_COLORMAPMODES.includes (this.toolpathColorMode)) {
 			this.refreshToolpathColors ();
+			this.refreshPointColors ();
+		}
 	}
 
-	// Value range of the power (W) or time (ms) mode. Pass null to use the range of the loaded layer.
+	// Value range of the power (W), time (ms) or velocity (mm/s) mode. Pass null to use the range of the loaded layer.
 	setColorRange (mode, minValue, maxValue)
 	{
 		if (!(mode in this.colorRanges))
@@ -1511,8 +1578,36 @@ class LayerViewImpl {
 		if ((range === previous) || (range && previous && (range.min === previous.min) && (range.max === previous.max)))
 			return;
 		this.colorRanges[mode] = range;
-		if (this.toolpathColorMode === mode)
+		if (this.toolpathColorMode === mode) {
 			this.refreshToolpathColors ();
+			this.refreshPointColors ();
+		}
+	}
+
+	// Range of the laser speeds (mm/s) of the loaded layer, or of the recorded point velocities if the
+	// toolpath has no speeds.
+	getLayerVelocityRange ()
+	{
+		let minimum = Infinity;
+		let maximum = -Infinity;
+		for (const properties of this.segmentProperties) {
+			const speed = Number (properties.laserspeed);
+			if (Number.isFinite (speed) && (speed > 0)) {
+				minimum = Math.min (minimum, speed);
+				maximum = Math.max (maximum, speed);
+			}
+		}
+		if (minimum <= maximum)
+			return { min: minimum, max: maximum };
+		if (this.layerPointsArray && this.layerPointsVelocities && (this.layerPointsVelocities.length > 0))
+			return { min: this.layerPointsMinVelocity, max: this.layerPointsMaxVelocity };
+		return null;
+	}
+
+	static makeColorRangeNormalizer (range)
+	{
+		const span = range.max - range.min;
+		return (value) => (span !== 0) ? (value - range.min) / span : ((value >= range.max) ? 1.0 : 0.0);
 	}
 
 	// Range of the effective laser power (W) over all lines of the loaded layer, including ramp support points.
@@ -1546,6 +1641,8 @@ class LayerViewImpl {
 			return configured;
 		if (mode === "time")
 			return { min: 0.0, max: this.timelineDuration };
+		if (mode === "velocity")
+			return this.getLayerVelocityRange () || { min: 0.0, max: 1.0 };
 		return this.getLayerPowerRange () || { min: 0.0, max: 1.0 };
 	}
 
@@ -1578,16 +1675,19 @@ class LayerViewImpl {
 		const colors = new Array (lineCount);
 		let gradients = null;
 
-		if ((mode === "power") || (mode === "time")) {
+		if (LAYERVIEW_COLORMAPMODES.includes (mode)) {
 			const sampler = new ColorMapSampler (this.colorMapName, this.colorMapInverted);
-			const range = this.getEffectiveColorRange (mode);
-			const span = range.max - range.min;
-			const normalize = (value) => (span !== 0) ? (value - range.min) / span : ((value >= range.max) ? 1.0 : 0.0);
+			const normalize = LayerViewImpl.makeColorRangeNormalizer (this.getEffectiveColorRange (mode));
 
 			if (mode === "time") {
 				const startTimes = (this.lineStartTimes && (this.lineStartTimes.length === lineCount)) ? this.lineStartTimes : null;
 				for (let lineIndex = 0; lineIndex < lineCount; lineIndex++)
 					colors[lineIndex] = sampler.colorAt (startTimes ? normalize (startTimes[lineIndex]) : 0.0);
+			} else if (mode === "velocity") {
+				for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+					const speed = Number (this.segmentProperties[lineIndex].laserspeed);
+					colors[lineIndex] = (Number.isFinite (speed) && (speed > 0)) ? sampler.colorAt (normalize (speed)) : LAYERVIEW_DISABLEDPARTCOLOR;
+				}
 			} else {
 				gradients = new Array (lineCount).fill (null);
 				for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
