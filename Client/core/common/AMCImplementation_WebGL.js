@@ -1226,6 +1226,25 @@ class WebGLImpl {
         return (this.renderElements.has(identifier));
     }
 
+    disposeObject(object) {
+        if (!object)
+            return;
+
+        object.traverse((child) => {
+            if (child.geometry)
+                child.geometry.dispose();
+
+            if (child.material) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                for (const material of materials) {
+                    if (material.map)
+                        material.map.dispose();
+                    material.dispose();
+                }
+            }
+        });
+    }
+
     removeElement(identifier) {
         if (!identifier)
             return false;
@@ -1233,6 +1252,7 @@ class WebGLImpl {
 		let selectedObject = this.scene.getObjectByName(identifier);
 		if (selectedObject) {
 			this.scene.remove(selectedObject);
+			this.disposeObject(selectedObject);
 		}
 		
         if (this.renderElements.has(identifier)) {

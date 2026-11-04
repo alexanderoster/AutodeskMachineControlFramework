@@ -246,9 +246,7 @@ class LayerViewImpl {
     rebuildGrid() {
         if (!this.glInstance) return;
         if (this.currentSize.gridWidth <= 0 || this.currentSize.gridHeight <= 0) return;
-        var gridObject = this.glInstance.scene.getObjectByName("grid");
-        if (gridObject)
-            this.glInstance.scene.remove(gridObject);
+        this.glInstance.removeElement("grid");
         this.glInstance.add2DGridGeometry("grid", this.currentSize.gridWidth, this.currentSize.gridHeight, 50, 5, this.gridColor);
         this.updateTransform();
         this.renderNeedsUpdate = true;
@@ -285,9 +283,7 @@ class LayerViewImpl {
         if (!this.glInstance)
             return;
 
-        var gridObject = this.glInstance.scene.getObjectByName("grid");
-        if (gridObject)
-            this.glInstance.scene.remove(gridObject);
+        this.glInstance.removeElement("grid");
 
         this.glInstance.add2DGridGeometry("grid", width, height, 50, 5, this.gridColor);
 		this.updateTransform ();
