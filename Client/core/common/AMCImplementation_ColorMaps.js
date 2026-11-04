@@ -43,7 +43,6 @@ const fromUnitRGB = (stops) => stops.map ((stop) => [stop[0], Math.round (stop[1
 
 export const COLORMAP_PRESETS = [
 	{ name: "cooltowarm", caption: "Cool to Warm", stops: COOLTOWARM_STOPS },
-	{ name: "warmtocool", caption: "Warm to Cool", stops: COOLTOWARM_STOPS.map ((stop) => [1 - stop[0], stop[1], stop[2], stop[3]]).reverse () },
 	{ name: "grayscale", caption: "Grayscale", stops: [[0, 0, 0, 0], [1, 255, 255, 255]] },
 	{ name: "rainbowdesaturated", caption: "Rainbow Desaturated", stops: fromUnitRGB ([
 		[0.0, 0.278, 0.278, 0.859], [0.143, 0.0, 0.0, 0.361], [0.285, 0.0, 1.0, 1.0], [0.429, 0.0, 0.502, 0.0],
