@@ -87,6 +87,9 @@ private:
 	std::shared_ptr<rapidjson::Document> m_ExternalEventParameters;
 	std::shared_ptr<rapidjson::Document> m_ExternalEventReturnValues;
 
+	// Client session that resolves session and user references of formulas; null without a session.
+	AMC::PUIFrontendState getFormulaFrontendState();
+
 protected:
 
 public:
@@ -324,6 +327,16 @@ public:
 	IJSONObject* GetExternalEventResults() override;
 
 	IMachineConfigurationHandler* CreateMachineConfigurationHandler() override;
+
+	IFormula* CreateFormula(const std::string& sFormula) override;
+
+	std::string EvaluateFormula(const std::string& sFormula) override;
+
+	LibMCEnv_double EvaluateFormulaAsDouble(const std::string& sFormula) override;
+
+	LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string& sFormula) override;
+
+	bool EvaluateFormulaAsBool(const std::string& sFormula) override;
 };
 
 } // namespace Impl

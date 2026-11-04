@@ -145,6 +145,7 @@ class CMachineConfigurationTypeIterator;
 class CMachineConfigurationHandler;
 class CTelemetryMarkerScope;
 class CTelemetryChannel;
+class CFormula;
 class CStateEnvironment;
 class CUIItem;
 class CUIEnvironment;
@@ -239,6 +240,7 @@ typedef CMachineConfigurationTypeIterator CLibMCEnvMachineConfigurationTypeItera
 typedef CMachineConfigurationHandler CLibMCEnvMachineConfigurationHandler;
 typedef CTelemetryMarkerScope CLibMCEnvTelemetryMarkerScope;
 typedef CTelemetryChannel CLibMCEnvTelemetryChannel;
+typedef CFormula CLibMCEnvFormula;
 typedef CStateEnvironment CLibMCEnvStateEnvironment;
 typedef CUIItem CLibMCEnvUIItem;
 typedef CUIEnvironment CLibMCEnvUIEnvironment;
@@ -333,6 +335,7 @@ typedef std::shared_ptr<CMachineConfigurationTypeIterator> PMachineConfiguration
 typedef std::shared_ptr<CMachineConfigurationHandler> PMachineConfigurationHandler;
 typedef std::shared_ptr<CTelemetryMarkerScope> PTelemetryMarkerScope;
 typedef std::shared_ptr<CTelemetryChannel> PTelemetryChannel;
+typedef std::shared_ptr<CFormula> PFormula;
 typedef std::shared_ptr<CStateEnvironment> PStateEnvironment;
 typedef std::shared_ptr<CUIItem> PUIItem;
 typedef std::shared_ptr<CUIEnvironment> PUIEnvironment;
@@ -427,6 +430,7 @@ typedef PMachineConfigurationTypeIterator PLibMCEnvMachineConfigurationTypeItera
 typedef PMachineConfigurationHandler PLibMCEnvMachineConfigurationHandler;
 typedef PTelemetryMarkerScope PLibMCEnvTelemetryMarkerScope;
 typedef PTelemetryChannel PLibMCEnvTelemetryChannel;
+typedef PFormula PLibMCEnvFormula;
 typedef PStateEnvironment PLibMCEnvStateEnvironment;
 typedef PUIItem PLibMCEnvUIItem;
 typedef PUIEnvironment PLibMCEnvUIEnvironment;
@@ -773,6 +777,10 @@ public:
 			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "NONONEMPTYLAYERFOUND";
 			case LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND: return "TOOLPATHPARTNOTFOUND";
 			case LIBMCENV_ERROR_INVALIDCONFIGURATIONVERSIONNAME: return "INVALIDCONFIGURATIONVERSIONNAME";
+			case LIBMCENV_ERROR_INVALIDFORMULA: return "INVALIDFORMULA";
+			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "FORMULAEVALUATIONFAILED";
+			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "FORMULASESSIONREFERENCESNOTAVAILABLE";
+			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "INVALIDFORMULAREFERENCEINDEX";
 		}
 		return "UNKNOWN";
 	}
@@ -1045,6 +1053,10 @@ public:
 			case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "No non-empty layer found in the given layer range.";
 			case LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND: return "Toolpath part not found.";
 			case LIBMCENV_ERROR_INVALIDCONFIGURATIONVERSIONNAME: return "Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters.";
+			case LIBMCENV_ERROR_INVALIDFORMULA: return "Invalid formula.";
+			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
+			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
+			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
 		}
 		return "unknown error";
 	}
@@ -1247,6 +1259,7 @@ private:
 	friend class CMachineConfigurationHandler;
 	friend class CTelemetryMarkerScope;
 	friend class CTelemetryChannel;
+	friend class CFormula;
 	friend class CStateEnvironment;
 	friend class CUIItem;
 	friend class CUIEnvironment;
@@ -3613,6 +3626,30 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CFormula 
+**************************************************************************************************************************/
+class CFormula : public CBase {
+public:
+	
+	/**
+	* CFormula::CFormula - Constructor for Formula class.
+	*/
+	CFormula(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetFormula();
+	inline LibMCEnv_uint32 GetReferenceCount();
+	inline std::string GetReference(const LibMCEnv_uint32 nIndex);
+	inline bool HasSessionReferences();
+	inline std::string Evaluate();
+	inline LibMCEnv_double EvaluateAsDouble();
+	inline LibMCEnv_int64 EvaluateAsInteger();
+	inline bool EvaluateAsBool();
+};
+	
+/*************************************************************************************************************************
  Class CStateEnvironment 
 **************************************************************************************************************************/
 class CStateEnvironment : public CBase {
@@ -3724,6 +3761,11 @@ public:
 	inline PTempStreamWriter CreateTemporaryStream(const std::string & sName, const std::string & sMIMEType);
 	inline PZIPStreamWriter CreateZIPStream(const std::string & sName);
 	inline PStreamReader LoadStream(const std::string & sUUID, const bool bMustExist);
+	inline PFormula CreateFormula(const std::string & sFormula);
+	inline std::string EvaluateFormula(const std::string & sFormula);
+	inline LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula);
+	inline LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula);
+	inline bool EvaluateFormulaAsBool(const std::string & sFormula);
 };
 	
 /*************************************************************************************************************************
@@ -3870,6 +3912,11 @@ public:
 	inline PJSONObject GetExternalEventParameters();
 	inline PJSONObject GetExternalEventResults();
 	inline PMachineConfigurationHandler CreateMachineConfigurationHandler();
+	inline PFormula CreateFormula(const std::string & sFormula);
+	inline std::string EvaluateFormula(const std::string & sFormula);
+	inline LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula);
+	inline LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula);
+	inline bool EvaluateFormulaAsBool(const std::string & sFormula);
 };
 	
 	/**
@@ -4895,6 +4942,14 @@ public:
 		pWrapperTable->m_TelemetryChannel_GetGlobalIdentifier = nullptr;
 		pWrapperTable->m_TelemetryChannel_StartMarkerScope = nullptr;
 		pWrapperTable->m_TelemetryChannel_CreateInstantMarker = nullptr;
+		pWrapperTable->m_Formula_GetFormula = nullptr;
+		pWrapperTable->m_Formula_GetReferenceCount = nullptr;
+		pWrapperTable->m_Formula_GetReference = nullptr;
+		pWrapperTable->m_Formula_HasSessionReferences = nullptr;
+		pWrapperTable->m_Formula_Evaluate = nullptr;
+		pWrapperTable->m_Formula_EvaluateAsDouble = nullptr;
+		pWrapperTable->m_Formula_EvaluateAsInteger = nullptr;
+		pWrapperTable->m_Formula_EvaluateAsBool = nullptr;
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
@@ -4993,6 +5048,11 @@ public:
 		pWrapperTable->m_StateEnvironment_CreateTemporaryStream = nullptr;
 		pWrapperTable->m_StateEnvironment_CreateZIPStream = nullptr;
 		pWrapperTable->m_StateEnvironment_LoadStream = nullptr;
+		pWrapperTable->m_StateEnvironment_CreateFormula = nullptr;
+		pWrapperTable->m_StateEnvironment_EvaluateFormula = nullptr;
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble = nullptr;
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger = nullptr;
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool = nullptr;
 		pWrapperTable->m_UIItem_GetName = nullptr;
 		pWrapperTable->m_UIItem_GetPath = nullptr;
 		pWrapperTable->m_UIItem_GetUUID = nullptr;
@@ -5107,6 +5167,11 @@ public:
 		pWrapperTable->m_UIEnvironment_GetExternalEventParameters = nullptr;
 		pWrapperTable->m_UIEnvironment_GetExternalEventResults = nullptr;
 		pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler = nullptr;
+		pWrapperTable->m_UIEnvironment_CreateFormula = nullptr;
+		pWrapperTable->m_UIEnvironment_EvaluateFormula = nullptr;
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble = nullptr;
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger = nullptr;
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
 		pWrapperTable->m_ReleaseInstance = nullptr;
@@ -13641,6 +13706,78 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Formula_GetFormula = (PLibMCEnvFormula_GetFormulaPtr) GetProcAddress(hLibrary, "libmcenv_formula_getformula");
+		#else // _WIN32
+		pWrapperTable->m_Formula_GetFormula = (PLibMCEnvFormula_GetFormulaPtr) dlsym(hLibrary, "libmcenv_formula_getformula");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_GetFormula == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_GetReferenceCount = (PLibMCEnvFormula_GetReferenceCountPtr) GetProcAddress(hLibrary, "libmcenv_formula_getreferencecount");
+		#else // _WIN32
+		pWrapperTable->m_Formula_GetReferenceCount = (PLibMCEnvFormula_GetReferenceCountPtr) dlsym(hLibrary, "libmcenv_formula_getreferencecount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_GetReferenceCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_GetReference = (PLibMCEnvFormula_GetReferencePtr) GetProcAddress(hLibrary, "libmcenv_formula_getreference");
+		#else // _WIN32
+		pWrapperTable->m_Formula_GetReference = (PLibMCEnvFormula_GetReferencePtr) dlsym(hLibrary, "libmcenv_formula_getreference");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_GetReference == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_HasSessionReferences = (PLibMCEnvFormula_HasSessionReferencesPtr) GetProcAddress(hLibrary, "libmcenv_formula_hassessionreferences");
+		#else // _WIN32
+		pWrapperTable->m_Formula_HasSessionReferences = (PLibMCEnvFormula_HasSessionReferencesPtr) dlsym(hLibrary, "libmcenv_formula_hassessionreferences");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_HasSessionReferences == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_Evaluate = (PLibMCEnvFormula_EvaluatePtr) GetProcAddress(hLibrary, "libmcenv_formula_evaluate");
+		#else // _WIN32
+		pWrapperTable->m_Formula_Evaluate = (PLibMCEnvFormula_EvaluatePtr) dlsym(hLibrary, "libmcenv_formula_evaluate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_Evaluate == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_EvaluateAsDouble = (PLibMCEnvFormula_EvaluateAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_formula_evaluateasdouble");
+		#else // _WIN32
+		pWrapperTable->m_Formula_EvaluateAsDouble = (PLibMCEnvFormula_EvaluateAsDoublePtr) dlsym(hLibrary, "libmcenv_formula_evaluateasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_EvaluateAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_EvaluateAsInteger = (PLibMCEnvFormula_EvaluateAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_formula_evaluateasinteger");
+		#else // _WIN32
+		pWrapperTable->m_Formula_EvaluateAsInteger = (PLibMCEnvFormula_EvaluateAsIntegerPtr) dlsym(hLibrary, "libmcenv_formula_evaluateasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_EvaluateAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Formula_EvaluateAsBool = (PLibMCEnvFormula_EvaluateAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_formula_evaluateasbool");
+		#else // _WIN32
+		pWrapperTable->m_Formula_EvaluateAsBool = (PLibMCEnvFormula_EvaluateAsBoolPtr) dlsym(hLibrary, "libmcenv_formula_evaluateasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Formula_EvaluateAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getmachinestate");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) dlsym(hLibrary, "libmcenv_stateenvironment_getmachinestate");
@@ -14520,6 +14657,51 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_StateEnvironment_LoadStream == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_CreateFormula = (PLibMCEnvStateEnvironment_CreateFormulaPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_createformula");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_CreateFormula = (PLibMCEnvStateEnvironment_CreateFormulaPtr) dlsym(hLibrary, "libmcenv_stateenvironment_createformula");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_CreateFormula == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormula = (PLibMCEnvStateEnvironment_EvaluateFormulaPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_evaluateformula");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormula = (PLibMCEnvStateEnvironment_EvaluateFormulaPtr) dlsym(hLibrary, "libmcenv_stateenvironment_evaluateformula");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_EvaluateFormula == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble = (PLibMCEnvStateEnvironment_EvaluateFormulaAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_evaluateformulaasdouble");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble = (PLibMCEnvStateEnvironment_EvaluateFormulaAsDoublePtr) dlsym(hLibrary, "libmcenv_stateenvironment_evaluateformulaasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger = (PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_evaluateformulaasinteger");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger = (PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr) dlsym(hLibrary, "libmcenv_stateenvironment_evaluateformulaasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool = (PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_evaluateformulaasbool");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool = (PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr) dlsym(hLibrary, "libmcenv_stateenvironment_evaluateformulaasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -15546,6 +15728,51 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_CreateFormula = (PLibMCEnvUIEnvironment_CreateFormulaPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_createformula");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_CreateFormula = (PLibMCEnvUIEnvironment_CreateFormulaPtr) dlsym(hLibrary, "libmcenv_uienvironment_createformula");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_CreateFormula == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormula = (PLibMCEnvUIEnvironment_EvaluateFormulaPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_evaluateformula");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormula = (PLibMCEnvUIEnvironment_EvaluateFormulaPtr) dlsym(hLibrary, "libmcenv_uienvironment_evaluateformula");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_EvaluateFormula == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble = (PLibMCEnvUIEnvironment_EvaluateFormulaAsDoublePtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_evaluateformulaasdouble");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble = (PLibMCEnvUIEnvironment_EvaluateFormulaAsDoublePtr) dlsym(hLibrary, "libmcenv_uienvironment_evaluateformulaasdouble");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger = (PLibMCEnvUIEnvironment_EvaluateFormulaAsIntegerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_evaluateformulaasinteger");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger = (PLibMCEnvUIEnvironment_EvaluateFormulaAsIntegerPtr) dlsym(hLibrary, "libmcenv_uienvironment_evaluateformulaasinteger");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool = (PLibMCEnvUIEnvironment_EvaluateFormulaAsBoolPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_evaluateformulaasbool");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool = (PLibMCEnvUIEnvironment_EvaluateFormulaAsBoolPtr) dlsym(hLibrary, "libmcenv_uienvironment_evaluateformulaasbool");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -19377,6 +19604,38 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_TelemetryChannel_CreateInstantMarker == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_formula_getformula", (void**)&(pWrapperTable->m_Formula_GetFormula));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_GetFormula == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_getreferencecount", (void**)&(pWrapperTable->m_Formula_GetReferenceCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_GetReferenceCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_getreference", (void**)&(pWrapperTable->m_Formula_GetReference));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_GetReference == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_hassessionreferences", (void**)&(pWrapperTable->m_Formula_HasSessionReferences));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_HasSessionReferences == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_evaluate", (void**)&(pWrapperTable->m_Formula_Evaluate));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_Evaluate == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_evaluateasdouble", (void**)&(pWrapperTable->m_Formula_EvaluateAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_EvaluateAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_evaluateasinteger", (void**)&(pWrapperTable->m_Formula_EvaluateAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_EvaluateAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_formula_evaluateasbool", (void**)&(pWrapperTable->m_Formula_EvaluateAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_EvaluateAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_getmachinestate", (void**)&(pWrapperTable->m_StateEnvironment_GetMachineState));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetMachineState == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -19767,6 +20026,26 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_loadstream", (void**)&(pWrapperTable->m_StateEnvironment_LoadStream));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_LoadStream == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_createformula", (void**)&(pWrapperTable->m_StateEnvironment_CreateFormula));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_CreateFormula == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformula", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormula));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormula == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformulaasdouble", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformulaasinteger", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformulaasbool", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uiitem_getname", (void**)&(pWrapperTable->m_UIItem_GetName));
@@ -20223,6 +20502,26 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_createmachineconfigurationhandler", (void**)&(pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_CreateMachineConfigurationHandler == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_createformula", (void**)&(pWrapperTable->m_UIEnvironment_CreateFormula));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_CreateFormula == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_evaluateformula", (void**)&(pWrapperTable->m_UIEnvironment_EvaluateFormula));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_EvaluateFormula == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_evaluateformulaasdouble", (void**)&(pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_evaluateformulaasinteger", (void**)&(pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_evaluateformulaasbool", (void**)&(pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_getversion", (void**)&(pWrapperTable->m_GetVersion));
@@ -33306,6 +33605,116 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class CFormula
+	 */
+	
+	/**
+	* CFormula::GetFormula - Returns the formula text.
+	* @return Formula text.
+	*/
+	std::string CFormula::GetFormula()
+	{
+		LibMCEnv_uint32 bytesNeededFormula = 0;
+		LibMCEnv_uint32 bytesWrittenFormula = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_GetFormula(m_pHandle, 0, &bytesNeededFormula, nullptr));
+		std::vector<char> bufferFormula(bytesNeededFormula);
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_GetFormula(m_pHandle, bytesNeededFormula, &bytesWrittenFormula, &bufferFormula[0]));
+		
+		return std::string(&bufferFormula[0]);
+	}
+	
+	/**
+	* CFormula::GetReferenceCount - Returns the number of distinct references of the formula.
+	* @return Number of distinct references.
+	*/
+	LibMCEnv_uint32 CFormula::GetReferenceCount()
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_GetReferenceCount(m_pHandle, &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* CFormula::GetReference - Returns a reference of the formula, in order of first appearance.
+	* @param[in] nIndex - Index of the reference, 0-based. Fails if larger or equal to the reference count.
+	* @return Reference as written in the formula, for example main.jobinfo.currentlayer or session.name.
+	*/
+	std::string CFormula::GetReference(const LibMCEnv_uint32 nIndex)
+	{
+		LibMCEnv_uint32 bytesNeededPath = 0;
+		LibMCEnv_uint32 bytesWrittenPath = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_GetReference(m_pHandle, nIndex, 0, &bytesNeededPath, nullptr));
+		std::vector<char> bufferPath(bytesNeededPath);
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_GetReference(m_pHandle, nIndex, bytesNeededPath, &bytesWrittenPath, &bufferPath[0]));
+		
+		return std::string(&bufferPath[0]);
+	}
+	
+	/**
+	* CFormula::HasSessionReferences - Returns if the formula references session or user values.
+	* @return True, if the formula contains a session or user reference.
+	*/
+	bool CFormula::HasSessionReferences()
+	{
+		bool resultHasSessionReferences = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_HasSessionReferences(m_pHandle, &resultHasSessionReferences));
+		
+		return resultHasSessionReferences;
+	}
+	
+	/**
+	* CFormula::Evaluate - Evaluates the formula and returns the result as string. Booleans are returned as 1 and 0. Fails with FORMULAEVALUATIONFAILED on runtime errors like a division by zero or an unknown parameter.
+	* @return Result of the formula.
+	*/
+	std::string CFormula::Evaluate()
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_Evaluate(m_pHandle, 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_Evaluate(m_pHandle, bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CFormula::EvaluateAsDouble - Evaluates the formula and returns the result as double. An empty result is 0. Fails if the result is a text that is not a number.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_double CFormula::EvaluateAsDouble()
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_EvaluateAsDouble(m_pHandle, &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CFormula::EvaluateAsInteger - Evaluates the formula and returns the result as integer. Doubles are rounded to the nearest integer. An empty result is 0. Fails if the result is a text that is not a number.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_int64 CFormula::EvaluateAsInteger()
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_EvaluateAsInteger(m_pHandle, &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CFormula::EvaluateAsBool - Evaluates the formula and returns the result as bool. Numbers are true unless zero; strings are true unless empty, 0 or false.
+	* @return Result of the formula.
+	*/
+	bool CFormula::EvaluateAsBool()
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Formula_EvaluateAsBool(m_pHandle, &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
 	 * Method definitions for class CStateEnvironment
 	 */
 	
@@ -34694,6 +35103,77 @@ public:
 		} else {
 			return nullptr;
 		}
+	}
+	
+	/**
+	* CStateEnvironment::CreateFormula - Compiles a formula over the parameters and states of all state machines. Fails with INVALIDFORMULA on syntax errors and with FORMULASESSIONREFERENCESNOTAVAILABLE if the formula references session or user values.
+	* @param[in] sFormula - Formula text, for example main.jobinfo.currentlayer + 1.
+	* @return Compiled formula.
+	*/
+	PFormula CStateEnvironment::CreateFormula(const std::string & sFormula)
+	{
+		LibMCEnvHandle hFormulaInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_CreateFormula(m_pHandle, sFormula.c_str(), &hFormulaInstance));
+		
+		if (!hFormulaInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CFormula>(m_pWrapper, hFormulaInstance);
+	}
+	
+	/**
+	* CStateEnvironment::EvaluateFormula - Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	std::string CStateEnvironment::EvaluateFormula(const std::string & sFormula)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormula(m_pHandle, sFormula.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormula(m_pHandle, sFormula.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CStateEnvironment::EvaluateFormulaAsDouble - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_double CStateEnvironment::EvaluateFormulaAsDouble(const std::string & sFormula)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormulaAsDouble(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CStateEnvironment::EvaluateFormulaAsInteger - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_int64 CStateEnvironment::EvaluateFormulaAsInteger(const std::string & sFormula)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormulaAsInteger(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CStateEnvironment::EvaluateFormulaAsBool - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	bool CStateEnvironment::EvaluateFormulaAsBool(const std::string & sFormula)
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormulaAsBool(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
 	}
 	
 	/**
@@ -36318,6 +36798,77 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CMachineConfigurationHandler>(m_pWrapper, hMachineConfigurationHandlerInstance);
+	}
+	
+	/**
+	* CUIEnvironment::CreateFormula - Compiles a formula over the parameters and states of all state machines and the session and user values of the client session that triggered the event. Fails with INVALIDFORMULA on syntax errors.
+	* @param[in] sFormula - Formula text, for example session.formula_a + main.jobinfo.currentlayer.
+	* @return Compiled formula. Session and user references keep resolving to the session of this event.
+	*/
+	PFormula CUIEnvironment::CreateFormula(const std::string & sFormula)
+	{
+		LibMCEnvHandle hFormulaInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_CreateFormula(m_pHandle, sFormula.c_str(), &hFormulaInstance));
+		
+		if (!hFormulaInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CFormula>(m_pWrapper, hFormulaInstance);
+	}
+	
+	/**
+	* CUIEnvironment::EvaluateFormula - Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	std::string CUIEnvironment::EvaluateFormula(const std::string & sFormula)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormula(m_pHandle, sFormula.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormula(m_pHandle, sFormula.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CUIEnvironment::EvaluateFormulaAsDouble - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_double CUIEnvironment::EvaluateFormulaAsDouble(const std::string & sFormula)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormulaAsDouble(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::EvaluateFormulaAsInteger - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	LibMCEnv_int64 CUIEnvironment::EvaluateFormulaAsInteger(const std::string & sFormula)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormulaAsInteger(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::EvaluateFormulaAsBool - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	bool CUIEnvironment::EvaluateFormulaAsBool(const std::string & sFormula)
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormulaAsBool(m_pHandle, sFormula.c_str(), &resultValue));
+		
+		return resultValue;
 	}
 
 } // namespace LibMCEnv

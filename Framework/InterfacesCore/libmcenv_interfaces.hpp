@@ -140,6 +140,7 @@ class IMachineConfigurationTypeIterator;
 class IMachineConfigurationHandler;
 class ITelemetryMarkerScope;
 class ITelemetryChannel;
+class IFormula;
 class IStateEnvironment;
 class IUIItem;
 class IUIEnvironment;
@@ -7901,6 +7902,66 @@ typedef IBaseSharedPtr<ITelemetryChannel> PITelemetryChannel;
 
 
 /*************************************************************************************************************************
+ Class interface for Formula 
+**************************************************************************************************************************/
+
+class IFormula : public virtual IBase {
+public:
+	/**
+	* IFormula::GetFormula - Returns the formula text.
+	* @return Formula text.
+	*/
+	virtual std::string GetFormula() = 0;
+
+	/**
+	* IFormula::GetReferenceCount - Returns the number of distinct references of the formula.
+	* @return Number of distinct references.
+	*/
+	virtual LibMCEnv_uint32 GetReferenceCount() = 0;
+
+	/**
+	* IFormula::GetReference - Returns a reference of the formula, in order of first appearance.
+	* @param[in] nIndex - Index of the reference, 0-based. Fails if larger or equal to the reference count.
+	* @return Reference as written in the formula, for example main.jobinfo.currentlayer or session.name.
+	*/
+	virtual std::string GetReference(const LibMCEnv_uint32 nIndex) = 0;
+
+	/**
+	* IFormula::HasSessionReferences - Returns if the formula references session or user values.
+	* @return True, if the formula contains a session or user reference.
+	*/
+	virtual bool HasSessionReferences() = 0;
+
+	/**
+	* IFormula::Evaluate - Evaluates the formula and returns the result as string. Booleans are returned as 1 and 0. Fails with FORMULAEVALUATIONFAILED on runtime errors like a division by zero or an unknown parameter.
+	* @return Result of the formula.
+	*/
+	virtual std::string Evaluate() = 0;
+
+	/**
+	* IFormula::EvaluateAsDouble - Evaluates the formula and returns the result as double. An empty result is 0. Fails if the result is a text that is not a number.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_double EvaluateAsDouble() = 0;
+
+	/**
+	* IFormula::EvaluateAsInteger - Evaluates the formula and returns the result as integer. Doubles are rounded to the nearest integer. An empty result is 0. Fails if the result is a text that is not a number.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_int64 EvaluateAsInteger() = 0;
+
+	/**
+	* IFormula::EvaluateAsBool - Evaluates the formula and returns the result as bool. Numbers are true unless zero; strings are true unless empty, 0 or false.
+	* @return Result of the formula.
+	*/
+	virtual bool EvaluateAsBool() = 0;
+
+};
+
+typedef IBaseSharedPtr<IFormula> PIFormula;
+
+
+/*************************************************************************************************************************
  Class interface for StateEnvironment 
 **************************************************************************************************************************/
 
@@ -8616,6 +8677,41 @@ public:
 	* @return Stream Instance. Will return null if not found and MustExists is false.
 	*/
 	virtual IStreamReader * LoadStream(const std::string & sUUID, const bool bMustExist) = 0;
+
+	/**
+	* IStateEnvironment::CreateFormula - Compiles a formula over the parameters and states of all state machines. Fails with INVALIDFORMULA on syntax errors and with FORMULASESSIONREFERENCESNOTAVAILABLE if the formula references session or user values.
+	* @param[in] sFormula - Formula text, for example main.jobinfo.currentlayer + 1.
+	* @return Compiled formula.
+	*/
+	virtual IFormula * CreateFormula(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::EvaluateFormula - Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual std::string EvaluateFormula(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::EvaluateFormulaAsDouble - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::EvaluateFormulaAsInteger - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::EvaluateFormulaAsBool - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual bool EvaluateFormulaAsBool(const std::string & sFormula) = 0;
 
 };
 
@@ -9468,6 +9564,41 @@ public:
 	* @return MachineConfigurationHandler instance.
 	*/
 	virtual IMachineConfigurationHandler * CreateMachineConfigurationHandler() = 0;
+
+	/**
+	* IUIEnvironment::CreateFormula - Compiles a formula over the parameters and states of all state machines and the session and user values of the client session that triggered the event. Fails with INVALIDFORMULA on syntax errors.
+	* @param[in] sFormula - Formula text, for example session.formula_a + main.jobinfo.currentlayer.
+	* @return Compiled formula. Session and user references keep resolving to the session of this event.
+	*/
+	virtual IFormula * CreateFormula(const std::string & sFormula) = 0;
+
+	/**
+	* IUIEnvironment::EvaluateFormula - Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual std::string EvaluateFormula(const std::string & sFormula) = 0;
+
+	/**
+	* IUIEnvironment::EvaluateFormulaAsDouble - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula) = 0;
+
+	/**
+	* IUIEnvironment::EvaluateFormulaAsInteger - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula) = 0;
+
+	/**
+	* IUIEnvironment::EvaluateFormulaAsBool - Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+	* @param[in] sFormula - Formula text.
+	* @return Result of the formula.
+	*/
+	virtual bool EvaluateFormulaAsBool(const std::string & sFormula) = 0;
 
 };
 

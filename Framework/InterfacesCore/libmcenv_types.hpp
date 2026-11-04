@@ -360,6 +360,10 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_NONONEMPTYLAYERFOUND 10263 /** No non-empty layer found in the given layer range. */
 #define LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND 10264 /** Toolpath part not found. */
 #define LIBMCENV_ERROR_INVALIDCONFIGURATIONVERSIONNAME 10265 /** Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters. */
+#define LIBMCENV_ERROR_INVALIDFORMULA 10266 /** Invalid formula. */
+#define LIBMCENV_ERROR_FORMULAEVALUATIONFAILED 10267 /** Formula evaluation failed. */
+#define LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE 10268 /** Session and user references are only available in formulas of the UI environment. */
+#define LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX 10269 /** Invalid formula reference index. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -632,6 +636,10 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_NONONEMPTYLAYERFOUND: return "No non-empty layer found in the given layer range.";
     case LIBMCENV_ERROR_TOOLPATHPARTNOTFOUND: return "Toolpath part not found.";
     case LIBMCENV_ERROR_INVALIDCONFIGURATIONVERSIONNAME: return "Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters.";
+    case LIBMCENV_ERROR_INVALIDFORMULA: return "Invalid formula.";
+    case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
+    case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
+    case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
     default: return "unknown error";
   }
 }
@@ -726,6 +734,7 @@ typedef LibMCEnvHandle LibMCEnv_MachineConfigurationTypeIterator;
 typedef LibMCEnvHandle LibMCEnv_MachineConfigurationHandler;
 typedef LibMCEnvHandle LibMCEnv_TelemetryMarkerScope;
 typedef LibMCEnvHandle LibMCEnv_TelemetryChannel;
+typedef LibMCEnvHandle LibMCEnv_Formula;
 typedef LibMCEnvHandle LibMCEnv_StateEnvironment;
 typedef LibMCEnvHandle LibMCEnv_UIItem;
 typedef LibMCEnvHandle LibMCEnv_UIEnvironment;

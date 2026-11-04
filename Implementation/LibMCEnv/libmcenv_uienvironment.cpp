@@ -51,6 +51,7 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_imageloader.hpp"
 #include "libmcenv_videostream.hpp"
 #include "libmcenv_machineconfigurationhandler.hpp"
+#include "libmcenv_formula.hpp"
 
 #include "amc_systemstate.hpp"
 #include "amc_streamregistry.hpp"
@@ -1492,4 +1493,40 @@ IJSONObject* CUIEnvironment::ParseJSONData(const LibMCEnv_uint64 nJSONDataBuffer
 IMachineConfigurationHandler* CUIEnvironment::CreateMachineConfigurationHandler()
 {
     return new CMachineConfigurationHandler(m_pUISystemState->getDataModel(), m_pUISystemState->getStateMachineData());
+}
+
+AMC::PUIFrontendState CUIEnvironment::getFormulaFrontendState()
+{
+    if (m_pAPIAuth.get() == nullptr)
+        return nullptr;
+    return m_pAPIAuth->getFrontendState();
+}
+
+IFormula* CUIEnvironment::CreateFormula(const std::string& sFormula)
+{
+    return new CFormula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
+}
+
+std::string CUIEnvironment::EvaluateFormula(const std::string& sFormula)
+{
+    CFormula formula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
+    return formula.Evaluate();
+}
+
+LibMCEnv_double CUIEnvironment::EvaluateFormulaAsDouble(const std::string& sFormula)
+{
+    CFormula formula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
+    return formula.EvaluateAsDouble();
+}
+
+LibMCEnv_int64 CUIEnvironment::EvaluateFormulaAsInteger(const std::string& sFormula)
+{
+    CFormula formula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
+    return formula.EvaluateAsInteger();
+}
+
+bool CUIEnvironment::EvaluateFormulaAsBool(const std::string& sFormula)
+{
+    CFormula formula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
+    return formula.EvaluateAsBool();
 }

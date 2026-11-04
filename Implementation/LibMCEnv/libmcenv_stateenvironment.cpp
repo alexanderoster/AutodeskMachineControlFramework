@@ -61,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcenv_imageloader.hpp"
 #include "libmcenv_jsonobject.hpp"
 #include "libmcenv_videostream.hpp"
+#include "libmcenv_formula.hpp"
 
 #include "amc_telemetry.hpp"
 #include "amc_logger.hpp"
@@ -623,6 +624,35 @@ void CStateEnvironment::SetSessionVariableForAllSessionsAsInteger(const std::str
 void CStateEnvironment::SetSessionVariableForAllSessionsAsBool(const std::string& sVariableName, const bool bValue)
 {
 	getFrontendDefinitionOfSystemState(m_pSystemState.get())->broadcastSessionVariableAsBool(sVariableName, bValue);
+}
+
+IFormula* CStateEnvironment::CreateFormula(const std::string& sFormula)
+{
+	return new CFormula(sFormula, m_pSystemState->getStateMachineData(), nullptr);
+}
+
+std::string CStateEnvironment::EvaluateFormula(const std::string& sFormula)
+{
+	CFormula formula(sFormula, m_pSystemState->getStateMachineData(), nullptr);
+	return formula.Evaluate();
+}
+
+LibMCEnv_double CStateEnvironment::EvaluateFormulaAsDouble(const std::string& sFormula)
+{
+	CFormula formula(sFormula, m_pSystemState->getStateMachineData(), nullptr);
+	return formula.EvaluateAsDouble();
+}
+
+LibMCEnv_int64 CStateEnvironment::EvaluateFormulaAsInteger(const std::string& sFormula)
+{
+	CFormula formula(sFormula, m_pSystemState->getStateMachineData(), nullptr);
+	return formula.EvaluateAsInteger();
+}
+
+bool CStateEnvironment::EvaluateFormulaAsBool(const std::string& sFormula)
+{
+	CFormula formula(sFormula, m_pSystemState->getStateMachineData(), nullptr);
+	return formula.EvaluateAsBool();
 }
 
 bool CStateEnvironment::HasResourceData(const std::string& sIdentifier)

@@ -179,6 +179,16 @@ public:
 
 	void SetSessionVariableForAllSessionsAsBool(const std::string& sVariableName, const bool bValue) override;
 
+	IFormula* CreateFormula(const std::string& sFormula) override;
+
+	std::string EvaluateFormula(const std::string& sFormula) override;
+
+	LibMCEnv_double EvaluateFormulaAsDouble(const std::string& sFormula) override;
+
+	LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string& sFormula) override;
+
+	bool EvaluateFormulaAsBool(const std::string& sFormula) override;
+
 	bool HasResourceData(const std::string& sIdentifier) override;
 
 	void LoadResourceData(const std::string& sResourceName, LibMCEnv_uint64 nResourceDataBufferSize, LibMCEnv_uint64* pResourceDataNeededCount, LibMCEnv_uint8* pResourceDataBuffer) override;

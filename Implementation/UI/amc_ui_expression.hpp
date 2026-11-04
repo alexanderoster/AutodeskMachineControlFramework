@@ -75,6 +75,20 @@ namespace AMC {
 		}
 	};
 
+	// Resolves formula references against the state machines and, if given, a client session.
+	// Without a session context, session references evaluate to an empty string.
+	class CUIExpressionFormulaResolver : public CUIFormulaResolver {
+	private:
+		CStateMachineData* m_pStateMachineData;
+		CUIExpressionSessionContext* m_pSessionContext;
+
+	public:
+
+		CUIExpressionFormulaResolver(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext);
+
+		CUIFormulaValue resolveReference(const sUIFormulaReference& reference) override;
+	};
+
 	// Sync values are formulas. A formula that is a single (optionally negated) reference is evaluated
 	// directly; any other formula is compiled once and evaluated with fail-soft semantics.
 	class CUIExpression {

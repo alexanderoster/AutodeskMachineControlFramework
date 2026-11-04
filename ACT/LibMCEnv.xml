@@ -302,7 +302,11 @@
 		<error name="VIDEOSTREAMFRAMEENCODINGERROR" code="10262" description="Video stream frame encoding error." />	
 		<error name="NONONEMPTYLAYERFOUND" code="10263" description="No non-empty layer found in the given layer range." />
 		<error name="TOOLPATHPARTNOTFOUND" code="10264" description="Toolpath part not found." />	
-		<error name="INVALIDCONFIGURATIONVERSIONNAME" code="10265" description="Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters." />			
+		<error name="INVALIDCONFIGURATIONVERSIONNAME" code="10265" description="Invalid configuration version name. Names MUST NOT be empty and MUST NOT be longer than 256 characters." />
+		<error name="INVALIDFORMULA" code="10266" description="Invalid formula." />
+		<error name="FORMULAEVALUATIONFAILED" code="10267" description="Formula evaluation failed." />
+		<error name="FORMULASESSIONREFERENCESNOTAVAILABLE" code="10268" description="Session and user references are only available in formulas of the UI environment." />
+		<error name="INVALIDFORMULAREFERENCEINDEX" code="10269" description="Invalid formula reference index." />			
 		
 	</errors>
 
@@ -5564,6 +5568,43 @@
 
 	</class>
 
+	<class name="Formula" parent="Base" description="A compiled formula in the syntax of the sync attributes of the user interface. Parameter and state name references of the state machines are read live on every evaluation. Session and user references are only allowed in formulas of the UI environment and resolve to the client session that triggered the event. A formula may be evaluated many times and outlive the environment that created it.">
+
+		<method name="GetFormula" description="Returns the formula text.">
+			<param name="Formula" type="string" pass="return" description="Formula text." />
+		</method>
+
+		<method name="GetReferenceCount" description="Returns the number of distinct references of the formula.">
+			<param name="Count" type="uint32" pass="return" description="Number of distinct references." />
+		</method>
+
+		<method name="GetReference" description="Returns a reference of the formula, in order of first appearance.">
+			<param name="Index" type="uint32" pass="in" description="Index of the reference, 0-based. Fails if larger or equal to the reference count." />
+			<param name="Path" type="string" pass="return" description="Reference as written in the formula, for example main.jobinfo.currentlayer or session.name." />
+		</method>
+
+		<method name="HasSessionReferences" description="Returns if the formula references session or user values.">
+			<param name="HasSessionReferences" type="bool" pass="return" description="True, if the formula contains a session or user reference." />
+		</method>
+
+		<method name="Evaluate" description="Evaluates the formula and returns the result as string. Booleans are returned as 1 and 0. Fails with FORMULAEVALUATIONFAILED on runtime errors like a division by zero or an unknown parameter.">
+			<param name="Value" type="string" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateAsDouble" description="Evaluates the formula and returns the result as double. An empty result is 0. Fails if the result is a text that is not a number.">
+			<param name="Value" type="double" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateAsInteger" description="Evaluates the formula and returns the result as integer. Doubles are rounded to the nearest integer. An empty result is 0. Fails if the result is a text that is not a number.">
+			<param name="Value" type="int64" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateAsBool" description="Evaluates the formula and returns the result as bool. Numbers are true unless zero; strings are true unless empty, 0 or false.">
+			<param name="Value" type="bool" pass="return" description="Result of the formula." />
+		</method>
+
+	</class>
+
 	<class name="StateEnvironment" parent="Base" description="Environment of the state">
 
 		<method name="GetMachineState" description="Retrieves the machine state">
@@ -6084,6 +6125,31 @@
 			<param name="UUID" type="string" pass="in" description="UUID of the storage stream." />
 			<param name="MustExist" type="bool" pass="in" description="If true, the call fails if the stream does not exist." />
 			<param name="StreamInstance" type="optionalclass" class="StreamReader" pass="return" description="Stream Instance. Will return null if not found and MustExists is false." />
+		</method>
+
+		<method name="CreateFormula" description="Compiles a formula over the parameters and states of all state machines. Fails with INVALIDFORMULA on syntax errors and with FORMULASESSIONREFERENCESNOTAVAILABLE if the formula references session or user values.">
+			<param name="Formula" type="string" pass="in" description="Formula text, for example main.jobinfo.currentlayer + 1." />
+			<param name="FormulaInstance" type="class" class="Formula" pass="return" description="Compiled formula." />
+		</method>
+
+		<method name="EvaluateFormula" description="Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="string" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsDouble" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="double" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsInteger" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="int64" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsBool" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="bool" pass="return" description="Result of the formula." />
 		</method>
 
 	</class>
@@ -6697,6 +6763,31 @@
 		<method name="CreateMachineConfigurationHandler" description="creates a machine configuration handler, dealing with all persistent machine settings that the user will store in the local database.">			
 			<param name="MachineConfigurationHandlerInstance" type="class" class="MachineConfigurationHandler" pass="return" description="MachineConfigurationHandler instance." />
 		</method>		
+
+		<method name="CreateFormula" description="Compiles a formula over the parameters and states of all state machines and the session and user values of the client session that triggered the event. Fails with INVALIDFORMULA on syntax errors.">
+			<param name="Formula" type="string" pass="in" description="Formula text, for example session.formula_a + main.jobinfo.currentlayer." />
+			<param name="FormulaInstance" type="class" class="Formula" pass="return" description="Compiled formula. Session and user references keep resolving to the session of this event." />
+		</method>
+
+		<method name="EvaluateFormula" description="Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="string" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsDouble" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="double" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsInteger" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="int64" pass="return" description="Result of the formula." />
+		</method>
+
+		<method name="EvaluateFormulaAsBool" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.">
+			<param name="Formula" type="string" pass="in" description="Formula text." />
+			<param name="Value" type="bool" pass="return" description="Result of the formula." />
+		</method>
 	</class>
 
 

@@ -39,62 +39,54 @@ using namespace AMC;
 
 namespace AMC {
 
-	class CUIExpressionFormulaResolver : public CUIFormulaResolver {
-	private:
-		CStateMachineData* m_pStateMachineData;
-		CUIExpressionSessionContext* m_pSessionContext;
+	CUIExpressionFormulaResolver::CUIExpressionFormulaResolver(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
+		: m_pStateMachineData(pStateMachineData), m_pSessionContext(pSessionContext)
+	{
+	}
 
-	public:
+	CUIFormulaValue CUIExpressionFormulaResolver::resolveReference(const sUIFormulaReference& reference)
+	{
+		switch (reference.m_Type) {
+		case eUIFormulaReferenceType::Session: {
+			if (m_pSessionContext == nullptr)
+				return CUIFormulaValue::fromString("");
 
-		CUIExpressionFormulaResolver(CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
-			: m_pStateMachineData(pStateMachineData), m_pSessionContext(pSessionContext)
-		{
-		}
-
-		CUIFormulaValue resolveReference(const sUIFormulaReference& reference) override
-		{
-			switch (reference.m_Type) {
-			case eUIFormulaReferenceType::Session: {
-				if (m_pSessionContext == nullptr)
-					return CUIFormulaValue::fromString("");
-
-				switch (m_pSessionContext->getSessionReferenceDataType(reference.m_sPath)) {
-				case eParameterDataType::Bool:
-					return CUIFormulaValue::fromBool(m_pSessionContext->evaluateSessionReferenceAsBool(reference.m_sPath));
-				case eParameterDataType::Integer:
-					return CUIFormulaValue::fromInteger(m_pSessionContext->evaluateSessionReferenceAsInteger(reference.m_sPath));
-				case eParameterDataType::Double:
-					return CUIFormulaValue::fromDouble(m_pSessionContext->evaluateSessionReferenceAsNumber(reference.m_sPath));
-				default:
-					return CUIFormulaValue::fromString(m_pSessionContext->evaluateSessionReference(reference.m_sPath));
-				}
-			}
-
-			case eUIFormulaReferenceType::StateName:
-				LibMCAssertNotNull(m_pStateMachineData);
-				return CUIFormulaValue::fromString(m_pStateMachineData->getInstanceStateName(reference.m_sInstanceName));
-
-			case eUIFormulaReferenceType::Parameter: {
-				LibMCAssertNotNull(m_pStateMachineData);
-				auto pParameterGroup = m_pStateMachineData->getParameterHandler(reference.m_sInstanceName)->findGroup(reference.m_sGroupName, true);
-
-				switch (pParameterGroup->getParameterDataTypeByName(reference.m_sParameterName)) {
-				case eParameterDataType::Bool:
-					return CUIFormulaValue::fromBool(pParameterGroup->getBoolParameterValueByName(reference.m_sParameterName));
-				case eParameterDataType::Integer:
-					return CUIFormulaValue::fromInteger(pParameterGroup->getIntParameterValueByName(reference.m_sParameterName));
-				case eParameterDataType::Double:
-					return CUIFormulaValue::fromDouble(pParameterGroup->getDoubleParameterValueByName(reference.m_sParameterName));
-				default:
-					return CUIFormulaValue::fromString(pParameterGroup->getParameterValueByName(reference.m_sParameterName));
-				}
-			}
-
+			switch (m_pSessionContext->getSessionReferenceDataType(reference.m_sPath)) {
+			case eParameterDataType::Bool:
+				return CUIFormulaValue::fromBool(m_pSessionContext->evaluateSessionReferenceAsBool(reference.m_sPath));
+			case eParameterDataType::Integer:
+				return CUIFormulaValue::fromInteger(m_pSessionContext->evaluateSessionReferenceAsInteger(reference.m_sPath));
+			case eParameterDataType::Double:
+				return CUIFormulaValue::fromDouble(m_pSessionContext->evaluateSessionReferenceAsNumber(reference.m_sPath));
 			default:
-				throw ELibMCCustomException(LIBMC_ERROR_INVALIDEXPRESSIONVALUE, reference.m_sPath);
+				return CUIFormulaValue::fromString(m_pSessionContext->evaluateSessionReference(reference.m_sPath));
 			}
 		}
-	};
+
+		case eUIFormulaReferenceType::StateName:
+			LibMCAssertNotNull(m_pStateMachineData);
+			return CUIFormulaValue::fromString(m_pStateMachineData->getInstanceStateName(reference.m_sInstanceName));
+
+		case eUIFormulaReferenceType::Parameter: {
+			LibMCAssertNotNull(m_pStateMachineData);
+			auto pParameterGroup = m_pStateMachineData->getParameterHandler(reference.m_sInstanceName)->findGroup(reference.m_sGroupName, true);
+
+			switch (pParameterGroup->getParameterDataTypeByName(reference.m_sParameterName)) {
+			case eParameterDataType::Bool:
+				return CUIFormulaValue::fromBool(pParameterGroup->getBoolParameterValueByName(reference.m_sParameterName));
+			case eParameterDataType::Integer:
+				return CUIFormulaValue::fromInteger(pParameterGroup->getIntParameterValueByName(reference.m_sParameterName));
+			case eParameterDataType::Double:
+				return CUIFormulaValue::fromDouble(pParameterGroup->getDoubleParameterValueByName(reference.m_sParameterName));
+			default:
+				return CUIFormulaValue::fromString(pParameterGroup->getParameterValueByName(reference.m_sParameterName));
+			}
+		}
+
+		default:
+			throw ELibMCCustomException(LIBMC_ERROR_INVALIDEXPRESSIONVALUE, reference.m_sPath);
+		}
+	}
 
 }
 

@@ -10175,6 +10175,89 @@ typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_StartMarkerScopePtr) (LibMCEn
 typedef LibMCEnvResult (*PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr) (LibMCEnv_TelemetryChannel pTelemetryChannel, LibMCEnv_uint64 nUserContextData, LibMCEnv_uint64 * pMarkerID);
 
 /*************************************************************************************************************************
+ Class definition for Formula
+**************************************************************************************************************************/
+
+/**
+* Returns the formula text.
+*
+* @param[in] pFormula - Formula instance.
+* @param[in] nFormulaBufferSize - size of the buffer (including trailing 0)
+* @param[out] pFormulaNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pFormulaBuffer -  buffer of Formula text., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_GetFormulaPtr) (LibMCEnv_Formula pFormula, const LibMCEnv_uint32 nFormulaBufferSize, LibMCEnv_uint32* pFormulaNeededChars, char * pFormulaBuffer);
+
+/**
+* Returns the number of distinct references of the formula.
+*
+* @param[in] pFormula - Formula instance.
+* @param[out] pCount - Number of distinct references.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_GetReferenceCountPtr) (LibMCEnv_Formula pFormula, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns a reference of the formula, in order of first appearance.
+*
+* @param[in] pFormula - Formula instance.
+* @param[in] nIndex - Index of the reference, 0-based. Fails if larger or equal to the reference count.
+* @param[in] nPathBufferSize - size of the buffer (including trailing 0)
+* @param[out] pPathNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pPathBuffer -  buffer of Reference as written in the formula, for example main.jobinfo.currentlayer or session.name., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_GetReferencePtr) (LibMCEnv_Formula pFormula, LibMCEnv_uint32 nIndex, const LibMCEnv_uint32 nPathBufferSize, LibMCEnv_uint32* pPathNeededChars, char * pPathBuffer);
+
+/**
+* Returns if the formula references session or user values.
+*
+* @param[in] pFormula - Formula instance.
+* @param[out] pHasSessionReferences - True, if the formula contains a session or user reference.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_HasSessionReferencesPtr) (LibMCEnv_Formula pFormula, bool * pHasSessionReferences);
+
+/**
+* Evaluates the formula and returns the result as string. Booleans are returned as 1 and 0. Fails with FORMULAEVALUATIONFAILED on runtime errors like a division by zero or an unknown parameter.
+*
+* @param[in] pFormula - Formula instance.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Result of the formula., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_EvaluatePtr) (LibMCEnv_Formula pFormula, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Evaluates the formula and returns the result as double. An empty result is 0. Fails if the result is a text that is not a number.
+*
+* @param[in] pFormula - Formula instance.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_EvaluateAsDoublePtr) (LibMCEnv_Formula pFormula, LibMCEnv_double * pValue);
+
+/**
+* Evaluates the formula and returns the result as integer. Doubles are rounded to the nearest integer. An empty result is 0. Fails if the result is a text that is not a number.
+*
+* @param[in] pFormula - Formula instance.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_EvaluateAsIntegerPtr) (LibMCEnv_Formula pFormula, LibMCEnv_int64 * pValue);
+
+/**
+* Evaluates the formula and returns the result as bool. Numbers are true unless zero; strings are true unless empty, 0 or false.
+*
+* @param[in] pFormula - Formula instance.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvFormula_EvaluateAsBoolPtr) (LibMCEnv_Formula pFormula, bool * pValue);
+
+/*************************************************************************************************************************
  Class definition for StateEnvironment
 **************************************************************************************************************************/
 
@@ -11198,6 +11281,58 @@ typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_CreateZIPStreamPtr) (LibMCEnv
 * @return error code or 0 (success)
 */
 typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_LoadStreamPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pUUID, bool bMustExist, LibMCEnv_StreamReader * pStreamInstance);
+
+/**
+* Compiles a formula over the parameters and states of all state machines. Fails with INVALIDFORMULA on syntax errors and with FORMULASESSIONREFERENCESNOTAVAILABLE if the formula references session or user values.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pFormula - Formula text, for example main.jobinfo.currentlayer + 1.
+* @param[out] pFormulaInstance - Compiled formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_CreateFormulaPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, LibMCEnv_Formula * pFormulaInstance);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Result of the formula., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaAsDoublePtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, LibMCEnv_double * pValue);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, LibMCEnv_int64 * pValue);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr) (LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, bool * pValue);
 
 /*************************************************************************************************************************
  Class definition for UIItem
@@ -12429,6 +12564,58 @@ typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_GetExternalEventResultsPtr) (Lib
 */
 typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_CreateMachineConfigurationHandlerPtr) (LibMCEnv_UIEnvironment pUIEnvironment, LibMCEnv_MachineConfigurationHandler * pMachineConfigurationHandlerInstance);
 
+/**
+* Compiles a formula over the parameters and states of all state machines and the session and user values of the client session that triggered the event. Fails with INVALIDFORMULA on syntax errors.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pFormula - Formula text, for example session.formula_a + main.jobinfo.currentlayer.
+* @param[out] pFormulaInstance - Compiled formula. Session and user references keep resolving to the session of this event.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_CreateFormulaPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, LibMCEnv_Formula * pFormulaInstance);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.Evaluate.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Result of the formula., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_EvaluateFormulaPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsDouble.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_EvaluateFormulaAsDoublePtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, LibMCEnv_double * pValue);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsInteger.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_EvaluateFormulaAsIntegerPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, LibMCEnv_int64 * pValue);
+
+/**
+* Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pFormula - Formula text.
+* @param[out] pValue - Result of the formula.
+* @return error code or 0 (success)
+*/
+typedef LibMCEnvResult (*PLibMCEnvUIEnvironment_EvaluateFormulaAsBoolPtr) (LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, bool * pValue);
+
 /*************************************************************************************************************************
  Global functions
 **************************************************************************************************************************/
@@ -13427,6 +13614,14 @@ typedef struct {
 	PLibMCEnvTelemetryChannel_GetGlobalIdentifierPtr m_TelemetryChannel_GetGlobalIdentifier;
 	PLibMCEnvTelemetryChannel_StartMarkerScopePtr m_TelemetryChannel_StartMarkerScope;
 	PLibMCEnvTelemetryChannel_CreateInstantMarkerPtr m_TelemetryChannel_CreateInstantMarker;
+	PLibMCEnvFormula_GetFormulaPtr m_Formula_GetFormula;
+	PLibMCEnvFormula_GetReferenceCountPtr m_Formula_GetReferenceCount;
+	PLibMCEnvFormula_GetReferencePtr m_Formula_GetReference;
+	PLibMCEnvFormula_HasSessionReferencesPtr m_Formula_HasSessionReferences;
+	PLibMCEnvFormula_EvaluatePtr m_Formula_Evaluate;
+	PLibMCEnvFormula_EvaluateAsDoublePtr m_Formula_EvaluateAsDouble;
+	PLibMCEnvFormula_EvaluateAsIntegerPtr m_Formula_EvaluateAsInteger;
+	PLibMCEnvFormula_EvaluateAsBoolPtr m_Formula_EvaluateAsBool;
 	PLibMCEnvStateEnvironment_GetMachineStatePtr m_StateEnvironment_GetMachineState;
 	PLibMCEnvStateEnvironment_GetPreviousStatePtr m_StateEnvironment_GetPreviousState;
 	PLibMCEnvStateEnvironment_PrepareSignalPtr m_StateEnvironment_PrepareSignal;
@@ -13525,6 +13720,11 @@ typedef struct {
 	PLibMCEnvStateEnvironment_CreateTemporaryStreamPtr m_StateEnvironment_CreateTemporaryStream;
 	PLibMCEnvStateEnvironment_CreateZIPStreamPtr m_StateEnvironment_CreateZIPStream;
 	PLibMCEnvStateEnvironment_LoadStreamPtr m_StateEnvironment_LoadStream;
+	PLibMCEnvStateEnvironment_CreateFormulaPtr m_StateEnvironment_CreateFormula;
+	PLibMCEnvStateEnvironment_EvaluateFormulaPtr m_StateEnvironment_EvaluateFormula;
+	PLibMCEnvStateEnvironment_EvaluateFormulaAsDoublePtr m_StateEnvironment_EvaluateFormulaAsDouble;
+	PLibMCEnvStateEnvironment_EvaluateFormulaAsIntegerPtr m_StateEnvironment_EvaluateFormulaAsInteger;
+	PLibMCEnvStateEnvironment_EvaluateFormulaAsBoolPtr m_StateEnvironment_EvaluateFormulaAsBool;
 	PLibMCEnvUIItem_GetNamePtr m_UIItem_GetName;
 	PLibMCEnvUIItem_GetPathPtr m_UIItem_GetPath;
 	PLibMCEnvUIItem_GetUUIDPtr m_UIItem_GetUUID;
@@ -13639,6 +13839,11 @@ typedef struct {
 	PLibMCEnvUIEnvironment_GetExternalEventParametersPtr m_UIEnvironment_GetExternalEventParameters;
 	PLibMCEnvUIEnvironment_GetExternalEventResultsPtr m_UIEnvironment_GetExternalEventResults;
 	PLibMCEnvUIEnvironment_CreateMachineConfigurationHandlerPtr m_UIEnvironment_CreateMachineConfigurationHandler;
+	PLibMCEnvUIEnvironment_CreateFormulaPtr m_UIEnvironment_CreateFormula;
+	PLibMCEnvUIEnvironment_EvaluateFormulaPtr m_UIEnvironment_EvaluateFormula;
+	PLibMCEnvUIEnvironment_EvaluateFormulaAsDoublePtr m_UIEnvironment_EvaluateFormulaAsDouble;
+	PLibMCEnvUIEnvironment_EvaluateFormulaAsIntegerPtr m_UIEnvironment_EvaluateFormulaAsInteger;
+	PLibMCEnvUIEnvironment_EvaluateFormulaAsBoolPtr m_UIEnvironment_EvaluateFormulaAsBool;
 	PLibMCEnvGetVersionPtr m_GetVersion;
 	PLibMCEnvGetLastErrorPtr m_GetLastError;
 	PLibMCEnvReleaseInstancePtr m_ReleaseInstance;
