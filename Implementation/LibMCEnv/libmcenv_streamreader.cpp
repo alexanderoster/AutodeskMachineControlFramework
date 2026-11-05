@@ -139,7 +139,7 @@ void CStreamReader::ReadData(const LibMCEnv_uint64 nSizeToRead, LibMCEnv_uint64 
 		uint32_t nReadErrorCode = 0;
 		readCallback((void*) pDataBuffer, nSizeToRead, pUserData, &nReadErrorCode);
 		if (nReadErrorCode)
-			throw ELibMCEnvInterfaceException(nSeekErrorCode);
+			throw ELibMCEnvInterfaceException(nReadErrorCode);
 
 		m_nReadPosition += nSizeToRead;
 

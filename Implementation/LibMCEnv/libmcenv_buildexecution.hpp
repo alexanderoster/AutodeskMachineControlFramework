@@ -160,6 +160,20 @@ public:
 
 	IJournalHandler* LoadAttachedJournal(const LibMCEnv_uint32 nCacheMemoryQuotaInMegabytes) override;
 
+	IDataCaptureOptions* CreateDataCaptureOptions() override;
+
+	IDataCapture* CreateDataCapture(const std::string& sIdentifier, const std::string& sName, IDataCaptureOptions* pOptions, const std::string& sUserUUID) override;
+
+	bool HasDataCapture(const std::string& sIdentifier) override;
+
+	LibMCEnv_uint64 GetDataCaptureRowCount(const std::string& sIdentifier) override;
+
+	LibMCEnv_uint32 GetDataCaptureSegmentCount(const std::string& sIdentifier) override;
+
+	IDataTable* LoadDataCaptureSegment(const std::string& sIdentifier, const LibMCEnv_uint32 nSegmentIndex) override;
+
+	IDataTableReader* OpenDataCaptureReader(const std::string& sIdentifier) override;
+
 };
 
 } // namespace Impl

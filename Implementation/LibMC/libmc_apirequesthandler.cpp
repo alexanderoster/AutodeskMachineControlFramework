@@ -38,6 +38,7 @@ Abstract: This is a stub class definition of CAPIRequestHandler
 #include "amc_api_constants.hpp"
 #include "amc_api_response.hpp"
 // Include custom headers here.
+#include <cstring>
 
 
 using namespace LibMC::Impl;
@@ -47,7 +48,7 @@ using namespace LibMC::Impl;
 **************************************************************************************************************************/
 
 CAPIRequestHandler::CAPIRequestHandler(AMC::PAPI pAPI, const std::string& sURI, const AMC::eAPIRequestType eRequestType, AMC::PAPIAuth pAuth, AMC::PLogger pLogger)
-    : m_RequestType(eRequestType), m_pAPI (pAPI), m_pAuth (pAuth), m_pLogger (pLogger)
+    : m_RequestType(eRequestType), m_pAPI (pAPI), m_pAuth (pAuth), m_pLogger (pLogger), m_nChunkOffset (0)
 {
     if (pAPI.get() == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -158,14 +159,8 @@ void CAPIRequestHandler::GetResultData(LibMC_uint64 nDataBufferSize, LibMC_uint6
 		if (nDataBufferSize < nStreamSize)
 			throw ELibMCInterfaceException(LIBMC_ERROR_BUFFERTOOSMALL);
 
-		if (m_pResponse.get() != nullptr) {
-			const uint8_t* pSrc = m_pResponse->getStreamData();
-			uint8_t* pDst = pDataBuffer;
-
-			for (uint64_t nIndex = 0; nIndex < nStreamSize; nIndex++) {
-				*pDst = *pSrc; pDst++; pSrc++;
-			}
-		}
+		if ((m_pResponse.get() != nullptr) && (nStreamSize > 0))
+			memcpy(pDataBuffer, m_pResponse->getStreamData(), (size_t)nStreamSize);
 	}
 
 }
@@ -178,5 +173,68 @@ std::string CAPIRequestHandler::GetContentDispositionName()
 
     return m_pResponse->getContentDispositionName();
 
+}
+
+void CAPIRequestHandler::SetClientAddress(const std::string& sAddress)
+{
+    m_FormFields.setClientAddress(sAddress);
+}
+
+AMC::CAPIStorageStreamResponse* CAPIRequestHandler::getStreamResponse()
+{
+    if (m_pResponse.get() == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_APIREQUESTNOTHANDLED);
+
+    auto pStreamResponse = dynamic_cast<AMC::CAPIStorageStreamResponse*> (m_pResponse.get());
+    if (pStreamResponse == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_NOSTREAMRESULT);
+
+    return pStreamResponse;
+}
+
+bool CAPIRequestHandler::HasStreamResult()
+{
+    if (m_pResponse.get() == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_APIREQUESTNOTHANDLED);
+
+    return (dynamic_cast<AMC::CAPIStorageStreamResponse*> (m_pResponse.get()) != nullptr);
+}
+
+void CAPIRequestHandler::GetResultStreamInfo(LibMC_uint64& nSize, std::string& sETag, std::string& sLastModified)
+{
+    auto pStreamResponse = getStreamResponse();
+    nSize = pStreamResponse->getSize();
+    sETag = pStreamResponse->getETag();
+    sLastModified = pStreamResponse->getLastModified();
+}
+
+void CAPIRequestHandler::ReadResultStreamChunk(const LibMC_uint64 nOffset, const LibMC_uint64 nLength, LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8* pDataBuffer)
+{
+    auto pStreamResponse = getStreamResponse();
+
+    // The binding calls twice: first for the size, then with a buffer. The chunk is read once and cached.
+    if ((m_ChunkBuffer.empty()) || (m_nChunkOffset != nOffset) || (m_ChunkBuffer.size() != nLength)) {
+        m_ChunkBuffer.clear();
+        pStreamResponse->readChunk(nOffset, nLength, m_ChunkBuffer);
+        m_nChunkOffset = nOffset;
+    }
+
+    if (pDataNeededCount != nullptr)
+        *pDataNeededCount = m_ChunkBuffer.size();
+
+    if (pDataBuffer != nullptr) {
+        if (nDataBufferSize < m_ChunkBuffer.size())
+            throw ELibMCInterfaceException(LIBMC_ERROR_BUFFERTOOSMALL);
+
+        if (!m_ChunkBuffer.empty())
+            memcpy(pDataBuffer, m_ChunkBuffer.data(), m_ChunkBuffer.size());
+
+        m_ChunkBuffer.clear();
+    }
+}
+
+void CAPIRequestHandler::FinishStreamResult(const bool bSuccess)
+{
+    getStreamResponse()->finish(bSuccess);
 }
 

@@ -73,6 +73,8 @@ namespace AMC {
 	class CAlertHandler;
 	class CTelemetryHandler;
 	class CStreamRegistry;
+	class CStreamDownloadRegistry;
+	class CAPISessionHandler;
 
 	typedef std::shared_ptr<CLogger> PLogger;
 	typedef std::shared_ptr<CStateSignalHandler> PStateSignalHandler;
@@ -115,6 +117,10 @@ namespace AMC {
 		AMC::PParameterGroup m_pSystemMemoryGroup;
 		AMC::PTelemetryHandler m_pTelemetryHandler;
 		AMC::PStreamRegistry m_pStreamRegistry;
+		std::shared_ptr<CStreamDownloadRegistry> m_pStreamDownloadRegistry;
+
+		// Owned by the API; set once the API exists. State machines use it to address client sessions.
+		std::weak_ptr<CAPISessionHandler> m_pSessionHandler;
 
 		AMCCommon::PChrono m_pGlobalChrono;
 
@@ -159,6 +165,11 @@ namespace AMC {
 		PAlertHandler getAlertHandlerInstance();
 		PTelemetryHandler getTelemetryHandlerInstance();
 		PStreamRegistry getStreamRegistryInstance();
+		std::shared_ptr<CStreamDownloadRegistry> getStreamDownloadRegistryInstance();
+
+		void setSessionHandler(std::shared_ptr<CAPISessionHandler> pSessionHandler);
+		// Returns null before the API has been created.
+		std::shared_ptr<CAPISessionHandler> getSessionHandler();
 
 		LibMCData::PDataModel getDataModelInstance ();
 

@@ -110,6 +110,7 @@
 		<error name="INVALIDMAXPOWERVALUE" code="1056" description="Invalid max power value." />
 		<error name="SIMULATIONWORKINGFILEISNOTINITIALIZED" code="1057" description="Simulation working file is not initialized." />
 		<error name="SIMULATIONWORKINGFILESIZEMISMATCH" code="1058" description="Simulation working file size mismatch." />
+		<error name="SIMULATIONFILEOUTPUTDISABLED" code="1059" description="Simulation file output has been disabled in the SMC configuration, LoadSimulationData is not available." />
 		
 	</errors>
 
@@ -331,13 +332,13 @@ Custom implementation
 		<method name="StopExecution" description="Stops the execution of the current list immediately.">
 		</method>	
 
-		<method name="LoadSimulationData" description="Reads the SMC Simulation data into a data table.">
+		<method name="LoadSimulationData" description="Reads the SMC Simulation data into a data table. Can be called once per job: after a successful read the simulation output files (or the RTC log record file in hardware mode) are deleted. Fails with SIMULATIONFILEOUTPUTDISABLED if the configuration disabled the simulation file output.">
 			<param name="SimulationDataTable" type="class" class="LibMCEnv:DataTable" pass="in" description="Data table object to read the simulation into." />
-		</method>	
+		</method>
 
-		<method name="LoadRawSimulationData" description="Returns raw simulation data.">
+		<method name="LoadRawSimulationData" description="Returns raw simulation data. Can be called once per job (one size query followed by one data read): after a successful read the temporary module file is deleted.">
 			<param name="Data" type="basicarray" class="uint8" pass="out" description="Raw binary simulation data." />
-		</method>	
+		</method>
 		
 		<method name="GetJobCharacteristic" description="Returns a characteristic value of a job.">
 			<param name="ValueType" type="enum" class="JobCharacteristic" pass="in" description="Type of job" />
@@ -389,6 +390,14 @@ Custom implementation
 
 		<method name="GetSendToHardware" description="Returns if the computation shall be sent to the hardware.">
 			<param name="SendToHardware" type="bool" pass="return" description="Flag, if the computation shall be sent to the hardware." />
+		</method>
+
+		<method name="SetSimulationFileOutputEnabled" description="Sets if SMC shall write its simulation output files (SimOutputFileDirectory) during job execution. Default is true. Set to false if LoadSimulationData is never called: this saves several GB of disk space and minutes of planning time per large layer.">
+			<param name="Enabled" type="bool" pass="in" description="Flag, if the simulation output files shall be written." />
+		</method>
+
+		<method name="GetSimulationFileOutputEnabled" description="Returns if SMC shall write its simulation output files during job execution.">
+			<param name="Enabled" type="bool" pass="return" description="Flag, if the simulation output files shall be written." />
 		</method>
 
 	

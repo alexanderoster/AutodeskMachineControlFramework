@@ -478,6 +478,21 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_JOBNAMETOOLONG 451 /** Job name exceeds maximum allowed length */
 #define LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG 452 /** String parameter exceeds maximum allowed length */
 #define LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION 453 /** Telemetry setting changed after database initialisation */
+#define LIBMCDATA_ERROR_DATACAPTURENOTFOUND 454 /** Data capture not found. */
+#define LIBMCDATA_ERROR_DUPLICATEDATACAPTUREIDENTIFIER 455 /** Duplicate data capture identifier. */
+#define LIBMCDATA_ERROR_INVALIDDATACAPTUREIDENTIFIER 456 /** Invalid data capture identifier. */
+#define LIBMCDATA_ERROR_INVALIDDATACAPTURENAME 457 /** Invalid data capture name. */
+#define LIBMCDATA_ERROR_DATACAPTURENOTRECORDING 458 /** Data capture is not recording. */
+#define LIBMCDATA_ERROR_INVALIDDATACAPTURESTATUS 459 /** Invalid data capture status. */
+#define LIBMCDATA_ERROR_INVALIDDATACAPTURECOLUMNINDEX 460 /** Invalid data capture column index. */
+#define LIBMCDATA_ERROR_INVALIDDATACAPTURESEGMENTINDEX 461 /** Invalid data capture segment index. */
+#define LIBMCDATA_ERROR_DUPLICATEDATACAPTURESEGMENT 462 /** Duplicate data capture segment. */
+#define LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN 463 /** Duplicate data capture column. */
+#define LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED 464 /** Data capture has already been aborted. */
+#define LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND 465 /** Random write stream not found. */
+#define LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND 466 /** Download access log entry not found. */
+#define LIBMCDATA_ERROR_STREAMHASACTIVEWRITER 467 /** Storage stream is still being written. */
+#define LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED 468 /** ZIP stream has already been finished and can not be discarded. */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -868,6 +883,21 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_JOBNAMETOOLONG: return "Job name exceeds maximum allowed length";
     case LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG: return "String parameter exceeds maximum allowed length";
     case LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION: return "Telemetry setting changed after database initialisation";
+    case LIBMCDATA_ERROR_DATACAPTURENOTFOUND: return "Data capture not found.";
+    case LIBMCDATA_ERROR_DUPLICATEDATACAPTUREIDENTIFIER: return "Duplicate data capture identifier.";
+    case LIBMCDATA_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "Invalid data capture identifier.";
+    case LIBMCDATA_ERROR_INVALIDDATACAPTURENAME: return "Invalid data capture name.";
+    case LIBMCDATA_ERROR_DATACAPTURENOTRECORDING: return "Data capture is not recording.";
+    case LIBMCDATA_ERROR_INVALIDDATACAPTURESTATUS: return "Invalid data capture status.";
+    case LIBMCDATA_ERROR_INVALIDDATACAPTURECOLUMNINDEX: return "Invalid data capture column index.";
+    case LIBMCDATA_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "Invalid data capture segment index.";
+    case LIBMCDATA_ERROR_DUPLICATEDATACAPTURESEGMENT: return "Duplicate data capture segment.";
+    case LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN: return "Duplicate data capture column.";
+    case LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED: return "Data capture has already been aborted.";
+    case LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND: return "Random write stream not found.";
+    case LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND: return "Download access log entry not found.";
+    case LIBMCDATA_ERROR_STREAMHASACTIVEWRITER: return "Storage stream is still being written.";
+    case LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIP stream has already been finished and can not be discarded.";
     default: return "unknown error";
   }
 }
@@ -897,6 +927,7 @@ typedef LibMCDataHandle LibMCData_BuildJobData;
 typedef LibMCDataHandle LibMCData_BuildJobDataIterator;
 typedef LibMCDataHandle LibMCData_BuildJobExecutionData;
 typedef LibMCDataHandle LibMCData_BuildJobExecutionDataIterator;
+typedef LibMCDataHandle LibMCData_DataCapture;
 typedef LibMCDataHandle LibMCData_BuildJobExecution;
 typedef LibMCDataHandle LibMCData_BuildJobExecutionIterator;
 typedef LibMCDataHandle LibMCData_BuildJob;
@@ -990,6 +1021,13 @@ namespace LibMCData {
     IntervalEndMarker = 3
   };
   
+  enum class eDataCaptureStatus : LibMCData_int32 {
+    Unknown = 0,
+    Recording = 1,
+    Finished = 2,
+    Aborted = 3
+  };
+  
   enum class eBuildJobExecutionStatus : LibMCData_int32 {
     Unknown = 0,
     InProcess = 1,
@@ -1074,6 +1112,7 @@ typedef LibMCData::eBuildJobStatus eLibMCDataBuildJobStatus;
 typedef LibMCData::eCustomDataType eLibMCDataCustomDataType;
 typedef LibMCData::eTelemetryChannelType eLibMCDataTelemetryChannelType;
 typedef LibMCData::eTelemetryChunkEntryType eLibMCDataTelemetryChunkEntryType;
+typedef LibMCData::eDataCaptureStatus eLibMCDataDataCaptureStatus;
 typedef LibMCData::eBuildJobExecutionStatus eLibMCDataBuildJobExecutionStatus;
 typedef LibMCData::sJournalChunkVariableInfo sLibMCDataJournalChunkVariableInfo;
 typedef LibMCData::sTelemetryChunkEntry sLibMCDataTelemetryChunkEntry;

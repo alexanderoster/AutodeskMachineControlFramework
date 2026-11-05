@@ -288,6 +288,11 @@ Custom implementation
 			<param name="Device" type="class" class="PylonDevice" pass="return" description="Device Instance" />
 		</method>
 
+		<method name="ConnectToUniqueEmulatedDevice" description="Enables the pylon camera emulation for the time of the connection, checks if there is exactly one emulated device and connects to it. Physical cameras are ignored.">
+			<param name="Identifier" type="string" pass="in" description="Identifier for the connection. Fails if identifier is already existing. MUST be non-empty a alpanumerical string with _, up until 64 characters." />
+			<param name="Device" type="class" class="PylonDevice" pass="return" description="Device Instance" />
+		</method>
+
 		<method name="ConnectionExists" description= "Checks if a connection exists with a certain identifier.">
 			<param name="Identifier" type="string" pass="in" description="Identifier for the connection." />
 			<param name="Exists" type="bool" pass="return" description="Returns true, if the connection exists, false otherwise." />

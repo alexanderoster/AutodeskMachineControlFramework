@@ -49,6 +49,7 @@ namespace AMC {
 	amcDeclareDependingClass(CAPISessionHandler, PAPISessionHandler);
 	amcDeclareDependingClass(CParameterHandler, PParameterHandler);
 	amcDeclareDependingClass(CUIFrontendDefinition, PUIFrontendDefinition);
+	amcDeclareDependingClass(CUIClientAction, PUIClientAction);
 	
 
 	class CAPISessionHandler {
@@ -96,6 +97,18 @@ namespace AMC {
 		// Marks the session as active without a request, e.g. while it has an open event stream.
 		// Returns false if the session does not exist anymore.
 		bool refreshSessionActivity(const std::string& sSessionUUID);
+
+		// Returns false if the session does not exist or is not authenticated. sUserUUID receives its user.
+		bool getAuthorizedUserForSession(const std::string& sSessionUUID, std::string& sUserUUID);
+
+		// Queues a client action for the browser tabs of a session. sStreamUUID tags a download action with its
+		// stream, so that a cancelled download can drop it. Returns false if the session does not exist.
+		bool enqueueClientActionForSession(const std::string& sSessionUUID, PUIClientAction pAction, const std::string& sStreamUUID);
+
+		// Drops the unclaimed actions of a stream from all sessions.
+		void removeClientActionsOfStream(const std::string& sStreamUUID);
+
+		bool hasUnclaimedClientActionsOfStream(const std::string& sStreamUUID);
 
 	};
 

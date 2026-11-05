@@ -41,6 +41,7 @@ Abstract: This is the class declaration of CRTCContext
 
 #include <set>
 #include <atomic>
+#include <chrono>
 
 namespace LibMCDriver_ScanLab {
 namespace Impl {
@@ -232,6 +233,11 @@ protected:
 	// path starts list execution itself and bypasses this context.
 	std::shared_ptr<std::atomic<bool>> m_pMicrovectorStreamExecutionStarted;
 
+	// true while a stepwise microvector download (BeginMicrovectorStreaming .. completion) is in
+	// progress. Shared with CRTCRecordingInstance: its readout must not report completion while
+	// the card may just be between two segments of the layer (BUSY drops in the fallback case).
+	std::shared_ptr<std::atomic<bool>> m_pMicrovectorStreamDownloadActive;
+
 	// List index / position of the last SetStartList() call, i.e. where the currently open list
 	// begins. The streaming path starts execution from here (prologue included).
 	uint32_t m_nCurrentStartListIndex;
@@ -252,6 +258,28 @@ protected:
 	// SetMicrovectorStreamingEnabled(). Range (0..1]; values below the safe minimum only make
 	// sense for testing the overrun detector and are accepted with a logged warning.
 	double m_dMicrovectorStreamPrebufferFraction;
+
+	// --- Alternating List1/List2 execution for layers that do not fit into one list -----------
+	// Opt-in via the public SetMicrovectorListSwitchingEnabled(); only effective together with
+	// the streamed download. See the constant block in the .cpp and
+	// Plan/RTC6_DoubleBuffering_Implementation_Plan_2026-10-07.html.
+	bool m_bMicrovectorListSwitchingEnabled;
+	uint32_t m_nMicrovectorListCapacityLimit;		// 0 == full configured list size (test aid)
+	uint32_t m_nMicrovectorSegmentTailReserve;		// positions kept free at the end of a segment
+
+	// Per-layer state of the segmented download, reset by SetStartList() and on any abort.
+	uint32_t m_nCurrentOpenListIndex;				// list the PC currently writes into (1 or 2)
+	uint32_t m_nSegmentsClosed;						// set_end_of_list issued by the driver this layer
+	bool m_bListChangeArmed;						// auto_change_pos armed and not yet confirmed consumed
+	bool m_bPendingExplicitStart;					// fallback: the open list has to be started by execute_list_pos
+	uint64_t m_nMaxSegmentVectors;					// largest closed segment, sizes the wait timeout
+	uint32_t m_nListSwitchFallbackCount;
+
+	// Statistics of the last AddMicrovectorMovement call for GetMicrovectorListSwitchingStatistics().
+	uint32_t m_nLastLayerSegmentCount;
+	uint32_t m_nLastLayerFallbackCount;
+	uint64_t m_nLastLayerMinMargin;
+	uint64_t m_nLastLayerMaxWaitInMS;
 
 	LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
 
@@ -334,11 +362,100 @@ protected:
 	// paths of AddMicrovectorMovement; callers bracket it with n_reset_error / n_get_error.
 	void emitMicroVectorsToOpenList(const LibMCDriver_ScanLab::sMicroVector* pBegin, uint64_t nCount);
 
+	// Where an absolute list memory address lies: list 1 or 2 with the offset relative to that
+	// list, or list index 0 for the protected area / unconfigured lists.
+	struct sListLocation {
+		uint32_t nListIndex;
+		uint64_t nOffset;
+		uint64_t nListSize;
+	};
+	sListLocation resolveListLocation(uint64_t nAbsolutePointer) const;
+
+	// Usable positions of a list: its configured size, capped by the test-aid capacity limit.
+	uint64_t effectiveListCapacity(const sListLocation& location) const;
+
+	// Power quantization shared by writePower() and the exact capacity pre-scan, so that both
+	// agree on when two consecutive microvectors need a power command.
+	int32_t quantizeDigitalPowerValue(double dClippedPowerFactor) const;
+	void quantizePulseModulationPower(double dClippedPowerFactor, uint32_t& nHalfPeriodInBits, uint32_t& nPulseLength) const;
+
+	// Number of list positions the power commands of a microvector block take when it is written
+	// from an invalid power cache (first vector always counts). Exact for a whole block,
+	// conservative for a suffix.
+	uint64_t countMicrovectorPowerPositions(const LibMCDriver_ScanLab::sMicroVector* pBegin, uint64_t nCount) const;
+
 	// Streaming download only: reads input and output pointer (two control commands, so this
 	// drains the High Performance Mode pipeline - call sparingly) and verifies that the output
-	// pointer has not caught up with the download. Throws after stopping list execution if the
-	// margin is exhausted. Returns min(nMinObservedMargin, current margin) for diagnostics.
-	uint64_t checkStreamMargin(uint64_t nMinObservedMargin);
+	// pointer has not caught up with the download. Throws if the margin is exhausted; the caller
+	// stops list execution. Pointers in different lists cannot collide, the margin is then only
+	// diagnostic. Returns min(nMinObservedMargin, current margin) and the input pointer location.
+	uint64_t checkStreamMargin(uint64_t nMinObservedMargin, sListLocation& inputLocation);
+
+	// Segmented download helpers (see BeginMicrovectorStreaming / ContinueMicrovectorStreaming).
+	void resetListSwitchingLayerState();
+	void closeSegment(uint64_t nSegmentVectors);
+	bool armListChangeIfBusy();
+	void drainPendingListChange();
+
+	// --- Stepwise microvector download ---------------------------------------------------------
+	// One download of a layer is a session: BeginMicrovectorStreaming() opens it (and starts list
+	// execution on the streamed path), ContinueMicrovectorStreaming() advances it in time-boxed
+	// steps and never waits for the card, so the caller can interleave other work - the plugin
+	// reads out the RTC recording between the steps. AddMicrovectorMovement() is the blocking
+	// wrapper around the same state machine.
+	enum class eMicrovectorStreamState : uint32_t {
+		None = 0,				// no session
+		Writing = 1,			// Continue writes blocks
+		WaitingForList = 2,		// the next segment's list is still executing; Continue polls load_list
+		Complete = 3			// all vectors written, statistics published
+	};
+
+	struct sMicrovectorStreamSession {
+		eMicrovectorStreamState eState = eMicrovectorStreamState::None;
+
+		// The caller's buffer. The interface contract requires it to stay valid and unchanged
+		// until the session is complete or aborted; the layer is far too large to copy.
+		const LibMCDriver_ScanLab::sMicroVector* pVectors = nullptr;
+		uint64_t nTotal = 0;
+		uint64_t nWritten = 0;
+		uint64_t nSegmentVectors = 0;			// vectors written into the open segment
+		uint64_t nPrebufferCount = 0;
+		bool bExecutionStarted = false;			// streamed path: execute_list_pos has been issued
+		bool bSwitchLists = false;
+		bool bRestFitsExactly = false;
+		uint64_t nRoomLeft = 0;
+		sListLocation inputLocation = { 0, 0, 0 };
+		uint64_t nMinObservedMargin = 0;
+		uint64_t nMaxWaitInMS = 0;
+		uint64_t nPowerCommandsBefore = 0;
+		std::chrono::steady_clock::time_point tLoadStart;
+
+		// WaitingForList: which list has to be reported as processed by load_list(3, 0), since when,
+		// and the timeout derived from the largest segment so far.
+		uint32_t nWaitTargetList = 0;
+		std::chrono::steady_clock::time_point tWaitStart;
+		uint64_t nWaitTimeoutInMS = 0;
+	};
+	sMicrovectorStreamSession m_StreamSession;
+
+	void resetMicrovectorStreamSession();
+	// Writes one check block of the session, closing the segment and opening the next list first
+	// if the block does not fit. Leaves the session in WaitingForList when the next list is not
+	// free yet; the block is then written by a later call.
+	void writeNextMicrovectorBlock();
+	// Closes the current segment's list and opens the other one. The first switch opens it at
+	// once; later switches have to wait until the card has left the target list and only start
+	// that wait (state WaitingForList).
+	void beginOpenNextSegmentList();
+	// One load_list(3, 0) poll of the WaitingForList state. True once the target list is open.
+	bool pollListConsumed();
+	// Arms the next list change and makes the freed list the open one. Follows a successful poll.
+	void finishOpenNextSegmentList();
+	void completeSegmentListOpen(uint32_t nTargetList, uint64_t nWaitInMS, bool bArmed);
+	void refreshRoomAfterSegmentOpen();
+	void finishMicrovectorStreamSession();
+	// Stops list execution, consumes an armed list change and forgets the session.
+	void abortMicrovectorStreamSession();
 
 public:
 
@@ -655,6 +772,16 @@ public:
 	void AddMicrovectorMovement(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector* pMicrovectorArrayBuffer) override;
 
 	void SetMicrovectorStreamingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nMinLayerSize, const LibMCDriver_ScanLab_double dPrebufferFraction) override;
+
+	void SetMicrovectorListSwitchingEnabled(const bool bEnabled, const LibMCDriver_ScanLab_uint32 nListCapacityLimit, const LibMCDriver_ScanLab_uint32 nTailReserve) override;
+
+	void GetMicrovectorListSwitchingStatistics(LibMCDriver_ScanLab_uint32& nSegmentCount, LibMCDriver_ScanLab_uint32& nFallbackCount, LibMCDriver_ScanLab_uint64& nMinMargin, LibMCDriver_ScanLab_uint64& nMaxListWaitInMS) override;
+
+	bool BeginMicrovectorStreaming(const LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector* pMicrovectorArrayBuffer) override;
+
+	bool ContinueMicrovectorStreaming(const LibMCDriver_ScanLab_uint32 nTimeBudgetInMS) override;
+
+	void AbortMicrovectorStreaming() override;
 
 };
 

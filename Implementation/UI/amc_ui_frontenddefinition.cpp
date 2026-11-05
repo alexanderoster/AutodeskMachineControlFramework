@@ -120,6 +120,16 @@ void CUIFrontendDefinitionAttribute::collectSessionReferences(std::vector<std::s
 {
 }
 
+bool CUIFrontendDefinitionAttribute::isSynchronized()
+{
+	return true;
+}
+
+void CUIFrontendDefinitionAttribute::writeClientValueToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, const std::string& sClientValue)
+{
+	throw ELibMCCustomException(LIBMC_ERROR_NOTIMPLEMENTED, "client values are not supported by attribute " + getName());
+}
+
 CUIFrontendDefinitionExpressionAttribute::CUIFrontendDefinitionExpressionAttribute(const std::string& sName, eUIFrontendDefinitionAttributeType attributeType, const CUIExpression& valueExpression)
 	: CUIFrontendDefinitionAttribute(sName, attributeType), m_ValueExpression(valueExpression)
 {
@@ -133,34 +143,52 @@ CUIFrontendDefinitionExpressionAttribute::~CUIFrontendDefinitionExpressionAttrib
 void CUIFrontendDefinitionExpressionAttribute::writeToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, CStateMachineData* pStateMachineData, CUIFrontendState* pFrontendState)
 {
 	CUIExpressionSessionContext* pSessionContext = pFrontendState;
+	writeExpressionToFrontendJSON(attributesObject, m_ValueExpression, pStateMachineData, pSessionContext);
+}
+
+bool CUIFrontendDefinitionExpressionAttribute::isSynchronized()
+{
+	return m_ValueExpression.needsSync();
+}
+
+void CUIFrontendDefinitionExpressionAttribute::writeClientValueToFrontendJSON(CJSONWriter& writer, CJSONWriterObject& attributesObject, const std::string& sClientValue)
+{
+	// Client values are converted with the same rules as fixed values of the definition.
+	CUIExpression clientValueExpression;
+	clientValueExpression.setFixedValue(sClientValue);
+	writeExpressionToFrontendJSON(attributesObject, clientValueExpression, nullptr, nullptr);
+}
+
+void CUIFrontendDefinitionExpressionAttribute::writeExpressionToFrontendJSON(CJSONWriterObject& attributesObject, CUIExpression& valueExpression, CStateMachineData* pStateMachineData, CUIExpressionSessionContext* pSessionContext)
+{
 
 	switch (getAttributeType()) {
 		case eUIFrontendDefinitionAttributeType::atBoolean: {
-			bool bValue = m_ValueExpression.evaluateBoolValue (pStateMachineData, pSessionContext);
+			bool bValue = valueExpression.evaluateBoolValue(pStateMachineData, pSessionContext);
 			attributesObject.addBool(getName(), bValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atString: {
-			std::string sValue = m_ValueExpression.evaluateStringValue(pStateMachineData, pSessionContext);
+			std::string sValue = valueExpression.evaluateStringValue(pStateMachineData, pSessionContext);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atNumber: {
-			double dValue = m_ValueExpression.evaluateNumberValue(pStateMachineData, pSessionContext);
+			double dValue = valueExpression.evaluateNumberValue(pStateMachineData, pSessionContext);
 			attributesObject.addDouble(getName(), dValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atInteger: {
-			int64_t nValue = m_ValueExpression.evaluateIntegerValue(pStateMachineData, pSessionContext);
+			int64_t nValue = valueExpression.evaluateIntegerValue(pStateMachineData, pSessionContext);
 			attributesObject.addInteger(getName(), nValue);
 			break;
 		}
 
 		case eUIFrontendDefinitionAttributeType::atUUID: {
-			std::string sValue = m_ValueExpression.evaluateUUIDValue(pStateMachineData, pSessionContext);
+			std::string sValue = valueExpression.evaluateUUIDValue(pStateMachineData, pSessionContext);
 			attributesObject.addString(getName(), sValue);
 			break;
 		}

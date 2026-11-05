@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <chrono>
 
 using namespace LibMCDriver_ScanLabSMC::Impl;
 
@@ -195,9 +197,26 @@ CScanLabSMCSDK::CScanLabSMCSDK(const std::string& sDLLNameUTF8, const std::strin
 
 	auto pDirectoryCache = cacheDllDirectory();
 
-	HMODULE hLibrary = LoadLibraryW(wsLibraryFileName.data());
+	// The DLL directory and the current directory set by cacheDllDirectory() are process-wide
+	// state. Other drivers (GRPC, OIE) set them too, and their state machines initialize at the
+	// same time, so between the two calls above and this load another thread may have pointed
+	// them elsewhere (intermittent COULDNOTLOADLIBRARY at startup, 2026-10-07).
+	// LOAD_WITH_ALTERED_SEARCH_PATH with the absolute file name makes the loader resolve the
+	// dependencies from the directory of the SMC DLL itself, independent of that global state.
+	HMODULE hLibrary = 0;
+	DWORD nLastLoadError = 0;
+	for (uint32_t nAttempt = 0; (nAttempt < 5) && (hLibrary == 0); nAttempt++) {
+		if (nAttempt > 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			SetDllDirectoryW(m_sDLLDirectoryW.c_str());
+			SetCurrentDirectoryW(m_sDLLDirectoryW.c_str());
+		}
+		hLibrary = LoadLibraryExW(wsLibraryFileName.data(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+		if (hLibrary == 0)
+			nLastLoadError = GetLastError();
+	}
 	if (hLibrary == 0)
-		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTLOADLIBRARY);
+		throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_COULDNOTLOADLIBRARY, "could not load SMC library " + sDLLNameUTF8 + " (Windows error " + std::to_string(nLastLoadError) + ")");
 #else // _WIN32
 	void* hLibrary = dlopen(sDLLNameUTF8.c_str(), RTLD_LAZY);
 	if (hLibrary == 0) {

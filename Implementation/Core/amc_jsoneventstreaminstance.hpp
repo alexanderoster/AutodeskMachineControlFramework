@@ -60,6 +60,8 @@ namespace AMC {
 		// Data change counter the last event was built from, and when it was built.
 		uint64_t m_nDataChangeCounter;
 		std::chrono::steady_clock::time_point m_LastBuildTime;
+		// Revision of the session's pending client actions that the consumer has received.
+		uint64_t m_nActionsRevision;
 
 		sJSONEventStreamCursor();
 	};

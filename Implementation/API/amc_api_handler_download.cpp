@@ -34,6 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcdata_dynamic.hpp"
 #include "common_utils.hpp"
 #include "common_chrono.hpp"
+#include "amc_api.hpp"
+#include "amc_api_constants.hpp"
+#include "amc_streamdownloadregistry.hpp"
 
 using namespace AMC;
 
@@ -71,7 +74,8 @@ PAPIResponse CAPIHandler_Download::handleRequest(const std::string& sURI, const 
 
 	if (pAuth.get() == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
-	if (requestType != eAPIRequestType::rtGet)
+	bool bHeadOnly = (requestType == eAPIRequestType::rtHead);
+	if ((requestType != eAPIRequestType::rtGet) && (!bHeadOnly))
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
 	auto sParameterString = sURI.substr(getBaseURI().length());
@@ -82,23 +86,36 @@ PAPIResponse CAPIHandler_Download::handleRequest(const std::string& sURI, const 
 
 	auto pDataModel = m_pSystemState->getDataModelInstance();
 	auto pStorage = pDataModel->CreateStorage();
-	auto pGlobalChrono = m_pSystemState->globalChrono();
+	auto pGlobalChrono = m_pSystemState->getGlobalChronoInstance();
+	uint64_t nNow = pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970();
 
-	std::string sIPAddress;
 	std::string sStreamUUID;
 	std::string sSessionUUID;
 	std::string sUserUUID;
 	std::string sDownloadFileName;
+	uint64_t nCreationTimeStamp = 0;
+	bool bRevoked = false;
+	pStorage->GetDownloadTicketDetails(sDownloadTicketUUID, sStreamUUID, sDownloadFileName, sSessionUUID, sUserUUID, nCreationTimeStamp, bRevoked);
 
-	pStorage->RequestDownloadTicket(sDownloadTicketUUID, sIPAddress, pGlobalChrono->getUTCTimeStampInMicrosecondsSince1970(), sStreamUUID, sDownloadFileName, sSessionUUID, sUserUUID);
+	// A revoked ticket (cancelled download) or an old link gets 410, so that a browser never resumes it.
+	uint64_t nLifetime = (uint64_t)AMC_API_DOWNLOADTICKET_LIFETIME_SECONDS * 1000000ULL;
+	if (bRevoked || (nNow > nCreationTimeStamp + nLifetime))
+		return CAPI::makeError(AMC_API_HTTP_GONE, LIBMC_ERROR_DOWNLOADTICKETEXPIRED, "download ticket has expired or has been revoked: " + sDownloadTicketUUID);
 
+	if (!pStorage->StreamIsReady(sStreamUUID))
+		throw ELibMCInterfaceException(LIBMC_ERROR_STORAGESTREAMNOTFOUND, "download stream not found: " + sStreamUUID);
+
+	// Every download holds its own stream object and file handle; the response streams it in chunks.
 	auto pStream = pStorage->RetrieveStream(sStreamUUID);
-	auto sContentType = pStream->GetMIMEType();
+	auto pResponse = std::make_shared<CAPIStorageStreamResponse>(pStorage, pStream, m_pSystemState->getStreamDownloadRegistryInstance(), pGlobalChrono, bHeadOnly);
+	pResponse->setContentDispositionName(sDownloadFileName);
 
-	auto apiResponse = std::make_shared<CAPIFixedBufferResponse>(sContentType);
-	apiResponse->setContentDispositionName(sDownloadFileName);
-	pStream->GetContent(apiResponse->getBuffer());
+	if (!pResponse->reserveSlot())
+		return CAPI::makeError(AMC_API_HTTP_SERVICEUNAVAILABLE, LIBMC_ERROR_TOOMANYDOWNLOADS, "too many concurrent downloads");
 
-	return apiResponse;
+	if (!bHeadOnly)
+		pResponse->setDownloadUUID(pStorage->LogDownloadStart(sDownloadTicketUUID, pFormFields.getClientAddress(), nNow));
+
+	return pResponse;
 }
 

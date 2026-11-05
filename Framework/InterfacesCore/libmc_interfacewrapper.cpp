@@ -616,6 +616,171 @@ LibMCResult libmc_apirequesthandler_getcontentdispositionname(LibMC_APIRequestHa
 	}
 }
 
+LibMCResult libmc_apirequesthandler_setclientaddress(LibMC_APIRequestHandler pAPIRequestHandler, const char * pAddress)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if (pAddress == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		std::string sAddress(pAddress);
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIAPIRequestHandler->SetClientAddress(sAddress);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCResult libmc_apirequesthandler_hasstreamresult(LibMC_APIRequestHandler pAPIRequestHandler, bool * pHasStream)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if (pHasStream == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		*pHasStream = pIAPIRequestHandler->HasStreamResult();
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCResult libmc_apirequesthandler_getresultstreaminfo(LibMC_APIRequestHandler pAPIRequestHandler, LibMC_uint64 * pSize, const LibMC_uint32 nETagBufferSize, LibMC_uint32* pETagNeededChars, char * pETagBuffer, const LibMC_uint32 nLastModifiedBufferSize, LibMC_uint32* pLastModifiedNeededChars, char * pLastModifiedBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if (!pSize)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		if ( (!pETagBuffer) && !(pETagNeededChars) )
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		if ( (!pLastModifiedBuffer) && !(pLastModifiedNeededChars) )
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		std::string sETag("");
+		std::string sLastModified("");
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pETagBuffer == nullptr) || (pLastModifiedBuffer == nullptr);
+		if (isCacheCall) {
+			pIAPIRequestHandler->GetResultStreamInfo(*pSize, sETag, sLastModified);
+
+			pIAPIRequestHandler->_setCache (new ParameterCache_3<LibMC_uint64, std::string, std::string> (*pSize, sETag, sLastModified));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_3<LibMC_uint64, std::string, std::string>*> (pIAPIRequestHandler->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+			cache->retrieveData (*pSize, sETag, sLastModified);
+			pIAPIRequestHandler->_setCache (nullptr);
+		}
+		
+		if (pETagNeededChars)
+			*pETagNeededChars = (LibMC_uint32) (sETag.size()+1);
+		if (pETagBuffer) {
+			if (sETag.size() >= nETagBufferSize)
+				throw ELibMCInterfaceException (LIBMC_ERROR_BUFFERTOOSMALL);
+			for (size_t iETag = 0; iETag < sETag.size(); iETag++)
+				pETagBuffer[iETag] = sETag[iETag];
+			pETagBuffer[sETag.size()] = 0;
+		}
+		if (pLastModifiedNeededChars)
+			*pLastModifiedNeededChars = (LibMC_uint32) (sLastModified.size()+1);
+		if (pLastModifiedBuffer) {
+			if (sLastModified.size() >= nLastModifiedBufferSize)
+				throw ELibMCInterfaceException (LIBMC_ERROR_BUFFERTOOSMALL);
+			for (size_t iLastModified = 0; iLastModified < sLastModified.size(); iLastModified++)
+				pLastModifiedBuffer[iLastModified] = sLastModified[iLastModified];
+			pLastModifiedBuffer[sLastModified.size()] = 0;
+		}
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCResult libmc_apirequesthandler_readresultstreamchunk(LibMC_APIRequestHandler pAPIRequestHandler, LibMC_uint64 nOffset, LibMC_uint64 nLength, const LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8 * pDataBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if ((!pDataBuffer) && !(pDataNeededCount))
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIAPIRequestHandler->ReadResultStreamChunk(nOffset, nLength, nDataBufferSize, pDataNeededCount, pDataBuffer);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCResult libmc_apirequesthandler_finishstreamresult(LibMC_APIRequestHandler pAPIRequestHandler, bool bSuccess)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIAPIRequestHandler->FinishStreamResult(bSuccess);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for MCContext
@@ -1093,6 +1258,16 @@ LibMCResult LibMC::Impl::LibMC_GetProcAddress (const char * pProcName, void ** p
 		*ppProcAddress = (void*) &libmc_apirequesthandler_getresultdata;
 	if (sProcName == "libmc_apirequesthandler_getcontentdispositionname") 
 		*ppProcAddress = (void*) &libmc_apirequesthandler_getcontentdispositionname;
+	if (sProcName == "libmc_apirequesthandler_setclientaddress") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_setclientaddress;
+	if (sProcName == "libmc_apirequesthandler_hasstreamresult") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_hasstreamresult;
+	if (sProcName == "libmc_apirequesthandler_getresultstreaminfo") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_getresultstreaminfo;
+	if (sProcName == "libmc_apirequesthandler_readresultstreamchunk") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_readresultstreamchunk;
+	if (sProcName == "libmc_apirequesthandler_finishstreamresult") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_finishstreamresult;
 	if (sProcName == "libmc_mccontext_registerlibrarypath") 
 		*ppProcAddress = (void*) &libmc_mccontext_registerlibrarypath;
 	if (sProcName == "libmc_mccontext_settempbasepath") 

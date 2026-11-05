@@ -62,6 +62,7 @@ status as a snapshot event and every later change as a patch event.
 
 #define AMC_API_FRONTENDEVENTSTREAM_EVENT_SNAPSHOT "snapshot"
 #define AMC_API_FRONTENDEVENTSTREAM_EVENT_PATCH "patch"
+#define AMC_API_FRONTENDEVENTSTREAM_EVENT_ACTIONS "actions"
 
 #define AMC_API_FRONTENDEVENTSTREAM_METRICSLABEL "stream"
 

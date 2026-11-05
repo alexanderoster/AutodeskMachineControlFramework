@@ -76,6 +76,9 @@ private:
 
 	void checkIdentifier(const std::string& sIdentifier);
 
+	// Returns the DeviceClass property of an enumerated device, empty if the device has none.
+	std::string readDeviceClass(size_t nDeviceIndex);
+
 public:
 
 	CDriver_Pylon(const std::string & sName, LibMCEnv::PDriverEnvironment pDriverEnvironment);
@@ -99,6 +102,8 @@ public:
 	IPylonDevice * ConnectToUniqueGenericDevice(const std::string & sIdentifier) override;
 
 	IPylonDevice * ConnectToUniqueGigEDevice(const std::string & sIdentifier) override;
+
+	IPylonDevice * ConnectToUniqueEmulatedDevice(const std::string & sIdentifier) override;
 
 	bool ConnectionExists(const std::string & sIdentifier) override;
 

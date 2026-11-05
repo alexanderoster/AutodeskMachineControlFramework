@@ -67,10 +67,15 @@ namespace AMC {
 		std::map<std::string, std::shared_ptr <std::vector<uint8_t>>> m_FileData;
 		std::map<std::string, std::string> m_StringData;
 		std::map<std::string, std::string> m_RequestParameters;
+		std::string m_sClientAddress;
 
 
 	public:
 		CAPIFormFields();
+
+		// Network address of the client that sent the request, as reported by the HTTP server. May be empty.
+		void setClientAddress(const std::string& sClientAddress);
+		std::string getClientAddress();
 
 		void addDataField(const std::string& sName, std::shared_ptr<std::vector<uint8_t>> pData);
 		bool hasDataField(const std::string& sName);

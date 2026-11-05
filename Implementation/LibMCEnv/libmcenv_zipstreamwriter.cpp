@@ -183,6 +183,14 @@ void CZIPStreamWriter::Finish()
     m_pZIPWriter->Finish();
 }
 
+void CZIPStreamWriter::Discard()
+{
+    if (m_pZIPWriter->IsFinished())
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_ZIPSTREAMALREADYFINISHED, "ZIP stream has already been finished: " + m_sUUID);
+
+    m_pZIPWriter->Discard();
+}
+
 void CZIPStreamWriter::CreateZIPEntryFromStream(const std::string& sFileName, IStreamReader* pStreamReader) 
 {
     m_pZIPWriter->FinishCurrentEntry();

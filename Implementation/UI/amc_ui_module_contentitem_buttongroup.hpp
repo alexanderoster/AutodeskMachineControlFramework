@@ -76,6 +76,7 @@ namespace AMC {
 		CUIExpression m_TargetPageExpression;
 		CUIExpression m_EventExpression;
 		CUIExpression m_IconExpression;
+		CUIExpression m_HintExpression;
 
 		// Static layout metadata (toolbar concept):
 		//   kind    = "button" | "spacer" | "spring"
@@ -103,7 +104,7 @@ namespace AMC {
 
 	public:
 
-		CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression & IconName, const CUIExpression& Disabled, const CUIExpression& Visible, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData);
+		CUIModule_ContentButton (const std::string & sGroupPath, const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression & IconName, const CUIExpression& Disabled, const CUIExpression& Visible, const CUIExpression& Hint, const std::string& sEventFormValueSetting, PStateMachineData pStateMachineData);
 
 		virtual ~CUIModule_ContentButton();
 
@@ -158,7 +159,7 @@ namespace AMC {
 
 		virtual ~CUIModule_ContentButtonGroup();
 
-		PUIModule_ContentButton addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const std::string& sEventFormValueSetting);
+		PUIModule_ContentButton addButton(const CUIExpression& Caption, const CUIExpression& TargetPage, const CUIExpression& Event, const std::string& sButtonName, const CUIExpression& IconName, const CUIExpression& DisabledExpression, const CUIExpression& VisibleExpression, const CUIExpression& HintExpression, const std::string& sEventFormValueSetting);
 
 		virtual void configurePostLoading() override;
 

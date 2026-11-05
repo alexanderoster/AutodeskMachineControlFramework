@@ -40,6 +40,12 @@ Abstract: This is a stub class definition of CDriver_GRPC
 
 #include "libmcdriver_grpc_grpcconnection.hpp"
 
+#include <thread>
+#include <chrono>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using namespace LibMCDriver_GRPC::Impl;
 
 /*************************************************************************************************************************
@@ -135,6 +141,40 @@ void CDriver_GRPC::loadGRPCSDK()
 		m_sDLLDirectoryW = std::wstring(wsDLLPath.data());
 
 		SetDllDirectoryW(m_sDLLDirectoryW.c_str ());
+
+		// SetDllDirectoryW is process-wide state and the ScanLab OIE and SMC drivers set it to
+		// their own directories while their state machines initialize, which happens at the same
+		// time as this. The generated loadLibrary() below uses a plain LoadLibraryW, whose
+		// dependency search then goes to the wrong directory (abseil, protobuf, ... not found;
+		// intermittent COULDNOTLOADLIBRARY at startup, 2026-10-07). Bring the wrapper DLL into
+		// the process first with LOAD_WITH_ALTERED_SEARCH_PATH, which resolves its dependencies
+		// from its own directory regardless of that state. loadLibrary() then only finds the
+		// module that is already loaded. The handle is kept for the lifetime of the process, like
+		// the wrapper's own handle.
+		{
+			std::string sWrapperFileNameUTF8 = m_pGRPCDLL_LibGRPCWrapper->GetAbsoluteFileName();
+			int nWrapperLength = (int)sWrapperFileNameUTF8.length();
+			int nWrapperBufferSize = nWrapperLength * 2 + 2;
+			std::vector<wchar_t> wsWrapperFileName(nWrapperBufferSize);
+			int nWrapperResult = MultiByteToWideChar(CP_UTF8, 0, sWrapperFileNameUTF8.c_str(), nWrapperLength, &wsWrapperFileName[0], nWrapperBufferSize);
+			if (nWrapperResult == 0)
+				throw ELibMCDriver_GRPCInterfaceException(LIBMCDRIVER_GRPC_ERROR_COULDNOTLOADLIBRARY);
+
+			HMODULE hPreloaded = 0;
+			DWORD nLastLoadError = 0;
+			for (uint32_t nAttempt = 0; (nAttempt < 5) && (hPreloaded == 0); nAttempt++) {
+				if (nAttempt > 0) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(200));
+					SetDllDirectoryW(m_sDLLDirectoryW.c_str());
+				}
+				hPreloaded = LoadLibraryExW(wsWrapperFileName.data(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+				if (hPreloaded == 0)
+					nLastLoadError = GetLastError();
+			}
+			if (hPreloaded == 0)
+				throw ELibMCDriver_GRPCInterfaceException(LIBMCDRIVER_GRPC_ERROR_COULDNOTLOADLIBRARY, "could not load gRPC wrapper library " + sWrapperFileNameUTF8 + " (Windows error " + std::to_string(nLastLoadError) + ")");
+			m_pPreloadedGRPCWrapperModule = (void*)hPreloaded;
+		}
 
 		m_pGRPCWrapper = LibGRPCWrapper::CWrapper::loadLibrary (m_pGRPCDLL_LibGRPCWrapper->GetAbsoluteFileName ());
 #endif

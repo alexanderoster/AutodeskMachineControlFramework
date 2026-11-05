@@ -49,6 +49,7 @@ import AMCApplicationModule_TogglePanel from "../modules/AMCModule_TogglePanel.j
 import AMCApplicationModule_Form from "../modules/AMCModule_Form.js"
 import AMCApplicationModule_Chart from "../modules/AMCModule_Chart.js"
 import AMCApplicationModule_JournalHistory from "../modules/AMCModule_JournalHistory.js"
+import AMCApplicationModule_DataCapture from "../modules/AMCModule_DataCapture.js"
 import AMCApplicationModule_Image from "../modules/AMCModule_Image.js"
 import AMCApplicationModule_StateMachineGraph from "../modules/AMCModule_StateMachineGraph.js"
 import AMCApplicationModule_Paragraph from "../modules/AMCModule_Paragraph.js"
@@ -74,6 +75,10 @@ import AMCApplicationDialog from "./AMCDialog.js"
 
 const CONFIG_REQUEST_TIMEOUT_MS = 2000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+// UI events run plugin code on the server (loading a recording of 60M rows for the SMC Viewer
+// takes 10-50 s), so they get a much longer timeout than plain status requests.
+const EVENT_REQUEST_TIMEOUT_MS = 120000;
+const EVENT_ERROR_SNACKBAR_TIMEOUT_MS = 8000;
 const MAX_CONSECUTIVE_FAILURES = 5;
 
 // Client reactivity metrics: aggregate /api/frontend roundtrips over this window
@@ -175,10 +180,18 @@ export default class AMCApplication extends Common.AMCObject {
 			Timeout: -1,
 			Text: "",
 			Color: "secondary",
-			FontColor: "white"			
+			FontColor: "white",
+			// Incremented on every showSnackBar () call, so the client can restart its auto-hide
+			// timer even if text and visibility have not changed.
+			Sequence: 0
 		}
 
 		// mode is one of "off" / "connecting" / "stream" / "polling".
+		// Senders whose event request is still running (double-send guard of triggerUIEvent).
+		this.PendingEventSenders = new Set ();
+		// Session client actions this tab has claimed or tried to claim.
+		this.ClaimedClientActions = new Set ();
+
 		this.FrontendUpdates = {
 			// Identifies this tab within the session's event stream, which serves each tab its active pages and dialogs.
 			clientID: this._createFrontendClientID (),
@@ -817,6 +830,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_Chart (page, def);
 		if (def.type === "journalhistory")
 			return new AMCApplicationModule_JournalHistory (page, def);
+		if (def.type === "datacapture")
+			return new AMCApplicationModule_DataCapture (page, def);
 		if (def.type === "image")
 			return new AMCApplicationModule_Image (page, def);
 		if (def.type === "paragraph")
@@ -1152,6 +1167,10 @@ export default class AMCApplication extends Common.AMCObject {
 		applyPageVisibility(this.AppContent.PageMap, data.pages);
 		applyPageVisibility(this.AppContent.CustomPageMap, data.custompages);
 		applyPageVisibility(this.AppContent.DialogMap, data.dialogs);
+
+		// Server-driven dialogs follow their "active" flag; patches update the dialog objects in place.
+		if (data.dialogs)
+			this._syncServerDrivenDialogs(data.dialogs);
 	}
 
 	// Leaves a page that became hidden and closes dialogs that became hidden.
@@ -1201,6 +1220,9 @@ export default class AMCApplication extends Common.AMCObject {
 	}
 
 	_setFrontendState(data, scope) {
+		if (data && Array.isArray (data.pendingactions))
+			this._handlePendingClientActions (data.pendingactions);
+
 		this.API.frontendState = data;
 		this.API.frontendScope = scope;
 		this.API.frontendRevision = Number.isSafeInteger (data.revision) ? data.revision : 0;
@@ -1239,6 +1261,37 @@ export default class AMCApplication extends Common.AMCObject {
 				}
 			}
 		}
+	}
+
+	// Applies the server-side open state of dialogs that carry an "active" flag (dialogs
+	// with sync:active in the machine configuration). The server is authoritative: such a
+	// dialog is opened while the flag is true, even if a client action closed it in between,
+	// and closed as soon as the flag turns false. Dialogs without the flag are untouched.
+	_syncServerDrivenDialogs(dialogsJSON) {
+		let changed = false;
+
+		for (let dialogJSON of dialogsJSON) {
+			if (typeof dialogJSON.active !== "boolean")
+				continue;
+
+			let dialog = this.AppContent.DialogMap.get(dialogJSON.name);
+			if (!dialog)
+				continue;
+
+			dialog.serverDriven = true;
+			dialog.closable = (dialogJSON.closable !== false);
+
+			if (dialogJSON.active && !dialog.dialogIsActive && (dialog.visible !== false)) {
+				// showDialog already refreshes the content items.
+				this.showDialog(dialog.name);
+			} else if (!dialogJSON.active && dialog.dialogIsActive) {
+				dialog.dialogIsActive = false;
+				changed = true;
+			}
+		}
+
+		if (changed)
+			this.updateContentItems();
 	}
 
 	// Recursively index a v2 module (and its submodules) by UUID.
@@ -1503,6 +1556,7 @@ export default class AMCApplication extends Common.AMCObject {
 			updates.source = source;
 			source.addEventListener ("snapshot", event => this._onFrontendStreamEvent (generation, "snapshot", event));
 			source.addEventListener ("patch", event => this._onFrontendStreamEvent (generation, "patch", event));
+			source.addEventListener ("actions", event => this._onFrontendActionsEvent (generation, event));
 			source.onerror = () => this._onFrontendStreamError (generation);
 		})
 		.catch (err => {
@@ -1548,6 +1602,23 @@ export default class AMCApplication extends Common.AMCObject {
 			updates.reconnectTimer = null;
 			this._connectFrontendStream ();
 		}, delayMS);
+	}
+
+	_onFrontendActionsEvent(generation, event) {
+		let updates = this.FrontendUpdates;
+		if ((generation !== updates.generation) || !updates.enabled)
+			return;
+
+		let data;
+		try {
+			data = JSON.parse (event.data);
+		}
+		catch (err) {
+			console.warn ("[frontend updates] malformed actions event:", err);
+			return;
+		}
+		if (data && (typeof data === "object"))
+			this._handlePendingClientActions (data.pendingactions);
 	}
 
 	_onFrontendStreamEvent(generation, eventType, event) {
@@ -2104,6 +2175,9 @@ export default class AMCApplication extends Common.AMCObject {
         }
     }
 
+    // Only one dialog is open at a time. A server-driven dialog (see
+    // _syncServerDrivenDialogs) re-opens on the next frontend poll while its flag is
+    // set, so it wins over dialogs opened by client actions.
     showDialog(dialog) {
 
         this.closeAllDialogs();
@@ -2125,20 +2199,19 @@ export default class AMCApplication extends Common.AMCObject {
 		
     }
 	
-	streamDownload (downloadticketuuid) 
+	streamDownload (downloadticketuuid, downloadfilename)
 	{
-				
-	
-		/*// Start download in Browser
-		const a = document.createElement('a');
-		a.href = this.getDownloadURL (downloadticketuuid);
-		a.download = downloadfilename;
-		document.body.appendChild(a);    
-		a.click();
-		document.body.removeChild(a); */
-			
-		window.open (this.getDownloadURL (downloadticketuuid), "_blank");
-		
+		// Hand the download over to the browser download manager: it streams the file to disk, shows
+		// progress and can pause and resume. Large files must never be loaded into page memory, and a
+		// programmatic link click is not blocked by the popup blocker like window.open is.
+		const link = document.createElement ("a");
+		link.href = this.getDownloadURL (downloadticketuuid);
+		if (downloadfilename)
+			link.download = downloadfilename;
+		link.rel = "noopener";
+		document.body.appendChild (link);
+		link.click ();
+		document.body.removeChild (link);
 	}
 
     getImageURL(uuid) {
@@ -2170,76 +2243,136 @@ export default class AMCApplication extends Common.AMCObject {
         if (eventParameters)
             requestBody["parameters"] = eventParameters;
 
-        this.axiosPostRequest("/event", requestBody)
+        // A sender whose previous event is still running (usually 50-200 ms) does not send a second one:
+        // the second click of a double click would otherwise reach the server as a new command.
+        let pendingKey = senderuuid ? String (senderuuid) : null;
+        if (pendingKey) {
+            if (this.PendingEventSenders.has (pendingKey)) {
+                console.info ("[events] ignoring " + eventname + ": the previous event of this sender is still running");
+                return;
+            }
+            this.PendingEventSenders.add (pendingKey);
+        }
+
+        this.axiosPostRequest("/event", requestBody, { timeout: EVENT_REQUEST_TIMEOUT_MS })
         .then(resultHandleEvent => {
-			
-			if (resultHandleEvent.data.actions) {
-				if (Array.isArray(resultHandleEvent.data.actions)) {
-					let action;
-					for (action of resultHandleEvent.data.actions) {
-						if (action.action === "activatemodaldialog") {
-							this.showDialog(action.dialogname);
-						}
-						if (action.action === "activatepage") {
-							this.changePage(action.pagename);
-						}
-						if (action.action === "closemodaldialog") {
-							this.closeAllDialogs();
-						}
-						if (action.action === "streamdownload") {
-							this.streamDownload(action.downloadticket);
-						}
-						
-						//this.updateContentItemResult(item.uuid, item);
-					}
-				}
+
+			// A failed event carries no actions and must not run the success callback
+			if (resultHandleEvent.data.errorcode) {
+				this.showEventError(eventname, resultHandleEvent.data.errormessage);
+				return;
 			}
-			
+
+			this.executeClientActions (resultHandleEvent.data.actions);
+
 			if (executionCallback) {
 				executionCallback ();
-			}				
-			
+			}
+
         })
         .catch(err => {
             console.log(err);
+            this.showEventError(eventname, this.extractErrorMessage(err));
+        })
+        .finally(() => {
+            if (pendingKey)
+                this.PendingEventSenders.delete (pendingKey);
         });
     }
 
-    triggerWidgetRequest (widgetuuid, requestType, requestJSON, executionCallback) {
+    // Runs the client actions of an event response, a widget response or the session's pending action queue.
+    executeClientActions(actions) {
+        if (!Array.isArray (actions))
+            return;
+
+        for (let action of actions) {
+            if (!action || (typeof action !== "object"))
+                continue;
+            if (action.action === "activatemodaldialog") {
+                this.showDialog(action.dialogname);
+            }
+            if (action.action === "activatepage") {
+                this.changePage(action.pagename);
+            }
+            if (action.action === "closemodaldialog") {
+                this.closeAllDialogs();
+            }
+            if (action.action === "streamdownload") {
+                this.streamDownload(action.downloadticket, action.downloadfilename);
+            }
+        }
+    }
+
+    // Actions that the server queued for this session (for example a download prepared by a state
+    // machine) arrive through the event stream or the polling response. Several tabs of one session
+    // receive the same list; the first tab that claims an action executes it, the others get 409.
+    _handlePendingClientActions(actions) {
+        if (!Array.isArray (actions))
+            return;
+
+        for (let action of actions) {
+            if (!action || (typeof action !== "object") || !action.actionuuid)
+                continue;
+
+            let actionUUID = String (action.actionuuid);
+            if (this.ClaimedClientActions.has (actionUUID))
+                continue;
+            this.ClaimedClientActions.add (actionUUID);
+
+            this.axiosPostRequest ("/frontend/actions/" + actionUUID + "/claim", {})
+            .then (resultJSON => {
+                if (resultJSON.data && resultJSON.data.errorcode) {
+                    console.info ("[frontend updates] client action " + actionUUID + " was claimed by another tab");
+                    return;
+                }
+                this.executeClientActions ([action]);
+            })
+            .catch (err => {
+                let status = (err && err.response) ? err.response.status : 0;
+                if (status === 409) {
+                    console.info ("[frontend updates] client action " + actionUUID + " was claimed by another tab");
+                    return;
+                }
+                console.warn ("[frontend updates] claiming client action " + actionUUID + " failed:", this.extractErrorMessage (err));
+                this.ClaimedClientActions.delete (actionUUID);
+            });
+        }
+    }
+
+    // Sets every snack bar field, so a caller never inherits the color or timeout of a previous message.
+    // timeout <= 0 keeps the message until it is dismissed.
+    showSnackBar(text, color, timeout) {
+        this.SnackBar.Text = text;
+        this.SnackBar.Color = color || "secondary";
+        this.SnackBar.Timeout = (timeout > 0) ? timeout : -1;
+        this.SnackBar.Sequence++;
+        this.SnackBar.Visible = true;
+    }
+
+    // Failed events were only visible in the browser console. Report them in the snack bar.
+    showEventError(eventname, errormessage) {
+        this.showSnackBar("Event \"" + eventname + "\" failed: " + errormessage, "error", EVENT_ERROR_SNACKBAR_TIMEOUT_MS);
+    }
+
+    // failureCallback receives the request error, so the caller can roll back optimistic UI state.
+    triggerWidgetRequest (widgetuuid, requestType, requestJSON, executionCallback, failureCallback) {
 
 		
         this.axiosPostRequest("/widget/" + Assert.UUIDValue (widgetuuid) + "/" + Assert.StringValue (requestType), Assert.ObjectValue (requestJSON))
         .then(resultHandleWidgetRequest => {
 			
-			if (resultHandleWidgetRequest.data.actions) {
-				if (Array.isArray(resultHandleWidgetRequest.data.actions)) {
-					let action;
-					for (action of resultHandleWidgetRequest.data.actions) {
-						if (action.action === "activatemodaldialog") {
-							this.showDialog(action.dialogname);
-						}
-						if (action.action === "activatepage") {
-							this.changePage(action.pagename);
-						}
-						if (action.action === "closemodaldialog") {
-							this.closeAllDialogs();
-						}
-						if (action.action === "streamdownload") {
-							this.streamDownload(action.downloadticket);
-						}
-						
-						//this.updateContentItemResult(item.uuid, item);
-					}
-				}
-			}
-			
+			this.executeClientActions (resultHandleWidgetRequest.data.actions);
+
 			if (executionCallback) {
 				executionCallback ();
-			}				
-			
+			}
+
         })
         .catch(err => {
             console.log(err);
+            if (failureCallback) {
+                failureCallback (err);
+            }
         });
     }
 

@@ -364,6 +364,43 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_FORMULAEVALUATIONFAILED 10267 /** Formula evaluation failed. */
 #define LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE 10268 /** Session and user references are only available in formulas of the UI environment. */
 #define LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX 10269 /** Invalid formula reference index. */
+#define LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT 10270 /** Column is not of type float. */
+#define LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL 10271 /** Column is not of type bool. */
+#define LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP 10272 /** Column is not of type timestamp. */
+#define LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION 10273 /** Unsupported datatable format version. */
+#define LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING 10274 /** Unsupported datatable column encoding. */
+#define LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER 10275 /** Invalid datatable column header. */
+#define LIBMCENV_ERROR_DATACAPTURENOTCONFIGURABLE 10276 /** Data capture schema is frozen and can not be changed anymore. */
+#define LIBMCENV_ERROR_DATACAPTURENOTRECORDING 10277 /** Data capture is not recording. */
+#define LIBMCENV_ERROR_DATACAPTURECHUNKALREADYOPEN 10278 /** Data capture has an uncommitted chunk already. */
+#define LIBMCENV_ERROR_DATACAPTURECHUNKINVALID 10279 /** Data capture chunk is invalid or has been committed already. */
+#define LIBMCENV_ERROR_DATACAPTURECHUNKINCOMPLETE 10280 /** Data capture chunk columns have different row counts. */
+#define LIBMCENV_ERROR_DATACAPTURECHUNKOVERFLOW 10281 /** Data capture chunk capacity exceeded. */
+#define LIBMCENV_ERROR_DATACAPTUREQUEUEFULL 10282 /** Data capture queue is full. */
+#define LIBMCENV_ERROR_DATACAPTUREWRITERFAILED 10283 /** Data capture writer failed. */
+#define LIBMCENV_ERROR_INVALIDDATACAPTUREOPTION 10284 /** Invalid data capture option. */
+#define LIBMCENV_ERROR_DATACAPTUREROWNOTOPEN 10285 /** Data capture chunk has no open row. */
+#define LIBMCENV_ERROR_DATACAPTUREROWALREADYOPEN 10286 /** Data capture chunk has an open row already. */
+#define LIBMCENV_ERROR_DATACAPTUREVALUEOUTOFRANGE 10287 /** Data capture value is out of range for the column type. */
+#define LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED 10288 /** Data capture segment has been deleted by retention. */
+#define LIBMCENV_ERROR_EMPTYDATACAPTURENAME 10289 /** Empty data capture name. */
+#define LIBMCENV_ERROR_EMPTYDATACAPTUREIDENTIFIER 10290 /** Empty data capture identifier. */
+#define LIBMCENV_ERROR_INVALIDDATACAPTUREIDENTIFIER 10291 /** Invalid data capture identifier. */
+#define LIBMCENV_ERROR_DATACAPTUREEXECUTIONNOTINPROCESS 10292 /** Data captures can only be created while the build execution is in process. */
+#define LIBMCENV_ERROR_DATATABLESEGMENTTRUNCATED 10293 /** Datatable segment is truncated and has no footer. */
+#define LIBMCENV_ERROR_UNSUPPORTEDDATATABLECODEC 10294 /** Unsupported datatable page codec. */
+#define LIBMCENV_ERROR_INVALIDDATATABLESEGMENT 10295 /** Invalid datatable segment. */
+#define LIBMCENV_ERROR_DATACAPTURECHUNKOUTSTANDING 10296 /** Data capture has an uncommitted chunk. */
+#define LIBMCENV_ERROR_DATACAPTURECOLUMNTYPEMISMATCH 10297 /** Data capture column has a different type. */
+#define LIBMCENV_ERROR_INVALIDDATACAPTURESEGMENTINDEX 10298 /** Invalid data capture segment index. */
+#define LIBMCENV_ERROR_DATACAPTURECOLUMNNOTFOUND 10299 /** Data capture column not found. */
+#define LIBMCENV_ERROR_INVALIDDATATABLEROWRANGE 10300 /** Invalid datatable row range. */
+#define LIBMCENV_ERROR_INVALIDDOWNSAMPLEPARAMETERS 10301 /** Invalid downsample parameters. */
+#define LIBMCENV_ERROR_DATATABLECOLUMNTYPEMISMATCH 10302 /** Datatable column can not be read as the requested type. */
+#define LIBMCENV_ERROR_INVALIDDATATABLECHUNKINDEX 10303 /** Invalid datatable chunk index. */
+#define LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS 10304 /** Storage stream has active downloads. */
+#define LIBMCENV_ERROR_ZIPSTREAMALREADYFINISHED 10305 /** ZIP stream has already been finished. */
+#define LIBMCENV_ERROR_SESSIONHANDLERNOTAVAILABLE 10306 /** Session handler is not available. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -640,6 +677,43 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
     case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
     case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
+    case LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT: return "Column is not of type float.";
+    case LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL: return "Column is not of type bool.";
+    case LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP: return "Column is not of type timestamp.";
+    case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION: return "Unsupported datatable format version.";
+    case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING: return "Unsupported datatable column encoding.";
+    case LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER: return "Invalid datatable column header.";
+    case LIBMCENV_ERROR_DATACAPTURENOTCONFIGURABLE: return "Data capture schema is frozen and can not be changed anymore.";
+    case LIBMCENV_ERROR_DATACAPTURENOTRECORDING: return "Data capture is not recording.";
+    case LIBMCENV_ERROR_DATACAPTURECHUNKALREADYOPEN: return "Data capture has an uncommitted chunk already.";
+    case LIBMCENV_ERROR_DATACAPTURECHUNKINVALID: return "Data capture chunk is invalid or has been committed already.";
+    case LIBMCENV_ERROR_DATACAPTURECHUNKINCOMPLETE: return "Data capture chunk columns have different row counts.";
+    case LIBMCENV_ERROR_DATACAPTURECHUNKOVERFLOW: return "Data capture chunk capacity exceeded.";
+    case LIBMCENV_ERROR_DATACAPTUREQUEUEFULL: return "Data capture queue is full.";
+    case LIBMCENV_ERROR_DATACAPTUREWRITERFAILED: return "Data capture writer failed.";
+    case LIBMCENV_ERROR_INVALIDDATACAPTUREOPTION: return "Invalid data capture option.";
+    case LIBMCENV_ERROR_DATACAPTUREROWNOTOPEN: return "Data capture chunk has no open row.";
+    case LIBMCENV_ERROR_DATACAPTUREROWALREADYOPEN: return "Data capture chunk has an open row already.";
+    case LIBMCENV_ERROR_DATACAPTUREVALUEOUTOFRANGE: return "Data capture value is out of range for the column type.";
+    case LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED: return "Data capture segment has been deleted by retention.";
+    case LIBMCENV_ERROR_EMPTYDATACAPTURENAME: return "Empty data capture name.";
+    case LIBMCENV_ERROR_EMPTYDATACAPTUREIDENTIFIER: return "Empty data capture identifier.";
+    case LIBMCENV_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "Invalid data capture identifier.";
+    case LIBMCENV_ERROR_DATACAPTUREEXECUTIONNOTINPROCESS: return "Data captures can only be created while the build execution is in process.";
+    case LIBMCENV_ERROR_DATATABLESEGMENTTRUNCATED: return "Datatable segment is truncated and has no footer.";
+    case LIBMCENV_ERROR_UNSUPPORTEDDATATABLECODEC: return "Unsupported datatable page codec.";
+    case LIBMCENV_ERROR_INVALIDDATATABLESEGMENT: return "Invalid datatable segment.";
+    case LIBMCENV_ERROR_DATACAPTURECHUNKOUTSTANDING: return "Data capture has an uncommitted chunk.";
+    case LIBMCENV_ERROR_DATACAPTURECOLUMNTYPEMISMATCH: return "Data capture column has a different type.";
+    case LIBMCENV_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "Invalid data capture segment index.";
+    case LIBMCENV_ERROR_DATACAPTURECOLUMNNOTFOUND: return "Data capture column not found.";
+    case LIBMCENV_ERROR_INVALIDDATATABLEROWRANGE: return "Invalid datatable row range.";
+    case LIBMCENV_ERROR_INVALIDDOWNSAMPLEPARAMETERS: return "Invalid downsample parameters.";
+    case LIBMCENV_ERROR_DATATABLECOLUMNTYPEMISMATCH: return "Datatable column can not be read as the requested type.";
+    case LIBMCENV_ERROR_INVALIDDATATABLECHUNKINDEX: return "Invalid datatable chunk index.";
+    case LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS: return "Storage stream has active downloads.";
+    case LIBMCENV_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIP stream has already been finished.";
+    case LIBMCENV_ERROR_SESSIONHANDLERNOTAVAILABLE: return "Session handler is not available.";
     default: return "unknown error";
   }
 }
@@ -670,6 +744,10 @@ typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataChannel;
 typedef LibMCEnvHandle LibMCEnv_ScatterPlotDataChannelIterator;
 typedef LibMCEnvHandle LibMCEnv_DataTableScatterPlotOptions;
 typedef LibMCEnvHandle LibMCEnv_DataTable;
+typedef LibMCEnvHandle LibMCEnv_DataCaptureOptions;
+typedef LibMCEnvHandle LibMCEnv_DataCaptureChunk;
+typedef LibMCEnvHandle LibMCEnv_DataCapture;
+typedef LibMCEnvHandle LibMCEnv_DataTableReader;
 typedef LibMCEnvHandle LibMCEnv_DataSeries;
 typedef LibMCEnvHandle LibMCEnv_DateTimeDifference;
 typedef LibMCEnvHandle LibMCEnv_DateTime;
@@ -885,7 +963,48 @@ namespace LibMCEnv {
     Int32Column = 2,
     Uint32Column = 3,
     Int64Column = 4,
-    Uint64Column = 5
+    Uint64Column = 5,
+    FloatColumn = 6,
+    BoolColumn = 7,
+    TimestampColumn = 8
+  };
+  
+  enum class eDataCaptureBackpressureMode : LibMCEnv_int32 {
+    Unknown = 0,
+    Block = 1,
+    DropOldest = 2,
+    Fail = 3
+  };
+  
+  enum class eDataCaptureCompression : LibMCEnv_int32 {
+    Unknown = 0,
+    None = 1,
+    LZ4 = 2,
+    Deflate = 3
+  };
+  
+  enum class eDataCaptureEncoding : LibMCEnv_int32 {
+    Unknown = 0,
+    Automatic = 1,
+    Plain = 2,
+    Delta = 3,
+    BitPack = 4
+  };
+  
+  enum class eDataTableDownsampleMode : LibMCEnv_int32 {
+    Unknown = 0,
+    Stride = 1,
+    MinMax = 2,
+    Average = 3
+  };
+  
+  enum class eDataCaptureStatus : LibMCEnv_int32 {
+    Unknown = 0,
+    Configuring = 1,
+    Recording = 2,
+    Finished = 3,
+    Aborted = 4,
+    Failed = 5
   };
   
   enum class eTelemetryChannelType : LibMCEnv_int32 {
@@ -1014,6 +1133,11 @@ typedef LibMCEnv::eMessageDialogType eLibMCEnvMessageDialogType;
 typedef LibMCEnv::eWorkingFileProcessStatus eLibMCEnvWorkingFileProcessStatus;
 typedef LibMCEnv::eBuildExecutionStatus eLibMCEnvBuildExecutionStatus;
 typedef LibMCEnv::eDataTableColumnType eLibMCEnvDataTableColumnType;
+typedef LibMCEnv::eDataCaptureBackpressureMode eLibMCEnvDataCaptureBackpressureMode;
+typedef LibMCEnv::eDataCaptureCompression eLibMCEnvDataCaptureCompression;
+typedef LibMCEnv::eDataCaptureEncoding eLibMCEnvDataCaptureEncoding;
+typedef LibMCEnv::eDataTableDownsampleMode eLibMCEnvDataTableDownsampleMode;
+typedef LibMCEnv::eDataCaptureStatus eLibMCEnvDataCaptureStatus;
 typedef LibMCEnv::eTelemetryChannelType eLibMCEnvTelemetryChannelType;
 typedef LibMCEnv::eSignalPhase eLibMCEnvSignalPhase;
 typedef LibMCEnv::sPosition2D sLibMCEnvPosition2D;

@@ -49,8 +49,81 @@ Abstract: This is a stub class definition of CDataTable
 
 #include "amc_constants.hpp"
 #include "amc_scatterplot.hpp"
+#include "amc_datatableformat.hpp"
 
 using namespace LibMCEnv::Impl;
+
+namespace {
+
+	// Clears a data table during stack unwinding, so that a failed load never leaves a partially loaded table behind.
+	class CDataTableClearGuard {
+	private:
+		CDataTable* m_pTable;
+		bool m_bArmed;
+
+	public:
+		explicit CDataTableClearGuard(CDataTable* pTable)
+			: m_pTable(pTable), m_bArmed(true)
+		{
+		}
+
+		~CDataTableClearGuard()
+		{
+			if (m_bArmed)
+				m_pTable->Clear();
+		}
+
+		void dismiss()
+		{
+			m_bArmed = false;
+		}
+	};
+
+}
+
+LibMCEnvResult CDataTable::formatErrorToResult(AMC::eDataTableFormatError formatError)
+{
+	switch (formatError) {
+	case AMC::eDataTableFormatError::InvalidSignature: return LIBMCENV_ERROR_INVALIDDATATABLESIGNATURE;
+	case AMC::eDataTableFormatError::UnsupportedVersion: return LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION;
+	case AMC::eDataTableFormatError::UnsupportedCodec: return LIBMCENV_ERROR_UNSUPPORTEDDATATABLECODEC;
+	case AMC::eDataTableFormatError::UnsupportedEncoding: return LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING;
+	case AMC::eDataTableFormatError::InvalidDataType: return LIBMCENV_ERROR_INVALIDCOLUMNDATATYPE;
+	case AMC::eDataTableFormatError::Truncated: return LIBMCENV_ERROR_DATATABLESEGMENTTRUNCATED;
+	case AMC::eDataTableFormatError::Corrupt: return LIBMCENV_ERROR_INVALIDDATATABLESEGMENT;
+	case AMC::eDataTableFormatError::InvalidRange: return LIBMCENV_ERROR_INVALIDDATATABLEROWRANGE;
+	case AMC::eDataTableFormatError::SegmentPurged: return LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED;
+	case AMC::eDataTableFormatError::ColumnNotFound: return LIBMCENV_ERROR_DATACAPTURECOLUMNNOTFOUND;
+	case AMC::eDataTableFormatError::TypeMismatch: return LIBMCENV_ERROR_DATATABLECOLUMNTYPEMISMATCH;
+	default: return LIBMCENV_ERROR_INVALIDPARAM;
+	}
+}
+
+CDataTableColumn* CDataTable::getColumnByIndex(uint32_t nColumnIndex)
+{
+	if (nColumnIndex >= m_Columns.size())
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCOLUMNINDEX);
+
+	return m_Columns.at(nColumnIndex).get();
+}
+
+CDataTableColumn* CDataTable::findColumnByIdentifier(const std::string& sIdentifier)
+{
+	return findColumn(sIdentifier, false);
+}
+
+void CDataTable::setColumnPlainData(const std::string& sIdentifier, uint64_t nRowCount, const std::function<void(uint8_t* pPlainValues, uint64_t nSizeInBytes)>& fillCallback)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+
+	uint8_t* pPlainValues = pColumn->resizeRawData(nRowCount);
+	if (nRowCount > 0) {
+		fillCallback(pPlainValues, nRowCount * pColumn->getEntrySizeInBytes());
+		pColumn->rawDataChanged();
+	}
+
+	updateMaxRowCount();
+}
 
 
 #pragma pack(push)
@@ -110,6 +183,29 @@ void CDataTableColumn::writeUint64ToBuffer(uint64_t nValue, std::vector<char>& b
 
 	writeUint64ToBufferFixedDigits (nValue, nDigits, buffer, nBufferPosition);
 
+}
+
+void CDataTableColumn::writeQuantizedDoubleToBuffer(double dValue, uint64_t nQuantizationFactor, uint32_t nQuantizationDigits, std::vector<char>& buffer, size_t& nBufferPosition)
+{
+	uint64_t nQuantizedValue;
+
+	if (dValue >= 0.0) {
+		nQuantizedValue = (uint64_t)round(dValue * (double)nQuantizationFactor);
+	}
+	else {
+		nQuantizedValue = (uint64_t)round((-dValue) * (double)nQuantizationFactor);
+
+		buffer.at(nBufferPosition) = '-';
+		nBufferPosition++;
+	}
+
+	uint64_t nIntegerValue = nQuantizedValue / nQuantizationFactor;
+	uint64_t nFracValue = nQuantizedValue % nQuantizationFactor;
+
+	writeUint64ToBuffer(nIntegerValue, buffer, nBufferPosition);
+	buffer.at(nBufferPosition) = '.';
+	nBufferPosition++;
+	writeUint64ToBufferFixedDigits(nFracValue, nQuantizationDigits, buffer, nBufferPosition);
 }
 
 
@@ -220,6 +316,12 @@ public:
 	size_t getEntrySizeInBytes() override
 	{
 		return sizeof(double);
+	}
+
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
 	}
 
 	void WriteDataToStream(ITempStreamWriter* pWriter) override
@@ -416,6 +518,12 @@ public:
 		return sizeof(uint32_t);
 	}
 
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
+	}
+
 	void WriteDataToStream(ITempStreamWriter* pWriter) override
 	{
 		if (pWriter == nullptr)
@@ -602,6 +710,12 @@ public:
 		return sizeof(uint64_t);
 	}
 
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
+	}
+
 	void WriteDataToStream(ITempStreamWriter* pWriter) override
 	{
 		if (pWriter == nullptr)
@@ -768,6 +882,12 @@ public:
 	size_t getEntrySizeInBytes() override
 	{
 		return sizeof(int32_t);
+	}
+
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
 	}
 
 	void WriteDataToStream(ITempStreamWriter* pWriter) override
@@ -963,6 +1083,12 @@ public:
 		return sizeof(int64_t);
 	}
 
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
+	}
+
 	void WriteDataToStream(ITempStreamWriter* pWriter) override
 	{
 		if (pWriter == nullptr)
@@ -1040,6 +1166,307 @@ public:
 
 };
 
+
+/*************************************************************************************************************************
+ Fixed-width column template for the column types added in format phase 0 (Float, Bool, Timestamp).
+ Rows are held in a flat std::vector<T> and written to the stream as a raw value array, exactly like
+ the five original column types. Bit-packing and delta encoding arrive with format version 2.
+**************************************************************************************************************************/
+
+template <typename T>
+class CDataTableColumn_FixedWidth : public CDataTableColumn
+{
+protected:
+
+	std::vector <T> m_Rows;
+
+public:
+
+	CDataTableColumn_FixedWidth(const std::string& sIdentifier, const std::string& sDescription)
+		: CDataTableColumn(sIdentifier, sDescription)
+	{
+
+	}
+
+	virtual ~CDataTableColumn_FixedWidth()
+	{
+
+	}
+
+	size_t getRowCount() override
+	{
+		return m_Rows.size();
+	}
+
+	void copyDataTo(T* pBuffer, size_t nBufferSize)
+	{
+		if (nBufferSize > 0) {
+			if (pBuffer == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNBUFFERISNULL);
+
+			size_t nCopyCount = nBufferSize;
+			if (nCopyCount > m_Rows.size())
+				nCopyCount = m_Rows.size();
+
+			for (size_t nIndex = 0; nIndex < nCopyCount; nIndex++)
+				pBuffer[nIndex] = m_Rows.at(nIndex);
+
+			// Fill up buffer with 0 as value, when buffer is larger than the row count of the column
+			for (size_t nFillIndex = nCopyCount; nFillIndex < nBufferSize; nFillIndex++)
+				pBuffer[nFillIndex] = (T)0;
+		}
+	}
+
+	virtual void copyDataFrom(const T* pBuffer, size_t nBufferSize)
+	{
+		m_Rows.resize(nBufferSize);
+
+		if (nBufferSize > 0) {
+
+			if (pBuffer == nullptr)
+				throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNBUFFERISNULL);
+
+			for (size_t nIndex = 0; nIndex < nBufferSize; nIndex++)
+				m_Rows.at(nIndex) = pBuffer[nIndex];
+
+		}
+	}
+
+	size_t getEntrySizeInBytes() override
+	{
+		return sizeof(T);
+	}
+
+	uint8_t* resizeRawData(uint64_t nEntryCount) override
+	{
+		m_Rows.resize(nEntryCount);
+		return (uint8_t*)m_Rows.data();
+	}
+
+	void WriteDataToStream(ITempStreamWriter* pWriter) override
+	{
+		if (pWriter == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+		if (m_Rows.size() > 0) {
+			pWriter->WriteData(m_Rows.size() * getEntrySizeInBytes(), (uint8_t*)m_Rows.data());
+		}
+	}
+
+	void ReadDataFromStream(IStreamReader* pReader, uint64_t nEntryCount) override
+	{
+		if (pReader == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+		if (nEntryCount > 0) {
+			m_Rows.resize(nEntryCount);
+			size_t nBufferSize = m_Rows.size() * getEntrySizeInBytes();
+
+			pReader->ReadData(nBufferSize, nBufferSize, nullptr, (uint8_t*)m_Rows.data());
+
+		}
+		else {
+			m_Rows.resize(0);
+		}
+	}
+
+	void fillScatterplotXCoordinates(AMC::CScatterplot* pScatterplot, double dScaleFactor, double dOffset) override
+	{
+		if (pScatterplot == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+		auto& entries = pScatterplot->getEntries();
+		size_t entryCount = entries.size();
+		size_t rowCount = m_Rows.size();
+
+		for (size_t nIndex = 0; nIndex < entryCount; nIndex++) {
+			auto& entry = entries.at(nIndex);
+			if (nIndex < rowCount) {
+				entry.m_dX = (double)m_Rows.at(nIndex) * dScaleFactor + dOffset;
+			}
+			else {
+				entry.m_dX = 0.0;
+			}
+		}
+	}
+
+	void fillScatterplotYCoordinates(AMC::CScatterplot* pScatterplot, double dScaleFactor, double dOffset) override
+	{
+		if (pScatterplot == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+		auto& entries = pScatterplot->getEntries();
+		size_t entryCount = entries.size();
+		size_t rowCount = m_Rows.size();
+
+		for (size_t nIndex = 0; nIndex < entryCount; nIndex++) {
+			auto& entry = entries.at(nIndex);
+			if (nIndex < rowCount) {
+				entry.m_dY = (double)m_Rows.at(nIndex) * dScaleFactor + dOffset;
+			}
+			else {
+				entry.m_dY = 0.0;
+			}
+		}
+	}
+
+	void fillScatterplotChannel(AMC::CScatterplot* pScatterplot, const std::string& sChannel, const std::string& sColumn, double dScaleFactor, double dOffset) override
+	{
+		if (pScatterplot == nullptr)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
+
+		auto& channelEntries = pScatterplot->getChannelEntries();
+		auto channelIter = channelEntries.find(sChannel);
+
+		if (channelIter == channelEntries.end()) {
+			channelEntries[sChannel][sColumn] = std::vector<double>();
+		}
+		else {
+			auto& columnEntries = channelIter->second;
+
+			if (columnEntries.find(sColumn) == columnEntries.end())
+				columnEntries[sColumn] = std::vector<double>();
+			else {
+				std::string sException = "The channel = " + sChannel + " with the column = " + sColumn + " already exists";
+				throw std::runtime_error(sException.c_str());
+			}
+		}
+
+		auto& vecColumn = channelEntries[sChannel][sColumn];
+
+		vecColumn.resize(m_Rows.size());
+
+		for (size_t nIndex = 0; nIndex < m_Rows.size(); nIndex++) {
+			vecColumn[nIndex] = (double)m_Rows.at(nIndex) * dScaleFactor + dOffset;
+		}
+	}
+
+};
+
+
+class CDataTableColumn_Float : public CDataTableColumn_FixedWidth<float>
+{
+private:
+
+	uint64_t m_nCSVQuantizationFactor;
+	uint32_t m_nCSVQuantizationDigits;
+
+public:
+
+	CDataTableColumn_Float(const std::string& sIdentifier, const std::string& sDescription)
+		: CDataTableColumn_FixedWidth<float>(sIdentifier, sDescription)
+	{
+		// Same CSV export rounding as the double column.
+		m_nCSVQuantizationDigits = 3;
+		m_nCSVQuantizationFactor = 1ULL;
+		for (uint32_t nIndex = 0; nIndex < m_nCSVQuantizationDigits; nIndex++)
+			m_nCSVQuantizationFactor *= 10;
+	}
+
+	LibMCEnv::eDataTableColumnType getColumnType() override
+	{
+		return LibMCEnv::eDataTableColumnType::FloatColumn;
+	}
+
+	void writeCSVValue(size_t nRowIndex, std::vector<char>& buffer, size_t& nBufferPosition) override
+	{
+		if (nRowIndex < m_Rows.size()) {
+			writeQuantizedDoubleToBuffer((double)m_Rows[nRowIndex], m_nCSVQuantizationFactor, m_nCSVQuantizationDigits, buffer, nBufferPosition);
+		}
+		else {
+			buffer.at(nBufferPosition) = '0';
+			nBufferPosition++;
+		}
+	}
+
+};
+
+
+class CDataTableColumn_Bool : public CDataTableColumn_FixedWidth<uint8_t>
+{
+private:
+
+	void normalizeRows()
+	{
+		for (auto& nValue : m_Rows)
+			nValue = (nValue != 0) ? 1 : 0;
+	}
+
+public:
+
+	CDataTableColumn_Bool(const std::string& sIdentifier, const std::string& sDescription)
+		: CDataTableColumn_FixedWidth<uint8_t>(sIdentifier, sDescription)
+	{
+
+	}
+
+	LibMCEnv::eDataTableColumnType getColumnType() override
+	{
+		return LibMCEnv::eDataTableColumnType::BoolColumn;
+	}
+
+	// Values cross the ABI as bytes; any nonzero byte is true and is stored as 1.
+	void copyDataFrom(const uint8_t* pBuffer, size_t nBufferSize) override
+	{
+		CDataTableColumn_FixedWidth<uint8_t>::copyDataFrom(pBuffer, nBufferSize);
+		normalizeRows();
+	}
+
+	void ReadDataFromStream(IStreamReader* pReader, uint64_t nEntryCount) override
+	{
+		CDataTableColumn_FixedWidth<uint8_t>::ReadDataFromStream(pReader, nEntryCount);
+		normalizeRows();
+	}
+
+	void rawDataChanged() override
+	{
+		normalizeRows();
+	}
+
+	void writeCSVValue(size_t nRowIndex, std::vector<char>& buffer, size_t& nBufferPosition) override
+	{
+		if ((nRowIndex < m_Rows.size()) && (m_Rows[nRowIndex] != 0)) {
+			buffer.at(nBufferPosition) = '1';
+		}
+		else {
+			buffer.at(nBufferPosition) = '0';
+		}
+		nBufferPosition++;
+	}
+
+};
+
+
+class CDataTableColumn_Timestamp : public CDataTableColumn_FixedWidth<uint64_t>
+{
+public:
+
+	CDataTableColumn_Timestamp(const std::string& sIdentifier, const std::string& sDescription)
+		: CDataTableColumn_FixedWidth<uint64_t>(sIdentifier, sDescription)
+	{
+
+	}
+
+	LibMCEnv::eDataTableColumnType getColumnType() override
+	{
+		return LibMCEnv::eDataTableColumnType::TimestampColumn;
+	}
+
+	// Timestamps are microseconds and are exported as plain integers.
+	void writeCSVValue(size_t nRowIndex, std::vector<char>& buffer, size_t& nBufferPosition) override
+	{
+		if (nRowIndex < m_Rows.size()) {
+			writeUint64ToBuffer(m_Rows[nRowIndex], buffer, nBufferPosition);
+		}
+		else {
+			buffer.at(nBufferPosition) = '0';
+			nBufferPosition++;
+		}
+	}
+
+};
+
+
 CDataTableColumn::CDataTableColumn(const std::string& sIdentifier, const std::string& sDescription)
 	: m_sIdentifier (sIdentifier), m_sDescription (sDescription)
 {
@@ -1064,6 +1491,16 @@ std::string CDataTableColumn::getIdentifier()
 std::string CDataTableColumn::getDescription()
 {
 	return m_sDescription;
+}
+
+void CDataTableColumn::rawDataChanged()
+{
+}
+
+const uint8_t* CDataTableColumn::getRawData()
+{
+	// Resizing to the current row count changes nothing and returns the value array.
+	return resizeRawData(getRowCount());
 }
 
 void CDataTableColumn::setDescription(const std::string& sDescription)
@@ -1130,6 +1567,15 @@ PDataTableColumn CDataTable::addColumnEx(const std::string& sIdentifier, const s
 	case LibMCEnv::eDataTableColumnType::Int64Column:
 		pColumn = std::make_shared<CDataTableColumn_Int64>(sIdentifier, sDescription);
 		break;
+	case LibMCEnv::eDataTableColumnType::FloatColumn:
+		pColumn = std::make_shared<CDataTableColumn_Float>(sIdentifier, sDescription);
+		break;
+	case LibMCEnv::eDataTableColumnType::BoolColumn:
+		pColumn = std::make_shared<CDataTableColumn_Bool>(sIdentifier, sDescription);
+		break;
+	case LibMCEnv::eDataTableColumnType::TimestampColumn:
+		pColumn = std::make_shared<CDataTableColumn_Timestamp>(sIdentifier, sDescription);
+		break;
 	default:
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDCOLUMNDATATYPE);
 	}
@@ -1173,7 +1619,14 @@ CDataTableColumn* CDataTable::findColumn(const std::string& sIdentifier, bool bM
 
 LibMCEnv_uint32 CDataTable::GetRowCount()
 {
+	// Kept for ABI compatibility. Row counts above the uint32 range are truncated here;
+	// GetRowCount64 returns the full value.
 	return (uint32_t) m_nMaxRowCount;
+}
+
+LibMCEnv_uint64 CDataTable::GetRowCount64()
+{
+	return (uint64_t) m_nMaxRowCount;
 }
 
 LibMCEnv_uint32 CDataTable::GetColumnCount()
@@ -1384,6 +1837,105 @@ void CDataTable::SetUint64ColumnValues(const std::string & sIdentifier, const Li
 }
 
 
+void CDataTable::GetFloatColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pFloatColumn = dynamic_cast<CDataTableColumn_Float*> (pColumn);
+
+	if (pFloatColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT, "column is not of type float: " + sIdentifier);
+
+	if (pValuesNeededCount != nullptr)
+		*pValuesNeededCount = m_nMaxRowCount;
+
+	if (pValuesBuffer != nullptr)
+	{
+		if (nValuesBufferSize < m_nMaxRowCount)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_BUFFERTOOSMALL);
+
+		pFloatColumn->copyDataTo(pValuesBuffer, m_nMaxRowCount);
+	}
+}
+
+void CDataTable::GetBoolColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pBoolColumn = dynamic_cast<CDataTableColumn_Bool*> (pColumn);
+
+	if (pBoolColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL, "column is not of type bool: " + sIdentifier);
+
+	if (pValuesNeededCount != nullptr)
+		*pValuesNeededCount = m_nMaxRowCount;
+
+	if (pValuesBuffer != nullptr)
+	{
+		if (nValuesBufferSize < m_nMaxRowCount)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_BUFFERTOOSMALL);
+
+		pBoolColumn->copyDataTo(pValuesBuffer, m_nMaxRowCount);
+	}
+}
+
+void CDataTable::GetTimestampColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pTimestampColumn = dynamic_cast<CDataTableColumn_Timestamp*> (pColumn);
+
+	if (pTimestampColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP, "column is not of type timestamp: " + sIdentifier);
+
+	if (pValuesNeededCount != nullptr)
+		*pValuesNeededCount = m_nMaxRowCount;
+
+	if (pValuesBuffer != nullptr)
+	{
+		if (nValuesBufferSize < m_nMaxRowCount)
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_BUFFERTOOSMALL);
+
+		pTimestampColumn->copyDataTo(pValuesBuffer, m_nMaxRowCount);
+	}
+}
+
+void CDataTable::SetFloatColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pFloatColumn = dynamic_cast<CDataTableColumn_Float*> (pColumn);
+
+	if (pFloatColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT, "column is not of type float: " + sIdentifier);
+
+	pFloatColumn->copyDataFrom(pValuesBuffer, nValuesBufferSize);
+
+	updateMaxRowCount();
+}
+
+void CDataTable::SetBoolColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pBoolColumn = dynamic_cast<CDataTableColumn_Bool*> (pColumn);
+
+	if (pBoolColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL, "column is not of type bool: " + sIdentifier);
+
+	pBoolColumn->copyDataFrom(pValuesBuffer, nValuesBufferSize);
+
+	updateMaxRowCount();
+}
+
+void CDataTable::SetTimestampColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer)
+{
+	auto pColumn = findColumn(sIdentifier, true);
+	auto pTimestampColumn = dynamic_cast<CDataTableColumn_Timestamp*> (pColumn);
+
+	if (pTimestampColumn == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP, "column is not of type timestamp: " + sIdentifier);
+
+	pTimestampColumn->copyDataFrom(pValuesBuffer, nValuesBufferSize);
+
+	updateMaxRowCount();
+}
+
 void CDataTable::updateMaxRowCount()
 {
 	m_nMaxRowCount = 0;
@@ -1498,6 +2050,7 @@ void CDataTable::WriteDataToStream(ITempStreamWriter* pWriter, IDataTableWriteOp
 
 	uint64_t currentDataStart = sizeof (header);
 	header.m_nSignature = DATATABLE_HEADERSIGNATURE;
+	header.m_nVersion = DATATABLE_CURRENTFORMATVERSION;
 	header.m_nColumnTableStart = currentDataStart;
 	header.m_nColumnCount = (uint32_t)m_Columns.size();
 	pWriter->WriteData(sizeof (header), (uint8_t*)&header);
@@ -1549,6 +2102,70 @@ void CDataTable::LoadFromStream(IStreamReader* pStream)
 	if (pStream == nullptr)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDPARAM);
 
+	uint64_t nStreamSize = pStream->GetSize();
+
+	// The signature selects the format: the chunked columnar format (version 2) carries its own
+	// signature, so that it is never interpreted as a version 1 column table.
+	uint32_t nSignature = 0;
+	pStream->Seek(0);
+	pStream->ReadData(sizeof(nSignature), sizeof(nSignature), nullptr, (uint8_t*)&nSignature);
+
+	if (nSignature == DATATABLE_HEADERSIGNATURE_V2)
+		loadFromStreamV2(pStream, nStreamSize);
+	else
+		loadFromStreamV1(pStream, nStreamSize);
+}
+
+void CDataTable::loadFromStreamV2(IStreamReader* pStream, uint64_t nStreamSize)
+{
+	CDataTableClearGuard clearOnFailure(this);
+
+	try {
+
+		AMC::CDataTableV2SegmentReader segmentReader([pStream](uint64_t nOffset, uint64_t nSize, uint8_t* pBuffer) {
+			if (nSize > 0) {
+				pStream->Seek(nOffset);
+				pStream->ReadData(nSize, nSize, nullptr, pBuffer);
+			}
+		}, nStreamSize);
+
+		uint64_t nRowCount = segmentReader.getRowCount();
+		uint32_t nChunkCount = segmentReader.getChunkCount();
+		uint32_t nColumnCount = segmentReader.getColumnCount();
+
+		for (uint32_t nColumnIndex = 0; nColumnIndex < nColumnCount; nColumnIndex++) {
+			auto& column = segmentReader.getColumn(nColumnIndex);
+			auto pColumn = addColumnEx(column.m_sIdentifier, column.m_sDescription, (LibMCEnv::eDataTableColumnType)column.m_DataType);
+
+			if (nRowCount > 0) {
+				uint64_t nEntrySize = pColumn->getEntrySizeInBytes();
+				uint8_t* pColumnData = pColumn->resizeRawData(nRowCount);
+
+				uint64_t nRowOffset = 0;
+				for (uint32_t nChunkIndex = 0; nChunkIndex < nChunkCount; nChunkIndex++) {
+					segmentReader.readPage(nChunkIndex, nColumnIndex, pColumnData + nRowOffset * nEntrySize, (nRowCount - nRowOffset) * nEntrySize);
+					nRowOffset += segmentReader.getChunkRowCount(nChunkIndex);
+				}
+
+				pColumn->rawDataChanged();
+			}
+		}
+
+	}
+	catch (const AMC::EDataTableFormatException& formatException) {
+		throw ELibMCEnvInterfaceException(formatErrorToResult(formatException.getError()), formatException.what());
+	}
+
+	clearOnFailure.dismiss();
+
+	updateMaxRowCount();
+}
+
+void CDataTable::loadFromStreamV1(IStreamReader* pStream, uint64_t nStreamSize)
+{
+	if (nStreamSize < sizeof(sLibMCDataTableStreamHeader))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLESIGNATURE, "stream is too small for a datatable");
+
 	sLibMCDataTableStreamHeader header;
 	memset((void*)&header, 0, sizeof(header));
 
@@ -1558,10 +2175,17 @@ void CDataTable::LoadFromStream(IStreamReader* pStream)
 	if (header.m_nSignature != DATATABLE_HEADERSIGNATURE)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLESIGNATURE);
 
+	// Files written before the version field was populated carry 0 and are format version 1.
+	if ((header.m_nVersion != DATATABLE_FORMATVERSION_UNVERSIONED) && (header.m_nVersion != DATATABLE_FORMATVERSION_1))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION, "unsupported datatable format version: " + std::to_string(header.m_nVersion));
+
 	if (header.m_nColumnCount >= DATATABLE_MAXCOLUMNCOUNT)
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_DATATABLEHASTOOMANYCOLUMS);
 
 	if (header.m_nColumnCount > 0) {
+
+		if (header.m_nColumnTableStart < sizeof(header))
+			throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER, "column table overlaps the stream header");
 
 		std::vector<sLibMCDataTableColumnHeader> columnHeaders;
 		columnHeaders.resize(header.m_nColumnCount);
@@ -1571,34 +2195,63 @@ void CDataTable::LoadFromStream(IStreamReader* pStream)
 		pStream->Seek(header.m_nColumnTableStart);
 		pStream->ReadData(nBufferSize, nBufferSize, nullptr, (uint8_t*)columnHeaders.data());
 
-		for (auto & columnHeader : columnHeaders) {
-			std::vector<uint8_t> identifierBytes;
-			std::vector<uint8_t> descriptionBytes;
+		// Never leave a partially loaded table behind: if any check or read below throws,
+		// the guard clears the table during stack unwinding.
+		CDataTableClearGuard clearOnFailure(this);
 
-			identifierBytes.resize((size_t)columnHeader.m_nIdentifierLength + 1);
-			descriptionBytes.resize((size_t)columnHeader.m_nDescriptionLength + 1);
+		{
 
-			if (columnHeader.m_nIdentifierLength > 0) {
-				pStream->Seek(columnHeader.m_nIdentifierStart);
-				pStream->ReadData(columnHeader.m_nIdentifierLength, columnHeader.m_nIdentifierLength, nullptr, identifierBytes.data());
+			for (auto& columnHeader : columnHeaders) {
+
+				// RAW is the only encoding of format version 1. Anything else would be read as garbage.
+				if (columnHeader.m_nEncodingType != DATATABLE_ENCODINGTYPE_RAW)
+					throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING, "unsupported datatable column encoding: " + std::to_string(columnHeader.m_nEncodingType));
+
+				// Validate all offsets against the stream size before allocating or reading anything,
+				// so that a truncated or corrupted stream fails with a datatable-specific error.
+				if ((columnHeader.m_nIdentifierStart > nStreamSize) || (columnHeader.m_nIdentifierLength > nStreamSize - columnHeader.m_nIdentifierStart))
+					throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER, "column identifier exceeds the end of the stream");
+				if ((columnHeader.m_nDescriptionStart > nStreamSize) || (columnHeader.m_nDescriptionLength > nStreamSize - columnHeader.m_nDescriptionStart))
+					throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER, "column description exceeds the end of the stream");
+
+				std::vector<uint8_t> identifierBytes;
+				std::vector<uint8_t> descriptionBytes;
+
+				identifierBytes.resize((size_t)columnHeader.m_nIdentifierLength + 1);
+				descriptionBytes.resize((size_t)columnHeader.m_nDescriptionLength + 1);
+
+				if (columnHeader.m_nIdentifierLength > 0) {
+					pStream->Seek(columnHeader.m_nIdentifierStart);
+					pStream->ReadData(columnHeader.m_nIdentifierLength, columnHeader.m_nIdentifierLength, nullptr, identifierBytes.data());
+				}
+
+				if (columnHeader.m_nDescriptionLength > 0) {
+					pStream->Seek(columnHeader.m_nDescriptionStart);
+					pStream->ReadData(columnHeader.m_nDescriptionLength, columnHeader.m_nDescriptionLength, nullptr, descriptionBytes.data());
+				}
+
+				identifierBytes.at(columnHeader.m_nIdentifierLength) = 0;
+				descriptionBytes.at(columnHeader.m_nDescriptionLength) = 0;
+
+				std::string sIdentifier((char*)identifierBytes.data());
+				std::string sDescription((char*)descriptionBytes.data());
+
+				auto pColumn = addColumnEx(sIdentifier, sDescription, (LibMCEnv::eDataTableColumnType)columnHeader.m_nColumnDataType);
+
+				uint64_t nEntrySize = pColumn->getEntrySizeInBytes();
+				if (columnHeader.m_nColumnDataStart > nStreamSize)
+					throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER, "column data of " + sIdentifier + " starts beyond the end of the stream");
+				if (columnHeader.m_nEntryCount > (nStreamSize - columnHeader.m_nColumnDataStart) / nEntrySize)
+					throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER, "column data of " + sIdentifier + " exceeds the end of the stream");
+
+				pStream->Seek(columnHeader.m_nColumnDataStart);
+				pColumn->ReadDataFromStream(pStream, columnHeader.m_nEntryCount);
+
 			}
 
-			if (columnHeader.m_nDescriptionLength > 0) {
-				pStream->Seek(columnHeader.m_nDescriptionStart);
-				pStream->ReadData(columnHeader.m_nDescriptionLength, columnHeader.m_nDescriptionLength, nullptr, descriptionBytes.data());
-			}
-
-			identifierBytes.at(columnHeader.m_nIdentifierLength) = 0;
-			descriptionBytes.at(columnHeader.m_nDescriptionLength) = 0;
-
-			std::string sIdentifier((char*)identifierBytes.data());
-			std::string sDescription((char*)descriptionBytes.data());
-
-			auto pColumn = addColumnEx(sIdentifier, sDescription, (LibMCEnv::eDataTableColumnType)columnHeader.m_nColumnDataType);
-			pStream->Seek(columnHeader.m_nColumnDataStart);
-			pColumn->ReadDataFromStream(pStream, columnHeader.m_nEntryCount);
-			
 		}
+
+		clearOnFailure.dismiss();
 
 		updateMaxRowCount();
 
@@ -1625,7 +2278,7 @@ IScatterPlot* CDataTable::CalculateScatterPlot(IDataTableScatterPlotOptions* pSc
 
 	std::string sNewUUID = AMCCommon::CUtils::createUUID();
 
-	uint32_t nPointCount = GetRowCount();
+	size_t nPointCount = m_nMaxRowCount;
 
 	std::string sXAxisColumn = pScatterPlotInput->GetXAxisColumn();
 	if (sXAxisColumn.empty ())

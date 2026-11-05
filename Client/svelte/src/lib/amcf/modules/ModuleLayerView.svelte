@@ -18,6 +18,10 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Spline from '@lucide/svelte/icons/spline';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Plus from '@lucide/svelte/icons/plus';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import MdiIcon from '$lib/amcf/MdiIcon.svelte';
 	// @ts-ignore — core JS has no type declarations yet
 	import WebGLImpl from '@core/common/AMCImplementation_WebGL.js';
 	// @ts-ignore
@@ -106,6 +110,11 @@
 		poll.v;
 		return platform?.labelvisible ? String(platform.labelcaption || '') : '';
 	});
+	let labelIcon = $derived.by(() => {
+		poll.v;
+		return platform?.labelvisible ? String(platform.labelicon || '') : '';
+	});
+	let sliderFixed = $derived.by(() => { poll.v; return !!platform?.sliderfixed; });
 
 	// Scatter plot (platform.scatterplotuuid) drawn as points on top of the toolpath.
 	let pointsLoaded = $state(false);
@@ -192,6 +201,14 @@
 	});
 
 	let sliderValue = $state(0);
+	// Written by the follow-server effect; only a changed server layer moves the slider.
+	let lastServerLayer: number | null = null;
+	let draggingSlider = false;
+	let loadingLayer = $state(false);
+	let loadingPoints = $state(false);
+	// Plain tooltip with the point or toolpath segment under the mouse. Always on, unlike the
+	// "Properties" inspector, which replaces it while active.
+	let hoverInfo = $state({ visible: false, text: '', x: 0, y: 0, flipX: false, flipY: false });
 	let appliedColorTheme = $state('');
 	let coordinateSystemOverride: boolean | null = $state(null);
 	let coordinateSystemVisible = $derived.by(() => {
@@ -216,12 +233,22 @@
 		untrack(() => resetView());
 	});
 
+	// Follow the layer of the server, unless the slider is being dragged. Only a changed server value
+	// is applied, so the slider does not jump back while a layer change is still being processed.
 	$effect(() => {
 		poll.v;
-		if (platform) {
-			sliderValue = platform.currentlayer || 0;
+		if (!platform) return;
+		const serverLayer = platform.currentlayer || 0;
+		if (serverLayer !== lastServerLayer) {
+			lastServerLayer = serverLayer;
+			if (!draggingSlider)
+				sliderValue = serverLayer;
 		}
 	});
+
+	function isValidUUID (uuid: string): boolean {
+		return !!uuid && (uuid !== NULL_UUID);
+	}
 
 	function getCurrentColorSet(): Record<string, string> | null {
 		if (!platform) return null;
@@ -232,12 +259,10 @@
 	function getBuildPlateURL(): string | null {
 		if (!platform || !app) return null;
 		const isDark = document.documentElement.classList.contains('dark');
-		if (isDark && platform.dark_baseimageresource) {
+		if (isDark && isValidUUID(platform.dark_baseimageresource))
 			return app.getImageURL(platform.dark_baseimageresource);
-		}
-		if (platform.baseimageresource) {
+		if (isValidUUID(platform.baseimageresource))
 			return app.getImageURL(platform.baseimageresource);
-		}
 		return null;
 	}
 
@@ -411,31 +436,42 @@
 		playbackFrame = 0;
 	}
 
+	// Runs on mount and whenever the container reappears: hiding the module destroys the container
+	// together with the canvas that three.js appended to it.
 	function ensureInit() {
-		if (initialized || !containerEl || !app) return;
+		if (!containerEl || !app) return;
 		const w = containerEl.clientWidth, h = containerEl.clientHeight;
 		if (w === 0 || h === 0) return;
 
+		let firstInit = false;
+
 		try {
-			glInstance = app.retrieveWebGLInstance(module.uuid);
 			if (!glInstance) {
-				glInstance = new WebGLImpl();
-				app.storeWebGLInstance(module.uuid, glInstance);
+				glInstance = app.retrieveWebGLInstance(module.uuid);
+				if (!glInstance) {
+					glInstance = new WebGLImpl();
+					app.storeWebGLInstance(module.uuid, glInstance);
+				}
 			}
 
-			layerViewer = new LayerViewImpl(glInstance);
-			// Write-only, so effects that pan or zoom do not subscribe to viewVersion.
-			layerViewer.onTransformChanged = () => { viewVersion = ++transformChangeCount; };
-			layerViewer.toolpathVisible = toolpathVisible;
-			layerViewer.showLaserOffPoints = showLaserOffPoints;
-			layerViewer.setTimeCapFraction(timeSliderValue / TIME_SLIDER_STEPS);
+			if (!layerViewer) {
+				layerViewer = new LayerViewImpl(glInstance);
+				// Write-only, so effects that pan or zoom do not subscribe to viewVersion.
+				layerViewer.onTransformChanged = () => { viewVersion = ++transformChangeCount; };
+				layerViewer.toolpathVisible = toolpathVisible;
+				layerViewer.showLaserOffPoints = showLaserOffPoints;
+				layerViewer.setTimeCapFraction(timeSliderValue / TIME_SLIDER_STEPS);
+				firstInit = true;
+			}
 
-			glInstance.setupDOMElement(containerEl);
+			// Re-attach the canvas when the container has been recreated
+			if (!containerEl.contains(glInstance.renderer.domElement))
+				glInstance.setupDOMElement(containerEl);
 			layerViewer.updateSize(w, h);
 			layerViewer.setCoordinateTransform(...coordinateTransform);
 			appliedCoordinateTransform = coordinateTransform;
 
-			if (platform) {
+			if (firstInit && platform) {
 				const plateURL = getBuildPlateURL();
 				if (plateURL) {
 					layerViewer.SetBuildPlateSVG(plateURL);
@@ -446,6 +482,8 @@
 				platform.displayed_layer = 0;
 				platform.displayed_build = 0;
 				platform.displayed_scatterplot = '';
+			} else if (autoFrame) {
+				centerOnPlatform();
 			}
 
 			const cs = getCurrentColorSet();
@@ -459,64 +497,97 @@
 			initialized = true;
 		} catch (e) {
 			console.warn('[LayerView] init failed:', e);
+			return;
 		}
+
+		// Load the current layer right away instead of waiting for the next poll
+		if (firstInit)
+			onDataChanged(module);
 	}
 
 	function onDataChanged(sender: any) {
-		if (!layerViewer || !platform || !sender) return;
+		const currentPlatform = module.platform;
+		if (!layerViewer || !currentPlatform || !sender) return;
 		if (!module.isActive || !module.isActive()) return;
 		if (sender.uuid !== module.uuid) return;
 
-		if (platform.displayed_layer !== platform.currentlayer ||
-			platform.displayed_build !== platform.builduuid ||
-			platform.displayed_partstateversion !== platform.partstateversion) {
+		if (currentPlatform.displayed_layer !== currentPlatform.currentlayer ||
+			currentPlatform.displayed_build !== currentPlatform.builduuid ||
+			currentPlatform.displayed_partstateversion !== currentPlatform.partstateversion) {
 
-			if (platform.displayed_layer !== platform.currentlayer || platform.displayed_build !== platform.builduuid) {
+			if (currentPlatform.displayed_layer !== currentPlatform.currentlayer || currentPlatform.displayed_build !== currentPlatform.builduuid) {
 				stopPlayback();
 				setTimeSliderValue(TIME_SLIDER_STEPS);
 				editedTimeRange = null;
 			}
-			if (platform.displayed_build !== platform.builduuid) {
+			if (currentPlatform.displayed_build !== currentPlatform.builduuid) {
 				editedPowerRange = null;
 				editedVelocityRange = null;
 			}
-			platform.displayed_layer = platform.currentlayer;
-			platform.displayed_build = platform.builduuid;
-			platform.displayed_partstateversion = platform.partstateversion;
-			sliderValue = platform.currentlayer || 0;
-
-			app.axiosPostRequest('/build/toolpath', {
-				builduuid: platform.builduuid,
-				layerindex: platform.currentlayer
-			})
-			.then((layerJSON: any) => {
-				if (layerViewer) {
-					clearHover();
-					buildPowerRange = readPowerRange(layerJSON.data);
-					layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
-					layerPowerRange = layerViewer.getLayerPowerRange();
-					layerVelocityRange = layerViewer.getLayerVelocityRange();
-					refreshTimeline();
-					layerViewer.RenderScene(true);
-				}
-			})
-			.catch((err: any) => {
-				console.warn('[LayerView] layer load error:', err?.response || err);
-				if (layerViewer) layerViewer.RenderScene(true);
-			});
+			currentPlatform.displayed_layer = currentPlatform.currentlayer;
+			currentPlatform.displayed_build = currentPlatform.builduuid;
+			currentPlatform.displayed_partstateversion = currentPlatform.partstateversion;
+			loadToolpath(currentPlatform.builduuid, currentPlatform.currentlayer);
 		}
 
-		const scatterPlotUUID = typeof platform.scatterplotuuid === 'string' ? platform.scatterplotuuid.toLowerCase() : NULL_UUID;
-		if (platform.displayed_scatterplot !== scatterPlotUUID) {
-			platform.displayed_scatterplot = scatterPlotUUID;
+		const scatterPlotUUID = typeof currentPlatform.scatterplotuuid === 'string' ? currentPlatform.scatterplotuuid.toLowerCase() : NULL_UUID;
+		if (currentPlatform.displayed_scatterplot !== scatterPlotUUID) {
+			currentPlatform.displayed_scatterplot = scatterPlotUUID;
 			loadScatterPlot(scatterPlotUUID);
 		}
+	}
+
+	function isDisplayedToolpath(buildUUID: string, layerIndex: number): boolean {
+		const currentPlatform = module.platform;
+		return !!currentPlatform && (currentPlatform.displayed_build === buildUUID) && (currentPlatform.displayed_layer === layerIndex);
+	}
+
+	function loadToolpath(buildUUID: string, layerIndex: number) {
+		if (!layerViewer) return;
+		hideHoverInfo();
+		clearHover();
+
+		// The null UUID means "no build": show the empty platform
+		if (!isValidUUID(buildUUID)) {
+			loadingLayer = false;
+			buildPowerRange = null;
+			layerViewer.loadLayer(null, null);
+			layerPowerRange = layerViewer.getLayerPowerRange();
+			layerVelocityRange = layerViewer.getLayerVelocityRange();
+			refreshTimeline();
+			return;
+		}
+
+		loadingLayer = true;
+		app.axiosPostRequest('/build/toolpath', {
+			builduuid: buildUUID,
+			layerindex: layerIndex
+		})
+		.then((layerJSON: any) => {
+			// A newer layer has been requested in the meantime
+			if (!layerViewer || !isDisplayedToolpath(buildUUID, layerIndex)) return;
+			clearHover();
+			buildPowerRange = readPowerRange(layerJSON.data);
+			layerViewer.loadLayer(layerJSON.data.segments, layerJSON.data.parts);
+			layerPowerRange = layerViewer.getLayerPowerRange();
+			layerVelocityRange = layerViewer.getLayerVelocityRange();
+			refreshTimeline();
+			layerViewer.RenderScene(true);
+		})
+		.catch((err: any) => {
+			console.warn('[LayerView] layer load error:', err?.response || err);
+			if (layerViewer) layerViewer.RenderScene(true);
+		})
+		.finally(() => {
+			if (isDisplayedToolpath(buildUUID, layerIndex)) loadingLayer = false;
+		});
 	}
 
 	function clearScatterPlot() {
 		pointsLoaded = false;
 		pointColumns = [];
 		hoverPoint = null;
+		hideHoverInfo();
 		if (!layerViewer) return;
 		layerViewer.clearPointsChannelData(POINT_CHANNEL);
 		layerViewer.clearPoints();
@@ -546,8 +617,10 @@
 	async function loadScatterPlot(scatterPlotUUID: string) {
 		const loadIndex = ++pointLoadCounter;
 		clearScatterPlot();
+		loadingPoints = false;
 		if (!layerViewer || scatterPlotUUID === NULL_UUID || !UUID_PATTERN.test(scatterPlotUUID)) return;
 
+		loadingPoints = true;
 		try {
 			const pointsResponse = await app.axiosGetArrayBufferRequest('/pointcloud/' + scatterPlotUUID);
 			let channelColumns: [string, Float32Array][] = [];
@@ -575,11 +648,15 @@
 		} catch (err: any) {
 			console.warn('[LayerView] point cloud error:', err?.response || err);
 			if (layerViewer) layerViewer.RenderScene(true);
+		} finally {
+			// Another scatter plot may have been requested in the meantime
+			if (loadIndex === pointLoadCounter) loadingPoints = false;
 		}
 	}
 
 	function toggleLaserOffPoints() {
 		showLaserOffPoints = !showLaserOffPoints;
+		hideHoverInfo();
 		if (!layerViewer) return;
 		layerViewer.showLaserOffPoints = showLaserOffPoints;
 		layerViewer.updateLayerPoints();
@@ -588,6 +665,7 @@
 
 	function toggleToolpath() {
 		toolpathVisible = !toolpathVisible;
+		hideHoverInfo();
 		if (!layerViewer) return;
 		clearHover();
 		layerViewer.toolpathVisible = toolpathVisible;
@@ -596,15 +674,36 @@
 		layerViewer.RenderScene(true);
 	}
 
-	function changeLayer(layer: number) {
-		sliderValue = layer;
-		if (platform) {
-			app.triggerWidgetRequest(platform.uuid, 'changelayer', { targetlayer: layer });
+	function changeLayerTo(targetLayer: number) {
+		if (!app || !platform || sliderFixed) return;
+		if (isNaN(targetLayer) || (targetLayer < 0) || (targetLayer >= layerCount)) return;
+
+		sliderValue = targetLayer;
+		if (targetLayer !== platform.currentlayer) {
+			// The slider moves optimistically. If the request fails, the server keeps its layer and the
+			// follow-server effect will not fire (the value did not change), so roll back here.
+			app.triggerWidgetRequest(platform.uuid, 'changelayer', { targetlayer: targetLayer }, undefined, (err: any) => {
+				if (!draggingSlider && (sliderValue === targetLayer))
+					sliderValue = module.platform?.currentlayer || 0;
+				app.showSnackBar('Layer change to ' + targetLayer + ' failed: ' + app.extractErrorMessage(err), 'error', 8000);
+			});
 		}
 	}
 
+	// Every layer change recomputes the scatter plot on the server, so the layer is only sent when
+	// the slider is released and not for every intermediate position.
+	function onSliderInput(e: Event) {
+		draggingSlider = true;
+		sliderValue = parseInt((e.target as HTMLInputElement).value);
+	}
+
 	function onSliderChange(e: Event) {
-		changeLayer(parseInt((e.target as HTMLInputElement).value));
+		draggingSlider = false;
+		changeLayerTo(parseInt((e.target as HTMLInputElement).value));
+	}
+
+	function onSliderRelease() {
+		draggingSlider = false;
 	}
 
 	// Clicking the "Layer x / n" badge swaps it for a number field; Enter jumps to the typed
@@ -613,6 +712,7 @@
 	let layerJumpValue = $state<number | null>(null);
 
 	function openLayerJump() {
+		if (sliderFixed) return;
 		layerJumpValue = sliderValue;
 		layerJumpOpen = true;
 	}
@@ -621,7 +721,7 @@
 		if (!layerJumpOpen) return;
 		layerJumpOpen = false;
 		if (typeof layerJumpValue !== 'number' || !Number.isFinite(layerJumpValue)) return;
-		changeLayer(Math.min(Math.max(Math.round(layerJumpValue), 0), layerCount));
+		changeLayerTo(Math.min(Math.max(Math.round(layerJumpValue), 0), Math.max(layerCount - 1, 0)));
 	}
 
 	function onLayerJumpKeyDown(event: KeyboardEvent) {
@@ -640,9 +740,96 @@
 		node.select();
 	}
 
+	function hideHoverInfo() {
+		// A hover update that is already scheduled would show the tooltip again
+		pendingHover = null;
+		if (hoverRAF) {
+			cancelAnimationFrame(hoverRAF);
+			hoverRAF = 0;
+		}
+		if (hoverInfo.visible)
+			hoverInfo.visible = false;
+	}
+
+	function describePoint(mouseX: number, mouseY: number): string {
+		if (!pointsLoaded) return '';
+		const pointIndex = layerViewer.resolvePointIndex(glInstance.getRaycasterCollisions('layerdata_points', mouseX, mouseY));
+		if (pointIndex < 0) return '';
+
+		let text = `Point ID = ${pointIndex}`;
+		const position = layerViewer.getPointPosition(pointIndex);
+		if (position) text += `\nPosition: ${position.x.toFixed(4)} / ${position.y.toFixed(4)} mm`;
+		const velocity = layerViewer.getPointVelocity(pointIndex);
+		if (velocity > 0) text += `\nVelocity: ${velocity.toFixed(4)} mm/s`;
+		const acceleration = layerViewer.getPointAcceleration(pointIndex);
+		if (acceleration) text += `\nAcceleration: ${(acceleration.a / 1000).toFixed(4)} m/s²`;
+		const jerk = layerViewer.getPointJerk(pointIndex);
+		if (jerk) text += `\nJerk: ${(jerk.j / 1000000).toFixed(4)} km/s³`;
+		const power = layerViewer.getPointPower(pointIndex);
+		if (power !== null) text += `\nPower: ${power.toFixed(4)} W`;
+		return text;
+	}
+
+	function describeSegment(mouseX: number, mouseY: number): string {
+		if (!toolpathVisible) return '';
+		const lineIndex = glInstance.getRaycasterCollisions('layerdata_lines', mouseX, mouseY);
+		const coordinates = layerViewer.linesCoordinates;
+		if ((lineIndex < 0) || !coordinates || (lineIndex * 4 + 3 >= coordinates.length)) return '';
+
+		const [x1, y1, x2, y2] = coordinates.slice(lineIndex * 4, lineIndex * 4 + 4);
+		let text = `Line ID = ${lineIndex}\n${x1.toFixed(3)} / ${y1.toFixed(3)} - ${x2.toFixed(3)} / ${y2.toFixed(3)} mm`;
+		const properties = layerViewer.segmentProperties?.[lineIndex];
+		if (properties) {
+			if ((typeof properties.laserpower === 'number') && (typeof properties.laserspeed === 'number'))
+				text += `\n${properties.laserpower.toFixed(0)} W / ${properties.laserspeed.toFixed(1)} mm/s`;
+			if (properties.profilename)
+				text += `\nProfile: ${properties.profilename}`;
+		}
+		return text;
+	}
+
+	// Runs once per animation frame, see scheduleHoverUpdate ()
+	function updateHover(clientX: number, clientY: number) {
+		if (dragging) return;
+
+		if (propertiesMode) {
+			// The "Properties" inspector replaces the plain tooltip while it is active
+			if (hoverInfo.visible) hoverInfo.visible = false;
+			updateHoverSegment(clientX, clientY);
+			return;
+		}
+
+		updateHoverInfo(clientX, clientY);
+	}
+
+	function updateHoverInfo(clientX: number, clientY: number) {
+		if (!glInstance?.renderer || !layerViewer || !containerEl) return;
+
+		const canvasBox = glInstance.renderer.domElement.getBoundingClientRect();
+		const mouseX = clientX - canvasBox.left;
+		const mouseY = clientY - canvasBox.top;
+		const text = describePoint(mouseX, mouseY) || describeSegment(mouseX, mouseY);
+		if (!text) {
+			hideHoverInfo();
+			return;
+		}
+
+		const containerBox = containerEl.getBoundingClientRect();
+		const x = clientX - containerBox.left;
+		const y = clientY - containerBox.top;
+		hoverInfo.text = text;
+		hoverInfo.x = x;
+		hoverInfo.y = y;
+		hoverInfo.flipX = x > containerBox.width / 2;
+		hoverInfo.flipY = y > containerBox.height / 2;
+		hoverInfo.visible = true;
+	}
+
 	function onWheel(event: WheelEvent) {
 		if (!containerEl || !layerViewer) return;
 		event.preventDefault();
+		hideHoverInfo();
+		clearHover();
 
 		let delta = event.deltaY;
 		if (delta > 5) delta = 5;
@@ -908,14 +1095,14 @@
 		return `${characters.slice(0, maxCharacters - 1).join('').trimEnd()}…`;
 	}
 
-	// Segment picking scans every line of the layer, so throttle it to one hit
-	// test per animation frame regardless of how fast pointer events arrive.
+	// Segment and point picking scan every line and point of the layer, so throttle it to one
+	// hit test per animation frame regardless of how fast pointer events arrive.
 	function scheduleHoverUpdate(clientX: number, clientY: number) {
 		pendingHover = { x: clientX, y: clientY };
 		if (hoverRAF) return;
 		hoverRAF = requestAnimationFrame(() => {
 			hoverRAF = 0;
-			if (pendingHover) updateHoverSegment(pendingHover.x, pendingHover.y);
+			if (pendingHover) updateHover(pendingHover.x, pendingHover.y);
 		});
 	}
 
@@ -935,13 +1122,17 @@
 
 	function togglePropertiesMode() {
 		propertiesMode = !propertiesMode;
+		hideHoverInfo();
 		if (!propertiesMode) clearHover();
 	}
 
 	function toggleZoomSelectMode() {
 		zoomSelectMode = !zoomSelectMode;
 		zoomSelection = null;
-		if (zoomSelectMode) clearHover();
+		if (zoomSelectMode) {
+			hideHoverInfo();
+			clearHover();
+		}
 	}
 
 	function localViewportPoint(event: PointerEvent): { x: number; y: number } | null {
@@ -984,6 +1175,7 @@
 		if (zoomSelectMode && event.button === 0) {
 			const point = localViewportPoint(event);
 			if (!point) return;
+			hideHoverInfo();
 			clearHover();
 			zoomSelection = { startX: point.x, startY: point.y, endX: point.x, endY: point.y };
 			(event.target as HTMLElement).setPointerCapture(event.pointerId);
@@ -992,6 +1184,7 @@
 
 		if (event.button === 0 || event.button === 1) {
 			dragging = true;
+			hideHoverInfo();
 			clearHover();
 			dragX = event.clientX;
 			dragY = event.clientY;
@@ -1019,7 +1212,7 @@
 			return;
 		}
 
-		if (propertiesMode && !zoomSelectMode) scheduleHoverUpdate(event.clientX, event.clientY);
+		if (!zoomSelectMode) scheduleHoverUpdate(event.clientX, event.clientY);
 	}
 
 	function onPointerUp() {
@@ -1037,17 +1230,18 @@
 
 	function onPointerLeave() {
 		mousePosition = null;
+		hideHoverInfo();
 		clearHover();
 	}
 
-	// Frames the build-area rectangle. The origin is the location of machine-zero
-	// inside the plate (measured from the lower-left corner), so the plate corners in
-	// machine coordinates run from -origin to (size - origin). For origin=(sx/2,sy/2)
-	// this yields a view symmetric around zero, e.g. [-100..100] x [-125..125].
+	// Frames the build-area rectangle. CenterOnRectangle() works in plate coordinates:
+	// the build plate image is drawn from (0, 0) to (sizex, sizey) and the toolpath is
+	// shifted by the origin (see LayerViewImpl.setOrigin / updateTransform), so the
+	// frame is the plate itself, not "-origin .. size - origin". Framing with the origin
+	// subtracted (as the Vue 2 client does since "Layer Viewer updates") puts the plate
+	// corner into the view center for origin = (sizex/2, sizey/2).
 	function centerOnPlatform() {
 		if (!layerViewer || !platform) return;
-		const ox = platform.originx || 0;
-		const oy = platform.originy || 0;
 		const sx = platform.sizex || 300;
 		const sy = platform.sizey || 300;
 		// Optional per-axis padding (in mm) that enlarges the reset zoom window,
@@ -1055,8 +1249,8 @@
 		const px = platform.paddingx || 0;
 		const py = platform.paddingy || 0;
 		layerViewer.CenterOnRectangle(
-			-ox - ZOOM_MARGIN - px, -oy - ZOOM_MARGIN - py,
-			(sx - ox) + ZOOM_MARGIN + px, (sy - oy) + ZOOM_MARGIN + py
+			-ZOOM_MARGIN - px, -ZOOM_MARGIN - py,
+			sx + ZOOM_MARGIN + px, sy + ZOOM_MARGIN + py
 		);
 	}
 
@@ -1085,6 +1279,33 @@
 		} catch { resetView(); }
 	}
 
+	// The container is recreated whenever the module is hidden and shown again, so the canvas has to be
+	// re-attached and the resize observer re-registered. ensureInit () reads and writes state that must
+	// not become a dependency of this effect.
+	$effect(() => {
+		const element = containerEl;
+		if (!element) return;
+
+		untrack(() => ensureInit());
+
+		const observer = new ResizeObserver(() => {
+			const w = element.clientWidth, h = element.clientHeight;
+			if ((w === 0) || (h === 0)) return;
+
+			if (!layerViewer || !glInstance?.renderer || !element.contains(glInstance.renderer.domElement)) {
+				ensureInit();
+				return;
+			}
+
+			layerViewer.updateSize(w, h);
+			if (autoFrame) centerOnPlatform();
+			layerViewer.RenderScene(true);
+		});
+		observer.observe(element);
+
+		return () => observer.disconnect();
+	});
+
 	onMount(() => {
 		module.onDataHasChanged = onDataChanged;
 
@@ -1093,31 +1314,12 @@
 			platform.displayed_build = 0;
 			platform.displayed_scatterplot = '';
 		}
-
-		requestAnimationFrame(() => {
-			ensureInit();
-		});
-
-		const ro = new ResizeObserver(() => {
-			if (!initialized) {
-				ensureInit();
-			} else if (layerViewer && containerEl) {
-				const w = containerEl.clientWidth, h = containerEl.clientHeight;
-				if (w > 0 && h > 0) {
-					layerViewer.updateSize(w, h);
-					if (autoFrame) centerOnPlatform();
-					layerViewer.RenderScene(true);
-				}
-			}
-		});
-		if (containerEl) ro.observe(containerEl);
-
-		return () => ro.disconnect();
 	});
 
 	onDestroy(() => {
 		module.onDataHasChanged = null;
 		stopPlayback();
+		hideHoverInfo();
 		clearHover();
 		pointLoadCounter++;
 		if (platform) {
@@ -1178,104 +1380,120 @@
 			></div>
 		{/if}
 
-		<!-- Overlaid toolbar -->
-		<div class="layerview-toolbar">
-			<button class="layerview-btn" onclick={resetView} title="Frame the build platform" aria-label="Zoom to platform">
-				<Square size={16} />
-				<span>Zoom to Platform</span>
-			</button>
-			<button class="layerview-btn" onclick={fitToPath} title="Frame the parts" aria-label="Zoom to parts">
-				<Shapes size={16} />
-				<span>Zoom to Parts</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={toggleZoomSelectMode}
-				title="Drag a rectangle to zoom into it (Esc to cancel)"
-				aria-label="Custom zoom: select a rectangle"
-				aria-pressed={zoomSelectMode}
-			>
-				<ZoomIn size={16} />
-				<span>Custom Zoom</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={() => coordinateSystemOverride = !coordinateSystemVisible}
-				title="Toggle coordinate axes"
-				aria-label="Toggle coordinate axes"
-				aria-pressed={coordinateSystemVisible}
-			>
-				<Axis3d size={16} />
-				<span>Axes</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={() => namesMode = !namesMode}
-				title="Show part outlines and names"
-				aria-label="Toggle part outlines and names"
-				aria-pressed={namesMode}
-			>
-				<Tags size={16} />
-				<span>Names</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={togglePropertiesMode}
-				title="Show segment and recorded point properties on hover"
-				aria-label="Toggle segment and point properties inspector"
-				aria-pressed={propertiesMode}
-			>
-				<Info size={16} />
-				<span>Properties</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={cycleToolpathColorMode}
-				title="Change how the toolpath and the recorded points are coloured: profile color, segment type, start time, laser power, velocity or laser on/off"
-				aria-label={`Display mode: ${toolpathColorCaption}. Click to change`}
-			>
-				<Paintbrush size={16} />
-				<span>{toolpathColorCaption}</span>
-			</button>
-			<button
-				class="layerview-btn"
-				onclick={() => (endPointsVisible = !endPointsVisible)}
-				title="Show the start and end points of the toolpath lines"
-				aria-label="Toggle toolpath end points"
-				aria-pressed={endPointsVisible}
-			>
-				<Spline size={16} />
-				<span>End Points</span>
-			</button>
-			{#if pointsLoaded}
-				{#if pointColumns.includes('laseron')}
-					<button
-						class="layerview-btn"
-						onclick={toggleLaserOffPoints}
-						title="Also show points recorded while the laser was off"
-						aria-label="Toggle points with laser off"
-						aria-pressed={showLaserOffPoints}
-					>
-						<ZapOff size={16} />
-						<span>Laser Off</span>
-					</button>
-				{/if}
+		<!-- Overlaid toolbar, with the platform label and the loading indicator below it -->
+		<div class="layerview-top-left">
+			<div class="layerview-toolbar">
+				<button class="layerview-btn" onclick={resetView} title="Frame the build platform" aria-label="Zoom to platform">
+					<Square size={16} />
+					<span>Zoom to Platform</span>
+				</button>
+				<button class="layerview-btn" onclick={fitToPath} title="Frame the parts" aria-label="Zoom to parts">
+					<Shapes size={16} />
+					<span>Zoom to Parts</span>
+				</button>
 				<button
 					class="layerview-btn"
-					onclick={toggleToolpath}
-					title="Show or hide the toolpath below the recorded points"
-					aria-label="Toggle toolpath"
-					aria-pressed={toolpathVisible}
+					onclick={toggleZoomSelectMode}
+					title="Drag a rectangle to zoom into it (Esc to cancel)"
+					aria-label="Custom zoom: select a rectangle"
+					aria-pressed={zoomSelectMode}
 				>
-					<Route size={16} />
-					<span>Toolpath</span>
+					<ZoomIn size={16} />
+					<span>Custom Zoom</span>
 				</button>
+				<button
+					class="layerview-btn"
+					onclick={() => coordinateSystemOverride = !coordinateSystemVisible}
+					title="Toggle coordinate axes"
+					aria-label="Toggle coordinate axes"
+					aria-pressed={coordinateSystemVisible}
+				>
+					<Axis3d size={16} />
+					<span>Axes</span>
+				</button>
+				<button
+					class="layerview-btn"
+					onclick={() => namesMode = !namesMode}
+					title="Show part outlines and names"
+					aria-label="Toggle part outlines and names"
+					aria-pressed={namesMode}
+				>
+					<Tags size={16} />
+					<span>Names</span>
+				</button>
+				<button
+					class="layerview-btn"
+					onclick={togglePropertiesMode}
+					title="Show segment and recorded point properties on hover"
+					aria-label="Toggle segment and point properties inspector"
+					aria-pressed={propertiesMode}
+				>
+					<Info size={16} />
+					<span>Properties</span>
+				</button>
+				<button
+					class="layerview-btn"
+					onclick={cycleToolpathColorMode}
+					title="Change how the toolpath and the recorded points are coloured: profile color, segment type, start time, laser power, velocity or laser on/off"
+					aria-label={`Display mode: ${toolpathColorCaption}. Click to change`}
+				>
+					<Paintbrush size={16} />
+					<span>{toolpathColorCaption}</span>
+				</button>
+				<button
+					class="layerview-btn"
+					onclick={() => (endPointsVisible = !endPointsVisible)}
+					title="Show the start and end points of the toolpath lines"
+					aria-label="Toggle toolpath end points"
+					aria-pressed={endPointsVisible}
+				>
+					<Spline size={16} />
+					<span>End Points</span>
+				</button>
+				{#if pointsLoaded}
+					{#if pointColumns.includes('laseron')}
+						<button
+							class="layerview-btn"
+							onclick={toggleLaserOffPoints}
+							title="Also show points recorded while the laser was off"
+							aria-label="Toggle points with laser off"
+							aria-pressed={showLaserOffPoints}
+						>
+							<ZapOff size={16} />
+							<span>Laser Off</span>
+						</button>
+					{/if}
+					<button
+						class="layerview-btn"
+						onclick={toggleToolpath}
+						title="Show or hide the toolpath below the recorded points"
+						aria-label="Toggle toolpath"
+						aria-pressed={toolpathVisible}
+					>
+						<Route size={16} />
+						<span>Toolpath</span>
+					</button>
+				{/if}
+			</div>
+
+			<!-- Platform label and loading indicator -->
+			{#if labelCaption || labelIcon || loadingLayer || loadingPoints}
+				<div class="layerview-status">
+					{#if labelCaption || labelIcon}
+						<div class="layerview-label">
+							{#if labelIcon}<MdiIcon icon={labelIcon} class="h-3.5 w-3.5" />{/if}
+							<span>{labelCaption}</span>
+						</div>
+					{/if}
+					{#if loadingLayer || loadingPoints}
+						<div class="layerview-label">
+							<LoaderCircle class="h-3.5 w-3.5 animate-spin" />
+							<span>Loading layer data</span>
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
-
-		{#if labelCaption}
-			<div class="layerview-label">{labelCaption}</div>
-		{/if}
 
 		<!-- Layer info overlay -->
 		{#if layerCount > 0}
@@ -1287,7 +1505,7 @@
 						type="number"
 						inputmode="numeric"
 						min="0"
-						max={layerCount}
+						max={layerCount - 1}
 						step="1"
 						bind:value={layerJumpValue}
 						onkeydown={onLayerJumpKeyDown}
@@ -1301,7 +1519,7 @@
 					type="button"
 					class="layerview-layer-info layerview-layer-info-button"
 					onclick={openLayerJump}
-					title="Click to jump to a layer"
+					title={sliderFixed ? 'Layer' : 'Click to jump to a layer'}
 					aria-label={`Layer ${sliderValue} of ${layerCount}. Click to jump to a layer`}
 				>
 					Layer {sliderValue} / {layerCount}
@@ -1427,6 +1645,14 @@
 			<div class="layerview-mouse-pos" class:above-time-slider={showTimeSlider && timelineDuration > 0}>
 				X: {mousePosition.x.toFixed(2)} &middot; Y: {mousePosition.y.toFixed(2)} mm
 			</div>
+		{/if}
+
+		<!-- Info about the point or toolpath segment under the mouse -->
+		{#if hoverInfo.visible && !propertiesMode}
+			<div
+				class="layerview-hover-info"
+				style="left: {hoverInfo.x}px; top: {hoverInfo.y}px; transform: translate({hoverInfo.flipX ? 'calc(-100% - 12px)' : '12px'}, {hoverInfo.flipY ? 'calc(-100% - 12px)' : '12px'});"
+			>{hoverInfo.text}</div>
 		{/if}
 
 		<!-- Recorded point inspector popup (Properties toggle) -->
@@ -1586,19 +1812,32 @@
 			</div>
 		{/if}
 
-		<!-- Layer slider (vertical) -->
+		<!-- Layer slider (vertical) with -/+ step buttons -->
 		{#if layerCount > 0}
 			<div class="layerview-slider-wrap">
+				{#if !sliderFixed}
+					<button class="layerview-btn layerview-step" onclick={() => changeLayerTo(sliderValue + 1)} disabled={sliderValue >= layerCount - 1} title="Next layer" aria-label="Next layer">
+						<Plus size={14} />
+					</button>
+				{/if}
 				<input
 					type="range"
 					class="layerview-slider"
 					min="0"
-					max={layerCount}
+					max={layerCount - 1}
 					value={sliderValue}
-					oninput={onSliderChange}
+					disabled={sliderFixed}
+					oninput={onSliderInput}
+					onchange={onSliderChange}
+					onpointerup={onSliderRelease}
 					aria-label="Layer"
 					aria-orientation="vertical"
 				/>
+				{#if !sliderFixed}
+					<button class="layerview-btn layerview-step" onclick={() => changeLayerTo(sliderValue - 1)} disabled={sliderValue <= 0} title="Previous layer" aria-label="Previous layer">
+						<Minus size={14} />
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -1700,13 +1939,24 @@
 		fill: var(--destructive, #dc2626);
 		text-decoration: line-through;
 	}
-	.layerview-toolbar {
+	.layerview-top-left {
 		position: absolute;
 		top: 8px;
 		left: 8px;
+		/* Leave room for the layer-info badge in the top-right corner */
+		max-width: calc(100% - 140px);
 		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
 		gap: 4px;
 		z-index: 10;
+		pointer-events: none;
+	}
+	.layerview-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		pointer-events: auto;
 	}
 	.layerview-btn {
 		display: inline-flex;
@@ -1737,23 +1987,38 @@
 		background-color: var(--primary, #2563eb);
 		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
 	}
+	.layerview-btn:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+	.layerview-step {
+		width: 24px;
+		height: 24px;
+		padding: 0;
+	}
+	.layerview-status {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		max-width: 100%;
+	}
 	.layerview-label {
-		position: absolute;
-		/* Below the toolbar (top 8px + 56px buttons). */
-		top: 72px;
-		left: 8px;
-		max-width: calc(100% - 56px);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+		max-width: 100%;
 		padding: 4px 10px;
 		border-radius: 4px;
 		background: rgba(0, 0, 0, 0.65);
 		color: white;
 		font-size: 11px;
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+	.layerview-label span {
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space: nowrap;
-		pointer-events: none;
-		z-index: 10;
 	}
 	.layerview-layer-info {
 		position: absolute;
@@ -1797,6 +2062,8 @@
 		bottom: 8px;
 		width: 64px;
 		height: 64px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.35);
 		pointer-events: none;
 		z-index: 9;
 	}
@@ -2024,6 +2291,18 @@
 		opacity: 0.4;
 		cursor: default;
 	}
+	.layerview-hover-info {
+		position: absolute;
+		z-index: 20;
+		padding: 5px 8px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.75);
+		color: white;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		white-space: pre-line;
+		pointer-events: none;
+	}
 	.layerview-point-marker {
 		position: absolute;
 		width: 14px;
@@ -2086,14 +2365,17 @@
 		top: 44px;
 		bottom: 16px;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		gap: 6px;
 		z-index: 10;
 	}
 	.layerview-slider {
 		writing-mode: vertical-lr;
 		direction: rtl;
-		height: 100%;
+		flex: 1;
+		min-height: 0;
 		width: 20px;
 		accent-color: var(--primary, #2563eb);
 	}

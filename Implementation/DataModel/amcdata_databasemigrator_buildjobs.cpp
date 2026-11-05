@@ -165,6 +165,48 @@ namespace AMCData {
 			break;
 		}
 
+		case 23:
+		{
+			// Manifest of streaming data captures. A capture belongs to a build job execution,
+			// its segments are storage streams and are indexed like telemetry_chunks.
+			std::string sDataCapturesQuery = "CREATE TABLE `datacaptures` (";
+			sDataCapturesQuery += "`uuid`  varchar ( 64 ) UNIQUE NOT NULL,";
+			sDataCapturesQuery += "`executionuuid`  varchar ( 64 ) NOT NULL,";
+			sDataCapturesQuery += "`identifier`  varchar ( 256 ) NOT NULL,";
+			sDataCapturesQuery += "`name`  varchar ( 256 ) NOT NULL,";
+			sDataCapturesQuery += "`status`  varchar ( 64 ) NOT NULL,";
+			sDataCapturesQuery += "`useruuid`  varchar ( 64 ) NOT NULL,";
+			sDataCapturesQuery += "`active`  integer DEFAULT 0,";
+			sDataCapturesQuery += "`timestamp`  varchar ( 64 ) NOT NULL,";
+			sDataCapturesQuery += "`endtimestamp`  varchar ( 64 ) NOT NULL)";
+			pTransaction->executeStatement(sDataCapturesQuery);
+
+			std::string sDataCaptureColumnsQuery = "CREATE TABLE `datacapture_columns` (";
+			sDataCaptureColumnsQuery += "`captureuuid`  varchar ( 64 ) NOT NULL,";
+			sDataCaptureColumnsQuery += "`columnindex`  integer NOT NULL,";
+			sDataCaptureColumnsQuery += "`identifier`  varchar ( 256 ) NOT NULL,";
+			sDataCaptureColumnsQuery += "`description`  TEXT NOT NULL,";
+			sDataCaptureColumnsQuery += "`columntype`  integer NOT NULL)";
+			pTransaction->executeStatement(sDataCaptureColumnsQuery);
+
+			std::string sDataCaptureSegmentsQuery = "CREATE TABLE `datacapture_segments` (";
+			sDataCaptureSegmentsQuery += "`uuid`  varchar ( 64 ) UNIQUE NOT NULL,";
+			sDataCaptureSegmentsQuery += "`captureuuid`  varchar ( 64 ) NOT NULL,";
+			sDataCaptureSegmentsQuery += "`segmentindex`  integer NOT NULL,";
+			sDataCaptureSegmentsQuery += "`storagestreamuuid`  varchar ( 64 ) NOT NULL,";
+			sDataCaptureSegmentsQuery += "`firstrow`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`rowcount`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`chunkcount`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`sizeinbytes`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`starttimestamp`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`endtimestamp`  integer DEFAULT 0,";
+			sDataCaptureSegmentsQuery += "`status`  varchar ( 64 ) NOT NULL,";
+			sDataCaptureSegmentsQuery += "`timestamp`  varchar ( 64 ) NOT NULL)";
+			pTransaction->executeStatement(sDataCaptureSegmentsQuery);
+
+			break;
+		}
+
 		}
 
 		

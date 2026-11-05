@@ -32,6 +32,7 @@ Abstract: This is a stub class definition of CBuildJobHandler
 */
 
 #include "libmcdata_buildjobhandler.hpp"
+#include "libmcdata_datacapture.hpp"
 #include "libmcdata_interfaceexception.hpp"
 
 // Include custom headers here.
@@ -316,4 +317,9 @@ LibMCData_uint64 CBuildJobHandler::GetExecutionListHeadID()
     if (!pStatement->nextRow())
         return 0;
     return (uint64_t) pStatement->getColumnInt64(1);
+}
+
+IDataCapture* CBuildJobHandler::RetrieveDataCapture(const std::string& sDataCaptureUUID)
+{
+    return CDataCapture::makeFromDatabaseByUUID(m_pSQLHandler, m_pStorageState, sDataCaptureUUID);
 }

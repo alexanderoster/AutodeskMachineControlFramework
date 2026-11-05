@@ -270,6 +270,7 @@ typedef void * LibMCDriver_ScanLab_pvoid;
 #define LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE 1165 /** Minimum jump distance provided twice in profile. */
 #define LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER 1166 /** Toolpath profile has a modifier that the driver cannot execute. */
 #define LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE 1167 /** Modified laser power is outside of the calibrated laser power range. */
+#define LIBMCDRIVER_SCANLAB_ERROR_RECORDINGREADOUTNOTSTARTED 1168 /** The incremental readout of the recording has not been started. */
 
 /*************************************************************************************************************************
  Error strings for LibMCDriver_ScanLab
@@ -452,6 +453,7 @@ inline const char * LIBMCDRIVER_SCANLAB_GETERRORSTRING (LibMCDriver_ScanLabResul
     case LIBMCDRIVER_SCANLAB_ERROR_MINIMUMJUMPDISTANCEPROVIDEDTWICEINPROFILE: return "Minimum jump distance provided twice in profile.";
     case LIBMCDRIVER_SCANLAB_ERROR_UNSUPPORTEDPROFILEMODIFIER: return "Toolpath profile has a modifier that the driver cannot execute.";
     case LIBMCDRIVER_SCANLAB_ERROR_MODIFIEDLASERPOWEROUTOFRANGE: return "Modified laser power is outside of the calibrated laser power range.";
+    case LIBMCDRIVER_SCANLAB_ERROR_RECORDINGREADOUTNOTSTARTED: return "The incremental readout of the recording has not been started.";
     default: return "unknown error";
   }
 }

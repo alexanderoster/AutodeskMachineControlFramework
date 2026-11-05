@@ -50,7 +50,8 @@ CSMCConfiguration::CSMCConfiguration(LibMCEnv::PDriverEnvironment pDriverEnviron
      m_WarnLevel (LibMCDriver_ScanLabSMC::eWarnLevel::Error),
     m_nSerialNumber (0),
     m_BlendMode (LibMCDriver_ScanLabSMC::eBlendMode::Deactivated),
-    m_bSendToHardware (false)
+    m_bSendToHardware (false),
+    m_bSimulationFileOutputEnabled (true)
 
 {
     if (pDriverEnvironment.get() == nullptr)
@@ -108,6 +109,16 @@ void CSMCConfiguration::SetSendToHardware(const bool bSendToHardware)
 bool CSMCConfiguration::GetSendToHardware()
 {
     return m_bSendToHardware;
+}
+
+void CSMCConfiguration::SetSimulationFileOutputEnabled(const bool bEnabled)
+{
+    m_bSimulationFileOutputEnabled = bEnabled;
+}
+
+bool CSMCConfiguration::GetSimulationFileOutputEnabled()
+{
+    return m_bSimulationFileOutputEnabled;
 }
 
 
@@ -484,7 +495,9 @@ std::string CSMCConfiguration::buildConfigurationXML(LibMCEnv::CWorkingDirectory
     pSimulationConfigNode->AddChildText("", "SimulationMode", sSimulationMode);
     pSimulationConfigNode->AddChildText("", "SimOutputFileDirectory", sSimulationDirectory);
     pSimulationConfigNode->AddChildText("", "BinaryOutput", "false");
-    pSimulationConfigNode->AddChildText("", "DisableFileOutput", "false");
+    // Writing the simulation output costs several GB of disk and minutes of planning time per large
+    // layer, so plugins that only use LoadRawSimulationData switch it off via the configuration.
+    pSimulationConfigNode->AddChildText("", "DisableFileOutput", m_bSimulationFileOutputEnabled ? "false" : "true");
 
     auto pRTCConfigNode = pConfigurationNode->AddChild("", "RTCConfig");
     pRTCConfigNode->AddChildText("", "BoardIdentificationMethod", "BySerialNumber");

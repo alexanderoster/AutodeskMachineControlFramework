@@ -80,6 +80,7 @@ class CBuildJobData;
 class CBuildJobDataIterator;
 class CBuildJobExecutionData;
 class CBuildJobExecutionDataIterator;
+class CDataCapture;
 class CBuildJobExecution;
 class CBuildJobExecutionIterator;
 class CBuildJob;
@@ -124,6 +125,7 @@ typedef CBuildJobData CLibMCDataBuildJobData;
 typedef CBuildJobDataIterator CLibMCDataBuildJobDataIterator;
 typedef CBuildJobExecutionData CLibMCDataBuildJobExecutionData;
 typedef CBuildJobExecutionDataIterator CLibMCDataBuildJobExecutionDataIterator;
+typedef CDataCapture CLibMCDataDataCapture;
 typedef CBuildJobExecution CLibMCDataBuildJobExecution;
 typedef CBuildJobExecutionIterator CLibMCDataBuildJobExecutionIterator;
 typedef CBuildJob CLibMCDataBuildJob;
@@ -168,6 +170,7 @@ typedef std::shared_ptr<CBuildJobData> PBuildJobData;
 typedef std::shared_ptr<CBuildJobDataIterator> PBuildJobDataIterator;
 typedef std::shared_ptr<CBuildJobExecutionData> PBuildJobExecutionData;
 typedef std::shared_ptr<CBuildJobExecutionDataIterator> PBuildJobExecutionDataIterator;
+typedef std::shared_ptr<CDataCapture> PDataCapture;
 typedef std::shared_ptr<CBuildJobExecution> PBuildJobExecution;
 typedef std::shared_ptr<CBuildJobExecutionIterator> PBuildJobExecutionIterator;
 typedef std::shared_ptr<CBuildJob> PBuildJob;
@@ -212,6 +215,7 @@ typedef PBuildJobData PLibMCDataBuildJobData;
 typedef PBuildJobDataIterator PLibMCDataBuildJobDataIterator;
 typedef PBuildJobExecutionData PLibMCDataBuildJobExecutionData;
 typedef PBuildJobExecutionDataIterator PLibMCDataBuildJobExecutionDataIterator;
+typedef PDataCapture PLibMCDataDataCapture;
 typedef PBuildJobExecution PLibMCDataBuildJobExecution;
 typedef PBuildJobExecutionIterator PLibMCDataBuildJobExecutionIterator;
 typedef PBuildJob PLibMCDataBuildJob;
@@ -691,6 +695,21 @@ public:
 			case LIBMCDATA_ERROR_JOBNAMETOOLONG: return "JOBNAMETOOLONG";
 			case LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG: return "STRINGPARAMETERTOOLONG";
 			case LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION: return "TELEMETRYSETTINGAFTERINITIALISATION";
+			case LIBMCDATA_ERROR_DATACAPTURENOTFOUND: return "DATACAPTURENOTFOUND";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTUREIDENTIFIER: return "DUPLICATEDATACAPTUREIDENTIFIER";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "INVALIDDATACAPTUREIDENTIFIER";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURENAME: return "INVALIDDATACAPTURENAME";
+			case LIBMCDATA_ERROR_DATACAPTURENOTRECORDING: return "DATACAPTURENOTRECORDING";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURESTATUS: return "INVALIDDATACAPTURESTATUS";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURECOLUMNINDEX: return "INVALIDDATACAPTURECOLUMNINDEX";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "INVALIDDATACAPTURESEGMENTINDEX";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURESEGMENT: return "DUPLICATEDATACAPTURESEGMENT";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN: return "DUPLICATEDATACAPTURECOLUMN";
+			case LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED: return "DATACAPTUREALREADYABORTED";
+			case LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND: return "RANDOMWRITESTREAMNOTFOUND";
+			case LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND: return "DOWNLOADENTRYNOTFOUND";
+			case LIBMCDATA_ERROR_STREAMHASACTIVEWRITER: return "STREAMHASACTIVEWRITER";
+			case LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIPSTREAMALREADYFINISHED";
 		}
 		return "UNKNOWN";
 	}
@@ -1081,6 +1100,21 @@ public:
 			case LIBMCDATA_ERROR_JOBNAMETOOLONG: return "Job name exceeds maximum allowed length";
 			case LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG: return "String parameter exceeds maximum allowed length";
 			case LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION: return "Telemetry setting changed after database initialisation";
+			case LIBMCDATA_ERROR_DATACAPTURENOTFOUND: return "Data capture not found.";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTUREIDENTIFIER: return "Duplicate data capture identifier.";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "Invalid data capture identifier.";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURENAME: return "Invalid data capture name.";
+			case LIBMCDATA_ERROR_DATACAPTURENOTRECORDING: return "Data capture is not recording.";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURESTATUS: return "Invalid data capture status.";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURECOLUMNINDEX: return "Invalid data capture column index.";
+			case LIBMCDATA_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "Invalid data capture segment index.";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURESEGMENT: return "Duplicate data capture segment.";
+			case LIBMCDATA_ERROR_DUPLICATEDATACAPTURECOLUMN: return "Duplicate data capture column.";
+			case LIBMCDATA_ERROR_DATACAPTUREALREADYABORTED: return "Data capture has already been aborted.";
+			case LIBMCDATA_ERROR_RANDOMWRITESTREAMNOTFOUND: return "Random write stream not found.";
+			case LIBMCDATA_ERROR_DOWNLOADENTRYNOTFOUND: return "Download access log entry not found.";
+			case LIBMCDATA_ERROR_STREAMHASACTIVEWRITER: return "Storage stream is still being written.";
+			case LIBMCDATA_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIP stream has already been finished and can not be discarded.";
 		}
 		return "unknown error";
 	}
@@ -1219,6 +1253,7 @@ private:
 	friend class CBuildJobDataIterator;
 	friend class CBuildJobExecutionData;
 	friend class CBuildJobExecutionDataIterator;
+	friend class CDataCapture;
 	friend class CBuildJobExecution;
 	friend class CBuildJobExecutionIterator;
 	friend class CBuildJob;
@@ -1616,6 +1651,7 @@ public:
 	inline LibMCData_uint64 GetZIPStreamSize();
 	inline void Finish();
 	inline bool IsFinished();
+	inline void Discard();
 };
 	
 /*************************************************************************************************************************
@@ -1649,7 +1685,17 @@ public:
 	inline bool StreamIsImage(const std::string & sUUID);
 	inline void CreateDownloadTicket(const std::string & sTicketUUID, const std::string & sStreamUUID, const std::string & sClientFileName, const std::string & sSessionUUID, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline void RequestDownloadTicket(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID);
+	inline void GetDownloadTicketDetails(const std::string & sTicketUUID, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID, LibMCData_uint64 & nCreationTimeStamp, bool & bRevoked);
+	inline LibMCData_uint32 RevokeDownloadTicketsOfStream(const std::string & sStreamUUID);
+	inline std::string LogDownloadStart(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void LogDownloadFinish(const std::string & sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void DeleteStream(const std::string & sUUID);
+	inline LibMCData_uint32 DiscardUnfinishedZIPStreams();
+	inline std::string ListStreamUUIDsByName(const std::string & sName);
 	inline void AttachStreamToJournal(const std::string & sStreamUUID, const std::string & sJournalUUID);
+	inline void DiscardRandomWriteStream(const std::string & sUUID);
+	inline LibMCData_uint64 GetDataCaptureStorageSize();
+	inline LibMCData_uint32 EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes);
 };
 	
 /*************************************************************************************************************************
@@ -1749,6 +1795,39 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class CDataCapture 
+**************************************************************************************************************************/
+class CDataCapture : public CBase {
+public:
+	
+	/**
+	* CDataCapture::CDataCapture - Constructor for DataCapture class.
+	*/
+	CDataCapture(CWrapper* pWrapper, LibMCDataHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetUUID();
+	inline std::string GetExecutionUUID();
+	inline std::string GetIdentifier();
+	inline std::string GetName();
+	inline eDataCaptureStatus GetStatus();
+	inline std::string GetTimeStamp();
+	inline void AddColumn(const LibMCData_uint32 nColumnIndex, const std::string & sIdentifier, const std::string & sDescription, const LibMCData_uint32 nColumnType);
+	inline LibMCData_uint32 GetColumnCount();
+	inline void GetColumnInformation(const LibMCData_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, LibMCData_uint32 & nColumnType);
+	inline void AddSegment(const LibMCData_uint32 nSegmentIndex, const std::string & sStreamUUID, const LibMCData_uint64 nFirstRow, const LibMCData_uint64 nRowCount, const LibMCData_uint32 nChunkCount, const LibMCData_uint64 nSizeInBytes, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp);
+	inline LibMCData_uint32 GetSegmentCount();
+	inline void GetSegmentInformation(const LibMCData_uint32 nSegmentIndex, std::string & sStreamUUID, LibMCData_uint64 & nFirstRow, LibMCData_uint64 & nRowCount, LibMCData_uint64 & nSizeInBytes, bool & bIsPurged);
+	inline LibMCData_uint32 GetSegmentChunkCount(const LibMCData_uint32 nSegmentIndex);
+	inline LibMCData_uint64 GetRowCount();
+	inline LibMCData_uint64 GetStoredSizeInBytes();
+	inline void Finish(const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline void Abort(const LibMCData_uint64 nAbsoluteTimeStamp);
+};
+	
+/*************************************************************************************************************************
  Class CBuildJobExecution 
 **************************************************************************************************************************/
 class CBuildJobExecution : public CBase {
@@ -1788,6 +1867,11 @@ public:
 	inline void StoreMetaDataString(const std::string & sKey, const std::string & sValue, const LibMCData_uint64 nAbsoluteTimeStamp);
 	inline bool HasMetaDataString(const std::string & sKey);
 	inline std::string GetMetaDataString(const std::string & sKey);
+	inline PDataCapture CreateDataCapture(const std::string & sIdentifier, const std::string & sName, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp);
+	inline bool HasDataCapture(const std::string & sIdentifier);
+	inline PDataCapture RetrieveDataCapture(const std::string & sIdentifier);
+	inline LibMCData_uint32 GetDataCaptureCount();
+	inline PDataCapture RetrieveDataCaptureByIndex(const LibMCData_uint32 nIndex);
 };
 	
 /*************************************************************************************************************************
@@ -1904,6 +1988,7 @@ public:
 	inline LibMCData_uint64 GetExecutionListHeadID();
 	inline PBuildJobIterator ListJobsChangedSince(const LibMCData_uint64 nIncrementalID);
 	inline PBuildJobExecutionIterator ListJobExecutionsChangedSince(const LibMCData_uint64 nIncrementalID);
+	inline PDataCapture RetrieveDataCapture(const std::string & sDataCaptureUUID);
 };
 	
 /*************************************************************************************************************************
@@ -2421,6 +2506,7 @@ public:
 		pWrapperTable->m_StorageZIPWriter_GetZIPStreamSize = nullptr;
 		pWrapperTable->m_StorageZIPWriter_Finish = nullptr;
 		pWrapperTable->m_StorageZIPWriter_IsFinished = nullptr;
+		pWrapperTable->m_StorageZIPWriter_Discard = nullptr;
 		pWrapperTable->m_Storage_StreamIsReady = nullptr;
 		pWrapperTable->m_Storage_RetrieveStream = nullptr;
 		pWrapperTable->m_Storage_StoreNewStream = nullptr;
@@ -2438,7 +2524,17 @@ public:
 		pWrapperTable->m_Storage_StreamIsImage = nullptr;
 		pWrapperTable->m_Storage_CreateDownloadTicket = nullptr;
 		pWrapperTable->m_Storage_RequestDownloadTicket = nullptr;
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = nullptr;
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = nullptr;
+		pWrapperTable->m_Storage_LogDownloadStart = nullptr;
+		pWrapperTable->m_Storage_LogDownloadFinish = nullptr;
+		pWrapperTable->m_Storage_DeleteStream = nullptr;
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = nullptr;
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = nullptr;
 		pWrapperTable->m_Storage_AttachStreamToJournal = nullptr;
+		pWrapperTable->m_Storage_DiscardRandomWriteStream = nullptr;
+		pWrapperTable->m_Storage_GetDataCaptureStorageSize = nullptr;
+		pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit = nullptr;
 		pWrapperTable->m_CustomDataStream_GetDataUUID = nullptr;
 		pWrapperTable->m_CustomDataStream_GetIdentifier = nullptr;
 		pWrapperTable->m_CustomDataStream_GetName = nullptr;
@@ -2455,6 +2551,23 @@ public:
 		pWrapperTable->m_BuildJobDataIterator_GetCurrentJobData = nullptr;
 		pWrapperTable->m_BuildJobExecutionData_GetExecutionUUID = nullptr;
 		pWrapperTable->m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData = nullptr;
+		pWrapperTable->m_DataCapture_GetUUID = nullptr;
+		pWrapperTable->m_DataCapture_GetExecutionUUID = nullptr;
+		pWrapperTable->m_DataCapture_GetIdentifier = nullptr;
+		pWrapperTable->m_DataCapture_GetName = nullptr;
+		pWrapperTable->m_DataCapture_GetStatus = nullptr;
+		pWrapperTable->m_DataCapture_GetTimeStamp = nullptr;
+		pWrapperTable->m_DataCapture_AddColumn = nullptr;
+		pWrapperTable->m_DataCapture_GetColumnCount = nullptr;
+		pWrapperTable->m_DataCapture_GetColumnInformation = nullptr;
+		pWrapperTable->m_DataCapture_AddSegment = nullptr;
+		pWrapperTable->m_DataCapture_GetSegmentCount = nullptr;
+		pWrapperTable->m_DataCapture_GetSegmentInformation = nullptr;
+		pWrapperTable->m_DataCapture_GetSegmentChunkCount = nullptr;
+		pWrapperTable->m_DataCapture_GetRowCount = nullptr;
+		pWrapperTable->m_DataCapture_GetStoredSizeInBytes = nullptr;
+		pWrapperTable->m_DataCapture_Finish = nullptr;
+		pWrapperTable->m_DataCapture_Abort = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetExecutionUUID = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetJobUUID = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetJobName = nullptr;
@@ -2481,6 +2594,11 @@ public:
 		pWrapperTable->m_BuildJobExecution_StoreMetaDataString = nullptr;
 		pWrapperTable->m_BuildJobExecution_HasMetaDataString = nullptr;
 		pWrapperTable->m_BuildJobExecution_GetMetaDataString = nullptr;
+		pWrapperTable->m_BuildJobExecution_CreateDataCapture = nullptr;
+		pWrapperTable->m_BuildJobExecution_HasDataCapture = nullptr;
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCapture = nullptr;
+		pWrapperTable->m_BuildJobExecution_GetDataCaptureCount = nullptr;
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex = nullptr;
 		pWrapperTable->m_BuildJobExecutionIterator_GetCurrentJobExecution = nullptr;
 		pWrapperTable->m_BuildJob_GetUUID = nullptr;
 		pWrapperTable->m_BuildJob_GetName = nullptr;
@@ -2533,6 +2651,7 @@ public:
 		pWrapperTable->m_BuildJobHandler_GetExecutionListHeadID = nullptr;
 		pWrapperTable->m_BuildJobHandler_ListJobsChangedSince = nullptr;
 		pWrapperTable->m_BuildJobHandler_ListJobExecutionsChangedSince = nullptr;
+		pWrapperTable->m_BuildJobHandler_RetrieveDataCapture = nullptr;
 		pWrapperTable->m_UserList_Count = nullptr;
 		pWrapperTable->m_UserList_GetUserProperties = nullptr;
 		pWrapperTable->m_LoginHandler_UserExists = nullptr;
@@ -3577,6 +3696,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StorageZIPWriter_Discard = (PLibMCDataStorageZIPWriter_DiscardPtr) GetProcAddress(hLibrary, "libmcdata_storagezipwriter_discard");
+		#else // _WIN32
+		pWrapperTable->m_StorageZIPWriter_Discard = (PLibMCDataStorageZIPWriter_DiscardPtr) dlsym(hLibrary, "libmcdata_storagezipwriter_discard");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StorageZIPWriter_Discard == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Storage_StreamIsReady = (PLibMCDataStorage_StreamIsReadyPtr) GetProcAddress(hLibrary, "libmcdata_storage_streamisready");
 		#else // _WIN32
 		pWrapperTable->m_Storage_StreamIsReady = (PLibMCDataStorage_StreamIsReadyPtr) dlsym(hLibrary, "libmcdata_storage_streamisready");
@@ -3730,12 +3858,102 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = (PLibMCDataStorage_GetDownloadTicketDetailsPtr) GetProcAddress(hLibrary, "libmcdata_storage_getdownloadticketdetails");
+		#else // _WIN32
+		pWrapperTable->m_Storage_GetDownloadTicketDetails = (PLibMCDataStorage_GetDownloadTicketDetailsPtr) dlsym(hLibrary, "libmcdata_storage_getdownloadticketdetails");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_GetDownloadTicketDetails == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = (PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr) GetProcAddress(hLibrary, "libmcdata_storage_revokedownloadticketsofstream");
+		#else // _WIN32
+		pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream = (PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr) dlsym(hLibrary, "libmcdata_storage_revokedownloadticketsofstream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_LogDownloadStart = (PLibMCDataStorage_LogDownloadStartPtr) GetProcAddress(hLibrary, "libmcdata_storage_logdownloadstart");
+		#else // _WIN32
+		pWrapperTable->m_Storage_LogDownloadStart = (PLibMCDataStorage_LogDownloadStartPtr) dlsym(hLibrary, "libmcdata_storage_logdownloadstart");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_LogDownloadStart == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_LogDownloadFinish = (PLibMCDataStorage_LogDownloadFinishPtr) GetProcAddress(hLibrary, "libmcdata_storage_logdownloadfinish");
+		#else // _WIN32
+		pWrapperTable->m_Storage_LogDownloadFinish = (PLibMCDataStorage_LogDownloadFinishPtr) dlsym(hLibrary, "libmcdata_storage_logdownloadfinish");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_LogDownloadFinish == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_DeleteStream = (PLibMCDataStorage_DeleteStreamPtr) GetProcAddress(hLibrary, "libmcdata_storage_deletestream");
+		#else // _WIN32
+		pWrapperTable->m_Storage_DeleteStream = (PLibMCDataStorage_DeleteStreamPtr) dlsym(hLibrary, "libmcdata_storage_deletestream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_DeleteStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = (PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr) GetProcAddress(hLibrary, "libmcdata_storage_discardunfinishedzipstreams");
+		#else // _WIN32
+		pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams = (PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr) dlsym(hLibrary, "libmcdata_storage_discardunfinishedzipstreams");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = (PLibMCDataStorage_ListStreamUUIDsByNamePtr) GetProcAddress(hLibrary, "libmcdata_storage_liststreamuuidsbyname");
+		#else // _WIN32
+		pWrapperTable->m_Storage_ListStreamUUIDsByName = (PLibMCDataStorage_ListStreamUUIDsByNamePtr) dlsym(hLibrary, "libmcdata_storage_liststreamuuidsbyname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_ListStreamUUIDsByName == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_Storage_AttachStreamToJournal = (PLibMCDataStorage_AttachStreamToJournalPtr) GetProcAddress(hLibrary, "libmcdata_storage_attachstreamtojournal");
 		#else // _WIN32
 		pWrapperTable->m_Storage_AttachStreamToJournal = (PLibMCDataStorage_AttachStreamToJournalPtr) dlsym(hLibrary, "libmcdata_storage_attachstreamtojournal");
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_Storage_AttachStreamToJournal == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_DiscardRandomWriteStream = (PLibMCDataStorage_DiscardRandomWriteStreamPtr) GetProcAddress(hLibrary, "libmcdata_storage_discardrandomwritestream");
+		#else // _WIN32
+		pWrapperTable->m_Storage_DiscardRandomWriteStream = (PLibMCDataStorage_DiscardRandomWriteStreamPtr) dlsym(hLibrary, "libmcdata_storage_discardrandomwritestream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_DiscardRandomWriteStream == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_GetDataCaptureStorageSize = (PLibMCDataStorage_GetDataCaptureStorageSizePtr) GetProcAddress(hLibrary, "libmcdata_storage_getdatacapturestoragesize");
+		#else // _WIN32
+		pWrapperTable->m_Storage_GetDataCaptureStorageSize = (PLibMCDataStorage_GetDataCaptureStorageSizePtr) dlsym(hLibrary, "libmcdata_storage_getdatacapturestoragesize");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_GetDataCaptureStorageSize == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit = (PLibMCDataStorage_EnforceDataCaptureStorageLimitPtr) GetProcAddress(hLibrary, "libmcdata_storage_enforcedatacapturestoragelimit");
+		#else // _WIN32
+		pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit = (PLibMCDataStorage_EnforceDataCaptureStorageLimitPtr) dlsym(hLibrary, "libmcdata_storage_enforcedatacapturestoragelimit");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -3880,6 +4098,159 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetUUID = (PLibMCDataDataCapture_GetUUIDPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetUUID = (PLibMCDataDataCapture_GetUUIDPtr) dlsym(hLibrary, "libmcdata_datacapture_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetUUID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetExecutionUUID = (PLibMCDataDataCapture_GetExecutionUUIDPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getexecutionuuid");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetExecutionUUID = (PLibMCDataDataCapture_GetExecutionUUIDPtr) dlsym(hLibrary, "libmcdata_datacapture_getexecutionuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetExecutionUUID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetIdentifier = (PLibMCDataDataCapture_GetIdentifierPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getidentifier");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetIdentifier = (PLibMCDataDataCapture_GetIdentifierPtr) dlsym(hLibrary, "libmcdata_datacapture_getidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetIdentifier == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetName = (PLibMCDataDataCapture_GetNamePtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getname");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetName = (PLibMCDataDataCapture_GetNamePtr) dlsym(hLibrary, "libmcdata_datacapture_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetName == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetStatus = (PLibMCDataDataCapture_GetStatusPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getstatus");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetStatus = (PLibMCDataDataCapture_GetStatusPtr) dlsym(hLibrary, "libmcdata_datacapture_getstatus");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetStatus == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetTimeStamp = (PLibMCDataDataCapture_GetTimeStampPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_gettimestamp");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetTimeStamp = (PLibMCDataDataCapture_GetTimeStampPtr) dlsym(hLibrary, "libmcdata_datacapture_gettimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetTimeStamp == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_AddColumn = (PLibMCDataDataCapture_AddColumnPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_addcolumn");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_AddColumn = (PLibMCDataDataCapture_AddColumnPtr) dlsym(hLibrary, "libmcdata_datacapture_addcolumn");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_AddColumn == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetColumnCount = (PLibMCDataDataCapture_GetColumnCountPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getcolumncount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetColumnCount = (PLibMCDataDataCapture_GetColumnCountPtr) dlsym(hLibrary, "libmcdata_datacapture_getcolumncount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetColumnCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetColumnInformation = (PLibMCDataDataCapture_GetColumnInformationPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getcolumninformation");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetColumnInformation = (PLibMCDataDataCapture_GetColumnInformationPtr) dlsym(hLibrary, "libmcdata_datacapture_getcolumninformation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetColumnInformation == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_AddSegment = (PLibMCDataDataCapture_AddSegmentPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_addsegment");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_AddSegment = (PLibMCDataDataCapture_AddSegmentPtr) dlsym(hLibrary, "libmcdata_datacapture_addsegment");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_AddSegment == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentCount = (PLibMCDataDataCapture_GetSegmentCountPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getsegmentcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentCount = (PLibMCDataDataCapture_GetSegmentCountPtr) dlsym(hLibrary, "libmcdata_datacapture_getsegmentcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetSegmentCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentInformation = (PLibMCDataDataCapture_GetSegmentInformationPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getsegmentinformation");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentInformation = (PLibMCDataDataCapture_GetSegmentInformationPtr) dlsym(hLibrary, "libmcdata_datacapture_getsegmentinformation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetSegmentInformation == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentChunkCount = (PLibMCDataDataCapture_GetSegmentChunkCountPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getsegmentchunkcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentChunkCount = (PLibMCDataDataCapture_GetSegmentChunkCountPtr) dlsym(hLibrary, "libmcdata_datacapture_getsegmentchunkcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetSegmentChunkCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetRowCount = (PLibMCDataDataCapture_GetRowCountPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetRowCount = (PLibMCDataDataCapture_GetRowCountPtr) dlsym(hLibrary, "libmcdata_datacapture_getrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetRowCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetStoredSizeInBytes = (PLibMCDataDataCapture_GetStoredSizeInBytesPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_getstoredsizeinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetStoredSizeInBytes = (PLibMCDataDataCapture_GetStoredSizeInBytesPtr) dlsym(hLibrary, "libmcdata_datacapture_getstoredsizeinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetStoredSizeInBytes == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_Finish = (PLibMCDataDataCapture_FinishPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_finish");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_Finish = (PLibMCDataDataCapture_FinishPtr) dlsym(hLibrary, "libmcdata_datacapture_finish");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_Finish == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_Abort = (PLibMCDataDataCapture_AbortPtr) GetProcAddress(hLibrary, "libmcdata_datacapture_abort");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_Abort = (PLibMCDataDataCapture_AbortPtr) dlsym(hLibrary, "libmcdata_datacapture_abort");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_Abort == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4114,6 +4485,51 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobExecution_GetMetaDataString == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_CreateDataCapture = (PLibMCDataBuildJobExecution_CreateDataCapturePtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_createdatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_CreateDataCapture = (PLibMCDataBuildJobExecution_CreateDataCapturePtr) dlsym(hLibrary, "libmcdata_buildjobexecution_createdatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_CreateDataCapture == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_HasDataCapture = (PLibMCDataBuildJobExecution_HasDataCapturePtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_hasdatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_HasDataCapture = (PLibMCDataBuildJobExecution_HasDataCapturePtr) dlsym(hLibrary, "libmcdata_buildjobexecution_hasdatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_HasDataCapture == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCapture = (PLibMCDataBuildJobExecution_RetrieveDataCapturePtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_retrievedatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCapture = (PLibMCDataBuildJobExecution_RetrieveDataCapturePtr) dlsym(hLibrary, "libmcdata_buildjobexecution_retrievedatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_RetrieveDataCapture == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_GetDataCaptureCount = (PLibMCDataBuildJobExecution_GetDataCaptureCountPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_getdatacapturecount");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_GetDataCaptureCount = (PLibMCDataBuildJobExecution_GetDataCaptureCountPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_getdatacapturecount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_GetDataCaptureCount == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex = (PLibMCDataBuildJobExecution_RetrieveDataCaptureByIndexPtr) GetProcAddress(hLibrary, "libmcdata_buildjobexecution_retrievedatacapturebyindex");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex = (PLibMCDataBuildJobExecution_RetrieveDataCaptureByIndexPtr) dlsym(hLibrary, "libmcdata_buildjobexecution_retrievedatacapturebyindex");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -4582,6 +4998,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildJobHandler_ListJobExecutionsChangedSince == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildJobHandler_RetrieveDataCapture = (PLibMCDataBuildJobHandler_RetrieveDataCapturePtr) GetProcAddress(hLibrary, "libmcdata_buildjobhandler_retrievedatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildJobHandler_RetrieveDataCapture = (PLibMCDataBuildJobHandler_RetrieveDataCapturePtr) dlsym(hLibrary, "libmcdata_buildjobhandler_retrievedatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildJobHandler_RetrieveDataCapture == nullptr)
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6068,6 +6493,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_StorageZIPWriter_IsFinished == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_storagezipwriter_discard", (void**)&(pWrapperTable->m_StorageZIPWriter_Discard));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StorageZIPWriter_Discard == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_storage_streamisready", (void**)&(pWrapperTable->m_Storage_StreamIsReady));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_StreamIsReady == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -6136,8 +6565,48 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_RequestDownloadTicket == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcdata_storage_getdownloadticketdetails", (void**)&(pWrapperTable->m_Storage_GetDownloadTicketDetails));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_GetDownloadTicketDetails == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_revokedownloadticketsofstream", (void**)&(pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_RevokeDownloadTicketsOfStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_logdownloadstart", (void**)&(pWrapperTable->m_Storage_LogDownloadStart));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_LogDownloadStart == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_logdownloadfinish", (void**)&(pWrapperTable->m_Storage_LogDownloadFinish));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_LogDownloadFinish == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_deletestream", (void**)&(pWrapperTable->m_Storage_DeleteStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_DeleteStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_discardunfinishedzipstreams", (void**)&(pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_DiscardUnfinishedZIPStreams == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_liststreamuuidsbyname", (void**)&(pWrapperTable->m_Storage_ListStreamUUIDsByName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_ListStreamUUIDsByName == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcdata_storage_attachstreamtojournal", (void**)&(pWrapperTable->m_Storage_AttachStreamToJournal));
 		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_AttachStreamToJournal == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_discardrandomwritestream", (void**)&(pWrapperTable->m_Storage_DiscardRandomWriteStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_DiscardRandomWriteStream == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_getdatacapturestoragesize", (void**)&(pWrapperTable->m_Storage_GetDataCaptureStorageSize));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_GetDataCaptureStorageSize == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_storage_enforcedatacapturestoragelimit", (void**)&(pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Storage_EnforceDataCaptureStorageLimit == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_customdatastream_getdatauuid", (void**)&(pWrapperTable->m_CustomDataStream_GetDataUUID));
@@ -6202,6 +6671,74 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecutiondataiterator_getcurrentjobexecutiondata", (void**)&(pWrapperTable->m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getuuid", (void**)&(pWrapperTable->m_DataCapture_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetUUID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getexecutionuuid", (void**)&(pWrapperTable->m_DataCapture_GetExecutionUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetExecutionUUID == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getidentifier", (void**)&(pWrapperTable->m_DataCapture_GetIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetIdentifier == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getname", (void**)&(pWrapperTable->m_DataCapture_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetName == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getstatus", (void**)&(pWrapperTable->m_DataCapture_GetStatus));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetStatus == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_gettimestamp", (void**)&(pWrapperTable->m_DataCapture_GetTimeStamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetTimeStamp == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_addcolumn", (void**)&(pWrapperTable->m_DataCapture_AddColumn));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_AddColumn == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getcolumncount", (void**)&(pWrapperTable->m_DataCapture_GetColumnCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetColumnCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getcolumninformation", (void**)&(pWrapperTable->m_DataCapture_GetColumnInformation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetColumnInformation == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_addsegment", (void**)&(pWrapperTable->m_DataCapture_AddSegment));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_AddSegment == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getsegmentcount", (void**)&(pWrapperTable->m_DataCapture_GetSegmentCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetSegmentCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getsegmentinformation", (void**)&(pWrapperTable->m_DataCapture_GetSegmentInformation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetSegmentInformation == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getsegmentchunkcount", (void**)&(pWrapperTable->m_DataCapture_GetSegmentChunkCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetSegmentChunkCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getrowcount", (void**)&(pWrapperTable->m_DataCapture_GetRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetRowCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_getstoredsizeinbytes", (void**)&(pWrapperTable->m_DataCapture_GetStoredSizeInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetStoredSizeInBytes == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_finish", (void**)&(pWrapperTable->m_DataCapture_Finish));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_Finish == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_datacapture_abort", (void**)&(pWrapperTable->m_DataCapture_Abort));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_Abort == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getexecutionuuid", (void**)&(pWrapperTable->m_BuildJobExecution_GetExecutionUUID));
@@ -6306,6 +6843,26 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getmetadatastring", (void**)&(pWrapperTable->m_BuildJobExecution_GetMetaDataString));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetMetaDataString == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_createdatacapture", (void**)&(pWrapperTable->m_BuildJobExecution_CreateDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_CreateDataCapture == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_hasdatacapture", (void**)&(pWrapperTable->m_BuildJobExecution_HasDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_HasDataCapture == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_retrievedatacapture", (void**)&(pWrapperTable->m_BuildJobExecution_RetrieveDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_RetrieveDataCapture == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_getdatacapturecount", (void**)&(pWrapperTable->m_BuildJobExecution_GetDataCaptureCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_GetDataCaptureCount == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobexecution_retrievedatacapturebyindex", (void**)&(pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobExecution_RetrieveDataCaptureByIndex == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobexecutioniterator_getcurrentjobexecution", (void**)&(pWrapperTable->m_BuildJobExecutionIterator_GetCurrentJobExecution));
@@ -6514,6 +7071,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_buildjobhandler_listjobexecutionschangedsince", (void**)&(pWrapperTable->m_BuildJobHandler_ListJobExecutionsChangedSince));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_ListJobExecutionsChangedSince == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_buildjobhandler_retrievedatacapture", (void**)&(pWrapperTable->m_BuildJobHandler_RetrieveDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildJobHandler_RetrieveDataCapture == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_userlist_count", (void**)&(pWrapperTable->m_UserList_Count));
@@ -8419,6 +8980,14 @@ public:
 	}
 	
 	/**
+	* CStorageZIPWriter::Discard - Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+	*/
+	void CStorageZIPWriter::Discard()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StorageZIPWriter_Discard(m_pHandle));
+	}
+	
+	/**
 	 * Method definitions for class CStorage
 	 */
 	
@@ -8660,6 +9229,118 @@ public:
 	}
 	
 	/**
+	* CStorage::GetDownloadTicketDetails - Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[out] sStreamUUID - UUID of storage stream.
+	* @param[out] sClientFileName - ClientFileName of the ticket.
+	* @param[out] sSessionUUID - UUID of user session.
+	* @param[out] sUserUUID - UUID of user that created the ticket.
+	* @param[out] nCreationTimeStamp - Creation time of the ticket in microseconds since 1970.
+	* @param[out] bRevoked - True if the ticket has been revoked.
+	*/
+	void CStorage::GetDownloadTicketDetails(const std::string & sTicketUUID, std::string & sStreamUUID, std::string & sClientFileName, std::string & sSessionUUID, std::string & sUserUUID, LibMCData_uint64 & nCreationTimeStamp, bool & bRevoked)
+	{
+		LibMCData_uint32 bytesNeededStreamUUID = 0;
+		LibMCData_uint32 bytesWrittenStreamUUID = 0;
+		LibMCData_uint32 bytesNeededClientFileName = 0;
+		LibMCData_uint32 bytesWrittenClientFileName = 0;
+		LibMCData_uint32 bytesNeededSessionUUID = 0;
+		LibMCData_uint32 bytesWrittenSessionUUID = 0;
+		LibMCData_uint32 bytesNeededUserUUID = 0;
+		LibMCData_uint32 bytesWrittenUserUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_GetDownloadTicketDetails(m_pHandle, sTicketUUID.c_str(), 0, &bytesNeededStreamUUID, nullptr, 0, &bytesNeededClientFileName, nullptr, 0, &bytesNeededSessionUUID, nullptr, 0, &bytesNeededUserUUID, nullptr, &nCreationTimeStamp, &bRevoked));
+		std::vector<char> bufferStreamUUID(bytesNeededStreamUUID);
+		std::vector<char> bufferClientFileName(bytesNeededClientFileName);
+		std::vector<char> bufferSessionUUID(bytesNeededSessionUUID);
+		std::vector<char> bufferUserUUID(bytesNeededUserUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_GetDownloadTicketDetails(m_pHandle, sTicketUUID.c_str(), bytesNeededStreamUUID, &bytesWrittenStreamUUID, &bufferStreamUUID[0], bytesNeededClientFileName, &bytesWrittenClientFileName, &bufferClientFileName[0], bytesNeededSessionUUID, &bytesWrittenSessionUUID, &bufferSessionUUID[0], bytesNeededUserUUID, &bytesWrittenUserUUID, &bufferUserUUID[0], &nCreationTimeStamp, &bRevoked));
+		sStreamUUID = std::string(&bufferStreamUUID[0]);
+		sClientFileName = std::string(&bufferClientFileName[0]);
+		sSessionUUID = std::string(&bufferSessionUUID[0]);
+		sUserUUID = std::string(&bufferUserUUID[0]);
+	}
+	
+	/**
+	* CStorage::RevokeDownloadTicketsOfStream - Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.
+	* @param[in] sStreamUUID - UUID of storage stream.
+	* @return Number of tickets that were revoked by this call.
+	*/
+	LibMCData_uint32 CStorage::RevokeDownloadTicketsOfStream(const std::string & sStreamUUID)
+	{
+		LibMCData_uint32 resultRevokedCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_RevokeDownloadTicketsOfStream(m_pHandle, sStreamUUID.c_str(), &resultRevokedCount));
+		
+		return resultRevokedCount;
+	}
+	
+	/**
+	* CStorage::LogDownloadStart - Creates an entry in the download access log of a ticket and returns the UUID of the entry.
+	* @param[in] sTicketUUID - UUID of download ticket.
+	* @param[in] sIPAddress - IP Address where the request came from.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return UUID of the access log entry.
+	*/
+	std::string CStorage::LogDownloadStart(const std::string & sTicketUUID, const std::string & sIPAddress, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		LibMCData_uint32 bytesNeededDownloadUUID = 0;
+		LibMCData_uint32 bytesWrittenDownloadUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadStart(m_pHandle, sTicketUUID.c_str(), sIPAddress.c_str(), nAbsoluteTimeStamp, 0, &bytesNeededDownloadUUID, nullptr));
+		std::vector<char> bufferDownloadUUID(bytesNeededDownloadUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadStart(m_pHandle, sTicketUUID.c_str(), sIPAddress.c_str(), nAbsoluteTimeStamp, bytesNeededDownloadUUID, &bytesWrittenDownloadUUID, &bufferDownloadUUID[0]));
+		
+		return std::string(&bufferDownloadUUID[0]);
+	}
+	
+	/**
+	* CStorage::LogDownloadFinish - Records the result of a download in its access log entry. Fails if the entry does not exist.
+	* @param[in] sDownloadUUID - UUID of the access log entry.
+	* @param[in] nSentBytes - Number of bytes that were sent to the client.
+	* @param[in] bSuccess - True if all requested bytes were sent.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	void CStorage::LogDownloadFinish(const std::string & sDownloadUUID, const LibMCData_uint64 nSentBytes, const bool bSuccess, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_LogDownloadFinish(m_pHandle, sDownloadUUID.c_str(), nSentBytes, bSuccess, nAbsoluteTimeStamp));
+	}
+	
+	/**
+	* CStorage::DeleteStream - Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.
+	* @param[in] sUUID - UUID of storage stream.
+	*/
+	void CStorage::DeleteStream(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_DeleteStream(m_pHandle, sUUID.c_str()));
+	}
+	
+	/**
+	* CStorage::DiscardUnfinishedZIPStreams - Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.
+	* @return Number of deleted streams.
+	*/
+	LibMCData_uint32 CStorage::DiscardUnfinishedZIPStreams()
+	{
+		LibMCData_uint32 resultDeletedCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_DiscardUnfinishedZIPStreams(m_pHandle, &resultDeletedCount));
+		
+		return resultDeletedCount;
+	}
+	
+	/**
+	* CStorage::ListStreamUUIDsByName - Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.
+	* @param[in] sName - Name of the streams.
+	* @return Comma separated list of stream UUIDs. Empty if there is none.
+	*/
+	std::string CStorage::ListStreamUUIDsByName(const std::string & sName)
+	{
+		LibMCData_uint32 bytesNeededUUIDList = 0;
+		LibMCData_uint32 bytesWrittenUUIDList = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_ListStreamUUIDsByName(m_pHandle, sName.c_str(), 0, &bytesNeededUUIDList, nullptr));
+		std::vector<char> bufferUUIDList(bytesNeededUUIDList);
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_ListStreamUUIDsByName(m_pHandle, sName.c_str(), bytesNeededUUIDList, &bytesWrittenUUIDList, &bufferUUIDList[0]));
+		
+		return std::string(&bufferUUIDList[0]);
+	}
+	
+	/**
 	* CStorage::AttachStreamToJournal - Attaches a stream to a journal as temporary stream.
 	* @param[in] sStreamUUID - UUID of stream. Call fails if stream does not exist.
 	* @param[in] sJournalUUID - UUID of journal. Call fails if journal does not exist.
@@ -8667,6 +9348,40 @@ public:
 	void CStorage::AttachStreamToJournal(const std::string & sStreamUUID, const std::string & sJournalUUID)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_Storage_AttachStreamToJournal(m_pHandle, sStreamUUID.c_str(), sJournalUUID.c_str()));
+	}
+	
+	/**
+	* CStorage::DiscardRandomWriteStream - Discards an unfinished random write stream. The data on disk and the stream entry are deleted.
+	* @param[in] sUUID - UUID of storage stream. MUST have been created with BeginRandomWriteStream first and MUST NOT be finished.
+	*/
+	void CStorage::DiscardRandomWriteStream(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_DiscardRandomWriteStream(m_pHandle, sUUID.c_str()));
+	}
+	
+	/**
+	* CStorage::GetDataCaptureStorageSize - Returns the size of all data capture segments that are stored on disk.
+	* @return Size in bytes.
+	*/
+	LibMCData_uint64 CStorage::GetDataCaptureStorageSize()
+	{
+		LibMCData_uint64 resultSizeInBytes = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_GetDataCaptureStorageSize(m_pHandle, &resultSizeInBytes));
+		
+		return resultSizeInBytes;
+	}
+	
+	/**
+	* CStorage::EnforceDataCaptureStorageLimit - Deletes the oldest stored data capture segments until the total stored size is within the limit.
+	* @param[in] nLimitInBytes - Maximum total size of all stored data capture segments in bytes.
+	* @return Number of segments that have been deleted.
+	*/
+	LibMCData_uint32 CStorage::EnforceDataCaptureStorageLimit(const LibMCData_uint64 nLimitInBytes)
+	{
+		LibMCData_uint32 resultPurgedSegmentCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Storage_EnforceDataCaptureStorageLimit(m_pHandle, nLimitInBytes, &resultPurgedSegmentCount));
+		
+		return resultPurgedSegmentCount;
 	}
 	
 	/**
@@ -8921,6 +9636,244 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CBuildJobExecutionData>(m_pWrapper, hCurrentInstance);
+	}
+	
+	/**
+	 * Method definitions for class CDataCapture
+	 */
+	
+	/**
+	* CDataCapture::GetUUID - returns the uuid of the data capture.
+	* @return UUID String
+	*/
+	std::string CDataCapture::GetUUID()
+	{
+		LibMCData_uint32 bytesNeededUUID = 0;
+		LibMCData_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
+	}
+	
+	/**
+	* CDataCapture::GetExecutionUUID - returns the uuid of the build job execution the capture belongs to.
+	* @return UUID String
+	*/
+	std::string CDataCapture::GetExecutionUUID()
+	{
+		LibMCData_uint32 bytesNeededExecutionUUID = 0;
+		LibMCData_uint32 bytesWrittenExecutionUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetExecutionUUID(m_pHandle, 0, &bytesNeededExecutionUUID, nullptr));
+		std::vector<char> bufferExecutionUUID(bytesNeededExecutionUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetExecutionUUID(m_pHandle, bytesNeededExecutionUUID, &bytesWrittenExecutionUUID, &bufferExecutionUUID[0]));
+		
+		return std::string(&bufferExecutionUUID[0]);
+	}
+	
+	/**
+	* CDataCapture::GetIdentifier - returns the identifier of the data capture. It is unique within the build job execution.
+	* @return Identifier String
+	*/
+	std::string CDataCapture::GetIdentifier()
+	{
+		LibMCData_uint32 bytesNeededIdentifier = 0;
+		LibMCData_uint32 bytesWrittenIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetIdentifier(m_pHandle, 0, &bytesNeededIdentifier, nullptr));
+		std::vector<char> bufferIdentifier(bytesNeededIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetIdentifier(m_pHandle, bytesNeededIdentifier, &bytesWrittenIdentifier, &bufferIdentifier[0]));
+		
+		return std::string(&bufferIdentifier[0]);
+	}
+	
+	/**
+	* CDataCapture::GetName - returns the human readable name of the data capture.
+	* @return Name String
+	*/
+	std::string CDataCapture::GetName()
+	{
+		LibMCData_uint32 bytesNeededName = 0;
+		LibMCData_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* CDataCapture::GetStatus - returns the current status of the data capture.
+	* @return Status Value
+	*/
+	eDataCaptureStatus CDataCapture::GetStatus()
+	{
+		eDataCaptureStatus resultStatus = (eDataCaptureStatus) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetStatus(m_pHandle, &resultStatus));
+		
+		return resultStatus;
+	}
+	
+	/**
+	* CDataCapture::GetTimeStamp - returns the time stamp when the data capture was created.
+	* @return Timestamp in ISO8601 UTC format
+	*/
+	std::string CDataCapture::GetTimeStamp()
+	{
+		LibMCData_uint32 bytesNeededTimeStamp = 0;
+		LibMCData_uint32 bytesWrittenTimeStamp = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetTimeStamp(m_pHandle, 0, &bytesNeededTimeStamp, nullptr));
+		std::vector<char> bufferTimeStamp(bytesNeededTimeStamp);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetTimeStamp(m_pHandle, bytesNeededTimeStamp, &bytesWrittenTimeStamp, &bufferTimeStamp[0]));
+		
+		return std::string(&bufferTimeStamp[0]);
+	}
+	
+	/**
+	* CDataCapture::AddColumn - Registers a column of the capture schema. Fails if the capture is not recording or the column index already exists.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] sDescription - Description of the column.
+	* @param[in] nColumnType - Data type of the column as numeric data table column type.
+	*/
+	void CDataCapture::AddColumn(const LibMCData_uint32 nColumnIndex, const std::string & sIdentifier, const std::string & sDescription, const LibMCData_uint32 nColumnType)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_AddColumn(m_pHandle, nColumnIndex, sIdentifier.c_str(), sDescription.c_str(), nColumnType));
+	}
+	
+	/**
+	* CDataCapture::GetColumnCount - returns the number of columns of the capture schema.
+	* @return Number of columns.
+	*/
+	LibMCData_uint32 CDataCapture::GetColumnCount()
+	{
+		LibMCData_uint32 resultColumnCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetColumnCount(m_pHandle, &resultColumnCount));
+		
+		return resultColumnCount;
+	}
+	
+	/**
+	* CDataCapture::GetColumnInformation - returns the schema information of a column. Fails if the index does not exist.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[out] sIdentifier - Identifier of the column.
+	* @param[out] sDescription - Description of the column.
+	* @param[out] nColumnType - Data type of the column as numeric data table column type.
+	*/
+	void CDataCapture::GetColumnInformation(const LibMCData_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, LibMCData_uint32 & nColumnType)
+	{
+		LibMCData_uint32 bytesNeededIdentifier = 0;
+		LibMCData_uint32 bytesWrittenIdentifier = 0;
+		LibMCData_uint32 bytesNeededDescription = 0;
+		LibMCData_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetColumnInformation(m_pHandle, nColumnIndex, 0, &bytesNeededIdentifier, nullptr, 0, &bytesNeededDescription, nullptr, &nColumnType));
+		std::vector<char> bufferIdentifier(bytesNeededIdentifier);
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetColumnInformation(m_pHandle, nColumnIndex, bytesNeededIdentifier, &bytesWrittenIdentifier, &bufferIdentifier[0], bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0], &nColumnType));
+		sIdentifier = std::string(&bufferIdentifier[0]);
+		sDescription = std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* CDataCapture::AddSegment - Registers a finished segment stream of the capture. Fails if the capture is not recording or the segment index already exists.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[in] sStreamUUID - UUID of the storage stream that holds the segment. The stream MUST exist.
+	* @param[in] nFirstRow - Index of the first row of the segment within the capture.
+	* @param[in] nRowCount - Number of rows in the segment.
+	* @param[in] nChunkCount - Number of chunks in the segment.
+	* @param[in] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[in] nStartTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was opened.
+	* @param[in] nEndTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was closed.
+	*/
+	void CDataCapture::AddSegment(const LibMCData_uint32 nSegmentIndex, const std::string & sStreamUUID, const LibMCData_uint64 nFirstRow, const LibMCData_uint64 nRowCount, const LibMCData_uint32 nChunkCount, const LibMCData_uint64 nSizeInBytes, const LibMCData_uint64 nStartTimeStamp, const LibMCData_uint64 nEndTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_AddSegment(m_pHandle, nSegmentIndex, sStreamUUID.c_str(), nFirstRow, nRowCount, nChunkCount, nSizeInBytes, nStartTimeStamp, nEndTimeStamp));
+	}
+	
+	/**
+	* CDataCapture::GetSegmentCount - returns the number of registered segments, including purged ones.
+	* @return Number of segments.
+	*/
+	LibMCData_uint32 CDataCapture::GetSegmentCount()
+	{
+		LibMCData_uint32 resultSegmentCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetSegmentCount(m_pHandle, &resultSegmentCount));
+		
+		return resultSegmentCount;
+	}
+	
+	/**
+	* CDataCapture::GetSegmentInformation - returns the manifest entry of a segment. Fails if the index does not exist.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[out] sStreamUUID - UUID of the storage stream that holds the segment.
+	* @param[out] nFirstRow - Index of the first row of the segment within the capture.
+	* @param[out] nRowCount - Number of rows in the segment.
+	* @param[out] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[out] bIsPurged - Returns true if the segment data has been deleted by retention or abort.
+	*/
+	void CDataCapture::GetSegmentInformation(const LibMCData_uint32 nSegmentIndex, std::string & sStreamUUID, LibMCData_uint64 & nFirstRow, LibMCData_uint64 & nRowCount, LibMCData_uint64 & nSizeInBytes, bool & bIsPurged)
+	{
+		LibMCData_uint32 bytesNeededStreamUUID = 0;
+		LibMCData_uint32 bytesWrittenStreamUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetSegmentInformation(m_pHandle, nSegmentIndex, 0, &bytesNeededStreamUUID, nullptr, &nFirstRow, &nRowCount, &nSizeInBytes, &bIsPurged));
+		std::vector<char> bufferStreamUUID(bytesNeededStreamUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetSegmentInformation(m_pHandle, nSegmentIndex, bytesNeededStreamUUID, &bytesWrittenStreamUUID, &bufferStreamUUID[0], &nFirstRow, &nRowCount, &nSizeInBytes, &bIsPurged));
+		sStreamUUID = std::string(&bufferStreamUUID[0]);
+	}
+	
+	/**
+	* CDataCapture::GetSegmentChunkCount - returns the number of chunks of a segment. Fails if the index does not exist.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @return Number of chunks in the segment.
+	*/
+	LibMCData_uint32 CDataCapture::GetSegmentChunkCount(const LibMCData_uint32 nSegmentIndex)
+	{
+		LibMCData_uint32 resultChunkCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetSegmentChunkCount(m_pHandle, nSegmentIndex, &resultChunkCount));
+		
+		return resultChunkCount;
+	}
+	
+	/**
+	* CDataCapture::GetRowCount - returns the number of rows in all registered segments, including purged ones.
+	* @return Number of rows.
+	*/
+	LibMCData_uint64 CDataCapture::GetRowCount()
+	{
+		LibMCData_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetRowCount(m_pHandle, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	* CDataCapture::GetStoredSizeInBytes - returns the size of all segments of the capture that are still stored on disk.
+	* @return Size in bytes.
+	*/
+	LibMCData_uint64 CDataCapture::GetStoredSizeInBytes()
+	{
+		LibMCData_uint64 resultSizeInBytes = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetStoredSizeInBytes(m_pHandle, &resultSizeInBytes));
+		
+		return resultSizeInBytes;
+	}
+	
+	/**
+	* CDataCapture::Finish - Marks the capture as finished. Fails if the capture is not recording.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	void CDataCapture::Finish(const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Finish(m_pHandle, nAbsoluteTimeStamp));
+	}
+	
+	/**
+	* CDataCapture::Abort - Deletes all stored segments of the capture and marks it as aborted. Fails if the capture has been aborted before.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	*/
+	void CDataCapture::Abort(const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Abort(m_pHandle, nAbsoluteTimeStamp));
 	}
 	
 	/**
@@ -9289,6 +10242,82 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetMetaDataString(m_pHandle, sKey.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
 		
 		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CBuildJobExecution::CreateDataCapture - Creates the manifest of a new data capture in recording state. Fails if the identifier already exists in this execution.
+	* @param[in] sIdentifier - Identifier of the capture. MUST be unique within the execution, alphanumeric and not empty.
+	* @param[in] sName - Human readable name of the capture. MUST NOT be empty.
+	* @param[in] sUserUUID - UUID of the user that started the capture. Use 00000000-0000-0000-0000-000000000000 if no user shall be recorded.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return Data capture manifest instance.
+	*/
+	PDataCapture CBuildJobExecution::CreateDataCapture(const std::string & sIdentifier, const std::string & sName, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp)
+	{
+		LibMCDataHandle hDataCaptureInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_CreateDataCapture(m_pHandle, sIdentifier.c_str(), sName.c_str(), sUserUUID.c_str(), nAbsoluteTimeStamp, &hDataCaptureInstance));
+		
+		if (!hDataCaptureInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCapture>(m_pWrapper, hDataCaptureInstance);
+	}
+	
+	/**
+	* CBuildJobExecution::HasDataCapture - Returns if a data capture with a specific identifier exists in this execution.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Returns true, if the data capture exists.
+	*/
+	bool CBuildJobExecution::HasDataCapture(const std::string & sIdentifier)
+	{
+		bool resultHasDataCapture = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_HasDataCapture(m_pHandle, sIdentifier.c_str(), &resultHasDataCapture));
+		
+		return resultHasDataCapture;
+	}
+	
+	/**
+	* CBuildJobExecution::RetrieveDataCapture - Retrieves the manifest of a data capture by its identifier. Fails if the identifier does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Data capture manifest instance.
+	*/
+	PDataCapture CBuildJobExecution::RetrieveDataCapture(const std::string & sIdentifier)
+	{
+		LibMCDataHandle hDataCaptureInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_RetrieveDataCapture(m_pHandle, sIdentifier.c_str(), &hDataCaptureInstance));
+		
+		if (!hDataCaptureInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCapture>(m_pWrapper, hDataCaptureInstance);
+	}
+	
+	/**
+	* CBuildJobExecution::GetDataCaptureCount - Returns the number of data captures of this execution.
+	* @return Number of data captures.
+	*/
+	LibMCData_uint32 CBuildJobExecution::GetDataCaptureCount()
+	{
+		LibMCData_uint32 resultDataCaptureCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_GetDataCaptureCount(m_pHandle, &resultDataCaptureCount));
+		
+		return resultDataCaptureCount;
+	}
+	
+	/**
+	* CBuildJobExecution::RetrieveDataCaptureByIndex - Retrieves the manifest of a data capture of this execution by its index. Captures are ordered by their creation time.
+	* @param[in] nIndex - Index of the capture. 0-based. Fails if the index is out of bounds.
+	* @return Data capture manifest instance.
+	*/
+	PDataCapture CBuildJobExecution::RetrieveDataCaptureByIndex(const LibMCData_uint32 nIndex)
+	{
+		LibMCDataHandle hDataCaptureInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobExecution_RetrieveDataCaptureByIndex(m_pHandle, nIndex, &hDataCaptureInstance));
+		
+		if (!hDataCaptureInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCapture>(m_pWrapper, hDataCaptureInstance);
 	}
 	
 	/**
@@ -10033,6 +11062,22 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CBuildJobExecutionIterator>(m_pWrapper, hIteratorInstance);
+	}
+	
+	/**
+	* CBuildJobHandler::RetrieveDataCapture - Retrieves the manifest of a data capture by its uuid. Fails if the capture does not exist.
+	* @param[in] sDataCaptureUUID - UUID of the data capture.
+	* @return Data capture manifest instance.
+	*/
+	PDataCapture CBuildJobHandler::RetrieveDataCapture(const std::string & sDataCaptureUUID)
+	{
+		LibMCDataHandle hDataCaptureInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildJobHandler_RetrieveDataCapture(m_pHandle, sDataCaptureUUID.c_str(), &hDataCaptureInstance));
+		
+		if (!hDataCaptureInstance) {
+			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCapture>(m_pWrapper, hDataCaptureInstance);
 	}
 	
 	/**

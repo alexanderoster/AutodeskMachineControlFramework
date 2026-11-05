@@ -119,6 +119,57 @@ protected:
 
 	std::mutex m_RecordingMutex;
 
+	// Diagnostics of the packet and error callbacks of the OIE SDK. The callbacks run in a thread
+	// of the SDK at up to 100 kHz, so they only count and keep the first occurrence; the log lines
+	// are written through the driver environment from RetrieveCurrentRecording and
+	// ClearCurrentRecording, which the plugin calls from its own thread. A null driver environment
+	// switches the output off.
+	LibMCEnv::PDriverEnvironment m_pDriverEnvironment;
+	std::mutex m_DiagnosticsMutex;
+
+	std::atomic<uint64_t> m_nXYFallbackCount;
+	std::atomic<uint64_t> m_nSignalCountMismatchCount;
+	std::atomic<uint64_t> m_nPacketExceptionCount;
+	std::atomic<uint64_t> m_nPacketUnknownExceptionCount;
+	std::atomic<uint64_t> m_nErrorEventCount;
+
+	// First occurrence per category since the last clear, written under m_DiagnosticsMutex.
+	struct sFirstPacketIssue {
+		uint32_t m_nPacket = 0;
+		uint32_t m_nTag = 0;
+		std::string m_sText;
+	};
+	sFirstPacketIssue m_FirstXYFallback;
+	sFirstPacketIssue m_FirstPacketException;
+
+	struct sFirstSignalCountMismatch {
+		uint32_t m_nPacket = 0;
+		uint32_t m_nTag = 0;
+		uint32_t m_nExpected[3] = { 0, 0, 0 };   // sensor, rtc, additional
+		uint32_t m_nGot[3] = { 0, 0, 0 };
+	};
+	sFirstSignalCountMismatch m_FirstSignalCountMismatch;
+
+	// Error events carry two integers only, so the first and the last one are kept in atomics.
+	std::atomic<int32_t> m_nFirstErrorEventCode;
+	std::atomic<int32_t> m_nFirstErrorEventValue;
+	std::atomic<int32_t> m_nLastErrorEventCode;
+	std::atomic<int32_t> m_nLastErrorEventValue;
+
+	// Counter values at the previous report, so that every report shows the increase.
+	uint64_t m_nReportedXYFallbacks;
+	uint64_t m_nReportedSignalCountMismatches;
+	uint64_t m_nReportedPacketExceptions;
+	uint64_t m_nReportedPacketUnknownExceptions;
+	uint64_t m_nReportedErrorEvents;
+
+	void resetDiagnostics();
+	void reportDiagnosticsIncrease();
+	std::string describeDiagnostics();
+	void logDriverMessage(const std::string& sMessage);
+	void logDriverWarning(const std::string& sMessage);
+	void logDriverInfo(const std::string& sMessage);
+
 	void ensureConnectivity();
 	void removeDevice(bool bCheckForError);
 
@@ -133,7 +184,7 @@ protected:
 
 public:
 
-	COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pInstance, const std::string & sDeviceName, const std::string& sHostName, const LibMCDriver_ScanLabOIE_uint32 nPort, uint32_t nResponseTimeOut, IDeviceConfiguration* pDeviceConfiguration, std::vector<uint8_t>& correctionFileData, LibMCEnv::PWorkingDirectory pWorkingDirectory);
+	COIEDeviceInstance(PScanLabOIESDK pOIESDK, oie_instance pInstance, const std::string & sDeviceName, const std::string& sHostName, const LibMCDriver_ScanLabOIE_uint32 nPort, uint32_t nResponseTimeOut, IDeviceConfiguration* pDeviceConfiguration, std::vector<uint8_t>& correctionFileData, LibMCEnv::PWorkingDirectory pWorkingDirectory, LibMCEnv::PDriverEnvironment pDriverEnvironment);
 
 	virtual ~COIEDeviceInstance();
 

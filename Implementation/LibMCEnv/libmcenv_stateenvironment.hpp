@@ -277,6 +277,16 @@ public:
 
 	IStreamReader* LoadStream(const std::string& sUUID, const bool bMustExist) override;
 
+	bool StartStreamDownloadForSession(const std::string& sSessionUUID, const std::string& sStreamUUID, const std::string& sFileName) override;
+
+	void GetStreamDownloadProgress(const std::string& sStreamUUID, LibMCEnv_uint32& nActiveConnections, LibMCEnv_uint64& nDeliveredBytes, LibMCEnv_uint64& nTotalBytes, bool& bCompleted, LibMCEnv_uint64& nMillisecondsSinceActivity) override;
+
+	bool CancelStreamDownloads(const std::string& sStreamUUID) override;
+
+	void DeleteStorageStream(const std::string& sUUID) override;
+
+	LibMCEnv_uint32 EnforceStreamRetention(const std::string& sName, const LibMCEnv_uint32 nKeepCount) override;
+
 	IDateTime* GetCurrentDateTime() override;
 
 	IDateTime* GetCustomDateTime(const LibMCEnv_uint32 nYear, const LibMCEnv_uint32 nMonth, const LibMCEnv_uint32 nDay, const LibMCEnv_uint32 nHour, const LibMCEnv_uint32 nMinute, const LibMCEnv_uint32 nSecond, const LibMCEnv_uint32 nMicrosecond)  override;

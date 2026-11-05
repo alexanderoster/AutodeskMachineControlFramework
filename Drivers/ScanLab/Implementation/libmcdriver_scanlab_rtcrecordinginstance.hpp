@@ -93,6 +93,9 @@ public:
 
 	int32_t* reserveDataBuffer(uint32_t nCount, uint32_t& nEntriesToRead);
 
+	// Makes the chunk empty again, so that its buffer is reused.
+	void resetWriteOffset();
+
 
 };
 
@@ -136,6 +139,9 @@ public:
 	void getAllScaledRecordEntries(uint64_t nValuesBufferSize, uint64_t* pValuesNeededCount, double* pValuesBuffer, double dScaleFactor, double dOffset);
 
 	int32_t* reserveDataBuffer(uint32_t nCount, uint32_t& nEntriesToRead);
+
+	// Drops all record entries. The first chunk is kept and reused.
+	void discardRecords();
 };
 
 
@@ -170,6 +176,20 @@ private:
 	// May be nullptr (no streaming-aware context).
 	std::shared_ptr<std::atomic<bool>> m_pListExecutionAlreadyStarted;
 
+	// Shared with the owning CRTCContext. Set while a stepwise microvector download is in
+	// progress: the readout then runs in parallel to the download and must not take a BUSY drop
+	// between two segments (fallback start) for the end of the layer. May be nullptr.
+	std::shared_ptr<std::atomic<bool>> m_pMicrovectorDownloadActive;
+
+	// State of the incremental readout between startListWithRecording() and the call of
+	// readRecordedData() that reports completion.
+	bool m_bReadoutActive;
+	bool m_bMeasurementStarted;
+	uint32_t m_nReadoutLastPosition;
+	// A polling step has read its block and waits for the completion check of the next call.
+	bool m_bReadoutStepPending;
+	uint32_t m_nReadoutLastBusy;
+
 	void readRecordedDataBlockFromRTC(uint32_t DataStart, uint32_t DataEnd);
 
 	static std::string normalizeChannelName(const std::string& sChannelName);
@@ -178,7 +198,7 @@ private:
 
 public:
 
-	CRTCRecordingInstance(const std::string & sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted);
+	CRTCRecordingInstance(const std::string & sUUID, PScanLabSDK pSDK, uint32_t cardNo, double dXYCorrectionFactor, double dZCorrectionFactor, size_t nChunkSize, bool bEnableScanheadFeedback, bool bEnableBacktransformation, std::shared_ptr<std::atomic<bool>> pListExecutionAlreadyStarted, std::shared_ptr<std::atomic<bool>> pMicrovectorDownloadActive);
 
 	virtual ~CRTCRecordingInstance();
 	
@@ -205,6 +225,17 @@ public:
 	void disableRecording();
 
 	void executeListWithRecording();
+
+	// Starts list execution and the incremental readout. Returns immediately.
+	void startListWithRecording();
+
+	// Reads at most one block of recorded data from the card into the channels. Returns true
+	// once the list has finished and all recorded data has been read. Does not wait: the caller
+	// pauses between calls, 10 ms in executeListWithRecording().
+	bool readRecordedData();
+
+	// Drops the record entries of all channels and keeps channels and readout position.
+	void discardRecords();
 
 	void addRecordsToDataTable(const std::string & sChannelName, LibMCEnv::PDataTable pDataTable, const std::string & sColumnIdentifier, const std::string & sColumnDescription);
 

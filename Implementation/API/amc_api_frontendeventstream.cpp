@@ -229,6 +229,20 @@ std::string CAPIFrontendEventStream::waitForNextEvent(sJSONEventStreamCursor& cu
 		return "";
 	}
 
+	// Client actions queued by the server for this session (for example a download that a state machine
+	// prepared) are sent to every connection as an "actions" event whenever the queue changes. The event
+	// carries the last status revision as its ID, so that it does not disturb the resume point.
+	auto pFrontendState = pAuth->getFrontendState();
+	if (pFrontendState.get() != nullptr) {
+		uint64_t nActionsRevision = pFrontendState->getClientActionsRevision();
+		if (nActionsRevision != cursor.m_nActionsRevision) {
+			cursor.m_nActionsRevision = nActionsRevision;
+			CJSONWriter actionsWriter;
+			pFrontendState->writePendingClientActionsToJSON(actionsWriter);
+			return formatEvent(AMC_API_FRONTENDEVENTSTREAM_EVENT_ACTIONS, cursor.m_nLastEventID, actionsWriter.saveToString());
+		}
+	}
+
 	// The counter is read before the build, so that a change during the build triggers another one.
 	auto buildStart = std::chrono::steady_clock::now();
 	uint64_t nDataChangeCounter = pSystemState->stateMachineData()->getFrontendChangeCounter()->get();

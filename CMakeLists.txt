@@ -304,6 +304,9 @@ file(GLOB LIBMC_SRC_DEP_ZIP
 file(GLOB LIBMC_SRC_DEP_ZLIB
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/zlib/*.c
 )
+file(GLOB LIBMC_SRC_DEP_LZ4
+	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/lz4/*.c
+)
 file(GLOB LIBMC_SRC_DEP_PUGIXML
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML/pugixml.cpp
 )
@@ -323,6 +326,7 @@ source_group("libmcenv" FILES ${LIBMC_SRC_LIBMCENV})
 source_group("dependencies\\crossguid" FILES ${LIBMC_SRC_DEP_CROSSGUID})
 source_group("dependencies\\zip" FILES ${LIBMC_SRC_DEP_ZIP})
 source_group("dependencies\\zlib" FILES ${LIBMC_SRC_DEP_ZLIB})
+source_group("dependencies\\lz4" FILES ${LIBMC_SRC_DEP_LZ4})
 source_group("dependencies\\pugixml" FILES ${LIBMC_SRC_DEP_PUGIXML})
 source_group("dependencies\\lodepng" FILES ${LIBMC_SRC_DEP_LODEPNG})
 
@@ -336,6 +340,7 @@ set(LIBMC_SRC
   ${LIBMC_SRC_LIBMCENV}
   ${LIBMC_SRC_DEP_ZIP}
   ${LIBMC_SRC_DEP_ZLIB}
+  ${LIBMC_SRC_DEP_LZ4}
   ${LIBMC_SRC_DEP_PUGIXML}
   ${LIBMC_SRC_DEP_CROSSGUID}
   ${LIBMC_SRC_DEP_LODEPNG}
@@ -368,6 +373,7 @@ target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Implementat
 target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML)
 target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PicoSHA2)
 target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libzip)
+target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/lz4)
 target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
 target_include_directories(libmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
 
@@ -595,6 +601,7 @@ file(GLOB SERVER_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML/pugixml.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/zlib/*.c
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_httprange.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_guid.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
@@ -677,6 +684,7 @@ file(GLOB SERVER_WIN32_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PugiXML/pugixml.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Libraries/zlib/*.c
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_utils.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_httprange.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_guid.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_importstream_native.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/Implementation/Common/common_exportstream_native.cpp 
@@ -759,6 +767,7 @@ file(GLOB UNITTEST_SRC
   ${LIBMC_SRC_LIBMCENV}
   ${LIBMC_SRC_DEP_ZIP}
   ${LIBMC_SRC_DEP_ZLIB}
+  ${LIBMC_SRC_DEP_LZ4}
   ${LIBMC_SRC_DEP_PUGIXML}
   ${LIBMC_SRC_DEP_CROSSGUID}
   ${LIBMC_SRC_DEP_LODEPNG}
@@ -790,6 +799,7 @@ target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libr
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/PicoSHA2)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libzip)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/SQLite)
+target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/lz4)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries)
 target_include_directories(amc_unittest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/)
 target_compile_options(amc_unittest PRIVATE "-D__GITHASH=${GLOBALGITHASH}")

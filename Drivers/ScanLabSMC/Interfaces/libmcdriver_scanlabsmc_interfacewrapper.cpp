@@ -983,6 +983,56 @@ LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getsendtoha
 	}
 }
 
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool bEnabled)
+{
+	IBase* pIBaseClass = (IBase *)pSMCConfiguration;
+
+	try {
+		ISMCConfiguration* pISMCConfiguration = dynamic_cast<ISMCConfiguration*>(pIBaseClass);
+		if (!pISMCConfiguration)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		pISMCConfiguration->SetSimulationFileOutputEnabled(bEnabled);
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, bool * pEnabled)
+{
+	IBase* pIBaseClass = (IBase *)pSMCConfiguration;
+
+	try {
+		if (pEnabled == nullptr)
+			throw ELibMCDriver_ScanLabSMCInterfaceException (LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDPARAM);
+		ISMCConfiguration* pISMCConfiguration = dynamic_cast<ISMCConfiguration*>(pIBaseClass);
+		if (!pISMCConfiguration)
+			throw ELibMCDriver_ScanLabSMCInterfaceException(LIBMCDRIVER_SCANLABSMC_ERROR_INVALIDCAST);
+		
+		*pEnabled = pISMCConfiguration->GetSimulationFileOutputEnabled();
+
+		return LIBMCDRIVER_SCANLABSMC_SUCCESS;
+	}
+	catch (ELibMCDriver_ScanLabSMCInterfaceException & Exception) {
+		return handleLibMCDriver_ScanLabSMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDriver_ScanLabSMCResult libmcdriver_scanlabsmc_smcconfiguration_setserialnumber(LibMCDriver_ScanLabSMC_SMCConfiguration pSMCConfiguration, LibMCDriver_ScanLabSMC_uint32 nValue)
 {
 	IBase* pIBaseClass = (IBase *)pSMCConfiguration;
@@ -2297,6 +2347,10 @@ LibMCDriver_ScanLabSMCResult LibMCDriver_ScanLabSMC::Impl::LibMCDriver_ScanLabSM
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_setsendtohardware;
 	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_getsendtohardware") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_getsendtohardware;
+	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_setsimulationfileoutputenabled;
+	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled") 
+		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_getsimulationfileoutputenabled;
 	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_setserialnumber") 
 		*ppProcAddress = (void*) &libmcdriver_scanlabsmc_smcconfiguration_setserialnumber;
 	if (sProcName == "libmcdriver_scanlabsmc_smcconfiguration_getserialnumber") 

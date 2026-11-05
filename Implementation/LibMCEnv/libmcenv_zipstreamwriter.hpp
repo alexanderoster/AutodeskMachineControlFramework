@@ -124,6 +124,8 @@ public:
 
 	void Finish() override;
 
+	void Discard() override;
+
 	std::string GetUUID() override;
 
 	std::string GetName() override;

@@ -1156,6 +1156,14 @@ typedef LibMCDataResult (*PLibMCDataStorageZIPWriter_FinishPtr) (LibMCData_Stora
 */
 typedef LibMCDataResult (*PLibMCDataStorageZIPWriter_IsFinishedPtr) (LibMCData_StorageZIPWriter pStorageZIPWriter, bool * pFinished);
 
+/**
+* Discards an unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+*
+* @param[in] pStorageZIPWriter - StorageZIPWriter instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorageZIPWriter_DiscardPtr) (LibMCData_StorageZIPWriter pStorageZIPWriter);
+
 /*************************************************************************************************************************
  Class definition for Storage
 **************************************************************************************************************************/
@@ -1365,6 +1373,95 @@ typedef LibMCDataResult (*PLibMCDataStorage_CreateDownloadTicketPtr) (LibMCData_
 typedef LibMCDataResult (*PLibMCDataStorage_RequestDownloadTicketPtr) (LibMCData_Storage pStorage, const char * pTicketUUID, const char * pIPAddress, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, const LibMCData_uint32 nClientFileNameBufferSize, LibMCData_uint32* pClientFileNameNeededChars, char * pClientFileNameBuffer, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
 
 /**
+* Returns the details of a download ticket without creating an access log entry. Fails if the ticket does not exist.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pTicketUUID - UUID of download ticket.
+* @param[in] nStreamUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pStreamUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pStreamUUIDBuffer -  buffer of UUID of storage stream., may be NULL
+* @param[in] nClientFileNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pClientFileNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pClientFileNameBuffer -  buffer of ClientFileName of the ticket., may be NULL
+* @param[in] nSessionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSessionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSessionUUIDBuffer -  buffer of UUID of user session., may be NULL
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of UUID of user that created the ticket., may be NULL
+* @param[out] pCreationTimeStamp - Creation time of the ticket in microseconds since 1970.
+* @param[out] pRevoked - True if the ticket has been revoked.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_GetDownloadTicketDetailsPtr) (LibMCData_Storage pStorage, const char * pTicketUUID, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, const LibMCData_uint32 nClientFileNameBufferSize, LibMCData_uint32* pClientFileNameNeededChars, char * pClientFileNameBuffer, const LibMCData_uint32 nSessionUUIDBufferSize, LibMCData_uint32* pSessionUUIDNeededChars, char * pSessionUUIDBuffer, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer, LibMCData_uint64 * pCreationTimeStamp, bool * pRevoked);
+
+/**
+* Revokes all download tickets of a stream. Revoked tickets can not be used for downloads anymore.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pStreamUUID - UUID of storage stream.
+* @param[out] pRevokedCount - Number of tickets that were revoked by this call.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr) (LibMCData_Storage pStorage, const char * pStreamUUID, LibMCData_uint32 * pRevokedCount);
+
+/**
+* Creates an entry in the download access log of a ticket and returns the UUID of the entry.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pTicketUUID - UUID of download ticket.
+* @param[in] pIPAddress - IP Address where the request came from.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @param[in] nDownloadUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDownloadUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDownloadUUIDBuffer -  buffer of UUID of the access log entry., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_LogDownloadStartPtr) (LibMCData_Storage pStorage, const char * pTicketUUID, const char * pIPAddress, LibMCData_uint64 nAbsoluteTimeStamp, const LibMCData_uint32 nDownloadUUIDBufferSize, LibMCData_uint32* pDownloadUUIDNeededChars, char * pDownloadUUIDBuffer);
+
+/**
+* Records the result of a download in its access log entry. Fails if the entry does not exist.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pDownloadUUID - UUID of the access log entry.
+* @param[in] nSentBytes - Number of bytes that were sent to the client.
+* @param[in] bSuccess - True if all requested bytes were sent.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_LogDownloadFinishPtr) (LibMCData_Storage pStorage, const char * pDownloadUUID, LibMCData_uint64 nSentBytes, bool bSuccess, LibMCData_uint64 nAbsoluteTimeStamp);
+
+/**
+* Deletes a finished stream from disk and database, including its download tickets and journal links. Fails if the stream does not exist or is still being written.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pUUID - UUID of storage stream.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_DeleteStreamPtr) (LibMCData_Storage pStorage, const char * pUUID);
+
+/**
+* Deletes all ZIP streams that were never finished and have no active writer, for example after a crash. Returns the number of deleted streams.
+*
+* @param[in] pStorage - Storage instance.
+* @param[out] pDeletedCount - Number of deleted streams.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr) (LibMCData_Storage pStorage, LibMCData_uint32 * pDeletedCount);
+
+/**
+* Returns the UUIDs of all finished streams with the given name, newest first, separated by commas.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pName - Name of the streams.
+* @param[in] nUUIDListBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDListNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDListBuffer -  buffer of Comma separated list of stream UUIDs. Empty if there is none., may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_ListStreamUUIDsByNamePtr) (LibMCData_Storage pStorage, const char * pName, const LibMCData_uint32 nUUIDListBufferSize, LibMCData_uint32* pUUIDListNeededChars, char * pUUIDListBuffer);
+
+/**
 * Attaches a stream to a journal as temporary stream.
 *
 * @param[in] pStorage - Storage instance.
@@ -1373,6 +1470,34 @@ typedef LibMCDataResult (*PLibMCDataStorage_RequestDownloadTicketPtr) (LibMCData
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataStorage_AttachStreamToJournalPtr) (LibMCData_Storage pStorage, const char * pStreamUUID, const char * pJournalUUID);
+
+/**
+* Discards an unfinished random write stream. The data on disk and the stream entry are deleted.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] pUUID - UUID of storage stream. MUST have been created with BeginRandomWriteStream first and MUST NOT be finished.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_DiscardRandomWriteStreamPtr) (LibMCData_Storage pStorage, const char * pUUID);
+
+/**
+* Returns the size of all data capture segments that are stored on disk.
+*
+* @param[in] pStorage - Storage instance.
+* @param[out] pSizeInBytes - Size in bytes.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_GetDataCaptureStorageSizePtr) (LibMCData_Storage pStorage, LibMCData_uint64 * pSizeInBytes);
+
+/**
+* Deletes the oldest stored data capture segments until the total stored size is within the limit.
+*
+* @param[in] pStorage - Storage instance.
+* @param[in] nLimitInBytes - Maximum total size of all stored data capture segments in bytes.
+* @param[out] pPurgedSegmentCount - Number of segments that have been deleted.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataStorage_EnforceDataCaptureStorageLimitPtr) (LibMCData_Storage pStorage, LibMCData_uint64 nLimitInBytes, LibMCData_uint32 * pPurgedSegmentCount);
 
 /*************************************************************************************************************************
  Class definition for CustomDataStream
@@ -1559,6 +1684,198 @@ typedef LibMCDataResult (*PLibMCDataBuildJobExecutionData_GetExecutionUUIDPtr) (
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobExecutionDataIterator_GetCurrentJobExecutionDataPtr) (LibMCData_BuildJobExecutionDataIterator pBuildJobExecutionDataIterator, LibMCData_BuildJobExecutionData * pCurrentInstance);
+
+/*************************************************************************************************************************
+ Class definition for DataCapture
+**************************************************************************************************************************/
+
+/**
+* returns the uuid of the data capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID String, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetUUIDPtr) (LibMCData_DataCapture pDataCapture, const LibMCData_uint32 nUUIDBufferSize, LibMCData_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
+* returns the uuid of the build job execution the capture belongs to.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nExecutionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pExecutionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pExecutionUUIDBuffer -  buffer of UUID String, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetExecutionUUIDPtr) (LibMCData_DataCapture pDataCapture, const LibMCData_uint32 nExecutionUUIDBufferSize, LibMCData_uint32* pExecutionUUIDNeededChars, char * pExecutionUUIDBuffer);
+
+/**
+* returns the identifier of the data capture. It is unique within the build job execution.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pIdentifierBuffer -  buffer of Identifier String, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetIdentifierPtr) (LibMCData_DataCapture pDataCapture, const LibMCData_uint32 nIdentifierBufferSize, LibMCData_uint32* pIdentifierNeededChars, char * pIdentifierBuffer);
+
+/**
+* returns the human readable name of the data capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name String, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetNamePtr) (LibMCData_DataCapture pDataCapture, const LibMCData_uint32 nNameBufferSize, LibMCData_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* returns the current status of the data capture.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pStatus - Status Value
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetStatusPtr) (LibMCData_DataCapture pDataCapture, LibMCData::eDataCaptureStatus * pStatus);
+
+/**
+* returns the time stamp when the data capture was created.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nTimeStampBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimeStampNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimeStampBuffer -  buffer of Timestamp in ISO8601 UTC format, may be NULL
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetTimeStampPtr) (LibMCData_DataCapture pDataCapture, const LibMCData_uint32 nTimeStampBufferSize, LibMCData_uint32* pTimeStampNeededChars, char * pTimeStampBuffer);
+
+/**
+* Registers a column of the capture schema. Fails if the capture is not recording or the column index already exists.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] pIdentifier - Identifier of the column.
+* @param[in] pDescription - Description of the column.
+* @param[in] nColumnType - Data type of the column as numeric data table column type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_AddColumnPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 nColumnIndex, const char * pIdentifier, const char * pDescription, LibMCData_uint32 nColumnType);
+
+/**
+* returns the number of columns of the capture schema.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pColumnCount - Number of columns.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetColumnCountPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 * pColumnCount);
+
+/**
+* returns the schema information of a column. Fails if the index does not exist.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nColumnIndex - Index of the column. 0-based.
+* @param[in] nIdentifierBufferSize - size of the buffer (including trailing 0)
+* @param[out] pIdentifierNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pIdentifierBuffer -  buffer of Identifier of the column., may be NULL
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description of the column., may be NULL
+* @param[out] pColumnType - Data type of the column as numeric data table column type.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetColumnInformationPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 nColumnIndex, const LibMCData_uint32 nIdentifierBufferSize, LibMCData_uint32* pIdentifierNeededChars, char * pIdentifierBuffer, const LibMCData_uint32 nDescriptionBufferSize, LibMCData_uint32* pDescriptionNeededChars, char * pDescriptionBuffer, LibMCData_uint32 * pColumnType);
+
+/**
+* Registers a finished segment stream of the capture. Fails if the capture is not recording or the segment index already exists.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nSegmentIndex - Index of the segment. 0-based.
+* @param[in] pStreamUUID - UUID of the storage stream that holds the segment. The stream MUST exist.
+* @param[in] nFirstRow - Index of the first row of the segment within the capture.
+* @param[in] nRowCount - Number of rows in the segment.
+* @param[in] nChunkCount - Number of chunks in the segment.
+* @param[in] nSizeInBytes - Size of the segment stream in bytes.
+* @param[in] nStartTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was opened.
+* @param[in] nEndTimeStamp - Absolute time stamp in microseconds since 1970 when the segment was closed.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_AddSegmentPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 nSegmentIndex, const char * pStreamUUID, LibMCData_uint64 nFirstRow, LibMCData_uint64 nRowCount, LibMCData_uint32 nChunkCount, LibMCData_uint64 nSizeInBytes, LibMCData_uint64 nStartTimeStamp, LibMCData_uint64 nEndTimeStamp);
+
+/**
+* returns the number of registered segments, including purged ones.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pSegmentCount - Number of segments.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetSegmentCountPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 * pSegmentCount);
+
+/**
+* returns the manifest entry of a segment. Fails if the index does not exist.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nSegmentIndex - Index of the segment. 0-based.
+* @param[in] nStreamUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pStreamUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pStreamUUIDBuffer -  buffer of UUID of the storage stream that holds the segment., may be NULL
+* @param[out] pFirstRow - Index of the first row of the segment within the capture.
+* @param[out] pRowCount - Number of rows in the segment.
+* @param[out] pSizeInBytes - Size of the segment stream in bytes.
+* @param[out] pIsPurged - Returns true if the segment data has been deleted by retention or abort.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetSegmentInformationPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 nSegmentIndex, const LibMCData_uint32 nStreamUUIDBufferSize, LibMCData_uint32* pStreamUUIDNeededChars, char * pStreamUUIDBuffer, LibMCData_uint64 * pFirstRow, LibMCData_uint64 * pRowCount, LibMCData_uint64 * pSizeInBytes, bool * pIsPurged);
+
+/**
+* returns the number of chunks of a segment. Fails if the index does not exist.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nSegmentIndex - Index of the segment. 0-based.
+* @param[out] pChunkCount - Number of chunks in the segment.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetSegmentChunkCountPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint32 nSegmentIndex, LibMCData_uint32 * pChunkCount);
+
+/**
+* returns the number of rows in all registered segments, including purged ones.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pRowCount - Number of rows.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetRowCountPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint64 * pRowCount);
+
+/**
+* returns the size of all segments of the capture that are still stored on disk.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[out] pSizeInBytes - Size in bytes.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_GetStoredSizeInBytesPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint64 * pSizeInBytes);
+
+/**
+* Marks the capture as finished. Fails if the capture is not recording.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_FinishPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint64 nAbsoluteTimeStamp);
+
+/**
+* Deletes all stored segments of the capture and marks it as aborted. Fails if the capture has been aborted before.
+*
+* @param[in] pDataCapture - DataCapture instance.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataDataCapture_AbortPtr) (LibMCData_DataCapture pDataCapture, LibMCData_uint64 nAbsoluteTimeStamp);
 
 /*************************************************************************************************************************
  Class definition for BuildJobExecution
@@ -1835,6 +2152,58 @@ typedef LibMCDataResult (*PLibMCDataBuildJobExecution_HasMetaDataStringPtr) (Lib
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetMetaDataStringPtr) (LibMCData_BuildJobExecution pBuildJobExecution, const char * pKey, const LibMCData_uint32 nValueBufferSize, LibMCData_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Creates the manifest of a new data capture in recording state. Fails if the identifier already exists in this execution.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] pIdentifier - Identifier of the capture. MUST be unique within the execution, alphanumeric and not empty.
+* @param[in] pName - Human readable name of the capture. MUST NOT be empty.
+* @param[in] pUserUUID - UUID of the user that started the capture. Use 00000000-0000-0000-0000-000000000000 if no user shall be recorded.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @param[out] pDataCaptureInstance - Data capture manifest instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_CreateDataCapturePtr) (LibMCData_BuildJobExecution pBuildJobExecution, const char * pIdentifier, const char * pName, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp, LibMCData_DataCapture * pDataCaptureInstance);
+
+/**
+* Returns if a data capture with a specific identifier exists in this execution.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pHasDataCapture - Returns true, if the data capture exists.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_HasDataCapturePtr) (LibMCData_BuildJobExecution pBuildJobExecution, const char * pIdentifier, bool * pHasDataCapture);
+
+/**
+* Retrieves the manifest of a data capture by its identifier. Fails if the identifier does not exist.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] pIdentifier - Identifier of the capture.
+* @param[out] pDataCaptureInstance - Data capture manifest instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_RetrieveDataCapturePtr) (LibMCData_BuildJobExecution pBuildJobExecution, const char * pIdentifier, LibMCData_DataCapture * pDataCaptureInstance);
+
+/**
+* Returns the number of data captures of this execution.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[out] pDataCaptureCount - Number of data captures.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_GetDataCaptureCountPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint32 * pDataCaptureCount);
+
+/**
+* Retrieves the manifest of a data capture of this execution by its index. Captures are ordered by their creation time.
+*
+* @param[in] pBuildJobExecution - BuildJobExecution instance.
+* @param[in] nIndex - Index of the capture. 0-based. Fails if the index is out of bounds.
+* @param[out] pDataCaptureInstance - Data capture manifest instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobExecution_RetrieveDataCaptureByIndexPtr) (LibMCData_BuildJobExecution pBuildJobExecution, LibMCData_uint32 nIndex, LibMCData_DataCapture * pDataCaptureInstance);
 
 /*************************************************************************************************************************
  Class definition for BuildJobExecutionIterator
@@ -2376,6 +2745,16 @@ typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ListJobsChangedSincePtr) (Li
 * @return error code or 0 (success)
 */
 typedef LibMCDataResult (*PLibMCDataBuildJobHandler_ListJobExecutionsChangedSincePtr) (LibMCData_BuildJobHandler pBuildJobHandler, LibMCData_uint64 nIncrementalID, LibMCData_BuildJobExecutionIterator * pIteratorInstance);
+
+/**
+* Retrieves the manifest of a data capture by its uuid. Fails if the capture does not exist.
+*
+* @param[in] pBuildJobHandler - BuildJobHandler instance.
+* @param[in] pDataCaptureUUID - UUID of the data capture.
+* @param[out] pDataCaptureInstance - Data capture manifest instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataBuildJobHandler_RetrieveDataCapturePtr) (LibMCData_BuildJobHandler pBuildJobHandler, const char * pDataCaptureUUID, LibMCData_DataCapture * pDataCaptureInstance);
 
 /*************************************************************************************************************************
  Class definition for UserList
@@ -3840,6 +4219,7 @@ typedef struct {
 	PLibMCDataStorageZIPWriter_GetZIPStreamSizePtr m_StorageZIPWriter_GetZIPStreamSize;
 	PLibMCDataStorageZIPWriter_FinishPtr m_StorageZIPWriter_Finish;
 	PLibMCDataStorageZIPWriter_IsFinishedPtr m_StorageZIPWriter_IsFinished;
+	PLibMCDataStorageZIPWriter_DiscardPtr m_StorageZIPWriter_Discard;
 	PLibMCDataStorage_StreamIsReadyPtr m_Storage_StreamIsReady;
 	PLibMCDataStorage_RetrieveStreamPtr m_Storage_RetrieveStream;
 	PLibMCDataStorage_StoreNewStreamPtr m_Storage_StoreNewStream;
@@ -3857,7 +4237,17 @@ typedef struct {
 	PLibMCDataStorage_StreamIsImagePtr m_Storage_StreamIsImage;
 	PLibMCDataStorage_CreateDownloadTicketPtr m_Storage_CreateDownloadTicket;
 	PLibMCDataStorage_RequestDownloadTicketPtr m_Storage_RequestDownloadTicket;
+	PLibMCDataStorage_GetDownloadTicketDetailsPtr m_Storage_GetDownloadTicketDetails;
+	PLibMCDataStorage_RevokeDownloadTicketsOfStreamPtr m_Storage_RevokeDownloadTicketsOfStream;
+	PLibMCDataStorage_LogDownloadStartPtr m_Storage_LogDownloadStart;
+	PLibMCDataStorage_LogDownloadFinishPtr m_Storage_LogDownloadFinish;
+	PLibMCDataStorage_DeleteStreamPtr m_Storage_DeleteStream;
+	PLibMCDataStorage_DiscardUnfinishedZIPStreamsPtr m_Storage_DiscardUnfinishedZIPStreams;
+	PLibMCDataStorage_ListStreamUUIDsByNamePtr m_Storage_ListStreamUUIDsByName;
 	PLibMCDataStorage_AttachStreamToJournalPtr m_Storage_AttachStreamToJournal;
+	PLibMCDataStorage_DiscardRandomWriteStreamPtr m_Storage_DiscardRandomWriteStream;
+	PLibMCDataStorage_GetDataCaptureStorageSizePtr m_Storage_GetDataCaptureStorageSize;
+	PLibMCDataStorage_EnforceDataCaptureStorageLimitPtr m_Storage_EnforceDataCaptureStorageLimit;
 	PLibMCDataCustomDataStream_GetDataUUIDPtr m_CustomDataStream_GetDataUUID;
 	PLibMCDataCustomDataStream_GetIdentifierPtr m_CustomDataStream_GetIdentifier;
 	PLibMCDataCustomDataStream_GetNamePtr m_CustomDataStream_GetName;
@@ -3874,6 +4264,23 @@ typedef struct {
 	PLibMCDataBuildJobDataIterator_GetCurrentJobDataPtr m_BuildJobDataIterator_GetCurrentJobData;
 	PLibMCDataBuildJobExecutionData_GetExecutionUUIDPtr m_BuildJobExecutionData_GetExecutionUUID;
 	PLibMCDataBuildJobExecutionDataIterator_GetCurrentJobExecutionDataPtr m_BuildJobExecutionDataIterator_GetCurrentJobExecutionData;
+	PLibMCDataDataCapture_GetUUIDPtr m_DataCapture_GetUUID;
+	PLibMCDataDataCapture_GetExecutionUUIDPtr m_DataCapture_GetExecutionUUID;
+	PLibMCDataDataCapture_GetIdentifierPtr m_DataCapture_GetIdentifier;
+	PLibMCDataDataCapture_GetNamePtr m_DataCapture_GetName;
+	PLibMCDataDataCapture_GetStatusPtr m_DataCapture_GetStatus;
+	PLibMCDataDataCapture_GetTimeStampPtr m_DataCapture_GetTimeStamp;
+	PLibMCDataDataCapture_AddColumnPtr m_DataCapture_AddColumn;
+	PLibMCDataDataCapture_GetColumnCountPtr m_DataCapture_GetColumnCount;
+	PLibMCDataDataCapture_GetColumnInformationPtr m_DataCapture_GetColumnInformation;
+	PLibMCDataDataCapture_AddSegmentPtr m_DataCapture_AddSegment;
+	PLibMCDataDataCapture_GetSegmentCountPtr m_DataCapture_GetSegmentCount;
+	PLibMCDataDataCapture_GetSegmentInformationPtr m_DataCapture_GetSegmentInformation;
+	PLibMCDataDataCapture_GetSegmentChunkCountPtr m_DataCapture_GetSegmentChunkCount;
+	PLibMCDataDataCapture_GetRowCountPtr m_DataCapture_GetRowCount;
+	PLibMCDataDataCapture_GetStoredSizeInBytesPtr m_DataCapture_GetStoredSizeInBytes;
+	PLibMCDataDataCapture_FinishPtr m_DataCapture_Finish;
+	PLibMCDataDataCapture_AbortPtr m_DataCapture_Abort;
 	PLibMCDataBuildJobExecution_GetExecutionUUIDPtr m_BuildJobExecution_GetExecutionUUID;
 	PLibMCDataBuildJobExecution_GetJobUUIDPtr m_BuildJobExecution_GetJobUUID;
 	PLibMCDataBuildJobExecution_GetJobNamePtr m_BuildJobExecution_GetJobName;
@@ -3900,6 +4307,11 @@ typedef struct {
 	PLibMCDataBuildJobExecution_StoreMetaDataStringPtr m_BuildJobExecution_StoreMetaDataString;
 	PLibMCDataBuildJobExecution_HasMetaDataStringPtr m_BuildJobExecution_HasMetaDataString;
 	PLibMCDataBuildJobExecution_GetMetaDataStringPtr m_BuildJobExecution_GetMetaDataString;
+	PLibMCDataBuildJobExecution_CreateDataCapturePtr m_BuildJobExecution_CreateDataCapture;
+	PLibMCDataBuildJobExecution_HasDataCapturePtr m_BuildJobExecution_HasDataCapture;
+	PLibMCDataBuildJobExecution_RetrieveDataCapturePtr m_BuildJobExecution_RetrieveDataCapture;
+	PLibMCDataBuildJobExecution_GetDataCaptureCountPtr m_BuildJobExecution_GetDataCaptureCount;
+	PLibMCDataBuildJobExecution_RetrieveDataCaptureByIndexPtr m_BuildJobExecution_RetrieveDataCaptureByIndex;
 	PLibMCDataBuildJobExecutionIterator_GetCurrentJobExecutionPtr m_BuildJobExecutionIterator_GetCurrentJobExecution;
 	PLibMCDataBuildJob_GetUUIDPtr m_BuildJob_GetUUID;
 	PLibMCDataBuildJob_GetNamePtr m_BuildJob_GetName;
@@ -3952,6 +4364,7 @@ typedef struct {
 	PLibMCDataBuildJobHandler_GetExecutionListHeadIDPtr m_BuildJobHandler_GetExecutionListHeadID;
 	PLibMCDataBuildJobHandler_ListJobsChangedSincePtr m_BuildJobHandler_ListJobsChangedSince;
 	PLibMCDataBuildJobHandler_ListJobExecutionsChangedSincePtr m_BuildJobHandler_ListJobExecutionsChangedSince;
+	PLibMCDataBuildJobHandler_RetrieveDataCapturePtr m_BuildJobHandler_RetrieveDataCapture;
 	PLibMCDataUserList_CountPtr m_UserList_Count;
 	PLibMCDataUserList_GetUserPropertiesPtr m_UserList_GetUserProperties;
 	PLibMCDataLoginHandler_UserExistsPtr m_LoginHandler_UserExists;

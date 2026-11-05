@@ -36,10 +36,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "header_protection.hpp"
 
 #include "amc_api_types.hpp"
+#include "libmcdata_dynamic.hpp"
+#include "common_chrono.hpp"
 
 #include <vector>
+#include <memory>
 
 namespace AMC {
+
+	class CStreamDownloadRegistry;
+	typedef std::shared_ptr<CStreamDownloadRegistry> PStreamDownloadRegistry;
 
 	class CAPIResponse {
 	protected:
@@ -56,6 +62,8 @@ namespace AMC {
 	public:
 
 		CAPIResponse (uint32_t nHTTPCode, const std::string & sContentType);
+
+		virtual ~CAPIResponse();
 		
 		size_t getStreamSize () const;
 		
@@ -112,6 +120,59 @@ namespace AMC {
 
 	};
 
+
+	// A response whose body is a storage stream on disk. The HTTP server sends it in chunks through
+	// the request handler instead of loading it into memory, so files larger than the address space
+	// and larger than one socket write can be downloaded. Every response holds its own stream object
+	// and thus its own file handle. Delivery is reported to the download registry.
+	class CAPIStorageStreamResponse : public CAPIResponse {
+	private:
+
+		LibMCData::PStorage m_pStorage;
+		LibMCData::PStorageStream m_pStream;
+		PStreamDownloadRegistry m_pRegistry;
+		AMCCommon::PChrono m_pGlobalChrono;
+
+		std::string m_sStreamUUID;
+		uint64_t m_nSize;
+		std::string m_sETag;
+		std::string m_sLastModified;
+		std::string m_sDownloadUUID;
+
+		bool m_bHeadOnly;
+		bool m_bSlotReserved;
+		bool m_bRegistered;
+		bool m_bFinished;
+		uint64_t m_nSentBytes;
+
+	public:
+
+		CAPIStorageStreamResponse(LibMCData::PStorage pStorage, LibMCData::PStorageStream pStream, PStreamDownloadRegistry pRegistry, AMCCommon::PChrono pGlobalChrono, bool bHeadOnly);
+
+		// Releases the download slot and ends a registered connection that was never finished.
+		virtual ~CAPIStorageStreamResponse();
+
+		// Takes one of the limited download slots. Returns false if none is free.
+		bool reserveSlot();
+
+		// Access log entry of this download, written when the download ends.
+		void setDownloadUUID(const std::string& sDownloadUUID);
+
+		std::string getStreamUUID() const;
+		uint64_t getSize() const;
+		// Strong entity tag without quotes (the SHA-256 of the stream).
+		std::string getETag() const;
+		// Creation time of the stream as HTTP date.
+		std::string getLastModified() const;
+
+		// Reads a chunk and records it as sent. The first chunk registers the connection. Fails if the
+		// range is outside the stream or the download was cancelled.
+		void readChunk(uint64_t nOffset, uint64_t nLength, std::vector<uint8_t>& buffer);
+
+		// Ends the connection in the registry and the access log. Safe to call more than once.
+		void finish(bool bSuccess);
+
+	};
 
 	typedef std::shared_ptr<CAPIResponse> PAPIResponse;
 

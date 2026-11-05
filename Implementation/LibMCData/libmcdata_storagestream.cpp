@@ -44,8 +44,11 @@ using namespace LibMCData::Impl;
  Class definition of CStorageStream 
 **************************************************************************************************************************/
 
-uint32_t storageStream_ReadCallback(void* pBuffer, uint64_t nSize, void* pUserData)
+// The signatures match LibMCData::StreamReadCallback and StreamSeekCallback: the error code is
+// returned through the pointer argument, so that callers see read failures instead of silent success.
+void storageStream_ReadCallback(void* pBuffer, uint64_t nSize, void* pUserData, uint32_t* pErrorCode)
 {
+	uint32_t nErrorCode = LIBMCDATA_SUCCESS;
 	try {
 		if (pBuffer == nullptr)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
@@ -61,20 +64,21 @@ uint32_t storageStream_ReadCallback(void* pBuffer, uint64_t nSize, void* pUserDa
 		auto pImportStream = pCallbackRecord->m_pStream->getImportStream();
 		pImportStream->readBuffer((uint8_t*) pBuffer, nSize, true);
 
-		return LIBMCDATA_SUCCESS;
-
 	}
 	catch (ELibMCDataInterfaceException& E) {
-		return E.getErrorCode();
+		nErrorCode = E.getErrorCode();
 	}
 	catch (...) {
-		return LIBMCDATA_ERROR_GENERICEXCEPTION;
+		nErrorCode = LIBMCDATA_ERROR_GENERICEXCEPTION;
 	}
-		
+
+	if (pErrorCode != nullptr)
+		*pErrorCode = nErrorCode;
 }
 
-uint32_t storageStream_SeekCallback(uint64_t nPosition, void* pUserData)
+void storageStream_SeekCallback(uint64_t nPosition, void* pUserData, uint32_t* pErrorCode)
 {
+	uint32_t nErrorCode = LIBMCDATA_SUCCESS;
 	try {
 		if (pUserData == nullptr)
 			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDPARAM);
@@ -87,16 +91,16 @@ uint32_t storageStream_SeekCallback(uint64_t nPosition, void* pUserData)
 
 		auto pImportStream = pCallbackRecord->m_pStream->getImportStream();
 		pImportStream->seekPosition(nPosition, true);
-
-		return LIBMCDATA_SUCCESS;
 	}
 	catch (ELibMCDataInterfaceException& E) {
-		return E.getErrorCode();
+		nErrorCode = E.getErrorCode();
 	}
 	catch (...) {
-		return LIBMCDATA_ERROR_GENERICEXCEPTION;
+		nErrorCode = LIBMCDATA_ERROR_GENERICEXCEPTION;
 	}
 
+	if (pErrorCode != nullptr)
+		*pErrorCode = nErrorCode;
 }
 
 

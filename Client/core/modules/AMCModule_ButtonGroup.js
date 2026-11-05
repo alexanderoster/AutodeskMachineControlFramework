@@ -99,6 +99,7 @@ export default class AMCApplicationModule_ButtonGroup extends Common.AMCApplicat
 					event:           a.event     || "",
 					targetpage:      a.targetpage || "",
 					icon:            a.icon      || "",
+					hint:            a.hint      || "",
 					kind:            a.kind || "button",
 					variant:         a.variant || "default",
 					width:           a.width || "auto",

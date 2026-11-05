@@ -65,6 +65,7 @@ namespace AMC {
 		ftParameterListValues = 11,
 		ftStreamTicket = 12,
 		ftStreamScope = 13,
+		ftClaimAction = 14,
 	};
 
 	class CAPIHandler_Frontend : public CAPIHandler {
@@ -88,6 +89,10 @@ namespace AMC {
 		void handleMetricsRequest(CJSONWriter& writer, const uint8_t* pBodyData, const size_t nBodyDataSize, PAPIAuth pAuth);
 
 		PAPIFrontendEventStream getOrCreateEventStream(PAPIAuth pAuth);
+
+		// Claims a pending client action of the session for the calling browser tab. Returns a 409 response
+		// if another tab was first.
+		PAPIResponse handleClaimActionRequest(const std::string& sActionUUID, PAPIAuth pAuth);
 
 		// Reads the optional "client", "pages" and "dialogs" members of a stream request body and applies the scope
 		// to the event stream. Returns the normalized client ID, or an empty string if the body carries none.

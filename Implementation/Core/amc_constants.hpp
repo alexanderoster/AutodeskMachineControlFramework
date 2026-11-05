@@ -44,6 +44,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DATATABLE_MAXCOLUMNCOUNT (1024 * 1024)
 #define DATATABLE_HEADERSIGNATURE 0x6A9B23E1
+// Signature of the chunked columnar format (format version 2, see amc_datatableformat.hpp). It is
+// deliberately distinct from the v1 signature: a reader without v2 support must fail cleanly instead
+// of misreading a page directory as column data.
+#define DATATABLE_HEADERSIGNATURE_V2 0x6A9B23E2
+// Version field of the stream header. Files written before the field was populated carry 0 and
+// are treated as format version 1. Readers reject any other value.
+#define DATATABLE_FORMATVERSION_UNVERSIONED 0
+#define DATATABLE_FORMATVERSION_1 1
+#define DATATABLE_CURRENTFORMATVERSION DATATABLE_FORMATVERSION_1
 #define DATATABLE_DEFAULTCSVSEPARATOR ";"
 #define DATATABLE_DEFAULTCSVNEWLINE "\n"
 #define DATATABLE_DEFAULTCSVMAXBYTESPERENTRY 32
@@ -51,7 +60,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DATATABLE_MINCSVSEPARATOR 32
 #define DATATABLE_MAXCSVSEPARATOR 127
 
+// Column encodings. RAW is the only encoding of format version 1; readers reject any other value.
 #define DATATABLE_ENCODINGTYPE_RAW 1
+
+// Streaming data capture defaults and limits
+#define DATACAPTURE_DEFAULTCHUNKROWCOUNT 65536
+#define DATACAPTURE_MINCHUNKROWCOUNT 1
+#define DATACAPTURE_MAXCHUNKROWCOUNT (16 * 1024 * 1024)
+#define DATACAPTURE_DEFAULTSEGMENTSIZE (1024ULL * 1024ULL * 1024ULL)
+#define DATACAPTURE_MINSEGMENTSIZE 1024ULL
+#define DATACAPTURE_DEFAULTMAXQUEUEDCHUNKS 16
+#define DATACAPTURE_MINMAXQUEUEDCHUNKS 1
+#define DATACAPTURE_MAXMAXQUEUEDCHUNKS 1024
+#define DATACAPTURE_SEGMENTMIMETYPE "application/amcf-datatable"
 
 #define MICROSECONDS_PER_MILLISECOND 1000ULL
 #define MICROSECONDS_PER_SECOND (1000ULL * 1000ULL)

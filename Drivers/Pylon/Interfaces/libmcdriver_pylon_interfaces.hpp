@@ -541,6 +541,13 @@ public:
 	virtual IPylonDevice * ConnectToUniqueGigEDevice(const std::string & sIdentifier) = 0;
 
 	/**
+	* IDriver_Pylon::ConnectToUniqueEmulatedDevice - Enables the pylon camera emulation for the time of the connection, checks if there is exactly one emulated device and connects to it. Physical cameras are ignored.
+	* @param[in] sIdentifier - Identifier for the connection. Fails if identifier is already existing. MUST be non-empty a alpanumerical string with _, up until 64 characters.
+	* @return Device Instance
+	*/
+	virtual IPylonDevice * ConnectToUniqueEmulatedDevice(const std::string & sIdentifier) = 0;
+
+	/**
 	* IDriver_Pylon::ConnectionExists - Checks if a connection exists with a certain identifier.
 	* @param[in] sIdentifier - Identifier for the connection.
 	* @return Returns true, if the connection exists, false otherwise.

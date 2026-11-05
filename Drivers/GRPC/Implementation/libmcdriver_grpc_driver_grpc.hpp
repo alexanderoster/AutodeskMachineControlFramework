@@ -70,6 +70,10 @@ private:
 
 	std::wstring m_sDLLDirectoryW;
 
+	// Module handle of the wrapper DLL loaded ahead of the generated wrapper (see loadGRPCSDK).
+	// Never released: the DLL stays in the process as long as the wrapper uses it.
+	void* m_pPreloadedGRPCWrapperModule = nullptr;
+
 	LibMCEnv::PWorkingFile m_pGRPCDLL_AbseilDLL;
 	LibMCEnv::PWorkingFile m_pGRPCDLL_Cares;
 	LibMCEnv::PWorkingFile m_pGRPCDLL_LibCrypto3;

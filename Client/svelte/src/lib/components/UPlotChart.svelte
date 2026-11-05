@@ -17,6 +17,7 @@
 		height = 320,
 		fillHeight = false,
 		showLiveLabels = false,
+		formatX = undefined,
 		onZoom = undefined,
 		onHover = undefined
 	}: {
@@ -29,6 +30,8 @@
 		// When true the latest value of each trace is drawn directly on the canvas
 		// next to the series, at the right-hand edge of the plot.
 		showLiveLabels?: boolean;
+		// Formats the tick labels of the x axis. The default reads x as seconds.
+		formatX?: (value: number) => string;
 		onZoom?: (minX: number, maxX: number) => void;
 		onHover?: (idx: number | null) => void;
 	} = $props();
@@ -172,7 +175,7 @@
 					stroke: '#94a3b8',
 					grid: { stroke: 'rgba(148,163,184,0.15)' },
 					ticks: { stroke: 'rgba(148,163,184,0.25)' },
-					values: (_u, splits) => splits.map((v) => formatSeconds(v))
+					values: (_u, splits) => splits.map((v) => (formatX ? formatX(v) : formatSeconds(v)))
 				},
 				{
 					stroke: '#94a3b8',

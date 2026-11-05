@@ -41,8 +41,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <mutex>
+#include <deque>
+#include <chrono>
+
+// An action that no browser tab claimed within this time is dropped.
+#define AMC_UI_CLIENTACTION_EXPIRY_MS 30000
+#define AMC_UI_CLIENTACTIONS_JSONKEY "pendingactions"
+#define AMC_UI_CLIENTACTION_UUIDJSONKEY "actionuuid"
 
 namespace AMC {
+
+	class CUIClientAction;
+	typedef std::shared_ptr<CUIClientAction> PUIClientAction;
+
+	// A client action queued by the server for the browser tabs of a session, for example a download
+	// that a state machine prepared. Exactly one tab claims and executes it.
+	typedef struct _sPendingClientAction {
+		std::string m_sActionUUID;
+		PUIClientAction m_pAction;
+		std::string m_sStreamUUID;
+		std::chrono::steady_clock::time_point m_CreationTime;
+	} sPendingClientAction;
 
 	class CUserInformation;
 	typedef std::shared_ptr<CUserInformation> PUserInformation;
@@ -70,6 +89,16 @@ namespace AMC {
 		std::mutex m_EventStreamMutex;
 		PJSONEventStreamInstance m_pEventStream;
 
+		std::mutex m_ClientActionsMutex;
+		std::deque<sPendingClientAction> m_PendingClientActions;
+		// Changes with every enqueue, claim and expiry; the event stream sends the queue when it differs.
+		uint64_t m_nClientActionsRevision;
+
+		// Drops expired actions. Returns true if any was dropped. Caller holds m_ClientActionsMutex.
+		bool removeExpiredClientActionsNoLock(std::chrono::steady_clock::time_point now);
+
+		void notifyEventStream();
+
 		// Returns the session variable group after applying broadcasts that arrived since the last access.
 		CParameterGroup* getSessionVariables();
 
@@ -95,6 +124,21 @@ namespace AMC {
 		// Ends and releases the session's event stream, if any. Must be called when the session closes,
 		// since the stream keeps a reference to the session's authentication.
 		void endEventStream();
+
+		// Queues an action for the browser tabs of this session and wakes the event stream. Returns the action UUID.
+		std::string enqueueClientAction(PUIClientAction pAction, const std::string& sStreamUUID);
+
+		// The first tab that claims an action executes it. Returns false if the action is unknown, expired or claimed.
+		bool claimClientAction(const std::string& sActionUUID);
+
+		void removeClientActionsOfStream(const std::string& sStreamUUID);
+
+		bool hasClientActionsOfStream(const std::string& sStreamUUID);
+
+		uint64_t getClientActionsRevision();
+
+		// Writes the unclaimed actions as the array "pendingactions". Expired actions are dropped first.
+		void writePendingClientActionsToJSON(CJSONWriter& writer);
 
 		bool hasSessionVariable(const std::string& sName);
 

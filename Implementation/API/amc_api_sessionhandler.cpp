@@ -328,3 +328,77 @@ bool CAPISessionHandler::refreshSessionActivity(const std::string& sSessionUUID)
 
 	return true;
 }
+
+
+bool CAPISessionHandler::getAuthorizedUserForSession(const std::string& sSessionUUID, std::string& sUserUUID)
+{
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+	auto iIterator = m_SessionMap.find(sSessionUUID);
+	if (iIterator == m_SessionMap.end())
+		return false;
+
+	auto pSession = iIterator->second;
+	if (!pSession->isAuthenticated())
+		return false;
+
+	sUserUUID = pSession->getUserUUID();
+	return true;
+}
+
+bool CAPISessionHandler::enqueueClientActionForSession(const std::string& sSessionUUID, PUIClientAction pAction, const std::string& sStreamUUID)
+{
+	if (pAction.get() == nullptr)
+		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+
+	PUIFrontendState pFrontendState;
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		auto iIterator = m_SessionMap.find(sSessionUUID);
+		if (iIterator == m_SessionMap.end())
+			return false;
+
+		pFrontendState = iIterator->second->getFrontendState();
+	}
+
+	if (pFrontendState.get() == nullptr)
+		return false;
+
+	pFrontendState->enqueueClientAction(pAction, sStreamUUID);
+	return true;
+}
+
+void CAPISessionHandler::removeClientActionsOfStream(const std::string& sStreamUUID)
+{
+	std::vector<PUIFrontendState> frontendStates;
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		for (auto& iIterator : m_SessionMap) {
+			auto pFrontendState = iIterator.second->getFrontendState();
+			if (pFrontendState.get() != nullptr)
+				frontendStates.push_back(pFrontendState);
+		}
+	}
+
+	for (auto& pFrontendState : frontendStates)
+		pFrontendState->removeClientActionsOfStream(sStreamUUID);
+}
+
+bool CAPISessionHandler::hasUnclaimedClientActionsOfStream(const std::string& sStreamUUID)
+{
+	std::vector<PUIFrontendState> frontendStates;
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		for (auto& iIterator : m_SessionMap) {
+			auto pFrontendState = iIterator.second->getFrontendState();
+			if (pFrontendState.get() != nullptr)
+				frontendStates.push_back(pFrontendState);
+		}
+	}
+
+	for (auto& pFrontendState : frontendStates) {
+		if (pFrontendState->hasClientActionsOfStream(sStreamUUID))
+			return true;
+	}
+
+	return false;
+}

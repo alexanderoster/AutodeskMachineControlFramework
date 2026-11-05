@@ -558,6 +558,31 @@ typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_Backtransfo
 */
 typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_AddTargetPositionsToDataTablePtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording, LibMCEnv_DataTable pDataTable, const char * pColumnIdentifierX, const char * pColumnDescriptionX, const char * pColumnIdentifierY, const char * pColumnDescriptionY);
 
+/**
+* Starts the execution of the list and the incremental readout of the recorded data. Returns immediately. ReadRecordedData MUST be called repeatedly afterwards until it reports that the recording is complete.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
+/**
+* Reads the data that the RTC card has recorded since the last call into the channels. Does not wait for new data. Fails if StartListWithRecording has not been called.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @param[out] pRecordingComplete - True if the list has finished and all recorded data has been read.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording, bool * pRecordingComplete);
+
+/**
+* Drops the record entries of all channels. The channels and the readout position are kept, so that the recorded data can be handed on piece by piece between calls to ReadRecordedData.
+*
+* @param[in] pRTCRecording - RTCRecording instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr) (LibMCDriver_ScanLab_RTCRecording pRTCRecording);
+
 /*************************************************************************************************************************
  Class definition for GPIOSequence
 **************************************************************************************************************************/
@@ -1411,6 +1436,58 @@ typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_AddMicrovecto
 * @return error code or 0 (success)
 */
 typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_SetMicrovectorStreamingEnabledPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext, bool bEnabled, LibMCDriver_ScanLab_uint32 nMinLayerSize, LibMCDriver_ScanLab_double dPrebufferFraction);
+
+/**
+* Enables alternating List1/List2 execution for microvector layers that do not fit into one RTC6 list. AddMicrovectorMovement then splits the layer into segments, closes each full list with set_end_of_list, arms an automatic list change and continues in the other list while the laser keeps marking. Requires the streamed download (SetMicrovectorStreamingEnabled). Default is disabled.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] bEnabled - True to execute oversized layers alternately from List1 and List2.
+* @param[in] nListCapacityLimit - Test aid: maximum list positions used per segment, 0 = full configured list size. Values below 84096 (four check blocks in the worst case plus the tail reserve) are clamped to it.
+* @param[in] nTailReserve - List positions kept free at the end of every segment for set_end_of_list and the layer epilogue. 0 = built-in default of 4096.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_SetMicrovectorListSwitchingEnabledPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext, bool bEnabled, LibMCDriver_ScanLab_uint32 nListCapacityLimit, LibMCDriver_ScanLab_uint32 nTailReserve);
+
+/**
+* Returns counters of the last AddMicrovectorMovement call: number of segments the layer was split into, number of segments that had to be started explicitly because the card had already finished the previous one, the minimum observed download margin and the longest wait for a list to become free.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[out] pSegmentCount - Segments written (1 = no list switch).
+* @param[out] pFallbackCount - Segments started explicitly instead of by automatic list change.
+* @param[out] pMinMargin - Minimum observed distance between input and output pointer in list positions.
+* @param[out] pMaxListWaitInMS - Longest wait for the previous list to be consumed before it could be reused, in milliseconds.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_GetMicrovectorListSwitchingStatisticsPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 * pSegmentCount, LibMCDriver_ScanLab_uint32 * pFallbackCount, LibMCDriver_ScanLab_uint64 * pMinMargin, LibMCDriver_ScanLab_uint64 * pMaxListWaitInMS);
+
+/**
+* Stepwise variant of AddMicrovectorMovement, same semantics and configuration. Writes the first part of the layer and, on the streamed path, starts list execution. The rest is written by ContinueMicrovectorStreaming calls; between two calls the caller is free to do other work, e.g. read out the RTC recording while the card is marking. The microvector buffer MUST stay valid and unchanged until ContinueMicrovectorStreaming has returned true or AbortMicrovectorStreaming has been called. Small layers and the sequential download are written completely by this call.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] nMicrovectorArrayBufferSize - Number of elements in buffer
+* @param[in] pMicrovectorArrayBuffer - MicroVector buffer of Microvector array to execute. Must outlive the streaming session.
+* @param[out] pExecutionStarted - True if this call has started list execution (streamed download). False if the layer was written without starting execution; the caller executes the list as usual afterwards.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_BeginMicrovectorStreamingPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint64 nMicrovectorArrayBufferSize, const LibMCDriver_ScanLab::sMicroVector * pMicrovectorArrayBuffer, bool * pExecutionStarted);
+
+/**
+* Writes the next part of the layer passed to BeginMicrovectorStreaming. Returns as soon as the time budget is used up, the download has to wait for the card to free a list, or the layer is complete. Never waits for the card. Fails if no streaming session has been begun.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @param[in] nTimeBudgetInMS - Upper bound for the time spent writing in this call, in milliseconds. 0 writes a single block.
+* @param[out] pComplete - True once all microvectors have been written. The session is finished then; further calls return true without doing anything.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_ContinueMicrovectorStreamingPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext, LibMCDriver_ScanLab_uint32 nTimeBudgetInMS, bool * pComplete);
+
+/**
+* Ends a streaming session before completion, e.g. when the caller fails between two ContinueMicrovectorStreaming calls. Stops list execution, consumes an armed list change and resets the segmentation state. Does nothing if no session is active.
+*
+* @param[in] pRTCContext - RTCContext instance.
+* @return error code or 0 (success)
+*/
+typedef LibMCDriver_ScanLabResult (*PLibMCDriver_ScanLabRTCContext_AbortMicrovectorStreamingPtr) (LibMCDriver_ScanLab_RTCContext pRTCContext);
 
 /**
 * Returns the currently set free variable.
@@ -3278,6 +3355,9 @@ typedef struct {
 	PLibMCDriver_ScanLabRTCRecording_AddBacktransformedZPositionsToDataTablePtr m_RTCRecording_AddBacktransformedZPositionsToDataTable;
 	PLibMCDriver_ScanLabRTCRecording_BacktransformRawZCoordinatePtr m_RTCRecording_BacktransformRawZCoordinate;
 	PLibMCDriver_ScanLabRTCRecording_AddTargetPositionsToDataTablePtr m_RTCRecording_AddTargetPositionsToDataTable;
+	PLibMCDriver_ScanLabRTCRecording_StartListWithRecordingPtr m_RTCRecording_StartListWithRecording;
+	PLibMCDriver_ScanLabRTCRecording_ReadRecordedDataPtr m_RTCRecording_ReadRecordedData;
+	PLibMCDriver_ScanLabRTCRecording_DiscardRecordsPtr m_RTCRecording_DiscardRecords;
 	PLibMCDriver_ScanLabGPIOSequence_GetIdentifierPtr m_GPIOSequence_GetIdentifier;
 	PLibMCDriver_ScanLabGPIOSequence_ClearPtr m_GPIOSequence_Clear;
 	PLibMCDriver_ScanLabGPIOSequence_AddOutputPtr m_GPIOSequence_AddOutput;
@@ -3360,6 +3440,11 @@ typedef struct {
 	PLibMCDriver_ScanLabRTCContext_AddFreeVariablePtr m_RTCContext_AddFreeVariable;
 	PLibMCDriver_ScanLabRTCContext_AddMicrovectorMovementPtr m_RTCContext_AddMicrovectorMovement;
 	PLibMCDriver_ScanLabRTCContext_SetMicrovectorStreamingEnabledPtr m_RTCContext_SetMicrovectorStreamingEnabled;
+	PLibMCDriver_ScanLabRTCContext_SetMicrovectorListSwitchingEnabledPtr m_RTCContext_SetMicrovectorListSwitchingEnabled;
+	PLibMCDriver_ScanLabRTCContext_GetMicrovectorListSwitchingStatisticsPtr m_RTCContext_GetMicrovectorListSwitchingStatistics;
+	PLibMCDriver_ScanLabRTCContext_BeginMicrovectorStreamingPtr m_RTCContext_BeginMicrovectorStreaming;
+	PLibMCDriver_ScanLabRTCContext_ContinueMicrovectorStreamingPtr m_RTCContext_ContinueMicrovectorStreaming;
+	PLibMCDriver_ScanLabRTCContext_AbortMicrovectorStreamingPtr m_RTCContext_AbortMicrovectorStreaming;
 	PLibMCDriver_ScanLabRTCContext_GetCurrentFreeVariablePtr m_RTCContext_GetCurrentFreeVariable;
 	PLibMCDriver_ScanLabRTCContext_GetTimeStampPtr m_RTCContext_GetTimeStamp;
 	PLibMCDriver_ScanLabRTCContext_GetRTCChannelPtr m_RTCContext_GetRTCChannel;

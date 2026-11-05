@@ -47,6 +47,7 @@ Abstract: This is the class declaration of CStorageZIPWriter
 
 // Include custom headers here.
 #include "amcdata_storagewriter.hpp"
+#include "amcdata_storagestate.hpp"
 #include "amcdata_sqlhandler.hpp"
 
 namespace LibMCData {
@@ -62,12 +63,20 @@ private:
 
 	AMCData::PStorageWriter_ZIPStream m_pStorageWriter;
 	AMCData::PSQLHandler m_pSQLHandler;
+	AMCData::PStorageState m_pStorageState;
+
+	// Fails if the stream has been discarded.
+	AMCData::CStorageWriter_ZIPStream* getWriter();
 
 public:
 
-	CStorageZIPWriter(AMCData::PStorageWriter_ZIPStream pStorageWriter, AMCData::PSQLHandler pSQLHandler);
+	CStorageZIPWriter(AMCData::PStorageWriter_ZIPStream pStorageWriter, AMCData::PSQLHandler pSQLHandler, AMCData::PStorageState pStorageState);
 
+	// An unfinished writer is removed from the storage state, so that its file is deleted with the last
+	// reference. The database entry of such a stream is removed by DiscardUnfinishedZIPStreams.
 	virtual ~CStorageZIPWriter();
+
+	void Discard() override;
 
 	LibMCData_uint32 StartNewEntry(const std::string & sFileName, const LibMCData_uint64 nAbsoluteTimeStamp) override;
 

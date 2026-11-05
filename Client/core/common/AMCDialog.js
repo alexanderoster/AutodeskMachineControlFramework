@@ -41,6 +41,13 @@ export default class AMCApplicationDialog extends AMCApplicationPage {
 		// dialog JSON); capture it so the client can render the dialog header.
 		this.title = dialogJSON.title || "";
 		this.dialogIsActive = false;
+
+		// "closable" (default true): a non-closable dialog has no close button and ignores
+		// Escape and outside clicks. "active" is only sent for server-driven dialogs; their
+		// open state follows the server on every frontend poll instead of client actions.
+		// Both are initialised here so Vue 2 tracks them.
+		this.closable = (dialogJSON.closable !== false);
+		this.serverDriven = (typeof dialogJSON.active === "boolean");
 	}
 
 	// A dialog is never the application's active page, so the inherited page-based

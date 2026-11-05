@@ -379,6 +379,42 @@ public:
 	*/
 	virtual std::string GetContentDispositionName() = 0;
 
+	/**
+	* IAPIRequestHandler::SetClientAddress - Sets the network address of the client that sent the request. Call before Handle().
+	* @param[in] sAddress - Network address of the client.
+	*/
+	virtual void SetClientAddress(const std::string & sAddress) = 0;
+
+	/**
+	* IAPIRequestHandler::HasStreamResult - Returns true if the result is a storage stream that must be sent in chunks with ReadResultStreamChunk instead of a buffer. Call only after Handle().
+	* @return Result is a stream.
+	*/
+	virtual bool HasStreamResult() = 0;
+
+	/**
+	* IAPIRequestHandler::GetResultStreamInfo - Returns size and validators of the result stream. Fails if the result is not a stream.
+	* @param[out] nSize - Stream size in bytes.
+	* @param[out] sETag - Strong entity tag of the stream, without quotes.
+	* @param[out] sLastModified - Creation time of the stream as HTTP date.
+	*/
+	virtual void GetResultStreamInfo(LibMC_uint64 & nSize, std::string & sETag, std::string & sLastModified) = 0;
+
+	/**
+	* IAPIRequestHandler::ReadResultStreamChunk - Reads a part of the result stream and records it as sent. Fails if the range is outside the stream, the length exceeds 16 MiB or the download was cancelled.
+	* @param[in] nOffset - Start position in bytes.
+	* @param[in] nLength - Number of bytes to read.
+	* @param[in] nDataBufferSize - Number of elements in buffer
+	* @param[out] pDataNeededCount - will be filled with the count of the written structs, or needed buffer size.
+	* @param[out] pDataBuffer - uint8 buffer of Data that was read.
+	*/
+	virtual void ReadResultStreamChunk(const LibMC_uint64 nOffset, const LibMC_uint64 nLength, LibMC_uint64 nDataBufferSize, LibMC_uint64* pDataNeededCount, LibMC_uint8 * pDataBuffer) = 0;
+
+	/**
+	* IAPIRequestHandler::FinishStreamResult - Reports that sending the result stream has ended. May be called more than once and without any chunk having been read.
+	* @param[in] bSuccess - All requested bytes were sent.
+	*/
+	virtual void FinishStreamResult(const bool bSuccess) = 0;
+
 };
 
 typedef IBaseSharedPtr<IAPIRequestHandler> PIAPIRequestHandler;

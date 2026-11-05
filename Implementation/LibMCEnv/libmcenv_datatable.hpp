@@ -47,7 +47,9 @@ Abstract: This is the class declaration of CDataTable
 
 // Include custom headers here.
 #include <map>
+#include <functional>
 #include "amc_scatterplot.hpp"
+#include "amc_datatableformat.hpp"
 
 namespace LibMCEnv {
 namespace Impl {
@@ -68,6 +70,7 @@ protected:
 
 	void writeUint64ToBufferFixedDigits(uint64_t nValue, uint32_t nFixedDigits, std::vector<char>& buffer, size_t& nBufferPosition);
 	void writeUint64ToBuffer(uint64_t nValue, std::vector<char>& buffer, size_t& nBufferPosition);
+	void writeQuantizedDoubleToBuffer(double dValue, uint64_t nQuantizationFactor, uint32_t nQuantizationDigits, std::vector<char>& buffer, size_t& nBufferPosition);
 
 public:
 
@@ -92,6 +95,16 @@ public:
 	virtual void ReadDataFromStream(IStreamReader* pReader, uint64_t nEntryCount) = 0;
 
 	virtual size_t getEntrySizeInBytes() = 0;
+
+	// Resizes the column to nEntryCount rows and returns its raw value array, so that a reader
+	// can fill the column page by page. rawDataChanged must be called after the array has been filled.
+	virtual uint8_t* resizeRawData(uint64_t nEntryCount) = 0;
+
+	virtual void rawDataChanged();
+
+	// Returns the raw value array of the column: getRowCount() values of getEntrySizeInBytes() bytes each.
+	// The pointer is valid until the column is changed.
+	const uint8_t* getRawData();
 
 	virtual void fillScatterplotXCoordinates (AMC::CScatterplot* pScatterplot, double dScaleFactor, double dOffset) = 0;
 
@@ -120,9 +133,27 @@ private:
 
 	PDataTableColumn addColumnEx(const std::string& sIdentifier, const std::string& sDescription, const LibMCEnv::eDataTableColumnType eColumnType);
 
+	void loadFromStreamV1(IStreamReader* pStream, uint64_t nStreamSize);
+
+	void loadFromStreamV2(IStreamReader* pStream, uint64_t nStreamSize);
+
 public:
 
 	static CDataTable* makeFromStream (IStreamReader * pStreamReader, AMC::PToolpathHandler pToolpathHandler);
+
+	// Maps an error of the data table format layer to a LibMCEnv error code.
+	static LibMCEnvResult formatErrorToResult(AMC::eDataTableFormatError formatError);
+
+	// Resizes a column to nRowCount rows and lets the callback fill its plain value array.
+	// Used by readers that materialise a row range. Not part of the external API.
+	void setColumnPlainData(const std::string& sIdentifier, uint64_t nRowCount, const std::function<void(uint8_t* pPlainValues, uint64_t nSizeInBytes)>& fillCallback);
+
+	// Column access for implementation classes that read a table column by column, for example to
+	// append it to a data capture. Not part of the external API.
+	CDataTableColumn* getColumnByIndex(uint32_t nColumnIndex);
+
+	// Returns nullptr if the column does not exist.
+	CDataTableColumn* findColumnByIdentifier(const std::string& sIdentifier);
 
 	CDataTable(AMC::PToolpathHandler pToolpathHandler);
 
@@ -135,6 +166,8 @@ public:
 	bool HasColumn(const std::string & sIdentifier) override;
 
 	LibMCEnv_uint32 GetRowCount() override;
+
+	LibMCEnv_uint64 GetRowCount64() override;
 
 	LibMCEnv_uint32 GetColumnCount() override;
 
@@ -156,6 +189,12 @@ public:
 
 	void GetUint64ColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer) override;
 
+	void GetFloatColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_single * pValuesBuffer) override;
+
+	void GetBoolColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint8 * pValuesBuffer) override;
+
+	void GetTimestampColumnValues(const std::string & sIdentifier, LibMCEnv_uint64 nValuesBufferSize, LibMCEnv_uint64* pValuesNeededCount, LibMCEnv_uint64 * pValuesBuffer) override;
+
 	void SetDoubleColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_double * pValuesBuffer) override;
 
 	void SetInt32ColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_int32 * pValuesBuffer) override;
@@ -165,6 +204,12 @@ public:
 	void SetUint32ColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint32 * pValuesBuffer) override;
 
 	void SetUint64ColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) override;
+
+	void SetFloatColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_single * pValuesBuffer) override;
+
+	void SetBoolColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint8 * pValuesBuffer) override;
+
+	void SetTimestampColumnValues(const std::string & sIdentifier, const LibMCEnv_uint64 nValuesBufferSize, const LibMCEnv_uint64 * pValuesBuffer) override;
 
 	IDataTableWriteOptions* CreateWriteOptions() override;
 

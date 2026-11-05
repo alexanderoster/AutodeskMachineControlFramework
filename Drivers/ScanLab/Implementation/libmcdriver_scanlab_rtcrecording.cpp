@@ -141,6 +141,21 @@ void CRTCRecording::ExecuteListWithRecording()
 	m_pInstance->executeListWithRecording();
 }
 
+void CRTCRecording::StartListWithRecording()
+{
+	m_pInstance->startListWithRecording();
+}
+
+bool CRTCRecording::ReadRecordedData()
+{
+	return m_pInstance->readRecordedData();
+}
+
+void CRTCRecording::DiscardRecords()
+{
+	m_pInstance->discardRecords();
+}
+
 void CRTCRecording::AddRecordsToDataTable(const std::string & sChannelName, LibMCEnv::PDataTable pDataTable, const std::string & sColumnIdentifier, const std::string & sColumnDescription)
 {
 	m_pInstance->addRecordsToDataTable(sChannelName, pDataTable, sColumnIdentifier, sColumnDescription);

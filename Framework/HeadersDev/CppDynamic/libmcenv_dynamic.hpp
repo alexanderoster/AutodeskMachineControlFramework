@@ -81,6 +81,10 @@ class CScatterPlotDataChannel;
 class CScatterPlotDataChannelIterator;
 class CDataTableScatterPlotOptions;
 class CDataTable;
+class CDataCaptureOptions;
+class CDataCaptureChunk;
+class CDataCapture;
+class CDataTableReader;
 class CDataSeries;
 class CDateTimeDifference;
 class CDateTime;
@@ -176,6 +180,10 @@ typedef CScatterPlotDataChannel CLibMCEnvScatterPlotDataChannel;
 typedef CScatterPlotDataChannelIterator CLibMCEnvScatterPlotDataChannelIterator;
 typedef CDataTableScatterPlotOptions CLibMCEnvDataTableScatterPlotOptions;
 typedef CDataTable CLibMCEnvDataTable;
+typedef CDataCaptureOptions CLibMCEnvDataCaptureOptions;
+typedef CDataCaptureChunk CLibMCEnvDataCaptureChunk;
+typedef CDataCapture CLibMCEnvDataCapture;
+typedef CDataTableReader CLibMCEnvDataTableReader;
 typedef CDataSeries CLibMCEnvDataSeries;
 typedef CDateTimeDifference CLibMCEnvDateTimeDifference;
 typedef CDateTime CLibMCEnvDateTime;
@@ -271,6 +279,10 @@ typedef std::shared_ptr<CScatterPlotDataChannel> PScatterPlotDataChannel;
 typedef std::shared_ptr<CScatterPlotDataChannelIterator> PScatterPlotDataChannelIterator;
 typedef std::shared_ptr<CDataTableScatterPlotOptions> PDataTableScatterPlotOptions;
 typedef std::shared_ptr<CDataTable> PDataTable;
+typedef std::shared_ptr<CDataCaptureOptions> PDataCaptureOptions;
+typedef std::shared_ptr<CDataCaptureChunk> PDataCaptureChunk;
+typedef std::shared_ptr<CDataCapture> PDataCapture;
+typedef std::shared_ptr<CDataTableReader> PDataTableReader;
 typedef std::shared_ptr<CDataSeries> PDataSeries;
 typedef std::shared_ptr<CDateTimeDifference> PDateTimeDifference;
 typedef std::shared_ptr<CDateTime> PDateTime;
@@ -366,6 +378,10 @@ typedef PScatterPlotDataChannel PLibMCEnvScatterPlotDataChannel;
 typedef PScatterPlotDataChannelIterator PLibMCEnvScatterPlotDataChannelIterator;
 typedef PDataTableScatterPlotOptions PLibMCEnvDataTableScatterPlotOptions;
 typedef PDataTable PLibMCEnvDataTable;
+typedef PDataCaptureOptions PLibMCEnvDataCaptureOptions;
+typedef PDataCaptureChunk PLibMCEnvDataCaptureChunk;
+typedef PDataCapture PLibMCEnvDataCapture;
+typedef PDataTableReader PLibMCEnvDataTableReader;
 typedef PDataSeries PLibMCEnvDataSeries;
 typedef PDateTimeDifference PLibMCEnvDateTimeDifference;
 typedef PDateTime PLibMCEnvDateTime;
@@ -781,6 +797,43 @@ public:
 			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "FORMULAEVALUATIONFAILED";
 			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "FORMULASESSIONREFERENCESNOTAVAILABLE";
 			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "INVALIDFORMULAREFERENCEINDEX";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT: return "COLUMNISNOTOFTYPEFLOAT";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL: return "COLUMNISNOTOFTYPEBOOL";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP: return "COLUMNISNOTOFTYPETIMESTAMP";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION: return "UNSUPPORTEDDATATABLEVERSION";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING: return "UNSUPPORTEDDATATABLEENCODING";
+			case LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER: return "INVALIDDATATABLECOLUMNHEADER";
+			case LIBMCENV_ERROR_DATACAPTURENOTCONFIGURABLE: return "DATACAPTURENOTCONFIGURABLE";
+			case LIBMCENV_ERROR_DATACAPTURENOTRECORDING: return "DATACAPTURENOTRECORDING";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKALREADYOPEN: return "DATACAPTURECHUNKALREADYOPEN";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKINVALID: return "DATACAPTURECHUNKINVALID";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKINCOMPLETE: return "DATACAPTURECHUNKINCOMPLETE";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKOVERFLOW: return "DATACAPTURECHUNKOVERFLOW";
+			case LIBMCENV_ERROR_DATACAPTUREQUEUEFULL: return "DATACAPTUREQUEUEFULL";
+			case LIBMCENV_ERROR_DATACAPTUREWRITERFAILED: return "DATACAPTUREWRITERFAILED";
+			case LIBMCENV_ERROR_INVALIDDATACAPTUREOPTION: return "INVALIDDATACAPTUREOPTION";
+			case LIBMCENV_ERROR_DATACAPTUREROWNOTOPEN: return "DATACAPTUREROWNOTOPEN";
+			case LIBMCENV_ERROR_DATACAPTUREROWALREADYOPEN: return "DATACAPTUREROWALREADYOPEN";
+			case LIBMCENV_ERROR_DATACAPTUREVALUEOUTOFRANGE: return "DATACAPTUREVALUEOUTOFRANGE";
+			case LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED: return "DATACAPTURESEGMENTPURGED";
+			case LIBMCENV_ERROR_EMPTYDATACAPTURENAME: return "EMPTYDATACAPTURENAME";
+			case LIBMCENV_ERROR_EMPTYDATACAPTUREIDENTIFIER: return "EMPTYDATACAPTUREIDENTIFIER";
+			case LIBMCENV_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "INVALIDDATACAPTUREIDENTIFIER";
+			case LIBMCENV_ERROR_DATACAPTUREEXECUTIONNOTINPROCESS: return "DATACAPTUREEXECUTIONNOTINPROCESS";
+			case LIBMCENV_ERROR_DATATABLESEGMENTTRUNCATED: return "DATATABLESEGMENTTRUNCATED";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLECODEC: return "UNSUPPORTEDDATATABLECODEC";
+			case LIBMCENV_ERROR_INVALIDDATATABLESEGMENT: return "INVALIDDATATABLESEGMENT";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKOUTSTANDING: return "DATACAPTURECHUNKOUTSTANDING";
+			case LIBMCENV_ERROR_DATACAPTURECOLUMNTYPEMISMATCH: return "DATACAPTURECOLUMNTYPEMISMATCH";
+			case LIBMCENV_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "INVALIDDATACAPTURESEGMENTINDEX";
+			case LIBMCENV_ERROR_DATACAPTURECOLUMNNOTFOUND: return "DATACAPTURECOLUMNNOTFOUND";
+			case LIBMCENV_ERROR_INVALIDDATATABLEROWRANGE: return "INVALIDDATATABLEROWRANGE";
+			case LIBMCENV_ERROR_INVALIDDOWNSAMPLEPARAMETERS: return "INVALIDDOWNSAMPLEPARAMETERS";
+			case LIBMCENV_ERROR_DATATABLECOLUMNTYPEMISMATCH: return "DATATABLECOLUMNTYPEMISMATCH";
+			case LIBMCENV_ERROR_INVALIDDATATABLECHUNKINDEX: return "INVALIDDATATABLECHUNKINDEX";
+			case LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS: return "STREAMHASACTIVEDOWNLOADS";
+			case LIBMCENV_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIPSTREAMALREADYFINISHED";
+			case LIBMCENV_ERROR_SESSIONHANDLERNOTAVAILABLE: return "SESSIONHANDLERNOTAVAILABLE";
 		}
 		return "UNKNOWN";
 	}
@@ -1057,6 +1110,43 @@ public:
 			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
 			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
 			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPEFLOAT: return "Column is not of type float.";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPEBOOL: return "Column is not of type bool.";
+			case LIBMCENV_ERROR_COLUMNISNOTOFTYPETIMESTAMP: return "Column is not of type timestamp.";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEVERSION: return "Unsupported datatable format version.";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLEENCODING: return "Unsupported datatable column encoding.";
+			case LIBMCENV_ERROR_INVALIDDATATABLECOLUMNHEADER: return "Invalid datatable column header.";
+			case LIBMCENV_ERROR_DATACAPTURENOTCONFIGURABLE: return "Data capture schema is frozen and can not be changed anymore.";
+			case LIBMCENV_ERROR_DATACAPTURENOTRECORDING: return "Data capture is not recording.";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKALREADYOPEN: return "Data capture has an uncommitted chunk already.";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKINVALID: return "Data capture chunk is invalid or has been committed already.";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKINCOMPLETE: return "Data capture chunk columns have different row counts.";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKOVERFLOW: return "Data capture chunk capacity exceeded.";
+			case LIBMCENV_ERROR_DATACAPTUREQUEUEFULL: return "Data capture queue is full.";
+			case LIBMCENV_ERROR_DATACAPTUREWRITERFAILED: return "Data capture writer failed.";
+			case LIBMCENV_ERROR_INVALIDDATACAPTUREOPTION: return "Invalid data capture option.";
+			case LIBMCENV_ERROR_DATACAPTUREROWNOTOPEN: return "Data capture chunk has no open row.";
+			case LIBMCENV_ERROR_DATACAPTUREROWALREADYOPEN: return "Data capture chunk has an open row already.";
+			case LIBMCENV_ERROR_DATACAPTUREVALUEOUTOFRANGE: return "Data capture value is out of range for the column type.";
+			case LIBMCENV_ERROR_DATACAPTURESEGMENTPURGED: return "Data capture segment has been deleted by retention.";
+			case LIBMCENV_ERROR_EMPTYDATACAPTURENAME: return "Empty data capture name.";
+			case LIBMCENV_ERROR_EMPTYDATACAPTUREIDENTIFIER: return "Empty data capture identifier.";
+			case LIBMCENV_ERROR_INVALIDDATACAPTUREIDENTIFIER: return "Invalid data capture identifier.";
+			case LIBMCENV_ERROR_DATACAPTUREEXECUTIONNOTINPROCESS: return "Data captures can only be created while the build execution is in process.";
+			case LIBMCENV_ERROR_DATATABLESEGMENTTRUNCATED: return "Datatable segment is truncated and has no footer.";
+			case LIBMCENV_ERROR_UNSUPPORTEDDATATABLECODEC: return "Unsupported datatable page codec.";
+			case LIBMCENV_ERROR_INVALIDDATATABLESEGMENT: return "Invalid datatable segment.";
+			case LIBMCENV_ERROR_DATACAPTURECHUNKOUTSTANDING: return "Data capture has an uncommitted chunk.";
+			case LIBMCENV_ERROR_DATACAPTURECOLUMNTYPEMISMATCH: return "Data capture column has a different type.";
+			case LIBMCENV_ERROR_INVALIDDATACAPTURESEGMENTINDEX: return "Invalid data capture segment index.";
+			case LIBMCENV_ERROR_DATACAPTURECOLUMNNOTFOUND: return "Data capture column not found.";
+			case LIBMCENV_ERROR_INVALIDDATATABLEROWRANGE: return "Invalid datatable row range.";
+			case LIBMCENV_ERROR_INVALIDDOWNSAMPLEPARAMETERS: return "Invalid downsample parameters.";
+			case LIBMCENV_ERROR_DATATABLECOLUMNTYPEMISMATCH: return "Datatable column can not be read as the requested type.";
+			case LIBMCENV_ERROR_INVALIDDATATABLECHUNKINDEX: return "Invalid datatable chunk index.";
+			case LIBMCENV_ERROR_STREAMHASACTIVEDOWNLOADS: return "Storage stream has active downloads.";
+			case LIBMCENV_ERROR_ZIPSTREAMALREADYFINISHED: return "ZIP stream has already been finished.";
+			case LIBMCENV_ERROR_SESSIONHANDLERNOTAVAILABLE: return "Session handler is not available.";
 		}
 		return "unknown error";
 	}
@@ -1195,6 +1285,10 @@ private:
 	friend class CScatterPlotDataChannelIterator;
 	friend class CDataTableScatterPlotOptions;
 	friend class CDataTable;
+	friend class CDataCaptureOptions;
+	friend class CDataCaptureChunk;
+	friend class CDataCapture;
+	friend class CDataTableReader;
 	friend class CDataSeries;
 	friend class CDateTimeDifference;
 	friend class CDateTime;
@@ -1776,6 +1870,7 @@ public:
 	inline void Clear();
 	inline bool HasColumn(const std::string & sIdentifier);
 	inline LibMCEnv_uint32 GetRowCount();
+	inline LibMCEnv_uint64 GetRowCount64();
 	inline LibMCEnv_uint32 GetColumnCount();
 	inline std::string GetColumnIdentifier(const LibMCEnv_uint32 nColumnIndex);
 	inline std::string GetColumnDescription(const LibMCEnv_uint32 nColumnIndex);
@@ -1786,11 +1881,17 @@ public:
 	inline void GetInt64ColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_int64> & ValuesBuffer);
 	inline void GetUint32ColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint32> & ValuesBuffer);
 	inline void GetUint64ColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint64> & ValuesBuffer);
+	inline void GetFloatColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_single> & ValuesBuffer);
+	inline void GetBoolColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint8> & ValuesBuffer);
+	inline void GetTimestampColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint64> & ValuesBuffer);
 	inline void SetDoubleColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_double> & ValuesBuffer);
 	inline void SetInt32ColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_int32> & ValuesBuffer);
 	inline void SetInt64ColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_int64> & ValuesBuffer);
 	inline void SetUint32ColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint32> & ValuesBuffer);
 	inline void SetUint64ColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint64> & ValuesBuffer);
+	inline void SetFloatColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_single> & ValuesBuffer);
+	inline void SetBoolColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint8> & ValuesBuffer);
+	inline void SetTimestampColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint64> & ValuesBuffer);
 	inline PDataTableWriteOptions CreateWriteOptions();
 	inline PDataTableCSVWriteOptions CreateCSVWriteOptions();
 	inline void WriteCSVToStream(classParam<CTempStreamWriter> pWriter, classParam<CDataTableCSVWriteOptions> pOptions);
@@ -1798,6 +1899,135 @@ public:
 	inline void LoadFromStream(classParam<CStreamReader> pStream);
 	inline PDataTableScatterPlotOptions CreateScatterPlotOptions();
 	inline PScatterPlot CalculateScatterPlot(classParam<CDataTableScatterPlotOptions> pScatterPlotOptions);
+};
+	
+/*************************************************************************************************************************
+ Class CDataCaptureOptions 
+**************************************************************************************************************************/
+class CDataCaptureOptions : public CBase {
+public:
+	
+	/**
+	* CDataCaptureOptions::CDataCaptureOptions - Constructor for DataCaptureOptions class.
+	*/
+	CDataCaptureOptions(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline void SetChunkRowCount(const LibMCEnv_uint32 nChunkRowCount);
+	inline LibMCEnv_uint32 GetChunkRowCount();
+	inline void SetSegmentSizeInBytes(const LibMCEnv_uint64 nSegmentSizeInBytes);
+	inline LibMCEnv_uint64 GetSegmentSizeInBytes();
+	inline void SetMaxQueuedChunks(const LibMCEnv_uint32 nMaxQueuedChunks);
+	inline LibMCEnv_uint32 GetMaxQueuedChunks();
+	inline void SetBackpressureMode(const eDataCaptureBackpressureMode eBackpressureMode);
+	inline eDataCaptureBackpressureMode GetBackpressureMode();
+	inline void SetStorageLimitInBytes(const LibMCEnv_uint64 nStorageLimitInBytes);
+	inline LibMCEnv_uint64 GetStorageLimitInBytes();
+	inline void SetCompression(const eDataCaptureCompression eCompression);
+	inline eDataCaptureCompression GetCompression();
+	inline void SetColumnEncoding(const std::string & sColumnIdentifier, const eDataCaptureEncoding eEncoding);
+	inline void SetDoubleQuantization(const std::string & sColumnIdentifier, const LibMCEnv_double dStep);
+};
+	
+/*************************************************************************************************************************
+ Class CDataCaptureChunk 
+**************************************************************************************************************************/
+class CDataCaptureChunk : public CBase {
+public:
+	
+	/**
+	* CDataCaptureChunk::CDataCaptureChunk - Constructor for DataCaptureChunk class.
+	*/
+	CDataCaptureChunk(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline LibMCEnv_uint32 GetCapacity();
+	inline LibMCEnv_uint32 GetRowCount();
+	inline bool IsFull();
+	inline void SetDoubleColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_double> & ValuesBuffer);
+	inline void SetInt32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_int32> & ValuesBuffer);
+	inline void SetUint32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint32> & ValuesBuffer);
+	inline void SetInt64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_int64> & ValuesBuffer);
+	inline void SetUint64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint64> & ValuesBuffer);
+	inline void SetFloatColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_single> & ValuesBuffer);
+	inline void SetBoolColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint8> & ValuesBuffer);
+	inline void SetTimestampColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint64> & ValuesBuffer);
+	inline void BeginRow();
+	inline void SetRowDoubleValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_double dValue);
+	inline void SetRowIntegerValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_int64 nValue);
+	inline void EndRow();
+};
+	
+/*************************************************************************************************************************
+ Class CDataCapture 
+**************************************************************************************************************************/
+class CDataCapture : public CBase {
+public:
+	
+	/**
+	* CDataCapture::CDataCapture - Constructor for DataCapture class.
+	*/
+	CDataCapture(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetUUID();
+	inline std::string GetIdentifier();
+	inline std::string GetName();
+	inline eDataCaptureStatus GetStatus();
+	inline void AddColumn(const std::string & sIdentifier, const std::string & sDescription, const eDataTableColumnType eColumnType);
+	inline LibMCEnv_uint32 GetColumnCount();
+	inline PDataCaptureChunk BeginChunk();
+	inline void CommitChunk(classParam<CDataCaptureChunk> pChunkInstance);
+	inline void Flush();
+	inline LibMCEnv_uint64 GetCapturedRowCount();
+	inline LibMCEnv_uint64 GetStorageSizeInBytes();
+	inline LibMCEnv_uint32 GetSegmentCount();
+	inline LibMCEnv_uint32 GetQueuedChunkCount();
+	inline LibMCEnv_uint64 GetDroppedRowCount();
+	inline std::string Finish();
+	inline void Abort();
+	inline void AddColumnsFromDataTable(classParam<CDataTable> pDataTable);
+	inline LibMCEnv_uint64 AppendDataTable(classParam<CDataTable> pDataTable);
+};
+	
+/*************************************************************************************************************************
+ Class CDataTableReader 
+**************************************************************************************************************************/
+class CDataTableReader : public CBase {
+public:
+	
+	/**
+	* CDataTableReader::CDataTableReader - Constructor for DataTableReader class.
+	*/
+	CDataTableReader(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline LibMCEnv_uint64 GetRowCount();
+	inline LibMCEnv_uint64 GetFirstAvailableRow();
+	inline LibMCEnv_uint32 GetColumnCount();
+	inline bool HasColumn(const std::string & sIdentifier);
+	inline void GetColumnInformation(const LibMCEnv_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, eDataTableColumnType & eColumnType);
+	inline LibMCEnv_double GetColumnQuantization(const std::string & sIdentifier);
+	inline LibMCEnv_uint32 GetSegmentCount();
+	inline void GetSegmentInformation(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, LibMCEnv_uint64 & nSizeInBytes, bool & bIsAvailable);
+	inline LibMCEnv_uint64 GetChunkCount();
+	inline void GetChunkInformation(const LibMCEnv_uint64 nChunkIndex, LibMCEnv_uint32 & nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, bool & bIsAvailable);
+	inline bool GetChunkStatistics(const LibMCEnv_uint64 nChunkIndex, const std::string & sIdentifier, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue);
+	inline void ReadDoubleColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_double> & ValuesBuffer);
+	inline void ReadFloatColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_single> & ValuesBuffer);
+	inline void ReadInt64ColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_int64> & ValuesBuffer);
+	inline void ReadBoolColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_uint8> & ValuesBuffer);
+	inline void ReadColumnDownsampled(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const LibMCEnv_uint32 nTargetPoints, const eDataTableDownsampleMode eMode, std::vector<LibMCEnv_double> & ValuesBuffer);
+	inline void FindChunksInValueRange(const std::string & sIdentifier, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue, std::vector<LibMCEnv_uint64> & ChunkIndicesBuffer);
+	inline PDataTable ExtractDataTable(const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const std::string & sColumnIdentifiers);
 };
 	
 /*************************************************************************************************************************
@@ -2300,6 +2530,13 @@ public:
 	inline bool HasMetaDataString(const std::string & sKey);
 	inline std::string GetMetaDataString(const std::string & sKey);
 	inline PJournalHandler LoadAttachedJournal(const LibMCEnv_uint32 nCacheMemoryQuotaInMegabytes);
+	inline PDataCaptureOptions CreateDataCaptureOptions();
+	inline PDataCapture CreateDataCapture(const std::string & sIdentifier, const std::string & sName, classParam<CDataCaptureOptions> pOptions, const std::string & sUserUUID);
+	inline bool HasDataCapture(const std::string & sIdentifier);
+	inline LibMCEnv_uint64 GetDataCaptureRowCount(const std::string & sIdentifier);
+	inline LibMCEnv_uint32 GetDataCaptureSegmentCount(const std::string & sIdentifier);
+	inline PDataTable LoadDataCaptureSegment(const std::string & sIdentifier, const LibMCEnv_uint32 nSegmentIndex);
+	inline PDataTableReader OpenDataCaptureReader(const std::string & sIdentifier);
 };
 	
 /*************************************************************************************************************************
@@ -3075,6 +3312,7 @@ public:
 	
 	inline PTempStreamWriter CreateZIPEntry(const std::string & sFileName);
 	inline void CreateZIPEntryFromStream(const std::string & sFileName, classParam<CStreamReader> pStreamReader);
+	inline void Discard();
 };
 	
 /*************************************************************************************************************************
@@ -3766,6 +4004,11 @@ public:
 	inline LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula);
 	inline LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula);
 	inline bool EvaluateFormulaAsBool(const std::string & sFormula);
+	inline bool StartStreamDownloadForSession(const std::string & sSessionUUID, const std::string & sStreamUUID, const std::string & sFileName);
+	inline void GetStreamDownloadProgress(const std::string & sStreamUUID, LibMCEnv_uint32 & nActiveConnections, LibMCEnv_uint64 & nDeliveredBytes, LibMCEnv_uint64 & nTotalBytes, bool & bCompleted, LibMCEnv_uint64 & nMillisecondsSinceActivity);
+	inline bool CancelStreamDownloads(const std::string & sStreamUUID);
+	inline void DeleteStorageStream(const std::string & sUUID);
+	inline LibMCEnv_uint32 EnforceStreamRetention(const std::string & sName, const LibMCEnv_uint32 nKeepCount);
 };
 	
 /*************************************************************************************************************************
@@ -4119,6 +4362,7 @@ public:
 		pWrapperTable->m_DataTable_Clear = nullptr;
 		pWrapperTable->m_DataTable_HasColumn = nullptr;
 		pWrapperTable->m_DataTable_GetRowCount = nullptr;
+		pWrapperTable->m_DataTable_GetRowCount64 = nullptr;
 		pWrapperTable->m_DataTable_GetColumnCount = nullptr;
 		pWrapperTable->m_DataTable_GetColumnIdentifier = nullptr;
 		pWrapperTable->m_DataTable_GetColumnDescription = nullptr;
@@ -4129,11 +4373,17 @@ public:
 		pWrapperTable->m_DataTable_GetInt64ColumnValues = nullptr;
 		pWrapperTable->m_DataTable_GetUint32ColumnValues = nullptr;
 		pWrapperTable->m_DataTable_GetUint64ColumnValues = nullptr;
+		pWrapperTable->m_DataTable_GetFloatColumnValues = nullptr;
+		pWrapperTable->m_DataTable_GetBoolColumnValues = nullptr;
+		pWrapperTable->m_DataTable_GetTimestampColumnValues = nullptr;
 		pWrapperTable->m_DataTable_SetDoubleColumnValues = nullptr;
 		pWrapperTable->m_DataTable_SetInt32ColumnValues = nullptr;
 		pWrapperTable->m_DataTable_SetInt64ColumnValues = nullptr;
 		pWrapperTable->m_DataTable_SetUint32ColumnValues = nullptr;
 		pWrapperTable->m_DataTable_SetUint64ColumnValues = nullptr;
+		pWrapperTable->m_DataTable_SetFloatColumnValues = nullptr;
+		pWrapperTable->m_DataTable_SetBoolColumnValues = nullptr;
+		pWrapperTable->m_DataTable_SetTimestampColumnValues = nullptr;
 		pWrapperTable->m_DataTable_CreateWriteOptions = nullptr;
 		pWrapperTable->m_DataTable_CreateCSVWriteOptions = nullptr;
 		pWrapperTable->m_DataTable_WriteCSVToStream = nullptr;
@@ -4141,6 +4391,71 @@ public:
 		pWrapperTable->m_DataTable_LoadFromStream = nullptr;
 		pWrapperTable->m_DataTable_CreateScatterPlotOptions = nullptr;
 		pWrapperTable->m_DataTable_CalculateScatterPlot = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetChunkRowCount = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetChunkRowCount = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetBackpressureMode = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetBackpressureMode = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetCompression = nullptr;
+		pWrapperTable->m_DataCaptureOptions_GetCompression = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetColumnEncoding = nullptr;
+		pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization = nullptr;
+		pWrapperTable->m_DataCaptureChunk_GetCapacity = nullptr;
+		pWrapperTable->m_DataCaptureChunk_GetRowCount = nullptr;
+		pWrapperTable->m_DataCaptureChunk_IsFull = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues = nullptr;
+		pWrapperTable->m_DataCaptureChunk_BeginRow = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue = nullptr;
+		pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue = nullptr;
+		pWrapperTable->m_DataCaptureChunk_EndRow = nullptr;
+		pWrapperTable->m_DataCapture_GetUUID = nullptr;
+		pWrapperTable->m_DataCapture_GetIdentifier = nullptr;
+		pWrapperTable->m_DataCapture_GetName = nullptr;
+		pWrapperTable->m_DataCapture_GetStatus = nullptr;
+		pWrapperTable->m_DataCapture_AddColumn = nullptr;
+		pWrapperTable->m_DataCapture_GetColumnCount = nullptr;
+		pWrapperTable->m_DataCapture_BeginChunk = nullptr;
+		pWrapperTable->m_DataCapture_CommitChunk = nullptr;
+		pWrapperTable->m_DataCapture_Flush = nullptr;
+		pWrapperTable->m_DataCapture_GetCapturedRowCount = nullptr;
+		pWrapperTable->m_DataCapture_GetStorageSizeInBytes = nullptr;
+		pWrapperTable->m_DataCapture_GetSegmentCount = nullptr;
+		pWrapperTable->m_DataCapture_GetQueuedChunkCount = nullptr;
+		pWrapperTable->m_DataCapture_GetDroppedRowCount = nullptr;
+		pWrapperTable->m_DataCapture_Finish = nullptr;
+		pWrapperTable->m_DataCapture_Abort = nullptr;
+		pWrapperTable->m_DataCapture_AddColumnsFromDataTable = nullptr;
+		pWrapperTable->m_DataCapture_AppendDataTable = nullptr;
+		pWrapperTable->m_DataTableReader_GetRowCount = nullptr;
+		pWrapperTable->m_DataTableReader_GetFirstAvailableRow = nullptr;
+		pWrapperTable->m_DataTableReader_GetColumnCount = nullptr;
+		pWrapperTable->m_DataTableReader_HasColumn = nullptr;
+		pWrapperTable->m_DataTableReader_GetColumnInformation = nullptr;
+		pWrapperTable->m_DataTableReader_GetColumnQuantization = nullptr;
+		pWrapperTable->m_DataTableReader_GetSegmentCount = nullptr;
+		pWrapperTable->m_DataTableReader_GetSegmentInformation = nullptr;
+		pWrapperTable->m_DataTableReader_GetChunkCount = nullptr;
+		pWrapperTable->m_DataTableReader_GetChunkInformation = nullptr;
+		pWrapperTable->m_DataTableReader_GetChunkStatistics = nullptr;
+		pWrapperTable->m_DataTableReader_ReadDoubleColumnRange = nullptr;
+		pWrapperTable->m_DataTableReader_ReadFloatColumnRange = nullptr;
+		pWrapperTable->m_DataTableReader_ReadInt64ColumnRange = nullptr;
+		pWrapperTable->m_DataTableReader_ReadBoolColumnRange = nullptr;
+		pWrapperTable->m_DataTableReader_ReadColumnDownsampled = nullptr;
+		pWrapperTable->m_DataTableReader_FindChunksInValueRange = nullptr;
+		pWrapperTable->m_DataTableReader_ExtractDataTable = nullptr;
 		pWrapperTable->m_DataSeries_GetName = nullptr;
 		pWrapperTable->m_DataSeries_GetUUID = nullptr;
 		pWrapperTable->m_DataSeries_Clear = nullptr;
@@ -4403,6 +4718,13 @@ public:
 		pWrapperTable->m_BuildExecution_HasMetaDataString = nullptr;
 		pWrapperTable->m_BuildExecution_GetMetaDataString = nullptr;
 		pWrapperTable->m_BuildExecution_LoadAttachedJournal = nullptr;
+		pWrapperTable->m_BuildExecution_CreateDataCaptureOptions = nullptr;
+		pWrapperTable->m_BuildExecution_CreateDataCapture = nullptr;
+		pWrapperTable->m_BuildExecution_HasDataCapture = nullptr;
+		pWrapperTable->m_BuildExecution_GetDataCaptureRowCount = nullptr;
+		pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount = nullptr;
+		pWrapperTable->m_BuildExecution_LoadDataCaptureSegment = nullptr;
+		pWrapperTable->m_BuildExecution_OpenDataCaptureReader = nullptr;
 		pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution = nullptr;
 		pWrapperTable->m_BuildIterator_GetCurrentBuild = nullptr;
 		pWrapperTable->m_Build_GetName = nullptr;
@@ -4762,6 +5084,7 @@ public:
 		pWrapperTable->m_TempStreamWriter_CopyFrom = nullptr;
 		pWrapperTable->m_ZIPStreamWriter_CreateZIPEntry = nullptr;
 		pWrapperTable->m_ZIPStreamWriter_CreateZIPEntryFromStream = nullptr;
+		pWrapperTable->m_ZIPStreamWriter_Discard = nullptr;
 		pWrapperTable->m_StreamReader_GetUUID = nullptr;
 		pWrapperTable->m_StreamReader_GetName = nullptr;
 		pWrapperTable->m_StreamReader_GetMIMEType = nullptr;
@@ -5053,6 +5376,11 @@ public:
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble = nullptr;
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger = nullptr;
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool = nullptr;
+		pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession = nullptr;
+		pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress = nullptr;
+		pWrapperTable->m_StateEnvironment_CancelStreamDownloads = nullptr;
+		pWrapperTable->m_StateEnvironment_DeleteStorageStream = nullptr;
+		pWrapperTable->m_StateEnvironment_EnforceStreamRetention = nullptr;
 		pWrapperTable->m_UIItem_GetName = nullptr;
 		pWrapperTable->m_UIItem_GetPath = nullptr;
 		pWrapperTable->m_UIItem_GetUUID = nullptr;
@@ -6299,6 +6627,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_DataTable_GetRowCount64 = (PLibMCEnvDataTable_GetRowCount64Ptr) GetProcAddress(hLibrary, "libmcenv_datatable_getrowcount64");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_GetRowCount64 = (PLibMCEnvDataTable_GetRowCount64Ptr) dlsym(hLibrary, "libmcenv_datatable_getrowcount64");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_GetRowCount64 == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_DataTable_GetColumnCount = (PLibMCEnvDataTable_GetColumnCountPtr) GetProcAddress(hLibrary, "libmcenv_datatable_getcolumncount");
 		#else // _WIN32
 		pWrapperTable->m_DataTable_GetColumnCount = (PLibMCEnvDataTable_GetColumnCountPtr) dlsym(hLibrary, "libmcenv_datatable_getcolumncount");
@@ -6389,6 +6726,33 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_DataTable_GetFloatColumnValues = (PLibMCEnvDataTable_GetFloatColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_getfloatcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_GetFloatColumnValues = (PLibMCEnvDataTable_GetFloatColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_getfloatcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_GetFloatColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTable_GetBoolColumnValues = (PLibMCEnvDataTable_GetBoolColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_getboolcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_GetBoolColumnValues = (PLibMCEnvDataTable_GetBoolColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_getboolcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_GetBoolColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTable_GetTimestampColumnValues = (PLibMCEnvDataTable_GetTimestampColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_gettimestampcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_GetTimestampColumnValues = (PLibMCEnvDataTable_GetTimestampColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_gettimestampcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_GetTimestampColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_DataTable_SetDoubleColumnValues = (PLibMCEnvDataTable_SetDoubleColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_setdoublecolumnvalues");
 		#else // _WIN32
 		pWrapperTable->m_DataTable_SetDoubleColumnValues = (PLibMCEnvDataTable_SetDoubleColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_setdoublecolumnvalues");
@@ -6431,6 +6795,33 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_DataTable_SetUint64ColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTable_SetFloatColumnValues = (PLibMCEnvDataTable_SetFloatColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_setfloatcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_SetFloatColumnValues = (PLibMCEnvDataTable_SetFloatColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_setfloatcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_SetFloatColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTable_SetBoolColumnValues = (PLibMCEnvDataTable_SetBoolColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_setboolcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_SetBoolColumnValues = (PLibMCEnvDataTable_SetBoolColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_setboolcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_SetBoolColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTable_SetTimestampColumnValues = (PLibMCEnvDataTable_SetTimestampColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datatable_settimestampcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataTable_SetTimestampColumnValues = (PLibMCEnvDataTable_SetTimestampColumnValuesPtr) dlsym(hLibrary, "libmcenv_datatable_settimestampcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTable_SetTimestampColumnValues == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -6494,6 +6885,591 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_DataTable_CalculateScatterPlot == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetChunkRowCount = (PLibMCEnvDataCaptureOptions_SetChunkRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setchunkrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetChunkRowCount = (PLibMCEnvDataCaptureOptions_SetChunkRowCountPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setchunkrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetChunkRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetChunkRowCount = (PLibMCEnvDataCaptureOptions_GetChunkRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getchunkrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetChunkRowCount = (PLibMCEnvDataCaptureOptions_GetChunkRowCountPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getchunkrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetChunkRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes = (PLibMCEnvDataCaptureOptions_SetSegmentSizeInBytesPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setsegmentsizeinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes = (PLibMCEnvDataCaptureOptions_SetSegmentSizeInBytesPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setsegmentsizeinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes = (PLibMCEnvDataCaptureOptions_GetSegmentSizeInBytesPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getsegmentsizeinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes = (PLibMCEnvDataCaptureOptions_GetSegmentSizeInBytesPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getsegmentsizeinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks = (PLibMCEnvDataCaptureOptions_SetMaxQueuedChunksPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setmaxqueuedchunks");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks = (PLibMCEnvDataCaptureOptions_SetMaxQueuedChunksPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setmaxqueuedchunks");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks = (PLibMCEnvDataCaptureOptions_GetMaxQueuedChunksPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getmaxqueuedchunks");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks = (PLibMCEnvDataCaptureOptions_GetMaxQueuedChunksPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getmaxqueuedchunks");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetBackpressureMode = (PLibMCEnvDataCaptureOptions_SetBackpressureModePtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setbackpressuremode");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetBackpressureMode = (PLibMCEnvDataCaptureOptions_SetBackpressureModePtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setbackpressuremode");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetBackpressureMode == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetBackpressureMode = (PLibMCEnvDataCaptureOptions_GetBackpressureModePtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getbackpressuremode");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetBackpressureMode = (PLibMCEnvDataCaptureOptions_GetBackpressureModePtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getbackpressuremode");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetBackpressureMode == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes = (PLibMCEnvDataCaptureOptions_SetStorageLimitInBytesPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setstoragelimitinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes = (PLibMCEnvDataCaptureOptions_SetStorageLimitInBytesPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setstoragelimitinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes = (PLibMCEnvDataCaptureOptions_GetStorageLimitInBytesPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getstoragelimitinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes = (PLibMCEnvDataCaptureOptions_GetStorageLimitInBytesPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getstoragelimitinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetCompression = (PLibMCEnvDataCaptureOptions_SetCompressionPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setcompression");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetCompression = (PLibMCEnvDataCaptureOptions_SetCompressionPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setcompression");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetCompression == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetCompression = (PLibMCEnvDataCaptureOptions_GetCompressionPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_getcompression");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_GetCompression = (PLibMCEnvDataCaptureOptions_GetCompressionPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_getcompression");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_GetCompression == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetColumnEncoding = (PLibMCEnvDataCaptureOptions_SetColumnEncodingPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setcolumnencoding");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetColumnEncoding = (PLibMCEnvDataCaptureOptions_SetColumnEncodingPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setcolumnencoding");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetColumnEncoding == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization = (PLibMCEnvDataCaptureOptions_SetDoubleQuantizationPtr) GetProcAddress(hLibrary, "libmcenv_datacaptureoptions_setdoublequantization");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization = (PLibMCEnvDataCaptureOptions_SetDoubleQuantizationPtr) dlsym(hLibrary, "libmcenv_datacaptureoptions_setdoublequantization");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_GetCapacity = (PLibMCEnvDataCaptureChunk_GetCapacityPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_getcapacity");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_GetCapacity = (PLibMCEnvDataCaptureChunk_GetCapacityPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_getcapacity");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_GetCapacity == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_GetRowCount = (PLibMCEnvDataCaptureChunk_GetRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_getrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_GetRowCount = (PLibMCEnvDataCaptureChunk_GetRowCountPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_getrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_GetRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_IsFull = (PLibMCEnvDataCaptureChunk_IsFullPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_isfull");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_IsFull = (PLibMCEnvDataCaptureChunk_IsFullPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_isfull");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_IsFull == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues = (PLibMCEnvDataCaptureChunk_SetDoubleColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setdoublecolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues = (PLibMCEnvDataCaptureChunk_SetDoubleColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setdoublecolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues = (PLibMCEnvDataCaptureChunk_SetInt32ColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setint32columnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues = (PLibMCEnvDataCaptureChunk_SetInt32ColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setint32columnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues = (PLibMCEnvDataCaptureChunk_SetUint32ColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setuint32columnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues = (PLibMCEnvDataCaptureChunk_SetUint32ColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setuint32columnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues = (PLibMCEnvDataCaptureChunk_SetInt64ColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setint64columnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues = (PLibMCEnvDataCaptureChunk_SetInt64ColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setint64columnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues = (PLibMCEnvDataCaptureChunk_SetUint64ColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setuint64columnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues = (PLibMCEnvDataCaptureChunk_SetUint64ColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setuint64columnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues = (PLibMCEnvDataCaptureChunk_SetFloatColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setfloatcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues = (PLibMCEnvDataCaptureChunk_SetFloatColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setfloatcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues = (PLibMCEnvDataCaptureChunk_SetBoolColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setboolcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues = (PLibMCEnvDataCaptureChunk_SetBoolColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setboolcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues = (PLibMCEnvDataCaptureChunk_SetTimestampColumnValuesPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_settimestampcolumnvalues");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues = (PLibMCEnvDataCaptureChunk_SetTimestampColumnValuesPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_settimestampcolumnvalues");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_BeginRow = (PLibMCEnvDataCaptureChunk_BeginRowPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_beginrow");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_BeginRow = (PLibMCEnvDataCaptureChunk_BeginRowPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_beginrow");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_BeginRow == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue = (PLibMCEnvDataCaptureChunk_SetRowDoubleValuePtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setrowdoublevalue");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue = (PLibMCEnvDataCaptureChunk_SetRowDoubleValuePtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setrowdoublevalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue = (PLibMCEnvDataCaptureChunk_SetRowIntegerValuePtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_setrowintegervalue");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue = (PLibMCEnvDataCaptureChunk_SetRowIntegerValuePtr) dlsym(hLibrary, "libmcenv_datacapturechunk_setrowintegervalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCaptureChunk_EndRow = (PLibMCEnvDataCaptureChunk_EndRowPtr) GetProcAddress(hLibrary, "libmcenv_datacapturechunk_endrow");
+		#else // _WIN32
+		pWrapperTable->m_DataCaptureChunk_EndRow = (PLibMCEnvDataCaptureChunk_EndRowPtr) dlsym(hLibrary, "libmcenv_datacapturechunk_endrow");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCaptureChunk_EndRow == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetUUID = (PLibMCEnvDataCapture_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetUUID = (PLibMCEnvDataCapture_GetUUIDPtr) dlsym(hLibrary, "libmcenv_datacapture_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetIdentifier = (PLibMCEnvDataCapture_GetIdentifierPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getidentifier");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetIdentifier = (PLibMCEnvDataCapture_GetIdentifierPtr) dlsym(hLibrary, "libmcenv_datacapture_getidentifier");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetIdentifier == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetName = (PLibMCEnvDataCapture_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getname");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetName = (PLibMCEnvDataCapture_GetNamePtr) dlsym(hLibrary, "libmcenv_datacapture_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetStatus = (PLibMCEnvDataCapture_GetStatusPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getstatus");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetStatus = (PLibMCEnvDataCapture_GetStatusPtr) dlsym(hLibrary, "libmcenv_datacapture_getstatus");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetStatus == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_AddColumn = (PLibMCEnvDataCapture_AddColumnPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_addcolumn");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_AddColumn = (PLibMCEnvDataCapture_AddColumnPtr) dlsym(hLibrary, "libmcenv_datacapture_addcolumn");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_AddColumn == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetColumnCount = (PLibMCEnvDataCapture_GetColumnCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getcolumncount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetColumnCount = (PLibMCEnvDataCapture_GetColumnCountPtr) dlsym(hLibrary, "libmcenv_datacapture_getcolumncount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetColumnCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_BeginChunk = (PLibMCEnvDataCapture_BeginChunkPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_beginchunk");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_BeginChunk = (PLibMCEnvDataCapture_BeginChunkPtr) dlsym(hLibrary, "libmcenv_datacapture_beginchunk");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_BeginChunk == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_CommitChunk = (PLibMCEnvDataCapture_CommitChunkPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_commitchunk");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_CommitChunk = (PLibMCEnvDataCapture_CommitChunkPtr) dlsym(hLibrary, "libmcenv_datacapture_commitchunk");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_CommitChunk == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_Flush = (PLibMCEnvDataCapture_FlushPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_flush");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_Flush = (PLibMCEnvDataCapture_FlushPtr) dlsym(hLibrary, "libmcenv_datacapture_flush");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_Flush == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetCapturedRowCount = (PLibMCEnvDataCapture_GetCapturedRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getcapturedrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetCapturedRowCount = (PLibMCEnvDataCapture_GetCapturedRowCountPtr) dlsym(hLibrary, "libmcenv_datacapture_getcapturedrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetCapturedRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetStorageSizeInBytes = (PLibMCEnvDataCapture_GetStorageSizeInBytesPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getstoragesizeinbytes");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetStorageSizeInBytes = (PLibMCEnvDataCapture_GetStorageSizeInBytesPtr) dlsym(hLibrary, "libmcenv_datacapture_getstoragesizeinbytes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetStorageSizeInBytes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentCount = (PLibMCEnvDataCapture_GetSegmentCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getsegmentcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetSegmentCount = (PLibMCEnvDataCapture_GetSegmentCountPtr) dlsym(hLibrary, "libmcenv_datacapture_getsegmentcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetSegmentCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetQueuedChunkCount = (PLibMCEnvDataCapture_GetQueuedChunkCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getqueuedchunkcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetQueuedChunkCount = (PLibMCEnvDataCapture_GetQueuedChunkCountPtr) dlsym(hLibrary, "libmcenv_datacapture_getqueuedchunkcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetQueuedChunkCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_GetDroppedRowCount = (PLibMCEnvDataCapture_GetDroppedRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_getdroppedrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_GetDroppedRowCount = (PLibMCEnvDataCapture_GetDroppedRowCountPtr) dlsym(hLibrary, "libmcenv_datacapture_getdroppedrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_GetDroppedRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_Finish = (PLibMCEnvDataCapture_FinishPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_finish");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_Finish = (PLibMCEnvDataCapture_FinishPtr) dlsym(hLibrary, "libmcenv_datacapture_finish");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_Finish == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_Abort = (PLibMCEnvDataCapture_AbortPtr) GetProcAddress(hLibrary, "libmcenv_datacapture_abort");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_Abort = (PLibMCEnvDataCapture_AbortPtr) dlsym(hLibrary, "libmcenv_datacapture_abort");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_Abort == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_AddColumnsFromDataTable = (PLibMCEnvDataCapture_AddColumnsFromDataTablePtr) GetProcAddress(hLibrary, "libmcenv_datacapture_addcolumnsfromdatatable");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_AddColumnsFromDataTable = (PLibMCEnvDataCapture_AddColumnsFromDataTablePtr) dlsym(hLibrary, "libmcenv_datacapture_addcolumnsfromdatatable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_AddColumnsFromDataTable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataCapture_AppendDataTable = (PLibMCEnvDataCapture_AppendDataTablePtr) GetProcAddress(hLibrary, "libmcenv_datacapture_appenddatatable");
+		#else // _WIN32
+		pWrapperTable->m_DataCapture_AppendDataTable = (PLibMCEnvDataCapture_AppendDataTablePtr) dlsym(hLibrary, "libmcenv_datacapture_appenddatatable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataCapture_AppendDataTable == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetRowCount = (PLibMCEnvDataTableReader_GetRowCountPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getrowcount");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetRowCount = (PLibMCEnvDataTableReader_GetRowCountPtr) dlsym(hLibrary, "libmcenv_datatablereader_getrowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetFirstAvailableRow = (PLibMCEnvDataTableReader_GetFirstAvailableRowPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getfirstavailablerow");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetFirstAvailableRow = (PLibMCEnvDataTableReader_GetFirstAvailableRowPtr) dlsym(hLibrary, "libmcenv_datatablereader_getfirstavailablerow");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetFirstAvailableRow == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnCount = (PLibMCEnvDataTableReader_GetColumnCountPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getcolumncount");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnCount = (PLibMCEnvDataTableReader_GetColumnCountPtr) dlsym(hLibrary, "libmcenv_datatablereader_getcolumncount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetColumnCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_HasColumn = (PLibMCEnvDataTableReader_HasColumnPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_hascolumn");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_HasColumn = (PLibMCEnvDataTableReader_HasColumnPtr) dlsym(hLibrary, "libmcenv_datatablereader_hascolumn");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_HasColumn == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnInformation = (PLibMCEnvDataTableReader_GetColumnInformationPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getcolumninformation");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnInformation = (PLibMCEnvDataTableReader_GetColumnInformationPtr) dlsym(hLibrary, "libmcenv_datatablereader_getcolumninformation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetColumnInformation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnQuantization = (PLibMCEnvDataTableReader_GetColumnQuantizationPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getcolumnquantization");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetColumnQuantization = (PLibMCEnvDataTableReader_GetColumnQuantizationPtr) dlsym(hLibrary, "libmcenv_datatablereader_getcolumnquantization");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetColumnQuantization == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetSegmentCount = (PLibMCEnvDataTableReader_GetSegmentCountPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getsegmentcount");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetSegmentCount = (PLibMCEnvDataTableReader_GetSegmentCountPtr) dlsym(hLibrary, "libmcenv_datatablereader_getsegmentcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetSegmentCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetSegmentInformation = (PLibMCEnvDataTableReader_GetSegmentInformationPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getsegmentinformation");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetSegmentInformation = (PLibMCEnvDataTableReader_GetSegmentInformationPtr) dlsym(hLibrary, "libmcenv_datatablereader_getsegmentinformation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetSegmentInformation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkCount = (PLibMCEnvDataTableReader_GetChunkCountPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getchunkcount");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkCount = (PLibMCEnvDataTableReader_GetChunkCountPtr) dlsym(hLibrary, "libmcenv_datatablereader_getchunkcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetChunkCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkInformation = (PLibMCEnvDataTableReader_GetChunkInformationPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getchunkinformation");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkInformation = (PLibMCEnvDataTableReader_GetChunkInformationPtr) dlsym(hLibrary, "libmcenv_datatablereader_getchunkinformation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetChunkInformation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkStatistics = (PLibMCEnvDataTableReader_GetChunkStatisticsPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_getchunkstatistics");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_GetChunkStatistics = (PLibMCEnvDataTableReader_GetChunkStatisticsPtr) dlsym(hLibrary, "libmcenv_datatablereader_getchunkstatistics");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_GetChunkStatistics == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ReadDoubleColumnRange = (PLibMCEnvDataTableReader_ReadDoubleColumnRangePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_readdoublecolumnrange");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ReadDoubleColumnRange = (PLibMCEnvDataTableReader_ReadDoubleColumnRangePtr) dlsym(hLibrary, "libmcenv_datatablereader_readdoublecolumnrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ReadDoubleColumnRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ReadFloatColumnRange = (PLibMCEnvDataTableReader_ReadFloatColumnRangePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_readfloatcolumnrange");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ReadFloatColumnRange = (PLibMCEnvDataTableReader_ReadFloatColumnRangePtr) dlsym(hLibrary, "libmcenv_datatablereader_readfloatcolumnrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ReadFloatColumnRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ReadInt64ColumnRange = (PLibMCEnvDataTableReader_ReadInt64ColumnRangePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_readint64columnrange");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ReadInt64ColumnRange = (PLibMCEnvDataTableReader_ReadInt64ColumnRangePtr) dlsym(hLibrary, "libmcenv_datatablereader_readint64columnrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ReadInt64ColumnRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ReadBoolColumnRange = (PLibMCEnvDataTableReader_ReadBoolColumnRangePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_readboolcolumnrange");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ReadBoolColumnRange = (PLibMCEnvDataTableReader_ReadBoolColumnRangePtr) dlsym(hLibrary, "libmcenv_datatablereader_readboolcolumnrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ReadBoolColumnRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ReadColumnDownsampled = (PLibMCEnvDataTableReader_ReadColumnDownsampledPtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_readcolumndownsampled");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ReadColumnDownsampled = (PLibMCEnvDataTableReader_ReadColumnDownsampledPtr) dlsym(hLibrary, "libmcenv_datatablereader_readcolumndownsampled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ReadColumnDownsampled == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_FindChunksInValueRange = (PLibMCEnvDataTableReader_FindChunksInValueRangePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_findchunksinvaluerange");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_FindChunksInValueRange = (PLibMCEnvDataTableReader_FindChunksInValueRangePtr) dlsym(hLibrary, "libmcenv_datatablereader_findchunksinvaluerange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_FindChunksInValueRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DataTableReader_ExtractDataTable = (PLibMCEnvDataTableReader_ExtractDataTablePtr) GetProcAddress(hLibrary, "libmcenv_datatablereader_extractdatatable");
+		#else // _WIN32
+		pWrapperTable->m_DataTableReader_ExtractDataTable = (PLibMCEnvDataTableReader_ExtractDataTablePtr) dlsym(hLibrary, "libmcenv_datatablereader_extractdatatable");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DataTableReader_ExtractDataTable == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -8852,6 +9828,69 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_BuildExecution_LoadAttachedJournal == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_CreateDataCaptureOptions = (PLibMCEnvBuildExecution_CreateDataCaptureOptionsPtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_createdatacaptureoptions");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_CreateDataCaptureOptions = (PLibMCEnvBuildExecution_CreateDataCaptureOptionsPtr) dlsym(hLibrary, "libmcenv_buildexecution_createdatacaptureoptions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_CreateDataCaptureOptions == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_CreateDataCapture = (PLibMCEnvBuildExecution_CreateDataCapturePtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_createdatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_CreateDataCapture = (PLibMCEnvBuildExecution_CreateDataCapturePtr) dlsym(hLibrary, "libmcenv_buildexecution_createdatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_CreateDataCapture == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_HasDataCapture = (PLibMCEnvBuildExecution_HasDataCapturePtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_hasdatacapture");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_HasDataCapture = (PLibMCEnvBuildExecution_HasDataCapturePtr) dlsym(hLibrary, "libmcenv_buildexecution_hasdatacapture");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_HasDataCapture == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_GetDataCaptureRowCount = (PLibMCEnvBuildExecution_GetDataCaptureRowCountPtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_getdatacapturerowcount");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_GetDataCaptureRowCount = (PLibMCEnvBuildExecution_GetDataCaptureRowCountPtr) dlsym(hLibrary, "libmcenv_buildexecution_getdatacapturerowcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_GetDataCaptureRowCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount = (PLibMCEnvBuildExecution_GetDataCaptureSegmentCountPtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_getdatacapturesegmentcount");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount = (PLibMCEnvBuildExecution_GetDataCaptureSegmentCountPtr) dlsym(hLibrary, "libmcenv_buildexecution_getdatacapturesegmentcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_LoadDataCaptureSegment = (PLibMCEnvBuildExecution_LoadDataCaptureSegmentPtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_loaddatacapturesegment");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_LoadDataCaptureSegment = (PLibMCEnvBuildExecution_LoadDataCaptureSegmentPtr) dlsym(hLibrary, "libmcenv_buildexecution_loaddatacapturesegment");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_LoadDataCaptureSegment == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_BuildExecution_OpenDataCaptureReader = (PLibMCEnvBuildExecution_OpenDataCaptureReaderPtr) GetProcAddress(hLibrary, "libmcenv_buildexecution_opendatacapturereader");
+		#else // _WIN32
+		pWrapperTable->m_BuildExecution_OpenDataCaptureReader = (PLibMCEnvBuildExecution_OpenDataCaptureReaderPtr) dlsym(hLibrary, "libmcenv_buildexecution_opendatacapturereader");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_BuildExecution_OpenDataCaptureReader == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -12086,6 +13125,15 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_ZIPStreamWriter_Discard = (PLibMCEnvZIPStreamWriter_DiscardPtr) GetProcAddress(hLibrary, "libmcenv_zipstreamwriter_discard");
+		#else // _WIN32
+		pWrapperTable->m_ZIPStreamWriter_Discard = (PLibMCEnvZIPStreamWriter_DiscardPtr) dlsym(hLibrary, "libmcenv_zipstreamwriter_discard");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_ZIPStreamWriter_Discard == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StreamReader_GetUUID = (PLibMCEnvStreamReader_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_streamreader_getuuid");
 		#else // _WIN32
 		pWrapperTable->m_StreamReader_GetUUID = (PLibMCEnvStreamReader_GetUUIDPtr) dlsym(hLibrary, "libmcenv_streamreader_getuuid");
@@ -14705,6 +15753,51 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession = (PLibMCEnvStateEnvironment_StartStreamDownloadForSessionPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_startstreamdownloadforsession");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession = (PLibMCEnvStateEnvironment_StartStreamDownloadForSessionPtr) dlsym(hLibrary, "libmcenv_stateenvironment_startstreamdownloadforsession");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress = (PLibMCEnvStateEnvironment_GetStreamDownloadProgressPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getstreamdownloadprogress");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress = (PLibMCEnvStateEnvironment_GetStreamDownloadProgressPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getstreamdownloadprogress");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_CancelStreamDownloads = (PLibMCEnvStateEnvironment_CancelStreamDownloadsPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_cancelstreamdownloads");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_CancelStreamDownloads = (PLibMCEnvStateEnvironment_CancelStreamDownloadsPtr) dlsym(hLibrary, "libmcenv_stateenvironment_cancelstreamdownloads");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_CancelStreamDownloads == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_DeleteStorageStream = (PLibMCEnvStateEnvironment_DeleteStorageStreamPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_deletestoragestream");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_DeleteStorageStream = (PLibMCEnvStateEnvironment_DeleteStorageStreamPtr) dlsym(hLibrary, "libmcenv_stateenvironment_deletestoragestream");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_DeleteStorageStream == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_EnforceStreamRetention = (PLibMCEnvStateEnvironment_EnforceStreamRetentionPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_enforcestreamretention");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_EnforceStreamRetention = (PLibMCEnvStateEnvironment_EnforceStreamRetentionPtr) dlsym(hLibrary, "libmcenv_stateenvironment_enforcestreamretention");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_EnforceStreamRetention == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_UIItem_GetName = (PLibMCEnvUIItem_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_uiitem_getname");
 		#else // _WIN32
 		pWrapperTable->m_UIItem_GetName = (PLibMCEnvUIItem_GetNamePtr) dlsym(hLibrary, "libmcenv_uiitem_getname");
@@ -16312,6 +17405,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetRowCount == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_datatable_getrowcount64", (void**)&(pWrapperTable->m_DataTable_GetRowCount64));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetRowCount64 == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_datatable_getcolumncount", (void**)&(pWrapperTable->m_DataTable_GetColumnCount));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetColumnCount == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -16352,6 +17449,18 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetUint64ColumnValues == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_datatable_getfloatcolumnvalues", (void**)&(pWrapperTable->m_DataTable_GetFloatColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetFloatColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatable_getboolcolumnvalues", (void**)&(pWrapperTable->m_DataTable_GetBoolColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetBoolColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatable_gettimestampcolumnvalues", (void**)&(pWrapperTable->m_DataTable_GetTimestampColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_GetTimestampColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_datatable_setdoublecolumnvalues", (void**)&(pWrapperTable->m_DataTable_SetDoubleColumnValues));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_SetDoubleColumnValues == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -16370,6 +17479,18 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_datatable_setuint64columnvalues", (void**)&(pWrapperTable->m_DataTable_SetUint64ColumnValues));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_SetUint64ColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatable_setfloatcolumnvalues", (void**)&(pWrapperTable->m_DataTable_SetFloatColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_SetFloatColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatable_setboolcolumnvalues", (void**)&(pWrapperTable->m_DataTable_SetBoolColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_SetBoolColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatable_settimestampcolumnvalues", (void**)&(pWrapperTable->m_DataTable_SetTimestampColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_SetTimestampColumnValues == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_datatable_createwriteoptions", (void**)&(pWrapperTable->m_DataTable_CreateWriteOptions));
@@ -16398,6 +17519,266 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_datatable_calculatescatterplot", (void**)&(pWrapperTable->m_DataTable_CalculateScatterPlot));
 		if ( (eLookupError != 0) || (pWrapperTable->m_DataTable_CalculateScatterPlot == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setchunkrowcount", (void**)&(pWrapperTable->m_DataCaptureOptions_SetChunkRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetChunkRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getchunkrowcount", (void**)&(pWrapperTable->m_DataCaptureOptions_GetChunkRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetChunkRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setsegmentsizeinbytes", (void**)&(pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetSegmentSizeInBytes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getsegmentsizeinbytes", (void**)&(pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetSegmentSizeInBytes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setmaxqueuedchunks", (void**)&(pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetMaxQueuedChunks == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getmaxqueuedchunks", (void**)&(pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetMaxQueuedChunks == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setbackpressuremode", (void**)&(pWrapperTable->m_DataCaptureOptions_SetBackpressureMode));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetBackpressureMode == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getbackpressuremode", (void**)&(pWrapperTable->m_DataCaptureOptions_GetBackpressureMode));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetBackpressureMode == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setstoragelimitinbytes", (void**)&(pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetStorageLimitInBytes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getstoragelimitinbytes", (void**)&(pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetStorageLimitInBytes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setcompression", (void**)&(pWrapperTable->m_DataCaptureOptions_SetCompression));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetCompression == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_getcompression", (void**)&(pWrapperTable->m_DataCaptureOptions_GetCompression));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_GetCompression == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setcolumnencoding", (void**)&(pWrapperTable->m_DataCaptureOptions_SetColumnEncoding));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetColumnEncoding == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacaptureoptions_setdoublequantization", (void**)&(pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureOptions_SetDoubleQuantization == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_getcapacity", (void**)&(pWrapperTable->m_DataCaptureChunk_GetCapacity));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_GetCapacity == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_getrowcount", (void**)&(pWrapperTable->m_DataCaptureChunk_GetRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_GetRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_isfull", (void**)&(pWrapperTable->m_DataCaptureChunk_IsFull));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_IsFull == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setdoublecolumnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetDoubleColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setint32columnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetInt32ColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setuint32columnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetUint32ColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setint64columnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetInt64ColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setuint64columnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetUint64ColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setfloatcolumnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetFloatColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setboolcolumnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetBoolColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_settimestampcolumnvalues", (void**)&(pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetTimestampColumnValues == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_beginrow", (void**)&(pWrapperTable->m_DataCaptureChunk_BeginRow));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_BeginRow == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setrowdoublevalue", (void**)&(pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetRowDoubleValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_setrowintegervalue", (void**)&(pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_SetRowIntegerValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapturechunk_endrow", (void**)&(pWrapperTable->m_DataCaptureChunk_EndRow));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCaptureChunk_EndRow == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getuuid", (void**)&(pWrapperTable->m_DataCapture_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getidentifier", (void**)&(pWrapperTable->m_DataCapture_GetIdentifier));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetIdentifier == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getname", (void**)&(pWrapperTable->m_DataCapture_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getstatus", (void**)&(pWrapperTable->m_DataCapture_GetStatus));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetStatus == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_addcolumn", (void**)&(pWrapperTable->m_DataCapture_AddColumn));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_AddColumn == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getcolumncount", (void**)&(pWrapperTable->m_DataCapture_GetColumnCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetColumnCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_beginchunk", (void**)&(pWrapperTable->m_DataCapture_BeginChunk));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_BeginChunk == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_commitchunk", (void**)&(pWrapperTable->m_DataCapture_CommitChunk));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_CommitChunk == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_flush", (void**)&(pWrapperTable->m_DataCapture_Flush));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_Flush == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getcapturedrowcount", (void**)&(pWrapperTable->m_DataCapture_GetCapturedRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetCapturedRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getstoragesizeinbytes", (void**)&(pWrapperTable->m_DataCapture_GetStorageSizeInBytes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetStorageSizeInBytes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getsegmentcount", (void**)&(pWrapperTable->m_DataCapture_GetSegmentCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetSegmentCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getqueuedchunkcount", (void**)&(pWrapperTable->m_DataCapture_GetQueuedChunkCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetQueuedChunkCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_getdroppedrowcount", (void**)&(pWrapperTable->m_DataCapture_GetDroppedRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_GetDroppedRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_finish", (void**)&(pWrapperTable->m_DataCapture_Finish));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_Finish == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_abort", (void**)&(pWrapperTable->m_DataCapture_Abort));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_Abort == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_addcolumnsfromdatatable", (void**)&(pWrapperTable->m_DataCapture_AddColumnsFromDataTable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_AddColumnsFromDataTable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datacapture_appenddatatable", (void**)&(pWrapperTable->m_DataCapture_AppendDataTable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataCapture_AppendDataTable == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getrowcount", (void**)&(pWrapperTable->m_DataTableReader_GetRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getfirstavailablerow", (void**)&(pWrapperTable->m_DataTableReader_GetFirstAvailableRow));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetFirstAvailableRow == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getcolumncount", (void**)&(pWrapperTable->m_DataTableReader_GetColumnCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetColumnCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_hascolumn", (void**)&(pWrapperTable->m_DataTableReader_HasColumn));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_HasColumn == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getcolumninformation", (void**)&(pWrapperTable->m_DataTableReader_GetColumnInformation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetColumnInformation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getcolumnquantization", (void**)&(pWrapperTable->m_DataTableReader_GetColumnQuantization));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetColumnQuantization == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getsegmentcount", (void**)&(pWrapperTable->m_DataTableReader_GetSegmentCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetSegmentCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getsegmentinformation", (void**)&(pWrapperTable->m_DataTableReader_GetSegmentInformation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetSegmentInformation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getchunkcount", (void**)&(pWrapperTable->m_DataTableReader_GetChunkCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetChunkCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getchunkinformation", (void**)&(pWrapperTable->m_DataTableReader_GetChunkInformation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetChunkInformation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_getchunkstatistics", (void**)&(pWrapperTable->m_DataTableReader_GetChunkStatistics));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_GetChunkStatistics == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_readdoublecolumnrange", (void**)&(pWrapperTable->m_DataTableReader_ReadDoubleColumnRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ReadDoubleColumnRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_readfloatcolumnrange", (void**)&(pWrapperTable->m_DataTableReader_ReadFloatColumnRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ReadFloatColumnRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_readint64columnrange", (void**)&(pWrapperTable->m_DataTableReader_ReadInt64ColumnRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ReadInt64ColumnRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_readboolcolumnrange", (void**)&(pWrapperTable->m_DataTableReader_ReadBoolColumnRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ReadBoolColumnRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_readcolumndownsampled", (void**)&(pWrapperTable->m_DataTableReader_ReadColumnDownsampled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ReadColumnDownsampled == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_findchunksinvaluerange", (void**)&(pWrapperTable->m_DataTableReader_FindChunksInValueRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_FindChunksInValueRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_datatablereader_extractdatatable", (void**)&(pWrapperTable->m_DataTableReader_ExtractDataTable));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DataTableReader_ExtractDataTable == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_dataseries_getname", (void**)&(pWrapperTable->m_DataSeries_GetName));
@@ -17446,6 +18827,34 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_buildexecution_loadattachedjournal", (void**)&(pWrapperTable->m_BuildExecution_LoadAttachedJournal));
 		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_LoadAttachedJournal == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_createdatacaptureoptions", (void**)&(pWrapperTable->m_BuildExecution_CreateDataCaptureOptions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_CreateDataCaptureOptions == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_createdatacapture", (void**)&(pWrapperTable->m_BuildExecution_CreateDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_CreateDataCapture == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_hasdatacapture", (void**)&(pWrapperTable->m_BuildExecution_HasDataCapture));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_HasDataCapture == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_getdatacapturerowcount", (void**)&(pWrapperTable->m_BuildExecution_GetDataCaptureRowCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_GetDataCaptureRowCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_getdatacapturesegmentcount", (void**)&(pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_GetDataCaptureSegmentCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_loaddatacapturesegment", (void**)&(pWrapperTable->m_BuildExecution_LoadDataCaptureSegment));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_LoadDataCaptureSegment == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_buildexecution_opendatacapturereader", (void**)&(pWrapperTable->m_BuildExecution_OpenDataCaptureReader));
+		if ( (eLookupError != 0) || (pWrapperTable->m_BuildExecution_OpenDataCaptureReader == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_buildexecutioniterator_getcurrentexecution", (void**)&(pWrapperTable->m_BuildExecutionIterator_GetCurrentExecution));
@@ -18884,6 +20293,10 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_ZIPStreamWriter_CreateZIPEntryFromStream == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_zipstreamwriter_discard", (void**)&(pWrapperTable->m_ZIPStreamWriter_Discard));
+		if ( (eLookupError != 0) || (pWrapperTable->m_ZIPStreamWriter_Discard == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_streamreader_getuuid", (void**)&(pWrapperTable->m_StreamReader_GetUUID));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StreamReader_GetUUID == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -20046,6 +21459,26 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformulaasbool", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_startstreamdownloadforsession", (void**)&(pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StartStreamDownloadForSession == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_getstreamdownloadprogress", (void**)&(pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetStreamDownloadProgress == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_cancelstreamdownloads", (void**)&(pWrapperTable->m_StateEnvironment_CancelStreamDownloads));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_CancelStreamDownloads == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_deletestoragestream", (void**)&(pWrapperTable->m_StateEnvironment_DeleteStorageStream));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_DeleteStorageStream == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_enforcestreamretention", (void**)&(pWrapperTable->m_StateEnvironment_EnforceStreamRetention));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EnforceStreamRetention == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uiitem_getname", (void**)&(pWrapperTable->m_UIItem_GetName));
@@ -22168,6 +23601,18 @@ public:
 	}
 	
 	/**
+	* CDataTable::GetRowCount64 - Returns the current row count as 64 bit value. GetRowCount is kept for ABI compatibility and truncates large row counts.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint64 CDataTable::GetRowCount64()
+	{
+		LibMCEnv_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetRowCount64(m_pHandle, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
 	* CDataTable::GetColumnCount - Returns the current column count.
 	* @return Number of columns.
 	*/
@@ -22311,6 +23756,48 @@ public:
 	}
 	
 	/**
+	* CDataTable::GetFloatColumnValues - Returns the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[out] ValuesBuffer - Value array of a column.
+	*/
+	void CDataTable::GetFloatColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_single> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetFloatColumnValues(m_pHandle, sIdentifier.c_str(), 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetFloatColumnValues(m_pHandle, sIdentifier.c_str(), elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTable::GetBoolColumnValues - Returns the values of a bool column as bytes (0 = false, 1 = true). Will fail if column does not exist or type is not bool.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[out] ValuesBuffer - Value array of a column. Each entry is 0 or 1.
+	*/
+	void CDataTable::GetBoolColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint8> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetBoolColumnValues(m_pHandle, sIdentifier.c_str(), 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetBoolColumnValues(m_pHandle, sIdentifier.c_str(), elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTable::GetTimestampColumnValues - Returns the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[out] ValuesBuffer - Value array of a column. Timestamps in microseconds.
+	*/
+	void CDataTable::GetTimestampColumnValues(const std::string & sIdentifier, std::vector<LibMCEnv_uint64> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetTimestampColumnValues(m_pHandle, sIdentifier.c_str(), 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_GetTimestampColumnValues(m_pHandle, sIdentifier.c_str(), elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
 	* CDataTable::SetDoubleColumnValues - Sets the values of a double column. Will fail if column does not exist or type is not double.
 	* @param[in] sIdentifier - Identifier of the column.
 	* @param[in] ValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
@@ -22358,6 +23845,36 @@ public:
 	void CDataTable::SetUint64ColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint64> & ValuesBuffer)
 	{
 		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_SetUint64ColumnValues(m_pHandle, sIdentifier.c_str(), (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTable::SetFloatColumnValues - Sets the values of a float (32 bit) column. Will fail if column does not exist or type is not float.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] ValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	void CDataTable::SetFloatColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_single> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_SetFloatColumnValues(m_pHandle, sIdentifier.c_str(), (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTable::SetBoolColumnValues - Sets the values of a bool column from bytes (0 = false, nonzero = true). Will fail if column does not exist or type is not bool.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] ValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	void CDataTable::SetBoolColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint8> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_SetBoolColumnValues(m_pHandle, sIdentifier.c_str(), (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTable::SetTimestampColumnValues - Sets the values of a timestamp column in microseconds. Will fail if column does not exist or type is not timestamp.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] ValuesBuffer - New Value array of a column. Array length should match RowCount. Values will be filled up with 0, if length is less than RowCount. RowCount will be extended if length is larger than RowCount.
+	*/
+	void CDataTable::SetTimestampColumnValues(const std::string & sIdentifier, const CInputVector<LibMCEnv_uint64> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTable_SetTimestampColumnValues(m_pHandle, sIdentifier.c_str(), (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
 	}
 	
 	/**
@@ -22454,6 +23971,805 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CScatterPlot>(m_pWrapper, hScatterPlot);
+	}
+	
+	/**
+	 * Method definitions for class CDataCaptureOptions
+	 */
+	
+	/**
+	* CDataCaptureOptions::SetChunkRowCount - Sets the number of rows a chunk can hold. Default is 65536.
+	* @param[in] nChunkRowCount - Rows per chunk. MUST be between 1 and 16777216.
+	*/
+	void CDataCaptureOptions::SetChunkRowCount(const LibMCEnv_uint32 nChunkRowCount)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetChunkRowCount(m_pHandle, nChunkRowCount));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetChunkRowCount - Returns the number of rows a chunk can hold.
+	* @return Rows per chunk.
+	*/
+	LibMCEnv_uint32 CDataCaptureOptions::GetChunkRowCount()
+	{
+		LibMCEnv_uint32 resultChunkRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetChunkRowCount(m_pHandle, &resultChunkRowCount));
+		
+		return resultChunkRowCount;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetSegmentSizeInBytes - Sets the size at which the capture rolls over into a new segment stream. Default is 1 GB.
+	* @param[in] nSegmentSizeInBytes - Maximum segment size in bytes. 0 means the capture never rolls over. A segment always holds at least one chunk.
+	*/
+	void CDataCaptureOptions::SetSegmentSizeInBytes(const LibMCEnv_uint64 nSegmentSizeInBytes)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetSegmentSizeInBytes(m_pHandle, nSegmentSizeInBytes));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetSegmentSizeInBytes - Returns the size at which the capture rolls over into a new segment stream.
+	* @return Maximum segment size in bytes. 0 means the capture never rolls over.
+	*/
+	LibMCEnv_uint64 CDataCaptureOptions::GetSegmentSizeInBytes()
+	{
+		LibMCEnv_uint64 resultSegmentSizeInBytes = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetSegmentSizeInBytes(m_pHandle, &resultSegmentSizeInBytes));
+		
+		return resultSegmentSizeInBytes;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetMaxQueuedChunks - Sets the maximum number of committed chunks that may wait for the writer thread. Default is 16.
+	* @param[in] nMaxQueuedChunks - Queue depth. MUST be between 1 and 1024.
+	*/
+	void CDataCaptureOptions::SetMaxQueuedChunks(const LibMCEnv_uint32 nMaxQueuedChunks)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetMaxQueuedChunks(m_pHandle, nMaxQueuedChunks));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetMaxQueuedChunks - Returns the maximum number of committed chunks that may wait for the writer thread.
+	* @return Queue depth.
+	*/
+	LibMCEnv_uint32 CDataCaptureOptions::GetMaxQueuedChunks()
+	{
+		LibMCEnv_uint32 resultMaxQueuedChunks = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetMaxQueuedChunks(m_pHandle, &resultMaxQueuedChunks));
+		
+		return resultMaxQueuedChunks;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetBackpressureMode - Sets what happens when the producer is faster than the disk. Default is Block.
+	* @param[in] eBackpressureMode - Block waits for the writer, DropOldest discards the oldest queued chunk, Fail raises an error.
+	*/
+	void CDataCaptureOptions::SetBackpressureMode(const eDataCaptureBackpressureMode eBackpressureMode)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetBackpressureMode(m_pHandle, eBackpressureMode));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetBackpressureMode - Returns what happens when the producer is faster than the disk.
+	* @return Backpressure mode.
+	*/
+	eDataCaptureBackpressureMode CDataCaptureOptions::GetBackpressureMode()
+	{
+		eDataCaptureBackpressureMode resultBackpressureMode = (eDataCaptureBackpressureMode) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetBackpressureMode(m_pHandle, &resultBackpressureMode));
+		
+		return resultBackpressureMode;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetStorageLimitInBytes - Sets the retention limit for all data capture segments stored on this machine. When it is exceeded after a segment has been finalized, the oldest stored segments are deleted first. Default is 0.
+	* @param[in] nStorageLimitInBytes - Total size limit in bytes. 0 disables retention.
+	*/
+	void CDataCaptureOptions::SetStorageLimitInBytes(const LibMCEnv_uint64 nStorageLimitInBytes)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetStorageLimitInBytes(m_pHandle, nStorageLimitInBytes));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetStorageLimitInBytes - Returns the retention limit for all data capture segments stored on this machine.
+	* @return Total size limit in bytes. 0 means retention is disabled.
+	*/
+	LibMCEnv_uint64 CDataCaptureOptions::GetStorageLimitInBytes()
+	{
+		LibMCEnv_uint64 resultStorageLimitInBytes = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetStorageLimitInBytes(m_pHandle, &resultStorageLimitInBytes));
+		
+		return resultStorageLimitInBytes;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetCompression - Sets the codec the pages of the capture are compressed with. Default is LZ4. A page is stored uncompressed if the codec does not make it smaller.
+	* @param[in] eCompression - None, LZ4 or Deflate. Deflate is meant for cold data, it costs considerably more processing time than LZ4.
+	*/
+	void CDataCaptureOptions::SetCompression(const eDataCaptureCompression eCompression)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetCompression(m_pHandle, eCompression));
+	}
+	
+	/**
+	* CDataCaptureOptions::GetCompression - Returns the codec the pages of the capture are compressed with.
+	* @return Compression codec.
+	*/
+	eDataCaptureCompression CDataCaptureOptions::GetCompression()
+	{
+		eDataCaptureCompression resultCompression = (eDataCaptureCompression) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_GetCompression(m_pHandle, &resultCompression));
+		
+		return resultCompression;
+	}
+	
+	/**
+	* CDataCaptureOptions::SetColumnEncoding - Sets the encoding of a column. Default is Automatic, which uses Delta for integer and timestamp columns, BitPack for bool columns and Plain for float and double columns. The column MUST exist when the capture starts recording and the encoding MUST fit its type.
+	* @param[in] sColumnIdentifier - Identifier of the column.
+	* @param[in] eEncoding - Automatic, Plain, Delta or BitPack.
+	*/
+	void CDataCaptureOptions::SetColumnEncoding(const std::string & sColumnIdentifier, const eDataCaptureEncoding eEncoding)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetColumnEncoding(m_pHandle, sColumnIdentifier.c_str(), eEncoding));
+	}
+	
+	/**
+	* CDataCaptureOptions::SetDoubleQuantization - Opts a double column into lossy storage: values are stored as integer multiples of the step with Delta encoding. Columns that are not quantised stay bit-exact. The step is recorded in the capture and the column MUST be a double column.
+	* @param[in] sColumnIdentifier - Identifier of the column.
+	* @param[in] dStep - Quantisation step. MUST be positive. 0 removes the quantisation.
+	*/
+	void CDataCaptureOptions::SetDoubleQuantization(const std::string & sColumnIdentifier, const LibMCEnv_double dStep)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureOptions_SetDoubleQuantization(m_pHandle, sColumnIdentifier.c_str(), dStep));
+	}
+	
+	/**
+	 * Method definitions for class CDataCaptureChunk
+	 */
+	
+	/**
+	* CDataCaptureChunk::GetCapacity - Returns the number of rows the chunk can hold.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint32 CDataCaptureChunk::GetCapacity()
+	{
+		LibMCEnv_uint32 resultCapacity = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_GetCapacity(m_pHandle, &resultCapacity));
+		
+		return resultCapacity;
+	}
+	
+	/**
+	* CDataCaptureChunk::GetRowCount - Returns the number of rows in the chunk. This is the row count of the longest column.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint32 CDataCaptureChunk::GetRowCount()
+	{
+		LibMCEnv_uint32 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_GetRowCount(m_pHandle, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	* CDataCaptureChunk::IsFull - Returns if the chunk has reached its capacity.
+	* @return Returns true if no more rows fit into the chunk.
+	*/
+	bool CDataCaptureChunk::IsFull()
+	{
+		bool resultFull = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_IsFull(m_pHandle, &resultFull));
+		
+		return resultFull;
+	}
+	
+	/**
+	* CDataCaptureChunk::SetDoubleColumnValues - Sets all rows of a double column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetDoubleColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_double> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetDoubleColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetInt32ColumnValues - Sets all rows of an int32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetInt32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_int32> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetInt32ColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetUint32ColumnValues - Sets all rows of an uint32 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetUint32ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint32> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetUint32ColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetInt64ColumnValues - Sets all rows of an int64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetInt64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_int64> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetInt64ColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetUint64ColumnValues - Sets all rows of an uint64 column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetUint64ColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint64> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetUint64ColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetFloatColumnValues - Sets all rows of a float (32 bit) column in this chunk. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetFloatColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_single> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetFloatColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetBoolColumnValues - Sets all rows of a bool column in this chunk from bytes (0 = false, nonzero = true). Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetBoolColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint8> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetBoolColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetTimestampColumnValues - Sets all rows of a timestamp column in this chunk in microseconds. Fails if the column type does not match or the capacity is exceeded.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] ValuesBuffer - Values of the column. All columns of a chunk MUST have the same length on commit.
+	*/
+	void CDataCaptureChunk::SetTimestampColumnValues(const LibMCEnv_uint32 nColumnIndex, const CInputVector<LibMCEnv_uint64> & ValuesBuffer)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetTimestampColumnValues(m_pHandle, nColumnIndex, (LibMCEnv_uint64)ValuesBuffer.size(), ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataCaptureChunk::BeginRow - Starts a new row at the end of the chunk. This is the convenience path for low-rate producers. Fails if the chunk is full, a row is open or the columns have different row counts.
+	*/
+	void CDataCaptureChunk::BeginRow()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_BeginRow(m_pHandle));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetRowDoubleValue - Sets a value of the open row. The column MUST be of type double or float.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] dValue - Value to set.
+	*/
+	void CDataCaptureChunk::SetRowDoubleValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_double dValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetRowDoubleValue(m_pHandle, nColumnIndex, dValue));
+	}
+	
+	/**
+	* CDataCaptureChunk::SetRowIntegerValue - Sets a value of the open row. The column MUST be of an integer, bool or timestamp type and the value MUST be in its range.
+	* @param[in] nColumnIndex - Index of the column. 0-based.
+	* @param[in] nValue - Value to set.
+	*/
+	void CDataCaptureChunk::SetRowIntegerValue(const LibMCEnv_uint32 nColumnIndex, const LibMCEnv_int64 nValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_SetRowIntegerValue(m_pHandle, nColumnIndex, nValue));
+	}
+	
+	/**
+	* CDataCaptureChunk::EndRow - Finishes the open row. Columns that have not been set in this row are zero.
+	*/
+	void CDataCaptureChunk::EndRow()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCaptureChunk_EndRow(m_pHandle));
+	}
+	
+	/**
+	 * Method definitions for class CDataCapture
+	 */
+	
+	/**
+	* CDataCapture::GetUUID - Returns the UUID of the capture.
+	* @return UUID of the capture.
+	*/
+	std::string CDataCapture::GetUUID()
+	{
+		LibMCEnv_uint32 bytesNeededUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
+	}
+	
+	/**
+	* CDataCapture::GetIdentifier - Returns the identifier of the capture. It is unique within the build execution.
+	* @return Identifier of the capture.
+	*/
+	std::string CDataCapture::GetIdentifier()
+	{
+		LibMCEnv_uint32 bytesNeededIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenIdentifier = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetIdentifier(m_pHandle, 0, &bytesNeededIdentifier, nullptr));
+		std::vector<char> bufferIdentifier(bytesNeededIdentifier);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetIdentifier(m_pHandle, bytesNeededIdentifier, &bytesWrittenIdentifier, &bufferIdentifier[0]));
+		
+		return std::string(&bufferIdentifier[0]);
+	}
+	
+	/**
+	* CDataCapture::GetName - Returns the human readable name of the capture.
+	* @return Name of the capture.
+	*/
+	std::string CDataCapture::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* CDataCapture::GetStatus - Returns the status of the capture.
+	* @return Status of the capture.
+	*/
+	eDataCaptureStatus CDataCapture::GetStatus()
+	{
+		eDataCaptureStatus resultStatus = (eDataCaptureStatus) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetStatus(m_pHandle, &resultStatus));
+		
+		return resultStatus;
+	}
+	
+	/**
+	* CDataCapture::AddColumn - Adds a column to the capture. The schema is frozen with the first call to BeginChunk.
+	* @param[in] sIdentifier - Identifier of the column. MUST be unique, alphanumeric and not empty.
+	* @param[in] sDescription - Description of the column.
+	* @param[in] eColumnType - Data type of the column.
+	*/
+	void CDataCapture::AddColumn(const std::string & sIdentifier, const std::string & sDescription, const eDataTableColumnType eColumnType)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_AddColumn(m_pHandle, sIdentifier.c_str(), sDescription.c_str(), eColumnType));
+	}
+	
+	/**
+	* CDataCapture::GetColumnCount - Returns the number of columns of the capture.
+	* @return Number of columns.
+	*/
+	LibMCEnv_uint32 CDataCapture::GetColumnCount()
+	{
+		LibMCEnv_uint32 resultColumnCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetColumnCount(m_pHandle, &resultColumnCount));
+		
+		return resultColumnCount;
+	}
+	
+	/**
+	* CDataCapture::BeginChunk - Borrows an empty chunk from the chunk pool. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies.
+	* @return Chunk to fill.
+	*/
+	PDataCaptureChunk CDataCapture::BeginChunk()
+	{
+		LibMCEnvHandle hChunkInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_BeginChunk(m_pHandle, &hChunkInstance));
+		
+		if (!hChunkInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCaptureChunk>(m_pWrapper, hChunkInstance);
+	}
+	
+	/**
+	* CDataCapture::CommitChunk - Hands a filled chunk over to the writer thread and returns immediately. All columns MUST have the same row count. The chunk instance MUST NOT be used afterwards.
+	* @param[in] pChunkInstance - Chunk that has been returned by BeginChunk.
+	*/
+	void CDataCapture::CommitChunk(classParam<CDataCaptureChunk> pChunkInstance)
+	{
+		LibMCEnvHandle hChunkInstance = pChunkInstance.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_CommitChunk(m_pHandle, hChunkInstance));
+	}
+	
+	/**
+	* CDataCapture::Flush - Blocks until all committed chunks have been written to storage.
+	*/
+	void CDataCapture::Flush()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Flush(m_pHandle));
+	}
+	
+	/**
+	* CDataCapture::GetCapturedRowCount - Returns the number of rows that have been committed and not dropped.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint64 CDataCapture::GetCapturedRowCount()
+	{
+		LibMCEnv_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetCapturedRowCount(m_pHandle, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	* CDataCapture::GetStorageSizeInBytes - Returns the number of bytes that have been written to storage so far.
+	* @return Size in bytes.
+	*/
+	LibMCEnv_uint64 CDataCapture::GetStorageSizeInBytes()
+	{
+		LibMCEnv_uint64 resultSizeInBytes = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetStorageSizeInBytes(m_pHandle, &resultSizeInBytes));
+		
+		return resultSizeInBytes;
+	}
+	
+	/**
+	* CDataCapture::GetSegmentCount - Returns the number of segment streams that have been opened so far.
+	* @return Number of segments.
+	*/
+	LibMCEnv_uint32 CDataCapture::GetSegmentCount()
+	{
+		LibMCEnv_uint32 resultSegmentCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetSegmentCount(m_pHandle, &resultSegmentCount));
+		
+		return resultSegmentCount;
+	}
+	
+	/**
+	* CDataCapture::GetQueuedChunkCount - Returns the number of committed chunks that are waiting for the writer thread.
+	* @return Number of queued chunks.
+	*/
+	LibMCEnv_uint32 CDataCapture::GetQueuedChunkCount()
+	{
+		LibMCEnv_uint32 resultQueuedChunkCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetQueuedChunkCount(m_pHandle, &resultQueuedChunkCount));
+		
+		return resultQueuedChunkCount;
+	}
+	
+	/**
+	* CDataCapture::GetDroppedRowCount - Returns the number of rows that have been discarded by the DropOldest backpressure mode.
+	* @return Number of dropped rows.
+	*/
+	LibMCEnv_uint64 CDataCapture::GetDroppedRowCount()
+	{
+		LibMCEnv_uint64 resultDroppedRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_GetDroppedRowCount(m_pHandle, &resultDroppedRowCount));
+		
+		return resultDroppedRowCount;
+	}
+	
+	/**
+	* CDataCapture::Finish - Writes all committed chunks, closes the last segment and marks the capture as finished. Fails if a chunk is uncommitted.
+	* @return UUID of the capture.
+	*/
+	std::string CDataCapture::Finish()
+	{
+		LibMCEnv_uint32 bytesNeededCaptureUUID = 0;
+		LibMCEnv_uint32 bytesWrittenCaptureUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Finish(m_pHandle, 0, &bytesNeededCaptureUUID, nullptr));
+		std::vector<char> bufferCaptureUUID(bytesNeededCaptureUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Finish(m_pHandle, bytesNeededCaptureUUID, &bytesWrittenCaptureUUID, &bufferCaptureUUID[0]));
+		
+		return std::string(&bufferCaptureUUID[0]);
+	}
+	
+	/**
+	* CDataCapture::Abort - Stops the capture and deletes all its segments.
+	*/
+	void CDataCapture::Abort()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_Abort(m_pHandle));
+	}
+	
+	/**
+	* CDataCapture::AddColumnsFromDataTable - Adds one column to the capture for every column of a data table, with the same identifier, description and type and in the same order. Fails if the schema is frozen or an identifier already exists.
+	* @param[in] pDataTable - Data table whose columns describe the schema. Its rows are not read.
+	*/
+	void CDataCapture::AddColumnsFromDataTable(classParam<CDataTable> pDataTable)
+	{
+		LibMCEnvHandle hDataTable = pDataTable.GetHandle();
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_AddColumnsFromDataTable(m_pHandle, hDataTable));
+	}
+	
+	/**
+	* CDataCapture::AppendDataTable - Appends all rows of a data table to the capture and splits them into chunks. Every column of the capture MUST exist in the table with the same identifier and type, and these columns MUST have the same row count. Further columns of the table are ignored. Freezes the schema on the first call. If no chunk is free, the backpressure mode of the capture applies. Fails if a chunk is uncommitted.
+	* @param[in] pDataTable - Data table that holds the rows to append.
+	* @return Number of rows that have been appended.
+	*/
+	LibMCEnv_uint64 CDataCapture::AppendDataTable(classParam<CDataTable> pDataTable)
+	{
+		LibMCEnvHandle hDataTable = pDataTable.GetHandle();
+		LibMCEnv_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataCapture_AppendDataTable(m_pHandle, hDataTable, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	 * Method definitions for class CDataTableReader
+	 */
+	
+	/**
+	* CDataTableReader::GetRowCount - Returns the number of rows of the capture, including rows in segments that have been deleted by retention.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint64 CDataTableReader::GetRowCount()
+	{
+		LibMCEnv_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetRowCount(m_pHandle, &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	* CDataTableReader::GetFirstAvailableRow - Returns the index of the first row that is still stored. Rows before it have been deleted by retention.
+	* @return Row index. Equal to the row count if nothing is stored.
+	*/
+	LibMCEnv_uint64 CDataTableReader::GetFirstAvailableRow()
+	{
+		LibMCEnv_uint64 resultFirstAvailableRow = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetFirstAvailableRow(m_pHandle, &resultFirstAvailableRow));
+		
+		return resultFirstAvailableRow;
+	}
+	
+	/**
+	* CDataTableReader::GetColumnCount - Returns the number of columns.
+	* @return Number of columns.
+	*/
+	LibMCEnv_uint32 CDataTableReader::GetColumnCount()
+	{
+		LibMCEnv_uint32 resultColumnCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetColumnCount(m_pHandle, &resultColumnCount));
+		
+		return resultColumnCount;
+	}
+	
+	/**
+	* CDataTableReader::HasColumn - Returns if a column exists.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @return Returns if the column exists.
+	*/
+	bool CDataTableReader::HasColumn(const std::string & sIdentifier)
+	{
+		bool resultColumnExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_HasColumn(m_pHandle, sIdentifier.c_str(), &resultColumnExists));
+		
+		return resultColumnExists;
+	}
+	
+	/**
+	* CDataTableReader::GetColumnInformation - Returns the schema information of a column. Fails if the index is out of bounds.
+	* @param[in] nColumnIndex - Index of column. 0-based.
+	* @param[out] sIdentifier - Identifier of the column.
+	* @param[out] sDescription - Description of the column.
+	* @param[out] eColumnType - Data type of the column.
+	*/
+	void CDataTableReader::GetColumnInformation(const LibMCEnv_uint32 nColumnIndex, std::string & sIdentifier, std::string & sDescription, eDataTableColumnType & eColumnType)
+	{
+		LibMCEnv_uint32 bytesNeededIdentifier = 0;
+		LibMCEnv_uint32 bytesWrittenIdentifier = 0;
+		LibMCEnv_uint32 bytesNeededDescription = 0;
+		LibMCEnv_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetColumnInformation(m_pHandle, nColumnIndex, 0, &bytesNeededIdentifier, nullptr, 0, &bytesNeededDescription, nullptr, &eColumnType));
+		std::vector<char> bufferIdentifier(bytesNeededIdentifier);
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetColumnInformation(m_pHandle, nColumnIndex, bytesNeededIdentifier, &bytesWrittenIdentifier, &bufferIdentifier[0], bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0], &eColumnType));
+		sIdentifier = std::string(&bufferIdentifier[0]);
+		sDescription = std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* CDataTableReader::GetColumnQuantization - Returns the quantisation step of a column. Values of a quantised column are exact to half a step.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @return Quantisation step. 0 if the column is not quantised.
+	*/
+	LibMCEnv_double CDataTableReader::GetColumnQuantization(const std::string & sIdentifier)
+	{
+		LibMCEnv_double resultStep = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetColumnQuantization(m_pHandle, sIdentifier.c_str(), &resultStep));
+		
+		return resultStep;
+	}
+	
+	/**
+	* CDataTableReader::GetSegmentCount - Returns the number of segments of the capture, including deleted ones.
+	* @return Number of segments.
+	*/
+	LibMCEnv_uint32 CDataTableReader::GetSegmentCount()
+	{
+		LibMCEnv_uint32 resultSegmentCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetSegmentCount(m_pHandle, &resultSegmentCount));
+		
+		return resultSegmentCount;
+	}
+	
+	/**
+	* CDataTableReader::GetSegmentInformation - Returns the row range and the size of a segment. Fails if the index is out of bounds.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @param[out] nFirstRow - Index of the first row of the segment.
+	* @param[out] nRowCount - Number of rows in the segment.
+	* @param[out] nSizeInBytes - Size of the segment stream in bytes.
+	* @param[out] bIsAvailable - Returns false if the segment has been deleted by retention.
+	*/
+	void CDataTableReader::GetSegmentInformation(const LibMCEnv_uint32 nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, LibMCEnv_uint64 & nSizeInBytes, bool & bIsAvailable)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetSegmentInformation(m_pHandle, nSegmentIndex, &nFirstRow, &nRowCount, &nSizeInBytes, &bIsAvailable));
+	}
+	
+	/**
+	* CDataTableReader::GetChunkCount - Returns the number of chunks of the capture, including chunks in deleted segments.
+	* @return Number of chunks.
+	*/
+	LibMCEnv_uint64 CDataTableReader::GetChunkCount()
+	{
+		LibMCEnv_uint64 resultChunkCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetChunkCount(m_pHandle, &resultChunkCount));
+		
+		return resultChunkCount;
+	}
+	
+	/**
+	* CDataTableReader::GetChunkInformation - Returns the position of a chunk. Fails if the index is out of bounds.
+	* @param[in] nChunkIndex - Index of the chunk. 0-based.
+	* @param[out] nSegmentIndex - Index of the segment that holds the chunk.
+	* @param[out] nFirstRow - Index of the first row of the chunk. For a chunk in a deleted segment this is the first row of the segment.
+	* @param[out] nRowCount - Number of rows in the chunk. 0 for a chunk in a deleted segment.
+	* @param[out] bIsAvailable - Returns false if the chunk has been deleted by retention.
+	*/
+	void CDataTableReader::GetChunkInformation(const LibMCEnv_uint64 nChunkIndex, LibMCEnv_uint32 & nSegmentIndex, LibMCEnv_uint64 & nFirstRow, LibMCEnv_uint64 & nRowCount, bool & bIsAvailable)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetChunkInformation(m_pHandle, nChunkIndex, &nSegmentIndex, &nFirstRow, &nRowCount, &bIsAvailable));
+	}
+	
+	/**
+	* CDataTableReader::GetChunkStatistics - Returns the minimum and maximum of a column in a chunk from the page directory, without reading the chunk.
+	* @param[in] nChunkIndex - Index of the chunk. 0-based.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[out] dMinValue - Minimum value of the column in the chunk.
+	* @param[out] dMaxValue - Maximum value of the column in the chunk.
+	* @return Returns false if the chunk has been deleted or holds no comparable value.
+	*/
+	bool CDataTableReader::GetChunkStatistics(const LibMCEnv_uint64 nChunkIndex, const std::string & sIdentifier, LibMCEnv_double & dMinValue, LibMCEnv_double & dMaxValue)
+	{
+		bool resultHasStatistics = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_GetChunkStatistics(m_pHandle, nChunkIndex, sIdentifier.c_str(), &dMinValue, &dMaxValue, &resultHasStatistics));
+		
+		return resultHasStatistics;
+	}
+	
+	/**
+	* CDataTableReader::ReadDoubleColumnRange - Reads a row range of a column as doubles. Works for every column type. Only the pages that overlap the range are read.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[out] ValuesBuffer - Values of the row range.
+	*/
+	void CDataTableReader::ReadDoubleColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_double> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadDoubleColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadDoubleColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::ReadFloatColumnRange - Reads a row range of a float or double column as floats.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[out] ValuesBuffer - Values of the row range.
+	*/
+	void CDataTableReader::ReadFloatColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_single> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadFloatColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadFloatColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::ReadInt64ColumnRange - Reads a row range of an integer, bool or timestamp column as 64 bit integers.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[out] ValuesBuffer - Values of the row range.
+	*/
+	void CDataTableReader::ReadInt64ColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_int64> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadInt64ColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadInt64ColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::ReadBoolColumnRange - Reads a row range of a bool column as bytes (0 = false, 1 = true).
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row to read.
+	* @param[in] nRowCount - Number of rows to read.
+	* @param[out] ValuesBuffer - Values of the row range.
+	*/
+	void CDataTableReader::ReadBoolColumnRange(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, std::vector<LibMCEnv_uint8> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadBoolColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadBoolColumnRange(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::ReadColumnDownsampled - Reduces a row range of a column to at most TargetPoints buckets without materialising the range. Stride returns the first value of each bucket, Average the mean and MinMax the minimum followed by the maximum of each bucket, which preserves the envelope of the signal.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] nFromRow - Index of the first row of the range.
+	* @param[in] nRowCount - Number of rows of the range.
+	* @param[in] nTargetPoints - Maximum number of buckets. MUST be positive.
+	* @param[in] eMode - Stride, MinMax or Average.
+	* @param[out] ValuesBuffer - One value per bucket, or two values per bucket in MinMax mode. The number of buckets is the smaller of TargetPoints and RowCount.
+	*/
+	void CDataTableReader::ReadColumnDownsampled(const std::string & sIdentifier, const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const LibMCEnv_uint32 nTargetPoints, const eDataTableDownsampleMode eMode, std::vector<LibMCEnv_double> & ValuesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededValues = 0;
+		LibMCEnv_uint64 elementsWrittenValues = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadColumnDownsampled(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, nTargetPoints, eMode, 0, &elementsNeededValues, nullptr));
+		ValuesBuffer.resize((size_t) elementsNeededValues);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ReadColumnDownsampled(m_pHandle, sIdentifier.c_str(), nFromRow, nRowCount, nTargetPoints, eMode, elementsNeededValues, &elementsWrittenValues, ValuesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::FindChunksInValueRange - Finds the chunks whose value range of a column overlaps a given range. Only the page directory is used, no chunk is read.
+	* @param[in] sIdentifier - Identifier of the column.
+	* @param[in] dMinValue - Lower bound of the value range.
+	* @param[in] dMaxValue - Upper bound of the value range.
+	* @param[out] ChunkIndicesBuffer - Indices of the chunks that may hold a value in the range.
+	*/
+	void CDataTableReader::FindChunksInValueRange(const std::string & sIdentifier, const LibMCEnv_double dMinValue, const LibMCEnv_double dMaxValue, std::vector<LibMCEnv_uint64> & ChunkIndicesBuffer)
+	{
+		LibMCEnv_uint64 elementsNeededChunkIndices = 0;
+		LibMCEnv_uint64 elementsWrittenChunkIndices = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_FindChunksInValueRange(m_pHandle, sIdentifier.c_str(), dMinValue, dMaxValue, 0, &elementsNeededChunkIndices, nullptr));
+		ChunkIndicesBuffer.resize((size_t) elementsNeededChunkIndices);
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_FindChunksInValueRange(m_pHandle, sIdentifier.c_str(), dMinValue, dMaxValue, elementsNeededChunkIndices, &elementsWrittenChunkIndices, ChunkIndicesBuffer.data()));
+	}
+	
+	/**
+	* CDataTableReader::ExtractDataTable - Materialises a row range as an ordinary in-memory data table.
+	* @param[in] nFromRow - Index of the first row of the range.
+	* @param[in] nRowCount - Number of rows of the range.
+	* @param[in] sColumnIdentifiers - Comma separated identifiers of the columns to extract. An empty string extracts all columns.
+	* @return Data table instance.
+	*/
+	PDataTable CDataTableReader::ExtractDataTable(const LibMCEnv_uint64 nFromRow, const LibMCEnv_uint64 nRowCount, const std::string & sColumnIdentifiers)
+	{
+		LibMCEnvHandle hDataTableInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_DataTableReader_ExtractDataTable(m_pHandle, nFromRow, nRowCount, sColumnIdentifiers.c_str(), &hDataTableInstance));
+		
+		if (!hDataTableInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataTable>(m_pWrapper, hDataTableInstance);
 	}
 	
 	/**
@@ -25985,6 +28301,113 @@ public:
 			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CJournalHandler>(m_pWrapper, hJournalHandler);
+	}
+	
+	/**
+	* CBuildExecution::CreateDataCaptureOptions - Creates an options object for a data capture with default values.
+	* @return Data capture options instance.
+	*/
+	PDataCaptureOptions CBuildExecution::CreateDataCaptureOptions()
+	{
+		LibMCEnvHandle hOptions = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_CreateDataCaptureOptions(m_pHandle, &hOptions));
+		
+		if (!hOptions) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCaptureOptions>(m_pWrapper, hOptions);
+	}
+	
+	/**
+	* CBuildExecution::CreateDataCapture - Creates a streaming data capture in this build execution. The execution MUST be in process.
+	* @param[in] sIdentifier - Unique identifier of the capture in this execution. Fails if the identifier already exists or is invalid.
+	* @param[in] sName - Human readable name of the capture.
+	* @param[in] pOptions - Data capture options. Defaults are used if not given.
+	* @param[in] sUserUUID - User UUID of the user that this data comes from. Empty string means no user attached.
+	* @return Data capture instance.
+	*/
+	PDataCapture CBuildExecution::CreateDataCapture(const std::string & sIdentifier, const std::string & sName, classParam<CDataCaptureOptions> pOptions, const std::string & sUserUUID)
+	{
+		LibMCEnvHandle hOptions = pOptions.GetHandle();
+		LibMCEnvHandle hDataCaptureInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_CreateDataCapture(m_pHandle, sIdentifier.c_str(), sName.c_str(), hOptions, sUserUUID.c_str(), &hDataCaptureInstance));
+		
+		if (!hDataCaptureInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataCapture>(m_pWrapper, hDataCaptureInstance);
+	}
+	
+	/**
+	* CBuildExecution::HasDataCapture - Returns if the execution has a data capture with a certain identifier.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Returns true if the capture exists.
+	*/
+	bool CBuildExecution::HasDataCapture(const std::string & sIdentifier)
+	{
+		bool resultCaptureExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_HasDataCapture(m_pHandle, sIdentifier.c_str(), &resultCaptureExists));
+		
+		return resultCaptureExists;
+	}
+	
+	/**
+	* CBuildExecution::GetDataCaptureRowCount - Returns the number of rows of a data capture that have been stored in segments. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Number of rows.
+	*/
+	LibMCEnv_uint64 CBuildExecution::GetDataCaptureRowCount(const std::string & sIdentifier)
+	{
+		LibMCEnv_uint64 resultRowCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_GetDataCaptureRowCount(m_pHandle, sIdentifier.c_str(), &resultRowCount));
+		
+		return resultRowCount;
+	}
+	
+	/**
+	* CBuildExecution::GetDataCaptureSegmentCount - Returns the number of stored segments of a data capture. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Number of segments.
+	*/
+	LibMCEnv_uint32 CBuildExecution::GetDataCaptureSegmentCount(const std::string & sIdentifier)
+	{
+		LibMCEnv_uint32 resultSegmentCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_GetDataCaptureSegmentCount(m_pHandle, sIdentifier.c_str(), &resultSegmentCount));
+		
+		return resultSegmentCount;
+	}
+	
+	/**
+	* CBuildExecution::LoadDataCaptureSegment - Loads one segment of a data capture as in-memory data table. Fails if the capture or the segment does not exist or the segment has been deleted by retention.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @param[in] nSegmentIndex - Index of the segment. 0-based.
+	* @return Loaded data table instance.
+	*/
+	PDataTable CBuildExecution::LoadDataCaptureSegment(const std::string & sIdentifier, const LibMCEnv_uint32 nSegmentIndex)
+	{
+		LibMCEnvHandle hDataTableInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_LoadDataCaptureSegment(m_pHandle, sIdentifier.c_str(), nSegmentIndex, &hDataTableInstance));
+		
+		if (!hDataTableInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataTable>(m_pWrapper, hDataTableInstance);
+	}
+	
+	/**
+	* CBuildExecution::OpenDataCaptureReader - Opens a reader on the stored segments of a data capture. Fails if the capture does not exist.
+	* @param[in] sIdentifier - Identifier of the capture.
+	* @return Reader instance.
+	*/
+	PDataTableReader CBuildExecution::OpenDataCaptureReader(const std::string & sIdentifier)
+	{
+		LibMCEnvHandle hReaderInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_BuildExecution_OpenDataCaptureReader(m_pHandle, sIdentifier.c_str(), &hReaderInstance));
+		
+		if (!hReaderInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDataTableReader>(m_pWrapper, hReaderInstance);
 	}
 	
 	/**
@@ -30874,6 +33297,14 @@ public:
 	}
 	
 	/**
+	* CZIPStreamWriter::Discard - Discards the unfinished ZIP stream. The file on disk and the stream entry are deleted. Fails if the stream has been finished already. A ZIP writer that is released without Finish is discarded automatically.
+	*/
+	void CZIPStreamWriter::Discard()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_ZIPStreamWriter_Discard(m_pHandle));
+	}
+	
+	/**
 	 * Method definitions for class CStreamReader
 	 */
 	
@@ -35174,6 +37605,71 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormulaAsBool(m_pHandle, sFormula.c_str(), &resultValue));
 		
 		return resultValue;
+	}
+	
+	/**
+	* CStateEnvironment::StartStreamDownloadForSession - Starts a stream download in the browser of a client session. Creates a download ticket for the user of the session and queues the download action for delivery to the session. Returns false if the session does not exist or is not authorized.
+	* @param[in] sSessionUUID - UUID of the client session.
+	* @param[in] sStreamUUID - Storage stream. Fails if the stream does not exist or is not finished.
+	* @param[in] sFileName - File name offered to the browser. Fails if empty.
+	* @return True if the download action was queued for the session.
+	*/
+	bool CStateEnvironment::StartStreamDownloadForSession(const std::string & sSessionUUID, const std::string & sStreamUUID, const std::string & sFileName)
+	{
+		bool resultSuccess = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StartStreamDownloadForSession(m_pHandle, sSessionUUID.c_str(), sStreamUUID.c_str(), sFileName.c_str(), &resultSuccess));
+		
+		return resultSuccess;
+	}
+	
+	/**
+	* CStateEnvironment::GetStreamDownloadProgress - Returns the delivery progress of all downloads of a storage stream.
+	* @param[in] sStreamUUID - Storage stream.
+	* @param[out] nActiveConnections - Connections that are sending the stream right now.
+	* @param[out] nDeliveredBytes - Bytes from the start of the stream that were sent without a gap.
+	* @param[out] nTotalBytes - Size of the stream.
+	* @param[out] bCompleted - The last byte was sent and its connection ended successfully.
+	* @param[out] nMillisecondsSinceActivity - Time since the last chunk was sent or since the download was handed over.
+	*/
+	void CStateEnvironment::GetStreamDownloadProgress(const std::string & sStreamUUID, LibMCEnv_uint32 & nActiveConnections, LibMCEnv_uint64 & nDeliveredBytes, LibMCEnv_uint64 & nTotalBytes, bool & bCompleted, LibMCEnv_uint64 & nMillisecondsSinceActivity)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetStreamDownloadProgress(m_pHandle, sStreamUUID.c_str(), &nActiveConnections, &nDeliveredBytes, &nTotalBytes, &bCompleted, &nMillisecondsSinceActivity));
+	}
+	
+	/**
+	* CStateEnvironment::CancelStreamDownloads - Stops all running downloads of a storage stream, revokes its download tickets and drops its unclaimed download actions. Does nothing if the stream was already delivered completely.
+	* @param[in] sStreamUUID - Storage stream.
+	* @return False if the download had already completed and nothing was cancelled.
+	*/
+	bool CStateEnvironment::CancelStreamDownloads(const std::string & sStreamUUID)
+	{
+		bool resultCancelled = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_CancelStreamDownloads(m_pHandle, sStreamUUID.c_str(), &resultCancelled));
+		
+		return resultCancelled;
+	}
+	
+	/**
+	* CStateEnvironment::DeleteStorageStream - Deletes a finished storage stream from disk and database, including its download tickets. Fails if the stream does not exist, is still being written or is being downloaded right now.
+	* @param[in] sUUID - UUID of the storage stream.
+	*/
+	void CStateEnvironment::DeleteStorageStream(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_DeleteStorageStream(m_pHandle, sUUID.c_str()));
+	}
+	
+	/**
+	* CStateEnvironment::EnforceStreamRetention - Deletes all finished streams with the given name except the newest ones. Streams with running downloads or pending download actions are kept. Returns the number of deleted streams.
+	* @param[in] sName - Name of the streams.
+	* @param[in] nKeepCount - Number of newest streams to keep.
+	* @return Number of deleted streams.
+	*/
+	LibMCEnv_uint32 CStateEnvironment::EnforceStreamRetention(const std::string & sName, const LibMCEnv_uint32 nKeepCount)
+	{
+		LibMCEnv_uint32 resultDeletedCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EnforceStreamRetention(m_pHandle, sName.c_str(), nKeepCount, &resultDeletedCount));
+		
+		return resultDeletedCount;
 	}
 	
 	/**
