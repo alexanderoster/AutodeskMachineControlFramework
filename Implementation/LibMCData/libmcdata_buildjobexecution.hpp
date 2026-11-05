@@ -36,6 +36,7 @@ Abstract: This is the class declaration of CBuildJobExecution
 #define __LIBMCDATA_BUILDJOBEXECUTION
 
 #include <cstdint>
+#include <optional>
 #include "libmcdata_interfaces.hpp"
 #include "libmcdata_buildjobexecutiondata.hpp"
 
@@ -55,7 +56,29 @@ namespace Impl {
 
 
 /*************************************************************************************************************************
- Class declaration of CBuildJobExecution 
+ Parent build job values, read together with the execution (LEFT JOIN on buildjobs).
+**************************************************************************************************************************/
+
+struct sBuildJobExecutionLoadedJob {
+	std::string m_sName;
+	eBuildJobStatus m_Status;
+	uint32_t m_nLayerCount;
+	std::string m_sThumbnailStreamUUID;
+};
+
+/*************************************************************************************************************************
+ Execution values that are loaded together with a build job execution and returned by the GetLoaded* getters
+ without another database query. The other mutable getters (GetStatus, GetDescription, ...) keep reading fresh.
+**************************************************************************************************************************/
+
+struct sBuildJobExecutionLoadedValues {
+	eBuildJobExecutionStatus m_Status;
+	std::string m_sDescription;
+	std::optional<uint64_t> m_EndTimeStamp; // empty if endjournaltimestamp is not a valid time stamp (as while in process)
+};
+
+/*************************************************************************************************************************
+ Class declaration of CBuildJobExecution
 **************************************************************************************************************************/
 
 class CBuildJobExecution : public virtual IBuildJobExecution, public virtual CBase {
@@ -70,17 +93,27 @@ private:
 
 	// Build Job related information
 	std::string m_sJobUUID;
-	std::string m_sJobName;
-	eBuildJobStatus m_JobStatus;
-	uint32_t m_nJobLayerCount;
+	sBuildJobExecutionLoadedJob m_LoadedJob;
+
+	sBuildJobExecutionLoadedValues m_LoadedValues;
 
 	CBuildJobExecutionData* makeJobExecutionDataEx(AMCData::CSQLStatement* pStatement);
 	IBuildJobExecutionDataIterator* listJobExecutionDataEx(AMCData::CSQLStatement* pStatement);
 
+	// Parses an endjournaltimestamp column; empty if it is not a valid time stamp.
+	static std::optional<uint64_t> parseEndTimeStamp(const std::string& sEndTimeStamp);
+	static uint64_t endTimeStampFromValues(const std::string& sExecutionUUID, uint64_t nStartTimeStamp, eBuildJobExecutionStatus eStatus, const std::optional<uint64_t>& endTimeStamp);
+	static uint64_t elapsedTimeFromValues(const std::string& sExecutionUUID, uint64_t nStartTimeStamp, bool bIsFromCurrentJournal, eBuildJobExecutionStatus eStatus, const std::optional<uint64_t>& endTimeStamp, const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure);
+
+	bool isFromCurrentJournal();
 
 public:
 
 	static void bumpIncrementalID(AMCData::PSQLHandler pSQLHandler, const std::string& sExecutionUUID);
+
+	// "SELECT <columns> FROM buildjobexecutions LEFT JOIN buildjobs" in the column order makeFromStatement reads,
+	// without any condition. Callers append their WHERE and ORDER BY clauses.
+	static std::string selectQueryWithoutConditions();
 
 	static CBuildJobExecution* makeFrom(CBuildJobExecution * pBuildJobExecution);
 
@@ -94,7 +127,7 @@ public:
 
 	static std::shared_ptr<CBuildJobExecution> makeSharedFromStatement(AMCData::PSQLHandler pSQLHandler, AMCData::PSQLStatement pStatement, AMCData::PStorageState pStorageState);
 
-	CBuildJobExecution(AMCData::PSQLHandler pSQLHandler, const std::string& sExecutionUUID, const std::string& sJobUUID, const std::string& sJournalUUID, const std::string& sUserUUID, uint64_t nStartJournalTimeStamp, const std::string & sJobName, eBuildJobStatus jobStatus, uint32_t nJobLayerCount, AMCData::PStorageState pStorageState);
+	CBuildJobExecution(AMCData::PSQLHandler pSQLHandler, const std::string& sExecutionUUID, const std::string& sJobUUID, const std::string& sJournalUUID, const std::string& sUserUUID, uint64_t nStartJournalTimeStamp, const sBuildJobExecutionLoadedJob& loadedJob, const sBuildJobExecutionLoadedValues& loadedValues, AMCData::PStorageState pStorageState);
 
 	virtual ~CBuildJobExecution();
 
@@ -129,6 +162,20 @@ public:
 	LibMCData_uint64 GetEndTimeStampInMicroseconds() override;
 
 	LibMCData_uint64 ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure);
+
+	LibMCData::eBuildJobExecutionStatus GetLoadedStatus() override;
+
+	std::string GetLoadedStatusString() override;
+
+	std::string GetLoadedDescription() override;
+
+	LibMCData_uint64 GetLoadedEndTimeStampInMicroseconds() override;
+
+	LibMCData_uint64 ComputeLoadedElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure) override;
+
+	bool JobHasThumbnailStream() override;
+
+	std::string GetJobThumbnailStreamUUID() override;
 
 	std::string AddJobExecutionData(const std::string& sIdentifier, const std::string& sName, IStorageStream* pStream, const LibMCData::eCustomDataType eDataType, const std::string& sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp) override;
 

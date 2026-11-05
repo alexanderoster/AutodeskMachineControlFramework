@@ -1608,6 +1608,50 @@ public:
 	virtual LibMCData_uint64 ComputeElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure) = 0;
 
 	/**
+	* IBuildJobExecution::GetLoadedStatus - returns the build job execution status as loaded when this instance was created (for example by ListJobExecutions). Does not query the database; use GetStatus for the current value.
+	* @return Status Value
+	*/
+	virtual LibMCData::eBuildJobExecutionStatus GetLoadedStatus() = 0;
+
+	/**
+	* IBuildJobExecution::GetLoadedStatusString - returns the build job execution status as string, as loaded when this instance was created. Does not query the database; use GetStatusString for the current value.
+	* @return Status Value
+	*/
+	virtual std::string GetLoadedStatusString() = 0;
+
+	/**
+	* IBuildJobExecution::GetLoadedDescription - returns the build job execution description as loaded when this instance was created. Does not query the database; use GetDescription for the current value.
+	* @return Description at load time.
+	*/
+	virtual std::string GetLoadedDescription() = 0;
+
+	/**
+	* IBuildJobExecution::GetLoadedEndTimeStampInMicroseconds - Returns the end time stamp of the build execution as loaded when this instance was created. Loaded status MUST BE Finished or Failed. Does not query the database; use GetEndTimeStampInMicroseconds for the current value.
+	* @return TimeStamp when the build ended in Microseconds.
+	*/
+	virtual LibMCData_uint64 GetLoadedEndTimeStampInMicroseconds() = 0;
+
+	/**
+	* IBuildJobExecution::ComputeLoadedElapsedTimeInMicroseconds - Same as ComputeElapsedTimeInMicroseconds, but based on the status and end time stamp loaded when this instance was created. Does not query the database.
+	* @param[in] nGlobalTimerInMicroseconds - The current session global timer.
+	* @param[in] bThrowExceptionInFailure - If true, the method will throw exceptions in any error case. If false, it will just return 0 in any error case.
+	* @return Elapsed time in Microseconds.
+	*/
+	virtual LibMCData_uint64 ComputeLoadedElapsedTimeInMicroseconds(const LibMCData_uint64 nGlobalTimerInMicroseconds, const bool bThrowExceptionInFailure) = 0;
+
+	/**
+	* IBuildJobExecution::JobHasThumbnailStream - returns if the parent build job had a thumbnail attached when this instance was loaded. Does not query the database.
+	* @return Returns true, if the parent build job has an attached thumbnail.
+	*/
+	virtual bool JobHasThumbnailStream() = 0;
+
+	/**
+	* IBuildJobExecution::GetJobThumbnailStreamUUID - returns the UUID of the thumbnail stream of the parent build job, as loaded when this instance was created. Does not query the database.
+	* @return Thumbnail UUID. 00000000-0000-0000-0000-000000000000, if no thumbnail is assigned or the parent build job does not exist.
+	*/
+	virtual std::string GetJobThumbnailStreamUUID() = 0;
+
+	/**
 	* IBuildJobExecution::AddJobExecutionData - Adds additional data to the Job Execution.
 	* @param[in] sIdentifier - Unique identifier for the job data.
 	* @param[in] sName - Name of the job data
