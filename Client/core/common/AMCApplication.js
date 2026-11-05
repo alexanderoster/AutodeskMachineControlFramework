@@ -74,6 +74,9 @@ import AMCApplicationDialog from "./AMCDialog.js"
 
 const CONFIG_REQUEST_TIMEOUT_MS = 2000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+// /upload/finish makes the server hash the whole stream, so its duration grows with the file size
+// (a large file can take more than 10 s on slow hardware). Like the chunk POSTs it runs without a timeout.
+const UPLOAD_FINISH_TIMEOUT_MS = 0;
 const MAX_CONSECUTIVE_FAILURES = 5;
 
 // Client reactivity metrics: aggregate /api/frontend roundtrips over this window
@@ -1825,11 +1828,11 @@ export default class AMCApplication extends Common.AMCObject {
 					
 					uploadObject.setStateMessageToWaiting ();
 					
-                    application.axiosPostRequest("/upload/" + uploadObject.streamuuid + "/finish", {
+                    return application.axiosPostRequest("/upload/" + uploadObject.streamuuid + "/finish", {
                         "streamuuid": uploadObject.streamuuid,
 						"context": "build",
                         "sha256": checkSum
-                    })
+                    }, { timeout: UPLOAD_FINISH_TIMEOUT_MS })
                     .then(resultUploadFinish => {
 
 						uploadObject.clearUploadState ();
@@ -1879,7 +1882,7 @@ export default class AMCApplication extends Common.AMCObject {
 				}
 			})
             .catch(err => {
-                err;
+                uploadObject.failUpload (err);
             });
 		
 		
@@ -1914,7 +1917,7 @@ export default class AMCApplication extends Common.AMCObject {
 				
 			})
             .catch(err => {
-                err;
+                itemState.failUpload (err);
 /*                if (failureeventname)
                     this.triggerUIEvent(failureeventname, itemuuid, {}); */
             });
@@ -1955,11 +1958,11 @@ export default class AMCApplication extends Common.AMCObject {
 					
 					uploadObject.setStateMessageToWaiting ();
 					
-                    application.axiosPostRequest("/upload/finish", {
+                    return application.axiosPostRequest("/upload/finish", {
                         "streamuuid": uploadObject.streamuuid,
 						"context": "image",
                         "sha256": checkSum
-                    })
+                    }, { timeout: UPLOAD_FINISH_TIMEOUT_MS })
                     .then(resultUploadFinish => {
                         
 						uploadObject.clearUploadState ();
@@ -2010,7 +2013,7 @@ export default class AMCApplication extends Common.AMCObject {
 				}
 			})
             .catch(err => {
-                err;
+                uploadObject.failUpload (err);
             });
 		
 		
@@ -2047,7 +2050,7 @@ export default class AMCApplication extends Common.AMCObject {
 				
 			})
             .catch(err => {
-                err;
+                itemState.failUpload (err);
 /*                if (failureeventname)
                     this.triggerUIEvent(failureeventname, itemuuid, {}); */
             });

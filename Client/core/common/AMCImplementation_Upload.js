@@ -220,6 +220,13 @@ export default class AMCUpload extends Common.AMCObject {
 		}
 	}
 	
+	failUpload (reason)
+	{
+		if (this.itemState) {
+			this.itemState.failUpload (reason);
+		}
+	}
+	
 	clearUploadState ()
 	{
 		if (this.itemState) {
