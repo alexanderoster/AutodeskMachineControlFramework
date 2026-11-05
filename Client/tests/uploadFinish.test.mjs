@@ -93,3 +93,47 @@ for (const [label, start] of [
 		assert.equal (state.getUploadID (), 0, "upload no longer active");
 	});
 }
+
+// A finish request of an upload that a newer upload in the same widget has replaced (the user picked or
+// dropped another file meanwhile) must not end the newer upload when it fails.
+for (const [label, start] of [
+	["image", (app, state) => app.performImageUpload (state, "onsuccess", "onfailure")],
+	["build", (app, state) => app.performJobUpload (state, "onsuccess", "onfailure")],
+]) {
+	test (`${label} upload: a failed finish of a replaced upload leaves the newer upload alone`, async () => {
+		const { app, state, requests } = createUpload ("resolve");
+
+		const pendingFinishes = [];
+		app.axiosPostRequest = (url, data, config) => {
+			requests.posts.push ({ url, data, config });
+			if (url === "/upload/")
+				return Promise.resolve ({ data: { streamuuid: STREAM_UUID } });
+			if (url.endsWith ("/finish"))
+				return new Promise ((resolve, reject) => pendingFinishes.push ({ resolve, reject }));
+			return Promise.reject (new Error ("unexpected POST " + url));
+		};
+
+		start (app, state);
+		await settle ();
+		assert.equal (pendingFinishes.length, 1, "first finish request pending");
+
+		const second = { complete: 0, error: 0 };
+		state.setChosenFile (new File ([new Uint8Array (1024)], "second.mp4", { type: "video/mp4" }));
+		const secondUploadID = state.generateUploadID ();
+		state._onComplete = () => { second.complete++; };
+		state._onError = () => { second.error++; };
+		start (app, state);
+		await settle ();
+		assert.equal (pendingFinishes.length, 2, "second finish request pending");
+
+		pendingFinishes[0].reject (new Error ("checksum mismatch"));
+		await settle ();
+		assert.equal (second.error, 0, "newer upload not failed");
+		assert.equal (state.getUploadID (), secondUploadID, "newer upload still active");
+
+		pendingFinishes[1].resolve ({ data: { contextuuid: CONTEXT_UUID } });
+		await settle ();
+		assert.equal (second.complete, 1);
+		assert.deepEqual (requests.events.map ((event) => event.eventName), ["onsuccess"]);
+	});
+}

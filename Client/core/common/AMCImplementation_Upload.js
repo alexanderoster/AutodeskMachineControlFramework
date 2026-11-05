@@ -220,9 +220,11 @@ export default class AMCUpload extends Common.AMCObject {
 		}
 	}
 	
+	// Only the upload that is still active may fail the state: a newer upload in the same widget
+	// (the user picked another file meanwhile) is not ended by a request of the one it replaced.
 	failUpload (reason)
 	{
-		if (this.itemState) {
+		if (this.checkIfUploadIsActive ()) {
 			this.itemState.failUpload (reason);
 		}
 	}
