@@ -46,6 +46,7 @@ export default class AMCUploadState extends Common.AMCObject {
 		this.messages = [];
 		this.itemUUID = itemUUID;		
 		this.cancelMessage = "Upload canceled";
+		this.failMessage = "Upload failed";
 		this.finishMessage = "Upload finished";
 		this.startMessage = "Starting upload";
 		this.progressMessage = "Uploading...";
@@ -93,6 +94,25 @@ export default class AMCUploadState extends Common.AMCObject {
 			this._onError = null;
 			this._onProgress = null;
 		}
+	}
+	
+	// Ends the upload after a failed request: the frontend widget learns about it through _onError
+	// instead of waiting forever.
+	failUpload (reason)
+	{
+		if (reason)
+			console.error ("Upload failed:", reason);
+
+		this.uploadID = 0;
+		this.chosenFile = null;
+		this.progress = 0;
+		this.setMessage (this.failMessage);
+		if (this._onError) {
+			try { this._onError (); } catch (_) { /* noop */ }
+		}
+		this._onComplete = null;
+		this._onError = null;
+		this._onProgress = null;
 	}
 	
 	setChosenFile (file)
