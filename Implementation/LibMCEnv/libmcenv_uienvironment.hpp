@@ -44,6 +44,7 @@ Abstract: This is the class declaration of CUIEnvironment
 #include "amc_userinformation.hpp"
 #include "amc_ui_systemstate.hpp"
 #include "amc_api_auth.hpp"
+#include "amc_ui_eventformvalues.hpp"
 
 #include <vector>
 
@@ -89,6 +90,12 @@ private:
 
 	// Client session that resolves session and user references of formulas; null without a session.
 	AMC::PUIFrontendState getFormulaFrontendState();
+
+	// Form values posted with the event being handled.
+	AMC::PUIEventFormValues m_pEventFormValues;
+
+	AMC::PParameterGroup getUIPropertyGroupForRead(const std::string& sElementPath, const std::string& sPropertyName);
+	AMC::PParameterGroup getUIPropertyGroupForWrite(const std::string& sElementPath, const std::string& sPropertyName);
 
 protected:
 
@@ -212,6 +219,9 @@ public:
 	std::vector<AMC::PUIClientAction>& getClientActions();
 
 	void setExternalEventParameters(const std::string & sParametersJSON);
+
+	// Keeps sPostedValue as this event's value of sElementPath, whatever polls write to the client variable meanwhile.
+	void capturePostedFormValue(const std::string& sElementPath, AMC::PParameterGroup pClientVariableGroup, const std::string& sPostedValue);
 
 	std::string getExternalEventReturnValues();
 

@@ -129,6 +129,7 @@ CUIEnvironment::CUIEnvironment(AMC::CUIHandler* pUIHandler, const std::string& s
 
     m_pUISystemState = pUIHandler->getUISystemState();
     m_pLogger = m_pUISystemState->getLogger();
+    m_pEventFormValues = std::make_shared<AMC::CUIEventFormValues>(m_pUISystemState->getGlobalChronoInstance());
 
     if (!sSenderUUID.empty()) {
         m_sSenderUUID = (AMCCommon::CUtils::normalizeUUIDString(sSenderUUID));
@@ -373,74 +374,69 @@ LibMCEnv::eParameterDataType CUIEnvironment::GetMachineParameterGroupParameterTy
 }
 
 
-std::string CUIEnvironment::GetUIProperty(const std::string& sElementPath, const std::string& sPropertyName) 
-{   
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException (LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
-    return pGroup->getParameterValueByName(sPropertyName);
-}
-
-std::string CUIEnvironment::GetUIPropertyAsUUID(const std::string& sElementPath, const std::string& sPropertyName)
+AMC::PParameterGroup CUIEnvironment::getUIPropertyGroupForRead(const std::string& sElementPath, const std::string& sPropertyName)
 {
     auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
     if (pClientVariableHandler == nullptr)
         throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
 
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    return m_pEventFormValues->groupForRead(pClientVariableHandler, sElementPath, sPropertyName);
+}
+
+AMC::PParameterGroup CUIEnvironment::getUIPropertyGroupForWrite(const std::string& sElementPath, const std::string& sPropertyName)
+{
+    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
+    if (pClientVariableHandler == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
+
+    return m_pEventFormValues->groupForWrite(pClientVariableHandler, sElementPath, sPropertyName);
+}
+
+void CUIEnvironment::capturePostedFormValue(const std::string& sElementPath, AMC::PParameterGroup pClientVariableGroup, const std::string& sPostedValue)
+{
+    m_pEventFormValues->capturePostedValue(sElementPath, pClientVariableGroup, sPostedValue);
+}
+
+std::string CUIEnvironment::GetUIProperty(const std::string& sElementPath, const std::string& sPropertyName) 
+{   
+    auto pGroup = getUIPropertyGroupForRead(sElementPath, sPropertyName);
+    return pGroup->getParameterValueByName(sPropertyName);
+}
+
+std::string CUIEnvironment::GetUIPropertyAsUUID(const std::string& sElementPath, const std::string& sPropertyName)
+{
+    auto pGroup = getUIPropertyGroupForRead(sElementPath, sPropertyName);
     return pGroup->getParameterValueByName(sPropertyName);
 
 }
 
 LibMCEnv_double CUIEnvironment::GetUIPropertyAsDouble(const std::string& sElementPath, const std::string& sPropertyName)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForRead(sElementPath, sPropertyName);
     return pGroup->getDoubleParameterValueByName(sPropertyName);
 }
 
 LibMCEnv_int64 CUIEnvironment::GetUIPropertyAsInteger(const std::string& sElementPath, const std::string& sPropertyName)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForRead(sElementPath, sPropertyName);
     return pGroup->getIntParameterValueByName(sPropertyName);
 }
 
 bool CUIEnvironment::GetUIPropertyAsBool(const std::string& sElementPath, const std::string& sPropertyName)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForRead(sElementPath, sPropertyName);
     return pGroup->getBoolParameterValueByName(sPropertyName);
 }
 
 void CUIEnvironment::SetUIProperty(const std::string& sElementPath, const std::string& sPropertyName, const std::string& sValue)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForWrite(sElementPath, sPropertyName);
     pGroup->setParameterValueByName(sPropertyName, sValue);
 }
 
 void CUIEnvironment::SetUIPropertyAsUUID(const std::string& sElementPath, const std::string& sPropertyName, const std::string& sValue)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForWrite(sElementPath, sPropertyName);
     if (!sValue.empty())
         pGroup->setParameterValueByName(sPropertyName, AMCCommon::CUtils::normalizeUUIDString (sValue));
     else
@@ -449,32 +445,20 @@ void CUIEnvironment::SetUIPropertyAsUUID(const std::string& sElementPath, const 
 
 void CUIEnvironment::SetUIPropertyAsDouble(const std::string& sElementPath, const std::string& sPropertyName, const LibMCEnv_double dValue) 
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForWrite(sElementPath, sPropertyName);
     pGroup->setDoubleParameterValueByName(sPropertyName, dValue);
 
 }
 
 void CUIEnvironment::SetUIPropertyAsInteger(const std::string& sElementPath, const std::string& sPropertyName, const LibMCEnv_int64 nValue) 
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForWrite(sElementPath, sPropertyName);
     pGroup->setIntParameterValueByName(sPropertyName, nValue);
 }
 
 void CUIEnvironment::SetUIPropertyAsBool(const std::string& sElementPath, const std::string& sPropertyName, const bool bValue)
 {
-    auto pClientVariableHandler = m_pAPIAuth->getLegacyParameterHandler(true);
-    if (pClientVariableHandler == nullptr)
-        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_COULDNNOTACCESSCLIENTVARIABLES);
-
-    auto pGroup = pClientVariableHandler->findGroup(sElementPath, true);
+    auto pGroup = getUIPropertyGroupForWrite(sElementPath, sPropertyName);
     pGroup->setBoolParameterValueByName(sPropertyName, bValue);
 }
 
