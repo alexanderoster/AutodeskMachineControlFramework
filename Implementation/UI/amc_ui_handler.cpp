@@ -838,6 +838,12 @@ CUIHandleEventResponse CUIHandler::handleEvent(const std::string& sEventName, co
                     auto pModuleItem = pPage->findModuleItemByUUID(sEntityUUID);
                     if (pModuleItem.get() != nullptr) {
                         pModuleItem->setEventPayloadValue(sEventName, sEntityUUID, sPayloadValue, pClientVariableHandler);
+
+                        // A content poll may resync the client variable before the handler reads it.
+                        if (std::dynamic_pointer_cast<CUIModule_ContentForm>(pModuleItem).get() != nullptr) {
+                            std::string sEntityPath = pModuleItem->findElementPathByUUID(sEntityUUID);
+                            pInternalUIEnvironment->capturePostedFormValue(sEntityPath, pClientVariableHandler->findGroup(sEntityPath, true), sPayloadValue);
+                        }
                     }
                 }
 
