@@ -26,6 +26,7 @@
 	import WorkflowPalette from './WorkflowPalette.svelte';
 	import WorkflowToolbar from './WorkflowToolbar.svelte';
 	import WorkflowStepEditor from './WorkflowStepEditor.svelte';
+	import { categoriesOf } from './workflowColors';
 
 	let {
 		state = $bindable(),
@@ -60,6 +61,7 @@
 
 	let selectedOperation = $derived(state.selectedUUID ? findOperation(state, state.selectedUUID) : null);
 	let selectedType = $derived(selectedOperation ? getOperationType(catalog, selectedOperation.type) : undefined);
+	let categories = $derived(categoriesOf(catalog));
 
 	function changed(action: () => void) {
 		if (readonly) return;
@@ -94,9 +96,10 @@
 	</WorkflowToolbar>
 
 	<div class="flex-1 flex gap-2 min-h-0">
-		<div class="w-48 shrink-0 rounded-md border bg-card/30 overflow-hidden">
+		<div class="w-48 shrink-0 rounded-md border bg-card overflow-hidden">
 			<WorkflowPalette
 				{catalog}
+				{categories}
 				context={state.sequence.context}
 				disabled={readonly}
 				{iconURL}
@@ -104,7 +107,7 @@
 			/>
 		</div>
 
-		<div class="flex-1 relative overflow-auto rounded-md border bg-card/20 p-4">
+		<div class="flex-1 relative overflow-auto rounded-md border bg-muted/40 p-4">
 			<div
 				class="flex flex-col gap-2 min-h-[120px]"
 				use:dndzone={{ items: dndItems, flipDurationMs, type: 'workflow-operations', dragDisabled: readonly }}
@@ -117,6 +120,8 @@
 							operation={item.op}
 							{index}
 							typeEntry={getOperationType(catalog, item.op.type)}
+							{categories}
+							{iconURL}
 							issues={issuesForOperation(issues, item.op.uuid)}
 							selected={state.selectedUUID === item.op.uuid}
 							running={activeOperation !== '' && activeOperation === item.op.uuid}
@@ -138,7 +143,7 @@
 		</div>
 
 		{#if selectedOperation}
-			<div class="w-72 shrink-0 rounded-md border bg-card/30 overflow-hidden">
+			<div class="w-72 shrink-0 rounded-md border bg-card overflow-hidden">
 				<WorkflowStepEditor
 					operation={selectedOperation}
 					typeEntry={selectedType}

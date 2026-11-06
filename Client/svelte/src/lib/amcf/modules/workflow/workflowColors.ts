@@ -1,29 +1,42 @@
 import type { OperationTypeEntry } from './workflowTypes';
 
 export interface WorkflowColors {
-	bg: string;
-	border: string;
+	stripe: string;
+	tint: string;
 	text: string;
-	badge: string;
 }
 
+// Surfaces stay neutral; the hue only marks the stripe, the icon tile and the category label,
+// so text keeps the theme's foreground contrast in light and dark mode.
 const colorMap: Record<string, WorkflowColors> = {
-	blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/40', text: 'text-blue-200', badge: 'bg-blue-600 text-white' },
-	amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/40', text: 'text-amber-200', badge: 'bg-amber-600 text-white' },
-	green: { bg: 'bg-green-500/10', border: 'border-green-500/40', text: 'text-green-200', badge: 'bg-green-600 text-white' },
-	red: { bg: 'bg-red-500/10', border: 'border-red-500/40', text: 'text-red-200', badge: 'bg-red-600 text-white' },
-	violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/40', text: 'text-violet-200', badge: 'bg-violet-600 text-white' },
-	cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/40', text: 'text-cyan-200', badge: 'bg-cyan-600 text-white' },
+	teal: { stripe: 'border-l-teal-500', tint: 'bg-teal-500/15', text: 'text-teal-700 dark:text-teal-300' },
+	blue: { stripe: 'border-l-sky-500', tint: 'bg-sky-500/15', text: 'text-sky-700 dark:text-sky-300' },
+	violet: { stripe: 'border-l-violet-500', tint: 'bg-violet-500/15', text: 'text-violet-700 dark:text-violet-300' },
+	amber: { stripe: 'border-l-amber-500', tint: 'bg-amber-500/15', text: 'text-amber-700 dark:text-amber-300' },
+	pink: { stripe: 'border-l-pink-500', tint: 'bg-pink-500/15', text: 'text-pink-700 dark:text-pink-300' },
+	green: { stripe: 'border-l-emerald-500', tint: 'bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-300' },
+	slate: { stripe: 'border-l-slate-400', tint: 'bg-slate-500/15', text: 'text-slate-600 dark:text-slate-300' },
+	red: { stripe: 'border-l-red-500', tint: 'bg-red-500/15', text: 'text-red-700 dark:text-red-300' },
 };
 
-const categoryPalette = ['blue', 'amber', 'green', 'violet', 'cyan'];
+const categoryPalette = ['teal', 'blue', 'violet', 'amber', 'pink', 'green'];
 
-// Types without an explicit color get a stable color per category.
-export function colorsFor(entry: OperationTypeEntry | undefined): WorkflowColors {
+export const OTHER_CATEGORY = 'Other';
+
+// Sorted, unique categories of a catalog. The position in this list selects the category color.
+export function categoriesOf(catalog: OperationTypeEntry[]): string[] {
+	return [...new Set(catalog.map((entry) => entry.category || OTHER_CATEGORY))].sort((a, b) => a.localeCompare(b));
+}
+
+export function colorsForCategory(category: string, categories: string[]): WorkflowColors {
+	const index = categories.indexOf(category || OTHER_CATEGORY);
+	if (index < 0) return colorMap.slate;
+	return colorMap[categoryPalette[index % categoryPalette.length]];
+}
+
+// Types with an explicit color use it; all others get the color of their category. Unknown types are red.
+export function colorsFor(entry: OperationTypeEntry | undefined, categories: string[]): WorkflowColors {
 	if (!entry) return colorMap.red;
 	if (entry.color && colorMap[entry.color]) return colorMap[entry.color];
-
-	let hash = 0;
-	for (const c of entry.category || '') hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
-	return colorMap[categoryPalette[hash % categoryPalette.length]];
+	return colorsForCategory(entry.category, categories);
 }

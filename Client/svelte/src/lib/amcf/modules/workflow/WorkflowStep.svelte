@@ -7,6 +7,8 @@
 		operation,
 		index,
 		typeEntry,
+		categories = [],
+		iconURL,
 		issues = [],
 		selected = false,
 		running = false,
@@ -19,6 +21,8 @@
 		operation: SequenceOperation;
 		index: number;
 		typeEntry: OperationTypeEntry | undefined;
+		categories?: string[];
+		iconURL?: (icon: string) => string;
 		issues?: ValidationIssue[];
 		selected?: boolean;
 		running?: boolean;
@@ -32,7 +36,8 @@
 	const MAX_SUMMARY_VALUES = 4;
 
 	let label = $derived(typeEntry?.displayname || operation.type);
-	let colors = $derived(colorsFor(typeEntry));
+	let colors = $derived(colorsFor(typeEntry, categories));
+	let icon = $derived(typeEntry?.icon && iconURL ? iconURL(typeEntry.icon) : '');
 	let errorCount = $derived(issues.filter((issue) => issue.severity === 'error').length);
 	let warningCount = $derived(issues.length - errorCount);
 
@@ -77,14 +82,13 @@
 
 <div
 	class={[
-		'group flex items-start gap-2 rounded-md border px-3 py-2 transition-all',
+		'group flex items-center gap-3 rounded-md border border-l-4 bg-card px-3 py-2 shadow-xs transition-all',
 		readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
-		colors.bg,
-		colors.border,
-		!operation.enabled && 'opacity-50 border-dashed',
+		colors.stripe,
+		!operation.enabled && 'opacity-60 border-dashed',
 		running && 'ring-2 ring-green-500 shadow-md',
 		selected && !running && 'ring-2 ring-primary shadow-md',
-		!selected && !running && 'hover:shadow-sm',
+		!selected && !running && 'hover:shadow-md',
 	]}
 	onclick={() => onselect?.(operation.uuid)}
 	onkeydown={handleKeydown}
@@ -92,13 +96,24 @@
 	tabindex="0"
 	data-operation-uuid={operation.uuid}
 >
-	<span class="text-muted-foreground/50 select-none tabular-nums text-xs pt-0.5 w-6 text-right" title="Position">
+	<span class="text-muted-foreground select-none tabular-nums text-xs w-5 text-right" title="Position">
 		{index + 1}
+	</span>
+
+	<span class={['h-8 w-8 shrink-0 rounded-md flex items-center justify-center', colors.tint]}>
+		{#if icon}
+			<img src={icon} alt="" class="h-5 w-5 object-contain" />
+		{:else}
+			<span class={['text-xs font-semibold', colors.text]}>{label.charAt(0).toUpperCase()}</span>
+		{/if}
 	</span>
 
 	<div class="flex-1 min-w-0 flex flex-col gap-0.5">
 		<div class="flex items-center gap-2">
-			<span class={[colors.text, 'text-sm font-medium', !operation.enabled && 'line-through']}>{label}</span>
+			<span class={['text-sm font-medium text-foreground', !operation.enabled && 'line-through']}>{label}</span>
+			{#if typeEntry?.category}
+				<span class={['text-[10px] uppercase tracking-wider font-medium', colors.text]}>{typeEntry.category}</span>
+			{/if}
 			{#if !typeEntry}
 				<Badge class="bg-red-600 text-white text-[9px] px-1 py-0 leading-tight">unknown type</Badge>
 			{/if}
@@ -116,31 +131,31 @@
 			{/if}
 		</div>
 		{#if summary}
-			<span class="text-xs text-muted-foreground/70 tabular-nums truncate">{summary}</span>
+			<span class="text-xs text-muted-foreground tabular-nums truncate">{summary}</span>
 		{/if}
 		{#if operation.comment}
-			<span class="text-xs italic text-muted-foreground/50 truncate">{operation.comment}</span>
+			<span class="text-xs italic text-muted-foreground/80 truncate">{operation.comment}</span>
 		{/if}
 	</div>
 
 	{#if !readonly}
 		<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
 			<button
-				class="text-muted-foreground/50 hover:text-foreground text-xs px-1"
+				class="text-muted-foreground hover:text-foreground text-xs px-1"
 				title={operation.enabled ? 'Disable operation' : 'Enable operation'}
 				onclick={(e) => stop(e, () => ontoggle?.(operation.uuid))}
 			>
 				{operation.enabled ? '⏸' : '▶'}
 			</button>
 			<button
-				class="text-muted-foreground/50 hover:text-foreground text-xs px-1"
+				class="text-muted-foreground hover:text-foreground text-xs px-1"
 				title="Duplicate operation"
 				onclick={(e) => stop(e, () => onduplicate?.(operation.uuid))}
 			>
 				⧉
 			</button>
 			<button
-				class="text-muted-foreground/50 hover:text-destructive text-sm px-1"
+				class="text-muted-foreground hover:text-destructive text-sm px-1"
 				title="Remove operation"
 				onclick={(e) => stop(e, () => onremove?.(operation.uuid))}
 			>

@@ -7,7 +7,6 @@
 		OperationSequenceData,
 		OperationTypeEntry,
 		OperationSequenceSummary,
-		OperationSequenceRevisionEntry,
 		BindingReference,
 		ValidationIssue,
 		ValidationResult,
@@ -41,17 +40,13 @@
 	let workflowState = $state(createWorkflowState(emptySequence));
 	let selectedName = $state('');
 	let latestRevision = $state(0);
-	let viewingRevision = $state(0);
 	let issues: ValidationIssue[] = $state.raw([]);
-	let revisions: OperationSequenceRevisionEntry[] = $state.raw([]);
-	let showHistory = $state(false);
 	let busy = $state(false);
 	let message = $state('');
 	let messageIsError = $state(false);
 	let validationTimer: ReturnType<typeof setTimeout> | undefined;
 
-	let viewingOldRevision = $derived(viewingRevision !== 0 && viewingRevision !== latestRevision);
-	let readonly = $derived(!canEdit || viewingOldRevision || busy || selectedName === '');
+	let readonly = $derived(!canEdit || busy || selectedName === '');
 	let references = $derived(referenceMap[selectedName] ?? []);
 	let errorCount = $derived(issues.filter((issue) => issue.severity === 'error').length);
 	let isRunning = $derived(activeSequence !== '' && activeSequence === selectedName);
@@ -104,24 +99,20 @@
 		issues = validation?.issues ?? [];
 	}
 
-	function loadSequence(name: string, revision?: number) {
+	function loadSequence(name: string) {
 		return run(async () => {
-			const payload: Record<string, unknown> = { name };
-			if (revision !== undefined) payload.revision = revision;
-			const data = await request('loadsequence', payload);
+			const data = await request('loadsequence', { name });
 			selectedName = name;
 			latestRevision = data.latestrevision ?? data.sequence.revision;
-			viewingRevision = data.sequence.revision;
 			resetWorkflowState(workflowState, data.sequence);
 			applyValidation(data.validation);
-			showMessage(revision !== undefined && revision !== latestRevision ? `Viewing revision ${revision} (read only)` : '');
+			showMessage('');
 		});
 	}
 
 	function selectSequence(name: string) {
 		if (name === selectedName) return;
 		if (workflowState.dirty && !confirm('Discard the unsaved changes?')) return;
-		showHistory = false;
 		loadSequence(name);
 	}
 
@@ -153,10 +144,8 @@
 			});
 			if (data.status === 'saved') {
 				latestRevision = data.sequence.revision;
-				viewingRevision = data.sequence.revision;
 				resetWorkflowState(workflowState, data.sequence);
 				issues = [];
-				revisions = [];
 				showMessage(`Saved as revision ${data.sequence.revision}`);
 			} else if (data.status === 'invalid') {
 				applyValidation(data.validation);
@@ -177,48 +166,22 @@
 		if (!confirm('Replace the editor content with the factory default? Nothing is saved until you save.')) return;
 		run(async () => {
 			const data = await request('resetsequence', { name: selectedName });
-			viewingRevision = latestRevision;
 			resetWorkflowState(workflowState, { ...data.sequence, revision: latestRevision }, true);
 			applyValidation(data.validation);
 			showMessage('Factory default loaded. Save to publish it as a new revision.');
 		});
 	}
 
-	function toggleHistory() {
-		showHistory = !showHistory;
-		if (showHistory) {
-			run(async () => {
-				const data = await request('listrevisions', { name: selectedName });
-				revisions = data.revisions ?? [];
-			});
-		}
-	}
-
-	function openRevision(revision: number) {
-		if (workflowState.dirty && !confirm('Discard the unsaved changes?')) return;
-		showHistory = false;
-		loadSequence(selectedName, revision);
-	}
-
-	// Turns the revision that is shown into a working copy on top of the latest revision.
-	function restoreRevision() {
-		const restored = { ...$state.snapshot(workflowState.sequence), revision: latestRevision };
-		viewingRevision = latestRevision;
-		resetWorkflowState(workflowState, restored, true);
-		showMessage(`Restored revision. Save to publish it as revision ${latestRevision + 1}.`);
-		scheduleValidation();
-	}
-
 	function exportSequence() {
 		run(async () => {
 			const payload: Record<string, unknown> = { name: selectedName };
-			if (viewingRevision !== 0) payload.revision = viewingRevision;
+			if (latestRevision !== 0) payload.revision = latestRevision;
 			const data = await request('exportsequence', payload);
 			const blob = new Blob([data.xml], { type: 'application/xml' });
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement('a');
 			link.href = url;
-			link.download = `${selectedName}_rev${viewingRevision}.xml`;
+			link.download = `${selectedName}_rev${latestRevision}.xml`;
 			link.click();
 			URL.revokeObjectURL(url);
 		});
@@ -231,17 +194,11 @@
 		run(async () => {
 			const xml = await file.text();
 			const data = await request('importsequence', { xml, name: selectedName });
-			viewingRevision = latestRevision;
 			resetWorkflowState(workflowState, data.sequence, true);
 			applyValidation(data.validation);
 			showMessage(`Imported ${file.name}. Save to publish it.`);
 		});
 		if (importInput) importInput.value = '';
-	}
-
-	function formatTimestamp(timestamp: string): string {
-		const date = new Date(timestamp);
-		return Number.isNaN(date.getTime()) ? timestamp : date.toLocaleString();
 	}
 </script>
 
@@ -262,39 +219,31 @@
 
 	{#if selectedName !== ''}
 		<span class="text-xs text-muted-foreground tabular-nums">
-			{#if viewingOldRevision}
-				revision {viewingRevision} of {latestRevision}
-			{:else}
-				revision {latestRevision}
-			{/if}
+			revision {latestRevision}
 			{#if isRunning}
-				· <span class="text-green-400">running revision {activeRevision}</span>
+				· <span class="text-green-700 dark:text-green-400">running revision {activeRevision}</span>
 			{/if}
 			{#if workflowState.dirty}
-				· <span class="text-amber-400">unsaved</span>
+				· <span class="text-amber-700 dark:text-amber-400">unsaved</span>
+			{/if}
+			{#if !canEdit}
+				· read only
 			{/if}
 		</span>
 
 		<Separator orientation="vertical" class="h-5" />
 
-		<Button variant="outline" size="sm" disabled={busy} onclick={toggleHistory}>History</Button>
-
-		{#if viewingOldRevision}
-			<Button variant="outline" size="sm" disabled={busy || !canEdit} onclick={restoreRevision}>Restore as new revision</Button>
-			<Button variant="ghost" size="sm" disabled={busy} onclick={() => loadSequence(selectedName)}>Back to latest</Button>
-		{:else}
-			<Button variant="outline" size="sm" disabled={busy} onclick={validateNow}>Validate</Button>
-			{#if canEdit}
-				<Button size="sm" disabled={busy || !workflowState.dirty || errorCount > 0} onclick={save}>Save</Button>
-				<Button variant="ghost" size="sm" disabled={busy || !workflowState.dirty} onclick={revert}>Revert</Button>
-				{#if selectedSummary?.hasdefault}
-					<Button variant="ghost" size="sm" disabled={busy} onclick={resetToDefault}>Reset to default</Button>
-				{/if}
+		<Button variant="outline" size="sm" disabled={busy} onclick={validateNow}>Validate</Button>
+		{#if canEdit}
+			<Button size="sm" disabled={busy || !workflowState.dirty || errorCount > 0} onclick={save}>Save</Button>
+			<Button variant="ghost" size="sm" disabled={busy || !workflowState.dirty} onclick={revert}>Revert</Button>
+			{#if selectedSummary?.hasdefault}
+				<Button variant="ghost" size="sm" disabled={busy} onclick={resetToDefault}>Reset to default</Button>
 			{/if}
 		{/if}
 
 		<Button variant="ghost" size="sm" disabled={busy} onclick={exportSequence}>Export</Button>
-		{#if canEdit && !viewingOldRevision}
+		{#if canEdit}
 			<Button variant="ghost" size="sm" disabled={busy} onclick={() => importInput?.click()}>Import</Button>
 			<input
 				bind:this={importInput}
@@ -306,7 +255,7 @@
 		{/if}
 
 		{#if errorCount > 0}
-			<span class="text-xs text-red-400">{errorCount} {errorCount === 1 ? 'error' : 'errors'}</span>
+			<span class="text-xs text-red-700 dark:text-red-400">{errorCount} {errorCount === 1 ? 'error' : 'errors'}</span>
 		{/if}
 	{/if}
 {/snippet}
@@ -314,41 +263,13 @@
 {#if visible}
 	<div class="w-full flex flex-col gap-2" style="min-height: 500px; height: 70vh;">
 		{#if message}
-			<div class={['rounded border px-3 py-1.5 text-xs', messageIsError ? 'border-red-500/40 text-red-300' : 'border-input text-muted-foreground']}>
+			<div
+				class={[
+					'rounded border px-3 py-1.5 text-xs',
+					messageIsError ? 'border-red-500/40 text-red-700 dark:text-red-300' : 'border-input text-muted-foreground',
+				]}
+			>
 				{message}
-			</div>
-		{/if}
-
-		{#if showHistory}
-			<div class="rounded-md border bg-card/30 max-h-48 overflow-auto">
-				<table class="w-full text-xs">
-					<thead>
-						<tr class="text-muted-foreground/60">
-							<th class="text-left font-normal px-2 py-1">Revision</th>
-							<th class="text-left font-normal px-2 py-1">Saved</th>
-							<th class="text-left font-normal px-2 py-1">User</th>
-							<th class="text-left font-normal px-2 py-1">Origin</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each revisions as revision (revision.uuid)}
-							<tr
-								class={['cursor-pointer hover:bg-accent/30', revision.revision === viewingRevision && 'bg-accent/20']}
-								onclick={() => openRevision(revision.revision)}
-							>
-								<td class="px-2 py-1 tabular-nums">
-									{revision.revision}
-									{#if isRunning && revision.revision === activeRevision}<span class="text-green-400"> (running)</span>{/if}
-								</td>
-								<td class="px-2 py-1">{formatTimestamp(revision.timestamp)}</td>
-								<td class="px-2 py-1">{revision.username || '—'}</td>
-								<td class="px-2 py-1">{revision.origin}</td>
-							</tr>
-						{:else}
-							<tr><td class="px-2 py-1 text-muted-foreground/50" colspan="4">No revisions</td></tr>
-						{/each}
-					</tbody>
-				</table>
 			</div>
 		{/if}
 
@@ -358,7 +279,7 @@
 				{catalog}
 				{readonly}
 				{issues}
-				activeOperation={isRunning && activeRevision === viewingRevision ? activeOperation : ''}
+				activeOperation={isRunning && activeRevision === latestRevision ? activeOperation : ''}
 				{references}
 				{iconURL}
 				{toolbar}
