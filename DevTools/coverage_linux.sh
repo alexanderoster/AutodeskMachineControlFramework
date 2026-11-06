@@ -122,8 +122,8 @@ if [[ ${#TESTDEFS[@]} -gt 0 ]]; then
 	"${CMD[@]}"
 fi
 
-lcov --capture --directory . --base-directory "$ROOT_DIR" --output-file coverage.info
-lcov --ignore-errors unused --remove coverage.info \
+lcov --capture --directory . --base-directory "$ROOT_DIR" --ignore-errors inconsistent --output-file coverage.info
+lcov --ignore-errors unused,inconsistent --remove coverage.info \
 	'/usr/*' \
 	"$ROOT_DIR/3RD_PARTY/*" \
 	"$ROOT_DIR/Framework/*" \
@@ -131,6 +131,6 @@ lcov --ignore-errors unused --remove coverage.info \
 	"$ROOT_DIR/SDK/*" \
 	"$ROOT_DIR/submodules/*" \
 	--output-file coverage.info
-genhtml coverage.info --output-directory coverage_html
+genhtml coverage.info --ignore-errors inconsistent --output-directory coverage_html
 echo "Coverage report: $BUILD_DIR/coverage_html/index.html"
 popd >/dev/null
