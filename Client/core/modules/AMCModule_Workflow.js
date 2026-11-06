@@ -33,6 +33,7 @@ import * as Assert from "../common/AMCAsserts.js";
 import * as Common from "../common/AMCCommon.js"
 
 
+// Static workflow stub. The catalog is converted to the operation type shape of the operation sequence editor.
 export default class AMCApplicationModule_Workflow extends Common.AMCApplicationModule {
 
 	constructor (page, moduleJSON)
@@ -43,18 +44,18 @@ export default class AMCApplicationModule_Workflow extends Common.AMCApplication
 
 		this.usesV2Frontend = true;
 
-		this.workflowData = moduleJSON.workflowdata || null;
-		this.catalogData = moduleJSON.catalogdata || null;
+		this.workflowData = null;
+		this.catalogData = null;
+		if (moduleJSON.catalog !== undefined)
+			this.catalogData = this._normalizeCatalog (moduleJSON.catalog);
 	}
 
 
 	updateFromJSON (updateJSON)
 	{
 		Assert.ObjectValue (updateJSON);
-		if (updateJSON.workflowdata !== undefined)
-			this.workflowData = updateJSON.workflowdata;
-		if (updateJSON.catalogdata !== undefined)
-			this.catalogData = updateJSON.catalogdata;
+		if (updateJSON.catalog !== undefined)
+			this.catalogData = this._normalizeCatalog (updateJSON.catalog);
 		if (updateJSON.visible !== undefined)
 			this.visible = Assert.BoolValue (updateJSON.visible);
 	}
@@ -64,12 +65,8 @@ export default class AMCApplicationModule_Workflow extends Common.AMCApplication
 	{
 		if (!attrs)
 			return true;
-		if (attrs.workflowdata !== undefined)
-			this.workflowData = attrs.workflowdata;
-		if (attrs.catalogdata !== undefined)
-			this.catalogData = attrs.catalogdata;
 		if (attrs.catalog !== undefined)
-			this.catalogData = this._normalizeCatalog(attrs.catalog);
+			this.catalogData = this._normalizeCatalog (attrs.catalog);
 		if (attrs.caption !== undefined)
 			this.caption = attrs.caption;
 		if (attrs.visible !== undefined)
@@ -77,68 +74,65 @@ export default class AMCApplicationModule_Workflow extends Common.AMCApplication
 		return true;
 	}
 
+	_normalizeParameterType (type)
+	{
+		if (type === "int")
+			return "integer";
+		if (type === "float")
+			return "double";
+		if (type === "bool")
+			return "bool";
+		return "string";
+	}
+
 	_normalizeCatalog (rawCatalog)
 	{
-		if (!Array.isArray(rawCatalog))
+		if (!Array.isArray (rawCatalog))
 			return null;
-		return rawCatalog.map(entry => {
-			const normalized = {
-				id: entry.id,
-				label: entry.label || entry.id,
-				category: entry.category || "functionblock",
-				color: entry.color || "blue"
-			};
-			if (entry.params && Array.isArray(entry.params)) {
-				normalized.params = entry.params.map(p => {
-					const param = {
-						name: p.name,
-						type: p.type || "string"
-					};
-					if (p.unit) param.unit = p.unit;
-					if (p.default !== undefined && p.default !== "") {
-						if (p.type === "int") param.default = parseInt(p.default, 10);
-						else if (p.type === "float") param.default = parseFloat(p.default);
-						else if (p.type === "bool") param.default = (p.default === "true" || p.default === "1");
-						else param.default = p.default;
-					}
-					return param;
-				});
-			}
-			return normalized;
-		});
+		return rawCatalog.map (entry => ({
+			type: entry.id,
+			displayname: entry.label || entry.id,
+			category: (entry.category === "template") ? "Templates" : "Function Blocks",
+			color: entry.color || "blue",
+			contexts: [],
+			itemlists: [],
+			parameters: (Array.isArray (entry.params) ? entry.params : []).map (p => ({
+				name: p.name,
+				displayname: p.name,
+				type: this._normalizeParameterType (p.type),
+				unit: p.unit || undefined,
+				default: (p.default !== undefined) ? String (p.default) : "",
+				expression: "literal",
+				required: false
+			}))
+		}));
 	}
 
 	getDefaultWorkflow ()
 	{
+		const operation = (uuid, type, values) => ({ uuid: uuid, type: type, enabled: true, comment: "", values: values || {}, items: {} });
+
 		return {
-			uuid: "mock-workflow-001",
 			name: "Example Production",
-			sequence: [
-				{ id: "s1", stepRef: "exposure", params: {} },
-				{ id: "s2", stepRef: "delay", params: { duration: 3000 } },
-				{ id: "s3", stepRef: "beschichter_lr", params: {} },
-				{
-					id: "g1",
-					type: "parallel",
-					branches: [
-						[
-							{ id: "s4a", stepRef: "dosierung_r", params: {} },
-							{ id: "s5a", stepRef: "delay", params: { duration: 2000 } }
-						],
-						[
-							{ id: "s4b", stepRef: "heatup_layer", params: {} },
-							{ id: "s5b", stepRef: "hold_temp", params: {} }
-						]
-					]
-				},
-				{ id: "s6", stepRef: "exposure", params: {} }
+			displayname: "Example Production",
+			description: "",
+			context: "",
+			bindinggroup: "",
+			revision: 0,
+			operations: [
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000001", "exposure"),
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000002", "delay", { duration: "3000" }),
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000003", "beschichter_lr"),
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000004", "dosierung_r"),
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000005", "heatup_layer"),
+				operation ("6f1c0a52-3a7e-4c39-9b51-000000000006", "exposure")
 			]
 		};
 	}
 
 	getDefaultCatalog ()
 	{
-		return [
+		return this._normalizeCatalog ([
 			{ id: "exposure",       label: "Exposure",        category: "functionblock", color: "blue" },
 			{ id: "delay",          label: "Delay",           category: "functionblock", color: "blue",
 			  params: [{ name: "duration", type: "int", unit: "ms", default: 1000 }] },
@@ -148,7 +142,7 @@ export default class AMCApplicationModule_Workflow extends Common.AMCApplication
 			{ id: "dosierung_l",    label: "Dosierung L",     category: "template",      color: "amber" },
 			{ id: "heatup_layer",   label: "Heatup Layer",    category: "template",      color: "amber" },
 			{ id: "hold_temp",      label: "Hold Temperature",category: "template",      color: "amber" }
-		];
+		]);
 	}
 
 }

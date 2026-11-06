@@ -25,6 +25,7 @@
 	import ModuleGraphic from './modules/ModuleGraphic.svelte';
 	import ModuleWorkflow from './modules/ModuleWorkflow.svelte';
 	import ModuleStateMachineGraph from './modules/ModuleStateMachineGraph.svelte';
+	import ModuleOperationSequenceEditor from './modules/ModuleOperationSequenceEditor.svelte';
 	import ModuleHistoryBrowser from './modules/ModuleHistoryBrowser.svelte';
 	import ModuleFallback from './modules/ModuleFallback.svelte';
 
@@ -58,6 +59,7 @@
 		workflow: ModuleWorkflow,
 		statemachinegraph: ModuleStateMachineGraph,
 		journalhistory: ModuleHistoryBrowser,
+		operationsequenceeditor: ModuleOperationSequenceEditor,
 	};
 
 	let Component = $derived(componentMap[module?.type] || ModuleFallback);

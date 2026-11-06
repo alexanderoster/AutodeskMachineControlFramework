@@ -63,6 +63,7 @@ import AMCApplicationModule_VideoStream from "../modules/AMCModule_VideoStream.j
 import AMCApplicationModule_Separator from "../modules/AMCModule_Separator.js"
 import AMCApplicationModule_StatusBanner from "../modules/AMCModule_StatusBanner.js"
 import AMCApplicationModule_Workflow from "../modules/AMCModule_Workflow.js"
+import AMCApplicationModule_OperationSequenceEditor from "../modules/AMCModule_OperationSequenceEditor.js"
 
 import { validateModuleJSON } from "./AMCModuleSchema.js"
 
@@ -469,7 +470,8 @@ export default class AMCApplication extends Common.AMCObject {
 			(moduleType === "upload") || (moduleType === "buildlist") || (moduleType === "partlist") || (moduleType === "executionlist") ||
 			(moduleType === "alertlist") || (moduleType === "buttongroup") || (moduleType === "parameterlist") ||
 			(moduleType === "statuslist") || (moduleType === "togglepanel") ||
-			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow") || (moduleType === "statemachinegraph");
+			(moduleType === "configurationlist") || (moduleType === "form") || (moduleType === "workflow") || (moduleType === "statemachinegraph") ||
+			(moduleType === "operationsequenceeditor");
 	}
 
 	// Detect whether a JSON object uses the v2 frontend format.
@@ -848,6 +850,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_Workflow (page, def);
 		if (def.type === "statemachinegraph")
 			return new AMCApplicationModule_StateMachineGraph (page, def);
+		if (def.type === "operationsequenceeditor")
+			return new AMCApplicationModule_OperationSequenceEditor (page, def);
 
 		return null;
 		

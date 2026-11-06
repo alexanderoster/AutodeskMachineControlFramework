@@ -1,191 +1,158 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { dndzone } from 'svelte-dnd-action';
-	import type {
-		Workflow,
-		SequenceItem,
-		StepCatalogEntry,
-		WorkflowStep as WStep,
-		ParallelGroup,
-	} from './workflowTypes';
-	import { isParallelGroup } from './workflowTypes';
+	import type { SequenceOperation, OperationTypeEntry, ValidationIssue, BindingReference } from './workflowTypes';
+	import { issuesForOperation } from './workflowTypes';
 	import {
-		createWorkflowState,
-		addStep,
-		removeStep,
-		addParallelGroup,
-		addBranch,
-		removeBranch,
-		updateStepParams,
-		selectStep,
+		addOperation,
+		removeOperation,
+		reorderOperations,
+		duplicateOperation,
+		toggleEnabled,
+		setOperationValue,
+		setOperationComment,
+		addItem,
+		removeItem,
+		setItemValue,
+		selectOperation,
+		setSequenceName,
 		undo,
-		findStepById,
-		getCatalogEntry,
+		findOperation,
+		getOperationType,
 		type WorkflowState,
 	} from './workflowStore';
-	import WorkflowStepComp from './WorkflowStep.svelte';
-	import WorkflowParallelGroup from './WorkflowParallelGroup.svelte';
+	import WorkflowStep from './WorkflowStep.svelte';
 	import WorkflowPalette from './WorkflowPalette.svelte';
 	import WorkflowToolbar from './WorkflowToolbar.svelte';
 	import WorkflowStepEditor from './WorkflowStepEditor.svelte';
 
 	let {
-		initialWorkflow,
+		state = $bindable(),
 		catalog,
+		readonly = false,
+		nameEditable = false,
+		issues = [],
+		activeOperation = '',
+		references = [],
+		iconURL,
+		toolbar,
+		onchange,
 	}: {
-		initialWorkflow: Workflow;
-		catalog: StepCatalogEntry[];
+		state: WorkflowState;
+		catalog: OperationTypeEntry[];
+		readonly?: boolean;
+		nameEditable?: boolean;
+		issues?: ValidationIssue[];
+		activeOperation?: string;
+		references?: BindingReference[];
+		iconURL?: (icon: string) => string;
+		toolbar?: Snippet;
+		onchange?: () => void;
 	} = $props();
-
-	// Intentionally snapshot props once; the editor owns its own mutable copy.
-	const snapshotWorkflow = JSON.parse(JSON.stringify(initialWorkflow)) as Workflow;
-	const snapshotCatalog = [...catalog];
-
-	let state: WorkflowState = $state(createWorkflowState(snapshotWorkflow, snapshotCatalog));
 
 	const flipDurationMs = 200;
 
-	let selectedStep = $derived(
-		state.selectedStepId ? findStepById(state, state.selectedStepId) : null,
-	);
-	let selectedCatalog = $derived(
-		selectedStep ? getCatalogEntry(state, selectedStep.stepRef) : undefined,
-	);
+	type DndItem = { id: string; op: SequenceOperation };
 
-	function handleSequenceConsider(e: CustomEvent<{ items: SequenceItem[] }>) {
-		state.workflow.sequence = e.detail.items;
+	// Drag and drop works on wrappers that use the operation UUID as id. Writable while a drag is in progress.
+	let dndItems: DndItem[] = $derived(state.sequence.operations.map((op) => ({ id: op.uuid, op })));
+
+	let selectedOperation = $derived(state.selectedUUID ? findOperation(state, state.selectedUUID) : null);
+	let selectedType = $derived(selectedOperation ? getOperationType(catalog, selectedOperation.type) : undefined);
+
+	function changed(action: () => void) {
+		if (readonly) return;
+		action();
+		onchange?.();
 	}
 
-	function handleSequenceFinalize(e: CustomEvent<{ items: SequenceItem[] }>) {
-		state.workflow.sequence = e.detail.items;
+	function handleConsider(e: CustomEvent<{ items: DndItem[] }>) {
+		dndItems = e.detail.items;
 	}
 
-	function handleSelect(id: string) {
-		selectStep(state, state.selectedStepId === id ? null : id);
+	function handleFinalize(e: CustomEvent<{ items: DndItem[] }>) {
+		dndItems = e.detail.items;
+		changed(() => reorderOperations(state, e.detail.items.map((item) => item.id)));
 	}
 
-	function handleRemove(id: string) {
-		removeStep(state, id);
-	}
-
-	function handleAddFromPalette(stepRef: string) {
-		addStep(state, stepRef);
-	}
-
-	function handleAddParallel() {
-		addParallelGroup(state, 2);
-	}
-
-	function handleUndo() {
-		undo(state);
-	}
-
-	function handleBranchUpdate(groupId: string, branchIndex: number, items: any[]) {
-		const group = state.workflow.sequence.find(
-			(s) => s.id === groupId && isParallelGroup(s),
-		) as ParallelGroup | undefined;
-		if (group) {
-			group.branches[branchIndex] = items;
-		}
-	}
-
-	function handleRemoveGroup(groupId: string) {
-		const idx = state.workflow.sequence.findIndex((s) => s.id === groupId);
-		if (idx !== -1) {
-			state.workflow.sequence.splice(idx, 1);
-		}
-	}
-
-	function handleAddBranch(groupId: string) {
-		addBranch(state, groupId);
-	}
-
-	function handleRemoveBranch(groupId: string, branchIndex: number) {
-		removeBranch(state, groupId, branchIndex);
-	}
-
-	function handleUpdateParams(stepId: string, params: Record<string, unknown>) {
-		updateStepParams(state, stepId, params);
-	}
-
-	function handleCloseEditor() {
-		selectStep(state, null);
-	}
-
-	function handleNameChange(name: string) {
-		state.workflow.name = name;
-	}
-
-	function getCatalogForStep(stepRef: string): StepCatalogEntry | undefined {
-		return catalog.find((c) => c.id === stepRef);
+	function handleSelect(uuid: string) {
+		selectOperation(state, state.selectedUUID === uuid ? null : uuid);
 	}
 </script>
 
 <div class="flex flex-col gap-2 h-full">
 	<WorkflowToolbar
 		canUndo={state.undoStack.length > 0}
-		workflowName={state.workflow.name}
-		onaddparallel={handleAddParallel}
-		onundo={handleUndo}
-		onnamchange={handleNameChange}
-	/>
+		workflowName={state.sequence.name}
+		{nameEditable}
+		{readonly}
+		onundo={() => changed(() => undo(state))}
+		onnamechange={(name) => changed(() => setSequenceName(state, name))}
+	>
+		{@render toolbar?.()}
+	</WorkflowToolbar>
 
 	<div class="flex-1 flex gap-2 min-h-0">
-		<!-- Palette -->
 		<div class="w-48 shrink-0 rounded-md border bg-card/30 overflow-hidden">
-			<WorkflowPalette {catalog} onadd={handleAddFromPalette} />
+			<WorkflowPalette
+				{catalog}
+				context={state.sequence.context}
+				disabled={readonly}
+				{iconURL}
+				onadd={(typeName) => changed(() => addOperation(state, typeName))}
+			/>
 		</div>
 
-		<!-- Canvas -->
 		<div class="flex-1 relative overflow-auto rounded-md border bg-card/20 p-4">
 			<div
 				class="flex flex-col gap-2 min-h-[120px]"
-				use:dndzone={{ items: state.workflow.sequence, flipDurationMs, type: 'workflow-steps' }}
-				onconsider={handleSequenceConsider}
-				onfinalize={handleSequenceFinalize}
+				use:dndzone={{ items: dndItems, flipDurationMs, type: 'workflow-operations', dragDisabled: readonly }}
+				onconsider={handleConsider}
+				onfinalize={handleFinalize}
 			>
-				{#each state.workflow.sequence as item (item.id)}
+				{#each dndItems as item, index (item.id)}
 					<div animate:flip={{ duration: flipDurationMs }}>
-						{#if isParallelGroup(item)}
-							<WorkflowParallelGroup
-								group={item}
-								{catalog}
-								selectedStepId={state.selectedStepId}
-								onselect={handleSelect}
-								onremove={handleRemove}
-								onbranchupdate={handleBranchUpdate}
-								onremovegroup={handleRemoveGroup}
-								onaddbranch={handleAddBranch}
-								onremovebranch={handleRemoveBranch}
-							/>
-						{:else}
-							<WorkflowStepComp
-								step={item}
-								catalogEntry={getCatalogForStep(item.stepRef)}
-								selected={state.selectedStepId === item.id}
-								onselect={handleSelect}
-								onremove={handleRemove}
-							/>
-						{/if}
+						<WorkflowStep
+							operation={item.op}
+							{index}
+							typeEntry={getOperationType(catalog, item.op.type)}
+							issues={issuesForOperation(issues, item.op.uuid)}
+							selected={state.selectedUUID === item.op.uuid}
+							running={activeOperation !== '' && activeOperation === item.op.uuid}
+							{readonly}
+							onselect={handleSelect}
+							onremove={(uuid) => changed(() => removeOperation(state, uuid))}
+							onduplicate={(uuid) => changed(() => duplicateOperation(state, uuid))}
+							ontoggle={(uuid) => changed(() => toggleEnabled(state, uuid))}
+						/>
 					</div>
 				{/each}
 			</div>
 
-			{#if state.workflow.sequence.length === 0}
-				<div class="flex items-center justify-center h-full text-muted-foreground/30 text-sm">
-					Drag steps from the palette or click to add
+			{#if dndItems.length === 0}
+				<div class="absolute inset-0 flex items-center justify-center pointer-events-none text-muted-foreground/30 text-sm">
+					{readonly ? 'This sequence has no operations' : 'Click an operation in the palette to add it'}
 				</div>
 			{/if}
 		</div>
 
-		<!-- Step Editor -->
-		{#if state.selectedStepId}
-			<div class="w-56 shrink-0 rounded-md border bg-card/30 overflow-hidden">
+		{#if selectedOperation}
+			<div class="w-72 shrink-0 rounded-md border bg-card/30 overflow-hidden">
 				<WorkflowStepEditor
-					step={selectedStep}
-					catalogEntry={selectedCatalog}
-					onupdate={handleUpdateParams}
-					onclose={handleCloseEditor}
+					operation={selectedOperation}
+					typeEntry={selectedType}
+					issues={issuesForOperation(issues, selectedOperation.uuid)}
+					{references}
+					{readonly}
+					onvaluechange={(uuid, name, value) => changed(() => setOperationValue(state, uuid, name, value))}
+					oncommentchange={(uuid, comment) => changed(() => setOperationComment(state, uuid, comment))}
+					ontoggle={(uuid) => changed(() => toggleEnabled(state, uuid))}
+					onadditem={(uuid, listName) => changed(() => addItem(state, catalog, uuid, listName))}
+					onremoveitem={(uuid, listName, index) => changed(() => removeItem(state, uuid, listName, index))}
+					onitemvaluechange={(uuid, listName, index, name, value) =>
+						changed(() => setItemValue(state, uuid, listName, index, name, value))}
+					onclose={() => selectOperation(state, null)}
 				/>
 			</div>
 		{/if}
