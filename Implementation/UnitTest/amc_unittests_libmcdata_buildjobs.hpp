@@ -1716,10 +1716,11 @@ namespace AMCUnitTest {
 			assertTrue(doc.IsObject() && doc.HasMember("entry") && doc["entry"].IsObject(), "entry is a JSON object");
 
 			SListEntry entry;
-			for (auto& member : doc["entry"].GetObject()) {
-				entry.m_Keys.push_back(member.name.GetString());
-				if (member.value.IsString())
-					entry.m_Strings[member.name.GetString()] = member.value.GetString();
+			auto& entryValue = doc["entry"];
+			for (auto iMember = entryValue.MemberBegin(); iMember != entryValue.MemberEnd(); iMember++) {
+				entry.m_Keys.push_back(iMember->name.GetString());
+				if (iMember->value.IsString())
+					entry.m_Strings[iMember->name.GetString()] = iMember->value.GetString();
 			}
 			entry.m_nDuration = doc["entry"]["executionduration"].GetInt64();
 			entry.m_nLayerCount = doc["entry"]["executionlayercount"].GetInt64();
