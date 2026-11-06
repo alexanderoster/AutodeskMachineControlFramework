@@ -283,6 +283,16 @@ public:
 
 	IDateTime* GetStartDateTime() override;
 
+	IOperationSequenceHandler* GetOperationSequenceHandler() override;
+
+	IOperationSequenceExecution* StartOperationSequence(const std::string& sExecutionName, const std::string& sSequenceName, const std::string& sBindingGroup, const std::string& sReturnState) override;
+
+	IOperationSequenceExecution* FindOperationSequenceExecution(const std::string& sExecutionName, const bool bFailIfNotExisting) override;
+
+	bool HasDispatchedOperation() override;
+
+	IDispatchedOperation* GetDispatchedOperation() override;
+
 };
 
 } // namespace Impl

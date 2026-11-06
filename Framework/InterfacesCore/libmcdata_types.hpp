@@ -478,6 +478,11 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_JOBNAMETOOLONG 451 /** Job name exceeds maximum allowed length */
 #define LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG 452 /** String parameter exceeds maximum allowed length */
 #define LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION 453 /** Telemetry setting changed after database initialisation */
+#define LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCESTATEMACHINE 454 /** Invalid operation sequence state machine name */
+#define LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCENAME 455 /** Invalid operation sequence name */
+#define LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION 456 /** Invalid operation sequence revision */
+#define LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS 457 /** Operation sequence revision already exists */
+#define LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND 458 /** Operation sequence revision not found */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -868,6 +873,11 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_JOBNAMETOOLONG: return "Job name exceeds maximum allowed length";
     case LIBMCDATA_ERROR_STRINGPARAMETERTOOLONG: return "String parameter exceeds maximum allowed length";
     case LIBMCDATA_ERROR_TELEMETRYSETTINGAFTERINITIALISATION: return "Telemetry setting changed after database initialisation";
+    case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCESTATEMACHINE: return "Invalid operation sequence state machine name";
+    case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCENAME: return "Invalid operation sequence name";
+    case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION: return "Invalid operation sequence revision";
+    case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS: return "Operation sequence revision already exists";
+    case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND: return "Operation sequence revision not found";
     default: return "unknown error";
   }
 }
@@ -907,6 +917,9 @@ typedef LibMCDataHandle LibMCData_LoginHandler;
 typedef LibMCDataHandle LibMCData_PersistencyHandler;
 typedef LibMCDataHandle LibMCData_UserPreferenceHandler;
 typedef LibMCDataHandle LibMCData_SessionMetricsHandler;
+typedef LibMCDataHandle LibMCData_OperationSequenceRevision;
+typedef LibMCDataHandle LibMCData_OperationSequenceRevisionIterator;
+typedef LibMCDataHandle LibMCData_OperationSequenceStore;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersion;
 typedef LibMCDataHandle LibMCData_MachineConfigurationVersionIterator;
 typedef LibMCDataHandle LibMCData_MachineConfigurationXSD;

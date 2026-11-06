@@ -453,6 +453,11 @@
 		<error name="JOBNAMETOOLONG" code="451" description="Job name exceeds maximum allowed length" />
 		<error name="STRINGPARAMETERTOOLONG" code="452" description="String parameter exceeds maximum allowed length" />
 		<error name="TELEMETRYSETTINGAFTERINITIALISATION" code="453" description="Telemetry setting changed after database initialisation" />
+		<error name="INVALIDOPERATIONSEQUENCESTATEMACHINE" code="454" description="Invalid operation sequence state machine name" />
+		<error name="INVALIDOPERATIONSEQUENCENAME" code="455" description="Invalid operation sequence name" />
+		<error name="INVALIDOPERATIONSEQUENCEREVISION" code="456" description="Invalid operation sequence revision" />
+		<error name="OPERATIONSEQUENCEREVISIONEXISTS" code="457" description="Operation sequence revision already exists" />
+		<error name="OPERATIONSEQUENCEREVISIONNOTFOUND" code="458" description="Operation sequence revision not found" />
 
 	</errors>
 	
@@ -2080,6 +2085,100 @@
 
 	</class>
 
+	<!-- The OperationSequenceRevision class is an immutable snapshot of a database row. -->
+	<class name="OperationSequenceRevision" parent="Base" description="A stored revision of an operation sequence.">
+
+		<method name="GetUUID" description="Returns the UUID of the revision.">
+			<param name="UUID" type="string" pass="return" description="Revision UUID." />
+		</method>
+
+		<method name="GetStateMachine" description="Returns the state machine instance the sequence belongs to.">
+			<param name="StateMachine" type="string" pass="return" description="State machine instance name." />
+		</method>
+
+		<method name="GetSequenceName" description="Returns the sequence name.">
+			<param name="SequenceName" type="string" pass="return" description="Sequence name." />
+		</method>
+
+		<method name="GetRevision" description="Returns the revision number.">
+			<param name="Revision" type="uint32" pass="return" description="Revision number, 1-based." />
+		</method>
+
+		<method name="GetOrigin" description="Returns the origin of the revision.">
+			<param name="Origin" type="uint32" pass="return" description="Origin as integer value of LibMCEnv::eOperationSequenceOrigin." />
+		</method>
+
+		<method name="GetContent" description="Returns the XML content of the revision.">
+			<param name="Content" type="string" pass="return" description="XML content in the operationsequence/2026/11 format." />
+		</method>
+
+		<method name="GetSHA256" description="Returns the SHA256 checksum of the content.">
+			<param name="SHA256" type="string" pass="return" description="SHA256 checksum." />
+		</method>
+
+		<method name="GetUserUUID" description="Returns the user that published the revision.">
+			<param name="UserUUID" type="string" pass="return" description="User UUID. Empty UUID if published by the system." />
+		</method>
+
+		<method name="GetTimestamp" description="Returns the publish timestamp.">
+			<param name="TimestampUTC" type="string" pass="return" description="ISO 8601 UTC timestamp." />
+		</method>
+
+	</class>
+
+	<class name="OperationSequenceRevisionIterator" parent="Iterator" description="Iterator over OperationSequenceRevision instances.">
+
+		<method name="GetCurrent" description="Returns the current OperationSequenceRevision instance.">
+			<param name="Instance" type="class" class="OperationSequenceRevision" pass="return" description="Current revision." />
+		</method>
+
+	</class>
+
+	<class name="OperationSequenceStore" parent="Base" description="Insert-only store of operation sequence revisions." multithread="true">
+
+		<method name="StoreRevision" description="Stores a new revision. Fails if the revision number already exists for the sequence.">
+			<param name="UUID" type="string" pass="in" description="Revision UUID." />
+			<param name="StateMachine" type="string" pass="in" description="State machine instance name. MUST NOT be empty." />
+			<param name="SequenceName" type="string" pass="in" description="Sequence name. MUST NOT be empty." />
+			<param name="Revision" type="uint32" pass="in" description="Revision number. MUST be larger than 0." />
+			<param name="Origin" type="uint32" pass="in" description="Origin as integer value of LibMCEnv::eOperationSequenceOrigin." />
+			<param name="Content" type="string" pass="in" description="XML content." />
+			<param name="UserUUID" type="string" pass="in" description="User UUID. Empty for the system." />
+			<param name="AbsoluteTimeStamp" type="uint64" pass="in" description="Absolute Time Stamp in Microseconds since 1970." />
+			<param name="Instance" type="class" class="OperationSequenceRevision" pass="return" description="Stored revision." />
+		</method>
+
+		<method name="GetLatestRevisionNumber" description="Returns the latest revision number of a sequence.">
+			<param name="StateMachine" type="string" pass="in" description="State machine instance name." />
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Revision" type="uint32" pass="return" description="Latest revision, or 0 if nothing is stored." />
+		</method>
+
+		<method name="ListLatestRevisions" description="Lists the latest revision of every sequence of a state machine, sorted by name.">
+			<param name="StateMachine" type="string" pass="in" description="State machine instance name." />
+			<param name="Iterator" type="class" class="OperationSequenceRevisionIterator" pass="return" description="Latest revisions." />
+		</method>
+
+		<method name="ListRevisions" description="Lists all revisions of a sequence, newest first.">
+			<param name="StateMachine" type="string" pass="in" description="State machine instance name." />
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Iterator" type="class" class="OperationSequenceRevisionIterator" pass="return" description="Revisions." />
+		</method>
+
+		<method name="FindRevision" description="Returns a specific revision of a sequence.">
+			<param name="StateMachine" type="string" pass="in" description="State machine instance name." />
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Revision" type="uint32" pass="in" description="Revision number." />
+			<param name="Instance" type="optionalclass" class="OperationSequenceRevision" pass="return" description="Revision, or null if not found." />
+		</method>
+
+		<method name="FindRevisionByUUID" description="Returns a revision by its UUID.">
+			<param name="UUID" type="string" pass="in" description="Revision UUID." />
+			<param name="Instance" type="optionalclass" class="OperationSequenceRevision" pass="return" description="Revision, or null if not found." />
+		</method>
+
+	</class>
+
 	<!-- The MachineConfigurationVersion class is not thread safe and MUST ONLY be used in a single thread context... -->
 	<class name="MachineConfigurationVersion" parent="Base" description="Machine configuration XML version.">
 
@@ -2391,6 +2490,10 @@
 
 		<method name="CreateSessionMetricsHandler" description="creates a session metrics handler instance.">
 			<param name="SessionMetricsHandler" type="class" class="SessionMetricsHandler" pass="return" description="SessionMetricsHandler instance." />	
+		</method>
+
+		<method name="CreateOperationSequenceStore" description="creates an operation sequence store instance.">
+			<param name="OperationSequenceStore" type="class" class="OperationSequenceStore" pass="return" description="OperationSequenceStore instance." />	
 		</method>
 		
 		<method name="SetBaseTempDirectory" description="Sets a custom base temp directory. An empty string defaults to the system temp directory.">

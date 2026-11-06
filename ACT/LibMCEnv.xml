@@ -307,6 +307,38 @@
 		<error name="FORMULAEVALUATIONFAILED" code="10267" description="Formula evaluation failed." />
 		<error name="FORMULASESSIONREFERENCESNOTAVAILABLE" code="10268" description="Session and user references are only available in formulas of the UI environment." />
 		<error name="INVALIDFORMULAREFERENCEINDEX" code="10269" description="Invalid formula reference index." />			
+		<error name="INVALIDOPERATIONTYPENAME" code="10270" description="Invalid operation type name. MUST be a non-empty alphanumeric identifier." />
+		<error name="OPERATIONTYPENOTFOUND" code="10271" description="Operation type not found." />
+		<error name="OPERATIONTYPEDEFINITIONMISMATCH" code="10272" description="Operation type or parameter already registered with a different definition." />
+		<error name="OPERATIONTARGETSTATENOTFOUND" code="10273" description="Target state of the operation type does not exist in the state machine." />
+		<error name="INVALIDOPERATIONPARAMETERNAME" code="10274" description="Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name." />
+		<error name="OPERATIONPARAMETERNOTFOUND" code="10275" description="Operation parameter not found." />
+		<error name="INVALIDOPERATIONPARAMETERDEFAULT" code="10276" description="Default value of the operation parameter is outside of its range or not a valid enum option." />
+		<error name="OPERATIONITEMLISTNOTFOUND" code="10277" description="Operation item list not found." />
+		<error name="OPERATIONITEMLISTFULL" code="10278" description="Operation item list has reached its maximum item count." />
+		<error name="INVALIDOPERATIONSEQUENCENAME" code="10279" description="Invalid operation sequence name. MUST be a non-empty alphanumeric identifier." />
+		<error name="OPERATIONSEQUENCENOTFOUND" code="10280" description="Operation sequence not found." />
+		<error name="INVALIDOPERATIONSEQUENCEXML" code="10281" description="Operation sequence XML is malformed or has an unknown root element or namespace." />
+		<error name="OPERATIONSEQUENCEVALIDATIONFAILED" code="10282" description="Operation sequence validation failed." />
+		<error name="OPERATIONSEQUENCEREVISIONCONFLICT" code="10283" description="A newer revision of the operation sequence has been published in the meantime." />
+		<error name="OPERATIONSEQUENCEISPUBLISHED" code="10284" description="Published operation sequences are immutable. Create a working copy to make changes." />
+		<error name="OPERATIONNOTFOUND" code="10285" description="Operation not found in the sequence." />
+		<error name="OPERATIONPARAMETEREVALUATIONFAILED" code="10286" description="An operation parameter value could not be evaluated." />
+		<error name="OPERATIONSEQUENCEEXECUTIONNOTFOUND" code="10287" description="Operation sequence execution not found." />
+		<error name="OPERATIONSEQUENCEEXECUTIONNOTRUNNING" code="10288" description="Operation sequence execution is not running." />
+		<error name="NOOPERATIONDISPATCHED" code="10289" description="No operation has been dispatched in this state machine." />
+		<error name="OPERATIONVALUETYPEMISMATCH" code="10290" description="Operation parameter cannot be returned in the requested type." />
+		<error name="OPERATIONDISPATCHERTRANSITIONMISSING" code="10291" description="A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher." />
+		<error name="OPERATIONSEQUENCESTORAGEFAILED" code="10292" description="The operation sequence revision could not be stored in the database." />
+		<error name="OPERATIONSEQUENCEREGISTRYNOTFOUND" code="10293" description="No operation sequence registry exists for the state machine instance." />
+		<error name="OPERATIONTYPEREGISTRATIONNOTALLOWED" code="10294" description="Operation types can only be registered from the state environment of the owning state machine." />
+		<error name="INVALIDOPERATIONITEMINDEX" code="10295" description="Invalid operation item index." />
+		<error name="INVALIDOPERATIONINDEX" code="10296" description="Invalid operation index." />
+		<error name="INVALIDOPERATIONSEQUENCEISSUEINDEX" code="10297" description="Invalid operation sequence issue index." />
+		<error name="INVALIDOPERATIONENUMOPTIONINDEX" code="10298" description="Invalid operation enum option index." />
+		<error name="OPERATIONPARAMETERHASNORANGE" code="10299" description="Operation parameter has no range." />
+		<error name="INVALIDOPERATIONEXPRESSIONMODE" code="10300" description="Invalid operation expression mode for this parameter type." />
+		<error name="OPERATIONICONRESOURCENOTFOUND" code="10301" description="Operation icon resource not found." />
 		
 	</errors>
 
@@ -558,6 +590,49 @@
 		<option name="Retracted" value="80" description="NOT IMPLEMENTED: The sender has retracted the signal before it was processed." />
 		<option name="Archived" value="90" description="The signal has been archived." />
 	</enum>	
+
+	<enum name="OperationParameterType">
+		<option name="Unknown" value="0"/>
+		<option name="String" value="1"/>
+		<option name="Integer" value="2"/>
+		<option name="Double" value="3"/>
+		<option name="Bool" value="4"/>
+		<option name="Enum" value="5"/>
+	</enum>
+
+	<enum name="OperationExpressionMode">
+		<option name="LiteralOnly" value="1"/>
+		<option name="LiteralOrReference" value="2"/>
+		<option name="Formula" value="3"/>
+	</enum>
+
+	<enum name="OperationValueKind">
+		<option name="Default" value="0"/>
+		<option name="Literal" value="1"/>
+		<option name="Reference" value="2"/>
+		<option name="Formula" value="3"/>
+	</enum>
+
+	<enum name="OperationSequenceOrigin">
+		<option name="Unknown" value="0"/>
+		<option name="Resource" value="1"/>
+		<option name="String" value="2"/>
+		<option name="Code" value="3"/>
+		<option name="Editor" value="4"/>
+		<option name="Document" value="5"/>
+	</enum>
+
+	<enum name="OperationSequenceExecutionStatus">
+		<option name="Running" value="1"/>
+		<option name="Completed" value="2"/>
+		<option name="Aborted" value="3"/>
+		<option name="Failed" value="4"/>
+	</enum>
+
+	<enum name="OperationSequenceIssueSeverity">
+		<option name="Warning" value="1"/>
+		<option name="Error" value="2"/>
+	</enum>
 
 	
 	<class name="Base">
@@ -5605,6 +5680,624 @@
 
 	</class>
 
+	<class name="OperationParameterDefinition" parent="Base" description="Definition of a typed parameter of an operation type or item list.">
+		<method name="GetName" description="Returns the parameter name, which is also the XML attribute name.">
+			<param name="Name" type="string" pass="return" description="Parameter name." />
+		</method>
+		<method name="GetDisplayName" description="Returns the display name.">
+			<param name="DisplayName" type="string" pass="return" description="Display name." />
+		</method>
+		<method name="SetDisplayName" description="Sets the display name.">
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+		</method>
+		<method name="GetDescription" description="Returns the description.">
+			<param name="Description" type="string" pass="return" description="Description." />
+		</method>
+		<method name="SetDescription" description="Sets the description.">
+			<param name="Description" type="string" pass="in" description="Description." />
+		</method>
+		<method name="GetParameterType" description="Returns the data type.">
+			<param name="ParameterType" type="enum" class="OperationParameterType" pass="return" description="Data type." />
+		</method>
+		<method name="GetDefaultValue" description="Returns the default value as string.">
+			<param name="DefaultValue" type="string" pass="return" description="Default value." />
+		</method>
+		<method name="GetUnit" description="Returns the display unit. Informational only.">
+			<param name="Unit" type="string" pass="return" description="Unit, e.g. um/s. May be empty." />
+		</method>
+		<method name="SetUnit" description="Sets the display unit. Informational only.">
+			<param name="Unit" type="string" pass="in" description="Unit, e.g. um/s." />
+		</method>
+		<method name="HasRange" description="Returns if resolved values are clamped to a range. Only numeric parameters have ranges.">
+			<param name="HasRange" type="bool" pass="return" description="True if a range is defined." />
+		</method>
+		<method name="GetRange" description="Returns the range. Fails if no range is defined.">
+			<param name="Minimum" type="double" pass="out" description="Minimum value." />
+			<param name="Maximum" type="double" pass="out" description="Maximum value." />
+		</method>
+		<method name="GetExpressionMode" description="Returns which kinds of raw values are accepted.">
+			<param name="ExpressionMode" type="enum" class="OperationExpressionMode" pass="return" description="Expression mode." />
+		</method>
+		<method name="SetExpressionMode" description="Restricts the kinds of raw values that are accepted. Formula is only allowed for numeric and bool parameters.">
+			<param name="ExpressionMode" type="enum" class="OperationExpressionMode" pass="in" description="Expression mode." />
+		</method>
+		<method name="IsRequired" description="Returns if the parameter must be set explicitly in a sequence.">
+			<param name="IsRequired" type="bool" pass="return" description="True if required." />
+		</method>
+		<method name="SetRequired" description="Sets if the parameter must be set explicitly in a sequence. Default is false.">
+			<param name="IsRequired" type="bool" pass="in" description="True if required." />
+		</method>
+		<method name="AddEnumOption" description="Adds an option to an enum parameter. Fails for other types or if the value exists with a different display name.">
+			<param name="Value" type="string" pass="in" description="Option value as written in the sequence." />
+			<param name="DisplayName" type="string" pass="in" description="Display name of the option." />
+		</method>
+		<method name="GetEnumOptionCount" description="Returns the number of enum options.">
+			<param name="Count" type="uint32" pass="return" description="Number of options." />
+		</method>
+		<method name="GetEnumOption" description="Returns an enum option.">
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based." />
+			<param name="Value" type="string" pass="out" description="Option value." />
+			<param name="DisplayName" type="string" pass="out" description="Display name." />
+		</method>
+	</class>
+
+	<class name="OperationParameterDefinitionIterator" parent="Iterator" description="Iterator over parameter definitions.">
+		<method name="GetCurrent" description="Returns the current parameter definition.">
+			<param name="Instance" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+	</class>
+
+	<class name="OperationParameterContainer" parent="Base" description="Base class of operation types and item lists. Holds parameter definitions. Adding an existing parameter with an identical definition returns it; a different definition fails with OPERATIONTYPEDEFINITIONMISMATCH.">
+		<method name="AddStringParameter" description="Adds a string parameter. Default expression mode is LiteralOrReference.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="DefaultValue" type="string" pass="in" description="Default value." />
+			<param name="Definition" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+		<method name="AddIntegerParameter" description="Adds an integer parameter. Resolved values are clamped to the range and rounded. If Maximum is smaller than Minimum, no range is applied.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="DefaultValue" type="int64" pass="in" description="Default value." />
+			<param name="Minimum" type="int64" pass="in" description="Minimum value." />
+			<param name="Maximum" type="int64" pass="in" description="Maximum value." />
+			<param name="Definition" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+		<method name="AddDoubleParameter" description="Adds a double parameter. Resolved values are clamped to the range. If Maximum is smaller than Minimum, no range is applied.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="DefaultValue" type="double" pass="in" description="Default value." />
+			<param name="Minimum" type="double" pass="in" description="Minimum value." />
+			<param name="Maximum" type="double" pass="in" description="Maximum value." />
+			<param name="Definition" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+		<method name="AddBoolParameter" description="Adds a bool parameter.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="DefaultValue" type="bool" pass="in" description="Default value." />
+			<param name="Definition" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+		<method name="AddEnumParameter" description="Adds an enum parameter. Options are added with AddEnumOption. The default MUST become a valid option before the first sequence is validated.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="DefaultValue" type="string" pass="in" description="Default option value." />
+			<param name="Definition" type="class" class="OperationParameterDefinition" pass="return" description="Parameter definition." />
+		</method>
+		<method name="HasParameter" description="Returns if a parameter exists.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Exists" type="bool" pass="return" description="True if the parameter exists." />
+		</method>
+		<method name="FindParameter" description="Returns a parameter definition.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONPARAMETERNOTFOUND; otherwise returns null." />
+			<param name="Definition" type="optionalclass" class="OperationParameterDefinition" pass="return" description="Parameter definition or null." />
+		</method>
+		<method name="ListParameters" description="Lists all parameter definitions in registration order.">
+			<param name="Iterator" type="class" class="OperationParameterDefinitionIterator" pass="return" description="Parameter definitions." />
+		</method>
+	</class>
+
+	<class name="OperationItemListDefinition" parent="OperationParameterContainer" description="Definition of a repeated child element of an operation, e.g. the stage elements of a multi stage movement.">
+		<method name="GetName" description="Returns the item list name, which is also the XML element name of its items.">
+			<param name="Name" type="string" pass="return" description="Item list name." />
+		</method>
+		<method name="GetDisplayName" description="Returns the display name.">
+			<param name="DisplayName" type="string" pass="return" description="Display name." />
+		</method>
+		<method name="GetMaxItemCount" description="Returns the maximum number of items. Sequences with more items fail validation.">
+			<param name="MaxItemCount" type="uint32" pass="return" description="Maximum item count." />
+		</method>
+	</class>
+
+	<class name="OperationItemListDefinitionIterator" parent="Iterator" description="Iterator over item list definitions.">
+		<method name="GetCurrent" description="Returns the current item list definition.">
+			<param name="Instance" type="class" class="OperationItemListDefinition" pass="return" description="Item list definition." />
+		</method>
+	</class>
+
+	<class name="OperationTypeDefinition" parent="OperationParameterContainer" description="A registered operation type of a state machine.">
+		<method name="GetName" description="Returns the type name as used in the type attribute of an operation.">
+			<param name="Name" type="string" pass="return" description="Type name." />
+		</method>
+		<method name="GetTargetState" description="Returns the state that executes operations of this type.">
+			<param name="TargetState" type="string" pass="return" description="State name." />
+		</method>
+		<method name="GetDisplayName" description="Returns the display name.">
+			<param name="DisplayName" type="string" pass="return" description="Display name." />
+		</method>
+		<method name="SetDisplayName" description="Sets the display name. Defaults to the type name.">
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+		</method>
+		<method name="GetDescription" description="Returns the description.">
+			<param name="Description" type="string" pass="return" description="Description." />
+		</method>
+		<method name="SetDescription" description="Sets the description.">
+			<param name="Description" type="string" pass="in" description="Description." />
+		</method>
+		<method name="GetCategory" description="Returns the palette category.">
+			<param name="Category" type="string" pass="return" description="Category." />
+		</method>
+		<method name="SetCategory" description="Sets the palette category, e.g. Motion or Temperature.">
+			<param name="Category" type="string" pass="in" description="Category." />
+		</method>
+		<method name="GetIconResource" description="Returns the icon resource name.">
+			<param name="ResourceName" type="string" pass="return" description="Resource name. May be empty." />
+		</method>
+		<method name="SetIconResource" description="Sets an SVG or PNG resource of the plugin package as icon. Fails if the resource does not exist.">
+			<param name="ResourceName" type="string" pass="in" description="Resource name." />
+		</method>
+		<method name="GetAllowedContexts" description="Returns the comma-separated sequence contexts this type may be used in.">
+			<param name="Contexts" type="string" pass="return" description="Contexts. Empty means all." />
+		</method>
+		<method name="SetAllowedContexts" description="Restricts the type to sequences with one of the given contexts.">
+			<param name="Contexts" type="string" pass="in" description="Comma-separated contexts, e.g. build. Empty means all." />
+		</method>
+		<method name="AddItemList" description="Adds an item list. Returns the existing one if identical.">
+			<param name="Name" type="string" pass="in" description="Item list name, also the XML element name." />
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+			<param name="MaxItemCount" type="uint32" pass="in" description="Maximum number of items. MUST be larger than 0." />
+			<param name="Definition" type="class" class="OperationItemListDefinition" pass="return" description="Item list definition." />
+		</method>
+		<method name="FindItemList" description="Returns an item list definition.">
+			<param name="Name" type="string" pass="in" description="Item list name." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONITEMLISTNOTFOUND; otherwise returns null." />
+			<param name="Definition" type="optionalclass" class="OperationItemListDefinition" pass="return" description="Item list definition or null." />
+		</method>
+		<method name="ListItemLists" description="Lists all item list definitions.">
+			<param name="Iterator" type="class" class="OperationItemListDefinitionIterator" pass="return" description="Item list definitions." />
+		</method>
+	</class>
+
+	<class name="OperationTypeDefinitionIterator" parent="Iterator" description="Iterator over operation types.">
+		<method name="GetCurrent" description="Returns the current operation type.">
+			<param name="Instance" type="class" class="OperationTypeDefinition" pass="return" description="Operation type." />
+		</method>
+	</class>
+
+	<class name="OperationItem" parent="Base" description="An item of an item list of an operation.">
+		<method name="GetIndex" description="Returns the index in the item list.">
+			<param name="Index" type="uint32" pass="return" description="Index, 0-based." />
+		</method>
+		<method name="HasValue" description="Returns if a value is set explicitly.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="HasValue" type="bool" pass="return" description="True if set." />
+		</method>
+		<method name="GetRawValue" description="Returns the raw value as written. Returns the default if not set.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="return" description="Raw value." />
+		</method>
+		<method name="SetRawValue" description="Sets a raw value. Fails if the sequence is published or the parameter is not defined.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="in" description="Literal, dollar-prefixed parameter reference or formula." />
+		</method>
+		<method name="ClearValue" description="Removes an explicit value, so the default applies. Fails if the sequence is published.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+		</method>
+	</class>
+
+	<class name="Operation" parent="Base" description="An operation instance of a sequence.">
+		<method name="GetUUID" description="Returns the stable UUID of the operation.">
+			<param name="UUID" type="string" pass="return" description="UUID." />
+		</method>
+		<method name="GetIndex" description="Returns the position in the sequence.">
+			<param name="Index" type="uint32" pass="return" description="Index, 0-based." />
+		</method>
+		<method name="GetTypeName" description="Returns the operation type name.">
+			<param name="TypeName" type="string" pass="return" description="Type name." />
+		</method>
+		<method name="IsEnabled" description="Returns if the operation is executed. Disabled operations are skipped at dispatch.">
+			<param name="IsEnabled" type="bool" pass="return" description="True if enabled." />
+		</method>
+		<method name="SetEnabled" description="Enables or disables the operation. Fails if the sequence is published.">
+			<param name="IsEnabled" type="bool" pass="in" description="True to enable." />
+		</method>
+		<method name="GetComment" description="Returns the comment.">
+			<param name="Comment" type="string" pass="return" description="Comment." />
+		</method>
+		<method name="SetComment" description="Sets the comment. Fails if the sequence is published.">
+			<param name="Comment" type="string" pass="in" description="Comment." />
+		</method>
+		<method name="HasValue" description="Returns if a parameter value is set explicitly.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="HasValue" type="bool" pass="return" description="True if set." />
+		</method>
+		<method name="GetRawValue" description="Returns the raw value as written. Returns the default if not set.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="return" description="Raw value." />
+		</method>
+		<method name="GetValueKind" description="Returns how a raw value will be resolved.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="ValueKind" type="enum" class="OperationValueKind" pass="return" description="Default, Literal, Reference or Formula." />
+		</method>
+		<method name="SetRawValue" description="Sets a raw value. Fails if the sequence is published or the parameter is not defined for the type.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="in" description="Literal, dollar-prefixed parameter reference or formula." />
+		</method>
+		<method name="ClearValue" description="Removes an explicit value, so the default applies. Fails if the sequence is published.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+		</method>
+		<method name="GetItemCount" description="Returns the number of items of an item list.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Count" type="uint32" pass="return" description="Number of items." />
+		</method>
+		<method name="GetItem" description="Returns an item of an item list.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based." />
+			<param name="Item" type="class" class="OperationItem" pass="return" description="Item." />
+		</method>
+		<method name="AddItem" description="Appends an item. Fails with OPERATIONITEMLISTFULL at the maximum count, or if the sequence is published.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Item" type="class" class="OperationItem" pass="return" description="New item." />
+		</method>
+		<method name="RemoveItem" description="Removes an item. Fails if the sequence is published.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based." />
+		</method>
+	</class>
+
+	<class name="OperationIterator" parent="Iterator" description="Iterator over the operations of a sequence.">
+		<method name="GetCurrent" description="Returns the current operation.">
+			<param name="Instance" type="class" class="Operation" pass="return" description="Operation." />
+		</method>
+	</class>
+
+	<class name="OperationSequence" parent="Base" description="An operation sequence. Either an editable working copy or an immutable published revision.">
+		<method name="GetName" description="Returns the sequence name.">
+			<param name="Name" type="string" pass="return" description="Name." />
+		</method>
+		<method name="GetDisplayName" description="Returns the display name.">
+			<param name="DisplayName" type="string" pass="return" description="Display name." />
+		</method>
+		<method name="SetDisplayName" description="Sets the display name. Fails if published.">
+			<param name="DisplayName" type="string" pass="in" description="Display name." />
+		</method>
+		<method name="GetDescription" description="Returns the description.">
+			<param name="Description" type="string" pass="return" description="Description." />
+		</method>
+		<method name="SetDescription" description="Sets the description. Fails if published.">
+			<param name="Description" type="string" pass="in" description="Description." />
+		</method>
+		<method name="GetContext" description="Returns the context, e.g. build or manual.">
+			<param name="Context" type="string" pass="return" description="Context. May be empty." />
+		</method>
+		<method name="SetContext" description="Sets the context. Fails if published.">
+			<param name="Context" type="string" pass="in" description="Context." />
+		</method>
+		<method name="GetBindingGroup" description="Returns the default parameter group for dollar-prefixed parameter references.">
+			<param name="GroupName" type="string" pass="return" description="Parameter group. May be empty." />
+		</method>
+		<method name="SetBindingGroup" description="Sets the default parameter group for dollar-prefixed parameter references. Fails if published.">
+			<param name="GroupName" type="string" pass="in" description="Parameter group." />
+		</method>
+		<method name="IsPublished" description="Returns if this is an immutable published revision.">
+			<param name="IsPublished" type="bool" pass="return" description="True if published." />
+		</method>
+		<method name="GetRevision" description="Returns the revision. For a working copy, returns the revision it was based on, or 0.">
+			<param name="Revision" type="uint32" pass="return" description="Revision." />
+		</method>
+		<method name="GetRevisionUUID" description="Returns the UUID of the stored revision. Use it to reference the revision from build metadata.">
+			<param name="RevisionUUID" type="string" pass="return" description="Revision UUID. Empty for working copies." />
+		</method>
+		<method name="IsValid" description="Returns if the revision passed validation against the currently registered types. A stored revision can become invalid after a plugin update. Invalid revisions cannot be started.">
+			<param name="IsValid" type="bool" pass="return" description="True if valid. Always true for revisions published in this session." />
+		</method>
+		<method name="GetValidationResult" description="Returns the result of validating the revision against the currently registered types.">
+			<param name="Result" type="class" class="OperationSequenceValidationResult" pass="return" description="Validation result." />
+		</method>
+		<method name="GetOrigin" description="Returns where the sequence came from.">
+			<param name="Origin" type="enum" class="OperationSequenceOrigin" pass="return" description="Origin." />
+		</method>
+		<method name="GetTimestamp" description="Returns the publish timestamp. Empty for working copies.">
+			<param name="TimestampUTC" type="string" pass="return" description="ISO 8601 UTC timestamp." />
+		</method>
+		<method name="GetUserUUID" description="Returns the user that published the revision.">
+			<param name="UserUUID" type="string" pass="return" description="User UUID. Empty for working copies." />
+		</method>
+		<method name="GetOperationCount" description="Returns the number of operations, including disabled ones.">
+			<param name="Count" type="uint32" pass="return" description="Number of operations." />
+		</method>
+		<method name="GetOperation" description="Returns an operation by index.">
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based." />
+			<param name="Operation" type="class" class="Operation" pass="return" description="Operation." />
+		</method>
+		<method name="FindOperation" description="Returns an operation by UUID.">
+			<param name="UUID" type="string" pass="in" description="Operation UUID." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONNOTFOUND; otherwise returns null." />
+			<param name="Operation" type="optionalclass" class="Operation" pass="return" description="Operation or null." />
+		</method>
+		<method name="ListOperations" description="Lists all operations in order.">
+			<param name="Iterator" type="class" class="OperationIterator" pass="return" description="Operations." />
+		</method>
+		<method name="AddOperation" description="Appends an operation of a registered type with default values. Fails if published.">
+			<param name="TypeName" type="string" pass="in" description="Operation type." />
+			<param name="Operation" type="class" class="Operation" pass="return" description="New operation." />
+		</method>
+		<method name="InsertOperation" description="Inserts an operation before the given index. Fails if published.">
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based. The operation count appends." />
+			<param name="TypeName" type="string" pass="in" description="Operation type." />
+			<param name="Operation" type="class" class="Operation" pass="return" description="New operation." />
+		</method>
+		<method name="RemoveOperation" description="Removes an operation. Fails if published.">
+			<param name="UUID" type="string" pass="in" description="Operation UUID." />
+		</method>
+		<method name="MoveOperation" description="Moves an operation to a new index. Fails if published.">
+			<param name="UUID" type="string" pass="in" description="Operation UUID." />
+			<param name="NewIndex" type="uint32" pass="in" description="New index, 0-based." />
+		</method>
+		<method name="CreateWorkingCopy" description="Returns an editable deep copy, based on this revision. Operation UUIDs are kept.">
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="return" description="Working copy." />
+		</method>
+		<method name="SerializeToXMLString" description="Serializes the sequence in the operationsequence/2026/11 format. Only explicitly set values are written.">
+			<param name="XMLString" type="string" pass="return" description="XML string." />
+		</method>
+		<method name="SerializeToXMLDocument" description="Serializes the sequence into a new XML document.">
+			<param name="Document" type="class" class="XMLDocument" pass="return" description="XML document." />
+		</method>
+	</class>
+
+	<class name="OperationSequenceIterator" parent="Iterator" description="Iterator over published sequence revisions.">
+		<method name="GetCurrent" description="Returns the current sequence.">
+			<param name="Instance" type="class" class="OperationSequence" pass="return" description="Sequence." />
+		</method>
+	</class>
+
+	<class name="OperationSequenceValidationResult" parent="Base" description="Result of validating a sequence against the registered operation types.">
+		<method name="IsValid" description="Returns true if there are no errors. Warnings do not prevent publishing.">
+			<param name="IsValid" type="bool" pass="return" description="True if valid." />
+		</method>
+		<method name="GetIssueCount" description="Returns the number of errors and warnings.">
+			<param name="Count" type="uint32" pass="return" description="Number of issues." />
+		</method>
+		<method name="GetIssue" description="Returns an issue.">
+			<param name="Index" type="uint32" pass="in" description="Index, 0-based." />
+			<param name="Severity" type="enum" class="OperationSequenceIssueSeverity" pass="out" description="Severity." />
+			<param name="OperationUUID" type="string" pass="out" description="Operation UUID, or empty for sequence-level issues." />
+			<param name="ParameterName" type="string" pass="out" description="Parameter or item list name. May be empty." />
+			<param name="Message" type="string" pass="out" description="Human readable message." />
+		</method>
+	</class>
+
+	<class name="OperationSequenceHandler" parent="Base" description="Operation type and sequence registry of a state machine instance. Shared by the state machine and the user interface.">
+		<method name="GetStateMachineInstance" description="Returns the state machine the registry belongs to.">
+			<param name="MachineInstance" type="string" pass="return" description="State machine instance name." />
+		</method>
+
+		<!-- Types (registration is only allowed from the owning state machine) -->
+		<method name="RegisterOperationType" description="Registers an operation type, or returns the existing one if it has the same target state. Only allowed from the state environment of the owning state machine.">
+			<param name="TypeName" type="string" pass="in" description="Type name. Case sensitive." />
+			<param name="TargetState" type="string" pass="in" description="State that executes the operation. MUST exist." />
+			<param name="Definition" type="class" class="OperationTypeDefinition" pass="return" description="Operation type." />
+		</method>
+		<method name="HasOperationType" description="Returns if a type is registered.">
+			<param name="TypeName" type="string" pass="in" description="Type name." />
+			<param name="Exists" type="bool" pass="return" description="True if registered." />
+		</method>
+		<method name="FindOperationType" description="Returns a registered type.">
+			<param name="TypeName" type="string" pass="in" description="Type name." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONTYPENOTFOUND; otherwise returns null." />
+			<param name="Definition" type="optionalclass" class="OperationTypeDefinition" pass="return" description="Operation type or null." />
+		</method>
+		<method name="ListOperationTypes" description="Lists all registered types.">
+			<param name="Iterator" type="class" class="OperationTypeDefinitionIterator" pass="return" description="Operation types." />
+		</method>
+
+		<!-- Working copies -->
+		<method name="CreateSequence" description="Creates an empty working copy.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="return" description="Working copy." />
+		</method>
+		<method name="ParseSequenceFromString" description="Parses a sequence XML string into a working copy. Accepts the operationsequence/2026/11 and processsequence/2025/03 formats. Does not validate.">
+			<param name="XMLString" type="string" pass="in" description="XML string." />
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="return" description="Working copy." />
+		</method>
+		<method name="ParseSequenceFromResource" description="Parses a sequence resource of the plugin package into a working copy. Does not validate.">
+			<param name="ResourceName" type="string" pass="in" description="Resource name." />
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="return" description="Working copy." />
+		</method>
+		<method name="ParseSequenceFromXMLDocument" description="Parses a sequence element of an XML document into a working copy. Does not validate.">
+			<param name="Document" type="class" class="XMLDocument" pass="in" description="XML document." />
+			<param name="NodePath" type="string" pass="in" description="Slash-separated path to the sequence element. Empty for the root." />
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="return" description="Working copy." />
+		</method>
+		<method name="ValidateSequence" description="Validates a sequence against the registered types and its default binding group.">
+			<param name="Sequence" type="class" class="OperationSequence" pass="in" description="Sequence to validate." />
+			<param name="Result" type="class" class="OperationSequenceValidationResult" pass="return" description="Validation result." />
+		</method>
+
+		<!-- Published revisions -->
+		<method name="PublishSequence" description="Validates a working copy and publishes it as the next revision. Fails with OPERATIONSEQUENCEVALIDATIONFAILED or OPERATIONSEQUENCEREVISIONCONFLICT.">
+			<param name="WorkingCopy" type="class" class="OperationSequence" pass="in" description="Working copy." />
+			<param name="UserUUID" type="string" pass="in" description="User that publishes the revision." />
+			<param name="OverwriteNewerRevision" type="bool" pass="in" description="If true, publishes even if a newer revision than the working copy's base exists." />
+			<param name="Published" type="class" class="OperationSequence" pass="return" description="Published revision." />
+		</method>
+		<method name="EnsureSequenceFromResource" description="Returns the stored latest revision if it is valid. If nothing is stored, publishes the resource as revision 1. If the stored latest revision is invalid against the registered types, publishes the resource as a new revision and logs a warning. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the resource itself is invalid.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name. Overrides the name in the file." />
+			<param name="ResourceName" type="string" pass="in" description="Resource name." />
+			<param name="Published" type="class" class="OperationSequence" pass="return" description="Latest revision." />
+		</method>
+		<method name="HasSequence" description="Returns if a sequence is published.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Exists" type="bool" pass="return" description="True if published." />
+		</method>
+		<method name="GetSequence" description="Returns the latest revision. Fails with OPERATIONSEQUENCENOTFOUND.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Published" type="class" class="OperationSequence" pass="return" description="Latest revision." />
+		</method>
+		<method name="GetSequenceRevision" description="Returns a specific revision. Fails with OPERATIONSEQUENCENOTFOUND.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Revision" type="uint32" pass="in" description="Revision, 1-based." />
+			<param name="Published" type="class" class="OperationSequence" pass="return" description="Revision." />
+		</method>
+		<method name="ListSequences" description="Lists the latest revision of all sequences, sorted by name.">
+			<param name="Iterator" type="class" class="OperationSequenceIterator" pass="return" description="Sequences." />
+		</method>
+		<method name="ListSequenceRevisions" description="Lists all stored revisions of a sequence, newest first. Fails with OPERATIONSEQUENCENOTFOUND.">
+			<param name="SequenceName" type="string" pass="in" description="Sequence name." />
+			<param name="Iterator" type="class" class="OperationSequenceIterator" pass="return" description="Revisions." />
+		</method>
+		<method name="FindSequenceRevisionByUUID" description="Returns a stored revision by its revision UUID, e.g. from build metadata.">
+			<param name="RevisionUUID" type="string" pass="in" description="Revision UUID." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONSEQUENCENOTFOUND; otherwise returns null." />
+			<param name="Published" type="optionalclass" class="OperationSequence" pass="return" description="Revision or null." />
+		</method>
+
+		<!-- Transition check -->
+		<method name="ValidateDispatcherTransitions" description="Checks that the dispatcher state declares an outstate to the target state of every registered type, and that every target state declares an outstate back to the dispatcher. Fails with OPERATIONDISPATCHERTRANSITIONMISSING and lists all missing outstates. Only allowed from the state environment of the owning state machine.">
+			<param name="DispatcherState" type="string" pass="in" description="Orchestrator state. MUST exist." />
+		</method>
+
+		<!-- Status mirror -->
+		<method name="SetStatusParameterGroup" description="Mirrors execution status and resolved values into a declared parameter group of the owning state machine. Only existing parameters are written.">
+			<param name="GroupName" type="string" pass="in" description="Parameter group. Empty disables mirroring." />
+			<param name="ValuePrefix" type="string" pass="in" description="Prefix for the type and resolved values, e.g. op_." />
+		</method>
+	</class>
+
+	<class name="DispatchedOperation" parent="Base" description="Snapshot of the operation being executed. All values are resolved, defaulted and clamped at dispatch.">
+		<method name="GetUUID" description="Returns the operation UUID.">
+			<param name="UUID" type="string" pass="return" description="UUID." />
+		</method>
+		<method name="GetTypeName" description="Returns the operation type.">
+			<param name="TypeName" type="string" pass="return" description="Type name." />
+		</method>
+		<method name="GetIndex" description="Returns the index in the sequence.">
+			<param name="Index" type="uint32" pass="return" description="Index, 0-based." />
+		</method>
+		<method name="GetExecutionName" description="Returns the execution that dispatched the operation.">
+			<param name="ExecutionName" type="string" pass="return" description="Execution name." />
+		</method>
+		<method name="GetSequenceName" description="Returns the sequence name.">
+			<param name="SequenceName" type="string" pass="return" description="Sequence name." />
+		</method>
+		<method name="GetRevision" description="Returns the sequence revision.">
+			<param name="Revision" type="uint32" pass="return" description="Revision." />
+		</method>
+		<method name="GetComment" description="Returns the comment.">
+			<param name="Comment" type="string" pass="return" description="Comment." />
+		</method>
+		<method name="GetTargetState" description="Returns the state that executes the operation.">
+			<param name="TargetState" type="string" pass="return" description="State name." />
+		</method>
+		<method name="GetReturnState" description="Returns the state to continue with when the operation is done.">
+			<param name="ReturnState" type="string" pass="return" description="State name." />
+		</method>
+		<method name="HasExplicitValue" description="Returns if the sequence set the value explicitly, rather than using the default.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="HasValue" type="bool" pass="return" description="True if set explicitly." />
+		</method>
+		<method name="GetStringValue" description="Returns a resolved value as string. Works for all parameter types.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetIntegerValue" description="Returns a resolved numeric or bool value as integer. Doubles are rounded. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="int64" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetDoubleValue" description="Returns a resolved numeric or bool value as double. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="double" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetBoolValue" description="Returns a resolved value as bool. Numbers are true unless zero.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="bool" pass="return" description="Resolved value." />
+		</method>
+		<method name="ReevaluateDoubleValue" description="Evaluates the raw value again against the current parameter values and clamps it.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="double" pass="return" description="Current value." />
+		</method>
+		<method name="ReevaluateIntegerValue" description="Evaluates the raw value again against the current parameter values, clamps and rounds it.">
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="int64" pass="return" description="Current value." />
+		</method>
+		<method name="GetItemCount" description="Returns the number of items of an item list.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Count" type="uint32" pass="return" description="Number of items." />
+		</method>
+		<method name="GetItemStringValue" description="Returns a resolved item value as string.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Item index, 0-based." />
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="string" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetItemIntegerValue" description="Returns a resolved item value as integer.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Item index, 0-based." />
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="int64" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetItemDoubleValue" description="Returns a resolved item value as double.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Item index, 0-based." />
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="double" pass="return" description="Resolved value." />
+		</method>
+		<method name="GetItemBoolValue" description="Returns a resolved item value as bool.">
+			<param name="ListName" type="string" pass="in" description="Item list name." />
+			<param name="Index" type="uint32" pass="in" description="Item index, 0-based." />
+			<param name="Name" type="string" pass="in" description="Parameter name." />
+			<param name="Value" type="bool" pass="return" description="Resolved value." />
+		</method>
+		<method name="MarkFailed" description="Marks the operation and its execution as failed, logs the message and updates the status mirror. The caller chooses the next state.">
+			<param name="Message" type="string" pass="in" description="Failure reason." />
+		</method>
+	</class>
+
+	<class name="OperationSequenceExecution" parent="Base" description="A named cursor over a pinned sequence revision. Only available in the state environment.">
+		<method name="GetName" description="Returns the execution name.">
+			<param name="Name" type="string" pass="return" description="Execution name." />
+		</method>
+		<method name="GetSequence" description="Returns the pinned revision.">
+			<param name="Sequence" type="class" class="OperationSequence" pass="return" description="Pinned revision." />
+		</method>
+		<method name="GetBindingGroup" description="Returns the parameter group used for dollar-prefixed parameter references.">
+			<param name="GroupName" type="string" pass="return" description="Parameter group." />
+		</method>
+		<method name="SetBindingGroup" description="Changes the parameter group for subsequent dispatches. MUST exist.">
+			<param name="GroupName" type="string" pass="in" description="Parameter group." />
+		</method>
+		<method name="GetReturnState" description="Returns the state that op states return to.">
+			<param name="ReturnState" type="string" pass="return" description="State name." />
+		</method>
+		<method name="GetStatus" description="Returns the execution status.">
+			<param name="Status" type="enum" class="OperationSequenceExecutionStatus" pass="return" description="Status." />
+		</method>
+		<method name="GetNextOperationIndex" description="Returns the index the next dispatch starts searching from.">
+			<param name="Index" type="uint32" pass="return" description="Index, 0-based." />
+		</method>
+		<method name="GetIterationCount" description="Returns how often the execution has been restarted.">
+			<param name="Count" type="uint32" pass="return" description="Number of restarts." />
+		</method>
+		<method name="DispatchNextOperation" description="Skips disabled operations, resolves the next operation and makes it the dispatched operation of the state machine. Returns null and sets the status to Completed at the end. Fails with OPERATIONPARAMETEREVALUATIONFAILED and sets the status to Failed if a value cannot be resolved.">
+			<param name="Operation" type="optionalclass" class="DispatchedOperation" pass="return" description="Dispatched operation, or null at the end of the sequence." />
+		</method>
+		<method name="Restart" description="Starts again at the first operation of the pinned revision and increments the iteration count. Newer revisions are only used by the next StartOperationSequence.">
+		</method>
+		<method name="Abort" description="Sets the status to Aborted, logs the reason and updates the status mirror.">
+			<param name="Reason" type="string" pass="in" description="Reason." />
+		</method>
+	</class>
+
+
 	<class name="StateEnvironment" parent="Base" description="Environment of the state">
 
 		<method name="GetMachineState" description="Retrieves the machine state">
@@ -6150,6 +6843,33 @@
 		<method name="EvaluateFormulaAsBool" description="Compiles and evaluates a formula once. See CreateFormula and Formula.EvaluateAsBool.">
 			<param name="Formula" type="string" pass="in" description="Formula text." />
 			<param name="Value" type="bool" pass="return" description="Result of the formula." />
+		</method>
+
+
+		<method name="GetOperationSequenceHandler" description="Returns the operation sequence registry of this state machine.">
+			<param name="Handler" type="class" class="OperationSequenceHandler" pass="return" description="Registry of this state machine." />
+		</method>
+
+		<method name="StartOperationSequence" description="Starts an execution pinned to the latest revision of a sequence. An execution with the same name is aborted and replaced. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the latest revision is invalid.">
+			<param name="ExecutionName" type="string" pass="in" description="Execution name, e.g. process." />
+			<param name="SequenceName" type="string" pass="in" description="Published sequence name." />
+			<param name="BindingGroup" type="string" pass="in" description="Parameter group for dollar-prefixed parameter references. Empty uses the sequence's binding group. MUST exist." />
+			<param name="ReturnState" type="string" pass="in" description="State that op states return to. MUST exist." />
+			<param name="Execution" type="class" class="OperationSequenceExecution" pass="return" description="New execution." />
+		</method>
+
+		<method name="FindOperationSequenceExecution" description="Returns an execution of this state machine by name.">
+			<param name="ExecutionName" type="string" pass="in" description="Execution name." />
+			<param name="FailIfNotExisting" type="bool" pass="in" description="If true, fails with OPERATIONSEQUENCEEXECUTIONNOTFOUND; otherwise returns null." />
+			<param name="Execution" type="optionalclass" class="OperationSequenceExecution" pass="return" description="Execution or null." />
+		</method>
+
+		<method name="HasDispatchedOperation" description="Returns if an operation has been dispatched in this state machine.">
+			<param name="HasOperation" type="bool" pass="return" description="True if an operation has been dispatched." />
+		</method>
+
+		<method name="GetDispatchedOperation" description="Returns the operation dispatched most recently in this state machine. Fails with NOOPERATIONDISPATCHED.">
+			<param name="Operation" type="class" class="DispatchedOperation" pass="return" description="Dispatched operation." />
 		</method>
 
 	</class>
@@ -6788,6 +7508,12 @@
 			<param name="Formula" type="string" pass="in" description="Formula text." />
 			<param name="Value" type="bool" pass="return" description="Result of the formula." />
 		</method>
+
+		<method name="GetOperationSequenceHandler" description="Returns the operation sequence registry of a state machine. Operation types cannot be registered from the user interface.">
+			<param name="MachineInstance" type="string" pass="in" description="State machine instance name." />
+			<param name="Handler" type="class" class="OperationSequenceHandler" pass="return" description="Registry of the state machine." />
+		</method>
+
 	</class>
 
 

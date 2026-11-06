@@ -734,6 +734,41 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_INVALIDTELEMETRYSETTING 718 /** Invalid telemetry setting. */
 #define LIBMC_ERROR_INVALIDTOOLPATHPROFILEINDEX 719 /** Invalid toolpath profile index. */
 #define LIBMC_ERROR_INVALIDTOOLPATHMODIFIERINDEX 720 /** Invalid toolpath modifier index. */
+#define LIBMC_ERROR_INVALIDOPERATIONTYPENAME 721 /** Invalid operation type name. MUST be a non-empty alphanumeric identifier. */
+#define LIBMC_ERROR_OPERATIONTYPENOTFOUND 722 /** Operation type not found. */
+#define LIBMC_ERROR_OPERATIONTYPEDEFINITIONMISMATCH 723 /** Operation type or parameter already registered with a different definition. */
+#define LIBMC_ERROR_OPERATIONTARGETSTATENOTFOUND 724 /** Target state of the operation type does not exist in the state machine. */
+#define LIBMC_ERROR_INVALIDOPERATIONPARAMETERNAME 725 /** Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name. */
+#define LIBMC_ERROR_OPERATIONPARAMETERNOTFOUND 726 /** Operation parameter not found. */
+#define LIBMC_ERROR_INVALIDOPERATIONPARAMETERDEFAULT 727 /** Default value of the operation parameter is outside of its range or not a valid enum option. */
+#define LIBMC_ERROR_OPERATIONITEMLISTNOTFOUND 728 /** Operation item list not found. */
+#define LIBMC_ERROR_OPERATIONITEMLISTFULL 729 /** Operation item list has reached its maximum item count. */
+#define LIBMC_ERROR_INVALIDOPERATIONSEQUENCENAME 730 /** Invalid operation sequence name. MUST be a non-empty alphanumeric identifier. */
+#define LIBMC_ERROR_OPERATIONSEQUENCENOTFOUND 731 /** Operation sequence not found. */
+#define LIBMC_ERROR_INVALIDOPERATIONSEQUENCEXML 732 /** Operation sequence XML is malformed or has an unknown root element or namespace. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED 733 /** Operation sequence validation failed. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT 734 /** A newer revision of the operation sequence has been published in the meantime. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEISPUBLISHED 735 /** Published operation sequences are immutable. Create a working copy to make changes. */
+#define LIBMC_ERROR_OPERATIONNOTFOUND 736 /** Operation not found in the sequence. */
+#define LIBMC_ERROR_OPERATIONPARAMETEREVALUATIONFAILED 737 /** An operation parameter value could not be evaluated. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND 738 /** Operation sequence execution not found. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING 739 /** Operation sequence execution is not running. */
+#define LIBMC_ERROR_NOOPERATIONDISPATCHED 740 /** No operation has been dispatched in this state machine. */
+#define LIBMC_ERROR_OPERATIONVALUETYPEMISMATCH 741 /** Operation parameter cannot be returned in the requested type. */
+#define LIBMC_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING 742 /** A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher. */
+#define LIBMC_ERROR_OPERATIONSEQUENCESTORAGEFAILED 743 /** The operation sequence revision could not be stored in the database. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND 744 /** No operation sequence registry exists for the state machine instance. */
+#define LIBMC_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED 745 /** Operation types can only be registered from the state environment of the owning state machine. */
+#define LIBMC_ERROR_INVALIDOPERATIONITEMINDEX 746 /** Invalid operation item index. */
+#define LIBMC_ERROR_INVALIDOPERATIONINDEX 747 /** Invalid operation index. */
+#define LIBMC_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX 748 /** Invalid operation sequence issue index. */
+#define LIBMC_ERROR_INVALIDOPERATIONENUMOPTIONINDEX 749 /** Invalid operation enum option index. */
+#define LIBMC_ERROR_OPERATIONPARAMETERHASNORANGE 750 /** Operation parameter has no range. */
+#define LIBMC_ERROR_INVALIDOPERATIONEXPRESSIONMODE 751 /** Invalid operation expression mode for this parameter type. */
+#define LIBMC_ERROR_MISSINGOPERATIONSEQUENCEEDITORSTATEMACHINE 752 /** The operationsequenceeditor element requires a statemachine attribute. */
+#define LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED 753 /** The user is not permitted to edit operation sequences. */
+#define LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON 754 /** Invalid operation sequence JSON. */
+#define LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND 755 /** Operation icon resource not found. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1380,6 +1415,41 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_INVALIDTELEMETRYSETTING: return "Invalid telemetry setting.";
     case LIBMC_ERROR_INVALIDTOOLPATHPROFILEINDEX: return "Invalid toolpath profile index.";
     case LIBMC_ERROR_INVALIDTOOLPATHMODIFIERINDEX: return "Invalid toolpath modifier index.";
+    case LIBMC_ERROR_INVALIDOPERATIONTYPENAME: return "Invalid operation type name. MUST be a non-empty alphanumeric identifier.";
+    case LIBMC_ERROR_OPERATIONTYPENOTFOUND: return "Operation type not found.";
+    case LIBMC_ERROR_OPERATIONTYPEDEFINITIONMISMATCH: return "Operation type or parameter already registered with a different definition.";
+    case LIBMC_ERROR_OPERATIONTARGETSTATENOTFOUND: return "Target state of the operation type does not exist in the state machine.";
+    case LIBMC_ERROR_INVALIDOPERATIONPARAMETERNAME: return "Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name.";
+    case LIBMC_ERROR_OPERATIONPARAMETERNOTFOUND: return "Operation parameter not found.";
+    case LIBMC_ERROR_INVALIDOPERATIONPARAMETERDEFAULT: return "Default value of the operation parameter is outside of its range or not a valid enum option.";
+    case LIBMC_ERROR_OPERATIONITEMLISTNOTFOUND: return "Operation item list not found.";
+    case LIBMC_ERROR_OPERATIONITEMLISTFULL: return "Operation item list has reached its maximum item count.";
+    case LIBMC_ERROR_INVALIDOPERATIONSEQUENCENAME: return "Invalid operation sequence name. MUST be a non-empty alphanumeric identifier.";
+    case LIBMC_ERROR_OPERATIONSEQUENCENOTFOUND: return "Operation sequence not found.";
+    case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEXML: return "Operation sequence XML is malformed or has an unknown root element or namespace.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED: return "Operation sequence validation failed.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT: return "A newer revision of the operation sequence has been published in the meantime.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEISPUBLISHED: return "Published operation sequences are immutable. Create a working copy to make changes.";
+    case LIBMC_ERROR_OPERATIONNOTFOUND: return "Operation not found in the sequence.";
+    case LIBMC_ERROR_OPERATIONPARAMETEREVALUATIONFAILED: return "An operation parameter value could not be evaluated.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND: return "Operation sequence execution not found.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING: return "Operation sequence execution is not running.";
+    case LIBMC_ERROR_NOOPERATIONDISPATCHED: return "No operation has been dispatched in this state machine.";
+    case LIBMC_ERROR_OPERATIONVALUETYPEMISMATCH: return "Operation parameter cannot be returned in the requested type.";
+    case LIBMC_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING: return "A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher.";
+    case LIBMC_ERROR_OPERATIONSEQUENCESTORAGEFAILED: return "The operation sequence revision could not be stored in the database.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND: return "No operation sequence registry exists for the state machine instance.";
+    case LIBMC_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED: return "Operation types can only be registered from the state environment of the owning state machine.";
+    case LIBMC_ERROR_INVALIDOPERATIONITEMINDEX: return "Invalid operation item index.";
+    case LIBMC_ERROR_INVALIDOPERATIONINDEX: return "Invalid operation index.";
+    case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX: return "Invalid operation sequence issue index.";
+    case LIBMC_ERROR_INVALIDOPERATIONENUMOPTIONINDEX: return "Invalid operation enum option index.";
+    case LIBMC_ERROR_OPERATIONPARAMETERHASNORANGE: return "Operation parameter has no range.";
+    case LIBMC_ERROR_INVALIDOPERATIONEXPRESSIONMODE: return "Invalid operation expression mode for this parameter type.";
+    case LIBMC_ERROR_MISSINGOPERATIONSEQUENCEEDITORSTATEMACHINE: return "The operationsequenceeditor element requires a statemachine attribute.";
+    case LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED: return "The user is not permitted to edit operation sequences.";
+    case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON: return "Invalid operation sequence JSON.";
+    case LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND: return "Operation icon resource not found.";
     default: return "unknown error";
   }
 }

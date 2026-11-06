@@ -9665,6 +9665,639 @@ LibMCDataResult libmcdata_sessionmetricshandler_addfrontendmetrics(LibMCData_Ses
 
 
 /*************************************************************************************************************************
+ Class implementation for OperationSequenceRevision
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_operationsequencerevision_getuuid(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nUUIDBufferSize, LibMCData_uint32* pUUIDNeededChars, char * pUUIDBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pUUIDBuffer) && !(pUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUUID("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			sUUID = pIOperationSequenceRevision->GetUUID();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sUUID));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sUUID);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pUUIDNeededChars)
+			*pUUIDNeededChars = (LibMCData_uint32) (sUUID.size()+1);
+		if (pUUIDBuffer) {
+			if (sUUID.size() >= nUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iUUID = 0; iUUID < sUUID.size(); iUUID++)
+				pUUIDBuffer[iUUID] = sUUID[iUUID];
+			pUUIDBuffer[sUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getstatemachine(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nStateMachineBufferSize, LibMCData_uint32* pStateMachineNeededChars, char * pStateMachineBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pStateMachineBuffer) && !(pStateMachineNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStateMachine("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pStateMachineBuffer == nullptr);
+		if (isCacheCall) {
+			sStateMachine = pIOperationSequenceRevision->GetStateMachine();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sStateMachine));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sStateMachine);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pStateMachineNeededChars)
+			*pStateMachineNeededChars = (LibMCData_uint32) (sStateMachine.size()+1);
+		if (pStateMachineBuffer) {
+			if (sStateMachine.size() >= nStateMachineBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iStateMachine = 0; iStateMachine < sStateMachine.size(); iStateMachine++)
+				pStateMachineBuffer[iStateMachine] = sStateMachine[iStateMachine];
+			pStateMachineBuffer[sStateMachine.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getsequencename(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nSequenceNameBufferSize, LibMCData_uint32* pSequenceNameNeededChars, char * pSequenceNameBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pSequenceNameBuffer) && !(pSequenceNameNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sSequenceName("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pSequenceNameBuffer == nullptr);
+		if (isCacheCall) {
+			sSequenceName = pIOperationSequenceRevision->GetSequenceName();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sSequenceName));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sSequenceName);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pSequenceNameNeededChars)
+			*pSequenceNameNeededChars = (LibMCData_uint32) (sSequenceName.size()+1);
+		if (pSequenceNameBuffer) {
+			if (sSequenceName.size() >= nSequenceNameBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iSequenceName = 0; iSequenceName < sSequenceName.size(); iSequenceName++)
+				pSequenceNameBuffer[iSequenceName] = sSequenceName[iSequenceName];
+			pSequenceNameBuffer[sSequenceName.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getrevision(LibMCData_OperationSequenceRevision pOperationSequenceRevision, LibMCData_uint32 * pRevision)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if (pRevision == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pRevision = pIOperationSequenceRevision->GetRevision();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getorigin(LibMCData_OperationSequenceRevision pOperationSequenceRevision, LibMCData_uint32 * pOrigin)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if (pOrigin == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pOrigin = pIOperationSequenceRevision->GetOrigin();
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getcontent(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nContentBufferSize, LibMCData_uint32* pContentNeededChars, char * pContentBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pContentBuffer) && !(pContentNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sContent("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pContentBuffer == nullptr);
+		if (isCacheCall) {
+			sContent = pIOperationSequenceRevision->GetContent();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sContent));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sContent);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pContentNeededChars)
+			*pContentNeededChars = (LibMCData_uint32) (sContent.size()+1);
+		if (pContentBuffer) {
+			if (sContent.size() >= nContentBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iContent = 0; iContent < sContent.size(); iContent++)
+				pContentBuffer[iContent] = sContent[iContent];
+			pContentBuffer[sContent.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getsha256(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nSHA256BufferSize, LibMCData_uint32* pSHA256NeededChars, char * pSHA256Buffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pSHA256Buffer) && !(pSHA256NeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sSHA256("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pSHA256Buffer == nullptr);
+		if (isCacheCall) {
+			sSHA256 = pIOperationSequenceRevision->GetSHA256();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sSHA256));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sSHA256);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pSHA256NeededChars)
+			*pSHA256NeededChars = (LibMCData_uint32) (sSHA256.size()+1);
+		if (pSHA256Buffer) {
+			if (sSHA256.size() >= nSHA256BufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iSHA256 = 0; iSHA256 < sSHA256.size(); iSHA256++)
+				pSHA256Buffer[iSHA256] = sSHA256[iSHA256];
+			pSHA256Buffer[sSHA256.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_getuseruuid(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pUserUUIDBuffer) && !(pUserUUIDNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUserUUID("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pUserUUIDBuffer == nullptr);
+		if (isCacheCall) {
+			sUserUUID = pIOperationSequenceRevision->GetUserUUID();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sUserUUID));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sUserUUID);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pUserUUIDNeededChars)
+			*pUserUUIDNeededChars = (LibMCData_uint32) (sUserUUID.size()+1);
+		if (pUserUUIDBuffer) {
+			if (sUserUUID.size() >= nUserUUIDBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iUserUUID = 0; iUserUUID < sUserUUID.size(); iUserUUID++)
+				pUserUUIDBuffer[iUserUUID] = sUserUUID[iUserUUID];
+			pUserUUIDBuffer[sUserUUID.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencerevision_gettimestamp(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nTimestampUTCBufferSize, LibMCData_uint32* pTimestampUTCNeededChars, char * pTimestampUTCBuffer)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevision;
+
+	try {
+		if ( (!pTimestampUTCBuffer) && !(pTimestampUTCNeededChars) )
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sTimestampUTC("");
+		IOperationSequenceRevision* pIOperationSequenceRevision = dynamic_cast<IOperationSequenceRevision*>(pIBaseClass);
+		if (!pIOperationSequenceRevision)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		bool isCacheCall = (pTimestampUTCBuffer == nullptr);
+		if (isCacheCall) {
+			sTimestampUTC = pIOperationSequenceRevision->GetTimestamp();
+
+			pIOperationSequenceRevision->_setCache (new ParameterCache_1<std::string> (sTimestampUTC));
+		}
+		else {
+			auto cache = dynamic_cast<ParameterCache_1<std::string>*> (pIOperationSequenceRevision->_getCache ());
+			if (cache == nullptr)
+				throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+			cache->retrieveData (sTimestampUTC);
+			pIOperationSequenceRevision->_setCache (nullptr);
+		}
+		
+		if (pTimestampUTCNeededChars)
+			*pTimestampUTCNeededChars = (LibMCData_uint32) (sTimestampUTC.size()+1);
+		if (pTimestampUTCBuffer) {
+			if (sTimestampUTC.size() >= nTimestampUTCBufferSize)
+				throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_BUFFERTOOSMALL);
+			for (size_t iTimestampUTC = 0; iTimestampUTC < sTimestampUTC.size(); iTimestampUTC++)
+				pTimestampUTCBuffer[iTimestampUTC] = sTimestampUTC[iTimestampUTC];
+			pTimestampUTCBuffer[sTimestampUTC.size()] = 0;
+		}
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for OperationSequenceRevisionIterator
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_operationsequencerevisioniterator_getcurrent(LibMCData_OperationSequenceRevisionIterator pOperationSequenceRevisionIterator, LibMCData_OperationSequenceRevision * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceRevisionIterator;
+
+	try {
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseInstance(nullptr);
+		IOperationSequenceRevisionIterator* pIOperationSequenceRevisionIterator = dynamic_cast<IOperationSequenceRevisionIterator*>(pIBaseClass);
+		if (!pIOperationSequenceRevisionIterator)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIOperationSequenceRevisionIterator->GetCurrent();
+
+		*pInstance = (IBase*)(pBaseInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
+ Class implementation for OperationSequenceStore
+**************************************************************************************************************************/
+LibMCDataResult libmcdata_operationsequencestore_storerevision(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pUUID, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 nRevision, LibMCData_uint32 nOrigin, const char * pContent, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp, LibMCData_OperationSequenceRevision * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pStateMachine == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pSequenceName == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pContent == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pUserUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUUID(pUUID);
+		std::string sStateMachine(pStateMachine);
+		std::string sSequenceName(pSequenceName);
+		std::string sContent(pContent);
+		std::string sUserUUID(pUserUUID);
+		IBase* pBaseInstance(nullptr);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIOperationSequenceStore->StoreRevision(sUUID, sStateMachine, sSequenceName, nRevision, nOrigin, sContent, sUserUUID, nAbsoluteTimeStamp);
+
+		*pInstance = (IBase*)(pBaseInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencestore_getlatestrevisionnumber(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 * pRevision)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pStateMachine == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pSequenceName == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pRevision == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStateMachine(pStateMachine);
+		std::string sSequenceName(pSequenceName);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		*pRevision = pIOperationSequenceStore->GetLatestRevisionNumber(sStateMachine, sSequenceName);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencestore_listlatestrevisions(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, LibMCData_OperationSequenceRevisionIterator * pIterator)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pStateMachine == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pIterator == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStateMachine(pStateMachine);
+		IBase* pBaseIterator(nullptr);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseIterator = pIOperationSequenceStore->ListLatestRevisions(sStateMachine);
+
+		*pIterator = (IBase*)(pBaseIterator);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencestore_listrevisions(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_OperationSequenceRevisionIterator * pIterator)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pStateMachine == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pSequenceName == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pIterator == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStateMachine(pStateMachine);
+		std::string sSequenceName(pSequenceName);
+		IBase* pBaseIterator(nullptr);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseIterator = pIOperationSequenceStore->ListRevisions(sStateMachine, sSequenceName);
+
+		*pIterator = (IBase*)(pBaseIterator);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencestore_findrevision(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 nRevision, LibMCData_OperationSequenceRevision * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pStateMachine == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pSequenceName == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sStateMachine(pStateMachine);
+		std::string sSequenceName(pSequenceName);
+		IBase* pBaseInstance(nullptr);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIOperationSequenceStore->FindRevision(sStateMachine, sSequenceName, nRevision);
+
+		*pInstance = (IBase*)(pBaseInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+LibMCDataResult libmcdata_operationsequencestore_findrevisionbyuuid(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pUUID, LibMCData_OperationSequenceRevision * pInstance)
+{
+	IBase* pIBaseClass = (IBase *)pOperationSequenceStore;
+
+	try {
+		if (pUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		if (pInstance == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUUID(pUUID);
+		IBase* pBaseInstance(nullptr);
+		IOperationSequenceStore* pIOperationSequenceStore = dynamic_cast<IOperationSequenceStore*>(pIBaseClass);
+		if (!pIOperationSequenceStore)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseInstance = pIOperationSequenceStore->FindRevisionByUUID(sUUID);
+
+		*pInstance = (IBase*)(pBaseInstance);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
+
+/*************************************************************************************************************************
  Class implementation for MachineConfigurationVersion
 **************************************************************************************************************************/
 LibMCDataResult libmcdata_machineconfigurationversion_getversionuuid(LibMCData_MachineConfigurationVersion pMachineConfigurationVersion, const LibMCData_uint32 nVersionUUIDBufferSize, LibMCData_uint32* pVersionUUIDNeededChars, char * pVersionUUIDBuffer)
@@ -11692,6 +12325,34 @@ LibMCDataResult libmcdata_datamodel_createsessionmetricshandler(LibMCData_DataMo
 	}
 }
 
+LibMCDataResult libmcdata_datamodel_createoperationsequencestore(LibMCData_DataModel pDataModel, LibMCData_OperationSequenceStore * pOperationSequenceStore)
+{
+	IBase* pIBaseClass = (IBase *)pDataModel;
+
+	try {
+		if (pOperationSequenceStore == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		IBase* pBaseOperationSequenceStore(nullptr);
+		IDataModel* pIDataModel = dynamic_cast<IDataModel*>(pIBaseClass);
+		if (!pIDataModel)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pBaseOperationSequenceStore = pIDataModel->CreateOperationSequenceStore();
+
+		*pOperationSequenceStore = (IBase*)(pBaseOperationSequenceStore);
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDataResult libmcdata_datamodel_setbasetempdirectory(LibMCData_DataModel pDataModel, const char * pTempDirectory)
 {
 	IBase* pIBaseClass = (IBase *)pDataModel;
@@ -12541,6 +13202,38 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_userpreferencehandler_deleteuserpreference;
 	if (sProcName == "libmcdata_sessionmetricshandler_addfrontendmetrics") 
 		*ppProcAddress = (void*) &libmcdata_sessionmetricshandler_addfrontendmetrics;
+	if (sProcName == "libmcdata_operationsequencerevision_getuuid") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getuuid;
+	if (sProcName == "libmcdata_operationsequencerevision_getstatemachine") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getstatemachine;
+	if (sProcName == "libmcdata_operationsequencerevision_getsequencename") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getsequencename;
+	if (sProcName == "libmcdata_operationsequencerevision_getrevision") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getrevision;
+	if (sProcName == "libmcdata_operationsequencerevision_getorigin") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getorigin;
+	if (sProcName == "libmcdata_operationsequencerevision_getcontent") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getcontent;
+	if (sProcName == "libmcdata_operationsequencerevision_getsha256") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getsha256;
+	if (sProcName == "libmcdata_operationsequencerevision_getuseruuid") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_getuseruuid;
+	if (sProcName == "libmcdata_operationsequencerevision_gettimestamp") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevision_gettimestamp;
+	if (sProcName == "libmcdata_operationsequencerevisioniterator_getcurrent") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencerevisioniterator_getcurrent;
+	if (sProcName == "libmcdata_operationsequencestore_storerevision") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_storerevision;
+	if (sProcName == "libmcdata_operationsequencestore_getlatestrevisionnumber") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_getlatestrevisionnumber;
+	if (sProcName == "libmcdata_operationsequencestore_listlatestrevisions") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_listlatestrevisions;
+	if (sProcName == "libmcdata_operationsequencestore_listrevisions") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_listrevisions;
+	if (sProcName == "libmcdata_operationsequencestore_findrevision") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_findrevision;
+	if (sProcName == "libmcdata_operationsequencestore_findrevisionbyuuid") 
+		*ppProcAddress = (void*) &libmcdata_operationsequencestore_findrevisionbyuuid;
 	if (sProcName == "libmcdata_machineconfigurationversion_getversionuuid") 
 		*ppProcAddress = (void*) &libmcdata_machineconfigurationversion_getversionuuid;
 	if (sProcName == "libmcdata_machineconfigurationversion_getxsduuid") 
@@ -12653,6 +13346,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_datamodel_createuserpreferencehandler;
 	if (sProcName == "libmcdata_datamodel_createsessionmetricshandler") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_createsessionmetricshandler;
+	if (sProcName == "libmcdata_datamodel_createoperationsequencestore") 
+		*ppProcAddress = (void*) &libmcdata_datamodel_createoperationsequencestore;
 	if (sProcName == "libmcdata_datamodel_setbasetempdirectory") 
 		*ppProcAddress = (void*) &libmcdata_datamodel_setbasetempdirectory;
 	if (sProcName == "libmcdata_datamodel_getbasetempdirectory") 

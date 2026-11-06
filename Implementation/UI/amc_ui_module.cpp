@@ -105,6 +105,16 @@ PDataSeriesHandler CUIModuleEnvironment::dataSeriesHandler()
 	return m_pUISystemState->getDataSeriesHandler ();
 }
 
+POperationSequenceHandler CUIModuleEnvironment::operationSequenceHandler()
+{
+	return m_pUISystemState->getOperationSequenceHandler();
+}
+
+PAccessControl CUIModuleEnvironment::accessControl()
+{
+	return m_pUISystemState->getAccessControl();
+}
+
 
 CUIModule::CUIModule(const std::string& sName, const std::string& sModuleType, const std::string& sParentPath, CUIFrontendDefinition* pFrontendDefinition)
 	: m_sName (sName), 

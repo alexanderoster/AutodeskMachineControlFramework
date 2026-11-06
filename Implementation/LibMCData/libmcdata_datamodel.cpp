@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcdata_persistencyhandler.hpp"
 #include "libmcdata_userpreferencehandler.hpp"
 #include "libmcdata_sessionmetricshandler.hpp"
+#include "libmcdata_operationsequencestore.hpp"
 #include "libmcdata_installationinformation.hpp"
 #include "libmcdata_machineconfigurationtype.hpp"
 
@@ -58,6 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amcdata_databasemigrator_machineconfiguration.hpp"
 #include "amcdata_databasemigrator_sessions.hpp"
 #include "amcdata_databasemigrator_userpreferences.hpp"
+#include "amcdata_databasemigrator_operationsequences.hpp"
 
 #include "common_utils.hpp"
 #include "common_chrono.hpp"
@@ -142,7 +144,8 @@ void CDataModel::InitialiseDatabase(const std::string & sDataDirectory, const Li
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_Journals>());
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_MachineConfiguration>());
     migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_Sessions>());
-    migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_UserPreferences>());
+		migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_UserPreferences>());
+		migrator.addMigrationClass(std::make_shared<AMCData::CDatabaseMigrationClass_OperationSequences>());
     migrator.migrateDatabaseSchemas(m_pSQLHandler, m_sInstallationUUID, m_sInstallationSecret);
 
     // Store Database type after successful initialisation
@@ -299,6 +302,11 @@ ISessionMetricsHandler* CDataModel::CreateSessionMetricsHandler()
         throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDJOURNAL);
 
     return new CSessionMetricsHandler(m_pJournal);
+}
+
+IOperationSequenceStore* CDataModel::CreateOperationSequenceStore()
+{
+    return new COperationSequenceStore(m_pSQLHandler);
 }
 
 void CDataModel::SetBaseTempDirectory(const std::string& sTempDirectory)

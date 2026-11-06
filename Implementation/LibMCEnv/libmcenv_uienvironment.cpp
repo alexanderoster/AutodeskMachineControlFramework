@@ -52,6 +52,9 @@ Abstract: This is a stub class definition of CUIEnvironment
 #include "libmcenv_videostream.hpp"
 #include "libmcenv_machineconfigurationhandler.hpp"
 #include "libmcenv_formula.hpp"
+#include "libmcenv_operationsequencehandler.hpp"
+#include "libmcenv_operationsequenceerrors.hpp"
+#include "amc_operationsequencehandler.hpp"
 
 #include "amc_systemstate.hpp"
 #include "amc_streamregistry.hpp"
@@ -1513,4 +1516,19 @@ bool CUIEnvironment::EvaluateFormulaAsBool(const std::string& sFormula)
 {
     CFormula formula(sFormula, m_pUISystemState->getStateMachineData(), getFormulaFrontendState());
     return formula.EvaluateAsBool();
+}
+
+IOperationSequenceHandler* CUIEnvironment::GetOperationSequenceHandler(const std::string& sMachineInstance)
+{
+    auto pHandler = m_pUISystemState->getOperationSequenceHandler();
+    if (pHandler.get() == nullptr)
+        throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+    auto pRegistry = callOperationSequenceCore([&]() { return pHandler->findRegistry(sMachineInstance, true); });
+
+    AMC::PResourcePackage pResourcePackage;
+    if (m_pUIHandler != nullptr)
+        pResourcePackage = m_pUIHandler->getCoreResourcePackage();
+
+    return new COperationSequenceHandler(pRegistry, false, pResourcePackage, AMC::eOperationSequenceOrigin::Editor);
 }

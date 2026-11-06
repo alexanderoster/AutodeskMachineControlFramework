@@ -10271,6 +10271,1645 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_formula_evaluateasinteger(LibMCEnv_For
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_formula_evaluateasbool(LibMCEnv_Formula pFormula, bool * pValue);
 
 /*************************************************************************************************************************
+ Class definition for OperationParameterDefinition
+**************************************************************************************************************************/
+
+/**
+* Returns the parameter name, which is also the XML attribute name.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Parameter name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getname(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the display name.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nDisplayNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDisplayNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDisplayNameBuffer -  buffer of Display name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getdisplayname(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const LibMCEnv_uint32 nDisplayNameBufferSize, LibMCEnv_uint32* pDisplayNameNeededChars, char * pDisplayNameBuffer);
+
+/**
+* Sets the display name.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] pDisplayName - Display name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_setdisplayname(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const char * pDisplayName);
+
+/**
+* Returns the description.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getdescription(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const LibMCEnv_uint32 nDescriptionBufferSize, LibMCEnv_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
+
+/**
+* Sets the description.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] pDescription - Description.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_setdescription(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const char * pDescription);
+
+/**
+* Returns the data type.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pParameterType - Data type.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getparametertype(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv::eOperationParameterType * pParameterType);
+
+/**
+* Returns the default value as string.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nDefaultValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDefaultValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDefaultValueBuffer -  buffer of Default value., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getdefaultvalue(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const LibMCEnv_uint32 nDefaultValueBufferSize, LibMCEnv_uint32* pDefaultValueNeededChars, char * pDefaultValueBuffer);
+
+/**
+* Returns the display unit. Informational only.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nUnitBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUnitNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUnitBuffer -  buffer of Unit, e.g. um/s. May be empty., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getunit(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const LibMCEnv_uint32 nUnitBufferSize, LibMCEnv_uint32* pUnitNeededChars, char * pUnitBuffer);
+
+/**
+* Sets the display unit. Informational only.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] pUnit - Unit, e.g. um/s.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_setunit(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const char * pUnit);
+
+/**
+* Returns if resolved values are clamped to a range. Only numeric parameters have ranges.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pHasRange - True if a range is defined.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_hasrange(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, bool * pHasRange);
+
+/**
+* Returns the range. Fails if no range is defined.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pMinimum - Minimum value.
+* @param[out] pMaximum - Maximum value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getrange(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv_double * pMinimum, LibMCEnv_double * pMaximum);
+
+/**
+* Returns which kinds of raw values are accepted.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pExpressionMode - Expression mode.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getexpressionmode(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv::eOperationExpressionMode * pExpressionMode);
+
+/**
+* Restricts the kinds of raw values that are accepted. Formula is only allowed for numeric and bool parameters.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] eExpressionMode - Expression mode.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_setexpressionmode(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv::eOperationExpressionMode eExpressionMode);
+
+/**
+* Returns if the parameter must be set explicitly in a sequence.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pIsRequired - True if required.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_isrequired(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, bool * pIsRequired);
+
+/**
+* Sets if the parameter must be set explicitly in a sequence. Default is false.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] bIsRequired - True if required.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_setrequired(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, bool bIsRequired);
+
+/**
+* Adds an option to an enum parameter. Fails for other types or if the value exists with a different display name.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] pValue - Option value as written in the sequence.
+* @param[in] pDisplayName - Display name of the option.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_addenumoption(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, const char * pValue, const char * pDisplayName);
+
+/**
+* Returns the number of enum options.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[out] pCount - Number of options.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getenumoptioncount(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns an enum option.
+*
+* @param[in] pOperationParameterDefinition - OperationParameterDefinition instance.
+* @param[in] nIndex - Index, 0-based.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Option value., may be NULL
+* @param[in] nDisplayNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDisplayNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDisplayNameBuffer -  buffer of Display name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinition_getenumoption(LibMCEnv_OperationParameterDefinition pOperationParameterDefinition, LibMCEnv_uint32 nIndex, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer, const LibMCEnv_uint32 nDisplayNameBufferSize, LibMCEnv_uint32* pDisplayNameNeededChars, char * pDisplayNameBuffer);
+
+/*************************************************************************************************************************
+ Class definition for OperationParameterDefinitionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current parameter definition.
+*
+* @param[in] pOperationParameterDefinitionIterator - OperationParameterDefinitionIterator instance.
+* @param[out] pInstance - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparameterdefinitioniterator_getcurrent(LibMCEnv_OperationParameterDefinitionIterator pOperationParameterDefinitionIterator, LibMCEnv_OperationParameterDefinition * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationParameterContainer
+**************************************************************************************************************************/
+
+/**
+* Adds a string parameter. Default expression mode is LiteralOrReference.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] pDisplayName - Display name.
+* @param[in] pDefaultValue - Default value.
+* @param[out] pDefinition - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_addstringparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, const char * pDisplayName, const char * pDefaultValue, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Adds an integer parameter. Resolved values are clamped to the range and rounded. If Maximum is smaller than Minimum, no range is applied.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] pDisplayName - Display name.
+* @param[in] nDefaultValue - Default value.
+* @param[in] nMinimum - Minimum value.
+* @param[in] nMaximum - Maximum value.
+* @param[out] pDefinition - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_addintegerparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, const char * pDisplayName, LibMCEnv_int64 nDefaultValue, LibMCEnv_int64 nMinimum, LibMCEnv_int64 nMaximum, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Adds a double parameter. Resolved values are clamped to the range. If Maximum is smaller than Minimum, no range is applied.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] pDisplayName - Display name.
+* @param[in] dDefaultValue - Default value.
+* @param[in] dMinimum - Minimum value.
+* @param[in] dMaximum - Maximum value.
+* @param[out] pDefinition - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_adddoubleparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, const char * pDisplayName, LibMCEnv_double dDefaultValue, LibMCEnv_double dMinimum, LibMCEnv_double dMaximum, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Adds a bool parameter.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] pDisplayName - Display name.
+* @param[in] bDefaultValue - Default value.
+* @param[out] pDefinition - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_addboolparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, const char * pDisplayName, bool bDefaultValue, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Adds an enum parameter. Options are added with AddEnumOption. The default MUST become a valid option before the first sequence is validated.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] pDisplayName - Display name.
+* @param[in] pDefaultValue - Default option value.
+* @param[out] pDefinition - Parameter definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_addenumparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, const char * pDisplayName, const char * pDefaultValue, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Returns if a parameter exists.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[out] pExists - True if the parameter exists.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_hasparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, bool * pExists);
+
+/**
+* Returns a parameter definition.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[in] pName - Parameter name.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONPARAMETERNOTFOUND; otherwise returns null.
+* @param[out] pDefinition - Parameter definition or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_findparameter(LibMCEnv_OperationParameterContainer pOperationParameterContainer, const char * pName, bool bFailIfNotExisting, LibMCEnv_OperationParameterDefinition * pDefinition);
+
+/**
+* Lists all parameter definitions in registration order.
+*
+* @param[in] pOperationParameterContainer - OperationParameterContainer instance.
+* @param[out] pIterator - Parameter definitions.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationparametercontainer_listparameters(LibMCEnv_OperationParameterContainer pOperationParameterContainer, LibMCEnv_OperationParameterDefinitionIterator * pIterator);
+
+/*************************************************************************************************************************
+ Class definition for OperationItemListDefinition
+**************************************************************************************************************************/
+
+/**
+* Returns the item list name, which is also the XML element name of its items.
+*
+* @param[in] pOperationItemListDefinition - OperationItemListDefinition instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Item list name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitemlistdefinition_getname(LibMCEnv_OperationItemListDefinition pOperationItemListDefinition, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the display name.
+*
+* @param[in] pOperationItemListDefinition - OperationItemListDefinition instance.
+* @param[in] nDisplayNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDisplayNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDisplayNameBuffer -  buffer of Display name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitemlistdefinition_getdisplayname(LibMCEnv_OperationItemListDefinition pOperationItemListDefinition, const LibMCEnv_uint32 nDisplayNameBufferSize, LibMCEnv_uint32* pDisplayNameNeededChars, char * pDisplayNameBuffer);
+
+/**
+* Returns the maximum number of items. Sequences with more items fail validation.
+*
+* @param[in] pOperationItemListDefinition - OperationItemListDefinition instance.
+* @param[out] pMaxItemCount - Maximum item count.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitemlistdefinition_getmaxitemcount(LibMCEnv_OperationItemListDefinition pOperationItemListDefinition, LibMCEnv_uint32 * pMaxItemCount);
+
+/*************************************************************************************************************************
+ Class definition for OperationItemListDefinitionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current item list definition.
+*
+* @param[in] pOperationItemListDefinitionIterator - OperationItemListDefinitionIterator instance.
+* @param[out] pInstance - Item list definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitemlistdefinitioniterator_getcurrent(LibMCEnv_OperationItemListDefinitionIterator pOperationItemListDefinitionIterator, LibMCEnv_OperationItemListDefinition * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationTypeDefinition
+**************************************************************************************************************************/
+
+/**
+* Returns the type name as used in the type attribute of an operation.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Type name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_getname(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the state that executes operations of this type.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nTargetStateBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTargetStateNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTargetStateBuffer -  buffer of State name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_gettargetstate(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nTargetStateBufferSize, LibMCEnv_uint32* pTargetStateNeededChars, char * pTargetStateBuffer);
+
+/**
+* Returns the display name.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nDisplayNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDisplayNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDisplayNameBuffer -  buffer of Display name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_getdisplayname(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nDisplayNameBufferSize, LibMCEnv_uint32* pDisplayNameNeededChars, char * pDisplayNameBuffer);
+
+/**
+* Sets the display name. Defaults to the type name.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pDisplayName - Display name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_setdisplayname(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pDisplayName);
+
+/**
+* Returns the description.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_getdescription(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nDescriptionBufferSize, LibMCEnv_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
+
+/**
+* Sets the description.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pDescription - Description.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_setdescription(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pDescription);
+
+/**
+* Returns the palette category.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nCategoryBufferSize - size of the buffer (including trailing 0)
+* @param[out] pCategoryNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pCategoryBuffer -  buffer of Category., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_getcategory(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nCategoryBufferSize, LibMCEnv_uint32* pCategoryNeededChars, char * pCategoryBuffer);
+
+/**
+* Sets the palette category, e.g. Motion or Temperature.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pCategory - Category.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_setcategory(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pCategory);
+
+/**
+* Returns the icon resource name.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nResourceNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pResourceNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pResourceNameBuffer -  buffer of Resource name. May be empty., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_geticonresource(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nResourceNameBufferSize, LibMCEnv_uint32* pResourceNameNeededChars, char * pResourceNameBuffer);
+
+/**
+* Sets an SVG or PNG resource of the plugin package as icon. Fails if the resource does not exist.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pResourceName - Resource name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_seticonresource(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pResourceName);
+
+/**
+* Returns the comma-separated sequence contexts this type may be used in.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] nContextsBufferSize - size of the buffer (including trailing 0)
+* @param[out] pContextsNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pContextsBuffer -  buffer of Contexts. Empty means all., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_getallowedcontexts(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const LibMCEnv_uint32 nContextsBufferSize, LibMCEnv_uint32* pContextsNeededChars, char * pContextsBuffer);
+
+/**
+* Restricts the type to sequences with one of the given contexts.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pContexts - Comma-separated contexts, e.g. build. Empty means all.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_setallowedcontexts(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pContexts);
+
+/**
+* Adds an item list. Returns the existing one if identical.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pName - Item list name, also the XML element name.
+* @param[in] pDisplayName - Display name.
+* @param[in] nMaxItemCount - Maximum number of items. MUST be larger than 0.
+* @param[out] pDefinition - Item list definition.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_additemlist(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pName, const char * pDisplayName, LibMCEnv_uint32 nMaxItemCount, LibMCEnv_OperationItemListDefinition * pDefinition);
+
+/**
+* Returns an item list definition.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[in] pName - Item list name.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONITEMLISTNOTFOUND; otherwise returns null.
+* @param[out] pDefinition - Item list definition or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_finditemlist(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, const char * pName, bool bFailIfNotExisting, LibMCEnv_OperationItemListDefinition * pDefinition);
+
+/**
+* Lists all item list definitions.
+*
+* @param[in] pOperationTypeDefinition - OperationTypeDefinition instance.
+* @param[out] pIterator - Item list definitions.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinition_listitemlists(LibMCEnv_OperationTypeDefinition pOperationTypeDefinition, LibMCEnv_OperationItemListDefinitionIterator * pIterator);
+
+/*************************************************************************************************************************
+ Class definition for OperationTypeDefinitionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current operation type.
+*
+* @param[in] pOperationTypeDefinitionIterator - OperationTypeDefinitionIterator instance.
+* @param[out] pInstance - Operation type.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationtypedefinitioniterator_getcurrent(LibMCEnv_OperationTypeDefinitionIterator pOperationTypeDefinitionIterator, LibMCEnv_OperationTypeDefinition * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationItem
+**************************************************************************************************************************/
+
+/**
+* Returns the index in the item list.
+*
+* @param[in] pOperationItem - OperationItem instance.
+* @param[out] pIndex - Index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitem_getindex(LibMCEnv_OperationItem pOperationItem, LibMCEnv_uint32 * pIndex);
+
+/**
+* Returns if a value is set explicitly.
+*
+* @param[in] pOperationItem - OperationItem instance.
+* @param[in] pName - Parameter name.
+* @param[out] pHasValue - True if set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitem_hasvalue(LibMCEnv_OperationItem pOperationItem, const char * pName, bool * pHasValue);
+
+/**
+* Returns the raw value as written. Returns the default if not set.
+*
+* @param[in] pOperationItem - OperationItem instance.
+* @param[in] pName - Parameter name.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Raw value., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitem_getrawvalue(LibMCEnv_OperationItem pOperationItem, const char * pName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Sets a raw value. Fails if the sequence is published or the parameter is not defined.
+*
+* @param[in] pOperationItem - OperationItem instance.
+* @param[in] pName - Parameter name.
+* @param[in] pValue - Literal, dollar-prefixed parameter reference or formula.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitem_setrawvalue(LibMCEnv_OperationItem pOperationItem, const char * pName, const char * pValue);
+
+/**
+* Removes an explicit value, so the default applies. Fails if the sequence is published.
+*
+* @param[in] pOperationItem - OperationItem instance.
+* @param[in] pName - Parameter name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationitem_clearvalue(LibMCEnv_OperationItem pOperationItem, const char * pName);
+
+/*************************************************************************************************************************
+ Class definition for Operation
+**************************************************************************************************************************/
+
+/**
+* Returns the stable UUID of the operation.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getuuid(LibMCEnv_Operation pOperation, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
+* Returns the position in the sequence.
+*
+* @param[in] pOperation - Operation instance.
+* @param[out] pIndex - Index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getindex(LibMCEnv_Operation pOperation, LibMCEnv_uint32 * pIndex);
+
+/**
+* Returns the operation type name.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] nTypeNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeNameBuffer -  buffer of Type name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_gettypename(LibMCEnv_Operation pOperation, const LibMCEnv_uint32 nTypeNameBufferSize, LibMCEnv_uint32* pTypeNameNeededChars, char * pTypeNameBuffer);
+
+/**
+* Returns if the operation is executed. Disabled operations are skipped at dispatch.
+*
+* @param[in] pOperation - Operation instance.
+* @param[out] pIsEnabled - True if enabled.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_isenabled(LibMCEnv_Operation pOperation, bool * pIsEnabled);
+
+/**
+* Enables or disables the operation. Fails if the sequence is published.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] bIsEnabled - True to enable.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_setenabled(LibMCEnv_Operation pOperation, bool bIsEnabled);
+
+/**
+* Returns the comment.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] nCommentBufferSize - size of the buffer (including trailing 0)
+* @param[out] pCommentNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pCommentBuffer -  buffer of Comment., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getcomment(LibMCEnv_Operation pOperation, const LibMCEnv_uint32 nCommentBufferSize, LibMCEnv_uint32* pCommentNeededChars, char * pCommentBuffer);
+
+/**
+* Sets the comment. Fails if the sequence is published.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pComment - Comment.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_setcomment(LibMCEnv_Operation pOperation, const char * pComment);
+
+/**
+* Returns if a parameter value is set explicitly.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pHasValue - True if set.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_hasvalue(LibMCEnv_Operation pOperation, const char * pName, bool * pHasValue);
+
+/**
+* Returns the raw value as written. Returns the default if not set.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pName - Parameter name.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Raw value., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getrawvalue(LibMCEnv_Operation pOperation, const char * pName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Returns how a raw value will be resolved.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValueKind - Default, Literal, Reference or Formula.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getvaluekind(LibMCEnv_Operation pOperation, const char * pName, LibMCEnv::eOperationValueKind * pValueKind);
+
+/**
+* Sets a raw value. Fails if the sequence is published or the parameter is not defined for the type.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pName - Parameter name.
+* @param[in] pValue - Literal, dollar-prefixed parameter reference or formula.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_setrawvalue(LibMCEnv_Operation pOperation, const char * pName, const char * pValue);
+
+/**
+* Removes an explicit value, so the default applies. Fails if the sequence is published.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pName - Parameter name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_clearvalue(LibMCEnv_Operation pOperation, const char * pName);
+
+/**
+* Returns the number of items of an item list.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pListName - Item list name.
+* @param[out] pCount - Number of items.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getitemcount(LibMCEnv_Operation pOperation, const char * pListName, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns an item of an item list.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Index, 0-based.
+* @param[out] pItem - Item.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_getitem(LibMCEnv_Operation pOperation, const char * pListName, LibMCEnv_uint32 nIndex, LibMCEnv_OperationItem * pItem);
+
+/**
+* Appends an item. Fails with OPERATIONITEMLISTFULL at the maximum count, or if the sequence is published.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pListName - Item list name.
+* @param[out] pItem - New item.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_additem(LibMCEnv_Operation pOperation, const char * pListName, LibMCEnv_OperationItem * pItem);
+
+/**
+* Removes an item. Fails if the sequence is published.
+*
+* @param[in] pOperation - Operation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operation_removeitem(LibMCEnv_Operation pOperation, const char * pListName, LibMCEnv_uint32 nIndex);
+
+/*************************************************************************************************************************
+ Class definition for OperationIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current operation.
+*
+* @param[in] pOperationIterator - OperationIterator instance.
+* @param[out] pInstance - Operation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationiterator_getcurrent(LibMCEnv_OperationIterator pOperationIterator, LibMCEnv_Operation * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequence
+**************************************************************************************************************************/
+
+/**
+* Returns the sequence name.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getname(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the display name.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nDisplayNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDisplayNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDisplayNameBuffer -  buffer of Display name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getdisplayname(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nDisplayNameBufferSize, LibMCEnv_uint32* pDisplayNameNeededChars, char * pDisplayNameBuffer);
+
+/**
+* Sets the display name. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pDisplayName - Display name.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_setdisplayname(LibMCEnv_OperationSequence pOperationSequence, const char * pDisplayName);
+
+/**
+* Returns the description.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nDescriptionBufferSize - size of the buffer (including trailing 0)
+* @param[out] pDescriptionNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pDescriptionBuffer -  buffer of Description., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getdescription(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nDescriptionBufferSize, LibMCEnv_uint32* pDescriptionNeededChars, char * pDescriptionBuffer);
+
+/**
+* Sets the description. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pDescription - Description.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_setdescription(LibMCEnv_OperationSequence pOperationSequence, const char * pDescription);
+
+/**
+* Returns the context, e.g. build or manual.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nContextBufferSize - size of the buffer (including trailing 0)
+* @param[out] pContextNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pContextBuffer -  buffer of Context. May be empty., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getcontext(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nContextBufferSize, LibMCEnv_uint32* pContextNeededChars, char * pContextBuffer);
+
+/**
+* Sets the context. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pContext - Context.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_setcontext(LibMCEnv_OperationSequence pOperationSequence, const char * pContext);
+
+/**
+* Returns the default parameter group for dollar-prefixed parameter references.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nGroupNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pGroupNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pGroupNameBuffer -  buffer of Parameter group. May be empty., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getbindinggroup(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nGroupNameBufferSize, LibMCEnv_uint32* pGroupNameNeededChars, char * pGroupNameBuffer);
+
+/**
+* Sets the default parameter group for dollar-prefixed parameter references. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pGroupName - Parameter group.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_setbindinggroup(LibMCEnv_OperationSequence pOperationSequence, const char * pGroupName);
+
+/**
+* Returns if this is an immutable published revision.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pIsPublished - True if published.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_ispublished(LibMCEnv_OperationSequence pOperationSequence, bool * pIsPublished);
+
+/**
+* Returns the revision. For a working copy, returns the revision it was based on, or 0.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pRevision - Revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getrevision(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_uint32 * pRevision);
+
+/**
+* Returns the UUID of the stored revision. Use it to reference the revision from build metadata.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nRevisionUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pRevisionUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pRevisionUUIDBuffer -  buffer of Revision UUID. Empty for working copies., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getrevisionuuid(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nRevisionUUIDBufferSize, LibMCEnv_uint32* pRevisionUUIDNeededChars, char * pRevisionUUIDBuffer);
+
+/**
+* Returns if the revision passed validation against the currently registered types. A stored revision can become invalid after a plugin update. Invalid revisions cannot be started.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pIsValid - True if valid. Always true for revisions published in this session.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_isvalid(LibMCEnv_OperationSequence pOperationSequence, bool * pIsValid);
+
+/**
+* Returns the result of validating the revision against the currently registered types.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pResult - Validation result.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getvalidationresult(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_OperationSequenceValidationResult * pResult);
+
+/**
+* Returns where the sequence came from.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pOrigin - Origin.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getorigin(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv::eOperationSequenceOrigin * pOrigin);
+
+/**
+* Returns the publish timestamp. Empty for working copies.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nTimestampUTCBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampUTCNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampUTCBuffer -  buffer of ISO 8601 UTC timestamp., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_gettimestamp(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nTimestampUTCBufferSize, LibMCEnv_uint32* pTimestampUTCNeededChars, char * pTimestampUTCBuffer);
+
+/**
+* Returns the user that published the revision.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of User UUID. Empty for working copies., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getuseruuid(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nUserUUIDBufferSize, LibMCEnv_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
+
+/**
+* Returns the number of operations, including disabled ones.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pCount - Number of operations.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getoperationcount(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns an operation by index.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nIndex - Index, 0-based.
+* @param[out] pOperation - Operation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_getoperation(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_uint32 nIndex, LibMCEnv_Operation * pOperation);
+
+/**
+* Returns an operation by UUID.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pUUID - Operation UUID.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONNOTFOUND; otherwise returns null.
+* @param[out] pOperation - Operation or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_findoperation(LibMCEnv_OperationSequence pOperationSequence, const char * pUUID, bool bFailIfNotExisting, LibMCEnv_Operation * pOperation);
+
+/**
+* Lists all operations in order.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pIterator - Operations.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_listoperations(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_OperationIterator * pIterator);
+
+/**
+* Appends an operation of a registered type with default values. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pTypeName - Operation type.
+* @param[out] pOperation - New operation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_addoperation(LibMCEnv_OperationSequence pOperationSequence, const char * pTypeName, LibMCEnv_Operation * pOperation);
+
+/**
+* Inserts an operation before the given index. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nIndex - Index, 0-based. The operation count appends.
+* @param[in] pTypeName - Operation type.
+* @param[out] pOperation - New operation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_insertoperation(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_uint32 nIndex, const char * pTypeName, LibMCEnv_Operation * pOperation);
+
+/**
+* Removes an operation. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pUUID - Operation UUID.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_removeoperation(LibMCEnv_OperationSequence pOperationSequence, const char * pUUID);
+
+/**
+* Moves an operation to a new index. Fails if published.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] pUUID - Operation UUID.
+* @param[in] nNewIndex - New index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_moveoperation(LibMCEnv_OperationSequence pOperationSequence, const char * pUUID, LibMCEnv_uint32 nNewIndex);
+
+/**
+* Returns an editable deep copy, based on this revision. Operation UUIDs are kept.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pWorkingCopy - Working copy.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_createworkingcopy(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_OperationSequence * pWorkingCopy);
+
+/**
+* Serializes the sequence in the operationsequence/2026/11 format. Only explicitly set values are written.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[in] nXMLStringBufferSize - size of the buffer (including trailing 0)
+* @param[out] pXMLStringNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pXMLStringBuffer -  buffer of XML string., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_serializetoxmlstring(LibMCEnv_OperationSequence pOperationSequence, const LibMCEnv_uint32 nXMLStringBufferSize, LibMCEnv_uint32* pXMLStringNeededChars, char * pXMLStringBuffer);
+
+/**
+* Serializes the sequence into a new XML document.
+*
+* @param[in] pOperationSequence - OperationSequence instance.
+* @param[out] pDocument - XML document.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequence_serializetoxmldocument(LibMCEnv_OperationSequence pOperationSequence, LibMCEnv_XMLDocument * pDocument);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current sequence.
+*
+* @param[in] pOperationSequenceIterator - OperationSequenceIterator instance.
+* @param[out] pInstance - Sequence.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceiterator_getcurrent(LibMCEnv_OperationSequenceIterator pOperationSequenceIterator, LibMCEnv_OperationSequence * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceValidationResult
+**************************************************************************************************************************/
+
+/**
+* Returns true if there are no errors. Warnings do not prevent publishing.
+*
+* @param[in] pOperationSequenceValidationResult - OperationSequenceValidationResult instance.
+* @param[out] pIsValid - True if valid.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencevalidationresult_isvalid(LibMCEnv_OperationSequenceValidationResult pOperationSequenceValidationResult, bool * pIsValid);
+
+/**
+* Returns the number of errors and warnings.
+*
+* @param[in] pOperationSequenceValidationResult - OperationSequenceValidationResult instance.
+* @param[out] pCount - Number of issues.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencevalidationresult_getissuecount(LibMCEnv_OperationSequenceValidationResult pOperationSequenceValidationResult, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns an issue.
+*
+* @param[in] pOperationSequenceValidationResult - OperationSequenceValidationResult instance.
+* @param[in] nIndex - Index, 0-based.
+* @param[out] pSeverity - Severity.
+* @param[in] nOperationUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pOperationUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pOperationUUIDBuffer -  buffer of Operation UUID, or empty for sequence-level issues., may be NULL
+* @param[in] nParameterNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pParameterNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pParameterNameBuffer -  buffer of Parameter or item list name. May be empty., may be NULL
+* @param[in] nMessageBufferSize - size of the buffer (including trailing 0)
+* @param[out] pMessageNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pMessageBuffer -  buffer of Human readable message., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencevalidationresult_getissue(LibMCEnv_OperationSequenceValidationResult pOperationSequenceValidationResult, LibMCEnv_uint32 nIndex, LibMCEnv::eOperationSequenceIssueSeverity * pSeverity, const LibMCEnv_uint32 nOperationUUIDBufferSize, LibMCEnv_uint32* pOperationUUIDNeededChars, char * pOperationUUIDBuffer, const LibMCEnv_uint32 nParameterNameBufferSize, LibMCEnv_uint32* pParameterNameNeededChars, char * pParameterNameBuffer, const LibMCEnv_uint32 nMessageBufferSize, LibMCEnv_uint32* pMessageNeededChars, char * pMessageBuffer);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceHandler
+**************************************************************************************************************************/
+
+/**
+* Returns the state machine the registry belongs to.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] nMachineInstanceBufferSize - size of the buffer (including trailing 0)
+* @param[out] pMachineInstanceNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pMachineInstanceBuffer -  buffer of State machine instance name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_getstatemachineinstance(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const LibMCEnv_uint32 nMachineInstanceBufferSize, LibMCEnv_uint32* pMachineInstanceNeededChars, char * pMachineInstanceBuffer);
+
+/**
+* Registers an operation type, or returns the existing one if it has the same target state. Only allowed from the state environment of the owning state machine.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pTypeName - Type name. Case sensitive.
+* @param[in] pTargetState - State that executes the operation. MUST exist.
+* @param[out] pDefinition - Operation type.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_registeroperationtype(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pTypeName, const char * pTargetState, LibMCEnv_OperationTypeDefinition * pDefinition);
+
+/**
+* Returns if a type is registered.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pTypeName - Type name.
+* @param[out] pExists - True if registered.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_hasoperationtype(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pTypeName, bool * pExists);
+
+/**
+* Returns a registered type.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pTypeName - Type name.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONTYPENOTFOUND; otherwise returns null.
+* @param[out] pDefinition - Operation type or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_findoperationtype(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pTypeName, bool bFailIfNotExisting, LibMCEnv_OperationTypeDefinition * pDefinition);
+
+/**
+* Lists all registered types.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[out] pIterator - Operation types.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_listoperationtypes(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, LibMCEnv_OperationTypeDefinitionIterator * pIterator);
+
+/**
+* Creates an empty working copy.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pWorkingCopy - Working copy.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_createsequence(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, LibMCEnv_OperationSequence * pWorkingCopy);
+
+/**
+* Parses a sequence XML string into a working copy. Accepts the operationsequence/2026/11 and processsequence/2025/03 formats. Does not validate.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pXMLString - XML string.
+* @param[out] pWorkingCopy - Working copy.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_parsesequencefromstring(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pXMLString, LibMCEnv_OperationSequence * pWorkingCopy);
+
+/**
+* Parses a sequence resource of the plugin package into a working copy. Does not validate.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pResourceName - Resource name.
+* @param[out] pWorkingCopy - Working copy.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_parsesequencefromresource(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pResourceName, LibMCEnv_OperationSequence * pWorkingCopy);
+
+/**
+* Parses a sequence element of an XML document into a working copy. Does not validate.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pDocument - XML document.
+* @param[in] pNodePath - Slash-separated path to the sequence element. Empty for the root.
+* @param[out] pWorkingCopy - Working copy.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_parsesequencefromxmldocument(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, LibMCEnv_XMLDocument pDocument, const char * pNodePath, LibMCEnv_OperationSequence * pWorkingCopy);
+
+/**
+* Validates a sequence against the registered types and its default binding group.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequence - Sequence to validate.
+* @param[out] pResult - Validation result.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_validatesequence(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, LibMCEnv_OperationSequence pSequence, LibMCEnv_OperationSequenceValidationResult * pResult);
+
+/**
+* Validates a working copy and publishes it as the next revision. Fails with OPERATIONSEQUENCEVALIDATIONFAILED or OPERATIONSEQUENCEREVISIONCONFLICT.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pWorkingCopy - Working copy.
+* @param[in] pUserUUID - User that publishes the revision.
+* @param[in] bOverwriteNewerRevision - If true, publishes even if a newer revision than the working copy's base exists.
+* @param[out] pPublished - Published revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_publishsequence(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, LibMCEnv_OperationSequence pWorkingCopy, const char * pUserUUID, bool bOverwriteNewerRevision, LibMCEnv_OperationSequence * pPublished);
+
+/**
+* Returns the stored latest revision if it is valid. If nothing is stored, publishes the resource as revision 1. If the stored latest revision is invalid against the registered types, publishes the resource as a new revision and logs a warning. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the resource itself is invalid.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name. Overrides the name in the file.
+* @param[in] pResourceName - Resource name.
+* @param[out] pPublished - Latest revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_ensuresequencefromresource(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, const char * pResourceName, LibMCEnv_OperationSequence * pPublished);
+
+/**
+* Returns if a sequence is published.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pExists - True if published.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_hassequence(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, bool * pExists);
+
+/**
+* Returns the latest revision. Fails with OPERATIONSEQUENCENOTFOUND.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pPublished - Latest revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_getsequence(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, LibMCEnv_OperationSequence * pPublished);
+
+/**
+* Returns a specific revision. Fails with OPERATIONSEQUENCENOTFOUND.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name.
+* @param[in] nRevision - Revision, 1-based.
+* @param[out] pPublished - Revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_getsequencerevision(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, LibMCEnv_uint32 nRevision, LibMCEnv_OperationSequence * pPublished);
+
+/**
+* Lists the latest revision of all sequences, sorted by name.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[out] pIterator - Sequences.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_listsequences(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, LibMCEnv_OperationSequenceIterator * pIterator);
+
+/**
+* Lists all stored revisions of a sequence, newest first. Fails with OPERATIONSEQUENCENOTFOUND.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pIterator - Revisions.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_listsequencerevisions(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pSequenceName, LibMCEnv_OperationSequenceIterator * pIterator);
+
+/**
+* Returns a stored revision by its revision UUID, e.g. from build metadata.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pRevisionUUID - Revision UUID.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCENOTFOUND; otherwise returns null.
+* @param[out] pPublished - Revision or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_findsequencerevisionbyuuid(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pRevisionUUID, bool bFailIfNotExisting, LibMCEnv_OperationSequence * pPublished);
+
+/**
+* Checks that the dispatcher state declares an outstate to the target state of every registered type, and that every target state declares an outstate back to the dispatcher. Fails with OPERATIONDISPATCHERTRANSITIONMISSING and lists all missing outstates. Only allowed from the state environment of the owning state machine.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pDispatcherState - Orchestrator state. MUST exist.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_validatedispatchertransitions(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pDispatcherState);
+
+/**
+* Mirrors execution status and resolved values into a declared parameter group of the owning state machine. Only existing parameters are written.
+*
+* @param[in] pOperationSequenceHandler - OperationSequenceHandler instance.
+* @param[in] pGroupName - Parameter group. Empty disables mirroring.
+* @param[in] pValuePrefix - Prefix for the type and resolved values, e.g. op_.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequencehandler_setstatusparametergroup(LibMCEnv_OperationSequenceHandler pOperationSequenceHandler, const char * pGroupName, const char * pValuePrefix);
+
+/*************************************************************************************************************************
+ Class definition for DispatchedOperation
+**************************************************************************************************************************/
+
+/**
+* Returns the operation UUID.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of UUID., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getuuid(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nUUIDBufferSize, LibMCEnv_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
+* Returns the operation type.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nTypeNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTypeNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTypeNameBuffer -  buffer of Type name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_gettypename(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nTypeNameBufferSize, LibMCEnv_uint32* pTypeNameNeededChars, char * pTypeNameBuffer);
+
+/**
+* Returns the index in the sequence.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[out] pIndex - Index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getindex(LibMCEnv_DispatchedOperation pDispatchedOperation, LibMCEnv_uint32 * pIndex);
+
+/**
+* Returns the execution that dispatched the operation.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nExecutionNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pExecutionNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pExecutionNameBuffer -  buffer of Execution name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getexecutionname(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nExecutionNameBufferSize, LibMCEnv_uint32* pExecutionNameNeededChars, char * pExecutionNameBuffer);
+
+/**
+* Returns the sequence name.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nSequenceNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSequenceNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSequenceNameBuffer -  buffer of Sequence name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getsequencename(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nSequenceNameBufferSize, LibMCEnv_uint32* pSequenceNameNeededChars, char * pSequenceNameBuffer);
+
+/**
+* Returns the sequence revision.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[out] pRevision - Revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getrevision(LibMCEnv_DispatchedOperation pDispatchedOperation, LibMCEnv_uint32 * pRevision);
+
+/**
+* Returns the comment.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nCommentBufferSize - size of the buffer (including trailing 0)
+* @param[out] pCommentNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pCommentBuffer -  buffer of Comment., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getcomment(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nCommentBufferSize, LibMCEnv_uint32* pCommentNeededChars, char * pCommentBuffer);
+
+/**
+* Returns the state that executes the operation.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nTargetStateBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTargetStateNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTargetStateBuffer -  buffer of State name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_gettargetstate(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nTargetStateBufferSize, LibMCEnv_uint32* pTargetStateNeededChars, char * pTargetStateBuffer);
+
+/**
+* Returns the state to continue with when the operation is done.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] nReturnStateBufferSize - size of the buffer (including trailing 0)
+* @param[out] pReturnStateNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pReturnStateBuffer -  buffer of State name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getreturnstate(LibMCEnv_DispatchedOperation pDispatchedOperation, const LibMCEnv_uint32 nReturnStateBufferSize, LibMCEnv_uint32* pReturnStateNeededChars, char * pReturnStateBuffer);
+
+/**
+* Returns if the sequence set the value explicitly, rather than using the default.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pHasValue - True if set explicitly.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_hasexplicitvalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, bool * pHasValue);
+
+/**
+* Returns a resolved value as string. Works for all parameter types.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Resolved value., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getstringvalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Returns a resolved numeric or bool value as integer. Doubles are rounded. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getintegervalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, LibMCEnv_int64 * pValue);
+
+/**
+* Returns a resolved numeric or bool value as double. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getdoublevalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, LibMCEnv_double * pValue);
+
+/**
+* Returns a resolved value as bool. Numbers are true unless zero.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getboolvalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, bool * pValue);
+
+/**
+* Evaluates the raw value again against the current parameter values and clamps it.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Current value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_reevaluatedoublevalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, LibMCEnv_double * pValue);
+
+/**
+* Evaluates the raw value again against the current parameter values, clamps and rounds it.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Current value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_reevaluateintegervalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pName, LibMCEnv_int64 * pValue);
+
+/**
+* Returns the number of items of an item list.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pListName - Item list name.
+* @param[out] pCount - Number of items.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getitemcount(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pListName, LibMCEnv_uint32 * pCount);
+
+/**
+* Returns a resolved item value as string.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Item index, 0-based.
+* @param[in] pName - Parameter name.
+* @param[in] nValueBufferSize - size of the buffer (including trailing 0)
+* @param[out] pValueNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pValueBuffer -  buffer of Resolved value., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getitemstringvalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pListName, LibMCEnv_uint32 nIndex, const char * pName, const LibMCEnv_uint32 nValueBufferSize, LibMCEnv_uint32* pValueNeededChars, char * pValueBuffer);
+
+/**
+* Returns a resolved item value as integer.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Item index, 0-based.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getitemintegervalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pListName, LibMCEnv_uint32 nIndex, const char * pName, LibMCEnv_int64 * pValue);
+
+/**
+* Returns a resolved item value as double.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Item index, 0-based.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getitemdoublevalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pListName, LibMCEnv_uint32 nIndex, const char * pName, LibMCEnv_double * pValue);
+
+/**
+* Returns a resolved item value as bool.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pListName - Item list name.
+* @param[in] nIndex - Item index, 0-based.
+* @param[in] pName - Parameter name.
+* @param[out] pValue - Resolved value.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_getitemboolvalue(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pListName, LibMCEnv_uint32 nIndex, const char * pName, bool * pValue);
+
+/**
+* Marks the operation and its execution as failed, logs the message and updates the status mirror. The caller chooses the next state.
+*
+* @param[in] pDispatchedOperation - DispatchedOperation instance.
+* @param[in] pMessage - Failure reason.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_dispatchedoperation_markfailed(LibMCEnv_DispatchedOperation pDispatchedOperation, const char * pMessage);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceExecution
+**************************************************************************************************************************/
+
+/**
+* Returns the execution name.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[in] nNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pNameBuffer -  buffer of Execution name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getname(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, const LibMCEnv_uint32 nNameBufferSize, LibMCEnv_uint32* pNameNeededChars, char * pNameBuffer);
+
+/**
+* Returns the pinned revision.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[out] pSequence - Pinned revision.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getsequence(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, LibMCEnv_OperationSequence * pSequence);
+
+/**
+* Returns the parameter group used for dollar-prefixed parameter references.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[in] nGroupNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pGroupNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pGroupNameBuffer -  buffer of Parameter group., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getbindinggroup(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, const LibMCEnv_uint32 nGroupNameBufferSize, LibMCEnv_uint32* pGroupNameNeededChars, char * pGroupNameBuffer);
+
+/**
+* Changes the parameter group for subsequent dispatches. MUST exist.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[in] pGroupName - Parameter group.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_setbindinggroup(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, const char * pGroupName);
+
+/**
+* Returns the state that op states return to.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[in] nReturnStateBufferSize - size of the buffer (including trailing 0)
+* @param[out] pReturnStateNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pReturnStateBuffer -  buffer of State name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getreturnstate(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, const LibMCEnv_uint32 nReturnStateBufferSize, LibMCEnv_uint32* pReturnStateNeededChars, char * pReturnStateBuffer);
+
+/**
+* Returns the execution status.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[out] pStatus - Status.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getstatus(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, LibMCEnv::eOperationSequenceExecutionStatus * pStatus);
+
+/**
+* Returns the index the next dispatch starts searching from.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[out] pIndex - Index, 0-based.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getnextoperationindex(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, LibMCEnv_uint32 * pIndex);
+
+/**
+* Returns how often the execution has been restarted.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[out] pCount - Number of restarts.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_getiterationcount(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, LibMCEnv_uint32 * pCount);
+
+/**
+* Skips disabled operations, resolves the next operation and makes it the dispatched operation of the state machine. Returns null and sets the status to Completed at the end. Fails with OPERATIONPARAMETEREVALUATIONFAILED and sets the status to Failed if a value cannot be resolved.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[out] pOperation - Dispatched operation, or null at the end of the sequence.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_dispatchnextoperation(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, LibMCEnv_DispatchedOperation * pOperation);
+
+/**
+* Starts again at the first operation of the pinned revision and increments the iteration count. Newer revisions are only used by the next StartOperationSequence.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_restart(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution);
+
+/**
+* Sets the status to Aborted, logs the reason and updates the status mirror.
+*
+* @param[in] pOperationSequenceExecution - OperationSequenceExecution instance.
+* @param[in] pReason - Reason.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_operationsequenceexecution_abort(LibMCEnv_OperationSequenceExecution pOperationSequenceExecution, const char * pReason);
+
+/*************************************************************************************************************************
  Class definition for StateEnvironment
 **************************************************************************************************************************/
 
@@ -11346,6 +12985,57 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_evaluateformulaasinte
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_evaluateformulaasbool(LibMCEnv_StateEnvironment pStateEnvironment, const char * pFormula, bool * pValue);
+
+/**
+* Returns the operation sequence registry of this state machine.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[out] pHandler - Registry of this state machine.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getoperationsequencehandler(LibMCEnv_StateEnvironment pStateEnvironment, LibMCEnv_OperationSequenceHandler * pHandler);
+
+/**
+* Starts an execution pinned to the latest revision of a sequence. An execution with the same name is aborted and replaced. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the latest revision is invalid.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pExecutionName - Execution name, e.g. process.
+* @param[in] pSequenceName - Published sequence name.
+* @param[in] pBindingGroup - Parameter group for dollar-prefixed parameter references. Empty uses the sequence's binding group. MUST exist.
+* @param[in] pReturnState - State that op states return to. MUST exist.
+* @param[out] pExecution - New execution.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_startoperationsequence(LibMCEnv_StateEnvironment pStateEnvironment, const char * pExecutionName, const char * pSequenceName, const char * pBindingGroup, const char * pReturnState, LibMCEnv_OperationSequenceExecution * pExecution);
+
+/**
+* Returns an execution of this state machine by name.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[in] pExecutionName - Execution name.
+* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCEEXECUTIONNOTFOUND; otherwise returns null.
+* @param[out] pExecution - Execution or null.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_findoperationsequenceexecution(LibMCEnv_StateEnvironment pStateEnvironment, const char * pExecutionName, bool bFailIfNotExisting, LibMCEnv_OperationSequenceExecution * pExecution);
+
+/**
+* Returns if an operation has been dispatched in this state machine.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[out] pHasOperation - True if an operation has been dispatched.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_hasdispatchedoperation(LibMCEnv_StateEnvironment pStateEnvironment, bool * pHasOperation);
+
+/**
+* Returns the operation dispatched most recently in this state machine. Fails with NOOPERATIONDISPATCHED.
+*
+* @param[in] pStateEnvironment - StateEnvironment instance.
+* @param[out] pOperation - Dispatched operation.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_stateenvironment_getdispatchedoperation(LibMCEnv_StateEnvironment pStateEnvironment, LibMCEnv_DispatchedOperation * pOperation);
 
 /*************************************************************************************************************************
  Class definition for UIItem
@@ -12628,6 +14318,16 @@ LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_evaluateformulaasinteger
 * @return error code or 0 (success)
 */
 LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_evaluateformulaasbool(LibMCEnv_UIEnvironment pUIEnvironment, const char * pFormula, bool * pValue);
+
+/**
+* Returns the operation sequence registry of a state machine. Operation types cannot be registered from the user interface.
+*
+* @param[in] pUIEnvironment - UIEnvironment instance.
+* @param[in] pMachineInstance - State machine instance name.
+* @param[out] pHandler - Registry of the state machine.
+* @return error code or 0 (success)
+*/
+LIBMCENV_DECLSPEC LibMCEnvResult libmcenv_uienvironment_getoperationsequencehandler(LibMCEnv_UIEnvironment pUIEnvironment, const char * pMachineInstance, LibMCEnv_OperationSequenceHandler * pHandler);
 
 /*************************************************************************************************************************
  Global functions

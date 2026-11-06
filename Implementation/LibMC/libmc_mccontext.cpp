@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_resourcepackage.hpp"
 #include "amc_accesscontrol.hpp"
 #include "amc_statesignalhandler.hpp"
+#include "amc_operationsequencehandler.hpp"
 
 #include "amc_api_factory.hpp"
 #include "amc_api_sessionhandler.hpp"
@@ -589,6 +590,7 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
 
 
     // Load Out States
+    auto pOperationSequenceRegistry = m_pSystemState->operationSequenceHandler()->createRegistry(sName);
     for (pugi::xml_node stateNode : statesNodes)
     {
         auto stateNameAttrib = stateNode.attribute("name");
@@ -596,6 +598,7 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
             throw ELibMCCustomException(LIBMC_ERROR_MISSINGSTATENAME, "statemachine " + sName);
 
         auto pState = pInstance->findState(stateNameAttrib.as_string(), true);
+        std::set<std::string> outStateNames;
 
         auto outstateNodes = stateNode.children("outstate");
         for (pugi::xml_node outstateNode : outstateNodes) {
@@ -608,10 +611,13 @@ AMC::PStateMachineInstance CMCContext::addMachineInstance(const pugi::xml_node& 
                 throw ELibMCCustomException(LIBMC_ERROR_INVALIDOUTSTATETARGET, targetAttrib.as_string());
 
             pState->addOutState(pTargetState);
+            outStateNames.insert(pTargetState->getName());
         }
 
-
+        pOperationSequenceRegistry->registerState(pState->getName(), outStateNames);
     }
+
+    pOperationSequenceRegistry->loadFromStore();
 
     // Load all telemetry channels for the state machine
     auto pTelemetryHandler = m_pSystemState->getTelemetryHandlerInstance();

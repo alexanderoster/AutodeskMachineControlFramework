@@ -347,6 +347,8 @@ public:
 	LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string& sFormula) override;
 
 	bool EvaluateFormulaAsBool(const std::string& sFormula) override;
+
+	IOperationSequenceHandler* GetOperationSequenceHandler(const std::string& sMachineInstance) override;
 };
 
 } // namespace Impl

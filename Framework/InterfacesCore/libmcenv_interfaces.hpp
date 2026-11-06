@@ -141,6 +141,22 @@ class IMachineConfigurationHandler;
 class ITelemetryMarkerScope;
 class ITelemetryChannel;
 class IFormula;
+class IOperationParameterDefinition;
+class IOperationParameterDefinitionIterator;
+class IOperationParameterContainer;
+class IOperationItemListDefinition;
+class IOperationItemListDefinitionIterator;
+class IOperationTypeDefinition;
+class IOperationTypeDefinitionIterator;
+class IOperationItem;
+class IOperation;
+class IOperationIterator;
+class IOperationSequence;
+class IOperationSequenceIterator;
+class IOperationSequenceValidationResult;
+class IOperationSequenceHandler;
+class IDispatchedOperation;
+class IOperationSequenceExecution;
 class IStateEnvironment;
 class IUIItem;
 class IUIEnvironment;
@@ -7962,6 +7978,1203 @@ typedef IBaseSharedPtr<IFormula> PIFormula;
 
 
 /*************************************************************************************************************************
+ Class interface for OperationParameterDefinition 
+**************************************************************************************************************************/
+
+class IOperationParameterDefinition : public virtual IBase {
+public:
+	/**
+	* IOperationParameterDefinition::GetName - Returns the parameter name, which is also the XML attribute name.
+	* @return Parameter name.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IOperationParameterDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	virtual std::string GetDisplayName() = 0;
+
+	/**
+	* IOperationParameterDefinition::SetDisplayName - Sets the display name.
+	* @param[in] sDisplayName - Display name.
+	*/
+	virtual void SetDisplayName(const std::string & sDisplayName) = 0;
+
+	/**
+	* IOperationParameterDefinition::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	virtual std::string GetDescription() = 0;
+
+	/**
+	* IOperationParameterDefinition::SetDescription - Sets the description.
+	* @param[in] sDescription - Description.
+	*/
+	virtual void SetDescription(const std::string & sDescription) = 0;
+
+	/**
+	* IOperationParameterDefinition::GetParameterType - Returns the data type.
+	* @return Data type.
+	*/
+	virtual LibMCEnv::eOperationParameterType GetParameterType() = 0;
+
+	/**
+	* IOperationParameterDefinition::GetDefaultValue - Returns the default value as string.
+	* @return Default value.
+	*/
+	virtual std::string GetDefaultValue() = 0;
+
+	/**
+	* IOperationParameterDefinition::GetUnit - Returns the display unit. Informational only.
+	* @return Unit, e.g. um/s. May be empty.
+	*/
+	virtual std::string GetUnit() = 0;
+
+	/**
+	* IOperationParameterDefinition::SetUnit - Sets the display unit. Informational only.
+	* @param[in] sUnit - Unit, e.g. um/s.
+	*/
+	virtual void SetUnit(const std::string & sUnit) = 0;
+
+	/**
+	* IOperationParameterDefinition::HasRange - Returns if resolved values are clamped to a range. Only numeric parameters have ranges.
+	* @return True if a range is defined.
+	*/
+	virtual bool HasRange() = 0;
+
+	/**
+	* IOperationParameterDefinition::GetRange - Returns the range. Fails if no range is defined.
+	* @param[out] dMinimum - Minimum value.
+	* @param[out] dMaximum - Maximum value.
+	*/
+	virtual void GetRange(LibMCEnv_double & dMinimum, LibMCEnv_double & dMaximum) = 0;
+
+	/**
+	* IOperationParameterDefinition::GetExpressionMode - Returns which kinds of raw values are accepted.
+	* @return Expression mode.
+	*/
+	virtual LibMCEnv::eOperationExpressionMode GetExpressionMode() = 0;
+
+	/**
+	* IOperationParameterDefinition::SetExpressionMode - Restricts the kinds of raw values that are accepted. Formula is only allowed for numeric and bool parameters.
+	* @param[in] eExpressionMode - Expression mode.
+	*/
+	virtual void SetExpressionMode(const LibMCEnv::eOperationExpressionMode eExpressionMode) = 0;
+
+	/**
+	* IOperationParameterDefinition::IsRequired - Returns if the parameter must be set explicitly in a sequence.
+	* @return True if required.
+	*/
+	virtual bool IsRequired() = 0;
+
+	/**
+	* IOperationParameterDefinition::SetRequired - Sets if the parameter must be set explicitly in a sequence. Default is false.
+	* @param[in] bIsRequired - True if required.
+	*/
+	virtual void SetRequired(const bool bIsRequired) = 0;
+
+	/**
+	* IOperationParameterDefinition::AddEnumOption - Adds an option to an enum parameter. Fails for other types or if the value exists with a different display name.
+	* @param[in] sValue - Option value as written in the sequence.
+	* @param[in] sDisplayName - Display name of the option.
+	*/
+	virtual void AddEnumOption(const std::string & sValue, const std::string & sDisplayName) = 0;
+
+	/**
+	* IOperationParameterDefinition::GetEnumOptionCount - Returns the number of enum options.
+	* @return Number of options.
+	*/
+	virtual LibMCEnv_uint32 GetEnumOptionCount() = 0;
+
+	/**
+	* IOperationParameterDefinition::GetEnumOption - Returns an enum option.
+	* @param[in] nIndex - Index, 0-based.
+	* @param[out] sValue - Option value.
+	* @param[out] sDisplayName - Display name.
+	*/
+	virtual void GetEnumOption(const LibMCEnv_uint32 nIndex, std::string & sValue, std::string & sDisplayName) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationParameterDefinition> PIOperationParameterDefinition;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationParameterDefinitionIterator 
+**************************************************************************************************************************/
+
+class IOperationParameterDefinitionIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationParameterDefinitionIterator::GetCurrent - Returns the current parameter definition.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationParameterDefinitionIterator> PIOperationParameterDefinitionIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationParameterContainer 
+**************************************************************************************************************************/
+
+class IOperationParameterContainer : public virtual IBase {
+public:
+	/**
+	* IOperationParameterContainer::AddStringParameter - Adds a string parameter. Default expression mode is LiteralOrReference.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] sDefaultValue - Default value.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * AddStringParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue) = 0;
+
+	/**
+	* IOperationParameterContainer::AddIntegerParameter - Adds an integer parameter. Resolved values are clamped to the range and rounded. If Maximum is smaller than Minimum, no range is applied.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] nDefaultValue - Default value.
+	* @param[in] nMinimum - Minimum value.
+	* @param[in] nMaximum - Maximum value.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * AddIntegerParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_int64 nDefaultValue, const LibMCEnv_int64 nMinimum, const LibMCEnv_int64 nMaximum) = 0;
+
+	/**
+	* IOperationParameterContainer::AddDoubleParameter - Adds a double parameter. Resolved values are clamped to the range. If Maximum is smaller than Minimum, no range is applied.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] dDefaultValue - Default value.
+	* @param[in] dMinimum - Minimum value.
+	* @param[in] dMaximum - Maximum value.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * AddDoubleParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_double dDefaultValue, const LibMCEnv_double dMinimum, const LibMCEnv_double dMaximum) = 0;
+
+	/**
+	* IOperationParameterContainer::AddBoolParameter - Adds a bool parameter.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] bDefaultValue - Default value.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * AddBoolParameter(const std::string & sName, const std::string & sDisplayName, const bool bDefaultValue) = 0;
+
+	/**
+	* IOperationParameterContainer::AddEnumParameter - Adds an enum parameter. Options are added with AddEnumOption. The default MUST become a valid option before the first sequence is validated.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] sDefaultValue - Default option value.
+	* @return Parameter definition.
+	*/
+	virtual IOperationParameterDefinition * AddEnumParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue) = 0;
+
+	/**
+	* IOperationParameterContainer::HasParameter - Returns if a parameter exists.
+	* @param[in] sName - Parameter name.
+	* @return True if the parameter exists.
+	*/
+	virtual bool HasParameter(const std::string & sName) = 0;
+
+	/**
+	* IOperationParameterContainer::FindParameter - Returns a parameter definition.
+	* @param[in] sName - Parameter name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONPARAMETERNOTFOUND; otherwise returns null.
+	* @return Parameter definition or null.
+	*/
+	virtual IOperationParameterDefinition * FindParameter(const std::string & sName, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IOperationParameterContainer::ListParameters - Lists all parameter definitions in registration order.
+	* @return Parameter definitions.
+	*/
+	virtual IOperationParameterDefinitionIterator * ListParameters() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationParameterContainer> PIOperationParameterContainer;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationItemListDefinition 
+**************************************************************************************************************************/
+
+class IOperationItemListDefinition : public virtual IOperationParameterContainer {
+public:
+	/**
+	* IOperationItemListDefinition::GetName - Returns the item list name, which is also the XML element name of its items.
+	* @return Item list name.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IOperationItemListDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	virtual std::string GetDisplayName() = 0;
+
+	/**
+	* IOperationItemListDefinition::GetMaxItemCount - Returns the maximum number of items. Sequences with more items fail validation.
+	* @return Maximum item count.
+	*/
+	virtual LibMCEnv_uint32 GetMaxItemCount() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationItemListDefinition> PIOperationItemListDefinition;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationItemListDefinitionIterator 
+**************************************************************************************************************************/
+
+class IOperationItemListDefinitionIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationItemListDefinitionIterator::GetCurrent - Returns the current item list definition.
+	* @return Item list definition.
+	*/
+	virtual IOperationItemListDefinition * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationItemListDefinitionIterator> PIOperationItemListDefinitionIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationTypeDefinition 
+**************************************************************************************************************************/
+
+class IOperationTypeDefinition : public virtual IOperationParameterContainer {
+public:
+	/**
+	* IOperationTypeDefinition::GetName - Returns the type name as used in the type attribute of an operation.
+	* @return Type name.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IOperationTypeDefinition::GetTargetState - Returns the state that executes operations of this type.
+	* @return State name.
+	*/
+	virtual std::string GetTargetState() = 0;
+
+	/**
+	* IOperationTypeDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	virtual std::string GetDisplayName() = 0;
+
+	/**
+	* IOperationTypeDefinition::SetDisplayName - Sets the display name. Defaults to the type name.
+	* @param[in] sDisplayName - Display name.
+	*/
+	virtual void SetDisplayName(const std::string & sDisplayName) = 0;
+
+	/**
+	* IOperationTypeDefinition::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	virtual std::string GetDescription() = 0;
+
+	/**
+	* IOperationTypeDefinition::SetDescription - Sets the description.
+	* @param[in] sDescription - Description.
+	*/
+	virtual void SetDescription(const std::string & sDescription) = 0;
+
+	/**
+	* IOperationTypeDefinition::GetCategory - Returns the palette category.
+	* @return Category.
+	*/
+	virtual std::string GetCategory() = 0;
+
+	/**
+	* IOperationTypeDefinition::SetCategory - Sets the palette category, e.g. Motion or Temperature.
+	* @param[in] sCategory - Category.
+	*/
+	virtual void SetCategory(const std::string & sCategory) = 0;
+
+	/**
+	* IOperationTypeDefinition::GetIconResource - Returns the icon resource name.
+	* @return Resource name. May be empty.
+	*/
+	virtual std::string GetIconResource() = 0;
+
+	/**
+	* IOperationTypeDefinition::SetIconResource - Sets an SVG or PNG resource of the plugin package as icon. Fails if the resource does not exist.
+	* @param[in] sResourceName - Resource name.
+	*/
+	virtual void SetIconResource(const std::string & sResourceName) = 0;
+
+	/**
+	* IOperationTypeDefinition::GetAllowedContexts - Returns the comma-separated sequence contexts this type may be used in.
+	* @return Contexts. Empty means all.
+	*/
+	virtual std::string GetAllowedContexts() = 0;
+
+	/**
+	* IOperationTypeDefinition::SetAllowedContexts - Restricts the type to sequences with one of the given contexts.
+	* @param[in] sContexts - Comma-separated contexts, e.g. build. Empty means all.
+	*/
+	virtual void SetAllowedContexts(const std::string & sContexts) = 0;
+
+	/**
+	* IOperationTypeDefinition::AddItemList - Adds an item list. Returns the existing one if identical.
+	* @param[in] sName - Item list name, also the XML element name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] nMaxItemCount - Maximum number of items. MUST be larger than 0.
+	* @return Item list definition.
+	*/
+	virtual IOperationItemListDefinition * AddItemList(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_uint32 nMaxItemCount) = 0;
+
+	/**
+	* IOperationTypeDefinition::FindItemList - Returns an item list definition.
+	* @param[in] sName - Item list name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONITEMLISTNOTFOUND; otherwise returns null.
+	* @return Item list definition or null.
+	*/
+	virtual IOperationItemListDefinition * FindItemList(const std::string & sName, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IOperationTypeDefinition::ListItemLists - Lists all item list definitions.
+	* @return Item list definitions.
+	*/
+	virtual IOperationItemListDefinitionIterator * ListItemLists() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationTypeDefinition> PIOperationTypeDefinition;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationTypeDefinitionIterator 
+**************************************************************************************************************************/
+
+class IOperationTypeDefinitionIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationTypeDefinitionIterator::GetCurrent - Returns the current operation type.
+	* @return Operation type.
+	*/
+	virtual IOperationTypeDefinition * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationTypeDefinitionIterator> PIOperationTypeDefinitionIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationItem 
+**************************************************************************************************************************/
+
+class IOperationItem : public virtual IBase {
+public:
+	/**
+	* IOperationItem::GetIndex - Returns the index in the item list.
+	* @return Index, 0-based.
+	*/
+	virtual LibMCEnv_uint32 GetIndex() = 0;
+
+	/**
+	* IOperationItem::HasValue - Returns if a value is set explicitly.
+	* @param[in] sName - Parameter name.
+	* @return True if set.
+	*/
+	virtual bool HasValue(const std::string & sName) = 0;
+
+	/**
+	* IOperationItem::GetRawValue - Returns the raw value as written. Returns the default if not set.
+	* @param[in] sName - Parameter name.
+	* @return Raw value.
+	*/
+	virtual std::string GetRawValue(const std::string & sName) = 0;
+
+	/**
+	* IOperationItem::SetRawValue - Sets a raw value. Fails if the sequence is published or the parameter is not defined.
+	* @param[in] sName - Parameter name.
+	* @param[in] sValue - Literal, dollar-prefixed parameter reference or formula.
+	*/
+	virtual void SetRawValue(const std::string & sName, const std::string & sValue) = 0;
+
+	/**
+	* IOperationItem::ClearValue - Removes an explicit value, so the default applies. Fails if the sequence is published.
+	* @param[in] sName - Parameter name.
+	*/
+	virtual void ClearValue(const std::string & sName) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationItem> PIOperationItem;
+
+
+/*************************************************************************************************************************
+ Class interface for Operation 
+**************************************************************************************************************************/
+
+class IOperation : public virtual IBase {
+public:
+	/**
+	* IOperation::GetUUID - Returns the stable UUID of the operation.
+	* @return UUID.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IOperation::GetIndex - Returns the position in the sequence.
+	* @return Index, 0-based.
+	*/
+	virtual LibMCEnv_uint32 GetIndex() = 0;
+
+	/**
+	* IOperation::GetTypeName - Returns the operation type name.
+	* @return Type name.
+	*/
+	virtual std::string GetTypeName() = 0;
+
+	/**
+	* IOperation::IsEnabled - Returns if the operation is executed. Disabled operations are skipped at dispatch.
+	* @return True if enabled.
+	*/
+	virtual bool IsEnabled() = 0;
+
+	/**
+	* IOperation::SetEnabled - Enables or disables the operation. Fails if the sequence is published.
+	* @param[in] bIsEnabled - True to enable.
+	*/
+	virtual void SetEnabled(const bool bIsEnabled) = 0;
+
+	/**
+	* IOperation::GetComment - Returns the comment.
+	* @return Comment.
+	*/
+	virtual std::string GetComment() = 0;
+
+	/**
+	* IOperation::SetComment - Sets the comment. Fails if the sequence is published.
+	* @param[in] sComment - Comment.
+	*/
+	virtual void SetComment(const std::string & sComment) = 0;
+
+	/**
+	* IOperation::HasValue - Returns if a parameter value is set explicitly.
+	* @param[in] sName - Parameter name.
+	* @return True if set.
+	*/
+	virtual bool HasValue(const std::string & sName) = 0;
+
+	/**
+	* IOperation::GetRawValue - Returns the raw value as written. Returns the default if not set.
+	* @param[in] sName - Parameter name.
+	* @return Raw value.
+	*/
+	virtual std::string GetRawValue(const std::string & sName) = 0;
+
+	/**
+	* IOperation::GetValueKind - Returns how a raw value will be resolved.
+	* @param[in] sName - Parameter name.
+	* @return Default, Literal, Reference or Formula.
+	*/
+	virtual LibMCEnv::eOperationValueKind GetValueKind(const std::string & sName) = 0;
+
+	/**
+	* IOperation::SetRawValue - Sets a raw value. Fails if the sequence is published or the parameter is not defined for the type.
+	* @param[in] sName - Parameter name.
+	* @param[in] sValue - Literal, dollar-prefixed parameter reference or formula.
+	*/
+	virtual void SetRawValue(const std::string & sName, const std::string & sValue) = 0;
+
+	/**
+	* IOperation::ClearValue - Removes an explicit value, so the default applies. Fails if the sequence is published.
+	* @param[in] sName - Parameter name.
+	*/
+	virtual void ClearValue(const std::string & sName) = 0;
+
+	/**
+	* IOperation::GetItemCount - Returns the number of items of an item list.
+	* @param[in] sListName - Item list name.
+	* @return Number of items.
+	*/
+	virtual LibMCEnv_uint32 GetItemCount(const std::string & sListName) = 0;
+
+	/**
+	* IOperation::GetItem - Returns an item of an item list.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Index, 0-based.
+	* @return Item.
+	*/
+	virtual IOperationItem * GetItem(const std::string & sListName, const LibMCEnv_uint32 nIndex) = 0;
+
+	/**
+	* IOperation::AddItem - Appends an item. Fails with OPERATIONITEMLISTFULL at the maximum count, or if the sequence is published.
+	* @param[in] sListName - Item list name.
+	* @return New item.
+	*/
+	virtual IOperationItem * AddItem(const std::string & sListName) = 0;
+
+	/**
+	* IOperation::RemoveItem - Removes an item. Fails if the sequence is published.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Index, 0-based.
+	*/
+	virtual void RemoveItem(const std::string & sListName, const LibMCEnv_uint32 nIndex) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperation> PIOperation;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationIterator 
+**************************************************************************************************************************/
+
+class IOperationIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationIterator::GetCurrent - Returns the current operation.
+	* @return Operation.
+	*/
+	virtual IOperation * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationIterator> PIOperationIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequence 
+**************************************************************************************************************************/
+
+class IOperationSequence : public virtual IBase {
+public:
+	/**
+	* IOperationSequence::GetName - Returns the sequence name.
+	* @return Name.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IOperationSequence::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	virtual std::string GetDisplayName() = 0;
+
+	/**
+	* IOperationSequence::SetDisplayName - Sets the display name. Fails if published.
+	* @param[in] sDisplayName - Display name.
+	*/
+	virtual void SetDisplayName(const std::string & sDisplayName) = 0;
+
+	/**
+	* IOperationSequence::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	virtual std::string GetDescription() = 0;
+
+	/**
+	* IOperationSequence::SetDescription - Sets the description. Fails if published.
+	* @param[in] sDescription - Description.
+	*/
+	virtual void SetDescription(const std::string & sDescription) = 0;
+
+	/**
+	* IOperationSequence::GetContext - Returns the context, e.g. build or manual.
+	* @return Context. May be empty.
+	*/
+	virtual std::string GetContext() = 0;
+
+	/**
+	* IOperationSequence::SetContext - Sets the context. Fails if published.
+	* @param[in] sContext - Context.
+	*/
+	virtual void SetContext(const std::string & sContext) = 0;
+
+	/**
+	* IOperationSequence::GetBindingGroup - Returns the default parameter group for dollar-prefixed parameter references.
+	* @return Parameter group. May be empty.
+	*/
+	virtual std::string GetBindingGroup() = 0;
+
+	/**
+	* IOperationSequence::SetBindingGroup - Sets the default parameter group for dollar-prefixed parameter references. Fails if published.
+	* @param[in] sGroupName - Parameter group.
+	*/
+	virtual void SetBindingGroup(const std::string & sGroupName) = 0;
+
+	/**
+	* IOperationSequence::IsPublished - Returns if this is an immutable published revision.
+	* @return True if published.
+	*/
+	virtual bool IsPublished() = 0;
+
+	/**
+	* IOperationSequence::GetRevision - Returns the revision. For a working copy, returns the revision it was based on, or 0.
+	* @return Revision.
+	*/
+	virtual LibMCEnv_uint32 GetRevision() = 0;
+
+	/**
+	* IOperationSequence::GetRevisionUUID - Returns the UUID of the stored revision. Use it to reference the revision from build metadata.
+	* @return Revision UUID. Empty for working copies.
+	*/
+	virtual std::string GetRevisionUUID() = 0;
+
+	/**
+	* IOperationSequence::IsValid - Returns if the revision passed validation against the currently registered types. A stored revision can become invalid after a plugin update. Invalid revisions cannot be started.
+	* @return True if valid. Always true for revisions published in this session.
+	*/
+	virtual bool IsValid() = 0;
+
+	/**
+	* IOperationSequence::GetValidationResult - Returns the result of validating the revision against the currently registered types.
+	* @return Validation result.
+	*/
+	virtual IOperationSequenceValidationResult * GetValidationResult() = 0;
+
+	/**
+	* IOperationSequence::GetOrigin - Returns where the sequence came from.
+	* @return Origin.
+	*/
+	virtual LibMCEnv::eOperationSequenceOrigin GetOrigin() = 0;
+
+	/**
+	* IOperationSequence::GetTimestamp - Returns the publish timestamp. Empty for working copies.
+	* @return ISO 8601 UTC timestamp.
+	*/
+	virtual std::string GetTimestamp() = 0;
+
+	/**
+	* IOperationSequence::GetUserUUID - Returns the user that published the revision.
+	* @return User UUID. Empty for working copies.
+	*/
+	virtual std::string GetUserUUID() = 0;
+
+	/**
+	* IOperationSequence::GetOperationCount - Returns the number of operations, including disabled ones.
+	* @return Number of operations.
+	*/
+	virtual LibMCEnv_uint32 GetOperationCount() = 0;
+
+	/**
+	* IOperationSequence::GetOperation - Returns an operation by index.
+	* @param[in] nIndex - Index, 0-based.
+	* @return Operation.
+	*/
+	virtual IOperation * GetOperation(const LibMCEnv_uint32 nIndex) = 0;
+
+	/**
+	* IOperationSequence::FindOperation - Returns an operation by UUID.
+	* @param[in] sUUID - Operation UUID.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONNOTFOUND; otherwise returns null.
+	* @return Operation or null.
+	*/
+	virtual IOperation * FindOperation(const std::string & sUUID, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IOperationSequence::ListOperations - Lists all operations in order.
+	* @return Operations.
+	*/
+	virtual IOperationIterator * ListOperations() = 0;
+
+	/**
+	* IOperationSequence::AddOperation - Appends an operation of a registered type with default values. Fails if published.
+	* @param[in] sTypeName - Operation type.
+	* @return New operation.
+	*/
+	virtual IOperation * AddOperation(const std::string & sTypeName) = 0;
+
+	/**
+	* IOperationSequence::InsertOperation - Inserts an operation before the given index. Fails if published.
+	* @param[in] nIndex - Index, 0-based. The operation count appends.
+	* @param[in] sTypeName - Operation type.
+	* @return New operation.
+	*/
+	virtual IOperation * InsertOperation(const LibMCEnv_uint32 nIndex, const std::string & sTypeName) = 0;
+
+	/**
+	* IOperationSequence::RemoveOperation - Removes an operation. Fails if published.
+	* @param[in] sUUID - Operation UUID.
+	*/
+	virtual void RemoveOperation(const std::string & sUUID) = 0;
+
+	/**
+	* IOperationSequence::MoveOperation - Moves an operation to a new index. Fails if published.
+	* @param[in] sUUID - Operation UUID.
+	* @param[in] nNewIndex - New index, 0-based.
+	*/
+	virtual void MoveOperation(const std::string & sUUID, const LibMCEnv_uint32 nNewIndex) = 0;
+
+	/**
+	* IOperationSequence::CreateWorkingCopy - Returns an editable deep copy, based on this revision. Operation UUIDs are kept.
+	* @return Working copy.
+	*/
+	virtual IOperationSequence * CreateWorkingCopy() = 0;
+
+	/**
+	* IOperationSequence::SerializeToXMLString - Serializes the sequence in the operationsequence/2026/11 format. Only explicitly set values are written.
+	* @return XML string.
+	*/
+	virtual std::string SerializeToXMLString() = 0;
+
+	/**
+	* IOperationSequence::SerializeToXMLDocument - Serializes the sequence into a new XML document.
+	* @return XML document.
+	*/
+	virtual IXMLDocument * SerializeToXMLDocument() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequence> PIOperationSequence;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceIterator 
+**************************************************************************************************************************/
+
+class IOperationSequenceIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationSequenceIterator::GetCurrent - Returns the current sequence.
+	* @return Sequence.
+	*/
+	virtual IOperationSequence * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceIterator> PIOperationSequenceIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceValidationResult 
+**************************************************************************************************************************/
+
+class IOperationSequenceValidationResult : public virtual IBase {
+public:
+	/**
+	* IOperationSequenceValidationResult::IsValid - Returns true if there are no errors. Warnings do not prevent publishing.
+	* @return True if valid.
+	*/
+	virtual bool IsValid() = 0;
+
+	/**
+	* IOperationSequenceValidationResult::GetIssueCount - Returns the number of errors and warnings.
+	* @return Number of issues.
+	*/
+	virtual LibMCEnv_uint32 GetIssueCount() = 0;
+
+	/**
+	* IOperationSequenceValidationResult::GetIssue - Returns an issue.
+	* @param[in] nIndex - Index, 0-based.
+	* @param[out] eSeverity - Severity.
+	* @param[out] sOperationUUID - Operation UUID, or empty for sequence-level issues.
+	* @param[out] sParameterName - Parameter or item list name. May be empty.
+	* @param[out] sMessage - Human readable message.
+	*/
+	virtual void GetIssue(const LibMCEnv_uint32 nIndex, LibMCEnv::eOperationSequenceIssueSeverity & eSeverity, std::string & sOperationUUID, std::string & sParameterName, std::string & sMessage) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceValidationResult> PIOperationSequenceValidationResult;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceHandler 
+**************************************************************************************************************************/
+
+class IOperationSequenceHandler : public virtual IBase {
+public:
+	/**
+	* IOperationSequenceHandler::GetStateMachineInstance - Returns the state machine the registry belongs to.
+	* @return State machine instance name.
+	*/
+	virtual std::string GetStateMachineInstance() = 0;
+
+	/**
+	* IOperationSequenceHandler::RegisterOperationType - Registers an operation type, or returns the existing one if it has the same target state. Only allowed from the state environment of the owning state machine.
+	* @param[in] sTypeName - Type name. Case sensitive.
+	* @param[in] sTargetState - State that executes the operation. MUST exist.
+	* @return Operation type.
+	*/
+	virtual IOperationTypeDefinition * RegisterOperationType(const std::string & sTypeName, const std::string & sTargetState) = 0;
+
+	/**
+	* IOperationSequenceHandler::HasOperationType - Returns if a type is registered.
+	* @param[in] sTypeName - Type name.
+	* @return True if registered.
+	*/
+	virtual bool HasOperationType(const std::string & sTypeName) = 0;
+
+	/**
+	* IOperationSequenceHandler::FindOperationType - Returns a registered type.
+	* @param[in] sTypeName - Type name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONTYPENOTFOUND; otherwise returns null.
+	* @return Operation type or null.
+	*/
+	virtual IOperationTypeDefinition * FindOperationType(const std::string & sTypeName, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IOperationSequenceHandler::ListOperationTypes - Lists all registered types.
+	* @return Operation types.
+	*/
+	virtual IOperationTypeDefinitionIterator * ListOperationTypes() = 0;
+
+	/**
+	* IOperationSequenceHandler::CreateSequence - Creates an empty working copy.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Working copy.
+	*/
+	virtual IOperationSequence * CreateSequence(const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::ParseSequenceFromString - Parses a sequence XML string into a working copy. Accepts the operationsequence/2026/11 and processsequence/2025/03 formats. Does not validate.
+	* @param[in] sXMLString - XML string.
+	* @return Working copy.
+	*/
+	virtual IOperationSequence * ParseSequenceFromString(const std::string & sXMLString) = 0;
+
+	/**
+	* IOperationSequenceHandler::ParseSequenceFromResource - Parses a sequence resource of the plugin package into a working copy. Does not validate.
+	* @param[in] sResourceName - Resource name.
+	* @return Working copy.
+	*/
+	virtual IOperationSequence * ParseSequenceFromResource(const std::string & sResourceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::ParseSequenceFromXMLDocument - Parses a sequence element of an XML document into a working copy. Does not validate.
+	* @param[in] pDocument - XML document.
+	* @param[in] sNodePath - Slash-separated path to the sequence element. Empty for the root.
+	* @return Working copy.
+	*/
+	virtual IOperationSequence * ParseSequenceFromXMLDocument(IXMLDocument* pDocument, const std::string & sNodePath) = 0;
+
+	/**
+	* IOperationSequenceHandler::ValidateSequence - Validates a sequence against the registered types and its default binding group.
+	* @param[in] pSequence - Sequence to validate.
+	* @return Validation result.
+	*/
+	virtual IOperationSequenceValidationResult * ValidateSequence(IOperationSequence* pSequence) = 0;
+
+	/**
+	* IOperationSequenceHandler::PublishSequence - Validates a working copy and publishes it as the next revision. Fails with OPERATIONSEQUENCEVALIDATIONFAILED or OPERATIONSEQUENCEREVISIONCONFLICT.
+	* @param[in] pWorkingCopy - Working copy.
+	* @param[in] sUserUUID - User that publishes the revision.
+	* @param[in] bOverwriteNewerRevision - If true, publishes even if a newer revision than the working copy's base exists.
+	* @return Published revision.
+	*/
+	virtual IOperationSequence * PublishSequence(IOperationSequence* pWorkingCopy, const std::string & sUserUUID, const bool bOverwriteNewerRevision) = 0;
+
+	/**
+	* IOperationSequenceHandler::EnsureSequenceFromResource - Returns the stored latest revision if it is valid. If nothing is stored, publishes the resource as revision 1. If the stored latest revision is invalid against the registered types, publishes the resource as a new revision and logs a warning. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the resource itself is invalid.
+	* @param[in] sSequenceName - Sequence name. Overrides the name in the file.
+	* @param[in] sResourceName - Resource name.
+	* @return Latest revision.
+	*/
+	virtual IOperationSequence * EnsureSequenceFromResource(const std::string & sSequenceName, const std::string & sResourceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::HasSequence - Returns if a sequence is published.
+	* @param[in] sSequenceName - Sequence name.
+	* @return True if published.
+	*/
+	virtual bool HasSequence(const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::GetSequence - Returns the latest revision. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Latest revision.
+	*/
+	virtual IOperationSequence * GetSequence(const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::GetSequenceRevision - Returns a specific revision. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @param[in] nRevision - Revision, 1-based.
+	* @return Revision.
+	*/
+	virtual IOperationSequence * GetSequenceRevision(const std::string & sSequenceName, const LibMCEnv_uint32 nRevision) = 0;
+
+	/**
+	* IOperationSequenceHandler::ListSequences - Lists the latest revision of all sequences, sorted by name.
+	* @return Sequences.
+	*/
+	virtual IOperationSequenceIterator * ListSequences() = 0;
+
+	/**
+	* IOperationSequenceHandler::ListSequenceRevisions - Lists all stored revisions of a sequence, newest first. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Revisions.
+	*/
+	virtual IOperationSequenceIterator * ListSequenceRevisions(const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceHandler::FindSequenceRevisionByUUID - Returns a stored revision by its revision UUID, e.g. from build metadata.
+	* @param[in] sRevisionUUID - Revision UUID.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCENOTFOUND; otherwise returns null.
+	* @return Revision or null.
+	*/
+	virtual IOperationSequence * FindSequenceRevisionByUUID(const std::string & sRevisionUUID, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IOperationSequenceHandler::ValidateDispatcherTransitions - Checks that the dispatcher state declares an outstate to the target state of every registered type, and that every target state declares an outstate back to the dispatcher. Fails with OPERATIONDISPATCHERTRANSITIONMISSING and lists all missing outstates. Only allowed from the state environment of the owning state machine.
+	* @param[in] sDispatcherState - Orchestrator state. MUST exist.
+	*/
+	virtual void ValidateDispatcherTransitions(const std::string & sDispatcherState) = 0;
+
+	/**
+	* IOperationSequenceHandler::SetStatusParameterGroup - Mirrors execution status and resolved values into a declared parameter group of the owning state machine. Only existing parameters are written.
+	* @param[in] sGroupName - Parameter group. Empty disables mirroring.
+	* @param[in] sValuePrefix - Prefix for the type and resolved values, e.g. op_.
+	*/
+	virtual void SetStatusParameterGroup(const std::string & sGroupName, const std::string & sValuePrefix) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceHandler> PIOperationSequenceHandler;
+
+
+/*************************************************************************************************************************
+ Class interface for DispatchedOperation 
+**************************************************************************************************************************/
+
+class IDispatchedOperation : public virtual IBase {
+public:
+	/**
+	* IDispatchedOperation::GetUUID - Returns the operation UUID.
+	* @return UUID.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IDispatchedOperation::GetTypeName - Returns the operation type.
+	* @return Type name.
+	*/
+	virtual std::string GetTypeName() = 0;
+
+	/**
+	* IDispatchedOperation::GetIndex - Returns the index in the sequence.
+	* @return Index, 0-based.
+	*/
+	virtual LibMCEnv_uint32 GetIndex() = 0;
+
+	/**
+	* IDispatchedOperation::GetExecutionName - Returns the execution that dispatched the operation.
+	* @return Execution name.
+	*/
+	virtual std::string GetExecutionName() = 0;
+
+	/**
+	* IDispatchedOperation::GetSequenceName - Returns the sequence name.
+	* @return Sequence name.
+	*/
+	virtual std::string GetSequenceName() = 0;
+
+	/**
+	* IDispatchedOperation::GetRevision - Returns the sequence revision.
+	* @return Revision.
+	*/
+	virtual LibMCEnv_uint32 GetRevision() = 0;
+
+	/**
+	* IDispatchedOperation::GetComment - Returns the comment.
+	* @return Comment.
+	*/
+	virtual std::string GetComment() = 0;
+
+	/**
+	* IDispatchedOperation::GetTargetState - Returns the state that executes the operation.
+	* @return State name.
+	*/
+	virtual std::string GetTargetState() = 0;
+
+	/**
+	* IDispatchedOperation::GetReturnState - Returns the state to continue with when the operation is done.
+	* @return State name.
+	*/
+	virtual std::string GetReturnState() = 0;
+
+	/**
+	* IDispatchedOperation::HasExplicitValue - Returns if the sequence set the value explicitly, rather than using the default.
+	* @param[in] sName - Parameter name.
+	* @return True if set explicitly.
+	*/
+	virtual bool HasExplicitValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetStringValue - Returns a resolved value as string. Works for all parameter types.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual std::string GetStringValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetIntegerValue - Returns a resolved numeric or bool value as integer. Doubles are rounded. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual LibMCEnv_int64 GetIntegerValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetDoubleValue - Returns a resolved numeric or bool value as double. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual LibMCEnv_double GetDoubleValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetBoolValue - Returns a resolved value as bool. Numbers are true unless zero.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual bool GetBoolValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::ReevaluateDoubleValue - Evaluates the raw value again against the current parameter values and clamps it.
+	* @param[in] sName - Parameter name.
+	* @return Current value.
+	*/
+	virtual LibMCEnv_double ReevaluateDoubleValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::ReevaluateIntegerValue - Evaluates the raw value again against the current parameter values, clamps and rounds it.
+	* @param[in] sName - Parameter name.
+	* @return Current value.
+	*/
+	virtual LibMCEnv_int64 ReevaluateIntegerValue(const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetItemCount - Returns the number of items of an item list.
+	* @param[in] sListName - Item list name.
+	* @return Number of items.
+	*/
+	virtual LibMCEnv_uint32 GetItemCount(const std::string & sListName) = 0;
+
+	/**
+	* IDispatchedOperation::GetItemStringValue - Returns a resolved item value as string.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual std::string GetItemStringValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetItemIntegerValue - Returns a resolved item value as integer.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual LibMCEnv_int64 GetItemIntegerValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetItemDoubleValue - Returns a resolved item value as double.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual LibMCEnv_double GetItemDoubleValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::GetItemBoolValue - Returns a resolved item value as bool.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	virtual bool GetItemBoolValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName) = 0;
+
+	/**
+	* IDispatchedOperation::MarkFailed - Marks the operation and its execution as failed, logs the message and updates the status mirror. The caller chooses the next state.
+	* @param[in] sMessage - Failure reason.
+	*/
+	virtual void MarkFailed(const std::string & sMessage) = 0;
+
+};
+
+typedef IBaseSharedPtr<IDispatchedOperation> PIDispatchedOperation;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceExecution 
+**************************************************************************************************************************/
+
+class IOperationSequenceExecution : public virtual IBase {
+public:
+	/**
+	* IOperationSequenceExecution::GetName - Returns the execution name.
+	* @return Execution name.
+	*/
+	virtual std::string GetName() = 0;
+
+	/**
+	* IOperationSequenceExecution::GetSequence - Returns the pinned revision.
+	* @return Pinned revision.
+	*/
+	virtual IOperationSequence * GetSequence() = 0;
+
+	/**
+	* IOperationSequenceExecution::GetBindingGroup - Returns the parameter group used for dollar-prefixed parameter references.
+	* @return Parameter group.
+	*/
+	virtual std::string GetBindingGroup() = 0;
+
+	/**
+	* IOperationSequenceExecution::SetBindingGroup - Changes the parameter group for subsequent dispatches. MUST exist.
+	* @param[in] sGroupName - Parameter group.
+	*/
+	virtual void SetBindingGroup(const std::string & sGroupName) = 0;
+
+	/**
+	* IOperationSequenceExecution::GetReturnState - Returns the state that op states return to.
+	* @return State name.
+	*/
+	virtual std::string GetReturnState() = 0;
+
+	/**
+	* IOperationSequenceExecution::GetStatus - Returns the execution status.
+	* @return Status.
+	*/
+	virtual LibMCEnv::eOperationSequenceExecutionStatus GetStatus() = 0;
+
+	/**
+	* IOperationSequenceExecution::GetNextOperationIndex - Returns the index the next dispatch starts searching from.
+	* @return Index, 0-based.
+	*/
+	virtual LibMCEnv_uint32 GetNextOperationIndex() = 0;
+
+	/**
+	* IOperationSequenceExecution::GetIterationCount - Returns how often the execution has been restarted.
+	* @return Number of restarts.
+	*/
+	virtual LibMCEnv_uint32 GetIterationCount() = 0;
+
+	/**
+	* IOperationSequenceExecution::DispatchNextOperation - Skips disabled operations, resolves the next operation and makes it the dispatched operation of the state machine. Returns null and sets the status to Completed at the end. Fails with OPERATIONPARAMETEREVALUATIONFAILED and sets the status to Failed if a value cannot be resolved.
+	* @return Dispatched operation, or null at the end of the sequence.
+	*/
+	virtual IDispatchedOperation * DispatchNextOperation() = 0;
+
+	/**
+	* IOperationSequenceExecution::Restart - Starts again at the first operation of the pinned revision and increments the iteration count. Newer revisions are only used by the next StartOperationSequence.
+	*/
+	virtual void Restart() = 0;
+
+	/**
+	* IOperationSequenceExecution::Abort - Sets the status to Aborted, logs the reason and updates the status mirror.
+	* @param[in] sReason - Reason.
+	*/
+	virtual void Abort(const std::string & sReason) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceExecution> PIOperationSequenceExecution;
+
+
+/*************************************************************************************************************************
  Class interface for StateEnvironment 
 **************************************************************************************************************************/
 
@@ -8712,6 +9925,42 @@ public:
 	* @return Result of the formula.
 	*/
 	virtual bool EvaluateFormulaAsBool(const std::string & sFormula) = 0;
+
+	/**
+	* IStateEnvironment::GetOperationSequenceHandler - Returns the operation sequence registry of this state machine.
+	* @return Registry of this state machine.
+	*/
+	virtual IOperationSequenceHandler * GetOperationSequenceHandler() = 0;
+
+	/**
+	* IStateEnvironment::StartOperationSequence - Starts an execution pinned to the latest revision of a sequence. An execution with the same name is aborted and replaced. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the latest revision is invalid.
+	* @param[in] sExecutionName - Execution name, e.g. process.
+	* @param[in] sSequenceName - Published sequence name.
+	* @param[in] sBindingGroup - Parameter group for dollar-prefixed parameter references. Empty uses the sequence's binding group. MUST exist.
+	* @param[in] sReturnState - State that op states return to. MUST exist.
+	* @return New execution.
+	*/
+	virtual IOperationSequenceExecution * StartOperationSequence(const std::string & sExecutionName, const std::string & sSequenceName, const std::string & sBindingGroup, const std::string & sReturnState) = 0;
+
+	/**
+	* IStateEnvironment::FindOperationSequenceExecution - Returns an execution of this state machine by name.
+	* @param[in] sExecutionName - Execution name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCEEXECUTIONNOTFOUND; otherwise returns null.
+	* @return Execution or null.
+	*/
+	virtual IOperationSequenceExecution * FindOperationSequenceExecution(const std::string & sExecutionName, const bool bFailIfNotExisting) = 0;
+
+	/**
+	* IStateEnvironment::HasDispatchedOperation - Returns if an operation has been dispatched in this state machine.
+	* @return True if an operation has been dispatched.
+	*/
+	virtual bool HasDispatchedOperation() = 0;
+
+	/**
+	* IStateEnvironment::GetDispatchedOperation - Returns the operation dispatched most recently in this state machine. Fails with NOOPERATIONDISPATCHED.
+	* @return Dispatched operation.
+	*/
+	virtual IDispatchedOperation * GetDispatchedOperation() = 0;
 
 };
 
@@ -9599,6 +10848,13 @@ public:
 	* @return Result of the formula.
 	*/
 	virtual bool EvaluateFormulaAsBool(const std::string & sFormula) = 0;
+
+	/**
+	* IUIEnvironment::GetOperationSequenceHandler - Returns the operation sequence registry of a state machine. Operation types cannot be registered from the user interface.
+	* @param[in] sMachineInstance - State machine instance name.
+	* @return Registry of the state machine.
+	*/
+	virtual IOperationSequenceHandler * GetOperationSequenceHandler(const std::string & sMachineInstance) = 0;
 
 };
 

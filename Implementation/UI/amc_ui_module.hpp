@@ -63,6 +63,8 @@ namespace AMC {
 	amcDeclareDependingClass(CToolpathHandler, PToolpathHandler);
 	amcDeclareDependingClass(CDataSeriesHandler, PDataSeriesHandler);
 	amcDeclareDependingClass(CUISystemState, PUISystemState);
+	amcDeclareDependingClass(COperationSequenceHandler, POperationSequenceHandler);
+	amcDeclareDependingClass(CAccessControl, PAccessControl);
 
 	class CUIModuleEnvironment {
 	private:
@@ -80,6 +82,8 @@ namespace AMC {
 		PMeshHandler meshHandler();
 		PToolpathHandler toolpathHandler();
 		PDataSeriesHandler dataSeriesHandler();
+		POperationSequenceHandler operationSequenceHandler();
+		PAccessControl accessControl();
 		LibMCData::PDataModel dataModel ();
 		CUIModule_ContentRegistry* contentRegistry ();
 		CLogger* getLogger();

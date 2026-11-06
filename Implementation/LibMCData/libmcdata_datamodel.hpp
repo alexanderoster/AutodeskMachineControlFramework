@@ -123,6 +123,8 @@ public:
 
 	ISessionMetricsHandler* CreateSessionMetricsHandler() override;
 
+	IOperationSequenceStore* CreateOperationSequenceStore() override;
+
 	void SetBaseTempDirectory(const std::string& sTempDirectory) override;
 
 	// DEPRECIATED! DO NOT USE. Use GetInstallationInformationObject instead!

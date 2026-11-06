@@ -146,6 +146,22 @@ class CMachineConfigurationHandler;
 class CTelemetryMarkerScope;
 class CTelemetryChannel;
 class CFormula;
+class COperationParameterDefinition;
+class COperationParameterDefinitionIterator;
+class COperationParameterContainer;
+class COperationItemListDefinition;
+class COperationItemListDefinitionIterator;
+class COperationTypeDefinition;
+class COperationTypeDefinitionIterator;
+class COperationItem;
+class COperation;
+class COperationIterator;
+class COperationSequence;
+class COperationSequenceIterator;
+class COperationSequenceValidationResult;
+class COperationSequenceHandler;
+class CDispatchedOperation;
+class COperationSequenceExecution;
 class CStateEnvironment;
 class CUIItem;
 class CUIEnvironment;
@@ -241,6 +257,22 @@ typedef CMachineConfigurationHandler CLibMCEnvMachineConfigurationHandler;
 typedef CTelemetryMarkerScope CLibMCEnvTelemetryMarkerScope;
 typedef CTelemetryChannel CLibMCEnvTelemetryChannel;
 typedef CFormula CLibMCEnvFormula;
+typedef COperationParameterDefinition CLibMCEnvOperationParameterDefinition;
+typedef COperationParameterDefinitionIterator CLibMCEnvOperationParameterDefinitionIterator;
+typedef COperationParameterContainer CLibMCEnvOperationParameterContainer;
+typedef COperationItemListDefinition CLibMCEnvOperationItemListDefinition;
+typedef COperationItemListDefinitionIterator CLibMCEnvOperationItemListDefinitionIterator;
+typedef COperationTypeDefinition CLibMCEnvOperationTypeDefinition;
+typedef COperationTypeDefinitionIterator CLibMCEnvOperationTypeDefinitionIterator;
+typedef COperationItem CLibMCEnvOperationItem;
+typedef COperation CLibMCEnvOperation;
+typedef COperationIterator CLibMCEnvOperationIterator;
+typedef COperationSequence CLibMCEnvOperationSequence;
+typedef COperationSequenceIterator CLibMCEnvOperationSequenceIterator;
+typedef COperationSequenceValidationResult CLibMCEnvOperationSequenceValidationResult;
+typedef COperationSequenceHandler CLibMCEnvOperationSequenceHandler;
+typedef CDispatchedOperation CLibMCEnvDispatchedOperation;
+typedef COperationSequenceExecution CLibMCEnvOperationSequenceExecution;
 typedef CStateEnvironment CLibMCEnvStateEnvironment;
 typedef CUIItem CLibMCEnvUIItem;
 typedef CUIEnvironment CLibMCEnvUIEnvironment;
@@ -336,6 +368,22 @@ typedef std::shared_ptr<CMachineConfigurationHandler> PMachineConfigurationHandl
 typedef std::shared_ptr<CTelemetryMarkerScope> PTelemetryMarkerScope;
 typedef std::shared_ptr<CTelemetryChannel> PTelemetryChannel;
 typedef std::shared_ptr<CFormula> PFormula;
+typedef std::shared_ptr<COperationParameterDefinition> POperationParameterDefinition;
+typedef std::shared_ptr<COperationParameterDefinitionIterator> POperationParameterDefinitionIterator;
+typedef std::shared_ptr<COperationParameterContainer> POperationParameterContainer;
+typedef std::shared_ptr<COperationItemListDefinition> POperationItemListDefinition;
+typedef std::shared_ptr<COperationItemListDefinitionIterator> POperationItemListDefinitionIterator;
+typedef std::shared_ptr<COperationTypeDefinition> POperationTypeDefinition;
+typedef std::shared_ptr<COperationTypeDefinitionIterator> POperationTypeDefinitionIterator;
+typedef std::shared_ptr<COperationItem> POperationItem;
+typedef std::shared_ptr<COperation> POperation;
+typedef std::shared_ptr<COperationIterator> POperationIterator;
+typedef std::shared_ptr<COperationSequence> POperationSequence;
+typedef std::shared_ptr<COperationSequenceIterator> POperationSequenceIterator;
+typedef std::shared_ptr<COperationSequenceValidationResult> POperationSequenceValidationResult;
+typedef std::shared_ptr<COperationSequenceHandler> POperationSequenceHandler;
+typedef std::shared_ptr<CDispatchedOperation> PDispatchedOperation;
+typedef std::shared_ptr<COperationSequenceExecution> POperationSequenceExecution;
 typedef std::shared_ptr<CStateEnvironment> PStateEnvironment;
 typedef std::shared_ptr<CUIItem> PUIItem;
 typedef std::shared_ptr<CUIEnvironment> PUIEnvironment;
@@ -431,6 +479,22 @@ typedef PMachineConfigurationHandler PLibMCEnvMachineConfigurationHandler;
 typedef PTelemetryMarkerScope PLibMCEnvTelemetryMarkerScope;
 typedef PTelemetryChannel PLibMCEnvTelemetryChannel;
 typedef PFormula PLibMCEnvFormula;
+typedef POperationParameterDefinition PLibMCEnvOperationParameterDefinition;
+typedef POperationParameterDefinitionIterator PLibMCEnvOperationParameterDefinitionIterator;
+typedef POperationParameterContainer PLibMCEnvOperationParameterContainer;
+typedef POperationItemListDefinition PLibMCEnvOperationItemListDefinition;
+typedef POperationItemListDefinitionIterator PLibMCEnvOperationItemListDefinitionIterator;
+typedef POperationTypeDefinition PLibMCEnvOperationTypeDefinition;
+typedef POperationTypeDefinitionIterator PLibMCEnvOperationTypeDefinitionIterator;
+typedef POperationItem PLibMCEnvOperationItem;
+typedef POperation PLibMCEnvOperation;
+typedef POperationIterator PLibMCEnvOperationIterator;
+typedef POperationSequence PLibMCEnvOperationSequence;
+typedef POperationSequenceIterator PLibMCEnvOperationSequenceIterator;
+typedef POperationSequenceValidationResult PLibMCEnvOperationSequenceValidationResult;
+typedef POperationSequenceHandler PLibMCEnvOperationSequenceHandler;
+typedef PDispatchedOperation PLibMCEnvDispatchedOperation;
+typedef POperationSequenceExecution PLibMCEnvOperationSequenceExecution;
 typedef PStateEnvironment PLibMCEnvStateEnvironment;
 typedef PUIItem PLibMCEnvUIItem;
 typedef PUIEnvironment PLibMCEnvUIEnvironment;
@@ -781,6 +845,38 @@ public:
 			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "FORMULAEVALUATIONFAILED";
 			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "FORMULASESSIONREFERENCESNOTAVAILABLE";
 			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "INVALIDFORMULAREFERENCEINDEX";
+			case LIBMCENV_ERROR_INVALIDOPERATIONTYPENAME: return "INVALIDOPERATIONTYPENAME";
+			case LIBMCENV_ERROR_OPERATIONTYPENOTFOUND: return "OPERATIONTYPENOTFOUND";
+			case LIBMCENV_ERROR_OPERATIONTYPEDEFINITIONMISMATCH: return "OPERATIONTYPEDEFINITIONMISMATCH";
+			case LIBMCENV_ERROR_OPERATIONTARGETSTATENOTFOUND: return "OPERATIONTARGETSTATENOTFOUND";
+			case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERNAME: return "INVALIDOPERATIONPARAMETERNAME";
+			case LIBMCENV_ERROR_OPERATIONPARAMETERNOTFOUND: return "OPERATIONPARAMETERNOTFOUND";
+			case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERDEFAULT: return "INVALIDOPERATIONPARAMETERDEFAULT";
+			case LIBMCENV_ERROR_OPERATIONITEMLISTNOTFOUND: return "OPERATIONITEMLISTNOTFOUND";
+			case LIBMCENV_ERROR_OPERATIONITEMLISTFULL: return "OPERATIONITEMLISTFULL";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCENAME: return "INVALIDOPERATIONSEQUENCENAME";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCENOTFOUND: return "OPERATIONSEQUENCENOTFOUND";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEXML: return "INVALIDOPERATIONSEQUENCEXML";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED: return "OPERATIONSEQUENCEVALIDATIONFAILED";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT: return "OPERATIONSEQUENCEREVISIONCONFLICT";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEISPUBLISHED: return "OPERATIONSEQUENCEISPUBLISHED";
+			case LIBMCENV_ERROR_OPERATIONNOTFOUND: return "OPERATIONNOTFOUND";
+			case LIBMCENV_ERROR_OPERATIONPARAMETEREVALUATIONFAILED: return "OPERATIONPARAMETEREVALUATIONFAILED";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND: return "OPERATIONSEQUENCEEXECUTIONNOTFOUND";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING: return "OPERATIONSEQUENCEEXECUTIONNOTRUNNING";
+			case LIBMCENV_ERROR_NOOPERATIONDISPATCHED: return "NOOPERATIONDISPATCHED";
+			case LIBMCENV_ERROR_OPERATIONVALUETYPEMISMATCH: return "OPERATIONVALUETYPEMISMATCH";
+			case LIBMCENV_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING: return "OPERATIONDISPATCHERTRANSITIONMISSING";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCESTORAGEFAILED: return "OPERATIONSEQUENCESTORAGEFAILED";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND: return "OPERATIONSEQUENCEREGISTRYNOTFOUND";
+			case LIBMCENV_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED: return "OPERATIONTYPEREGISTRATIONNOTALLOWED";
+			case LIBMCENV_ERROR_INVALIDOPERATIONITEMINDEX: return "INVALIDOPERATIONITEMINDEX";
+			case LIBMCENV_ERROR_INVALIDOPERATIONINDEX: return "INVALIDOPERATIONINDEX";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX: return "INVALIDOPERATIONSEQUENCEISSUEINDEX";
+			case LIBMCENV_ERROR_INVALIDOPERATIONENUMOPTIONINDEX: return "INVALIDOPERATIONENUMOPTIONINDEX";
+			case LIBMCENV_ERROR_OPERATIONPARAMETERHASNORANGE: return "OPERATIONPARAMETERHASNORANGE";
+			case LIBMCENV_ERROR_INVALIDOPERATIONEXPRESSIONMODE: return "INVALIDOPERATIONEXPRESSIONMODE";
+			case LIBMCENV_ERROR_OPERATIONICONRESOURCENOTFOUND: return "OPERATIONICONRESOURCENOTFOUND";
 		}
 		return "UNKNOWN";
 	}
@@ -1057,6 +1153,38 @@ public:
 			case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
 			case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
 			case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONTYPENAME: return "Invalid operation type name. MUST be a non-empty alphanumeric identifier.";
+			case LIBMCENV_ERROR_OPERATIONTYPENOTFOUND: return "Operation type not found.";
+			case LIBMCENV_ERROR_OPERATIONTYPEDEFINITIONMISMATCH: return "Operation type or parameter already registered with a different definition.";
+			case LIBMCENV_ERROR_OPERATIONTARGETSTATENOTFOUND: return "Target state of the operation type does not exist in the state machine.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERNAME: return "Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name.";
+			case LIBMCENV_ERROR_OPERATIONPARAMETERNOTFOUND: return "Operation parameter not found.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERDEFAULT: return "Default value of the operation parameter is outside of its range or not a valid enum option.";
+			case LIBMCENV_ERROR_OPERATIONITEMLISTNOTFOUND: return "Operation item list not found.";
+			case LIBMCENV_ERROR_OPERATIONITEMLISTFULL: return "Operation item list has reached its maximum item count.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCENAME: return "Invalid operation sequence name. MUST be a non-empty alphanumeric identifier.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCENOTFOUND: return "Operation sequence not found.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEXML: return "Operation sequence XML is malformed or has an unknown root element or namespace.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED: return "Operation sequence validation failed.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT: return "A newer revision of the operation sequence has been published in the meantime.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEISPUBLISHED: return "Published operation sequences are immutable. Create a working copy to make changes.";
+			case LIBMCENV_ERROR_OPERATIONNOTFOUND: return "Operation not found in the sequence.";
+			case LIBMCENV_ERROR_OPERATIONPARAMETEREVALUATIONFAILED: return "An operation parameter value could not be evaluated.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND: return "Operation sequence execution not found.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING: return "Operation sequence execution is not running.";
+			case LIBMCENV_ERROR_NOOPERATIONDISPATCHED: return "No operation has been dispatched in this state machine.";
+			case LIBMCENV_ERROR_OPERATIONVALUETYPEMISMATCH: return "Operation parameter cannot be returned in the requested type.";
+			case LIBMCENV_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING: return "A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCESTORAGEFAILED: return "The operation sequence revision could not be stored in the database.";
+			case LIBMCENV_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND: return "No operation sequence registry exists for the state machine instance.";
+			case LIBMCENV_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED: return "Operation types can only be registered from the state environment of the owning state machine.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONITEMINDEX: return "Invalid operation item index.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONINDEX: return "Invalid operation index.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX: return "Invalid operation sequence issue index.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONENUMOPTIONINDEX: return "Invalid operation enum option index.";
+			case LIBMCENV_ERROR_OPERATIONPARAMETERHASNORANGE: return "Operation parameter has no range.";
+			case LIBMCENV_ERROR_INVALIDOPERATIONEXPRESSIONMODE: return "Invalid operation expression mode for this parameter type.";
+			case LIBMCENV_ERROR_OPERATIONICONRESOURCENOTFOUND: return "Operation icon resource not found.";
 		}
 		return "unknown error";
 	}
@@ -1260,6 +1388,22 @@ private:
 	friend class CTelemetryMarkerScope;
 	friend class CTelemetryChannel;
 	friend class CFormula;
+	friend class COperationParameterDefinition;
+	friend class COperationParameterDefinitionIterator;
+	friend class COperationParameterContainer;
+	friend class COperationItemListDefinition;
+	friend class COperationItemListDefinitionIterator;
+	friend class COperationTypeDefinition;
+	friend class COperationTypeDefinitionIterator;
+	friend class COperationItem;
+	friend class COperation;
+	friend class COperationIterator;
+	friend class COperationSequence;
+	friend class COperationSequenceIterator;
+	friend class COperationSequenceValidationResult;
+	friend class COperationSequenceHandler;
+	friend class CDispatchedOperation;
+	friend class COperationSequenceExecution;
 	friend class CStateEnvironment;
 	friend class CUIItem;
 	friend class CUIEnvironment;
@@ -3650,6 +3794,416 @@ public:
 };
 	
 /*************************************************************************************************************************
+ Class COperationParameterDefinition 
+**************************************************************************************************************************/
+class COperationParameterDefinition : public CBase {
+public:
+	
+	/**
+	* COperationParameterDefinition::COperationParameterDefinition - Constructor for OperationParameterDefinition class.
+	*/
+	COperationParameterDefinition(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetName();
+	inline std::string GetDisplayName();
+	inline void SetDisplayName(const std::string & sDisplayName);
+	inline std::string GetDescription();
+	inline void SetDescription(const std::string & sDescription);
+	inline eOperationParameterType GetParameterType();
+	inline std::string GetDefaultValue();
+	inline std::string GetUnit();
+	inline void SetUnit(const std::string & sUnit);
+	inline bool HasRange();
+	inline void GetRange(LibMCEnv_double & dMinimum, LibMCEnv_double & dMaximum);
+	inline eOperationExpressionMode GetExpressionMode();
+	inline void SetExpressionMode(const eOperationExpressionMode eExpressionMode);
+	inline bool IsRequired();
+	inline void SetRequired(const bool bIsRequired);
+	inline void AddEnumOption(const std::string & sValue, const std::string & sDisplayName);
+	inline LibMCEnv_uint32 GetEnumOptionCount();
+	inline void GetEnumOption(const LibMCEnv_uint32 nIndex, std::string & sValue, std::string & sDisplayName);
+};
+	
+/*************************************************************************************************************************
+ Class COperationParameterDefinitionIterator 
+**************************************************************************************************************************/
+class COperationParameterDefinitionIterator : public CIterator {
+public:
+	
+	/**
+	* COperationParameterDefinitionIterator::COperationParameterDefinitionIterator - Constructor for OperationParameterDefinitionIterator class.
+	*/
+	COperationParameterDefinitionIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperationParameterDefinition GetCurrent();
+};
+	
+/*************************************************************************************************************************
+ Class COperationParameterContainer 
+**************************************************************************************************************************/
+class COperationParameterContainer : public CBase {
+public:
+	
+	/**
+	* COperationParameterContainer::COperationParameterContainer - Constructor for OperationParameterContainer class.
+	*/
+	COperationParameterContainer(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperationParameterDefinition AddStringParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue);
+	inline POperationParameterDefinition AddIntegerParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_int64 nDefaultValue, const LibMCEnv_int64 nMinimum, const LibMCEnv_int64 nMaximum);
+	inline POperationParameterDefinition AddDoubleParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_double dDefaultValue, const LibMCEnv_double dMinimum, const LibMCEnv_double dMaximum);
+	inline POperationParameterDefinition AddBoolParameter(const std::string & sName, const std::string & sDisplayName, const bool bDefaultValue);
+	inline POperationParameterDefinition AddEnumParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue);
+	inline bool HasParameter(const std::string & sName);
+	inline POperationParameterDefinition FindParameter(const std::string & sName, const bool bFailIfNotExisting);
+	inline POperationParameterDefinitionIterator ListParameters();
+};
+	
+/*************************************************************************************************************************
+ Class COperationItemListDefinition 
+**************************************************************************************************************************/
+class COperationItemListDefinition : public COperationParameterContainer {
+public:
+	
+	/**
+	* COperationItemListDefinition::COperationItemListDefinition - Constructor for OperationItemListDefinition class.
+	*/
+	COperationItemListDefinition(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: COperationParameterContainer(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetName();
+	inline std::string GetDisplayName();
+	inline LibMCEnv_uint32 GetMaxItemCount();
+};
+	
+/*************************************************************************************************************************
+ Class COperationItemListDefinitionIterator 
+**************************************************************************************************************************/
+class COperationItemListDefinitionIterator : public CIterator {
+public:
+	
+	/**
+	* COperationItemListDefinitionIterator::COperationItemListDefinitionIterator - Constructor for OperationItemListDefinitionIterator class.
+	*/
+	COperationItemListDefinitionIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperationItemListDefinition GetCurrent();
+};
+	
+/*************************************************************************************************************************
+ Class COperationTypeDefinition 
+**************************************************************************************************************************/
+class COperationTypeDefinition : public COperationParameterContainer {
+public:
+	
+	/**
+	* COperationTypeDefinition::COperationTypeDefinition - Constructor for OperationTypeDefinition class.
+	*/
+	COperationTypeDefinition(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: COperationParameterContainer(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetName();
+	inline std::string GetTargetState();
+	inline std::string GetDisplayName();
+	inline void SetDisplayName(const std::string & sDisplayName);
+	inline std::string GetDescription();
+	inline void SetDescription(const std::string & sDescription);
+	inline std::string GetCategory();
+	inline void SetCategory(const std::string & sCategory);
+	inline std::string GetIconResource();
+	inline void SetIconResource(const std::string & sResourceName);
+	inline std::string GetAllowedContexts();
+	inline void SetAllowedContexts(const std::string & sContexts);
+	inline POperationItemListDefinition AddItemList(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_uint32 nMaxItemCount);
+	inline POperationItemListDefinition FindItemList(const std::string & sName, const bool bFailIfNotExisting);
+	inline POperationItemListDefinitionIterator ListItemLists();
+};
+	
+/*************************************************************************************************************************
+ Class COperationTypeDefinitionIterator 
+**************************************************************************************************************************/
+class COperationTypeDefinitionIterator : public CIterator {
+public:
+	
+	/**
+	* COperationTypeDefinitionIterator::COperationTypeDefinitionIterator - Constructor for OperationTypeDefinitionIterator class.
+	*/
+	COperationTypeDefinitionIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperationTypeDefinition GetCurrent();
+};
+	
+/*************************************************************************************************************************
+ Class COperationItem 
+**************************************************************************************************************************/
+class COperationItem : public CBase {
+public:
+	
+	/**
+	* COperationItem::COperationItem - Constructor for OperationItem class.
+	*/
+	COperationItem(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline LibMCEnv_uint32 GetIndex();
+	inline bool HasValue(const std::string & sName);
+	inline std::string GetRawValue(const std::string & sName);
+	inline void SetRawValue(const std::string & sName, const std::string & sValue);
+	inline void ClearValue(const std::string & sName);
+};
+	
+/*************************************************************************************************************************
+ Class COperation 
+**************************************************************************************************************************/
+class COperation : public CBase {
+public:
+	
+	/**
+	* COperation::COperation - Constructor for Operation class.
+	*/
+	COperation(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetUUID();
+	inline LibMCEnv_uint32 GetIndex();
+	inline std::string GetTypeName();
+	inline bool IsEnabled();
+	inline void SetEnabled(const bool bIsEnabled);
+	inline std::string GetComment();
+	inline void SetComment(const std::string & sComment);
+	inline bool HasValue(const std::string & sName);
+	inline std::string GetRawValue(const std::string & sName);
+	inline eOperationValueKind GetValueKind(const std::string & sName);
+	inline void SetRawValue(const std::string & sName, const std::string & sValue);
+	inline void ClearValue(const std::string & sName);
+	inline LibMCEnv_uint32 GetItemCount(const std::string & sListName);
+	inline POperationItem GetItem(const std::string & sListName, const LibMCEnv_uint32 nIndex);
+	inline POperationItem AddItem(const std::string & sListName);
+	inline void RemoveItem(const std::string & sListName, const LibMCEnv_uint32 nIndex);
+};
+	
+/*************************************************************************************************************************
+ Class COperationIterator 
+**************************************************************************************************************************/
+class COperationIterator : public CIterator {
+public:
+	
+	/**
+	* COperationIterator::COperationIterator - Constructor for OperationIterator class.
+	*/
+	COperationIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperation GetCurrent();
+};
+	
+/*************************************************************************************************************************
+ Class COperationSequence 
+**************************************************************************************************************************/
+class COperationSequence : public CBase {
+public:
+	
+	/**
+	* COperationSequence::COperationSequence - Constructor for OperationSequence class.
+	*/
+	COperationSequence(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetName();
+	inline std::string GetDisplayName();
+	inline void SetDisplayName(const std::string & sDisplayName);
+	inline std::string GetDescription();
+	inline void SetDescription(const std::string & sDescription);
+	inline std::string GetContext();
+	inline void SetContext(const std::string & sContext);
+	inline std::string GetBindingGroup();
+	inline void SetBindingGroup(const std::string & sGroupName);
+	inline bool IsPublished();
+	inline LibMCEnv_uint32 GetRevision();
+	inline std::string GetRevisionUUID();
+	inline bool IsValid();
+	inline POperationSequenceValidationResult GetValidationResult();
+	inline eOperationSequenceOrigin GetOrigin();
+	inline std::string GetTimestamp();
+	inline std::string GetUserUUID();
+	inline LibMCEnv_uint32 GetOperationCount();
+	inline POperation GetOperation(const LibMCEnv_uint32 nIndex);
+	inline POperation FindOperation(const std::string & sUUID, const bool bFailIfNotExisting);
+	inline POperationIterator ListOperations();
+	inline POperation AddOperation(const std::string & sTypeName);
+	inline POperation InsertOperation(const LibMCEnv_uint32 nIndex, const std::string & sTypeName);
+	inline void RemoveOperation(const std::string & sUUID);
+	inline void MoveOperation(const std::string & sUUID, const LibMCEnv_uint32 nNewIndex);
+	inline POperationSequence CreateWorkingCopy();
+	inline std::string SerializeToXMLString();
+	inline PXMLDocument SerializeToXMLDocument();
+};
+	
+/*************************************************************************************************************************
+ Class COperationSequenceIterator 
+**************************************************************************************************************************/
+class COperationSequenceIterator : public CIterator {
+public:
+	
+	/**
+	* COperationSequenceIterator::COperationSequenceIterator - Constructor for OperationSequenceIterator class.
+	*/
+	COperationSequenceIterator(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CIterator(pWrapper, pHandle)
+	{
+	}
+	
+	inline POperationSequence GetCurrent();
+};
+	
+/*************************************************************************************************************************
+ Class COperationSequenceValidationResult 
+**************************************************************************************************************************/
+class COperationSequenceValidationResult : public CBase {
+public:
+	
+	/**
+	* COperationSequenceValidationResult::COperationSequenceValidationResult - Constructor for OperationSequenceValidationResult class.
+	*/
+	COperationSequenceValidationResult(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline bool IsValid();
+	inline LibMCEnv_uint32 GetIssueCount();
+	inline void GetIssue(const LibMCEnv_uint32 nIndex, eOperationSequenceIssueSeverity & eSeverity, std::string & sOperationUUID, std::string & sParameterName, std::string & sMessage);
+};
+	
+/*************************************************************************************************************************
+ Class COperationSequenceHandler 
+**************************************************************************************************************************/
+class COperationSequenceHandler : public CBase {
+public:
+	
+	/**
+	* COperationSequenceHandler::COperationSequenceHandler - Constructor for OperationSequenceHandler class.
+	*/
+	COperationSequenceHandler(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetStateMachineInstance();
+	inline POperationTypeDefinition RegisterOperationType(const std::string & sTypeName, const std::string & sTargetState);
+	inline bool HasOperationType(const std::string & sTypeName);
+	inline POperationTypeDefinition FindOperationType(const std::string & sTypeName, const bool bFailIfNotExisting);
+	inline POperationTypeDefinitionIterator ListOperationTypes();
+	inline POperationSequence CreateSequence(const std::string & sSequenceName);
+	inline POperationSequence ParseSequenceFromString(const std::string & sXMLString);
+	inline POperationSequence ParseSequenceFromResource(const std::string & sResourceName);
+	inline POperationSequence ParseSequenceFromXMLDocument(classParam<CXMLDocument> pDocument, const std::string & sNodePath);
+	inline POperationSequenceValidationResult ValidateSequence(classParam<COperationSequence> pSequence);
+	inline POperationSequence PublishSequence(classParam<COperationSequence> pWorkingCopy, const std::string & sUserUUID, const bool bOverwriteNewerRevision);
+	inline POperationSequence EnsureSequenceFromResource(const std::string & sSequenceName, const std::string & sResourceName);
+	inline bool HasSequence(const std::string & sSequenceName);
+	inline POperationSequence GetSequence(const std::string & sSequenceName);
+	inline POperationSequence GetSequenceRevision(const std::string & sSequenceName, const LibMCEnv_uint32 nRevision);
+	inline POperationSequenceIterator ListSequences();
+	inline POperationSequenceIterator ListSequenceRevisions(const std::string & sSequenceName);
+	inline POperationSequence FindSequenceRevisionByUUID(const std::string & sRevisionUUID, const bool bFailIfNotExisting);
+	inline void ValidateDispatcherTransitions(const std::string & sDispatcherState);
+	inline void SetStatusParameterGroup(const std::string & sGroupName, const std::string & sValuePrefix);
+};
+	
+/*************************************************************************************************************************
+ Class CDispatchedOperation 
+**************************************************************************************************************************/
+class CDispatchedOperation : public CBase {
+public:
+	
+	/**
+	* CDispatchedOperation::CDispatchedOperation - Constructor for DispatchedOperation class.
+	*/
+	CDispatchedOperation(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetUUID();
+	inline std::string GetTypeName();
+	inline LibMCEnv_uint32 GetIndex();
+	inline std::string GetExecutionName();
+	inline std::string GetSequenceName();
+	inline LibMCEnv_uint32 GetRevision();
+	inline std::string GetComment();
+	inline std::string GetTargetState();
+	inline std::string GetReturnState();
+	inline bool HasExplicitValue(const std::string & sName);
+	inline std::string GetStringValue(const std::string & sName);
+	inline LibMCEnv_int64 GetIntegerValue(const std::string & sName);
+	inline LibMCEnv_double GetDoubleValue(const std::string & sName);
+	inline bool GetBoolValue(const std::string & sName);
+	inline LibMCEnv_double ReevaluateDoubleValue(const std::string & sName);
+	inline LibMCEnv_int64 ReevaluateIntegerValue(const std::string & sName);
+	inline LibMCEnv_uint32 GetItemCount(const std::string & sListName);
+	inline std::string GetItemStringValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName);
+	inline LibMCEnv_int64 GetItemIntegerValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName);
+	inline LibMCEnv_double GetItemDoubleValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName);
+	inline bool GetItemBoolValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName);
+	inline void MarkFailed(const std::string & sMessage);
+};
+	
+/*************************************************************************************************************************
+ Class COperationSequenceExecution 
+**************************************************************************************************************************/
+class COperationSequenceExecution : public CBase {
+public:
+	
+	/**
+	* COperationSequenceExecution::COperationSequenceExecution - Constructor for OperationSequenceExecution class.
+	*/
+	COperationSequenceExecution(CWrapper* pWrapper, LibMCEnvHandle pHandle)
+		: CBase(pWrapper, pHandle)
+	{
+	}
+	
+	inline std::string GetName();
+	inline POperationSequence GetSequence();
+	inline std::string GetBindingGroup();
+	inline void SetBindingGroup(const std::string & sGroupName);
+	inline std::string GetReturnState();
+	inline eOperationSequenceExecutionStatus GetStatus();
+	inline LibMCEnv_uint32 GetNextOperationIndex();
+	inline LibMCEnv_uint32 GetIterationCount();
+	inline PDispatchedOperation DispatchNextOperation();
+	inline void Restart();
+	inline void Abort(const std::string & sReason);
+};
+	
+/*************************************************************************************************************************
  Class CStateEnvironment 
 **************************************************************************************************************************/
 class CStateEnvironment : public CBase {
@@ -3766,6 +4320,11 @@ public:
 	inline LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula);
 	inline LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula);
 	inline bool EvaluateFormulaAsBool(const std::string & sFormula);
+	inline POperationSequenceHandler GetOperationSequenceHandler();
+	inline POperationSequenceExecution StartOperationSequence(const std::string & sExecutionName, const std::string & sSequenceName, const std::string & sBindingGroup, const std::string & sReturnState);
+	inline POperationSequenceExecution FindOperationSequenceExecution(const std::string & sExecutionName, const bool bFailIfNotExisting);
+	inline bool HasDispatchedOperation();
+	inline PDispatchedOperation GetDispatchedOperation();
 };
 	
 /*************************************************************************************************************************
@@ -3917,6 +4476,7 @@ public:
 	inline LibMCEnv_double EvaluateFormulaAsDouble(const std::string & sFormula);
 	inline LibMCEnv_int64 EvaluateFormulaAsInteger(const std::string & sFormula);
 	inline bool EvaluateFormulaAsBool(const std::string & sFormula);
+	inline POperationSequenceHandler GetOperationSequenceHandler(const std::string & sMachineInstance);
 };
 	
 	/**
@@ -4950,6 +5510,160 @@ public:
 		pWrapperTable->m_Formula_EvaluateAsDouble = nullptr;
 		pWrapperTable->m_Formula_EvaluateAsInteger = nullptr;
 		pWrapperTable->m_Formula_EvaluateAsBool = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetName = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetDisplayName = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_SetDisplayName = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetDescription = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_SetDescription = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetParameterType = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetDefaultValue = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetUnit = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_SetUnit = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_HasRange = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetRange = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetExpressionMode = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_SetExpressionMode = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_IsRequired = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_SetRequired = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_AddEnumOption = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount = nullptr;
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOption = nullptr;
+		pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent = nullptr;
+		pWrapperTable->m_OperationParameterContainer_AddStringParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_AddIntegerParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_AddDoubleParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_AddBoolParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_AddEnumParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_HasParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_FindParameter = nullptr;
+		pWrapperTable->m_OperationParameterContainer_ListParameters = nullptr;
+		pWrapperTable->m_OperationItemListDefinition_GetName = nullptr;
+		pWrapperTable->m_OperationItemListDefinition_GetDisplayName = nullptr;
+		pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount = nullptr;
+		pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetName = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetTargetState = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetDisplayName = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_SetDisplayName = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetDescription = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_SetDescription = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetCategory = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_SetCategory = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetIconResource = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_SetIconResource = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_AddItemList = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_FindItemList = nullptr;
+		pWrapperTable->m_OperationTypeDefinition_ListItemLists = nullptr;
+		pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent = nullptr;
+		pWrapperTable->m_OperationItem_GetIndex = nullptr;
+		pWrapperTable->m_OperationItem_HasValue = nullptr;
+		pWrapperTable->m_OperationItem_GetRawValue = nullptr;
+		pWrapperTable->m_OperationItem_SetRawValue = nullptr;
+		pWrapperTable->m_OperationItem_ClearValue = nullptr;
+		pWrapperTable->m_Operation_GetUUID = nullptr;
+		pWrapperTable->m_Operation_GetIndex = nullptr;
+		pWrapperTable->m_Operation_GetTypeName = nullptr;
+		pWrapperTable->m_Operation_IsEnabled = nullptr;
+		pWrapperTable->m_Operation_SetEnabled = nullptr;
+		pWrapperTable->m_Operation_GetComment = nullptr;
+		pWrapperTable->m_Operation_SetComment = nullptr;
+		pWrapperTable->m_Operation_HasValue = nullptr;
+		pWrapperTable->m_Operation_GetRawValue = nullptr;
+		pWrapperTable->m_Operation_GetValueKind = nullptr;
+		pWrapperTable->m_Operation_SetRawValue = nullptr;
+		pWrapperTable->m_Operation_ClearValue = nullptr;
+		pWrapperTable->m_Operation_GetItemCount = nullptr;
+		pWrapperTable->m_Operation_GetItem = nullptr;
+		pWrapperTable->m_Operation_AddItem = nullptr;
+		pWrapperTable->m_Operation_RemoveItem = nullptr;
+		pWrapperTable->m_OperationIterator_GetCurrent = nullptr;
+		pWrapperTable->m_OperationSequence_GetName = nullptr;
+		pWrapperTable->m_OperationSequence_GetDisplayName = nullptr;
+		pWrapperTable->m_OperationSequence_SetDisplayName = nullptr;
+		pWrapperTable->m_OperationSequence_GetDescription = nullptr;
+		pWrapperTable->m_OperationSequence_SetDescription = nullptr;
+		pWrapperTable->m_OperationSequence_GetContext = nullptr;
+		pWrapperTable->m_OperationSequence_SetContext = nullptr;
+		pWrapperTable->m_OperationSequence_GetBindingGroup = nullptr;
+		pWrapperTable->m_OperationSequence_SetBindingGroup = nullptr;
+		pWrapperTable->m_OperationSequence_IsPublished = nullptr;
+		pWrapperTable->m_OperationSequence_GetRevision = nullptr;
+		pWrapperTable->m_OperationSequence_GetRevisionUUID = nullptr;
+		pWrapperTable->m_OperationSequence_IsValid = nullptr;
+		pWrapperTable->m_OperationSequence_GetValidationResult = nullptr;
+		pWrapperTable->m_OperationSequence_GetOrigin = nullptr;
+		pWrapperTable->m_OperationSequence_GetTimestamp = nullptr;
+		pWrapperTable->m_OperationSequence_GetUserUUID = nullptr;
+		pWrapperTable->m_OperationSequence_GetOperationCount = nullptr;
+		pWrapperTable->m_OperationSequence_GetOperation = nullptr;
+		pWrapperTable->m_OperationSequence_FindOperation = nullptr;
+		pWrapperTable->m_OperationSequence_ListOperations = nullptr;
+		pWrapperTable->m_OperationSequence_AddOperation = nullptr;
+		pWrapperTable->m_OperationSequence_InsertOperation = nullptr;
+		pWrapperTable->m_OperationSequence_RemoveOperation = nullptr;
+		pWrapperTable->m_OperationSequence_MoveOperation = nullptr;
+		pWrapperTable->m_OperationSequence_CreateWorkingCopy = nullptr;
+		pWrapperTable->m_OperationSequence_SerializeToXMLString = nullptr;
+		pWrapperTable->m_OperationSequence_SerializeToXMLDocument = nullptr;
+		pWrapperTable->m_OperationSequenceIterator_GetCurrent = nullptr;
+		pWrapperTable->m_OperationSequenceValidationResult_IsValid = nullptr;
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount = nullptr;
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssue = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_RegisterOperationType = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_HasOperationType = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_FindOperationType = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ListOperationTypes = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_CreateSequence = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ValidateSequence = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_PublishSequence = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_HasSequence = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_GetSequence = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ListSequences = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions = nullptr;
+		pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetUUID = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetTypeName = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetIndex = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetExecutionName = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetSequenceName = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetRevision = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetComment = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetTargetState = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetReturnState = nullptr;
+		pWrapperTable->m_DispatchedOperation_HasExplicitValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetStringValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetIntegerValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetDoubleValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetBoolValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetItemCount = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetItemStringValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetItemIntegerValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetItemDoubleValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_GetItemBoolValue = nullptr;
+		pWrapperTable->m_DispatchedOperation_MarkFailed = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetName = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetSequence = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetBindingGroup = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_SetBindingGroup = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetReturnState = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetStatus = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_GetIterationCount = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_Restart = nullptr;
+		pWrapperTable->m_OperationSequenceExecution_Abort = nullptr;
 		pWrapperTable->m_StateEnvironment_GetMachineState = nullptr;
 		pWrapperTable->m_StateEnvironment_GetPreviousState = nullptr;
 		pWrapperTable->m_StateEnvironment_PrepareSignal = nullptr;
@@ -5053,6 +5767,11 @@ public:
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsDouble = nullptr;
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsInteger = nullptr;
 		pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool = nullptr;
+		pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler = nullptr;
+		pWrapperTable->m_StateEnvironment_StartOperationSequence = nullptr;
+		pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution = nullptr;
+		pWrapperTable->m_StateEnvironment_HasDispatchedOperation = nullptr;
+		pWrapperTable->m_StateEnvironment_GetDispatchedOperation = nullptr;
 		pWrapperTable->m_UIItem_GetName = nullptr;
 		pWrapperTable->m_UIItem_GetPath = nullptr;
 		pWrapperTable->m_UIItem_GetUUID = nullptr;
@@ -5172,6 +5891,7 @@ public:
 		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsDouble = nullptr;
 		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsInteger = nullptr;
 		pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool = nullptr;
+		pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler = nullptr;
 		pWrapperTable->m_GetVersion = nullptr;
 		pWrapperTable->m_GetLastError = nullptr;
 		pWrapperTable->m_ReleaseInstance = nullptr;
@@ -13778,6 +14498,1392 @@ public:
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetName = (PLibMCEnvOperationParameterDefinition_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getname");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetName = (PLibMCEnvOperationParameterDefinition_GetNamePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDisplayName = (PLibMCEnvOperationParameterDefinition_GetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDisplayName = (PLibMCEnvOperationParameterDefinition_GetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetDisplayName = (PLibMCEnvOperationParameterDefinition_SetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_setdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetDisplayName = (PLibMCEnvOperationParameterDefinition_SetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_setdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_SetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDescription = (PLibMCEnvOperationParameterDefinition_GetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDescription = (PLibMCEnvOperationParameterDefinition_GetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetDescription = (PLibMCEnvOperationParameterDefinition_SetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_setdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetDescription = (PLibMCEnvOperationParameterDefinition_SetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_setdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_SetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetParameterType = (PLibMCEnvOperationParameterDefinition_GetParameterTypePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getparametertype");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetParameterType = (PLibMCEnvOperationParameterDefinition_GetParameterTypePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getparametertype");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetParameterType == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDefaultValue = (PLibMCEnvOperationParameterDefinition_GetDefaultValuePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getdefaultvalue");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetDefaultValue = (PLibMCEnvOperationParameterDefinition_GetDefaultValuePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getdefaultvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetDefaultValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetUnit = (PLibMCEnvOperationParameterDefinition_GetUnitPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getunit");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetUnit = (PLibMCEnvOperationParameterDefinition_GetUnitPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getunit");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetUnit == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetUnit = (PLibMCEnvOperationParameterDefinition_SetUnitPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_setunit");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetUnit = (PLibMCEnvOperationParameterDefinition_SetUnitPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_setunit");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_SetUnit == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_HasRange = (PLibMCEnvOperationParameterDefinition_HasRangePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_hasrange");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_HasRange = (PLibMCEnvOperationParameterDefinition_HasRangePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_hasrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_HasRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetRange = (PLibMCEnvOperationParameterDefinition_GetRangePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getrange");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetRange = (PLibMCEnvOperationParameterDefinition_GetRangePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getrange");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetRange == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetExpressionMode = (PLibMCEnvOperationParameterDefinition_GetExpressionModePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getexpressionmode");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetExpressionMode = (PLibMCEnvOperationParameterDefinition_GetExpressionModePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getexpressionmode");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetExpressionMode == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetExpressionMode = (PLibMCEnvOperationParameterDefinition_SetExpressionModePtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_setexpressionmode");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetExpressionMode = (PLibMCEnvOperationParameterDefinition_SetExpressionModePtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_setexpressionmode");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_SetExpressionMode == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_IsRequired = (PLibMCEnvOperationParameterDefinition_IsRequiredPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_isrequired");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_IsRequired = (PLibMCEnvOperationParameterDefinition_IsRequiredPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_isrequired");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_IsRequired == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetRequired = (PLibMCEnvOperationParameterDefinition_SetRequiredPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_setrequired");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_SetRequired = (PLibMCEnvOperationParameterDefinition_SetRequiredPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_setrequired");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_SetRequired == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_AddEnumOption = (PLibMCEnvOperationParameterDefinition_AddEnumOptionPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_addenumoption");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_AddEnumOption = (PLibMCEnvOperationParameterDefinition_AddEnumOptionPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_addenumoption");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_AddEnumOption == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount = (PLibMCEnvOperationParameterDefinition_GetEnumOptionCountPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getenumoptioncount");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount = (PLibMCEnvOperationParameterDefinition_GetEnumOptionCountPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getenumoptioncount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOption = (PLibMCEnvOperationParameterDefinition_GetEnumOptionPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinition_getenumoption");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinition_GetEnumOption = (PLibMCEnvOperationParameterDefinition_GetEnumOptionPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinition_getenumoption");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinition_GetEnumOption == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent = (PLibMCEnvOperationParameterDefinitionIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_operationparameterdefinitioniterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent = (PLibMCEnvOperationParameterDefinitionIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_operationparameterdefinitioniterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddStringParameter = (PLibMCEnvOperationParameterContainer_AddStringParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_addstringparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddStringParameter = (PLibMCEnvOperationParameterContainer_AddStringParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_addstringparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_AddStringParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddIntegerParameter = (PLibMCEnvOperationParameterContainer_AddIntegerParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_addintegerparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddIntegerParameter = (PLibMCEnvOperationParameterContainer_AddIntegerParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_addintegerparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_AddIntegerParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddDoubleParameter = (PLibMCEnvOperationParameterContainer_AddDoubleParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_adddoubleparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddDoubleParameter = (PLibMCEnvOperationParameterContainer_AddDoubleParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_adddoubleparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_AddDoubleParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddBoolParameter = (PLibMCEnvOperationParameterContainer_AddBoolParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_addboolparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddBoolParameter = (PLibMCEnvOperationParameterContainer_AddBoolParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_addboolparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_AddBoolParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddEnumParameter = (PLibMCEnvOperationParameterContainer_AddEnumParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_addenumparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_AddEnumParameter = (PLibMCEnvOperationParameterContainer_AddEnumParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_addenumparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_AddEnumParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_HasParameter = (PLibMCEnvOperationParameterContainer_HasParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_hasparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_HasParameter = (PLibMCEnvOperationParameterContainer_HasParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_hasparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_HasParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_FindParameter = (PLibMCEnvOperationParameterContainer_FindParameterPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_findparameter");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_FindParameter = (PLibMCEnvOperationParameterContainer_FindParameterPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_findparameter");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_FindParameter == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationParameterContainer_ListParameters = (PLibMCEnvOperationParameterContainer_ListParametersPtr) GetProcAddress(hLibrary, "libmcenv_operationparametercontainer_listparameters");
+		#else // _WIN32
+		pWrapperTable->m_OperationParameterContainer_ListParameters = (PLibMCEnvOperationParameterContainer_ListParametersPtr) dlsym(hLibrary, "libmcenv_operationparametercontainer_listparameters");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationParameterContainer_ListParameters == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetName = (PLibMCEnvOperationItemListDefinition_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_operationitemlistdefinition_getname");
+		#else // _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetName = (PLibMCEnvOperationItemListDefinition_GetNamePtr) dlsym(hLibrary, "libmcenv_operationitemlistdefinition_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItemListDefinition_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetDisplayName = (PLibMCEnvOperationItemListDefinition_GetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationitemlistdefinition_getdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetDisplayName = (PLibMCEnvOperationItemListDefinition_GetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationitemlistdefinition_getdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItemListDefinition_GetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount = (PLibMCEnvOperationItemListDefinition_GetMaxItemCountPtr) GetProcAddress(hLibrary, "libmcenv_operationitemlistdefinition_getmaxitemcount");
+		#else // _WIN32
+		pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount = (PLibMCEnvOperationItemListDefinition_GetMaxItemCountPtr) dlsym(hLibrary, "libmcenv_operationitemlistdefinition_getmaxitemcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent = (PLibMCEnvOperationItemListDefinitionIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_operationitemlistdefinitioniterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent = (PLibMCEnvOperationItemListDefinitionIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_operationitemlistdefinitioniterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetName = (PLibMCEnvOperationTypeDefinition_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_getname");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetName = (PLibMCEnvOperationTypeDefinition_GetNamePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetTargetState = (PLibMCEnvOperationTypeDefinition_GetTargetStatePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_gettargetstate");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetTargetState = (PLibMCEnvOperationTypeDefinition_GetTargetStatePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_gettargetstate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetTargetState == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetDisplayName = (PLibMCEnvOperationTypeDefinition_GetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_getdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetDisplayName = (PLibMCEnvOperationTypeDefinition_GetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_getdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetDisplayName = (PLibMCEnvOperationTypeDefinition_SetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_setdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetDisplayName = (PLibMCEnvOperationTypeDefinition_SetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_setdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_SetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetDescription = (PLibMCEnvOperationTypeDefinition_GetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_getdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetDescription = (PLibMCEnvOperationTypeDefinition_GetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_getdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetDescription = (PLibMCEnvOperationTypeDefinition_SetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_setdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetDescription = (PLibMCEnvOperationTypeDefinition_SetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_setdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_SetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetCategory = (PLibMCEnvOperationTypeDefinition_GetCategoryPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_getcategory");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetCategory = (PLibMCEnvOperationTypeDefinition_GetCategoryPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_getcategory");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetCategory == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetCategory = (PLibMCEnvOperationTypeDefinition_SetCategoryPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_setcategory");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetCategory = (PLibMCEnvOperationTypeDefinition_SetCategoryPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_setcategory");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_SetCategory == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetIconResource = (PLibMCEnvOperationTypeDefinition_GetIconResourcePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_geticonresource");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetIconResource = (PLibMCEnvOperationTypeDefinition_GetIconResourcePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_geticonresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetIconResource == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetIconResource = (PLibMCEnvOperationTypeDefinition_SetIconResourcePtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_seticonresource");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetIconResource = (PLibMCEnvOperationTypeDefinition_SetIconResourcePtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_seticonresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_SetIconResource == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts = (PLibMCEnvOperationTypeDefinition_GetAllowedContextsPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_getallowedcontexts");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts = (PLibMCEnvOperationTypeDefinition_GetAllowedContextsPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_getallowedcontexts");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts = (PLibMCEnvOperationTypeDefinition_SetAllowedContextsPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_setallowedcontexts");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts = (PLibMCEnvOperationTypeDefinition_SetAllowedContextsPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_setallowedcontexts");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_AddItemList = (PLibMCEnvOperationTypeDefinition_AddItemListPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_additemlist");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_AddItemList = (PLibMCEnvOperationTypeDefinition_AddItemListPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_additemlist");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_AddItemList == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_FindItemList = (PLibMCEnvOperationTypeDefinition_FindItemListPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_finditemlist");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_FindItemList = (PLibMCEnvOperationTypeDefinition_FindItemListPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_finditemlist");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_FindItemList == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinition_ListItemLists = (PLibMCEnvOperationTypeDefinition_ListItemListsPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinition_listitemlists");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinition_ListItemLists = (PLibMCEnvOperationTypeDefinition_ListItemListsPtr) dlsym(hLibrary, "libmcenv_operationtypedefinition_listitemlists");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinition_ListItemLists == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent = (PLibMCEnvOperationTypeDefinitionIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_operationtypedefinitioniterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent = (PLibMCEnvOperationTypeDefinitionIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_operationtypedefinitioniterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItem_GetIndex = (PLibMCEnvOperationItem_GetIndexPtr) GetProcAddress(hLibrary, "libmcenv_operationitem_getindex");
+		#else // _WIN32
+		pWrapperTable->m_OperationItem_GetIndex = (PLibMCEnvOperationItem_GetIndexPtr) dlsym(hLibrary, "libmcenv_operationitem_getindex");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItem_GetIndex == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItem_HasValue = (PLibMCEnvOperationItem_HasValuePtr) GetProcAddress(hLibrary, "libmcenv_operationitem_hasvalue");
+		#else // _WIN32
+		pWrapperTable->m_OperationItem_HasValue = (PLibMCEnvOperationItem_HasValuePtr) dlsym(hLibrary, "libmcenv_operationitem_hasvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItem_HasValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItem_GetRawValue = (PLibMCEnvOperationItem_GetRawValuePtr) GetProcAddress(hLibrary, "libmcenv_operationitem_getrawvalue");
+		#else // _WIN32
+		pWrapperTable->m_OperationItem_GetRawValue = (PLibMCEnvOperationItem_GetRawValuePtr) dlsym(hLibrary, "libmcenv_operationitem_getrawvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItem_GetRawValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItem_SetRawValue = (PLibMCEnvOperationItem_SetRawValuePtr) GetProcAddress(hLibrary, "libmcenv_operationitem_setrawvalue");
+		#else // _WIN32
+		pWrapperTable->m_OperationItem_SetRawValue = (PLibMCEnvOperationItem_SetRawValuePtr) dlsym(hLibrary, "libmcenv_operationitem_setrawvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItem_SetRawValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationItem_ClearValue = (PLibMCEnvOperationItem_ClearValuePtr) GetProcAddress(hLibrary, "libmcenv_operationitem_clearvalue");
+		#else // _WIN32
+		pWrapperTable->m_OperationItem_ClearValue = (PLibMCEnvOperationItem_ClearValuePtr) dlsym(hLibrary, "libmcenv_operationitem_clearvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationItem_ClearValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetUUID = (PLibMCEnvOperation_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_operation_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetUUID = (PLibMCEnvOperation_GetUUIDPtr) dlsym(hLibrary, "libmcenv_operation_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetIndex = (PLibMCEnvOperation_GetIndexPtr) GetProcAddress(hLibrary, "libmcenv_operation_getindex");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetIndex = (PLibMCEnvOperation_GetIndexPtr) dlsym(hLibrary, "libmcenv_operation_getindex");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetIndex == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetTypeName = (PLibMCEnvOperation_GetTypeNamePtr) GetProcAddress(hLibrary, "libmcenv_operation_gettypename");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetTypeName = (PLibMCEnvOperation_GetTypeNamePtr) dlsym(hLibrary, "libmcenv_operation_gettypename");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetTypeName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_IsEnabled = (PLibMCEnvOperation_IsEnabledPtr) GetProcAddress(hLibrary, "libmcenv_operation_isenabled");
+		#else // _WIN32
+		pWrapperTable->m_Operation_IsEnabled = (PLibMCEnvOperation_IsEnabledPtr) dlsym(hLibrary, "libmcenv_operation_isenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_IsEnabled == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_SetEnabled = (PLibMCEnvOperation_SetEnabledPtr) GetProcAddress(hLibrary, "libmcenv_operation_setenabled");
+		#else // _WIN32
+		pWrapperTable->m_Operation_SetEnabled = (PLibMCEnvOperation_SetEnabledPtr) dlsym(hLibrary, "libmcenv_operation_setenabled");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_SetEnabled == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetComment = (PLibMCEnvOperation_GetCommentPtr) GetProcAddress(hLibrary, "libmcenv_operation_getcomment");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetComment = (PLibMCEnvOperation_GetCommentPtr) dlsym(hLibrary, "libmcenv_operation_getcomment");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetComment == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_SetComment = (PLibMCEnvOperation_SetCommentPtr) GetProcAddress(hLibrary, "libmcenv_operation_setcomment");
+		#else // _WIN32
+		pWrapperTable->m_Operation_SetComment = (PLibMCEnvOperation_SetCommentPtr) dlsym(hLibrary, "libmcenv_operation_setcomment");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_SetComment == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_HasValue = (PLibMCEnvOperation_HasValuePtr) GetProcAddress(hLibrary, "libmcenv_operation_hasvalue");
+		#else // _WIN32
+		pWrapperTable->m_Operation_HasValue = (PLibMCEnvOperation_HasValuePtr) dlsym(hLibrary, "libmcenv_operation_hasvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_HasValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetRawValue = (PLibMCEnvOperation_GetRawValuePtr) GetProcAddress(hLibrary, "libmcenv_operation_getrawvalue");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetRawValue = (PLibMCEnvOperation_GetRawValuePtr) dlsym(hLibrary, "libmcenv_operation_getrawvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetRawValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetValueKind = (PLibMCEnvOperation_GetValueKindPtr) GetProcAddress(hLibrary, "libmcenv_operation_getvaluekind");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetValueKind = (PLibMCEnvOperation_GetValueKindPtr) dlsym(hLibrary, "libmcenv_operation_getvaluekind");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetValueKind == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_SetRawValue = (PLibMCEnvOperation_SetRawValuePtr) GetProcAddress(hLibrary, "libmcenv_operation_setrawvalue");
+		#else // _WIN32
+		pWrapperTable->m_Operation_SetRawValue = (PLibMCEnvOperation_SetRawValuePtr) dlsym(hLibrary, "libmcenv_operation_setrawvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_SetRawValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_ClearValue = (PLibMCEnvOperation_ClearValuePtr) GetProcAddress(hLibrary, "libmcenv_operation_clearvalue");
+		#else // _WIN32
+		pWrapperTable->m_Operation_ClearValue = (PLibMCEnvOperation_ClearValuePtr) dlsym(hLibrary, "libmcenv_operation_clearvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_ClearValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetItemCount = (PLibMCEnvOperation_GetItemCountPtr) GetProcAddress(hLibrary, "libmcenv_operation_getitemcount");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetItemCount = (PLibMCEnvOperation_GetItemCountPtr) dlsym(hLibrary, "libmcenv_operation_getitemcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetItemCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_GetItem = (PLibMCEnvOperation_GetItemPtr) GetProcAddress(hLibrary, "libmcenv_operation_getitem");
+		#else // _WIN32
+		pWrapperTable->m_Operation_GetItem = (PLibMCEnvOperation_GetItemPtr) dlsym(hLibrary, "libmcenv_operation_getitem");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_GetItem == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_AddItem = (PLibMCEnvOperation_AddItemPtr) GetProcAddress(hLibrary, "libmcenv_operation_additem");
+		#else // _WIN32
+		pWrapperTable->m_Operation_AddItem = (PLibMCEnvOperation_AddItemPtr) dlsym(hLibrary, "libmcenv_operation_additem");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_AddItem == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_Operation_RemoveItem = (PLibMCEnvOperation_RemoveItemPtr) GetProcAddress(hLibrary, "libmcenv_operation_removeitem");
+		#else // _WIN32
+		pWrapperTable->m_Operation_RemoveItem = (PLibMCEnvOperation_RemoveItemPtr) dlsym(hLibrary, "libmcenv_operation_removeitem");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_Operation_RemoveItem == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationIterator_GetCurrent = (PLibMCEnvOperationIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_operationiterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_OperationIterator_GetCurrent = (PLibMCEnvOperationIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_operationiterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetName = (PLibMCEnvOperationSequence_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getname");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetName = (PLibMCEnvOperationSequence_GetNamePtr) dlsym(hLibrary, "libmcenv_operationsequence_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetDisplayName = (PLibMCEnvOperationSequence_GetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetDisplayName = (PLibMCEnvOperationSequence_GetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationsequence_getdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SetDisplayName = (PLibMCEnvOperationSequence_SetDisplayNamePtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_setdisplayname");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SetDisplayName = (PLibMCEnvOperationSequence_SetDisplayNamePtr) dlsym(hLibrary, "libmcenv_operationsequence_setdisplayname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SetDisplayName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetDescription = (PLibMCEnvOperationSequence_GetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetDescription = (PLibMCEnvOperationSequence_GetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationsequence_getdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SetDescription = (PLibMCEnvOperationSequence_SetDescriptionPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_setdescription");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SetDescription = (PLibMCEnvOperationSequence_SetDescriptionPtr) dlsym(hLibrary, "libmcenv_operationsequence_setdescription");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SetDescription == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetContext = (PLibMCEnvOperationSequence_GetContextPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getcontext");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetContext = (PLibMCEnvOperationSequence_GetContextPtr) dlsym(hLibrary, "libmcenv_operationsequence_getcontext");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetContext == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SetContext = (PLibMCEnvOperationSequence_SetContextPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_setcontext");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SetContext = (PLibMCEnvOperationSequence_SetContextPtr) dlsym(hLibrary, "libmcenv_operationsequence_setcontext");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SetContext == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetBindingGroup = (PLibMCEnvOperationSequence_GetBindingGroupPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getbindinggroup");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetBindingGroup = (PLibMCEnvOperationSequence_GetBindingGroupPtr) dlsym(hLibrary, "libmcenv_operationsequence_getbindinggroup");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetBindingGroup == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SetBindingGroup = (PLibMCEnvOperationSequence_SetBindingGroupPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_setbindinggroup");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SetBindingGroup = (PLibMCEnvOperationSequence_SetBindingGroupPtr) dlsym(hLibrary, "libmcenv_operationsequence_setbindinggroup");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SetBindingGroup == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_IsPublished = (PLibMCEnvOperationSequence_IsPublishedPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_ispublished");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_IsPublished = (PLibMCEnvOperationSequence_IsPublishedPtr) dlsym(hLibrary, "libmcenv_operationsequence_ispublished");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_IsPublished == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetRevision = (PLibMCEnvOperationSequence_GetRevisionPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getrevision");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetRevision = (PLibMCEnvOperationSequence_GetRevisionPtr) dlsym(hLibrary, "libmcenv_operationsequence_getrevision");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetRevision == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetRevisionUUID = (PLibMCEnvOperationSequence_GetRevisionUUIDPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getrevisionuuid");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetRevisionUUID = (PLibMCEnvOperationSequence_GetRevisionUUIDPtr) dlsym(hLibrary, "libmcenv_operationsequence_getrevisionuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetRevisionUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_IsValid = (PLibMCEnvOperationSequence_IsValidPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_isvalid");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_IsValid = (PLibMCEnvOperationSequence_IsValidPtr) dlsym(hLibrary, "libmcenv_operationsequence_isvalid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_IsValid == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetValidationResult = (PLibMCEnvOperationSequence_GetValidationResultPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getvalidationresult");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetValidationResult = (PLibMCEnvOperationSequence_GetValidationResultPtr) dlsym(hLibrary, "libmcenv_operationsequence_getvalidationresult");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetValidationResult == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetOrigin = (PLibMCEnvOperationSequence_GetOriginPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getorigin");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetOrigin = (PLibMCEnvOperationSequence_GetOriginPtr) dlsym(hLibrary, "libmcenv_operationsequence_getorigin");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetOrigin == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetTimestamp = (PLibMCEnvOperationSequence_GetTimestampPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_gettimestamp");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetTimestamp = (PLibMCEnvOperationSequence_GetTimestampPtr) dlsym(hLibrary, "libmcenv_operationsequence_gettimestamp");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetTimestamp == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetUserUUID = (PLibMCEnvOperationSequence_GetUserUUIDPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getuseruuid");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetUserUUID = (PLibMCEnvOperationSequence_GetUserUUIDPtr) dlsym(hLibrary, "libmcenv_operationsequence_getuseruuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetUserUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetOperationCount = (PLibMCEnvOperationSequence_GetOperationCountPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getoperationcount");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetOperationCount = (PLibMCEnvOperationSequence_GetOperationCountPtr) dlsym(hLibrary, "libmcenv_operationsequence_getoperationcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetOperationCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_GetOperation = (PLibMCEnvOperationSequence_GetOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_getoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_GetOperation = (PLibMCEnvOperationSequence_GetOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_getoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_GetOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_FindOperation = (PLibMCEnvOperationSequence_FindOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_findoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_FindOperation = (PLibMCEnvOperationSequence_FindOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_findoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_FindOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_ListOperations = (PLibMCEnvOperationSequence_ListOperationsPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_listoperations");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_ListOperations = (PLibMCEnvOperationSequence_ListOperationsPtr) dlsym(hLibrary, "libmcenv_operationsequence_listoperations");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_ListOperations == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_AddOperation = (PLibMCEnvOperationSequence_AddOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_addoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_AddOperation = (PLibMCEnvOperationSequence_AddOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_addoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_AddOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_InsertOperation = (PLibMCEnvOperationSequence_InsertOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_insertoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_InsertOperation = (PLibMCEnvOperationSequence_InsertOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_insertoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_InsertOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_RemoveOperation = (PLibMCEnvOperationSequence_RemoveOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_removeoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_RemoveOperation = (PLibMCEnvOperationSequence_RemoveOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_removeoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_RemoveOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_MoveOperation = (PLibMCEnvOperationSequence_MoveOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_moveoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_MoveOperation = (PLibMCEnvOperationSequence_MoveOperationPtr) dlsym(hLibrary, "libmcenv_operationsequence_moveoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_MoveOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_CreateWorkingCopy = (PLibMCEnvOperationSequence_CreateWorkingCopyPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_createworkingcopy");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_CreateWorkingCopy = (PLibMCEnvOperationSequence_CreateWorkingCopyPtr) dlsym(hLibrary, "libmcenv_operationsequence_createworkingcopy");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_CreateWorkingCopy == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SerializeToXMLString = (PLibMCEnvOperationSequence_SerializeToXMLStringPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_serializetoxmlstring");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SerializeToXMLString = (PLibMCEnvOperationSequence_SerializeToXMLStringPtr) dlsym(hLibrary, "libmcenv_operationsequence_serializetoxmlstring");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SerializeToXMLString == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequence_SerializeToXMLDocument = (PLibMCEnvOperationSequence_SerializeToXMLDocumentPtr) GetProcAddress(hLibrary, "libmcenv_operationsequence_serializetoxmldocument");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequence_SerializeToXMLDocument = (PLibMCEnvOperationSequence_SerializeToXMLDocumentPtr) dlsym(hLibrary, "libmcenv_operationsequence_serializetoxmldocument");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequence_SerializeToXMLDocument == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceIterator_GetCurrent = (PLibMCEnvOperationSequenceIterator_GetCurrentPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceiterator_getcurrent");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceIterator_GetCurrent = (PLibMCEnvOperationSequenceIterator_GetCurrentPtr) dlsym(hLibrary, "libmcenv_operationsequenceiterator_getcurrent");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceIterator_GetCurrent == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_IsValid = (PLibMCEnvOperationSequenceValidationResult_IsValidPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencevalidationresult_isvalid");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_IsValid = (PLibMCEnvOperationSequenceValidationResult_IsValidPtr) dlsym(hLibrary, "libmcenv_operationsequencevalidationresult_isvalid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceValidationResult_IsValid == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount = (PLibMCEnvOperationSequenceValidationResult_GetIssueCountPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencevalidationresult_getissuecount");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount = (PLibMCEnvOperationSequenceValidationResult_GetIssueCountPtr) dlsym(hLibrary, "libmcenv_operationsequencevalidationresult_getissuecount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssue = (PLibMCEnvOperationSequenceValidationResult_GetIssuePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencevalidationresult_getissue");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceValidationResult_GetIssue = (PLibMCEnvOperationSequenceValidationResult_GetIssuePtr) dlsym(hLibrary, "libmcenv_operationsequencevalidationresult_getissue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceValidationResult_GetIssue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance = (PLibMCEnvOperationSequenceHandler_GetStateMachineInstancePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_getstatemachineinstance");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance = (PLibMCEnvOperationSequenceHandler_GetStateMachineInstancePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_getstatemachineinstance");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_RegisterOperationType = (PLibMCEnvOperationSequenceHandler_RegisterOperationTypePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_registeroperationtype");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_RegisterOperationType = (PLibMCEnvOperationSequenceHandler_RegisterOperationTypePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_registeroperationtype");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_RegisterOperationType == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_HasOperationType = (PLibMCEnvOperationSequenceHandler_HasOperationTypePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_hasoperationtype");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_HasOperationType = (PLibMCEnvOperationSequenceHandler_HasOperationTypePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_hasoperationtype");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_HasOperationType == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_FindOperationType = (PLibMCEnvOperationSequenceHandler_FindOperationTypePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_findoperationtype");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_FindOperationType = (PLibMCEnvOperationSequenceHandler_FindOperationTypePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_findoperationtype");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_FindOperationType == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListOperationTypes = (PLibMCEnvOperationSequenceHandler_ListOperationTypesPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_listoperationtypes");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListOperationTypes = (PLibMCEnvOperationSequenceHandler_ListOperationTypesPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_listoperationtypes");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ListOperationTypes == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_CreateSequence = (PLibMCEnvOperationSequenceHandler_CreateSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_createsequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_CreateSequence = (PLibMCEnvOperationSequenceHandler_CreateSequencePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_createsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_CreateSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromStringPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromstring");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromStringPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromstring");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromResourcePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromresource");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromResourcePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromXMLDocumentPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromxmldocument");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument = (PLibMCEnvOperationSequenceHandler_ParseSequenceFromXMLDocumentPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_parsesequencefromxmldocument");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ValidateSequence = (PLibMCEnvOperationSequenceHandler_ValidateSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_validatesequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ValidateSequence = (PLibMCEnvOperationSequenceHandler_ValidateSequencePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_validatesequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ValidateSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_PublishSequence = (PLibMCEnvOperationSequenceHandler_PublishSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_publishsequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_PublishSequence = (PLibMCEnvOperationSequenceHandler_PublishSequencePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_publishsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_PublishSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource = (PLibMCEnvOperationSequenceHandler_EnsureSequenceFromResourcePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_ensuresequencefromresource");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource = (PLibMCEnvOperationSequenceHandler_EnsureSequenceFromResourcePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_ensuresequencefromresource");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_HasSequence = (PLibMCEnvOperationSequenceHandler_HasSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_hassequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_HasSequence = (PLibMCEnvOperationSequenceHandler_HasSequencePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_hassequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_HasSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetSequence = (PLibMCEnvOperationSequenceHandler_GetSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_getsequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetSequence = (PLibMCEnvOperationSequenceHandler_GetSequencePtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_getsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_GetSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision = (PLibMCEnvOperationSequenceHandler_GetSequenceRevisionPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_getsequencerevision");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision = (PLibMCEnvOperationSequenceHandler_GetSequenceRevisionPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_getsequencerevision");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListSequences = (PLibMCEnvOperationSequenceHandler_ListSequencesPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_listsequences");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListSequences = (PLibMCEnvOperationSequenceHandler_ListSequencesPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_listsequences");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ListSequences == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions = (PLibMCEnvOperationSequenceHandler_ListSequenceRevisionsPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_listsequencerevisions");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions = (PLibMCEnvOperationSequenceHandler_ListSequenceRevisionsPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_listsequencerevisions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID = (PLibMCEnvOperationSequenceHandler_FindSequenceRevisionByUUIDPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_findsequencerevisionbyuuid");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID = (PLibMCEnvOperationSequenceHandler_FindSequenceRevisionByUUIDPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_findsequencerevisionbyuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions = (PLibMCEnvOperationSequenceHandler_ValidateDispatcherTransitionsPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_validatedispatchertransitions");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions = (PLibMCEnvOperationSequenceHandler_ValidateDispatcherTransitionsPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_validatedispatchertransitions");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup = (PLibMCEnvOperationSequenceHandler_SetStatusParameterGroupPtr) GetProcAddress(hLibrary, "libmcenv_operationsequencehandler_setstatusparametergroup");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup = (PLibMCEnvOperationSequenceHandler_SetStatusParameterGroupPtr) dlsym(hLibrary, "libmcenv_operationsequencehandler_setstatusparametergroup");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetUUID = (PLibMCEnvDispatchedOperation_GetUUIDPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getuuid");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetUUID = (PLibMCEnvDispatchedOperation_GetUUIDPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetUUID == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetTypeName = (PLibMCEnvDispatchedOperation_GetTypeNamePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_gettypename");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetTypeName = (PLibMCEnvDispatchedOperation_GetTypeNamePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_gettypename");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetTypeName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetIndex = (PLibMCEnvDispatchedOperation_GetIndexPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getindex");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetIndex = (PLibMCEnvDispatchedOperation_GetIndexPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getindex");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetIndex == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetExecutionName = (PLibMCEnvDispatchedOperation_GetExecutionNamePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getexecutionname");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetExecutionName = (PLibMCEnvDispatchedOperation_GetExecutionNamePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getexecutionname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetExecutionName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetSequenceName = (PLibMCEnvDispatchedOperation_GetSequenceNamePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getsequencename");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetSequenceName = (PLibMCEnvDispatchedOperation_GetSequenceNamePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getsequencename");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetSequenceName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetRevision = (PLibMCEnvDispatchedOperation_GetRevisionPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getrevision");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetRevision = (PLibMCEnvDispatchedOperation_GetRevisionPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getrevision");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetRevision == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetComment = (PLibMCEnvDispatchedOperation_GetCommentPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getcomment");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetComment = (PLibMCEnvDispatchedOperation_GetCommentPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getcomment");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetComment == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetTargetState = (PLibMCEnvDispatchedOperation_GetTargetStatePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_gettargetstate");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetTargetState = (PLibMCEnvDispatchedOperation_GetTargetStatePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_gettargetstate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetTargetState == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetReturnState = (PLibMCEnvDispatchedOperation_GetReturnStatePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getreturnstate");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetReturnState = (PLibMCEnvDispatchedOperation_GetReturnStatePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getreturnstate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetReturnState == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_HasExplicitValue = (PLibMCEnvDispatchedOperation_HasExplicitValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_hasexplicitvalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_HasExplicitValue = (PLibMCEnvDispatchedOperation_HasExplicitValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_hasexplicitvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_HasExplicitValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetStringValue = (PLibMCEnvDispatchedOperation_GetStringValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getstringvalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetStringValue = (PLibMCEnvDispatchedOperation_GetStringValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getstringvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetStringValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetIntegerValue = (PLibMCEnvDispatchedOperation_GetIntegerValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getintegervalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetIntegerValue = (PLibMCEnvDispatchedOperation_GetIntegerValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getintegervalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetIntegerValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetDoubleValue = (PLibMCEnvDispatchedOperation_GetDoubleValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getdoublevalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetDoubleValue = (PLibMCEnvDispatchedOperation_GetDoubleValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getdoublevalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetDoubleValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetBoolValue = (PLibMCEnvDispatchedOperation_GetBoolValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getboolvalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetBoolValue = (PLibMCEnvDispatchedOperation_GetBoolValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getboolvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetBoolValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue = (PLibMCEnvDispatchedOperation_ReevaluateDoubleValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_reevaluatedoublevalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue = (PLibMCEnvDispatchedOperation_ReevaluateDoubleValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_reevaluatedoublevalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue = (PLibMCEnvDispatchedOperation_ReevaluateIntegerValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_reevaluateintegervalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue = (PLibMCEnvDispatchedOperation_ReevaluateIntegerValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_reevaluateintegervalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemCount = (PLibMCEnvDispatchedOperation_GetItemCountPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getitemcount");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemCount = (PLibMCEnvDispatchedOperation_GetItemCountPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getitemcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetItemCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemStringValue = (PLibMCEnvDispatchedOperation_GetItemStringValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getitemstringvalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemStringValue = (PLibMCEnvDispatchedOperation_GetItemStringValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getitemstringvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetItemStringValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemIntegerValue = (PLibMCEnvDispatchedOperation_GetItemIntegerValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getitemintegervalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemIntegerValue = (PLibMCEnvDispatchedOperation_GetItemIntegerValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getitemintegervalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetItemIntegerValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemDoubleValue = (PLibMCEnvDispatchedOperation_GetItemDoubleValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getitemdoublevalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemDoubleValue = (PLibMCEnvDispatchedOperation_GetItemDoubleValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getitemdoublevalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetItemDoubleValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemBoolValue = (PLibMCEnvDispatchedOperation_GetItemBoolValuePtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_getitemboolvalue");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_GetItemBoolValue = (PLibMCEnvDispatchedOperation_GetItemBoolValuePtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_getitemboolvalue");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_GetItemBoolValue == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_DispatchedOperation_MarkFailed = (PLibMCEnvDispatchedOperation_MarkFailedPtr) GetProcAddress(hLibrary, "libmcenv_dispatchedoperation_markfailed");
+		#else // _WIN32
+		pWrapperTable->m_DispatchedOperation_MarkFailed = (PLibMCEnvDispatchedOperation_MarkFailedPtr) dlsym(hLibrary, "libmcenv_dispatchedoperation_markfailed");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_DispatchedOperation_MarkFailed == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetName = (PLibMCEnvOperationSequenceExecution_GetNamePtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getname");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetName = (PLibMCEnvOperationSequenceExecution_GetNamePtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getname");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetName == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetSequence = (PLibMCEnvOperationSequenceExecution_GetSequencePtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getsequence");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetSequence = (PLibMCEnvOperationSequenceExecution_GetSequencePtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetBindingGroup = (PLibMCEnvOperationSequenceExecution_GetBindingGroupPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getbindinggroup");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetBindingGroup = (PLibMCEnvOperationSequenceExecution_GetBindingGroupPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getbindinggroup");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetBindingGroup == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_SetBindingGroup = (PLibMCEnvOperationSequenceExecution_SetBindingGroupPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_setbindinggroup");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_SetBindingGroup = (PLibMCEnvOperationSequenceExecution_SetBindingGroupPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_setbindinggroup");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_SetBindingGroup == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetReturnState = (PLibMCEnvOperationSequenceExecution_GetReturnStatePtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getreturnstate");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetReturnState = (PLibMCEnvOperationSequenceExecution_GetReturnStatePtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getreturnstate");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetReturnState == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetStatus = (PLibMCEnvOperationSequenceExecution_GetStatusPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getstatus");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetStatus = (PLibMCEnvOperationSequenceExecution_GetStatusPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getstatus");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetStatus == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex = (PLibMCEnvOperationSequenceExecution_GetNextOperationIndexPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getnextoperationindex");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex = (PLibMCEnvOperationSequenceExecution_GetNextOperationIndexPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getnextoperationindex");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetIterationCount = (PLibMCEnvOperationSequenceExecution_GetIterationCountPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_getiterationcount");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_GetIterationCount = (PLibMCEnvOperationSequenceExecution_GetIterationCountPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_getiterationcount");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_GetIterationCount == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation = (PLibMCEnvOperationSequenceExecution_DispatchNextOperationPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_dispatchnextoperation");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation = (PLibMCEnvOperationSequenceExecution_DispatchNextOperationPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_dispatchnextoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_Restart = (PLibMCEnvOperationSequenceExecution_RestartPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_restart");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_Restart = (PLibMCEnvOperationSequenceExecution_RestartPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_restart");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_Restart == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_OperationSequenceExecution_Abort = (PLibMCEnvOperationSequenceExecution_AbortPtr) GetProcAddress(hLibrary, "libmcenv_operationsequenceexecution_abort");
+		#else // _WIN32
+		pWrapperTable->m_OperationSequenceExecution_Abort = (PLibMCEnvOperationSequenceExecution_AbortPtr) dlsym(hLibrary, "libmcenv_operationsequenceexecution_abort");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_OperationSequenceExecution_Abort == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getmachinestate");
 		#else // _WIN32
 		pWrapperTable->m_StateEnvironment_GetMachineState = (PLibMCEnvStateEnvironment_GetMachineStatePtr) dlsym(hLibrary, "libmcenv_stateenvironment_getmachinestate");
@@ -14702,6 +16808,51 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler = (PLibMCEnvStateEnvironment_GetOperationSequenceHandlerPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getoperationsequencehandler");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler = (PLibMCEnvStateEnvironment_GetOperationSequenceHandlerPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getoperationsequencehandler");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_StartOperationSequence = (PLibMCEnvStateEnvironment_StartOperationSequencePtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_startoperationsequence");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_StartOperationSequence = (PLibMCEnvStateEnvironment_StartOperationSequencePtr) dlsym(hLibrary, "libmcenv_stateenvironment_startoperationsequence");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_StartOperationSequence == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution = (PLibMCEnvStateEnvironment_FindOperationSequenceExecutionPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_findoperationsequenceexecution");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution = (PLibMCEnvStateEnvironment_FindOperationSequenceExecutionPtr) dlsym(hLibrary, "libmcenv_stateenvironment_findoperationsequenceexecution");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_HasDispatchedOperation = (PLibMCEnvStateEnvironment_HasDispatchedOperationPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_hasdispatchedoperation");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_HasDispatchedOperation = (PLibMCEnvStateEnvironment_HasDispatchedOperationPtr) dlsym(hLibrary, "libmcenv_stateenvironment_hasdispatchedoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_HasDispatchedOperation == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_StateEnvironment_GetDispatchedOperation = (PLibMCEnvStateEnvironment_GetDispatchedOperationPtr) GetProcAddress(hLibrary, "libmcenv_stateenvironment_getdispatchedoperation");
+		#else // _WIN32
+		pWrapperTable->m_StateEnvironment_GetDispatchedOperation = (PLibMCEnvStateEnvironment_GetDispatchedOperationPtr) dlsym(hLibrary, "libmcenv_stateenvironment_getdispatchedoperation");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_StateEnvironment_GetDispatchedOperation == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -15773,6 +17924,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool == nullptr)
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler = (PLibMCEnvUIEnvironment_GetOperationSequenceHandlerPtr) GetProcAddress(hLibrary, "libmcenv_uienvironment_getoperationsequencehandler");
+		#else // _WIN32
+		pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler = (PLibMCEnvUIEnvironment_GetOperationSequenceHandlerPtr) dlsym(hLibrary, "libmcenv_uienvironment_getoperationsequencehandler");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler == nullptr)
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -19636,6 +21796,622 @@ public:
 		if ( (eLookupError != 0) || (pWrapperTable->m_Formula_EvaluateAsBool == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getname", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getdisplayname", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_setdisplayname", (void**)&(pWrapperTable->m_OperationParameterDefinition_SetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_SetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getdescription", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_setdescription", (void**)&(pWrapperTable->m_OperationParameterDefinition_SetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_SetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getparametertype", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetParameterType));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetParameterType == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getdefaultvalue", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetDefaultValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetDefaultValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getunit", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetUnit));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetUnit == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_setunit", (void**)&(pWrapperTable->m_OperationParameterDefinition_SetUnit));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_SetUnit == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_hasrange", (void**)&(pWrapperTable->m_OperationParameterDefinition_HasRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_HasRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getrange", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetRange));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetRange == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getexpressionmode", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetExpressionMode));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetExpressionMode == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_setexpressionmode", (void**)&(pWrapperTable->m_OperationParameterDefinition_SetExpressionMode));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_SetExpressionMode == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_isrequired", (void**)&(pWrapperTable->m_OperationParameterDefinition_IsRequired));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_IsRequired == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_setrequired", (void**)&(pWrapperTable->m_OperationParameterDefinition_SetRequired));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_SetRequired == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_addenumoption", (void**)&(pWrapperTable->m_OperationParameterDefinition_AddEnumOption));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_AddEnumOption == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getenumoptioncount", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetEnumOptionCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinition_getenumoption", (void**)&(pWrapperTable->m_OperationParameterDefinition_GetEnumOption));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinition_GetEnumOption == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparameterdefinitioniterator_getcurrent", (void**)&(pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterDefinitionIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_addstringparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_AddStringParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_AddStringParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_addintegerparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_AddIntegerParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_AddIntegerParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_adddoubleparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_AddDoubleParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_AddDoubleParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_addboolparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_AddBoolParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_AddBoolParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_addenumparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_AddEnumParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_AddEnumParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_hasparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_HasParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_HasParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_findparameter", (void**)&(pWrapperTable->m_OperationParameterContainer_FindParameter));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_FindParameter == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationparametercontainer_listparameters", (void**)&(pWrapperTable->m_OperationParameterContainer_ListParameters));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationParameterContainer_ListParameters == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitemlistdefinition_getname", (void**)&(pWrapperTable->m_OperationItemListDefinition_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItemListDefinition_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitemlistdefinition_getdisplayname", (void**)&(pWrapperTable->m_OperationItemListDefinition_GetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItemListDefinition_GetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitemlistdefinition_getmaxitemcount", (void**)&(pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItemListDefinition_GetMaxItemCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitemlistdefinitioniterator_getcurrent", (void**)&(pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItemListDefinitionIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_getname", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_gettargetstate", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetTargetState));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetTargetState == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_getdisplayname", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_setdisplayname", (void**)&(pWrapperTable->m_OperationTypeDefinition_SetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_SetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_getdescription", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_setdescription", (void**)&(pWrapperTable->m_OperationTypeDefinition_SetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_SetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_getcategory", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetCategory));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetCategory == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_setcategory", (void**)&(pWrapperTable->m_OperationTypeDefinition_SetCategory));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_SetCategory == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_geticonresource", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetIconResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetIconResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_seticonresource", (void**)&(pWrapperTable->m_OperationTypeDefinition_SetIconResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_SetIconResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_getallowedcontexts", (void**)&(pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_GetAllowedContexts == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_setallowedcontexts", (void**)&(pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_SetAllowedContexts == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_additemlist", (void**)&(pWrapperTable->m_OperationTypeDefinition_AddItemList));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_AddItemList == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_finditemlist", (void**)&(pWrapperTable->m_OperationTypeDefinition_FindItemList));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_FindItemList == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinition_listitemlists", (void**)&(pWrapperTable->m_OperationTypeDefinition_ListItemLists));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinition_ListItemLists == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationtypedefinitioniterator_getcurrent", (void**)&(pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationTypeDefinitionIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitem_getindex", (void**)&(pWrapperTable->m_OperationItem_GetIndex));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItem_GetIndex == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitem_hasvalue", (void**)&(pWrapperTable->m_OperationItem_HasValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItem_HasValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitem_getrawvalue", (void**)&(pWrapperTable->m_OperationItem_GetRawValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItem_GetRawValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitem_setrawvalue", (void**)&(pWrapperTable->m_OperationItem_SetRawValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItem_SetRawValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationitem_clearvalue", (void**)&(pWrapperTable->m_OperationItem_ClearValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationItem_ClearValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getuuid", (void**)&(pWrapperTable->m_Operation_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getindex", (void**)&(pWrapperTable->m_Operation_GetIndex));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetIndex == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_gettypename", (void**)&(pWrapperTable->m_Operation_GetTypeName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetTypeName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_isenabled", (void**)&(pWrapperTable->m_Operation_IsEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_IsEnabled == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_setenabled", (void**)&(pWrapperTable->m_Operation_SetEnabled));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_SetEnabled == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getcomment", (void**)&(pWrapperTable->m_Operation_GetComment));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetComment == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_setcomment", (void**)&(pWrapperTable->m_Operation_SetComment));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_SetComment == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_hasvalue", (void**)&(pWrapperTable->m_Operation_HasValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_HasValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getrawvalue", (void**)&(pWrapperTable->m_Operation_GetRawValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetRawValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getvaluekind", (void**)&(pWrapperTable->m_Operation_GetValueKind));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetValueKind == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_setrawvalue", (void**)&(pWrapperTable->m_Operation_SetRawValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_SetRawValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_clearvalue", (void**)&(pWrapperTable->m_Operation_ClearValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_ClearValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getitemcount", (void**)&(pWrapperTable->m_Operation_GetItemCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetItemCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_getitem", (void**)&(pWrapperTable->m_Operation_GetItem));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_GetItem == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_additem", (void**)&(pWrapperTable->m_Operation_AddItem));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_AddItem == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operation_removeitem", (void**)&(pWrapperTable->m_Operation_RemoveItem));
+		if ( (eLookupError != 0) || (pWrapperTable->m_Operation_RemoveItem == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationiterator_getcurrent", (void**)&(pWrapperTable->m_OperationIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getname", (void**)&(pWrapperTable->m_OperationSequence_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getdisplayname", (void**)&(pWrapperTable->m_OperationSequence_GetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_setdisplayname", (void**)&(pWrapperTable->m_OperationSequence_SetDisplayName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SetDisplayName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getdescription", (void**)&(pWrapperTable->m_OperationSequence_GetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_setdescription", (void**)&(pWrapperTable->m_OperationSequence_SetDescription));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SetDescription == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getcontext", (void**)&(pWrapperTable->m_OperationSequence_GetContext));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetContext == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_setcontext", (void**)&(pWrapperTable->m_OperationSequence_SetContext));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SetContext == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getbindinggroup", (void**)&(pWrapperTable->m_OperationSequence_GetBindingGroup));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetBindingGroup == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_setbindinggroup", (void**)&(pWrapperTable->m_OperationSequence_SetBindingGroup));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SetBindingGroup == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_ispublished", (void**)&(pWrapperTable->m_OperationSequence_IsPublished));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_IsPublished == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getrevision", (void**)&(pWrapperTable->m_OperationSequence_GetRevision));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetRevision == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getrevisionuuid", (void**)&(pWrapperTable->m_OperationSequence_GetRevisionUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetRevisionUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_isvalid", (void**)&(pWrapperTable->m_OperationSequence_IsValid));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_IsValid == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getvalidationresult", (void**)&(pWrapperTable->m_OperationSequence_GetValidationResult));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetValidationResult == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getorigin", (void**)&(pWrapperTable->m_OperationSequence_GetOrigin));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetOrigin == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_gettimestamp", (void**)&(pWrapperTable->m_OperationSequence_GetTimestamp));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetTimestamp == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getuseruuid", (void**)&(pWrapperTable->m_OperationSequence_GetUserUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetUserUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getoperationcount", (void**)&(pWrapperTable->m_OperationSequence_GetOperationCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetOperationCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_getoperation", (void**)&(pWrapperTable->m_OperationSequence_GetOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_GetOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_findoperation", (void**)&(pWrapperTable->m_OperationSequence_FindOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_FindOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_listoperations", (void**)&(pWrapperTable->m_OperationSequence_ListOperations));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_ListOperations == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_addoperation", (void**)&(pWrapperTable->m_OperationSequence_AddOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_AddOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_insertoperation", (void**)&(pWrapperTable->m_OperationSequence_InsertOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_InsertOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_removeoperation", (void**)&(pWrapperTable->m_OperationSequence_RemoveOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_RemoveOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_moveoperation", (void**)&(pWrapperTable->m_OperationSequence_MoveOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_MoveOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_createworkingcopy", (void**)&(pWrapperTable->m_OperationSequence_CreateWorkingCopy));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_CreateWorkingCopy == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_serializetoxmlstring", (void**)&(pWrapperTable->m_OperationSequence_SerializeToXMLString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SerializeToXMLString == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequence_serializetoxmldocument", (void**)&(pWrapperTable->m_OperationSequence_SerializeToXMLDocument));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequence_SerializeToXMLDocument == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceiterator_getcurrent", (void**)&(pWrapperTable->m_OperationSequenceIterator_GetCurrent));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceIterator_GetCurrent == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencevalidationresult_isvalid", (void**)&(pWrapperTable->m_OperationSequenceValidationResult_IsValid));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceValidationResult_IsValid == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencevalidationresult_getissuecount", (void**)&(pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceValidationResult_GetIssueCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencevalidationresult_getissue", (void**)&(pWrapperTable->m_OperationSequenceValidationResult_GetIssue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceValidationResult_GetIssue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_getstatemachineinstance", (void**)&(pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_GetStateMachineInstance == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_registeroperationtype", (void**)&(pWrapperTable->m_OperationSequenceHandler_RegisterOperationType));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_RegisterOperationType == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_hasoperationtype", (void**)&(pWrapperTable->m_OperationSequenceHandler_HasOperationType));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_HasOperationType == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_findoperationtype", (void**)&(pWrapperTable->m_OperationSequenceHandler_FindOperationType));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_FindOperationType == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_listoperationtypes", (void**)&(pWrapperTable->m_OperationSequenceHandler_ListOperationTypes));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ListOperationTypes == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_createsequence", (void**)&(pWrapperTable->m_OperationSequenceHandler_CreateSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_CreateSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_parsesequencefromstring", (void**)&(pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromString == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_parsesequencefromresource", (void**)&(pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_parsesequencefromxmldocument", (void**)&(pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ParseSequenceFromXMLDocument == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_validatesequence", (void**)&(pWrapperTable->m_OperationSequenceHandler_ValidateSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ValidateSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_publishsequence", (void**)&(pWrapperTable->m_OperationSequenceHandler_PublishSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_PublishSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_ensuresequencefromresource", (void**)&(pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_EnsureSequenceFromResource == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_hassequence", (void**)&(pWrapperTable->m_OperationSequenceHandler_HasSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_HasSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_getsequence", (void**)&(pWrapperTable->m_OperationSequenceHandler_GetSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_GetSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_getsequencerevision", (void**)&(pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_GetSequenceRevision == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_listsequences", (void**)&(pWrapperTable->m_OperationSequenceHandler_ListSequences));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ListSequences == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_listsequencerevisions", (void**)&(pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ListSequenceRevisions == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_findsequencerevisionbyuuid", (void**)&(pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_FindSequenceRevisionByUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_validatedispatchertransitions", (void**)&(pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_ValidateDispatcherTransitions == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequencehandler_setstatusparametergroup", (void**)&(pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceHandler_SetStatusParameterGroup == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getuuid", (void**)&(pWrapperTable->m_DispatchedOperation_GetUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetUUID == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_gettypename", (void**)&(pWrapperTable->m_DispatchedOperation_GetTypeName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetTypeName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getindex", (void**)&(pWrapperTable->m_DispatchedOperation_GetIndex));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetIndex == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getexecutionname", (void**)&(pWrapperTable->m_DispatchedOperation_GetExecutionName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetExecutionName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getsequencename", (void**)&(pWrapperTable->m_DispatchedOperation_GetSequenceName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetSequenceName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getrevision", (void**)&(pWrapperTable->m_DispatchedOperation_GetRevision));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetRevision == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getcomment", (void**)&(pWrapperTable->m_DispatchedOperation_GetComment));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetComment == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_gettargetstate", (void**)&(pWrapperTable->m_DispatchedOperation_GetTargetState));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetTargetState == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getreturnstate", (void**)&(pWrapperTable->m_DispatchedOperation_GetReturnState));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetReturnState == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_hasexplicitvalue", (void**)&(pWrapperTable->m_DispatchedOperation_HasExplicitValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_HasExplicitValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getstringvalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetStringValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetStringValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getintegervalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetIntegerValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetIntegerValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getdoublevalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetDoubleValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetDoubleValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getboolvalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetBoolValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetBoolValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_reevaluatedoublevalue", (void**)&(pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_ReevaluateDoubleValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_reevaluateintegervalue", (void**)&(pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_ReevaluateIntegerValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getitemcount", (void**)&(pWrapperTable->m_DispatchedOperation_GetItemCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetItemCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getitemstringvalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetItemStringValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetItemStringValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getitemintegervalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetItemIntegerValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetItemIntegerValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getitemdoublevalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetItemDoubleValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetItemDoubleValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_getitemboolvalue", (void**)&(pWrapperTable->m_DispatchedOperation_GetItemBoolValue));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_GetItemBoolValue == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_dispatchedoperation_markfailed", (void**)&(pWrapperTable->m_DispatchedOperation_MarkFailed));
+		if ( (eLookupError != 0) || (pWrapperTable->m_DispatchedOperation_MarkFailed == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getname", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetName));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetName == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getsequence", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getbindinggroup", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetBindingGroup));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetBindingGroup == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_setbindinggroup", (void**)&(pWrapperTable->m_OperationSequenceExecution_SetBindingGroup));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_SetBindingGroup == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getreturnstate", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetReturnState));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetReturnState == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getstatus", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetStatus));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetStatus == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getnextoperationindex", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetNextOperationIndex == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_getiterationcount", (void**)&(pWrapperTable->m_OperationSequenceExecution_GetIterationCount));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_GetIterationCount == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_dispatchnextoperation", (void**)&(pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_DispatchNextOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_restart", (void**)&(pWrapperTable->m_OperationSequenceExecution_Restart));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_Restart == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_operationsequenceexecution_abort", (void**)&(pWrapperTable->m_OperationSequenceExecution_Abort));
+		if ( (eLookupError != 0) || (pWrapperTable->m_OperationSequenceExecution_Abort == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_getmachinestate", (void**)&(pWrapperTable->m_StateEnvironment_GetMachineState));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetMachineState == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
@@ -20046,6 +22822,26 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_stateenvironment_evaluateformulaasbool", (void**)&(pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool));
 		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_EvaluateFormulaAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_getoperationsequencehandler", (void**)&(pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetOperationSequenceHandler == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_startoperationsequence", (void**)&(pWrapperTable->m_StateEnvironment_StartOperationSequence));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_StartOperationSequence == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_findoperationsequenceexecution", (void**)&(pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_FindOperationSequenceExecution == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_hasdispatchedoperation", (void**)&(pWrapperTable->m_StateEnvironment_HasDispatchedOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_HasDispatchedOperation == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_stateenvironment_getdispatchedoperation", (void**)&(pWrapperTable->m_StateEnvironment_GetDispatchedOperation));
+		if ( (eLookupError != 0) || (pWrapperTable->m_StateEnvironment_GetDispatchedOperation == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_uiitem_getname", (void**)&(pWrapperTable->m_UIItem_GetName));
@@ -20522,6 +23318,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcenv_uienvironment_evaluateformulaasbool", (void**)&(pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool));
 		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_EvaluateFormulaAsBool == nullptr) )
+			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcenv_uienvironment_getoperationsequencehandler", (void**)&(pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler));
+		if ( (eLookupError != 0) || (pWrapperTable->m_UIEnvironment_GetOperationSequenceHandler == nullptr) )
 			return LIBMCENV_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcenv_getversion", (void**)&(pWrapperTable->m_GetVersion));
@@ -33715,6 +36515,2196 @@ public:
 	}
 	
 	/**
+	 * Method definitions for class COperationParameterDefinition
+	 */
+	
+	/**
+	* COperationParameterDefinition::GetName - Returns the parameter name, which is also the XML attribute name.
+	* @return Parameter name.
+	*/
+	std::string COperationParameterDefinition::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* COperationParameterDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	std::string COperationParameterDefinition::GetDisplayName()
+	{
+		LibMCEnv_uint32 bytesNeededDisplayName = 0;
+		LibMCEnv_uint32 bytesWrittenDisplayName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDisplayName(m_pHandle, 0, &bytesNeededDisplayName, nullptr));
+		std::vector<char> bufferDisplayName(bytesNeededDisplayName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDisplayName(m_pHandle, bytesNeededDisplayName, &bytesWrittenDisplayName, &bufferDisplayName[0]));
+		
+		return std::string(&bufferDisplayName[0]);
+	}
+	
+	/**
+	* COperationParameterDefinition::SetDisplayName - Sets the display name.
+	* @param[in] sDisplayName - Display name.
+	*/
+	void COperationParameterDefinition::SetDisplayName(const std::string & sDisplayName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_SetDisplayName(m_pHandle, sDisplayName.c_str()));
+	}
+	
+	/**
+	* COperationParameterDefinition::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	std::string COperationParameterDefinition::GetDescription()
+	{
+		LibMCEnv_uint32 bytesNeededDescription = 0;
+		LibMCEnv_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDescription(m_pHandle, 0, &bytesNeededDescription, nullptr));
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDescription(m_pHandle, bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0]));
+		
+		return std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* COperationParameterDefinition::SetDescription - Sets the description.
+	* @param[in] sDescription - Description.
+	*/
+	void COperationParameterDefinition::SetDescription(const std::string & sDescription)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_SetDescription(m_pHandle, sDescription.c_str()));
+	}
+	
+	/**
+	* COperationParameterDefinition::GetParameterType - Returns the data type.
+	* @return Data type.
+	*/
+	eOperationParameterType COperationParameterDefinition::GetParameterType()
+	{
+		eOperationParameterType resultParameterType = (eOperationParameterType) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetParameterType(m_pHandle, &resultParameterType));
+		
+		return resultParameterType;
+	}
+	
+	/**
+	* COperationParameterDefinition::GetDefaultValue - Returns the default value as string.
+	* @return Default value.
+	*/
+	std::string COperationParameterDefinition::GetDefaultValue()
+	{
+		LibMCEnv_uint32 bytesNeededDefaultValue = 0;
+		LibMCEnv_uint32 bytesWrittenDefaultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDefaultValue(m_pHandle, 0, &bytesNeededDefaultValue, nullptr));
+		std::vector<char> bufferDefaultValue(bytesNeededDefaultValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetDefaultValue(m_pHandle, bytesNeededDefaultValue, &bytesWrittenDefaultValue, &bufferDefaultValue[0]));
+		
+		return std::string(&bufferDefaultValue[0]);
+	}
+	
+	/**
+	* COperationParameterDefinition::GetUnit - Returns the display unit. Informational only.
+	* @return Unit, e.g. um/s. May be empty.
+	*/
+	std::string COperationParameterDefinition::GetUnit()
+	{
+		LibMCEnv_uint32 bytesNeededUnit = 0;
+		LibMCEnv_uint32 bytesWrittenUnit = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetUnit(m_pHandle, 0, &bytesNeededUnit, nullptr));
+		std::vector<char> bufferUnit(bytesNeededUnit);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetUnit(m_pHandle, bytesNeededUnit, &bytesWrittenUnit, &bufferUnit[0]));
+		
+		return std::string(&bufferUnit[0]);
+	}
+	
+	/**
+	* COperationParameterDefinition::SetUnit - Sets the display unit. Informational only.
+	* @param[in] sUnit - Unit, e.g. um/s.
+	*/
+	void COperationParameterDefinition::SetUnit(const std::string & sUnit)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_SetUnit(m_pHandle, sUnit.c_str()));
+	}
+	
+	/**
+	* COperationParameterDefinition::HasRange - Returns if resolved values are clamped to a range. Only numeric parameters have ranges.
+	* @return True if a range is defined.
+	*/
+	bool COperationParameterDefinition::HasRange()
+	{
+		bool resultHasRange = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_HasRange(m_pHandle, &resultHasRange));
+		
+		return resultHasRange;
+	}
+	
+	/**
+	* COperationParameterDefinition::GetRange - Returns the range. Fails if no range is defined.
+	* @param[out] dMinimum - Minimum value.
+	* @param[out] dMaximum - Maximum value.
+	*/
+	void COperationParameterDefinition::GetRange(LibMCEnv_double & dMinimum, LibMCEnv_double & dMaximum)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetRange(m_pHandle, &dMinimum, &dMaximum));
+	}
+	
+	/**
+	* COperationParameterDefinition::GetExpressionMode - Returns which kinds of raw values are accepted.
+	* @return Expression mode.
+	*/
+	eOperationExpressionMode COperationParameterDefinition::GetExpressionMode()
+	{
+		eOperationExpressionMode resultExpressionMode = (eOperationExpressionMode) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetExpressionMode(m_pHandle, &resultExpressionMode));
+		
+		return resultExpressionMode;
+	}
+	
+	/**
+	* COperationParameterDefinition::SetExpressionMode - Restricts the kinds of raw values that are accepted. Formula is only allowed for numeric and bool parameters.
+	* @param[in] eExpressionMode - Expression mode.
+	*/
+	void COperationParameterDefinition::SetExpressionMode(const eOperationExpressionMode eExpressionMode)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_SetExpressionMode(m_pHandle, eExpressionMode));
+	}
+	
+	/**
+	* COperationParameterDefinition::IsRequired - Returns if the parameter must be set explicitly in a sequence.
+	* @return True if required.
+	*/
+	bool COperationParameterDefinition::IsRequired()
+	{
+		bool resultIsRequired = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_IsRequired(m_pHandle, &resultIsRequired));
+		
+		return resultIsRequired;
+	}
+	
+	/**
+	* COperationParameterDefinition::SetRequired - Sets if the parameter must be set explicitly in a sequence. Default is false.
+	* @param[in] bIsRequired - True if required.
+	*/
+	void COperationParameterDefinition::SetRequired(const bool bIsRequired)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_SetRequired(m_pHandle, bIsRequired));
+	}
+	
+	/**
+	* COperationParameterDefinition::AddEnumOption - Adds an option to an enum parameter. Fails for other types or if the value exists with a different display name.
+	* @param[in] sValue - Option value as written in the sequence.
+	* @param[in] sDisplayName - Display name of the option.
+	*/
+	void COperationParameterDefinition::AddEnumOption(const std::string & sValue, const std::string & sDisplayName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_AddEnumOption(m_pHandle, sValue.c_str(), sDisplayName.c_str()));
+	}
+	
+	/**
+	* COperationParameterDefinition::GetEnumOptionCount - Returns the number of enum options.
+	* @return Number of options.
+	*/
+	LibMCEnv_uint32 COperationParameterDefinition::GetEnumOptionCount()
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetEnumOptionCount(m_pHandle, &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* COperationParameterDefinition::GetEnumOption - Returns an enum option.
+	* @param[in] nIndex - Index, 0-based.
+	* @param[out] sValue - Option value.
+	* @param[out] sDisplayName - Display name.
+	*/
+	void COperationParameterDefinition::GetEnumOption(const LibMCEnv_uint32 nIndex, std::string & sValue, std::string & sDisplayName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		LibMCEnv_uint32 bytesNeededDisplayName = 0;
+		LibMCEnv_uint32 bytesWrittenDisplayName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetEnumOption(m_pHandle, nIndex, 0, &bytesNeededValue, nullptr, 0, &bytesNeededDisplayName, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		std::vector<char> bufferDisplayName(bytesNeededDisplayName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinition_GetEnumOption(m_pHandle, nIndex, bytesNeededValue, &bytesWrittenValue, &bufferValue[0], bytesNeededDisplayName, &bytesWrittenDisplayName, &bufferDisplayName[0]));
+		sValue = std::string(&bufferValue[0]);
+		sDisplayName = std::string(&bufferDisplayName[0]);
+	}
+	
+	/**
+	 * Method definitions for class COperationParameterDefinitionIterator
+	 */
+	
+	/**
+	* COperationParameterDefinitionIterator::GetCurrent - Returns the current parameter definition.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterDefinitionIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterDefinitionIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class COperationParameterContainer
+	 */
+	
+	/**
+	* COperationParameterContainer::AddStringParameter - Adds a string parameter. Default expression mode is LiteralOrReference.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] sDefaultValue - Default value.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterContainer::AddStringParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_AddStringParameter(m_pHandle, sName.c_str(), sDisplayName.c_str(), sDefaultValue.c_str(), &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationParameterContainer::AddIntegerParameter - Adds an integer parameter. Resolved values are clamped to the range and rounded. If Maximum is smaller than Minimum, no range is applied.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] nDefaultValue - Default value.
+	* @param[in] nMinimum - Minimum value.
+	* @param[in] nMaximum - Maximum value.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterContainer::AddIntegerParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_int64 nDefaultValue, const LibMCEnv_int64 nMinimum, const LibMCEnv_int64 nMaximum)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_AddIntegerParameter(m_pHandle, sName.c_str(), sDisplayName.c_str(), nDefaultValue, nMinimum, nMaximum, &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationParameterContainer::AddDoubleParameter - Adds a double parameter. Resolved values are clamped to the range. If Maximum is smaller than Minimum, no range is applied.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] dDefaultValue - Default value.
+	* @param[in] dMinimum - Minimum value.
+	* @param[in] dMaximum - Maximum value.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterContainer::AddDoubleParameter(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_double dDefaultValue, const LibMCEnv_double dMinimum, const LibMCEnv_double dMaximum)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_AddDoubleParameter(m_pHandle, sName.c_str(), sDisplayName.c_str(), dDefaultValue, dMinimum, dMaximum, &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationParameterContainer::AddBoolParameter - Adds a bool parameter.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] bDefaultValue - Default value.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterContainer::AddBoolParameter(const std::string & sName, const std::string & sDisplayName, const bool bDefaultValue)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_AddBoolParameter(m_pHandle, sName.c_str(), sDisplayName.c_str(), bDefaultValue, &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationParameterContainer::AddEnumParameter - Adds an enum parameter. Options are added with AddEnumOption. The default MUST become a valid option before the first sequence is validated.
+	* @param[in] sName - Parameter name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] sDefaultValue - Default option value.
+	* @return Parameter definition.
+	*/
+	POperationParameterDefinition COperationParameterContainer::AddEnumParameter(const std::string & sName, const std::string & sDisplayName, const std::string & sDefaultValue)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_AddEnumParameter(m_pHandle, sName.c_str(), sDisplayName.c_str(), sDefaultValue.c_str(), &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationParameterContainer::HasParameter - Returns if a parameter exists.
+	* @param[in] sName - Parameter name.
+	* @return True if the parameter exists.
+	*/
+	bool COperationParameterContainer::HasParameter(const std::string & sName)
+	{
+		bool resultExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_HasParameter(m_pHandle, sName.c_str(), &resultExists));
+		
+		return resultExists;
+	}
+	
+	/**
+	* COperationParameterContainer::FindParameter - Returns a parameter definition.
+	* @param[in] sName - Parameter name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONPARAMETERNOTFOUND; otherwise returns null.
+	* @return Parameter definition or null.
+	*/
+	POperationParameterDefinition COperationParameterContainer::FindParameter(const std::string & sName, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_FindParameter(m_pHandle, sName.c_str(), bFailIfNotExisting, &hDefinition));
+		
+		if (hDefinition) {
+			return std::make_shared<COperationParameterDefinition>(m_pWrapper, hDefinition);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationParameterContainer::ListParameters - Lists all parameter definitions in registration order.
+	* @return Parameter definitions.
+	*/
+	POperationParameterDefinitionIterator COperationParameterContainer::ListParameters()
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationParameterContainer_ListParameters(m_pHandle, &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationParameterDefinitionIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	 * Method definitions for class COperationItemListDefinition
+	 */
+	
+	/**
+	* COperationItemListDefinition::GetName - Returns the item list name, which is also the XML element name of its items.
+	* @return Item list name.
+	*/
+	std::string COperationItemListDefinition::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinition_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinition_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* COperationItemListDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	std::string COperationItemListDefinition::GetDisplayName()
+	{
+		LibMCEnv_uint32 bytesNeededDisplayName = 0;
+		LibMCEnv_uint32 bytesWrittenDisplayName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinition_GetDisplayName(m_pHandle, 0, &bytesNeededDisplayName, nullptr));
+		std::vector<char> bufferDisplayName(bytesNeededDisplayName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinition_GetDisplayName(m_pHandle, bytesNeededDisplayName, &bytesWrittenDisplayName, &bufferDisplayName[0]));
+		
+		return std::string(&bufferDisplayName[0]);
+	}
+	
+	/**
+	* COperationItemListDefinition::GetMaxItemCount - Returns the maximum number of items. Sequences with more items fail validation.
+	* @return Maximum item count.
+	*/
+	LibMCEnv_uint32 COperationItemListDefinition::GetMaxItemCount()
+	{
+		LibMCEnv_uint32 resultMaxItemCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinition_GetMaxItemCount(m_pHandle, &resultMaxItemCount));
+		
+		return resultMaxItemCount;
+	}
+	
+	/**
+	 * Method definitions for class COperationItemListDefinitionIterator
+	 */
+	
+	/**
+	* COperationItemListDefinitionIterator::GetCurrent - Returns the current item list definition.
+	* @return Item list definition.
+	*/
+	POperationItemListDefinition COperationItemListDefinitionIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItemListDefinitionIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationItemListDefinition>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class COperationTypeDefinition
+	 */
+	
+	/**
+	* COperationTypeDefinition::GetName - Returns the type name as used in the type attribute of an operation.
+	* @return Type name.
+	*/
+	std::string COperationTypeDefinition::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::GetTargetState - Returns the state that executes operations of this type.
+	* @return State name.
+	*/
+	std::string COperationTypeDefinition::GetTargetState()
+	{
+		LibMCEnv_uint32 bytesNeededTargetState = 0;
+		LibMCEnv_uint32 bytesWrittenTargetState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetTargetState(m_pHandle, 0, &bytesNeededTargetState, nullptr));
+		std::vector<char> bufferTargetState(bytesNeededTargetState);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetTargetState(m_pHandle, bytesNeededTargetState, &bytesWrittenTargetState, &bufferTargetState[0]));
+		
+		return std::string(&bufferTargetState[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	std::string COperationTypeDefinition::GetDisplayName()
+	{
+		LibMCEnv_uint32 bytesNeededDisplayName = 0;
+		LibMCEnv_uint32 bytesWrittenDisplayName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetDisplayName(m_pHandle, 0, &bytesNeededDisplayName, nullptr));
+		std::vector<char> bufferDisplayName(bytesNeededDisplayName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetDisplayName(m_pHandle, bytesNeededDisplayName, &bytesWrittenDisplayName, &bufferDisplayName[0]));
+		
+		return std::string(&bufferDisplayName[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::SetDisplayName - Sets the display name. Defaults to the type name.
+	* @param[in] sDisplayName - Display name.
+	*/
+	void COperationTypeDefinition::SetDisplayName(const std::string & sDisplayName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_SetDisplayName(m_pHandle, sDisplayName.c_str()));
+	}
+	
+	/**
+	* COperationTypeDefinition::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	std::string COperationTypeDefinition::GetDescription()
+	{
+		LibMCEnv_uint32 bytesNeededDescription = 0;
+		LibMCEnv_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetDescription(m_pHandle, 0, &bytesNeededDescription, nullptr));
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetDescription(m_pHandle, bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0]));
+		
+		return std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::SetDescription - Sets the description.
+	* @param[in] sDescription - Description.
+	*/
+	void COperationTypeDefinition::SetDescription(const std::string & sDescription)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_SetDescription(m_pHandle, sDescription.c_str()));
+	}
+	
+	/**
+	* COperationTypeDefinition::GetCategory - Returns the palette category.
+	* @return Category.
+	*/
+	std::string COperationTypeDefinition::GetCategory()
+	{
+		LibMCEnv_uint32 bytesNeededCategory = 0;
+		LibMCEnv_uint32 bytesWrittenCategory = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetCategory(m_pHandle, 0, &bytesNeededCategory, nullptr));
+		std::vector<char> bufferCategory(bytesNeededCategory);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetCategory(m_pHandle, bytesNeededCategory, &bytesWrittenCategory, &bufferCategory[0]));
+		
+		return std::string(&bufferCategory[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::SetCategory - Sets the palette category, e.g. Motion or Temperature.
+	* @param[in] sCategory - Category.
+	*/
+	void COperationTypeDefinition::SetCategory(const std::string & sCategory)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_SetCategory(m_pHandle, sCategory.c_str()));
+	}
+	
+	/**
+	* COperationTypeDefinition::GetIconResource - Returns the icon resource name.
+	* @return Resource name. May be empty.
+	*/
+	std::string COperationTypeDefinition::GetIconResource()
+	{
+		LibMCEnv_uint32 bytesNeededResourceName = 0;
+		LibMCEnv_uint32 bytesWrittenResourceName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetIconResource(m_pHandle, 0, &bytesNeededResourceName, nullptr));
+		std::vector<char> bufferResourceName(bytesNeededResourceName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetIconResource(m_pHandle, bytesNeededResourceName, &bytesWrittenResourceName, &bufferResourceName[0]));
+		
+		return std::string(&bufferResourceName[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::SetIconResource - Sets an SVG or PNG resource of the plugin package as icon. Fails if the resource does not exist.
+	* @param[in] sResourceName - Resource name.
+	*/
+	void COperationTypeDefinition::SetIconResource(const std::string & sResourceName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_SetIconResource(m_pHandle, sResourceName.c_str()));
+	}
+	
+	/**
+	* COperationTypeDefinition::GetAllowedContexts - Returns the comma-separated sequence contexts this type may be used in.
+	* @return Contexts. Empty means all.
+	*/
+	std::string COperationTypeDefinition::GetAllowedContexts()
+	{
+		LibMCEnv_uint32 bytesNeededContexts = 0;
+		LibMCEnv_uint32 bytesWrittenContexts = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetAllowedContexts(m_pHandle, 0, &bytesNeededContexts, nullptr));
+		std::vector<char> bufferContexts(bytesNeededContexts);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_GetAllowedContexts(m_pHandle, bytesNeededContexts, &bytesWrittenContexts, &bufferContexts[0]));
+		
+		return std::string(&bufferContexts[0]);
+	}
+	
+	/**
+	* COperationTypeDefinition::SetAllowedContexts - Restricts the type to sequences with one of the given contexts.
+	* @param[in] sContexts - Comma-separated contexts, e.g. build. Empty means all.
+	*/
+	void COperationTypeDefinition::SetAllowedContexts(const std::string & sContexts)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_SetAllowedContexts(m_pHandle, sContexts.c_str()));
+	}
+	
+	/**
+	* COperationTypeDefinition::AddItemList - Adds an item list. Returns the existing one if identical.
+	* @param[in] sName - Item list name, also the XML element name.
+	* @param[in] sDisplayName - Display name.
+	* @param[in] nMaxItemCount - Maximum number of items. MUST be larger than 0.
+	* @return Item list definition.
+	*/
+	POperationItemListDefinition COperationTypeDefinition::AddItemList(const std::string & sName, const std::string & sDisplayName, const LibMCEnv_uint32 nMaxItemCount)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_AddItemList(m_pHandle, sName.c_str(), sDisplayName.c_str(), nMaxItemCount, &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationItemListDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationTypeDefinition::FindItemList - Returns an item list definition.
+	* @param[in] sName - Item list name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONITEMLISTNOTFOUND; otherwise returns null.
+	* @return Item list definition or null.
+	*/
+	POperationItemListDefinition COperationTypeDefinition::FindItemList(const std::string & sName, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_FindItemList(m_pHandle, sName.c_str(), bFailIfNotExisting, &hDefinition));
+		
+		if (hDefinition) {
+			return std::make_shared<COperationItemListDefinition>(m_pWrapper, hDefinition);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationTypeDefinition::ListItemLists - Lists all item list definitions.
+	* @return Item list definitions.
+	*/
+	POperationItemListDefinitionIterator COperationTypeDefinition::ListItemLists()
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinition_ListItemLists(m_pHandle, &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationItemListDefinitionIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	 * Method definitions for class COperationTypeDefinitionIterator
+	 */
+	
+	/**
+	* COperationTypeDefinitionIterator::GetCurrent - Returns the current operation type.
+	* @return Operation type.
+	*/
+	POperationTypeDefinition COperationTypeDefinitionIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationTypeDefinitionIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationTypeDefinition>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class COperationItem
+	 */
+	
+	/**
+	* COperationItem::GetIndex - Returns the index in the item list.
+	* @return Index, 0-based.
+	*/
+	LibMCEnv_uint32 COperationItem::GetIndex()
+	{
+		LibMCEnv_uint32 resultIndex = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_GetIndex(m_pHandle, &resultIndex));
+		
+		return resultIndex;
+	}
+	
+	/**
+	* COperationItem::HasValue - Returns if a value is set explicitly.
+	* @param[in] sName - Parameter name.
+	* @return True if set.
+	*/
+	bool COperationItem::HasValue(const std::string & sName)
+	{
+		bool resultHasValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_HasValue(m_pHandle, sName.c_str(), &resultHasValue));
+		
+		return resultHasValue;
+	}
+	
+	/**
+	* COperationItem::GetRawValue - Returns the raw value as written. Returns the default if not set.
+	* @param[in] sName - Parameter name.
+	* @return Raw value.
+	*/
+	std::string COperationItem::GetRawValue(const std::string & sName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_GetRawValue(m_pHandle, sName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_GetRawValue(m_pHandle, sName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* COperationItem::SetRawValue - Sets a raw value. Fails if the sequence is published or the parameter is not defined.
+	* @param[in] sName - Parameter name.
+	* @param[in] sValue - Literal, dollar-prefixed parameter reference or formula.
+	*/
+	void COperationItem::SetRawValue(const std::string & sName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_SetRawValue(m_pHandle, sName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* COperationItem::ClearValue - Removes an explicit value, so the default applies. Fails if the sequence is published.
+	* @param[in] sName - Parameter name.
+	*/
+	void COperationItem::ClearValue(const std::string & sName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationItem_ClearValue(m_pHandle, sName.c_str()));
+	}
+	
+	/**
+	 * Method definitions for class COperation
+	 */
+	
+	/**
+	* COperation::GetUUID - Returns the stable UUID of the operation.
+	* @return UUID.
+	*/
+	std::string COperation::GetUUID()
+	{
+		LibMCEnv_uint32 bytesNeededUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
+	}
+	
+	/**
+	* COperation::GetIndex - Returns the position in the sequence.
+	* @return Index, 0-based.
+	*/
+	LibMCEnv_uint32 COperation::GetIndex()
+	{
+		LibMCEnv_uint32 resultIndex = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetIndex(m_pHandle, &resultIndex));
+		
+		return resultIndex;
+	}
+	
+	/**
+	* COperation::GetTypeName - Returns the operation type name.
+	* @return Type name.
+	*/
+	std::string COperation::GetTypeName()
+	{
+		LibMCEnv_uint32 bytesNeededTypeName = 0;
+		LibMCEnv_uint32 bytesWrittenTypeName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetTypeName(m_pHandle, 0, &bytesNeededTypeName, nullptr));
+		std::vector<char> bufferTypeName(bytesNeededTypeName);
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetTypeName(m_pHandle, bytesNeededTypeName, &bytesWrittenTypeName, &bufferTypeName[0]));
+		
+		return std::string(&bufferTypeName[0]);
+	}
+	
+	/**
+	* COperation::IsEnabled - Returns if the operation is executed. Disabled operations are skipped at dispatch.
+	* @return True if enabled.
+	*/
+	bool COperation::IsEnabled()
+	{
+		bool resultIsEnabled = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_IsEnabled(m_pHandle, &resultIsEnabled));
+		
+		return resultIsEnabled;
+	}
+	
+	/**
+	* COperation::SetEnabled - Enables or disables the operation. Fails if the sequence is published.
+	* @param[in] bIsEnabled - True to enable.
+	*/
+	void COperation::SetEnabled(const bool bIsEnabled)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_SetEnabled(m_pHandle, bIsEnabled));
+	}
+	
+	/**
+	* COperation::GetComment - Returns the comment.
+	* @return Comment.
+	*/
+	std::string COperation::GetComment()
+	{
+		LibMCEnv_uint32 bytesNeededComment = 0;
+		LibMCEnv_uint32 bytesWrittenComment = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetComment(m_pHandle, 0, &bytesNeededComment, nullptr));
+		std::vector<char> bufferComment(bytesNeededComment);
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetComment(m_pHandle, bytesNeededComment, &bytesWrittenComment, &bufferComment[0]));
+		
+		return std::string(&bufferComment[0]);
+	}
+	
+	/**
+	* COperation::SetComment - Sets the comment. Fails if the sequence is published.
+	* @param[in] sComment - Comment.
+	*/
+	void COperation::SetComment(const std::string & sComment)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_SetComment(m_pHandle, sComment.c_str()));
+	}
+	
+	/**
+	* COperation::HasValue - Returns if a parameter value is set explicitly.
+	* @param[in] sName - Parameter name.
+	* @return True if set.
+	*/
+	bool COperation::HasValue(const std::string & sName)
+	{
+		bool resultHasValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_HasValue(m_pHandle, sName.c_str(), &resultHasValue));
+		
+		return resultHasValue;
+	}
+	
+	/**
+	* COperation::GetRawValue - Returns the raw value as written. Returns the default if not set.
+	* @param[in] sName - Parameter name.
+	* @return Raw value.
+	*/
+	std::string COperation::GetRawValue(const std::string & sName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetRawValue(m_pHandle, sName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetRawValue(m_pHandle, sName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* COperation::GetValueKind - Returns how a raw value will be resolved.
+	* @param[in] sName - Parameter name.
+	* @return Default, Literal, Reference or Formula.
+	*/
+	eOperationValueKind COperation::GetValueKind(const std::string & sName)
+	{
+		eOperationValueKind resultValueKind = (eOperationValueKind) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetValueKind(m_pHandle, sName.c_str(), &resultValueKind));
+		
+		return resultValueKind;
+	}
+	
+	/**
+	* COperation::SetRawValue - Sets a raw value. Fails if the sequence is published or the parameter is not defined for the type.
+	* @param[in] sName - Parameter name.
+	* @param[in] sValue - Literal, dollar-prefixed parameter reference or formula.
+	*/
+	void COperation::SetRawValue(const std::string & sName, const std::string & sValue)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_SetRawValue(m_pHandle, sName.c_str(), sValue.c_str()));
+	}
+	
+	/**
+	* COperation::ClearValue - Removes an explicit value, so the default applies. Fails if the sequence is published.
+	* @param[in] sName - Parameter name.
+	*/
+	void COperation::ClearValue(const std::string & sName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_ClearValue(m_pHandle, sName.c_str()));
+	}
+	
+	/**
+	* COperation::GetItemCount - Returns the number of items of an item list.
+	* @param[in] sListName - Item list name.
+	* @return Number of items.
+	*/
+	LibMCEnv_uint32 COperation::GetItemCount(const std::string & sListName)
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetItemCount(m_pHandle, sListName.c_str(), &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* COperation::GetItem - Returns an item of an item list.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Index, 0-based.
+	* @return Item.
+	*/
+	POperationItem COperation::GetItem(const std::string & sListName, const LibMCEnv_uint32 nIndex)
+	{
+		LibMCEnvHandle hItem = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_GetItem(m_pHandle, sListName.c_str(), nIndex, &hItem));
+		
+		if (!hItem) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationItem>(m_pWrapper, hItem);
+	}
+	
+	/**
+	* COperation::AddItem - Appends an item. Fails with OPERATIONITEMLISTFULL at the maximum count, or if the sequence is published.
+	* @param[in] sListName - Item list name.
+	* @return New item.
+	*/
+	POperationItem COperation::AddItem(const std::string & sListName)
+	{
+		LibMCEnvHandle hItem = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_AddItem(m_pHandle, sListName.c_str(), &hItem));
+		
+		if (!hItem) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationItem>(m_pWrapper, hItem);
+	}
+	
+	/**
+	* COperation::RemoveItem - Removes an item. Fails if the sequence is published.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Index, 0-based.
+	*/
+	void COperation::RemoveItem(const std::string & sListName, const LibMCEnv_uint32 nIndex)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_Operation_RemoveItem(m_pHandle, sListName.c_str(), nIndex));
+	}
+	
+	/**
+	 * Method definitions for class COperationIterator
+	 */
+	
+	/**
+	* COperationIterator::GetCurrent - Returns the current operation.
+	* @return Operation.
+	*/
+	POperation COperationIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperation>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class COperationSequence
+	 */
+	
+	/**
+	* COperationSequence::GetName - Returns the sequence name.
+	* @return Name.
+	*/
+	std::string COperationSequence::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* COperationSequence::GetDisplayName - Returns the display name.
+	* @return Display name.
+	*/
+	std::string COperationSequence::GetDisplayName()
+	{
+		LibMCEnv_uint32 bytesNeededDisplayName = 0;
+		LibMCEnv_uint32 bytesWrittenDisplayName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetDisplayName(m_pHandle, 0, &bytesNeededDisplayName, nullptr));
+		std::vector<char> bufferDisplayName(bytesNeededDisplayName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetDisplayName(m_pHandle, bytesNeededDisplayName, &bytesWrittenDisplayName, &bufferDisplayName[0]));
+		
+		return std::string(&bufferDisplayName[0]);
+	}
+	
+	/**
+	* COperationSequence::SetDisplayName - Sets the display name. Fails if published.
+	* @param[in] sDisplayName - Display name.
+	*/
+	void COperationSequence::SetDisplayName(const std::string & sDisplayName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SetDisplayName(m_pHandle, sDisplayName.c_str()));
+	}
+	
+	/**
+	* COperationSequence::GetDescription - Returns the description.
+	* @return Description.
+	*/
+	std::string COperationSequence::GetDescription()
+	{
+		LibMCEnv_uint32 bytesNeededDescription = 0;
+		LibMCEnv_uint32 bytesWrittenDescription = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetDescription(m_pHandle, 0, &bytesNeededDescription, nullptr));
+		std::vector<char> bufferDescription(bytesNeededDescription);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetDescription(m_pHandle, bytesNeededDescription, &bytesWrittenDescription, &bufferDescription[0]));
+		
+		return std::string(&bufferDescription[0]);
+	}
+	
+	/**
+	* COperationSequence::SetDescription - Sets the description. Fails if published.
+	* @param[in] sDescription - Description.
+	*/
+	void COperationSequence::SetDescription(const std::string & sDescription)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SetDescription(m_pHandle, sDescription.c_str()));
+	}
+	
+	/**
+	* COperationSequence::GetContext - Returns the context, e.g. build or manual.
+	* @return Context. May be empty.
+	*/
+	std::string COperationSequence::GetContext()
+	{
+		LibMCEnv_uint32 bytesNeededContext = 0;
+		LibMCEnv_uint32 bytesWrittenContext = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetContext(m_pHandle, 0, &bytesNeededContext, nullptr));
+		std::vector<char> bufferContext(bytesNeededContext);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetContext(m_pHandle, bytesNeededContext, &bytesWrittenContext, &bufferContext[0]));
+		
+		return std::string(&bufferContext[0]);
+	}
+	
+	/**
+	* COperationSequence::SetContext - Sets the context. Fails if published.
+	* @param[in] sContext - Context.
+	*/
+	void COperationSequence::SetContext(const std::string & sContext)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SetContext(m_pHandle, sContext.c_str()));
+	}
+	
+	/**
+	* COperationSequence::GetBindingGroup - Returns the default parameter group for dollar-prefixed parameter references.
+	* @return Parameter group. May be empty.
+	*/
+	std::string COperationSequence::GetBindingGroup()
+	{
+		LibMCEnv_uint32 bytesNeededGroupName = 0;
+		LibMCEnv_uint32 bytesWrittenGroupName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetBindingGroup(m_pHandle, 0, &bytesNeededGroupName, nullptr));
+		std::vector<char> bufferGroupName(bytesNeededGroupName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetBindingGroup(m_pHandle, bytesNeededGroupName, &bytesWrittenGroupName, &bufferGroupName[0]));
+		
+		return std::string(&bufferGroupName[0]);
+	}
+	
+	/**
+	* COperationSequence::SetBindingGroup - Sets the default parameter group for dollar-prefixed parameter references. Fails if published.
+	* @param[in] sGroupName - Parameter group.
+	*/
+	void COperationSequence::SetBindingGroup(const std::string & sGroupName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SetBindingGroup(m_pHandle, sGroupName.c_str()));
+	}
+	
+	/**
+	* COperationSequence::IsPublished - Returns if this is an immutable published revision.
+	* @return True if published.
+	*/
+	bool COperationSequence::IsPublished()
+	{
+		bool resultIsPublished = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_IsPublished(m_pHandle, &resultIsPublished));
+		
+		return resultIsPublished;
+	}
+	
+	/**
+	* COperationSequence::GetRevision - Returns the revision. For a working copy, returns the revision it was based on, or 0.
+	* @return Revision.
+	*/
+	LibMCEnv_uint32 COperationSequence::GetRevision()
+	{
+		LibMCEnv_uint32 resultRevision = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetRevision(m_pHandle, &resultRevision));
+		
+		return resultRevision;
+	}
+	
+	/**
+	* COperationSequence::GetRevisionUUID - Returns the UUID of the stored revision. Use it to reference the revision from build metadata.
+	* @return Revision UUID. Empty for working copies.
+	*/
+	std::string COperationSequence::GetRevisionUUID()
+	{
+		LibMCEnv_uint32 bytesNeededRevisionUUID = 0;
+		LibMCEnv_uint32 bytesWrittenRevisionUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetRevisionUUID(m_pHandle, 0, &bytesNeededRevisionUUID, nullptr));
+		std::vector<char> bufferRevisionUUID(bytesNeededRevisionUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetRevisionUUID(m_pHandle, bytesNeededRevisionUUID, &bytesWrittenRevisionUUID, &bufferRevisionUUID[0]));
+		
+		return std::string(&bufferRevisionUUID[0]);
+	}
+	
+	/**
+	* COperationSequence::IsValid - Returns if the revision passed validation against the currently registered types. A stored revision can become invalid after a plugin update. Invalid revisions cannot be started.
+	* @return True if valid. Always true for revisions published in this session.
+	*/
+	bool COperationSequence::IsValid()
+	{
+		bool resultIsValid = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_IsValid(m_pHandle, &resultIsValid));
+		
+		return resultIsValid;
+	}
+	
+	/**
+	* COperationSequence::GetValidationResult - Returns the result of validating the revision against the currently registered types.
+	* @return Validation result.
+	*/
+	POperationSequenceValidationResult COperationSequence::GetValidationResult()
+	{
+		LibMCEnvHandle hResult = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetValidationResult(m_pHandle, &hResult));
+		
+		if (!hResult) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceValidationResult>(m_pWrapper, hResult);
+	}
+	
+	/**
+	* COperationSequence::GetOrigin - Returns where the sequence came from.
+	* @return Origin.
+	*/
+	eOperationSequenceOrigin COperationSequence::GetOrigin()
+	{
+		eOperationSequenceOrigin resultOrigin = (eOperationSequenceOrigin) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetOrigin(m_pHandle, &resultOrigin));
+		
+		return resultOrigin;
+	}
+	
+	/**
+	* COperationSequence::GetTimestamp - Returns the publish timestamp. Empty for working copies.
+	* @return ISO 8601 UTC timestamp.
+	*/
+	std::string COperationSequence::GetTimestamp()
+	{
+		LibMCEnv_uint32 bytesNeededTimestampUTC = 0;
+		LibMCEnv_uint32 bytesWrittenTimestampUTC = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetTimestamp(m_pHandle, 0, &bytesNeededTimestampUTC, nullptr));
+		std::vector<char> bufferTimestampUTC(bytesNeededTimestampUTC);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetTimestamp(m_pHandle, bytesNeededTimestampUTC, &bytesWrittenTimestampUTC, &bufferTimestampUTC[0]));
+		
+		return std::string(&bufferTimestampUTC[0]);
+	}
+	
+	/**
+	* COperationSequence::GetUserUUID - Returns the user that published the revision.
+	* @return User UUID. Empty for working copies.
+	*/
+	std::string COperationSequence::GetUserUUID()
+	{
+		LibMCEnv_uint32 bytesNeededUserUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUserUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetUserUUID(m_pHandle, 0, &bytesNeededUserUUID, nullptr));
+		std::vector<char> bufferUserUUID(bytesNeededUserUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetUserUUID(m_pHandle, bytesNeededUserUUID, &bytesWrittenUserUUID, &bufferUserUUID[0]));
+		
+		return std::string(&bufferUserUUID[0]);
+	}
+	
+	/**
+	* COperationSequence::GetOperationCount - Returns the number of operations, including disabled ones.
+	* @return Number of operations.
+	*/
+	LibMCEnv_uint32 COperationSequence::GetOperationCount()
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetOperationCount(m_pHandle, &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* COperationSequence::GetOperation - Returns an operation by index.
+	* @param[in] nIndex - Index, 0-based.
+	* @return Operation.
+	*/
+	POperation COperationSequence::GetOperation(const LibMCEnv_uint32 nIndex)
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_GetOperation(m_pHandle, nIndex, &hOperation));
+		
+		if (!hOperation) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperation>(m_pWrapper, hOperation);
+	}
+	
+	/**
+	* COperationSequence::FindOperation - Returns an operation by UUID.
+	* @param[in] sUUID - Operation UUID.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONNOTFOUND; otherwise returns null.
+	* @return Operation or null.
+	*/
+	POperation COperationSequence::FindOperation(const std::string & sUUID, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_FindOperation(m_pHandle, sUUID.c_str(), bFailIfNotExisting, &hOperation));
+		
+		if (hOperation) {
+			return std::make_shared<COperation>(m_pWrapper, hOperation);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationSequence::ListOperations - Lists all operations in order.
+	* @return Operations.
+	*/
+	POperationIterator COperationSequence::ListOperations()
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_ListOperations(m_pHandle, &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	* COperationSequence::AddOperation - Appends an operation of a registered type with default values. Fails if published.
+	* @param[in] sTypeName - Operation type.
+	* @return New operation.
+	*/
+	POperation COperationSequence::AddOperation(const std::string & sTypeName)
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_AddOperation(m_pHandle, sTypeName.c_str(), &hOperation));
+		
+		if (!hOperation) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperation>(m_pWrapper, hOperation);
+	}
+	
+	/**
+	* COperationSequence::InsertOperation - Inserts an operation before the given index. Fails if published.
+	* @param[in] nIndex - Index, 0-based. The operation count appends.
+	* @param[in] sTypeName - Operation type.
+	* @return New operation.
+	*/
+	POperation COperationSequence::InsertOperation(const LibMCEnv_uint32 nIndex, const std::string & sTypeName)
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_InsertOperation(m_pHandle, nIndex, sTypeName.c_str(), &hOperation));
+		
+		if (!hOperation) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperation>(m_pWrapper, hOperation);
+	}
+	
+	/**
+	* COperationSequence::RemoveOperation - Removes an operation. Fails if published.
+	* @param[in] sUUID - Operation UUID.
+	*/
+	void COperationSequence::RemoveOperation(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_RemoveOperation(m_pHandle, sUUID.c_str()));
+	}
+	
+	/**
+	* COperationSequence::MoveOperation - Moves an operation to a new index. Fails if published.
+	* @param[in] sUUID - Operation UUID.
+	* @param[in] nNewIndex - New index, 0-based.
+	*/
+	void COperationSequence::MoveOperation(const std::string & sUUID, const LibMCEnv_uint32 nNewIndex)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_MoveOperation(m_pHandle, sUUID.c_str(), nNewIndex));
+	}
+	
+	/**
+	* COperationSequence::CreateWorkingCopy - Returns an editable deep copy, based on this revision. Operation UUIDs are kept.
+	* @return Working copy.
+	*/
+	POperationSequence COperationSequence::CreateWorkingCopy()
+	{
+		LibMCEnvHandle hWorkingCopy = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_CreateWorkingCopy(m_pHandle, &hWorkingCopy));
+		
+		if (!hWorkingCopy) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hWorkingCopy);
+	}
+	
+	/**
+	* COperationSequence::SerializeToXMLString - Serializes the sequence in the operationsequence/2026/11 format. Only explicitly set values are written.
+	* @return XML string.
+	*/
+	std::string COperationSequence::SerializeToXMLString()
+	{
+		LibMCEnv_uint32 bytesNeededXMLString = 0;
+		LibMCEnv_uint32 bytesWrittenXMLString = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SerializeToXMLString(m_pHandle, 0, &bytesNeededXMLString, nullptr));
+		std::vector<char> bufferXMLString(bytesNeededXMLString);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SerializeToXMLString(m_pHandle, bytesNeededXMLString, &bytesWrittenXMLString, &bufferXMLString[0]));
+		
+		return std::string(&bufferXMLString[0]);
+	}
+	
+	/**
+	* COperationSequence::SerializeToXMLDocument - Serializes the sequence into a new XML document.
+	* @return XML document.
+	*/
+	PXMLDocument COperationSequence::SerializeToXMLDocument()
+	{
+		LibMCEnvHandle hDocument = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequence_SerializeToXMLDocument(m_pHandle, &hDocument));
+		
+		if (!hDocument) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CXMLDocument>(m_pWrapper, hDocument);
+	}
+	
+	/**
+	 * Method definitions for class COperationSequenceIterator
+	 */
+	
+	/**
+	* COperationSequenceIterator::GetCurrent - Returns the current sequence.
+	* @return Sequence.
+	*/
+	POperationSequence COperationSequenceIterator::GetCurrent()
+	{
+		LibMCEnvHandle hInstance = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceIterator_GetCurrent(m_pHandle, &hInstance));
+		
+		if (!hInstance) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hInstance);
+	}
+	
+	/**
+	 * Method definitions for class COperationSequenceValidationResult
+	 */
+	
+	/**
+	* COperationSequenceValidationResult::IsValid - Returns true if there are no errors. Warnings do not prevent publishing.
+	* @return True if valid.
+	*/
+	bool COperationSequenceValidationResult::IsValid()
+	{
+		bool resultIsValid = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceValidationResult_IsValid(m_pHandle, &resultIsValid));
+		
+		return resultIsValid;
+	}
+	
+	/**
+	* COperationSequenceValidationResult::GetIssueCount - Returns the number of errors and warnings.
+	* @return Number of issues.
+	*/
+	LibMCEnv_uint32 COperationSequenceValidationResult::GetIssueCount()
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceValidationResult_GetIssueCount(m_pHandle, &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* COperationSequenceValidationResult::GetIssue - Returns an issue.
+	* @param[in] nIndex - Index, 0-based.
+	* @param[out] eSeverity - Severity.
+	* @param[out] sOperationUUID - Operation UUID, or empty for sequence-level issues.
+	* @param[out] sParameterName - Parameter or item list name. May be empty.
+	* @param[out] sMessage - Human readable message.
+	*/
+	void COperationSequenceValidationResult::GetIssue(const LibMCEnv_uint32 nIndex, eOperationSequenceIssueSeverity & eSeverity, std::string & sOperationUUID, std::string & sParameterName, std::string & sMessage)
+	{
+		LibMCEnv_uint32 bytesNeededOperationUUID = 0;
+		LibMCEnv_uint32 bytesWrittenOperationUUID = 0;
+		LibMCEnv_uint32 bytesNeededParameterName = 0;
+		LibMCEnv_uint32 bytesWrittenParameterName = 0;
+		LibMCEnv_uint32 bytesNeededMessage = 0;
+		LibMCEnv_uint32 bytesWrittenMessage = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceValidationResult_GetIssue(m_pHandle, nIndex, &eSeverity, 0, &bytesNeededOperationUUID, nullptr, 0, &bytesNeededParameterName, nullptr, 0, &bytesNeededMessage, nullptr));
+		std::vector<char> bufferOperationUUID(bytesNeededOperationUUID);
+		std::vector<char> bufferParameterName(bytesNeededParameterName);
+		std::vector<char> bufferMessage(bytesNeededMessage);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceValidationResult_GetIssue(m_pHandle, nIndex, &eSeverity, bytesNeededOperationUUID, &bytesWrittenOperationUUID, &bufferOperationUUID[0], bytesNeededParameterName, &bytesWrittenParameterName, &bufferParameterName[0], bytesNeededMessage, &bytesWrittenMessage, &bufferMessage[0]));
+		sOperationUUID = std::string(&bufferOperationUUID[0]);
+		sParameterName = std::string(&bufferParameterName[0]);
+		sMessage = std::string(&bufferMessage[0]);
+	}
+	
+	/**
+	 * Method definitions for class COperationSequenceHandler
+	 */
+	
+	/**
+	* COperationSequenceHandler::GetStateMachineInstance - Returns the state machine the registry belongs to.
+	* @return State machine instance name.
+	*/
+	std::string COperationSequenceHandler::GetStateMachineInstance()
+	{
+		LibMCEnv_uint32 bytesNeededMachineInstance = 0;
+		LibMCEnv_uint32 bytesWrittenMachineInstance = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_GetStateMachineInstance(m_pHandle, 0, &bytesNeededMachineInstance, nullptr));
+		std::vector<char> bufferMachineInstance(bytesNeededMachineInstance);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_GetStateMachineInstance(m_pHandle, bytesNeededMachineInstance, &bytesWrittenMachineInstance, &bufferMachineInstance[0]));
+		
+		return std::string(&bufferMachineInstance[0]);
+	}
+	
+	/**
+	* COperationSequenceHandler::RegisterOperationType - Registers an operation type, or returns the existing one if it has the same target state. Only allowed from the state environment of the owning state machine.
+	* @param[in] sTypeName - Type name. Case sensitive.
+	* @param[in] sTargetState - State that executes the operation. MUST exist.
+	* @return Operation type.
+	*/
+	POperationTypeDefinition COperationSequenceHandler::RegisterOperationType(const std::string & sTypeName, const std::string & sTargetState)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_RegisterOperationType(m_pHandle, sTypeName.c_str(), sTargetState.c_str(), &hDefinition));
+		
+		if (!hDefinition) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationTypeDefinition>(m_pWrapper, hDefinition);
+	}
+	
+	/**
+	* COperationSequenceHandler::HasOperationType - Returns if a type is registered.
+	* @param[in] sTypeName - Type name.
+	* @return True if registered.
+	*/
+	bool COperationSequenceHandler::HasOperationType(const std::string & sTypeName)
+	{
+		bool resultExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_HasOperationType(m_pHandle, sTypeName.c_str(), &resultExists));
+		
+		return resultExists;
+	}
+	
+	/**
+	* COperationSequenceHandler::FindOperationType - Returns a registered type.
+	* @param[in] sTypeName - Type name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONTYPENOTFOUND; otherwise returns null.
+	* @return Operation type or null.
+	*/
+	POperationTypeDefinition COperationSequenceHandler::FindOperationType(const std::string & sTypeName, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hDefinition = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_FindOperationType(m_pHandle, sTypeName.c_str(), bFailIfNotExisting, &hDefinition));
+		
+		if (hDefinition) {
+			return std::make_shared<COperationTypeDefinition>(m_pWrapper, hDefinition);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationSequenceHandler::ListOperationTypes - Lists all registered types.
+	* @return Operation types.
+	*/
+	POperationTypeDefinitionIterator COperationSequenceHandler::ListOperationTypes()
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ListOperationTypes(m_pHandle, &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationTypeDefinitionIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	* COperationSequenceHandler::CreateSequence - Creates an empty working copy.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Working copy.
+	*/
+	POperationSequence COperationSequenceHandler::CreateSequence(const std::string & sSequenceName)
+	{
+		LibMCEnvHandle hWorkingCopy = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_CreateSequence(m_pHandle, sSequenceName.c_str(), &hWorkingCopy));
+		
+		if (!hWorkingCopy) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hWorkingCopy);
+	}
+	
+	/**
+	* COperationSequenceHandler::ParseSequenceFromString - Parses a sequence XML string into a working copy. Accepts the operationsequence/2026/11 and processsequence/2025/03 formats. Does not validate.
+	* @param[in] sXMLString - XML string.
+	* @return Working copy.
+	*/
+	POperationSequence COperationSequenceHandler::ParseSequenceFromString(const std::string & sXMLString)
+	{
+		LibMCEnvHandle hWorkingCopy = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ParseSequenceFromString(m_pHandle, sXMLString.c_str(), &hWorkingCopy));
+		
+		if (!hWorkingCopy) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hWorkingCopy);
+	}
+	
+	/**
+	* COperationSequenceHandler::ParseSequenceFromResource - Parses a sequence resource of the plugin package into a working copy. Does not validate.
+	* @param[in] sResourceName - Resource name.
+	* @return Working copy.
+	*/
+	POperationSequence COperationSequenceHandler::ParseSequenceFromResource(const std::string & sResourceName)
+	{
+		LibMCEnvHandle hWorkingCopy = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ParseSequenceFromResource(m_pHandle, sResourceName.c_str(), &hWorkingCopy));
+		
+		if (!hWorkingCopy) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hWorkingCopy);
+	}
+	
+	/**
+	* COperationSequenceHandler::ParseSequenceFromXMLDocument - Parses a sequence element of an XML document into a working copy. Does not validate.
+	* @param[in] pDocument - XML document.
+	* @param[in] sNodePath - Slash-separated path to the sequence element. Empty for the root.
+	* @return Working copy.
+	*/
+	POperationSequence COperationSequenceHandler::ParseSequenceFromXMLDocument(classParam<CXMLDocument> pDocument, const std::string & sNodePath)
+	{
+		LibMCEnvHandle hDocument = pDocument.GetHandle();
+		LibMCEnvHandle hWorkingCopy = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ParseSequenceFromXMLDocument(m_pHandle, hDocument, sNodePath.c_str(), &hWorkingCopy));
+		
+		if (!hWorkingCopy) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hWorkingCopy);
+	}
+	
+	/**
+	* COperationSequenceHandler::ValidateSequence - Validates a sequence against the registered types and its default binding group.
+	* @param[in] pSequence - Sequence to validate.
+	* @return Validation result.
+	*/
+	POperationSequenceValidationResult COperationSequenceHandler::ValidateSequence(classParam<COperationSequence> pSequence)
+	{
+		LibMCEnvHandle hSequence = pSequence.GetHandle();
+		LibMCEnvHandle hResult = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ValidateSequence(m_pHandle, hSequence, &hResult));
+		
+		if (!hResult) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceValidationResult>(m_pWrapper, hResult);
+	}
+	
+	/**
+	* COperationSequenceHandler::PublishSequence - Validates a working copy and publishes it as the next revision. Fails with OPERATIONSEQUENCEVALIDATIONFAILED or OPERATIONSEQUENCEREVISIONCONFLICT.
+	* @param[in] pWorkingCopy - Working copy.
+	* @param[in] sUserUUID - User that publishes the revision.
+	* @param[in] bOverwriteNewerRevision - If true, publishes even if a newer revision than the working copy's base exists.
+	* @return Published revision.
+	*/
+	POperationSequence COperationSequenceHandler::PublishSequence(classParam<COperationSequence> pWorkingCopy, const std::string & sUserUUID, const bool bOverwriteNewerRevision)
+	{
+		LibMCEnvHandle hWorkingCopy = pWorkingCopy.GetHandle();
+		LibMCEnvHandle hPublished = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_PublishSequence(m_pHandle, hWorkingCopy, sUserUUID.c_str(), bOverwriteNewerRevision, &hPublished));
+		
+		if (!hPublished) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hPublished);
+	}
+	
+	/**
+	* COperationSequenceHandler::EnsureSequenceFromResource - Returns the stored latest revision if it is valid. If nothing is stored, publishes the resource as revision 1. If the stored latest revision is invalid against the registered types, publishes the resource as a new revision and logs a warning. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the resource itself is invalid.
+	* @param[in] sSequenceName - Sequence name. Overrides the name in the file.
+	* @param[in] sResourceName - Resource name.
+	* @return Latest revision.
+	*/
+	POperationSequence COperationSequenceHandler::EnsureSequenceFromResource(const std::string & sSequenceName, const std::string & sResourceName)
+	{
+		LibMCEnvHandle hPublished = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_EnsureSequenceFromResource(m_pHandle, sSequenceName.c_str(), sResourceName.c_str(), &hPublished));
+		
+		if (!hPublished) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hPublished);
+	}
+	
+	/**
+	* COperationSequenceHandler::HasSequence - Returns if a sequence is published.
+	* @param[in] sSequenceName - Sequence name.
+	* @return True if published.
+	*/
+	bool COperationSequenceHandler::HasSequence(const std::string & sSequenceName)
+	{
+		bool resultExists = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_HasSequence(m_pHandle, sSequenceName.c_str(), &resultExists));
+		
+		return resultExists;
+	}
+	
+	/**
+	* COperationSequenceHandler::GetSequence - Returns the latest revision. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Latest revision.
+	*/
+	POperationSequence COperationSequenceHandler::GetSequence(const std::string & sSequenceName)
+	{
+		LibMCEnvHandle hPublished = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_GetSequence(m_pHandle, sSequenceName.c_str(), &hPublished));
+		
+		if (!hPublished) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hPublished);
+	}
+	
+	/**
+	* COperationSequenceHandler::GetSequenceRevision - Returns a specific revision. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @param[in] nRevision - Revision, 1-based.
+	* @return Revision.
+	*/
+	POperationSequence COperationSequenceHandler::GetSequenceRevision(const std::string & sSequenceName, const LibMCEnv_uint32 nRevision)
+	{
+		LibMCEnvHandle hPublished = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_GetSequenceRevision(m_pHandle, sSequenceName.c_str(), nRevision, &hPublished));
+		
+		if (!hPublished) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hPublished);
+	}
+	
+	/**
+	* COperationSequenceHandler::ListSequences - Lists the latest revision of all sequences, sorted by name.
+	* @return Sequences.
+	*/
+	POperationSequenceIterator COperationSequenceHandler::ListSequences()
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ListSequences(m_pHandle, &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	* COperationSequenceHandler::ListSequenceRevisions - Lists all stored revisions of a sequence, newest first. Fails with OPERATIONSEQUENCENOTFOUND.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Revisions.
+	*/
+	POperationSequenceIterator COperationSequenceHandler::ListSequenceRevisions(const std::string & sSequenceName)
+	{
+		LibMCEnvHandle hIterator = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ListSequenceRevisions(m_pHandle, sSequenceName.c_str(), &hIterator));
+		
+		if (!hIterator) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceIterator>(m_pWrapper, hIterator);
+	}
+	
+	/**
+	* COperationSequenceHandler::FindSequenceRevisionByUUID - Returns a stored revision by its revision UUID, e.g. from build metadata.
+	* @param[in] sRevisionUUID - Revision UUID.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCENOTFOUND; otherwise returns null.
+	* @return Revision or null.
+	*/
+	POperationSequence COperationSequenceHandler::FindSequenceRevisionByUUID(const std::string & sRevisionUUID, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hPublished = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_FindSequenceRevisionByUUID(m_pHandle, sRevisionUUID.c_str(), bFailIfNotExisting, &hPublished));
+		
+		if (hPublished) {
+			return std::make_shared<COperationSequence>(m_pWrapper, hPublished);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationSequenceHandler::ValidateDispatcherTransitions - Checks that the dispatcher state declares an outstate to the target state of every registered type, and that every target state declares an outstate back to the dispatcher. Fails with OPERATIONDISPATCHERTRANSITIONMISSING and lists all missing outstates. Only allowed from the state environment of the owning state machine.
+	* @param[in] sDispatcherState - Orchestrator state. MUST exist.
+	*/
+	void COperationSequenceHandler::ValidateDispatcherTransitions(const std::string & sDispatcherState)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_ValidateDispatcherTransitions(m_pHandle, sDispatcherState.c_str()));
+	}
+	
+	/**
+	* COperationSequenceHandler::SetStatusParameterGroup - Mirrors execution status and resolved values into a declared parameter group of the owning state machine. Only existing parameters are written.
+	* @param[in] sGroupName - Parameter group. Empty disables mirroring.
+	* @param[in] sValuePrefix - Prefix for the type and resolved values, e.g. op_.
+	*/
+	void COperationSequenceHandler::SetStatusParameterGroup(const std::string & sGroupName, const std::string & sValuePrefix)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceHandler_SetStatusParameterGroup(m_pHandle, sGroupName.c_str(), sValuePrefix.c_str()));
+	}
+	
+	/**
+	 * Method definitions for class CDispatchedOperation
+	 */
+	
+	/**
+	* CDispatchedOperation::GetUUID - Returns the operation UUID.
+	* @return UUID.
+	*/
+	std::string CDispatchedOperation::GetUUID()
+	{
+		LibMCEnv_uint32 bytesNeededUUID = 0;
+		LibMCEnv_uint32 bytesWrittenUUID = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetUUID(m_pHandle, 0, &bytesNeededUUID, nullptr));
+		std::vector<char> bufferUUID(bytesNeededUUID);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetUUID(m_pHandle, bytesNeededUUID, &bytesWrittenUUID, &bufferUUID[0]));
+		
+		return std::string(&bufferUUID[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetTypeName - Returns the operation type.
+	* @return Type name.
+	*/
+	std::string CDispatchedOperation::GetTypeName()
+	{
+		LibMCEnv_uint32 bytesNeededTypeName = 0;
+		LibMCEnv_uint32 bytesWrittenTypeName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetTypeName(m_pHandle, 0, &bytesNeededTypeName, nullptr));
+		std::vector<char> bufferTypeName(bytesNeededTypeName);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetTypeName(m_pHandle, bytesNeededTypeName, &bytesWrittenTypeName, &bufferTypeName[0]));
+		
+		return std::string(&bufferTypeName[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetIndex - Returns the index in the sequence.
+	* @return Index, 0-based.
+	*/
+	LibMCEnv_uint32 CDispatchedOperation::GetIndex()
+	{
+		LibMCEnv_uint32 resultIndex = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetIndex(m_pHandle, &resultIndex));
+		
+		return resultIndex;
+	}
+	
+	/**
+	* CDispatchedOperation::GetExecutionName - Returns the execution that dispatched the operation.
+	* @return Execution name.
+	*/
+	std::string CDispatchedOperation::GetExecutionName()
+	{
+		LibMCEnv_uint32 bytesNeededExecutionName = 0;
+		LibMCEnv_uint32 bytesWrittenExecutionName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetExecutionName(m_pHandle, 0, &bytesNeededExecutionName, nullptr));
+		std::vector<char> bufferExecutionName(bytesNeededExecutionName);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetExecutionName(m_pHandle, bytesNeededExecutionName, &bytesWrittenExecutionName, &bufferExecutionName[0]));
+		
+		return std::string(&bufferExecutionName[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetSequenceName - Returns the sequence name.
+	* @return Sequence name.
+	*/
+	std::string CDispatchedOperation::GetSequenceName()
+	{
+		LibMCEnv_uint32 bytesNeededSequenceName = 0;
+		LibMCEnv_uint32 bytesWrittenSequenceName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetSequenceName(m_pHandle, 0, &bytesNeededSequenceName, nullptr));
+		std::vector<char> bufferSequenceName(bytesNeededSequenceName);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetSequenceName(m_pHandle, bytesNeededSequenceName, &bytesWrittenSequenceName, &bufferSequenceName[0]));
+		
+		return std::string(&bufferSequenceName[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetRevision - Returns the sequence revision.
+	* @return Revision.
+	*/
+	LibMCEnv_uint32 CDispatchedOperation::GetRevision()
+	{
+		LibMCEnv_uint32 resultRevision = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetRevision(m_pHandle, &resultRevision));
+		
+		return resultRevision;
+	}
+	
+	/**
+	* CDispatchedOperation::GetComment - Returns the comment.
+	* @return Comment.
+	*/
+	std::string CDispatchedOperation::GetComment()
+	{
+		LibMCEnv_uint32 bytesNeededComment = 0;
+		LibMCEnv_uint32 bytesWrittenComment = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetComment(m_pHandle, 0, &bytesNeededComment, nullptr));
+		std::vector<char> bufferComment(bytesNeededComment);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetComment(m_pHandle, bytesNeededComment, &bytesWrittenComment, &bufferComment[0]));
+		
+		return std::string(&bufferComment[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetTargetState - Returns the state that executes the operation.
+	* @return State name.
+	*/
+	std::string CDispatchedOperation::GetTargetState()
+	{
+		LibMCEnv_uint32 bytesNeededTargetState = 0;
+		LibMCEnv_uint32 bytesWrittenTargetState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetTargetState(m_pHandle, 0, &bytesNeededTargetState, nullptr));
+		std::vector<char> bufferTargetState(bytesNeededTargetState);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetTargetState(m_pHandle, bytesNeededTargetState, &bytesWrittenTargetState, &bufferTargetState[0]));
+		
+		return std::string(&bufferTargetState[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetReturnState - Returns the state to continue with when the operation is done.
+	* @return State name.
+	*/
+	std::string CDispatchedOperation::GetReturnState()
+	{
+		LibMCEnv_uint32 bytesNeededReturnState = 0;
+		LibMCEnv_uint32 bytesWrittenReturnState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetReturnState(m_pHandle, 0, &bytesNeededReturnState, nullptr));
+		std::vector<char> bufferReturnState(bytesNeededReturnState);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetReturnState(m_pHandle, bytesNeededReturnState, &bytesWrittenReturnState, &bufferReturnState[0]));
+		
+		return std::string(&bufferReturnState[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::HasExplicitValue - Returns if the sequence set the value explicitly, rather than using the default.
+	* @param[in] sName - Parameter name.
+	* @return True if set explicitly.
+	*/
+	bool CDispatchedOperation::HasExplicitValue(const std::string & sName)
+	{
+		bool resultHasValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_HasExplicitValue(m_pHandle, sName.c_str(), &resultHasValue));
+		
+		return resultHasValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetStringValue - Returns a resolved value as string. Works for all parameter types.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	std::string CDispatchedOperation::GetStringValue(const std::string & sName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetStringValue(m_pHandle, sName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetStringValue(m_pHandle, sName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetIntegerValue - Returns a resolved numeric or bool value as integer. Doubles are rounded. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	LibMCEnv_int64 CDispatchedOperation::GetIntegerValue(const std::string & sName)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetIntegerValue(m_pHandle, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetDoubleValue - Returns a resolved numeric or bool value as double. Fails with OPERATIONVALUETYPEMISMATCH for string and enum parameters.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	LibMCEnv_double CDispatchedOperation::GetDoubleValue(const std::string & sName)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetDoubleValue(m_pHandle, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetBoolValue - Returns a resolved value as bool. Numbers are true unless zero.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	bool CDispatchedOperation::GetBoolValue(const std::string & sName)
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetBoolValue(m_pHandle, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::ReevaluateDoubleValue - Evaluates the raw value again against the current parameter values and clamps it.
+	* @param[in] sName - Parameter name.
+	* @return Current value.
+	*/
+	LibMCEnv_double CDispatchedOperation::ReevaluateDoubleValue(const std::string & sName)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_ReevaluateDoubleValue(m_pHandle, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::ReevaluateIntegerValue - Evaluates the raw value again against the current parameter values, clamps and rounds it.
+	* @param[in] sName - Parameter name.
+	* @return Current value.
+	*/
+	LibMCEnv_int64 CDispatchedOperation::ReevaluateIntegerValue(const std::string & sName)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_ReevaluateIntegerValue(m_pHandle, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetItemCount - Returns the number of items of an item list.
+	* @param[in] sListName - Item list name.
+	* @return Number of items.
+	*/
+	LibMCEnv_uint32 CDispatchedOperation::GetItemCount(const std::string & sListName)
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemCount(m_pHandle, sListName.c_str(), &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* CDispatchedOperation::GetItemStringValue - Returns a resolved item value as string.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	std::string CDispatchedOperation::GetItemStringValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName)
+	{
+		LibMCEnv_uint32 bytesNeededValue = 0;
+		LibMCEnv_uint32 bytesWrittenValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemStringValue(m_pHandle, sListName.c_str(), nIndex, sName.c_str(), 0, &bytesNeededValue, nullptr));
+		std::vector<char> bufferValue(bytesNeededValue);
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemStringValue(m_pHandle, sListName.c_str(), nIndex, sName.c_str(), bytesNeededValue, &bytesWrittenValue, &bufferValue[0]));
+		
+		return std::string(&bufferValue[0]);
+	}
+	
+	/**
+	* CDispatchedOperation::GetItemIntegerValue - Returns a resolved item value as integer.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	LibMCEnv_int64 CDispatchedOperation::GetItemIntegerValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName)
+	{
+		LibMCEnv_int64 resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemIntegerValue(m_pHandle, sListName.c_str(), nIndex, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetItemDoubleValue - Returns a resolved item value as double.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	LibMCEnv_double CDispatchedOperation::GetItemDoubleValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName)
+	{
+		LibMCEnv_double resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemDoubleValue(m_pHandle, sListName.c_str(), nIndex, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::GetItemBoolValue - Returns a resolved item value as bool.
+	* @param[in] sListName - Item list name.
+	* @param[in] nIndex - Item index, 0-based.
+	* @param[in] sName - Parameter name.
+	* @return Resolved value.
+	*/
+	bool CDispatchedOperation::GetItemBoolValue(const std::string & sListName, const LibMCEnv_uint32 nIndex, const std::string & sName)
+	{
+		bool resultValue = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_GetItemBoolValue(m_pHandle, sListName.c_str(), nIndex, sName.c_str(), &resultValue));
+		
+		return resultValue;
+	}
+	
+	/**
+	* CDispatchedOperation::MarkFailed - Marks the operation and its execution as failed, logs the message and updates the status mirror. The caller chooses the next state.
+	* @param[in] sMessage - Failure reason.
+	*/
+	void CDispatchedOperation::MarkFailed(const std::string & sMessage)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_DispatchedOperation_MarkFailed(m_pHandle, sMessage.c_str()));
+	}
+	
+	/**
+	 * Method definitions for class COperationSequenceExecution
+	 */
+	
+	/**
+	* COperationSequenceExecution::GetName - Returns the execution name.
+	* @return Execution name.
+	*/
+	std::string COperationSequenceExecution::GetName()
+	{
+		LibMCEnv_uint32 bytesNeededName = 0;
+		LibMCEnv_uint32 bytesWrittenName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetName(m_pHandle, 0, &bytesNeededName, nullptr));
+		std::vector<char> bufferName(bytesNeededName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetName(m_pHandle, bytesNeededName, &bytesWrittenName, &bufferName[0]));
+		
+		return std::string(&bufferName[0]);
+	}
+	
+	/**
+	* COperationSequenceExecution::GetSequence - Returns the pinned revision.
+	* @return Pinned revision.
+	*/
+	POperationSequence COperationSequenceExecution::GetSequence()
+	{
+		LibMCEnvHandle hSequence = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetSequence(m_pHandle, &hSequence));
+		
+		if (!hSequence) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequence>(m_pWrapper, hSequence);
+	}
+	
+	/**
+	* COperationSequenceExecution::GetBindingGroup - Returns the parameter group used for dollar-prefixed parameter references.
+	* @return Parameter group.
+	*/
+	std::string COperationSequenceExecution::GetBindingGroup()
+	{
+		LibMCEnv_uint32 bytesNeededGroupName = 0;
+		LibMCEnv_uint32 bytesWrittenGroupName = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetBindingGroup(m_pHandle, 0, &bytesNeededGroupName, nullptr));
+		std::vector<char> bufferGroupName(bytesNeededGroupName);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetBindingGroup(m_pHandle, bytesNeededGroupName, &bytesWrittenGroupName, &bufferGroupName[0]));
+		
+		return std::string(&bufferGroupName[0]);
+	}
+	
+	/**
+	* COperationSequenceExecution::SetBindingGroup - Changes the parameter group for subsequent dispatches. MUST exist.
+	* @param[in] sGroupName - Parameter group.
+	*/
+	void COperationSequenceExecution::SetBindingGroup(const std::string & sGroupName)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_SetBindingGroup(m_pHandle, sGroupName.c_str()));
+	}
+	
+	/**
+	* COperationSequenceExecution::GetReturnState - Returns the state that op states return to.
+	* @return State name.
+	*/
+	std::string COperationSequenceExecution::GetReturnState()
+	{
+		LibMCEnv_uint32 bytesNeededReturnState = 0;
+		LibMCEnv_uint32 bytesWrittenReturnState = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetReturnState(m_pHandle, 0, &bytesNeededReturnState, nullptr));
+		std::vector<char> bufferReturnState(bytesNeededReturnState);
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetReturnState(m_pHandle, bytesNeededReturnState, &bytesWrittenReturnState, &bufferReturnState[0]));
+		
+		return std::string(&bufferReturnState[0]);
+	}
+	
+	/**
+	* COperationSequenceExecution::GetStatus - Returns the execution status.
+	* @return Status.
+	*/
+	eOperationSequenceExecutionStatus COperationSequenceExecution::GetStatus()
+	{
+		eOperationSequenceExecutionStatus resultStatus = (eOperationSequenceExecutionStatus) 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetStatus(m_pHandle, &resultStatus));
+		
+		return resultStatus;
+	}
+	
+	/**
+	* COperationSequenceExecution::GetNextOperationIndex - Returns the index the next dispatch starts searching from.
+	* @return Index, 0-based.
+	*/
+	LibMCEnv_uint32 COperationSequenceExecution::GetNextOperationIndex()
+	{
+		LibMCEnv_uint32 resultIndex = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetNextOperationIndex(m_pHandle, &resultIndex));
+		
+		return resultIndex;
+	}
+	
+	/**
+	* COperationSequenceExecution::GetIterationCount - Returns how often the execution has been restarted.
+	* @return Number of restarts.
+	*/
+	LibMCEnv_uint32 COperationSequenceExecution::GetIterationCount()
+	{
+		LibMCEnv_uint32 resultCount = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_GetIterationCount(m_pHandle, &resultCount));
+		
+		return resultCount;
+	}
+	
+	/**
+	* COperationSequenceExecution::DispatchNextOperation - Skips disabled operations, resolves the next operation and makes it the dispatched operation of the state machine. Returns null and sets the status to Completed at the end. Fails with OPERATIONPARAMETEREVALUATIONFAILED and sets the status to Failed if a value cannot be resolved.
+	* @return Dispatched operation, or null at the end of the sequence.
+	*/
+	PDispatchedOperation COperationSequenceExecution::DispatchNextOperation()
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_DispatchNextOperation(m_pHandle, &hOperation));
+		
+		if (hOperation) {
+			return std::make_shared<CDispatchedOperation>(m_pWrapper, hOperation);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* COperationSequenceExecution::Restart - Starts again at the first operation of the pinned revision and increments the iteration count. Newer revisions are only used by the next StartOperationSequence.
+	*/
+	void COperationSequenceExecution::Restart()
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_Restart(m_pHandle));
+	}
+	
+	/**
+	* COperationSequenceExecution::Abort - Sets the status to Aborted, logs the reason and updates the status mirror.
+	* @param[in] sReason - Reason.
+	*/
+	void COperationSequenceExecution::Abort(const std::string & sReason)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_OperationSequenceExecution_Abort(m_pHandle, sReason.c_str()));
+	}
+	
+	/**
 	 * Method definitions for class CStateEnvironment
 	 */
 	
@@ -35174,6 +40164,85 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_EvaluateFormulaAsBool(m_pHandle, sFormula.c_str(), &resultValue));
 		
 		return resultValue;
+	}
+	
+	/**
+	* CStateEnvironment::GetOperationSequenceHandler - Returns the operation sequence registry of this state machine.
+	* @return Registry of this state machine.
+	*/
+	POperationSequenceHandler CStateEnvironment::GetOperationSequenceHandler()
+	{
+		LibMCEnvHandle hHandler = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetOperationSequenceHandler(m_pHandle, &hHandler));
+		
+		if (!hHandler) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceHandler>(m_pWrapper, hHandler);
+	}
+	
+	/**
+	* CStateEnvironment::StartOperationSequence - Starts an execution pinned to the latest revision of a sequence. An execution with the same name is aborted and replaced. Fails with OPERATIONSEQUENCEVALIDATIONFAILED if the latest revision is invalid.
+	* @param[in] sExecutionName - Execution name, e.g. process.
+	* @param[in] sSequenceName - Published sequence name.
+	* @param[in] sBindingGroup - Parameter group for dollar-prefixed parameter references. Empty uses the sequence's binding group. MUST exist.
+	* @param[in] sReturnState - State that op states return to. MUST exist.
+	* @return New execution.
+	*/
+	POperationSequenceExecution CStateEnvironment::StartOperationSequence(const std::string & sExecutionName, const std::string & sSequenceName, const std::string & sBindingGroup, const std::string & sReturnState)
+	{
+		LibMCEnvHandle hExecution = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_StartOperationSequence(m_pHandle, sExecutionName.c_str(), sSequenceName.c_str(), sBindingGroup.c_str(), sReturnState.c_str(), &hExecution));
+		
+		if (!hExecution) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceExecution>(m_pWrapper, hExecution);
+	}
+	
+	/**
+	* CStateEnvironment::FindOperationSequenceExecution - Returns an execution of this state machine by name.
+	* @param[in] sExecutionName - Execution name.
+	* @param[in] bFailIfNotExisting - If true, fails with OPERATIONSEQUENCEEXECUTIONNOTFOUND; otherwise returns null.
+	* @return Execution or null.
+	*/
+	POperationSequenceExecution CStateEnvironment::FindOperationSequenceExecution(const std::string & sExecutionName, const bool bFailIfNotExisting)
+	{
+		LibMCEnvHandle hExecution = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_FindOperationSequenceExecution(m_pHandle, sExecutionName.c_str(), bFailIfNotExisting, &hExecution));
+		
+		if (hExecution) {
+			return std::make_shared<COperationSequenceExecution>(m_pWrapper, hExecution);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	/**
+	* CStateEnvironment::HasDispatchedOperation - Returns if an operation has been dispatched in this state machine.
+	* @return True if an operation has been dispatched.
+	*/
+	bool CStateEnvironment::HasDispatchedOperation()
+	{
+		bool resultHasOperation = 0;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_HasDispatchedOperation(m_pHandle, &resultHasOperation));
+		
+		return resultHasOperation;
+	}
+	
+	/**
+	* CStateEnvironment::GetDispatchedOperation - Returns the operation dispatched most recently in this state machine. Fails with NOOPERATIONDISPATCHED.
+	* @return Dispatched operation.
+	*/
+	PDispatchedOperation CStateEnvironment::GetDispatchedOperation()
+	{
+		LibMCEnvHandle hOperation = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_StateEnvironment_GetDispatchedOperation(m_pHandle, &hOperation));
+		
+		if (!hOperation) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<CDispatchedOperation>(m_pWrapper, hOperation);
 	}
 	
 	/**
@@ -36869,6 +41938,22 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_EvaluateFormulaAsBool(m_pHandle, sFormula.c_str(), &resultValue));
 		
 		return resultValue;
+	}
+	
+	/**
+	* CUIEnvironment::GetOperationSequenceHandler - Returns the operation sequence registry of a state machine. Operation types cannot be registered from the user interface.
+	* @param[in] sMachineInstance - State machine instance name.
+	* @return Registry of the state machine.
+	*/
+	POperationSequenceHandler CUIEnvironment::GetOperationSequenceHandler(const std::string & sMachineInstance)
+	{
+		LibMCEnvHandle hHandler = nullptr;
+		CheckError(m_pWrapper->m_WrapperTable.m_UIEnvironment_GetOperationSequenceHandler(m_pHandle, sMachineInstance.c_str(), &hHandler));
+		
+		if (!hHandler) {
+			CheckError(LIBMCENV_ERROR_INVALIDPARAM);
+		}
+		return std::make_shared<COperationSequenceHandler>(m_pWrapper, hHandler);
 	}
 
 } // namespace LibMCEnv

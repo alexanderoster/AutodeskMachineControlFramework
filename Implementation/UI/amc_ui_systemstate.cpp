@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace AMC;
 
-CUISystemState::CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpathHandler pToolpathHandler, PStateSignalHandler pSignalHandler, PLogger pLogger, PStateJournal pStateJournal, const std::string& sTestOutputPath, PAccessControl pAccessControl, PLanguageHandler pLanguageHandler, PMeshHandler pMeshHandler, PDataSeriesHandler pDataSeriesHandler, AMCCommon::PChrono pGlobalChronoInstance, PAlertHandler pAlertHandler, LibMCData::PDataModel pDataModel, PStreamRegistry pStreamRegistry)
+CUISystemState::CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpathHandler pToolpathHandler, PStateSignalHandler pSignalHandler, PLogger pLogger, PStateJournal pStateJournal, const std::string& sTestOutputPath, PAccessControl pAccessControl, PLanguageHandler pLanguageHandler, PMeshHandler pMeshHandler, PDataSeriesHandler pDataSeriesHandler, AMCCommon::PChrono pGlobalChronoInstance, PAlertHandler pAlertHandler, LibMCData::PDataModel pDataModel, PStreamRegistry pStreamRegistry, POperationSequenceHandler pOperationSequenceHandler)
     : m_pStateMachineData(pStateMachineData),
     m_pSignalHandler(pSignalHandler),
     m_pDataModel(pDataModel),
@@ -49,7 +49,8 @@ CUISystemState::CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpa
     m_pDataSeriesHandler (pDataSeriesHandler),
     m_pGlobalChronoInstance (pGlobalChronoInstance),
     m_pAlertHandler (pAlertHandler),
-    m_pStreamRegistry (pStreamRegistry)
+    m_pStreamRegistry (pStreamRegistry),
+    m_pOperationSequenceHandler (pOperationSequenceHandler)
 {
     if (pStateMachineData.get() == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
@@ -74,6 +75,8 @@ CUISystemState::CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpa
     if (pGlobalChronoInstance.get () == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
     if (pAlertHandler.get() == nullptr)
+        throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
+    if (pOperationSequenceHandler.get() == nullptr)
         throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
 
@@ -150,6 +153,11 @@ PDataSeriesHandler CUISystemState::getDataSeriesHandler()
 PStreamRegistry CUISystemState::getStreamRegistry()
 {
     return m_pStreamRegistry;
+}
+
+POperationSequenceHandler CUISystemState::getOperationSequenceHandler()
+{
+    return m_pOperationSequenceHandler;
 }
 
 AMCCommon::PChrono CUISystemState::getGlobalChronoInstance()

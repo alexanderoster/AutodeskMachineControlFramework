@@ -743,6 +743,41 @@
 		<error name="INVALIDTELEMETRYSETTING" code="718" description="Invalid telemetry setting." />
 		<error name="INVALIDTOOLPATHPROFILEINDEX" code="719" description="Invalid toolpath profile index." />
 		<error name="INVALIDTOOLPATHMODIFIERINDEX" code="720" description="Invalid toolpath modifier index." />
+		<error name="INVALIDOPERATIONTYPENAME" code="721" description="Invalid operation type name. MUST be a non-empty alphanumeric identifier." />
+		<error name="OPERATIONTYPENOTFOUND" code="722" description="Operation type not found." />
+		<error name="OPERATIONTYPEDEFINITIONMISMATCH" code="723" description="Operation type or parameter already registered with a different definition." />
+		<error name="OPERATIONTARGETSTATENOTFOUND" code="724" description="Target state of the operation type does not exist in the state machine." />
+		<error name="INVALIDOPERATIONPARAMETERNAME" code="725" description="Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name." />
+		<error name="OPERATIONPARAMETERNOTFOUND" code="726" description="Operation parameter not found." />
+		<error name="INVALIDOPERATIONPARAMETERDEFAULT" code="727" description="Default value of the operation parameter is outside of its range or not a valid enum option." />
+		<error name="OPERATIONITEMLISTNOTFOUND" code="728" description="Operation item list not found." />
+		<error name="OPERATIONITEMLISTFULL" code="729" description="Operation item list has reached its maximum item count." />
+		<error name="INVALIDOPERATIONSEQUENCENAME" code="730" description="Invalid operation sequence name. MUST be a non-empty alphanumeric identifier." />
+		<error name="OPERATIONSEQUENCENOTFOUND" code="731" description="Operation sequence not found." />
+		<error name="INVALIDOPERATIONSEQUENCEXML" code="732" description="Operation sequence XML is malformed or has an unknown root element or namespace." />
+		<error name="OPERATIONSEQUENCEVALIDATIONFAILED" code="733" description="Operation sequence validation failed." />
+		<error name="OPERATIONSEQUENCEREVISIONCONFLICT" code="734" description="A newer revision of the operation sequence has been published in the meantime." />
+		<error name="OPERATIONSEQUENCEISPUBLISHED" code="735" description="Published operation sequences are immutable. Create a working copy to make changes." />
+		<error name="OPERATIONNOTFOUND" code="736" description="Operation not found in the sequence." />
+		<error name="OPERATIONPARAMETEREVALUATIONFAILED" code="737" description="An operation parameter value could not be evaluated." />
+		<error name="OPERATIONSEQUENCEEXECUTIONNOTFOUND" code="738" description="Operation sequence execution not found." />
+		<error name="OPERATIONSEQUENCEEXECUTIONNOTRUNNING" code="739" description="Operation sequence execution is not running." />
+		<error name="NOOPERATIONDISPATCHED" code="740" description="No operation has been dispatched in this state machine." />
+		<error name="OPERATIONVALUETYPEMISMATCH" code="741" description="Operation parameter cannot be returned in the requested type." />
+		<error name="OPERATIONDISPATCHERTRANSITIONMISSING" code="742" description="A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher." />
+		<error name="OPERATIONSEQUENCESTORAGEFAILED" code="743" description="The operation sequence revision could not be stored in the database." />
+		<error name="OPERATIONSEQUENCEREGISTRYNOTFOUND" code="744" description="No operation sequence registry exists for the state machine instance." />
+		<error name="OPERATIONTYPEREGISTRATIONNOTALLOWED" code="745" description="Operation types can only be registered from the state environment of the owning state machine." />
+		<error name="INVALIDOPERATIONITEMINDEX" code="746" description="Invalid operation item index." />
+		<error name="INVALIDOPERATIONINDEX" code="747" description="Invalid operation index." />
+		<error name="INVALIDOPERATIONSEQUENCEISSUEINDEX" code="748" description="Invalid operation sequence issue index." />
+		<error name="INVALIDOPERATIONENUMOPTIONINDEX" code="749" description="Invalid operation enum option index." />
+		<error name="OPERATIONPARAMETERHASNORANGE" code="750" description="Operation parameter has no range." />
+		<error name="INVALIDOPERATIONEXPRESSIONMODE" code="751" description="Invalid operation expression mode for this parameter type." />
+		<error name="MISSINGOPERATIONSEQUENCEEDITORSTATEMACHINE" code="752" description="The operationsequenceeditor element requires a statemachine attribute." />
+		<error name="OPERATIONSEQUENCEEDITNOTPERMITTED" code="753" description="The user is not permitted to edit operation sequences." />
+		<error name="INVALIDOPERATIONSEQUENCEJSON" code="754" description="Invalid operation sequence JSON." />
+		<error name="OPERATIONICONRESOURCENOTFOUND" code="755" description="Operation icon resource not found." />
 				
 		
 		

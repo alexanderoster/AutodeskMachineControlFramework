@@ -85,6 +85,9 @@ class ILoginHandler;
 class IPersistencyHandler;
 class IUserPreferenceHandler;
 class ISessionMetricsHandler;
+class IOperationSequenceRevision;
+class IOperationSequenceRevisionIterator;
+class IOperationSequenceStore;
 class IMachineConfigurationVersion;
 class IMachineConfigurationVersionIterator;
 class IMachineConfigurationXSD;
@@ -2564,6 +2567,152 @@ typedef IBaseSharedPtr<ISessionMetricsHandler> PISessionMetricsHandler;
 
 
 /*************************************************************************************************************************
+ Class interface for OperationSequenceRevision 
+**************************************************************************************************************************/
+
+class IOperationSequenceRevision : public virtual IBase {
+public:
+	/**
+	* IOperationSequenceRevision::GetUUID - Returns the UUID of the revision.
+	* @return Revision UUID.
+	*/
+	virtual std::string GetUUID() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetStateMachine - Returns the state machine instance the sequence belongs to.
+	* @return State machine instance name.
+	*/
+	virtual std::string GetStateMachine() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetSequenceName - Returns the sequence name.
+	* @return Sequence name.
+	*/
+	virtual std::string GetSequenceName() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetRevision - Returns the revision number.
+	* @return Revision number, 1-based.
+	*/
+	virtual LibMCData_uint32 GetRevision() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetOrigin - Returns the origin of the revision.
+	* @return Origin as integer value of LibMCEnv::eOperationSequenceOrigin.
+	*/
+	virtual LibMCData_uint32 GetOrigin() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetContent - Returns the XML content of the revision.
+	* @return XML content in the operationsequence/2026/11 format.
+	*/
+	virtual std::string GetContent() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetSHA256 - Returns the SHA256 checksum of the content.
+	* @return SHA256 checksum.
+	*/
+	virtual std::string GetSHA256() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetUserUUID - Returns the user that published the revision.
+	* @return User UUID. Empty UUID if published by the system.
+	*/
+	virtual std::string GetUserUUID() = 0;
+
+	/**
+	* IOperationSequenceRevision::GetTimestamp - Returns the publish timestamp.
+	* @return ISO 8601 UTC timestamp.
+	*/
+	virtual std::string GetTimestamp() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceRevision> PIOperationSequenceRevision;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceRevisionIterator 
+**************************************************************************************************************************/
+
+class IOperationSequenceRevisionIterator : public virtual IIterator {
+public:
+	/**
+	* IOperationSequenceRevisionIterator::GetCurrent - Returns the current OperationSequenceRevision instance.
+	* @return Current revision.
+	*/
+	virtual IOperationSequenceRevision * GetCurrent() = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceRevisionIterator> PIOperationSequenceRevisionIterator;
+
+
+/*************************************************************************************************************************
+ Class interface for OperationSequenceStore 
+**************************************************************************************************************************/
+
+class IOperationSequenceStore : public virtual IBase {
+public:
+	/**
+	* IOperationSequenceStore::StoreRevision - Stores a new revision. Fails if the revision number already exists for the sequence.
+	* @param[in] sUUID - Revision UUID.
+	* @param[in] sStateMachine - State machine instance name. MUST NOT be empty.
+	* @param[in] sSequenceName - Sequence name. MUST NOT be empty.
+	* @param[in] nRevision - Revision number. MUST be larger than 0.
+	* @param[in] nOrigin - Origin as integer value of LibMCEnv::eOperationSequenceOrigin.
+	* @param[in] sContent - XML content.
+	* @param[in] sUserUUID - User UUID. Empty for the system.
+	* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+	* @return Stored revision.
+	*/
+	virtual IOperationSequenceRevision * StoreRevision(const std::string & sUUID, const std::string & sStateMachine, const std::string & sSequenceName, const LibMCData_uint32 nRevision, const LibMCData_uint32 nOrigin, const std::string & sContent, const std::string & sUserUUID, const LibMCData_uint64 nAbsoluteTimeStamp) = 0;
+
+	/**
+	* IOperationSequenceStore::GetLatestRevisionNumber - Returns the latest revision number of a sequence.
+	* @param[in] sStateMachine - State machine instance name.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Latest revision, or 0 if nothing is stored.
+	*/
+	virtual LibMCData_uint32 GetLatestRevisionNumber(const std::string & sStateMachine, const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceStore::ListLatestRevisions - Lists the latest revision of every sequence of a state machine, sorted by name.
+	* @param[in] sStateMachine - State machine instance name.
+	* @return Latest revisions.
+	*/
+	virtual IOperationSequenceRevisionIterator * ListLatestRevisions(const std::string & sStateMachine) = 0;
+
+	/**
+	* IOperationSequenceStore::ListRevisions - Lists all revisions of a sequence, newest first.
+	* @param[in] sStateMachine - State machine instance name.
+	* @param[in] sSequenceName - Sequence name.
+	* @return Revisions.
+	*/
+	virtual IOperationSequenceRevisionIterator * ListRevisions(const std::string & sStateMachine, const std::string & sSequenceName) = 0;
+
+	/**
+	* IOperationSequenceStore::FindRevision - Returns a specific revision of a sequence.
+	* @param[in] sStateMachine - State machine instance name.
+	* @param[in] sSequenceName - Sequence name.
+	* @param[in] nRevision - Revision number.
+	* @return Revision, or null if not found.
+	*/
+	virtual IOperationSequenceRevision * FindRevision(const std::string & sStateMachine, const std::string & sSequenceName, const LibMCData_uint32 nRevision) = 0;
+
+	/**
+	* IOperationSequenceStore::FindRevisionByUUID - Returns a revision by its UUID.
+	* @param[in] sUUID - Revision UUID.
+	* @return Revision, or null if not found.
+	*/
+	virtual IOperationSequenceRevision * FindRevisionByUUID(const std::string & sUUID) = 0;
+
+};
+
+typedef IBaseSharedPtr<IOperationSequenceStore> PIOperationSequenceStore;
+
+
+/*************************************************************************************************************************
  Class interface for MachineConfigurationVersion 
 **************************************************************************************************************************/
 
@@ -3002,6 +3151,12 @@ public:
 	* @return SessionMetricsHandler instance.
 	*/
 	virtual ISessionMetricsHandler * CreateSessionMetricsHandler() = 0;
+
+	/**
+	* IDataModel::CreateOperationSequenceStore - creates an operation sequence store instance.
+	* @return OperationSequenceStore instance.
+	*/
+	virtual IOperationSequenceStore * CreateOperationSequenceStore() = 0;
 
 	/**
 	* IDataModel::SetBaseTempDirectory - Sets a custom base temp directory. An empty string defaults to the system temp directory.

@@ -3068,6 +3068,193 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_userpreferencehandler_deleteuserpre
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_sessionmetricshandler_addfrontendmetrics(LibMCData_SessionMetricsHandler pSessionMetricsHandler, const char * pSessionUUID, const char * pLabel, LibMCData_uint64 nIntervalStart, LibMCData_uint64 nIntervalEnd, LibMCData_uint32 nRequestCount, LibMCData_double dSumDurationMS, LibMCData_double dMinDurationMS, LibMCData_double dMaxDurationMS, LibMCData_double dSumSqDurationMS, LibMCData_uint64 nPayloadSumBytes, LibMCData_uint64 nPayloadMaxBytes, LibMCData_double dServerBuildSumMS, LibMCData_uint64 nAbsoluteTimeStamp);
 
 /*************************************************************************************************************************
+ Class definition for OperationSequenceRevision
+**************************************************************************************************************************/
+
+/**
+* Returns the UUID of the revision.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUUIDBuffer -  buffer of Revision UUID., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getuuid(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nUUIDBufferSize, LibMCData_uint32* pUUIDNeededChars, char * pUUIDBuffer);
+
+/**
+* Returns the state machine instance the sequence belongs to.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nStateMachineBufferSize - size of the buffer (including trailing 0)
+* @param[out] pStateMachineNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pStateMachineBuffer -  buffer of State machine instance name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getstatemachine(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nStateMachineBufferSize, LibMCData_uint32* pStateMachineNeededChars, char * pStateMachineBuffer);
+
+/**
+* Returns the sequence name.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nSequenceNameBufferSize - size of the buffer (including trailing 0)
+* @param[out] pSequenceNameNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSequenceNameBuffer -  buffer of Sequence name., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getsequencename(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nSequenceNameBufferSize, LibMCData_uint32* pSequenceNameNeededChars, char * pSequenceNameBuffer);
+
+/**
+* Returns the revision number.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[out] pRevision - Revision number, 1-based.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getrevision(LibMCData_OperationSequenceRevision pOperationSequenceRevision, LibMCData_uint32 * pRevision);
+
+/**
+* Returns the origin of the revision.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[out] pOrigin - Origin as integer value of LibMCEnv::eOperationSequenceOrigin.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getorigin(LibMCData_OperationSequenceRevision pOperationSequenceRevision, LibMCData_uint32 * pOrigin);
+
+/**
+* Returns the XML content of the revision.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nContentBufferSize - size of the buffer (including trailing 0)
+* @param[out] pContentNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pContentBuffer -  buffer of XML content in the operationsequence/2026/11 format., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getcontent(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nContentBufferSize, LibMCData_uint32* pContentNeededChars, char * pContentBuffer);
+
+/**
+* Returns the SHA256 checksum of the content.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nSHA256BufferSize - size of the buffer (including trailing 0)
+* @param[out] pSHA256NeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pSHA256Buffer -  buffer of SHA256 checksum., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getsha256(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nSHA256BufferSize, LibMCData_uint32* pSHA256NeededChars, char * pSHA256Buffer);
+
+/**
+* Returns the user that published the revision.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nUserUUIDBufferSize - size of the buffer (including trailing 0)
+* @param[out] pUserUUIDNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pUserUUIDBuffer -  buffer of User UUID. Empty UUID if published by the system., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_getuseruuid(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nUserUUIDBufferSize, LibMCData_uint32* pUserUUIDNeededChars, char * pUserUUIDBuffer);
+
+/**
+* Returns the publish timestamp.
+*
+* @param[in] pOperationSequenceRevision - OperationSequenceRevision instance.
+* @param[in] nTimestampUTCBufferSize - size of the buffer (including trailing 0)
+* @param[out] pTimestampUTCNeededChars - will be filled with the count of the written bytes, or needed buffer size.
+* @param[out] pTimestampUTCBuffer -  buffer of ISO 8601 UTC timestamp., may be NULL
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevision_gettimestamp(LibMCData_OperationSequenceRevision pOperationSequenceRevision, const LibMCData_uint32 nTimestampUTCBufferSize, LibMCData_uint32* pTimestampUTCNeededChars, char * pTimestampUTCBuffer);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceRevisionIterator
+**************************************************************************************************************************/
+
+/**
+* Returns the current OperationSequenceRevision instance.
+*
+* @param[in] pOperationSequenceRevisionIterator - OperationSequenceRevisionIterator instance.
+* @param[out] pInstance - Current revision.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencerevisioniterator_getcurrent(LibMCData_OperationSequenceRevisionIterator pOperationSequenceRevisionIterator, LibMCData_OperationSequenceRevision * pInstance);
+
+/*************************************************************************************************************************
+ Class definition for OperationSequenceStore
+**************************************************************************************************************************/
+
+/**
+* Stores a new revision. Fails if the revision number already exists for the sequence.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pUUID - Revision UUID.
+* @param[in] pStateMachine - State machine instance name. MUST NOT be empty.
+* @param[in] pSequenceName - Sequence name. MUST NOT be empty.
+* @param[in] nRevision - Revision number. MUST be larger than 0.
+* @param[in] nOrigin - Origin as integer value of LibMCEnv::eOperationSequenceOrigin.
+* @param[in] pContent - XML content.
+* @param[in] pUserUUID - User UUID. Empty for the system.
+* @param[in] nAbsoluteTimeStamp - Absolute Time Stamp in Microseconds since 1970.
+* @param[out] pInstance - Stored revision.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_storerevision(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pUUID, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 nRevision, LibMCData_uint32 nOrigin, const char * pContent, const char * pUserUUID, LibMCData_uint64 nAbsoluteTimeStamp, LibMCData_OperationSequenceRevision * pInstance);
+
+/**
+* Returns the latest revision number of a sequence.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pStateMachine - State machine instance name.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pRevision - Latest revision, or 0 if nothing is stored.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_getlatestrevisionnumber(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 * pRevision);
+
+/**
+* Lists the latest revision of every sequence of a state machine, sorted by name.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pStateMachine - State machine instance name.
+* @param[out] pIterator - Latest revisions.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_listlatestrevisions(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, LibMCData_OperationSequenceRevisionIterator * pIterator);
+
+/**
+* Lists all revisions of a sequence, newest first.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pStateMachine - State machine instance name.
+* @param[in] pSequenceName - Sequence name.
+* @param[out] pIterator - Revisions.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_listrevisions(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_OperationSequenceRevisionIterator * pIterator);
+
+/**
+* Returns a specific revision of a sequence.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pStateMachine - State machine instance name.
+* @param[in] pSequenceName - Sequence name.
+* @param[in] nRevision - Revision number.
+* @param[out] pInstance - Revision, or null if not found.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_findrevision(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pStateMachine, const char * pSequenceName, LibMCData_uint32 nRevision, LibMCData_OperationSequenceRevision * pInstance);
+
+/**
+* Returns a revision by its UUID.
+*
+* @param[in] pOperationSequenceStore - OperationSequenceStore instance.
+* @param[in] pUUID - Revision UUID.
+* @param[out] pInstance - Revision, or null if not found.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_operationsequencestore_findrevisionbyuuid(LibMCData_OperationSequenceStore pOperationSequenceStore, const char * pUUID, LibMCData_OperationSequenceRevision * pInstance);
+
+/*************************************************************************************************************************
  Class definition for MachineConfigurationVersion
 **************************************************************************************************************************/
 
@@ -3663,6 +3850,15 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createuserpreferencehandl
 * @return error code or 0 (success)
 */
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createsessionmetricshandler(LibMCData_DataModel pDataModel, LibMCData_SessionMetricsHandler * pSessionMetricsHandler);
+
+/**
+* creates an operation sequence store instance.
+*
+* @param[in] pDataModel - DataModel instance.
+* @param[out] pOperationSequenceStore - OperationSequenceStore instance.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_datamodel_createoperationsequencestore(LibMCData_DataModel pDataModel, LibMCData_OperationSequenceStore * pOperationSequenceStore);
 
 /**
 * Sets a custom base temp directory. An empty string defaults to the system temp directory.

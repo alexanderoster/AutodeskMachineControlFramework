@@ -62,8 +62,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcenv_jsonobject.hpp"
 #include "libmcenv_videostream.hpp"
 #include "libmcenv_formula.hpp"
+#include "libmcenv_operationsequencehandler.hpp"
+#include "libmcenv_operationsequenceerrors.hpp"
 
 #include "amc_telemetry.hpp"
+#include "amc_operationsequencehandler.hpp"
 #include "amc_logger.hpp"
 #include "amc_driverhandler.hpp"
 #include "amc_parameterhandler.hpp"
@@ -1280,5 +1283,56 @@ ITelemetryChannel* CStateEnvironment::FindTelemetryChannel(const std::string& sC
 
 	return new CTelemetryChannel(pTelemetryHandler, m_sInstanceName, sChannelIdentifier);
 
+}
+
+static AMC::POperationSequenceRegistry findOperationSequenceRegistry(AMC::CSystemState* pSystemState, const std::string& sInstanceName)
+{
+	auto pHandler = pSystemState->operationSequenceHandler();
+	if (pHandler == nullptr)
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INTERNALERROR);
+
+	return callOperationSequenceCore([&]() { return pHandler->findRegistry(sInstanceName, true); });
+}
+
+IOperationSequenceHandler* CStateEnvironment::GetOperationSequenceHandler()
+{
+	auto pRegistry = findOperationSequenceRegistry(m_pSystemState.get(), m_sInstanceName);
+
+	AMC::PResourcePackage pResourcePackage;
+	auto pUIHandler = m_pSystemState->uiHandler();
+	if (pUIHandler != nullptr)
+		pResourcePackage = pUIHandler->getCoreResourcePackage();
+
+	return new COperationSequenceHandler(pRegistry, true, pResourcePackage, AMC::eOperationSequenceOrigin::Code);
+}
+
+IOperationSequenceExecution* CStateEnvironment::StartOperationSequence(const std::string& sExecutionName, const std::string& sSequenceName, const std::string& sBindingGroup, const std::string& sReturnState)
+{
+	auto pRegistry = findOperationSequenceRegistry(m_pSystemState.get(), m_sInstanceName);
+	auto pExecution = callOperationSequenceCore([&]() { return pRegistry->startExecution(sExecutionName, sSequenceName, sBindingGroup, sReturnState); });
+	return new COperationSequenceExecution(pExecution, pRegistry);
+}
+
+IOperationSequenceExecution* CStateEnvironment::FindOperationSequenceExecution(const std::string& sExecutionName, const bool bFailIfNotExisting)
+{
+	auto pRegistry = findOperationSequenceRegistry(m_pSystemState.get(), m_sInstanceName);
+	auto pExecution = callOperationSequenceCore([&]() { return pRegistry->findExecution(sExecutionName, bFailIfNotExisting); });
+	if (pExecution.get() == nullptr)
+		return nullptr;
+
+	return new COperationSequenceExecution(pExecution, pRegistry);
+}
+
+bool CStateEnvironment::HasDispatchedOperation()
+{
+	auto pRegistry = findOperationSequenceRegistry(m_pSystemState.get(), m_sInstanceName);
+	return pRegistry->hasDispatchedOperation();
+}
+
+IDispatchedOperation* CStateEnvironment::GetDispatchedOperation()
+{
+	auto pRegistry = findOperationSequenceRegistry(m_pSystemState.get(), m_sInstanceName);
+	auto pOperation = callOperationSequenceCore([&]() { return pRegistry->getDispatchedOperation(); });
+	return new CDispatchedOperation(pOperation);
 }
 

@@ -364,6 +364,38 @@ typedef void * LibMCEnv_pvoid;
 #define LIBMCENV_ERROR_FORMULAEVALUATIONFAILED 10267 /** Formula evaluation failed. */
 #define LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE 10268 /** Session and user references are only available in formulas of the UI environment. */
 #define LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX 10269 /** Invalid formula reference index. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONTYPENAME 10270 /** Invalid operation type name. MUST be a non-empty alphanumeric identifier. */
+#define LIBMCENV_ERROR_OPERATIONTYPENOTFOUND 10271 /** Operation type not found. */
+#define LIBMCENV_ERROR_OPERATIONTYPEDEFINITIONMISMATCH 10272 /** Operation type or parameter already registered with a different definition. */
+#define LIBMCENV_ERROR_OPERATIONTARGETSTATENOTFOUND 10273 /** Target state of the operation type does not exist in the state machine. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERNAME 10274 /** Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name. */
+#define LIBMCENV_ERROR_OPERATIONPARAMETERNOTFOUND 10275 /** Operation parameter not found. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERDEFAULT 10276 /** Default value of the operation parameter is outside of its range or not a valid enum option. */
+#define LIBMCENV_ERROR_OPERATIONITEMLISTNOTFOUND 10277 /** Operation item list not found. */
+#define LIBMCENV_ERROR_OPERATIONITEMLISTFULL 10278 /** Operation item list has reached its maximum item count. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCENAME 10279 /** Invalid operation sequence name. MUST be a non-empty alphanumeric identifier. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCENOTFOUND 10280 /** Operation sequence not found. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEXML 10281 /** Operation sequence XML is malformed or has an unknown root element or namespace. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED 10282 /** Operation sequence validation failed. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT 10283 /** A newer revision of the operation sequence has been published in the meantime. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEISPUBLISHED 10284 /** Published operation sequences are immutable. Create a working copy to make changes. */
+#define LIBMCENV_ERROR_OPERATIONNOTFOUND 10285 /** Operation not found in the sequence. */
+#define LIBMCENV_ERROR_OPERATIONPARAMETEREVALUATIONFAILED 10286 /** An operation parameter value could not be evaluated. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND 10287 /** Operation sequence execution not found. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING 10288 /** Operation sequence execution is not running. */
+#define LIBMCENV_ERROR_NOOPERATIONDISPATCHED 10289 /** No operation has been dispatched in this state machine. */
+#define LIBMCENV_ERROR_OPERATIONVALUETYPEMISMATCH 10290 /** Operation parameter cannot be returned in the requested type. */
+#define LIBMCENV_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING 10291 /** A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCESTORAGEFAILED 10292 /** The operation sequence revision could not be stored in the database. */
+#define LIBMCENV_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND 10293 /** No operation sequence registry exists for the state machine instance. */
+#define LIBMCENV_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED 10294 /** Operation types can only be registered from the state environment of the owning state machine. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONITEMINDEX 10295 /** Invalid operation item index. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONINDEX 10296 /** Invalid operation index. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX 10297 /** Invalid operation sequence issue index. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONENUMOPTIONINDEX 10298 /** Invalid operation enum option index. */
+#define LIBMCENV_ERROR_OPERATIONPARAMETERHASNORANGE 10299 /** Operation parameter has no range. */
+#define LIBMCENV_ERROR_INVALIDOPERATIONEXPRESSIONMODE 10300 /** Invalid operation expression mode for this parameter type. */
+#define LIBMCENV_ERROR_OPERATIONICONRESOURCENOTFOUND 10301 /** Operation icon resource not found. */
 
 /*************************************************************************************************************************
  Error strings for LibMCEnv
@@ -640,6 +672,38 @@ inline const char * LIBMCENV_GETERRORSTRING (LibMCEnvResult nErrorCode) {
     case LIBMCENV_ERROR_FORMULAEVALUATIONFAILED: return "Formula evaluation failed.";
     case LIBMCENV_ERROR_FORMULASESSIONREFERENCESNOTAVAILABLE: return "Session and user references are only available in formulas of the UI environment.";
     case LIBMCENV_ERROR_INVALIDFORMULAREFERENCEINDEX: return "Invalid formula reference index.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONTYPENAME: return "Invalid operation type name. MUST be a non-empty alphanumeric identifier.";
+    case LIBMCENV_ERROR_OPERATIONTYPENOTFOUND: return "Operation type not found.";
+    case LIBMCENV_ERROR_OPERATIONTYPEDEFINITIONMISMATCH: return "Operation type or parameter already registered with a different definition.";
+    case LIBMCENV_ERROR_OPERATIONTARGETSTATENOTFOUND: return "Target state of the operation type does not exist in the state machine.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERNAME: return "Invalid operation parameter name. MUST be an alphanumeric identifier and MUST NOT be a reserved attribute name.";
+    case LIBMCENV_ERROR_OPERATIONPARAMETERNOTFOUND: return "Operation parameter not found.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONPARAMETERDEFAULT: return "Default value of the operation parameter is outside of its range or not a valid enum option.";
+    case LIBMCENV_ERROR_OPERATIONITEMLISTNOTFOUND: return "Operation item list not found.";
+    case LIBMCENV_ERROR_OPERATIONITEMLISTFULL: return "Operation item list has reached its maximum item count.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCENAME: return "Invalid operation sequence name. MUST be a non-empty alphanumeric identifier.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCENOTFOUND: return "Operation sequence not found.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEXML: return "Operation sequence XML is malformed or has an unknown root element or namespace.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEVALIDATIONFAILED: return "Operation sequence validation failed.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEREVISIONCONFLICT: return "A newer revision of the operation sequence has been published in the meantime.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEISPUBLISHED: return "Published operation sequences are immutable. Create a working copy to make changes.";
+    case LIBMCENV_ERROR_OPERATIONNOTFOUND: return "Operation not found in the sequence.";
+    case LIBMCENV_ERROR_OPERATIONPARAMETEREVALUATIONFAILED: return "An operation parameter value could not be evaluated.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTFOUND: return "Operation sequence execution not found.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEEXECUTIONNOTRUNNING: return "Operation sequence execution is not running.";
+    case LIBMCENV_ERROR_NOOPERATIONDISPATCHED: return "No operation has been dispatched in this state machine.";
+    case LIBMCENV_ERROR_OPERATIONVALUETYPEMISMATCH: return "Operation parameter cannot be returned in the requested type.";
+    case LIBMCENV_ERROR_OPERATIONDISPATCHERTRANSITIONMISSING: return "A dispatcher state is missing an outstate to an operation target state, or a target state is missing an outstate back to the dispatcher.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCESTORAGEFAILED: return "The operation sequence revision could not be stored in the database.";
+    case LIBMCENV_ERROR_OPERATIONSEQUENCEREGISTRYNOTFOUND: return "No operation sequence registry exists for the state machine instance.";
+    case LIBMCENV_ERROR_OPERATIONTYPEREGISTRATIONNOTALLOWED: return "Operation types can only be registered from the state environment of the owning state machine.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONITEMINDEX: return "Invalid operation item index.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONINDEX: return "Invalid operation index.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONSEQUENCEISSUEINDEX: return "Invalid operation sequence issue index.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONENUMOPTIONINDEX: return "Invalid operation enum option index.";
+    case LIBMCENV_ERROR_OPERATIONPARAMETERHASNORANGE: return "Operation parameter has no range.";
+    case LIBMCENV_ERROR_INVALIDOPERATIONEXPRESSIONMODE: return "Invalid operation expression mode for this parameter type.";
+    case LIBMCENV_ERROR_OPERATIONICONRESOURCENOTFOUND: return "Operation icon resource not found.";
     default: return "unknown error";
   }
 }
@@ -735,6 +799,22 @@ typedef LibMCEnvHandle LibMCEnv_MachineConfigurationHandler;
 typedef LibMCEnvHandle LibMCEnv_TelemetryMarkerScope;
 typedef LibMCEnvHandle LibMCEnv_TelemetryChannel;
 typedef LibMCEnvHandle LibMCEnv_Formula;
+typedef LibMCEnvHandle LibMCEnv_OperationParameterDefinition;
+typedef LibMCEnvHandle LibMCEnv_OperationParameterDefinitionIterator;
+typedef LibMCEnvHandle LibMCEnv_OperationParameterContainer;
+typedef LibMCEnvHandle LibMCEnv_OperationItemListDefinition;
+typedef LibMCEnvHandle LibMCEnv_OperationItemListDefinitionIterator;
+typedef LibMCEnvHandle LibMCEnv_OperationTypeDefinition;
+typedef LibMCEnvHandle LibMCEnv_OperationTypeDefinitionIterator;
+typedef LibMCEnvHandle LibMCEnv_OperationItem;
+typedef LibMCEnvHandle LibMCEnv_Operation;
+typedef LibMCEnvHandle LibMCEnv_OperationIterator;
+typedef LibMCEnvHandle LibMCEnv_OperationSequence;
+typedef LibMCEnvHandle LibMCEnv_OperationSequenceIterator;
+typedef LibMCEnvHandle LibMCEnv_OperationSequenceValidationResult;
+typedef LibMCEnvHandle LibMCEnv_OperationSequenceHandler;
+typedef LibMCEnvHandle LibMCEnv_DispatchedOperation;
+typedef LibMCEnvHandle LibMCEnv_OperationSequenceExecution;
 typedef LibMCEnvHandle LibMCEnv_StateEnvironment;
 typedef LibMCEnvHandle LibMCEnv_UIItem;
 typedef LibMCEnvHandle LibMCEnv_UIEnvironment;
@@ -912,6 +992,49 @@ namespace LibMCEnv {
     Archived = 90 /** The signal has been archived. */
   };
   
+  enum class eOperationParameterType : LibMCEnv_int32 {
+    Unknown = 0,
+    String = 1,
+    Integer = 2,
+    Double = 3,
+    Bool = 4,
+    Enum = 5
+  };
+  
+  enum class eOperationExpressionMode : LibMCEnv_int32 {
+    LiteralOnly = 1,
+    LiteralOrReference = 2,
+    Formula = 3
+  };
+  
+  enum class eOperationValueKind : LibMCEnv_int32 {
+    Default = 0,
+    Literal = 1,
+    Reference = 2,
+    Formula = 3
+  };
+  
+  enum class eOperationSequenceOrigin : LibMCEnv_int32 {
+    Unknown = 0,
+    Resource = 1,
+    String = 2,
+    Code = 3,
+    Editor = 4,
+    Document = 5
+  };
+  
+  enum class eOperationSequenceExecutionStatus : LibMCEnv_int32 {
+    Running = 1,
+    Completed = 2,
+    Aborted = 3,
+    Failed = 4
+  };
+  
+  enum class eOperationSequenceIssueSeverity : LibMCEnv_int32 {
+    Warning = 1,
+    Error = 2
+  };
+  
   /*************************************************************************************************************************
    Declaration of structs
   **************************************************************************************************************************/
@@ -1016,6 +1139,12 @@ typedef LibMCEnv::eBuildExecutionStatus eLibMCEnvBuildExecutionStatus;
 typedef LibMCEnv::eDataTableColumnType eLibMCEnvDataTableColumnType;
 typedef LibMCEnv::eTelemetryChannelType eLibMCEnvTelemetryChannelType;
 typedef LibMCEnv::eSignalPhase eLibMCEnvSignalPhase;
+typedef LibMCEnv::eOperationParameterType eLibMCEnvOperationParameterType;
+typedef LibMCEnv::eOperationExpressionMode eLibMCEnvOperationExpressionMode;
+typedef LibMCEnv::eOperationValueKind eLibMCEnvOperationValueKind;
+typedef LibMCEnv::eOperationSequenceOrigin eLibMCEnvOperationSequenceOrigin;
+typedef LibMCEnv::eOperationSequenceExecutionStatus eLibMCEnvOperationSequenceExecutionStatus;
+typedef LibMCEnv::eOperationSequenceIssueSeverity eLibMCEnvOperationSequenceIssueSeverity;
 typedef LibMCEnv::sPosition2D sLibMCEnvPosition2D;
 typedef LibMCEnv::sHatch2D sLibMCEnvHatch2D;
 typedef LibMCEnv::sMeshVertex3D sLibMCEnvMeshVertex3D;

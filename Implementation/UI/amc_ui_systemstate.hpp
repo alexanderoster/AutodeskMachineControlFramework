@@ -55,6 +55,7 @@ namespace AMC {
 	class CAlertHandler;
 	class CLanguageHandler;
 	class CStreamRegistry;
+	class COperationSequenceHandler;
 
 	amcDeclareDependingClass(CLogger, PLogger);
 	amcDeclareDependingClass(CStateJournal, PStateJournal);
@@ -68,6 +69,7 @@ namespace AMC {
 	amcDeclareDependingClass(CAlertHandler, PAlertHandler);
 	amcDeclareDependingClass(CLanguageHandler, PLanguageHandler);
 	amcDeclareDependingClass(CStreamRegistry, PStreamRegistry);
+	amcDeclareDependingClass(COperationSequenceHandler, POperationSequenceHandler);
 	amcDeclareDependingClass(CUISystemState, PUISystemState);
 
 	class CUISystemState {
@@ -83,6 +85,7 @@ namespace AMC {
 		PDataSeriesHandler m_pDataSeriesHandler;
 		PAlertHandler m_pAlertHandler;
 		PStreamRegistry m_pStreamRegistry;
+		POperationSequenceHandler m_pOperationSequenceHandler;
 				
 		// LibMCData::PDataModel is thread safe, so it can be shared between contexts.
 		LibMCData::PDataModel m_pDataModel;
@@ -94,7 +97,7 @@ namespace AMC {
 		std::string m_sTestOutputPath;
 
 	public:
-		CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpathHandler pToolpathHandler, PStateSignalHandler pSignalHandler, PLogger pLogger, PStateJournal pStateJournal, const std::string& sTestOutputPath, PAccessControl pAccessControl, PLanguageHandler pLanguageHandler, PMeshHandler pMeshHandler, PDataSeriesHandler pDataSeriesHandler, AMCCommon::PChrono pGlobalChronoInstance, PAlertHandler pAlertHandler, LibMCData::PDataModel pDataModel, PStreamRegistry pStreamRegistry);
+		CUISystemState(PStateMachineData pStateMachineData, AMC::PToolpathHandler pToolpathHandler, PStateSignalHandler pSignalHandler, PLogger pLogger, PStateJournal pStateJournal, const std::string& sTestOutputPath, PAccessControl pAccessControl, PLanguageHandler pLanguageHandler, PMeshHandler pMeshHandler, PDataSeriesHandler pDataSeriesHandler, AMCCommon::PChrono pGlobalChronoInstance, PAlertHandler pAlertHandler, LibMCData::PDataModel pDataModel, PStreamRegistry pStreamRegistry, POperationSequenceHandler pOperationSequenceHandler);
 
 		virtual ~CUISystemState();
 
@@ -113,6 +116,7 @@ namespace AMC {
 		PMeshHandler getMeshHandler();
 		PDataSeriesHandler getDataSeriesHandler();
 		PStreamRegistry getStreamRegistry();
+		POperationSequenceHandler getOperationSequenceHandler();
 		AMCCommon::PChrono getGlobalChronoInstance();
 
 		std::string getTestOutputPath();

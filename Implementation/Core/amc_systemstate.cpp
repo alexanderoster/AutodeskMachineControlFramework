@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_languagehandler.hpp"
 #include "amc_meshhandler.hpp"
 #include "amc_streamregistry.hpp"
+#include "amc_operationsequencehandler.hpp"
 
 #include "libmcdata_dynamic.hpp"
 #include "libmc_types.hpp"
@@ -109,8 +110,9 @@ namespace AMC {
 		m_pLanguageHandler = std::make_shared<CLanguageHandler>();
 		m_pDataSeriesHandler = std::make_shared<CDataSeriesHandler>();
 		m_pAlertHandler = std::make_shared<CAlertHandler>();
+		m_pOperationSequenceHandler = std::make_shared<COperationSequenceHandler>(m_pStateMachineData, m_pLogger, m_pDataModel, m_pGlobalChrono);
 
-		auto pUISystemState = std::make_shared<CUISystemState>(m_pStateMachineData, m_pToolpathHandler, m_pSignalHandler, m_pLogger, m_pStateJournal, getTestEnvironmentPath(), m_pAccessControl, m_pLanguageHandler, m_pMeshHandler, m_pDataSeriesHandler, m_pGlobalChrono, m_pAlertHandler, m_pDataModel, m_pStreamRegistry);
+		auto pUISystemState = std::make_shared<CUISystemState>(m_pStateMachineData, m_pToolpathHandler, m_pSignalHandler, m_pLogger, m_pStateJournal, getTestEnvironmentPath(), m_pAccessControl, m_pLanguageHandler, m_pMeshHandler, m_pDataSeriesHandler, m_pGlobalChrono, m_pAlertHandler, m_pDataModel, m_pStreamRegistry, m_pOperationSequenceHandler);
 		m_pUIHandler = std::make_shared<CUIHandler>(pEnvWrapper, pUISystemState);
 
 		m_pSystemParameterHandler = std::make_shared<CParameterHandler>("System", m_pGlobalChrono, m_pStateMachineData->getFrontendChangeCounter());
@@ -156,6 +158,7 @@ namespace AMC {
 	{
 		m_pDriverHandler = nullptr;
 		m_pUIHandler = nullptr;
+		m_pOperationSequenceHandler = nullptr;
 		m_pStateMachineData = nullptr;
 		m_pToolpathHandler = nullptr;
 		m_pSignalHandler = nullptr;
@@ -220,6 +223,16 @@ namespace AMC {
 	PStreamRegistry CSystemState::getStreamRegistryInstance()
 	{
 		return m_pStreamRegistry;
+	}
+
+	POperationSequenceHandler CSystemState::getOperationSequenceHandlerInstance()
+	{
+		return m_pOperationSequenceHandler;
+	}
+
+	COperationSequenceHandler* CSystemState::operationSequenceHandler()
+	{
+		return m_pOperationSequenceHandler.get();
 	}
 
 	PLogger CSystemState::getLoggerInstance()
