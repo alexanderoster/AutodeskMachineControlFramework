@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<testdefinition xmlns="http://schemas.autodesk.com/amc/testdefinitions/2020/02">
+
+	<driver name="scanneremulator" library="driver_scanneremulator" type="scanneremulator" configurationschema="http://schemas.autodesk.com/amc/scanneremulator/2026/11">
+		<scanner name="configured" x1="-100" y1="-100" x2="100" y2="100" unitsinmm="1" laserindex="1" fastmode="true" timescale="2" outofviewport="clamp" maxpower="400">
+			<defaults jumpspeed="2000" markspeed="800" power="50" laserondelay="10" laseroffdelay="20" jumpdelay="30" markdelay="40" polygondelay="50" />
+			<skywriting mode="1" timelag="5" laseronshift="2" nprev="100" npost="120" limit="0.9" />
+			<transformation m11="1" m12="0" m21="0" m22="1" offsetx="1" offsety="2" />
+			<faults seed="42" slowdownfactor="3">
+				<fault type="listaborted" trigger="atexecution" execution="1" persistence="transient" />
+			</faults>
+		</scanner>
+		<scanner name="second" x1="0" y1="0" x2="50" y2="50" unitsinmm="0.5" laserindex="2" />
+	</driver>
+
+	<statemachine name="scanneremulatortest" description="Scanner Emulator Test" initstate="init" failedstate="fatalerror" successstate="success" library="plugin_scanneremulatortest">
+
+		<state name="init" repeatdelay="100">
+			<outstate target="success"/>
+		</state>
+
+		<state name="success" repeatdelay="100">
+			<outstate target="success"/>
+		</state>
+
+		<state name="fatalerror" repeatdelay="100">
+			<outstate target="fatalerror"/>
+		</state>
+
+	</statemachine>
+
+	<libraries>
+		<library name="plugin_scanneremulatortest" dll="%githash%_test_scanneremulatortest" />
+		<library name="driver_scanneremulator" dll="%githash%_driver_scanneremulator" />
+	</libraries>
+
+	<test description="Scanner Emulator timing, viewport, fault and recording test">
+		<instance name="scanneremulatortest" />
+	</test>
+
+</testdefinition>
