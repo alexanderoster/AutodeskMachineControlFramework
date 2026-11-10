@@ -1735,6 +1735,10 @@
 	}
 	.layerview-btn[aria-pressed='true'] {
 		background-color: var(--primary, #2563eb);
+		/* Match the "Start Execution" rule: keep the content readable when the
+		   dark-mode theme derivation lightens the primary (e.g. dark slate ->
+		   light grey), where the base white content would wash out. */
+		color: var(--primary-foreground, white);
 		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
 	}
 	.layerview-label {
@@ -1880,6 +1884,7 @@
 	}
 	.layerview-legend-btn[aria-pressed='true'] {
 		background-color: var(--primary, #2563eb);
+		color: var(--primary-foreground, white); /* see .layerview-btn pressed rule */
 	}
 	.layerview-legend-preset span {
 		max-width: 110px;
