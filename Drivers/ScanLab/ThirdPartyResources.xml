@@ -2,16 +2,27 @@
 <resources xmlns="http://schemas.autodesk.com/amc/thirdpartyresources/2022/04">
 
   <source 
-        name="scanlab_rtc6_rev_1_13"
-        url="https://www.scanlab.de/sites/default/files/2022-02/RTC6_Software_Package_Rev.1.13.0_2022_02_18.zip"
-		sha256="37a2bfa90d324ffee13b4a6b08161e153589c2dd3bc50f34b6b6ad383ea2b089"
+        name="scanlab_rtc6_rev_1_25_1"
+        url="https://www.scanlab.de/sites/default/files/2026-10/RTC6-1.25.1.zip"
+		sha256="a0255e33762f7ac615b59b327cac18b516da352b14110442e583d50e90f4c73f"
 		type="zip">
 		
-		<content filename="RTC6 Files/Windows/RTC6DLLx64.dll" resourcename="rtc6dllx64" />
-		<content filename="RTC6 Files/Program Files/RTC6DAT.dat" resourcename="rtc6dat" />
-		<content filename="RTC6 Files/Program Files/RTC6ETH.out" resourcename="rtc6eth" />
-		<content filename="RTC6 Files/Program Files/RTC6RBF.rbf" resourcename="rtc6rbf" />
-		<content filename="RTC6 Files/Program Files/RTC6OUT.out" resourcename="rtc6out" />
+		<!-- Release 1.25.1 supports RTC6 PCIe and RTC6 Ethernet hardware revision 1.
+		     Note that the bitstream content was renamed to RTC6RBF_CEBA4.rbf in this release.
+
+		     Linux note: this source only extracts the Windows SDK binary, but the driver
+		     resolves the rtc6dllx64 resource and dlopen()s it on non-Windows builds
+		     (see Implementation/libmcdriver_scanlab_sdk.cpp). On Linux the SDK shared
+		     library librtc6.so, shipped in this release as
+		     RTC6 Files/Linux/debian-bookworm/rtc6-devel_0.1.55-1_amd64.deb, must therefore
+		     be provided under the same rtc6dllx64 resource name. That .deb is not declared
+		     as a source entry here: add one with its url and sha256, or place librtc6.so
+		     under that resource name manually before using the driver on Linux. -->
+		<content filename="RTC6-1.25.1/RTC6 Files/Windows/RTC6DLLx64.dll" resourcename="rtc6dllx64" />
+		<content filename="RTC6-1.25.1/RTC6 Files/Program Files/RTC6DAT.dat" resourcename="rtc6dat" />
+		<content filename="RTC6-1.25.1/RTC6 Files/Program Files/RTC6ETH.out" resourcename="rtc6eth" />
+		<content filename="RTC6-1.25.1/RTC6 Files/Program Files/RTC6RBF_CEBA4.rbf" resourcename="rtc6rbf" />
+		<content filename="RTC6-1.25.1/RTC6 Files/Program Files/RTC6OUT.out" resourcename="rtc6out" />
 		
 		<license>
 			
