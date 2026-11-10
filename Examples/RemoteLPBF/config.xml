@@ -659,7 +659,7 @@
 							<row height="44" unit="pt"/>
 							<row height="44" unit="pt"/>
 							<row height="44" unit="pt"/>
-							<row height="1" unit="free"/>
+							<row height="1" unit="free" minheight="90"/>
 
 							<content name="ov_banner" columnstart="1" rowstart="1" columnend="2" rowend="1" rowposition="centered">
 								<statusbanner name="ov_ok" severity="ok" title="All systems nominal" description="All subsystems are operating normally." sync:visible="not (main.ui.main_haserror or main.ui.laser_haserror)"/>

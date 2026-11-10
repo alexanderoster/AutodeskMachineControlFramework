@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_sessionvariables.hpp"
 #include "amc_unittests_uiformula.hpp"
 #include "amc_unittests_frontendsnapshot.hpp"
+#include "amc_unittests_uigridrowminheight.hpp"
 #include "amc_unittests_eventstream.hpp"
 #include "amc_unittests_scanlab_jumpfilter.hpp"
 #include "amc_unittests_scanlab_powerramp.hpp"
@@ -119,6 +120,7 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_SessionVariables>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_UIFormula>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_FrontendSnapshot>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_UIGridRowMinHeight>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_EventStream>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_ScanLab_JumpFilter>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_ScanLab_PowerRamp>());

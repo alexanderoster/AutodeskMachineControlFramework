@@ -35,10 +35,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_modulefactory.hpp"
 
 #include "amc_ui_module_grid.hpp"
+#include "amc_ui_gridrowminheight.hpp"
 
 #include "amc_api_constants.hpp"
 #include "amc_resourcepackage.hpp"
 #include "amc_parameterhandler.hpp"
+#include "amc_logger.hpp"
 
 #include "libmc_exceptiontypes.hpp"
 #include "common_utils.hpp"
@@ -92,8 +94,8 @@ eUIModule_GridColumnPosition CUIModule_GridColumn::stringToGridPosition(const st
 }
 
 
-CUIModule_GridRow::CUIModule_GridRow(float fHeight, const std::string& sUnit)
-	: m_Height (fHeight), m_sUnit (sUnit)
+CUIModule_GridRow::CUIModule_GridRow(float fHeight, const std::string& sUnit, float fMinHeight, bool bHasMinHeight, const std::string& sMinHeightUnit)
+	: m_Height (fHeight), m_sUnit (sUnit), m_fMinHeight (fMinHeight), m_bHasMinHeight (bHasMinHeight), m_sMinHeightUnit (sMinHeightUnit)
 {
 	
 }
@@ -106,6 +108,21 @@ float CUIModule_GridRow::getHeight()
 std::string CUIModule_GridRow::getHeightUnitString()
 {
 	return m_sUnit;
+}
+
+float CUIModule_GridRow::getMinHeight()
+{
+	return m_fMinHeight;
+}
+
+bool CUIModule_GridRow::hasMinHeight()
+{
+	return m_bHasMinHeight;
+}
+
+std::string CUIModule_GridRow::getMinHeightUnitString()
+{
+	return m_sMinHeightUnit;
 }
 
 std::string CUIModule_GridRow::gridPositionToString(eUIModule_GridRowPosition ePosition)
@@ -183,6 +200,7 @@ CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath
 {
 
 	LibMCAssertNotNull(pUIModuleEnvironment.get());
+	m_pUIModuleEnvironment = pUIModuleEnvironment;
 	if (getTypeFromXML(xmlNode) != getStaticType())
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDMODULETYPE, "should be " + getStaticType ());
 
@@ -205,6 +223,11 @@ CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath
 			CJSONWriterObject rowObject(writer);
 			rowObject.addDouble(AMC_API_KEY_UI_ROWHEIGHT, row->getHeight());
 			rowObject.addString(AMC_API_KEY_UI_ROWHEIGHTUNIT, row->getHeightUnitString());
+			if (row->hasMinHeight()) {
+				rowObject.addDouble(AMC_API_KEY_UI_ROWMINHEIGHT, row->getMinHeight());
+				if (!row->getMinHeightUnitString().empty())
+					rowObject.addString(AMC_API_KEY_UI_ROWMINHEIGHTUNIT, row->getMinHeightUnitString());
+			}
 			rowsArray.addObject(rowObject);
 		}
 		object.addArray(sPropertyName, rowsArray);
@@ -249,7 +272,16 @@ CUIModule_Grid::CUIModule_Grid(pugi::xml_node& xmlNode, const std::string& sPath
 				throw ELibMCCustomException(LIBMC_ERROR_MISSINGROWHEIGHT, m_sName);
 			std::string sUnit = unitAttrib.as_string();
 
-			m_Rows.push_back(std::make_shared<CUIModule_GridRow>((float) rowHeight, sUnit));
+			// Optional minimum height. Only meaningful for rows whose size is not fixed by
+			// their height, that is free and auto rows. A missing or non-positive value
+			// keeps the default behavior of the row unit.
+			auto minHeight = CUIGridRowMinHeight::readFromXML(childNode, sUnit);
+			if (minHeight.m_bIgnoredOnUnit) {
+				auto pLogger = m_pUIModuleEnvironment->getLogger();
+				pLogger->logMessage("Grid '" + m_sName + "': the minheight attribute has no effect on a row with the unit '" + sUnit + "' and is ignored.", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+			}
+
+			m_Rows.push_back(std::make_shared<CUIModule_GridRow>((float) rowHeight, sUnit, minHeight.m_fHeight, minHeight.m_bIsSet, minHeight.m_sUnit));
 		}
 
 	}

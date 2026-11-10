@@ -85,11 +85,17 @@ namespace AMC {
 	private:
 		float m_Height;
 		std::string m_sUnit;
+		float m_fMinHeight;
+		bool m_bHasMinHeight;
+		std::string m_sMinHeightUnit;
 	public:
-		CUIModule_GridRow(float fHeight, const std::string& sUnit);
+		CUIModule_GridRow(float fHeight, const std::string& sUnit, float fMinHeight = 0.0f, bool bHasMinHeight = false, const std::string& sMinHeightUnit = "");
 
 		float getHeight();
 		std::string getHeightUnitString();
+		float getMinHeight();
+		bool hasMinHeight();
+		std::string getMinHeightUnitString();
 
 		static std::string gridPositionToString(eUIModule_GridRowPosition ePosition);
 		static eUIModule_GridRowPosition stringToGridPosition(const std::string& sString);
@@ -129,6 +135,9 @@ namespace AMC {
 
 		// Inner padding applied to each grid cell, in pixels (0 = none).
 		uint32_t m_nPadding;
+
+		// Needed for reporting configuration issues while the module is being parsed.
+		PUIModuleEnvironment m_pUIModuleEnvironment;
 
 		void addSection(PUIModule pModule, eUIModule_GridColumnPosition columnPosition, eUIModule_GridRowPosition rowPosition, bool bScrollbars);
 
