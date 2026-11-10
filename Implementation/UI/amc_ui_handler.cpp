@@ -437,8 +437,11 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
         auto darkResourceAttrib = logoNode.attribute("dark_resource");
         if (!darkResourceAttrib.empty()) {
-            auto pDarkResourceEntry = m_pCoreResourcePackage->findEntryByName(darkResourceAttrib.as_string(), true);
-            m_sDarkLogoUUID = pDarkResourceEntry->getUUID();
+            // The dark-mode logo is an optional enhancement: if the referenced resource is not
+            // part of the package, keep the regular logo for both themes (backwards compatible).
+            auto pDarkResourceEntry = m_pCoreResourcePackage->findEntryByName(darkResourceAttrib.as_string(), false);
+            if (pDarkResourceEntry != nullptr)
+                m_sDarkLogoUUID = pDarkResourceEntry->getUUID();
         }
 
         auto aspectratioAttrib = logoNode.attribute("aspectratio");
