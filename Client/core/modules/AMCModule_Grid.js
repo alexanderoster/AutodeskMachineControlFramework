@@ -149,11 +149,25 @@ export default class AMCApplicationModule_Grid extends Common.AMCApplicationModu
 			if (rowObject.unit === "px") {
 				rowString = rowString + rowObject.height + "px ";
 			} else if (rowObject.unit === "free") {
-				rowString = rowString + rowObject.height + "fr ";
+				// A free row can opt in to a local minimum height via the "minheight"
+				// attribute in the configuration. Such a row never collapses below
+				// that size; the page scrolls instead when the fixed rows exceed the
+				// available height.
+				if (rowObject.minheight > 0) {
+					rowString = rowString + "minmax(" + rowObject.minheight + (rowObject.minheightunit ? rowObject.minheightunit : "pt") + ", " + rowObject.height + "fr) ";
+				} else {
+					rowString = rowString + rowObject.height + "fr ";
+				}
 			} else if (rowObject.unit === "pt") {
 				rowString = rowString + rowObject.height + "pt ";
 			} else {
-				rowString = rowString + "auto ";
+				// An auto row is sized by its content, but can opt in to a local
+				// minimum height via the "minheight" attribute in the configuration.
+				if (rowObject.minheight > 0) {
+					rowString = rowString + "minmax(" + rowObject.minheight + (rowObject.minheightunit ? rowObject.minheightunit : "pt") + ", auto) ";
+				} else {
+					rowString = rowString + "auto ";
+				}
 			}
 		}
 
