@@ -167,6 +167,35 @@ static bool setLaserPin(LibMCEnv::PStateEnvironment pStateEnvironment, bool bOn,
 	return false;
 }
 
+// Closes the build execution of the running job (if any) and clears jobinfo.executionuuid, so it
+// is safe to call repeatedly, e.g. from the fatal error state.
+static void closeBuildExecution(LibMCEnv::PStateEnvironment pStateEnvironment, bool bSuccess) {
+	const std::string sEmptyUUID = "00000000-0000-0000-0000-000000000000";
+	auto sExecutionUUID = pStateEnvironment->GetUUIDParameter("jobinfo", "executionuuid");
+	if (sExecutionUUID == sEmptyUUID)
+		return;
+
+	pStateEnvironment->SetUUIDParameter("jobinfo", "executionuuid", sEmptyUUID);
+
+	try {
+		auto pBuildJob = pStateEnvironment->GetBuildJob(pStateEnvironment->GetUUIDParameter("jobinfo", "jobuuid"));
+		if (!pBuildJob->HasExecution(sExecutionUUID))
+			return;
+
+		auto pExecution = pBuildJob->FindExecution(sExecutionUUID);
+		if (!pExecution->IsInProcess())
+			return;
+
+		if (bSuccess)
+			pExecution->SetStatusToFinished();
+		else
+			pExecution->SetStatusToFailed();
+	}
+	catch (std::exception& e) {
+		pStateEnvironment->LogWarning("Could not close build execution " + sExecutionUUID + ": " + e.what());
+	}
+}
+
 // Refreshes the layer/height display parameters (and the preview layer index) after the layer
 // with the given (0-based) index has been exposed.
 static void updateLayerDisplays(LibMCEnv::PStateEnvironment pStateEnvironment, int64_t nLayerIndex, int64_t nLayerCount, double dCurrentHeight, double dTotalHeight) {
@@ -394,6 +423,7 @@ public:
 
 		auto pExposureSignal = pStateEnvironment->PrepareSignal("laser", "signal_exposure");
 		pExposureSignal->SetString("jobuuid", sJobUUID);
+		pExposureSignal->SetString("executionuuid", "");
 		pExposureSignal->SetInteger("layerindex", nLayerIndex);
 		pExposureSignal->SetInteger("timeout", nExposureTimeOut);
 		pExposureSignal->Trigger();
@@ -463,6 +493,12 @@ public:
 		pStateEnvironment->SetDoubleParameter("jobinfo", "currentheight", 0.0);
 		pStateEnvironment->SetDoubleParameter("jobinfo", "totalheight", dTotalHeight);
 		pStateEnvironment->SetBoolParameter("jobinfo", "printinprogress", true);
+
+		// The build execution holds the per-layer scanner recordings shown in the Build History.
+		closeBuildExecution(pStateEnvironment, false);
+		auto pExecution = pBuildJob->StartExecution(sJobName, "");
+		pStateEnvironment->SetUUIDParameter("jobinfo", "executionuuid", pExecution->GetUUID());
+		pStateEnvironment->LogMessage("Build execution: " + pExecution->GetUUID());
 
 		// Reset the execution progress.
 		pStateEnvironment->SetBoolParameter("execution", "executionactive", true);
@@ -642,6 +678,7 @@ public:
 
 		auto pExposureSignal = pStateEnvironment->PrepareSignal("laser", "signal_exposure");
 		pExposureSignal->SetString("jobuuid", sJobUUID);
+		pExposureSignal->SetString("executionuuid", pStateEnvironment->GetUUIDParameter("jobinfo", "executionuuid"));
 		pExposureSignal->SetInteger("layerindex", nCurrentLayer);
 		pExposureSignal->SetInteger("timeout", nExposureTimeOut);
 		pExposureSignal->Trigger();
@@ -726,6 +763,7 @@ public:
 		pStateEnvironment->SetBoolParameter("execution", "executionactive", false);
 		pStateEnvironment->SetBoolParameter("execution", "exposing", false);
 		pStateEnvironment->SetBoolParameter("jobinfo", "printinprogress", false);
+		closeBuildExecution(pStateEnvironment, true);
 
 		pStateEnvironment->SetStringParameter("ui", "currentlayerdisplay", "finished");
 		pStateEnvironment->SetStringParameter("ui", "currentheightdisplay", "finished");
@@ -766,6 +804,7 @@ public:
 		pStateEnvironment->SetBoolParameter("execution", "exposing", false);
 		pStateEnvironment->SetBoolParameter("execution", "cancelrequested", false);
 		pStateEnvironment->SetBoolParameter("jobinfo", "printinprogress", false);
+		closeBuildExecution(pStateEnvironment, false);
 
 		pStateEnvironment->UnloadAllToolpathes();
 
@@ -800,6 +839,7 @@ public:
 
 		// Best-effort: assert laser-off and unload any active toolpath.
 		setLaserPin(pStateEnvironment, false, 5000);
+		closeBuildExecution(pStateEnvironment, false);
 		pStateEnvironment->UnloadAllToolpathes();
 
 		pStateEnvironment->SetBoolParameter("execution", "executionactive", false);

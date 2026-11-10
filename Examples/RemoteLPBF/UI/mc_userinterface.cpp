@@ -1016,6 +1016,243 @@ public:
 };
 
 
+/*************************************************************************************************************************
+ Scan recording viewer (page "scanrecording")
+
+ The laser plugin stores the scanner recording of each exposed layer with the build execution as data table
+ "scannerrecording_layer<N>" (see laser.scannerrecording). The viewer turns it into a scatter plot on top of the
+ toolpath of the same layer.
+**************************************************************************************************************************/
+
+static const std::string SCANRECORDING_VIEWER = "scanrecording.preview";
+
+static std::string scanRecordingIdentifier(uint32_t nLayerIndex)
+{
+	return "scannerrecording_layer" + std::to_string(nLayerIndex);
+}
+
+// Returns nLayerCount if no layer of the execution has a recording.
+static uint32_t findFirstRecordedLayer(LibMCEnv::PBuildExecution pExecution, uint32_t nLayerCount)
+{
+	for (uint32_t nLayerIndex = 0; nLayerIndex < nLayerCount; nLayerIndex++) {
+		if (pExecution->HasAttachmentIdentifier(scanRecordingIdentifier(nLayerIndex)))
+			return nLayerIndex;
+	}
+	return nLayerCount;
+}
+
+// Inverse of the scanner setup in the laser plugin (InitialiseScanlabDriver): the card computes
+// offset + M * (build - laserorigin) with M = rotation(angle) * scale. Uses the current scanner card
+// configuration (main.cardconfig, which the laser derives its settings from), so recordings made
+// with a different transformation are drawn displaced.
+// Target positions (RTC SampleX/SampleY) are sampled before the card transformation, so only
+// head feedback positions may need bRevertTransformation.
+static void convertScannerToBuildCoordinates(LibMCEnv::PUIEnvironment pUIEnvironment, const std::vector<double>& scannerX, const std::vector<double>& scannerY, bool bRevertTransformation, std::vector<double>& buildX, std::vector<double>& buildY)
+{
+	const std::string sCardConfigGroup = "cardconfig";
+	double dLaserOriginX = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "laseroriginx");
+	double dLaserOriginY = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "laseroriginy");
+
+	double dAngleInRadian = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "transformation_angle") / 180.0 * 3.14159265359;
+	double dOffsetX = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "transformation_offsetx");
+	double dOffsetY = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "transformation_offsety");
+	double dScaleX = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "transformation_scalex");
+	double dScaleY = pUIEnvironment->GetMachineParameterAsDouble("main", sCardConfigGroup, "transformation_scaley");
+	if (bRevertTransformation && ((dScaleX == 0.0) || (dScaleY == 0.0)))
+		throw std::runtime_error("invalid laser transformation scale: zero scale factor");
+
+	double dCos = cos(dAngleInRadian);
+	double dSin = sin(dAngleInRadian);
+
+	size_t nCount = (std::min)(scannerX.size(), scannerY.size());
+	buildX.resize(nCount);
+	buildY.resize(nCount);
+
+	for (size_t nIndex = 0; nIndex < nCount; nIndex++) {
+		double dLaserX = scannerX.at(nIndex);
+		double dLaserY = scannerY.at(nIndex);
+
+		if (bRevertTransformation) {
+			double dX = dLaserX - dOffsetX;
+			double dY = dLaserY - dOffsetY;
+			dLaserX = (dCos * dX + dSin * dY) / dScaleX;
+			dLaserY = (-dSin * dX + dCos * dY) / dScaleY;
+		}
+
+		buildX.at(nIndex) = dLaserX + dLaserOriginX;
+		buildY.at(nIndex) = dLaserY + dLaserOriginY;
+	}
+}
+
+static void clearScanRecordingViewer(LibMCEnv::PUIEnvironment pUIEnvironment, const std::string& sCaption)
+{
+	pUIEnvironment->SetSessionVariableAsUUID("scanrecording_scatterplotuuid", "00000000-0000-0000-0000-000000000000");
+	pUIEnvironment->SetSessionVariable("scanrecording_caption", sCaption);
+}
+
+static void updateScanRecordingViewer(LibMCEnv::PUIEnvironment pUIEnvironment, const std::string& sExecutionUUID, uint32_t nLayerIndex)
+{
+	std::string sLayerCaption = "Layer " + std::to_string(nLayerIndex);
+
+	auto pExecution = pUIEnvironment->GetBuildExecution(sExecutionUUID);
+	std::string sIdentifier = scanRecordingIdentifier(nLayerIndex);
+	if (!pExecution->HasAttachmentIdentifier(sIdentifier)) {
+		clearScanRecordingViewer(pUIEnvironment, sLayerCaption + ": no scanner recording");
+		return;
+	}
+
+	auto pDataTable = pExecution->LoadDataTableByIdentifier(sIdentifier);
+	uint32_t nRowCount = pDataTable->GetRowCount();
+
+	std::string sColumnX, sColumnY;
+	bool bRevertTransformation = false;
+	if (pDataTable->HasColumn("targetx") && pDataTable->HasColumn("targety")) {
+		sColumnX = "targetx";
+		sColumnY = "targety";
+	}
+	else if (pDataTable->HasColumn("actualx") && pDataTable->HasColumn("actualy")) {
+		sColumnX = "actualx";
+		sColumnY = "actualy";
+		bRevertTransformation = pUIEnvironment->GetMachineParameterAsBool("laser", "scannerrecording", "positionsincludetransformation");
+	}
+
+	if (sColumnX.empty() || (nRowCount == 0)) {
+		clearScanRecordingViewer(pUIEnvironment, sLayerCaption + ": recording contains no positions");
+		return;
+	}
+
+	std::vector<double> scannerX, scannerY, buildX, buildY;
+	pDataTable->GetDoubleColumnValues(sColumnX, scannerX);
+	pDataTable->GetDoubleColumnValues(sColumnY, scannerY);
+	convertScannerToBuildCoordinates(pUIEnvironment, scannerX, scannerY, bRevertTransformation, buildX, buildY);
+
+	pDataTable->AddColumn("buildx", "Build X (mm)", LibMCEnv::eDataTableColumnType::DoubleColumn);
+	pDataTable->SetDoubleColumnValues("buildx", buildX);
+	pDataTable->AddColumn("buildy", "Build Y (mm)", LibMCEnv::eDataTableColumnType::DoubleColumn);
+	pDataTable->SetDoubleColumnValues("buildy", buildY);
+
+	auto pOptions = pDataTable->CreateScatterPlotOptions();
+	pOptions->SetXAxisColumn("buildx", 1.0, 0.0);
+	pOptions->SetYAxisColumn("buildy", 1.0, 0.0);
+
+	// The client colours the "laser" channel by the columns "laseron" and "power"; time and the raw
+	// scanner positions are used for the point tooltip and the time slider.
+	if (pDataTable->HasColumn("laseron"))
+		pOptions->AddDataChannel("laser", "laseron", 1.0, 0.0, 0);
+	if (pDataTable->HasColumn("time"))
+		pOptions->AddDataChannel("laser", "time", 1.0, 0.0, 0);
+	pOptions->AddDataChannel("laser", sColumnX, 1.0, 0.0, 0);
+	pOptions->AddDataChannel("laser", sColumnY, 1.0, 0.0, 0);
+
+	std::string sPowerSource;
+	if (pDataTable->HasColumn("pulselength"))
+		sPowerSource = "pulselength";
+	else if (pDataTable->HasColumn("analogout1"))
+		sPowerSource = "analogout1";
+
+	if (!sPowerSource.empty() && !pDataTable->HasColumn("power")) {
+		std::vector<int32_t> rawValues;
+		pDataTable->GetInt32ColumnValues(sPowerSource, rawValues);
+		std::vector<double> powerValues(rawValues.begin(), rawValues.end());
+
+		pDataTable->AddColumn("power", "Power (" + sPowerSource + ", raw)", LibMCEnv::eDataTableColumnType::DoubleColumn);
+		pDataTable->SetDoubleColumnValues("power", powerValues);
+		pOptions->AddDataChannel("laser", "power", 1.0, 0.0, 0);
+	}
+
+	auto pScatterPlot = pDataTable->CalculateScatterPlot(pOptions);
+
+	std::string sCaption = sLayerCaption + ": " + std::to_string(nRowCount) + " samples";
+	if (pDataTable->HasColumn("time")) {
+		std::vector<double> timeValues;
+		pDataTable->GetDoubleColumnValues("time", timeValues);
+		if (!timeValues.empty())
+			sCaption += ", " + std::to_string((int64_t)round(timeValues.back())) + " ms";
+	}
+
+	pUIEnvironment->SetSessionVariableAsUUID("scanrecording_scatterplotuuid", pScatterPlot->GetUUID());
+	pUIEnvironment->SetSessionVariable("scanrecording_caption", sCaption);
+}
+
+
+class CEvent_OnOpenScanRecording : public virtual CEvent {
+
+public:
+
+	static std::string getEventName()
+	{
+		return "onopenscanrecording";
+	}
+
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		auto sSender = pUIEnvironment->RetrieveEventSender();
+		auto sExecutionUUID = pUIEnvironment->GetUIPropertyAsUUID(sSender, "selecteduuid");
+
+		auto pExecution = pUIEnvironment->GetBuildExecution(sExecutionUUID);
+		auto pBuild = pExecution->GetBuild();
+		if (!pBuild->ToolpathIsLoaded())
+			pBuild->LoadToolpath();
+
+		uint32_t nLayerCount = pBuild->GetLayerCount();
+		uint32_t nFirstLayer = findFirstRecordedLayer(pExecution, nLayerCount);
+		if (nFirstLayer >= nLayerCount) {
+			pUIEnvironment->ShowHint("This build execution has no scanner recording. Enable laser.scannerrecording before starting an execution.", 4000);
+			return;
+		}
+
+		pUIEnvironment->SetSessionVariableAsUUID("scanrecording_executionuuid", sExecutionUUID);
+		pUIEnvironment->SetUIProperty(SCANRECORDING_VIEWER, "builduuid", pExecution->GetBuildUUID());
+		pUIEnvironment->SetUIPropertyAsInteger(SCANRECORDING_VIEWER, "currentlayer", nFirstLayer);
+		pUIEnvironment->SetUIPropertyAsUUID(SCANRECORDING_VIEWER, "highlightpartuuid", "00000000-0000-0000-0000-000000000000");
+
+		updateScanRecordingViewer(pUIEnvironment, sExecutionUUID, nFirstLayer);
+
+		pUIEnvironment->ActivatePage("scanrecording");
+	}
+};
+
+
+class CEvent_OnScanRecordingLayerChange : public virtual CEvent {
+
+public:
+
+	static std::string getEventName()
+	{
+		return "onscanrecordinglayerchange";
+	}
+
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		auto sExecutionUUID = pUIEnvironment->GetSessionVariableAsUUID("scanrecording_executionuuid");
+		if (sExecutionUUID == "00000000-0000-0000-0000-000000000000")
+			return;
+
+		auto nLayerIndex = pUIEnvironment->GetUIPropertyAsInteger(SCANRECORDING_VIEWER, "currentlayer");
+		if (nLayerIndex < 0)
+			return;
+
+		updateScanRecordingViewer(pUIEnvironment, sExecutionUUID, (uint32_t)nLayerIndex);
+	}
+};
+
+
+class CEvent_OnCloseScanRecording : public virtual CEvent {
+
+public:
+
+	static std::string getEventName()
+	{
+		return "onclosescanrecording";
+	}
+
+	void Handle(LibMCEnv::PUIEnvironment pUIEnvironment) override
+	{
+		pUIEnvironment->ActivatePage("buildhistory");
+	}
+};
+
+
 IEvent* CEventHandler::CreateEvent(const std::string& sEventName, LibMCEnv::PUIEnvironment pUIEnvironment)
 {
 	IEvent* pEventInstance = nullptr;
@@ -1074,6 +1311,12 @@ IEvent* CEventHandler::CreateEvent(const std::string& sEventName, LibMCEnv::PUIE
 	if (createEventInstanceByName<CEvent_CancelExecution>(sEventName, pEventInstance))
 		return pEventInstance;
 	if (createEventInstanceByName<CEvent_KeepAlive>(sEventName, pEventInstance))
+		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnOpenScanRecording>(sEventName, pEventInstance))
+		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnScanRecordingLayerChange>(sEventName, pEventInstance))
+		return pEventInstance;
+	if (createEventInstanceByName<CEvent_OnCloseScanRecording>(sEventName, pEventInstance))
 		return pEventInstance;
 
 	throw ELibMCUIInterfaceException(LIBMCUI_ERROR_INVALIDEVENTNAME, "invalid event name: " + sEventName);

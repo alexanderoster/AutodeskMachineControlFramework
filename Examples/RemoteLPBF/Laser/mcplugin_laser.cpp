@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libmcenv_drivercast.hpp"
 
 #include <cmath>
+#include <vector>
 
 using namespace LibMCPlugin::Impl;
 
@@ -224,6 +225,178 @@ void InitialiseScanlabDriver(LibMCEnv::PStateEnvironment pStateEnvironment, PDri
 }
 
 
+struct sScannerRecordingSettings {
+	bool m_bEnabled = false;
+	LibMCDriver_ScanLab::eRTCRecordingFrequency m_Frequency = LibMCDriver_ScanLab::eRTCRecordingFrequency::InvalidFrequency;
+	double m_dFrequencyInKHz = 0.0;
+	bool m_bTargetPosition = false;
+	bool m_bActualPosition = false;
+	bool m_bLaserOn = false;
+	bool m_bPulseLength = false;
+	bool m_bAnalogOut1 = false;
+	bool m_bStoreInExecution = false;
+	bool m_bStoreInJournal = false;
+	bool m_bStoreInBuild = false;
+};
+
+LibMCDriver_ScanLab::eRTCRecordingFrequency MapScannerRecordingFrequency(int64_t nFrequencyInKHz)
+{
+	switch (nFrequencyInKHz) {
+		case 100: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record100kHz;
+		case 50: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record50kHz;
+		case 25: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record25kHz;
+		case 20: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record20kHz;
+		case 10: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record10kHz;
+		case 5: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record5kHz;
+		case 4: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record4kHz;
+		case 2: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record2kHz;
+		case 1: return LibMCDriver_ScanLab::eRTCRecordingFrequency::Record1kHz;
+		default:
+			throw std::runtime_error("invalid scanner recording frequency: " + std::to_string(nFrequencyInKHz) + " kHz (allowed: 100, 50, 25, 20, 10, 5, 4, 2 or 1)");
+	}
+}
+
+// Reads the "scannerrecording" parameter group. The remaining settings are only read and validated if recording is enabled.
+sScannerRecordingSettings ReadScannerRecordingSettings(LibMCEnv::PStateEnvironment pStateEnvironment)
+{
+	const std::string sGroup = "scannerrecording";
+
+	sScannerRecordingSettings settings;
+	settings.m_bEnabled = pStateEnvironment->GetBoolParameter(sGroup, "enabled");
+	if (!settings.m_bEnabled)
+		return settings;
+
+	int64_t nFrequencyInKHz = pStateEnvironment->GetIntegerParameter(sGroup, "frequency");
+	settings.m_Frequency = MapScannerRecordingFrequency(nFrequencyInKHz);
+	settings.m_dFrequencyInKHz = (double)nFrequencyInKHz;
+
+	settings.m_bTargetPosition = pStateEnvironment->GetBoolParameter(sGroup, "targetposition");
+	settings.m_bActualPosition = pStateEnvironment->GetBoolParameter(sGroup, "actualposition");
+	settings.m_bLaserOn = pStateEnvironment->GetBoolParameter(sGroup, "laseron");
+	settings.m_bPulseLength = pStateEnvironment->GetBoolParameter(sGroup, "pulselength");
+	settings.m_bAnalogOut1 = pStateEnvironment->GetBoolParameter(sGroup, "analogout1");
+	settings.m_bStoreInExecution = pStateEnvironment->GetBoolParameter(sGroup, "storeinexecution");
+	settings.m_bStoreInJournal = pStateEnvironment->GetBoolParameter(sGroup, "storeinjournal");
+	settings.m_bStoreInBuild = pStateEnvironment->GetBoolParameter(sGroup, "storeinbuild");
+
+	if (!(settings.m_bTargetPosition || settings.m_bActualPosition || settings.m_bLaserOn || settings.m_bPulseLength || settings.m_bAnalogOut1))
+		throw std::runtime_error("scanner recording is enabled, but no signal is selected");
+	if (!(settings.m_bStoreInExecution || settings.m_bStoreInJournal || settings.m_bStoreInBuild))
+		throw std::runtime_error("scanner recording is enabled, but no storage (execution, journal or build) is selected");
+
+	return settings;
+}
+
+// Same list sequence as CDriver_ScanLab_RTC6::DrawLayer, with set_trigger8 recording around the layer.
+// Only returns once the list has finished and all samples have been read from the card.
+LibMCDriver_ScanLab::PRTCRecording DrawLayerWithRecording(PDriver_ScanLab_RTC6 pDriver, LibMCEnv::PBuild pBuildJob, uint32_t nLayerIndex, const sScannerRecordingSettings& settings)
+{
+	auto pContext = pDriver->GetContext();
+	auto pRecording = pContext->PrepareRecording(false, settings.m_bActualPosition, settings.m_bActualPosition);
+
+	if (settings.m_bTargetPosition) {
+		pRecording->AddChannel("targetx", LibMCDriver_ScanLab::eRTCChannelType::ChannelTargetX);
+		pRecording->AddChannel("targety", LibMCDriver_ScanLab::eRTCChannelType::ChannelTargetY);
+	}
+	if (settings.m_bActualPosition) {
+		pRecording->AddChannel("actualx", LibMCDriver_ScanLab::eRTCChannelType::ChannelCurrentXRaw);
+		pRecording->AddChannel("actualy", LibMCDriver_ScanLab::eRTCChannelType::ChannelCurrentYRaw);
+	}
+	if (settings.m_bLaserOn)
+		pRecording->AddChannel("laseron", LibMCDriver_ScanLab::eRTCChannelType::ChannelLaserOn);
+	if (settings.m_bPulseLength)
+		pRecording->AddChannel("pulselength", LibMCDriver_ScanLab::eRTCChannelType::ChannelPulseLength);
+	if (settings.m_bAnalogOut1)
+		pRecording->AddChannel("analogout1", LibMCDriver_ScanLab::eRTCChannelType::ChannelAnalogOut1);
+
+	auto pAccessor = pBuildJob->CreateToolpathAccessor();
+	auto pLayer = pAccessor->LoadLayer(nLayerIndex);
+
+	pContext->SetStartList(1, 0);
+	pRecording->EnableRecording(settings.m_Frequency);
+
+	pContext->AddLayerToList(pLayer, false);
+
+	pRecording->DisableRecording();
+	pContext->SetEndOfList();
+
+	pRecording->ExecuteListWithRecording();
+
+	return pRecording;
+}
+
+void StoreScannerRecording(LibMCEnv::PStateEnvironment pStateEnvironment, LibMCDriver_ScanLab::PRTCRecording pRecording, LibMCEnv::PBuild pBuildJob, const std::string& sExecutionUUID, uint32_t nLayerIndex, const sScannerRecordingSettings& settings)
+{
+	uint64_t nRecordCount = 0;
+	for (const std::string sChannelName : { "targetx", "actualx", "laseron", "pulselength", "analogout1" }) {
+		if (pRecording->HasChannel(sChannelName)) {
+			nRecordCount = pRecording->GetRecordCount(sChannelName);
+			break;
+		}
+	}
+
+	auto pDataTable = pStateEnvironment->CreateDataTable();
+
+	std::vector<double> timeInMS(nRecordCount);
+	for (uint64_t nIndex = 0; nIndex < nRecordCount; nIndex++)
+		timeInMS.at(nIndex) = (double)nIndex / settings.m_dFrequencyInKHz;
+	pDataTable->AddColumn("time", "Time (ms)", LibMCEnv::eDataTableColumnType::DoubleColumn);
+	pDataTable->SetDoubleColumnValues("time", timeInMS);
+
+	if (settings.m_bTargetPosition)
+		pRecording->AddTargetPositionsToDataTable(pDataTable, "targetx", "Target X (mm)", "targety", "Target Y (mm)");
+	if (settings.m_bActualPosition)
+		pRecording->AddBacktransformedXYPositionsToDataTable(pDataTable, "actualx", "Actual X (mm)", "actualy", "Actual Y (mm)");
+	if (settings.m_bLaserOn)
+		pRecording->AddRecordsToDataTable("laseron", pDataTable, "laseron", "Laser On");
+	if (settings.m_bPulseLength)
+		pRecording->AddRecordsToDataTable("pulselength", pDataTable, "pulselength", "Pulse Length (raw)");
+	if (settings.m_bAnalogOut1)
+		pRecording->AddRecordsToDataTable("analogout1", pDataTable, "analogout1", "Analog Out 1 (raw)");
+
+	std::string sIdentifier = "scannerrecording_layer" + std::to_string(nLayerIndex);
+	std::string sName = "Scanner Recording Layer " + std::to_string(nLayerIndex);
+
+	if (settings.m_bStoreInExecution) {
+		if ((!sExecutionUUID.empty()) && pBuildJob->HasExecution(sExecutionUUID)) {
+			auto pExecution = pBuildJob->FindExecution(sExecutionUUID);
+			// The UI viewer loads the plain identifier; a re-exposed layer gets a suffix.
+			std::string sExecutionIdentifier = sIdentifier;
+			uint32_t nRun = 1;
+			while (pExecution->HasAttachmentIdentifier(sExecutionIdentifier)) {
+				nRun++;
+				sExecutionIdentifier = sIdentifier + "_" + std::to_string(nRun);
+			}
+
+			pExecution->StoreDataTable(sExecutionIdentifier, sName, pDataTable, nullptr, "");
+		}
+		else {
+			pStateEnvironment->LogWarning("Scanner recording of layer " + std::to_string(nLayerIndex) + " not stored with a build execution: no execution is running");
+		}
+	}
+
+	if (settings.m_bStoreInJournal) {
+		auto pStream = pStateEnvironment->CreateTemporaryStream(sIdentifier, "text/csv");
+		pDataTable->WriteCSVToStream(pStream, nullptr);
+		pStream->Finish();
+	}
+
+	if (settings.m_bStoreInBuild) {
+		// Build attachment identifiers must be unique, and a build can be exposed more than once.
+		std::string sBuildIdentifier = sIdentifier;
+		uint32_t nRun = 1;
+		while (pBuildJob->HasAttachmentIdentifier(sBuildIdentifier)) {
+			nRun++;
+			sBuildIdentifier = sIdentifier + "_" + std::to_string(nRun);
+		}
+
+		pBuildJob->StoreDataTable(sBuildIdentifier, sName, pDataTable, nullptr, "");
+	}
+
+	pStateEnvironment->LogMessage("Stored scanner recording of layer " + std::to_string(nLayerIndex) + " (" + std::to_string(nRecordCount) + " samples)");
+}
+
+
 /*************************************************************************************************************************
  Class definition of CLaserState_Init
 **************************************************************************************************************************/
@@ -382,24 +555,32 @@ public:
 			auto pDriver = m_pPluginData->acquireScanLabDriver(pStateEnvironment);
 
 			if (pDriver->IsSimulationMode()) {
+				if (pStateEnvironment->GetBoolParameter("scannerrecording", "enabled"))
+					pStateEnvironment->LogMessage("Scanner recording is not available in simulation mode");
 				pStateEnvironment->LogMessage("Simulation mode delay of 2 seconds..");
 				pStateEnvironment->Sleep(2000);
 				pDriver->DrawLayer(pBuildJob->GetStorageUUID(), nLayerIndex);
 			}
 			else {
+				auto recordingSettings = ReadScannerRecordingSettings(pStateEnvironment);
+
 				// The laser enable pin is only high while the layer is drawn: with the pin
 				// high the idle standby (tickle) pulses already make the laser emit.
-				// DrawLayer blocks until the card has finished the list.
+				// DrawLayer / DrawLayerWithRecording block until the card has finished the list.
 				auto pContext = pDriver->GetContext();
 				auto nLeadTime = pStateEnvironment->GetIntegerParameter("lasersignaltiming", "enableleadtime");
 
+				LibMCDriver_ScanLab::PRTCRecording pRecording;
 				pContext->SetLaserPinOut(true, false);
 				pStateEnvironment->SetBoolParameter("lasersignaltiming", "laseronsignal", true);
 				try {
 					if (nLeadTime > 0)
 						pStateEnvironment->Sleep((uint32_t)nLeadTime);
 
-					pDriver->DrawLayer(pBuildJob->GetStorageUUID(), nLayerIndex);
+					if (recordingSettings.m_bEnabled)
+						pRecording = DrawLayerWithRecording(pDriver, pBuildJob, nLayerIndex, recordingSettings);
+					else
+						pDriver->DrawLayer(pBuildJob->GetStorageUUID(), nLayerIndex);
 				}
 				catch (...) {
 					pContext->SetLaserPinOut(false, false);
@@ -408,6 +589,15 @@ public:
 				}
 				pContext->SetLaserPinOut(false, false);
 				pStateEnvironment->SetBoolParameter("lasersignaltiming", "laseronsignal", false);
+
+				if (pRecording.get() != nullptr) {
+					try {
+						StoreScannerRecording(pStateEnvironment, pRecording, pBuildJob, pSignalHandler->GetString("executionuuid"), nLayerIndex, recordingSettings);
+					}
+					catch (std::exception& e) {
+						pStateEnvironment->LogWarning("Could not store scanner recording of layer " + std::to_string(nLayerIndex) + ": " + e.what());
+					}
+				}
 			}
 		}
 		pSignalHandler->SetBoolResult("success", true);

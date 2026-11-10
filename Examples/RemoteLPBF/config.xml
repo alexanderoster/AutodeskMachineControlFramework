@@ -68,6 +68,7 @@
 		<parametergroup name="jobinfo" description="Job Information">
 			<parameter name="jobname" description="Job Name" default="Job Name" type="string"/>
 			<parameter name="jobuuid" description="Job UUID" default="00000000-0000-0000-0000-000000000000" type="string"/>
+			<parameter name="executionuuid" description="Build Execution UUID of the running job" default="00000000-0000-0000-0000-000000000000" type="string"/>
 			<parameter name="layercount" description="Layer Count" default="0" type="int"/>
 			<parameter name="currentlayer" description="Current Layer (number of exposed layers)" default="0" type="int"/>
 			<parameter name="totalheight" description="Total Height" default="0" type="double" />
@@ -306,6 +307,21 @@
 			<parameter name="standbylength" description="Standby Tickle Signal Length (in Microseconds)" default="1" type="double"/>
 		</parametergroup>
 
+		<!-- Records RTC signals with set_trigger8 while a layer is exposed. Positions are in mm relative to the laser origin. Target positions (SampleX/SampleY) are sampled before the RTC transformation (angle, scale, offset); actual positions come from the scan head. At most 8 signals can be recorded. -->
+		<parametergroup name="scannerrecording" description="Scanner Position Recording">
+			<parameter name="enabled" description="Record scanner signals during layer exposure" default="0" type="bool"/>
+			<parameter name="frequency" description="Recording frequency in kHz (100, 50, 25, 20, 10, 5, 4, 2 or 1)" default="10" type="int"/>
+			<parameter name="targetposition" description="Record target position X/Y (mm)" default="1" type="bool"/>
+			<parameter name="actualposition" description="Record actual position X/Y from scan head feedback (mm, backtransformed)" default="0" type="bool"/>
+			<parameter name="laseron" description="Record laser on signal" default="1" type="bool"/>
+			<parameter name="pulselength" description="Record laser pulse length (raw, CO2 power modulation)" default="1" type="bool"/>
+			<parameter name="analogout1" description="Record analog out 1 (raw)" default="0" type="bool"/>
+			<parameter name="storeinexecution" description="Store recording of each layer as data table with the build execution (shown in the Build History scan recording viewer)" default="1" type="bool"/>
+			<parameter name="storeinjournal" description="Store recording of each layer as CSV in the journal" default="0" type="bool"/>
+			<parameter name="storeinbuild" description="Store recording of each layer as data table with the build" default="0" type="bool"/>
+			<parameter name="positionsincludetransformation" description="Recorded actual positions include the RTC transformation (angle, scale, offset); the viewer then reverts it to show build coordinates. Target positions never include it" default="1" type="bool"/>
+		</parametergroup>
+
 		<parametergroup name="laserfeedback" description="Laser Feedback Status">
 			<parameter name="laserok" description="Laser OK Status (DI0)" default="1" type="bool"/>
 			<parameter name="temperatureok" description="Temperature OK Status (DI1)" default="1" type="bool"/>
@@ -319,8 +335,10 @@
 			<result name="success" type="bool"/>
 		</signaldefinition>
 
+		<!-- executionuuid is empty for single layer exposures outside of an execution. -->
 		<signaldefinition name="signal_exposure">
 			<parameter name="jobuuid" type="string"/>
+			<parameter name="executionuuid" type="string"/>
 			<parameter name="layerindex" type="int"/>
 			<parameter name="timeout" type="int"/>
 			<result name="success" type="bool"/>
@@ -408,6 +426,11 @@
 			     Reset to "" whenever the dialog is opened. -->
 			<parameter name="configversion_name" type="string" default="" description="Name typed for a new configuration version"/>
 			<parameter name="configreset_confirmation" type="string" default="" description="Confirmation text typed for a factory reset"/>
+
+			<!-- Scan recording viewer (page "scanrecording"), opened from the Build History. -->
+			<parameter name="scanrecording_executionuuid" type="uuid" default="00000000-0000-0000-0000-000000000000" description="Build execution shown in the scan recording viewer"/>
+			<parameter name="scanrecording_scatterplotuuid" type="uuid" default="00000000-0000-0000-0000-000000000000" description="Scatter plot of the recorded layer shown in the scan recording viewer"/>
+			<parameter name="scanrecording_caption" type="string" default="" description="Label of the scan recording viewer"/>
 		</sessionvariables>
 
 		<!-- Read-only details of the part selected in the execution page "Parts" tab. All values come
@@ -574,9 +597,36 @@
 		<page name="buildhistory">
 			<content name="executionlibrary" title="Build History">
 				<executionlist loadingtext="Loading builds" entriesperpage="20" selectevent="" thumbnail="thumbnail_default">
-					<button name="details" caption="Details" selectevent=""/>
+					<button name="scanrecording" caption="Scan Recording" event="onopenscanrecording"/>
 				</executionlist>
 			</content>
+		</page>
+
+		<!-- Scanner recording of a past build execution (laser.scannerrecording), drawn on top of the
+		     toolpath of the same layer. Filled by the onopenscanrecording / onscanrecordinglayerchange events. -->
+		<page name="scanrecording">
+			<grid name="scanrecordinggrid" padding="8">
+				<column width="1" unit="free"/>
+
+				<row height="1" unit="free"/>
+				<row height="50" unit="pt"/>
+
+				<!-- Recorded points are drawn clamp(pointsizebase + pointsizefactor * zoom, pointsizemin, pointsizemax)
+				     pixels wide, with zoom in screen pixels per mm. The time slider caps toolpath and points at a
+				     fraction of the layer time. -->
+				<layerview name="preview" cardstyle="elevated" columnstart="1" rowstart="1" columnend="1" rowend="1">
+					<platform sizex="200" sizey="250" originx="0" originy="0" paddingx="50" paddingy="50" transformangle="0" rotationcenterx="0" rotationcentery="0" translationx="0" translationy="0" showcoordinatesystem="1" showtimeslider="1" pointsizebase="2.0" pointsizefactor="0.08" pointsizemin="2.0" pointsizemax="16.0" baseimage="buildplate-clean2" dark_baseimage="buildplate-dark-ui2"/>
+					<slider fixed="0" changeevent="onscanrecordinglayerchange"/>
+					<label visible="1" sync:caption="session.scanrecording_caption" icon="mdi-chart-scatter-plot"/>
+					<references sync:scatterplotuuid="session.scanrecording_scatterplotuuid"/>
+				</layerview>
+
+				<content name="scanrecordingbuttons" columnstart="1" rowstart="2" columnend="1" rowend="2" rowposition="centered">
+					<buttongroup distribution="equal">
+						<button name="back" caption="Back to Build History" event="onclosescanrecording"/>
+					</buttongroup>
+				</content>
+			</grid>
 		</page>
 
 		<!-- Execution page: live toolpath preview of the executing build plus the remote execution
@@ -809,6 +859,7 @@
 						<entry statemachine="laser" group="sdkstate"/>
 						<entry statemachine="laser" group="cardconfig"/>
 						<entry statemachine="laser" group="laserfeedback"/>
+						<entry statemachine="laser" group="scannerrecording"/>
 					</parameterlist>
 				</content>
 

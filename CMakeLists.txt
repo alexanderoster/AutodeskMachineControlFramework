@@ -50,7 +50,7 @@ option(INCLUDE_DRIVERS "Include the drivers in the build" ON)
 option(INCLUDE_TESTS "Include the test system in the build" OFF)
 option(ENABLE_COVERAGE "Enable coverage instrumentation (GCC/Clang)" OFF)
 
-set(CMAKE_AMCF_PLUGINNAME Examples/WidgetTest)
+set(CMAKE_AMCF_PLUGINNAME Examples/RemoteLPBF)
 
 set(CMAKE_AMCF_PROJECTDIR ${PROJECT_BINARY_DIR})
 
