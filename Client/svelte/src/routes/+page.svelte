@@ -113,6 +113,15 @@
 		return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 	}
 
+	function hexLightness (hex: string): number {
+		hex = hex.replace('#', '');
+		if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+		const r = parseInt(hex.substring(0, 2), 16) / 255;
+		const g = parseInt(hex.substring(2, 4), 16) / 255;
+		const b = parseInt(hex.substring(4, 6), 16) / 255;
+		return (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+	}
+
 	function buildColorCSS (
 		selector: string,
 		colors: Record<string, string>,
@@ -132,6 +141,13 @@
 			css += `  --sidebar-primary: ${primary};\n`;
 			css += `  --sidebar-ring: ${primary};\n`;
 			css += `  --chart-1: ${primary};\n`;
+			// Default-variant buttons (e.g. "Start Execution") pair bg-primary with
+			// text-primary-foreground. The dark-mode derivation can lighten a dark brand
+			// primary past mid-grey, where white text becomes unreadable; pick the
+			// foreground from the primary's own lightness, mirroring the login CTA rule.
+			const primaryForeground = hexLightness(primary) > 0.55 ? '#000000' : '#ffffff';
+			css += `  --primary-foreground: ${primaryForeground};\n`;
+			css += `  --sidebar-primary-foreground: ${primaryForeground};\n`;
 		}
 		if (secondary) css += `  --secondary: ${secondary};\n`;
 		if (accent) {
