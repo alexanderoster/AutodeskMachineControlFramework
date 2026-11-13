@@ -21,7 +21,7 @@ Measure modes (measure --modes, run --modes)
   frontend    Sequential GET /api/frontend?pages=buildhistory: the scoped v2 snapshot the
               client polls when it has no SSE stream (the list item only adds its head id).
 """
-import argparse, hashlib, json, os, random, re, shutil, signal, socket, sqlite3, subprocess
+import argparse, hashlib, json, os, random, re, secrets, shutil, signal, socket, sqlite3, subprocess
 import sys, threading, time, urllib.error, urllib.parse, urllib.request, uuid
 from datetime import datetime, timedelta, timezone
 
@@ -78,6 +78,27 @@ def prepare(output, workdir, port):
 
 SEED_NS = uuid.UUID("5eed0000-0000-4000-8000-000000000000")
 EMPTY_UUID = "00000000-0000-0000-0000-000000000000"
+PERF_USER = "perf"
+
+
+def env_credentials():
+    """(login, password) from AMCF_USERNAME / AMCF_PASSWORD, or None if either is missing."""
+    user, password = os.environ.get("AMCF_USERNAME"), os.environ.get("AMCF_PASSWORD")
+    return (user, password) if user and password else None
+
+
+def seed_user(db, login, password):
+    """Create or replace a login account. Fresh databases have no users (first-run setup)."""
+    salt = secrets.token_hex(32)
+    con = sqlite3.connect(db)
+    c = con.cursor()
+    c.execute("DELETE FROM users WHERE login = ?", (login,))
+    c.execute("INSERT INTO users (uuid,login,salt,description,passwordhash,updateuuid,role,language,active) "
+              "VALUES (?,?,?,?,?,?,?,?,?)",
+              (str(uuid.uuid4()), login, salt, "executionlist_perf account",
+               hashlib.sha256((salt + password).encode()).hexdigest(), str(uuid.uuid4()), "", "", 1))
+    con.commit()
+    con.close()
 
 
 def seed(db, n, damaged=0):
@@ -142,7 +163,7 @@ def seed(db, n, damaged=0):
 # HTTP client
 
 class Api:
-    def __init__(self, base, user="test", password="test"):
+    def __init__(self, base, user, password):
         self.base = base.rstrip("/")
         H = lambda s: hashlib.sha256(s.encode()).hexdigest()
         s = self._req("/auth/", {"username": user})
@@ -273,8 +294,8 @@ def measure_concurrent(api, clients):
     return r
 
 
-def measure(base, pid, modes, single_count, clients, delta_sizes, page=PAGE):
-    api = Api(base)
+def measure(base, credentials, pid, modes, single_count, clients, delta_sizes, page=PAGE):
+    api = Api(base, *credentials)
     try:
         head = api.executions(0)[0]["executionlistheadid"]  # since=0 is a delta of the whole list; only the head is needed
     except ApiError:
@@ -346,10 +367,12 @@ def run(args):
     if not os.path.exists(db):  # first start creates and migrates the schema
         Server(binary, args.workdir, args.port).stop()
     print("seeded: %d active executions, head id %d" % seed(db, args.n, args.damaged), file=sys.stderr)
+    credentials = env_credentials() or (PERF_USER, secrets.token_urlsafe(24))
+    seed_user(db, *credentials)
     srv = Server(binary, args.workdir, args.port)
     try:
-        res = measure("http://127.0.0.1:%d/api" % args.port, srv.proc.pid, args.modes.split(","), args.single_count,
-                      args.clients, delta_sizes(args.delta_sizes))
+        res = measure("http://127.0.0.1:%d/api" % args.port, credentials, srv.proc.pid, args.modes.split(","),
+                      args.single_count, args.clients, delta_sizes(args.delta_sizes))
     finally:
         srv.stop()
     res["executions"] = args.n
@@ -409,9 +432,16 @@ def main():
         return
     if args.cmd == "seed":
         print("%d active executions, head id %d" % seed(args.db, args.n, args.damaged))
+        credentials = env_credentials()
+        if credentials:
+            seed_user(args.db, *credentials)
+            print("account %s created" % credentials[0])
         return
     if args.cmd == "measure":
-        res = measure(args.base, args.pid, args.modes.split(","), args.single_count, args.clients,
+        credentials = env_credentials()
+        if not credentials:
+            sys.exit("measure: set AMCF_USERNAME and AMCF_PASSWORD")
+        res = measure(args.base, credentials, args.pid, args.modes.split(","), args.single_count, args.clients,
                       delta_sizes(args.delta_sizes), args.page)
     else:
         res = run(args)

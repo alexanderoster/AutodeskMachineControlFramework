@@ -1,15 +1,21 @@
 import requests
 import hashlib
 import json
+import os
+import getpass
 
 def sha256_hex(data: str) -> str:
     return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
 def main():
-    # Initial setup
-    username = "test"
-    user_password = "test"
-    base_url = "http://127.0.0.1:8869"
+    # Credentials come from AMCF_USERNAME / AMCF_PASSWORD or are asked for interactively.
+    username = os.environ.get("AMCF_USERNAME") or input("Username: ").strip()
+    user_password = os.environ.get("AMCF_PASSWORD") or getpass.getpass("Password: ")
+    base_url = os.environ.get("AMCF_URL", "http://127.0.0.1:8869")
+
+    if not username or not user_password:
+        print("Username and password are required.")
+        return
 
     # Step 1: Send initial POST to /api/auth
     auth_url = f"{base_url}/api/auth"
@@ -42,9 +48,6 @@ def main():
     clientkey_hash = sha256_hex(sessionkey + salted_password)
     sessionkey_hash = sha256_hex(sessionkey + clientkey_hash)
 
-    print("\nComputed session key hash:")
-    print(f"sessionkey_hash: {sessionkey_hash}")
-
     # Step 4: POST sessionkey_hash to /api/auth/{sessionuuid}
     login_url = f"{base_url}/api/auth/{sessionuuid}"
     login_payload = {"clientkey": sessionkey, "password": sessionkey_hash}
@@ -53,18 +56,17 @@ def main():
         login_response = requests.post(login_url, json=login_payload)
         login_response.raise_for_status()
         login_data = login_response.json()
-        print("\nFinal login response:")
-        print(json.dumps(login_data, indent=4))
     except requests.exceptions.RequestException as e:
         print(f"Final login request failed: {e}")
+        return
     except json.JSONDecodeError:
         print("Failed to decode final login response as JSON.")
-        
+        return
+
     token = login_data.get("token")
 
     if token:
-        print("\nExtracted token:")
-        print(token)
+        print("\nLogin successful, token received.")
     else:
         print("No token found in response.")
         

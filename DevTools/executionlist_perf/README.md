@@ -25,13 +25,16 @@ python3 DevTools/executionlist_perf/executionlist_perf.py run \
    row gets an `incremental_id` (one step per row, above any existing rows), so the list head
    is the newest seeded execution and `?since=<head-k>` returns exactly the last k rows.
 4. Starts the server and **measures** each mode in `--modes` (default
-   `full,concurrent,delta,frontend`). It logs in as `test`/`test` with the same
-   `/api/auth` session-key handshake the client uses, and sends the token as a Bearer header.
+   `full,concurrent,delta,frontend`). Fresh databases have no user accounts, so `run` first
+   writes an account `perf` with a random password (or `AMCF_USERNAME` / `AMCF_PASSWORD` if
+   both are set). It logs in with the same `/api/auth` session-key handshake the client uses,
+   and sends the token as a Bearer header.
 
 The steps can also run one at a time, against a server you start yourself:
 
 ```bash
 executionlist_perf.py prepare --output build_linux64/Output --workdir W
+export AMCF_USERNAME=perf AMCF_PASSWORD=<choose one>       # seed creates this account
 executionlist_perf.py seed W/data/storage.db -n 2000          # server stopped
 executionlist_perf.py measure --pid <amc_server pid> [--modes full,delta --single-count 20]
 ```
