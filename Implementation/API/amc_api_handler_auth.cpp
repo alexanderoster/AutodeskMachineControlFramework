@@ -249,6 +249,10 @@ void CAPIHandler_Auth::handleLogoutRequest(CJSONWriter& writer, std::string& sSe
 	if (pAuth.get() == nullptr)
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDPARAM);
 
+	// A session may only end itself; otherwise any authorized user could log out others by UUID.
+	if (sSessionUUID != pAuth->getSessionUUID())
+		throw ELibMCInterfaceException(LIBMC_ERROR_SESSIONNOTAUTHORIZED);
+
 	m_pSessionHandler->deactivateSession(sSessionUUID);
 
 	writer.addBoolean("success", true);

@@ -50,6 +50,7 @@ PUIModule_ContentImage CUIModule_ContentImage::makeFromXML(const pugi::xml_node&
 	LibMCAssertNotNull(pUIModuleEnvironment);
 
 	CUIExpression imageResourceExpression (xmlNode, "resource", true);
+	CUIExpression darkImageResourceExpression(xmlNode, "dark_resource", false);
 	CUIExpression aspectRatioExpression(xmlNode, "aspectratio", false);
 	CUIExpression maxWidthExpression(xmlNode, "maxwidth", false);
 	CUIExpression maxHeightExpression(xmlNode, "maxheight", false);
@@ -59,14 +60,15 @@ PUIModule_ContentImage CUIModule_ContentImage::makeFromXML(const pugi::xml_node&
 	auto pStateMachineData = pUIModuleEnvironment->stateMachineData();
 	auto pResourcePackage = pUIModuleEnvironment->resourcePackage();
 
-	auto pItem = std::make_shared <CUIModule_ContentImage>(sUUID, sItemName, sModulePath, imageResourceExpression, aspectRatioExpression, maxWidthExpression, maxHeightExpression, pStateMachineData, pResourcePackage);
+	auto pItem = std::make_shared <CUIModule_ContentImage>(sUUID, sItemName, sModulePath, imageResourceExpression, darkImageResourceExpression, aspectRatioExpression, maxWidthExpression, maxHeightExpression, pStateMachineData, pResourcePackage);
 	return pItem;
 }
 
 
-CUIModule_ContentImage::CUIModule_ContentImage(const std::string& sUUID, const std::string& sItemName, const std::string& sModulePath, CUIExpression imageResource, CUIExpression dAspectRatio, CUIExpression maxWidth, CUIExpression maxHeight, PStateMachineData pStateMachineData, PResourcePackage pResourcePackage)
+CUIModule_ContentImage::CUIModule_ContentImage(const std::string& sUUID, const std::string& sItemName, const std::string& sModulePath, CUIExpression imageResource, CUIExpression darkImageResource, CUIExpression dAspectRatio, CUIExpression maxWidth, CUIExpression maxHeight, PStateMachineData pStateMachineData, PResourcePackage pResourcePackage)
 	: CUIModule_ContentItem(sUUID, sItemName, sModulePath),
 	  m_ImageResource (imageResource),
+	  m_DarkImageResource (darkImageResource),
 	  m_AspectRatio (dAspectRatio),
 	  m_MaxWidth (maxWidth),
 	  m_MaxHeight (maxHeight),
@@ -96,6 +98,7 @@ void CUIModule_ContentImage::populateClientVariables(CParameterHandler* pClientV
 	auto pGroup = pClientVariableHandler->addGroup(getItemPath(), "upload UI element");
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMIMAGERESOURCE, "Resource Name", m_ImageResource.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMIMAGEUUID, "Resource UUID", AMCCommon::CUtils::createEmptyUUID ());
+	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMDARKIMAGERESOURCE, "Dark Resource Name", m_DarkImageResource.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMASPECTRATIO, "Aspect Ratio", m_AspectRatio.evaluateStringValue (m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMMAXWIDTH, "Maximum Width", m_MaxWidth.evaluateStringValue(m_pStateMachineData));
 	pGroup->addNewStringParameter(AMC_API_KEY_UI_ITEMMAXHEIGHT, "Maximum Height", m_MaxHeight.evaluateStringValue(m_pStateMachineData));
@@ -122,6 +125,12 @@ void CUIModule_ContentImage::registerFrontendAttributes()
 	registerItemProviderAttribute("resource", eUIFrontendDefinitionAttributeType::atUUID, eUIFrontendDefinitionAttributeScope::asGlobal,
 		[this](CJSONWriter& writer, CJSONWriterObject& object, const std::string& sName, CStateMachineData* pStateMachineData, CUIFrontendState* pFrontendState) {
 			object.addString(sName, resolveResourceToUUID(m_ImageResource.evaluateStringValue(pStateMachineData)));
+		});
+
+	// Shown instead of the resource while the client is in dark mode.
+	registerItemProviderAttribute("dark_resource", eUIFrontendDefinitionAttributeType::atUUID, eUIFrontendDefinitionAttributeScope::asGlobal,
+		[this](CJSONWriter& writer, CJSONWriterObject& object, const std::string& sName, CStateMachineData* pStateMachineData, CUIFrontendState* pFrontendState) {
+			object.addString(sName, resolveResourceToUUID(m_DarkImageResource.evaluateStringValue(pStateMachineData)));
 		});
 
 	registerOptionalStringAttribute("aspectratio", m_AspectRatio);

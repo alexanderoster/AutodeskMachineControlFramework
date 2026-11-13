@@ -65,6 +65,9 @@ namespace AMC {
 		uint32_t m_nDecimals;
 		std::string m_sUnit;
 		std::vector<sStatusListMapEntry> m_Maps;
+		// Optional severity (success | warning | error | info | neutral) that renders the value as a colored pill.
+		CUIExpression m_SeverityExpression;
+		bool m_bHasSeverity;
 	public:
 		CUIModule_ContentStatusListRow(const std::string& sLabel, const CUIExpression& valueExpression, const std::string& sDisplay, uint32_t nDecimals, const std::string& sUnit);
 		~CUIModule_ContentStatusListRow();
@@ -77,8 +80,12 @@ namespace AMC {
 		std::string getUnit();
 		const std::vector<sStatusListMapEntry>& getMaps();
 
+		void setSeverityExpression(const CUIExpression& severityExpression);
+		bool hasSeverity();
+
 		// Resolves the current live value of this row against the state machine data.
 		std::string evaluateValue(CStateMachineData* pStateMachineData);
+		std::string evaluateSeverity(CStateMachineData* pStateMachineData);
 	};
 
 

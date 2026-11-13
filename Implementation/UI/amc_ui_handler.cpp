@@ -113,6 +113,7 @@ bool CUIHandleEventResponse::externalValueNameIsReserved(const std::string& sNam
 
 CUIHandler::CUIHandler(LibMCEnv::PWrapper pEnvironmentWrapper, PUISystemState pUISystemState)
     : m_dLogoAspectRatio (1.0), 
+    m_bLoginShowAppName (true),
     m_pUISystemState (pUISystemState),
     m_pEnvironmentWrapper (pEnvironmentWrapper)
 {
@@ -420,8 +421,14 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
         m_LoginSubtitle = CUIExpression(loginNode, "loginsubtitle", "");
 
+        auto showAppNameAttrib = loginNode.attribute("showappname");
+        m_bLoginShowAppName = showAppNameAttrib.empty() ? true : showAppNameAttrib.as_bool();
+
         auto panelResourceAttrib = loginNode.attribute("panelresource");
         m_sPanelResourceName = panelResourceAttrib.empty() ? "" : panelResourceAttrib.as_string();
+
+        auto darkPanelResourceAttrib = loginNode.attribute("dark_panelresource");
+        m_sDarkPanelResourceName = darkPanelResourceAttrib.empty() ? "" : darkPanelResourceAttrib.as_string();
     }
 
 
@@ -565,6 +572,12 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
     if (menuNode.empty())
         throw ELibMCInterfaceException(LIBMC_ERROR_MISSINGMENUNODE);
 
+    auto menuLogoResourceAttrib = menuNode.attribute("logoresource");
+    m_sMenuLogoResourceName = menuLogoResourceAttrib.as_string();
+
+    auto darkMenuLogoResourceAttrib = menuNode.attribute("dark_logoresource");
+    m_sDarkMenuLogoResourceName = darkMenuLogoResourceAttrib.as_string();
+
     auto menuItems = menuNode.children("item");
     for (pugi::xml_node menuItem : menuItems) {
         auto idAttrib = menuItem.attribute("id");
@@ -593,6 +606,9 @@ void CUIHandler::loadFromXML(pugi::xml_node& xmlNode, const std::string& sUILibr
 
     auto toolbarLogoResourceAttrib = toolbarNode.attribute("logoresource");
     m_ToolbarLogoResourceName = toolbarLogoResourceAttrib.as_string();
+
+    auto darkToolbarLogoResourceAttrib = toolbarNode.attribute("dark_logoresource");
+    m_DarkToolbarLogoResourceName = darkToolbarLogoResourceAttrib.as_string();
 
     auto toolbarItems = toolbarNode.children("item");
     for (pugi::xml_node toolbarItem : toolbarItems) {
@@ -988,6 +1004,19 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
         auto pToolbarLogoResource = m_pCoreResourcePackage->findEntryByName(m_ToolbarLogoResourceName, true);
         writer.addString(AMC_API_KEY_UI_TOOLBARLOGOUUID, pToolbarLogoResource->getUUID());
     }
+    if (!m_DarkToolbarLogoResourceName.empty()) {
+        auto pDarkToolbarLogoResource = m_pCoreResourcePackage->findEntryByName(m_DarkToolbarLogoResourceName, true);
+        writer.addString(AMC_API_KEY_UI_DARKTOOLBARLOGOUUID, pDarkToolbarLogoResource->getUUID());
+    }
+
+    if (!m_sMenuLogoResourceName.empty()) {
+        auto pMenuLogoResource = m_pCoreResourcePackage->findEntryByName(m_sMenuLogoResourceName, true);
+        writer.addString(AMC_API_KEY_UI_MENULOGOUUID, pMenuLogoResource->getUUID());
+    }
+    if (!m_sDarkMenuLogoResourceName.empty()) {
+        auto pDarkMenuLogoResource = m_pCoreResourcePackage->findEntryByName(m_sDarkMenuLogoResourceName, true);
+        writer.addString(AMC_API_KEY_UI_DARKMENULOGOUUID, pDarkMenuLogoResource->getUUID());
+    }
 
     if (!m_LoginBackgroundUUID.isEmpty(pStateMachineData)) {
         auto pResourceEntry = m_pCoreResourcePackage->findEntryByName(m_LoginBackgroundUUID.evaluateStringValue(pStateMachineData), true);
@@ -1001,10 +1030,15 @@ void CUIHandler::writeConfigurationToJSON(CJSONWriter& writer)
 
     writer.addString(AMC_API_KEY_UI_LOGINSTYLE, m_sLoginStyle);
     writer.addString(AMC_API_KEY_UI_LOGINSUBTITLE, m_LoginSubtitle.evaluateStringValue(pStateMachineData));
+    writer.addBoolean(AMC_API_KEY_UI_LOGINSHOWAPPNAME, m_bLoginShowAppName);
 
     if (!m_sPanelResourceName.empty()) {
         auto pPanelResource = m_pCoreResourcePackage->findEntryByName(m_sPanelResourceName, true);
         writer.addString(AMC_API_KEY_UI_LOGINPANELUUID, pPanelResource->getUUID());
+    }
+    if (!m_sDarkPanelResourceName.empty()) {
+        auto pDarkPanelResource = m_pCoreResourcePackage->findEntryByName(m_sDarkPanelResourceName, true);
+        writer.addString(AMC_API_KEY_UI_DARKLOGINPANELUUID, pDarkPanelResource->getUUID());
     }
 
     writer.addString(AMC_API_KEY_UI_DEFAULTTHEME, m_sDefaultTheme);

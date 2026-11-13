@@ -116,7 +116,12 @@ namespace AMC {
 		CUIExpression m_LoginWelcomeMessage;
 		std::string m_sLoginStyle;
 		CUIExpression m_LoginSubtitle;
+		bool m_bLoginShowAppName;
 		std::string m_sPanelResourceName;
+		std::string m_sDarkPanelResourceName;
+
+		std::string m_sMenuLogoResourceName;
+		std::string m_sDarkMenuLogoResourceName;
 
 		std::string m_sMainPageName;
 
@@ -126,6 +131,7 @@ namespace AMC {
 		std::vector <PUIToolbarItem> m_ToolbarItems;
 		std::map<std::string, PUIToolbarItem> m_ToolbarItemUUIDMap;
 		std::string m_ToolbarLogoResourceName;
+		std::string m_DarkToolbarLogoResourceName;
 
 		std::map <std::string, PUIPage> m_Pages;
 		std::map <std::string, PUICustomPage> m_CustomPages;

@@ -53,6 +53,7 @@ namespace AMC {
 	class CUIModule_ContentImage : public CUIModule_ContentItem {
 	protected:		
 		CUIExpression m_ImageResource;
+		CUIExpression m_DarkImageResource;
 		CUIExpression m_AspectRatio;
 		CUIExpression m_MaxWidth;
 		CUIExpression m_MaxHeight;
@@ -64,7 +65,7 @@ namespace AMC {
 
 		static PUIModule_ContentImage makeFromXML(const pugi::xml_node& xmlNode, const std::string& sItemName, const std::string& sModulePath, PUIModuleEnvironment pUIModuleEnvironment);
 
-		CUIModule_ContentImage(const std::string & sUUID, const std::string& sItemName, const std::string& sModulePath, CUIExpression imageResource, CUIExpression dAspectRatio, CUIExpression maxWidth, CUIExpression maxHeight, PStateMachineData pStateMachineData, PResourcePackage pResourcePackage);
+		CUIModule_ContentImage(const std::string & sUUID, const std::string& sItemName, const std::string& sModulePath, CUIExpression imageResource, CUIExpression darkImageResource, CUIExpression dAspectRatio, CUIExpression maxWidth, CUIExpression maxHeight, PStateMachineData pStateMachineData, PResourcePackage pResourcePackage);
 		
 		virtual ~CUIModule_ContentImage();
 

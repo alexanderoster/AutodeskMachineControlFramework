@@ -52,7 +52,7 @@ using namespace AMC;
 
 
 CUIModule_ContentStatusListRow::CUIModule_ContentStatusListRow(const std::string& sLabel, const CUIExpression& valueExpression, const std::string& sDisplay, uint32_t nDecimals, const std::string& sUnit)
-	: m_sLabel(sLabel), m_ValueExpression(valueExpression), m_sDisplay(sDisplay), m_nDecimals(nDecimals), m_sUnit(sUnit)
+	: m_sLabel(sLabel), m_ValueExpression(valueExpression), m_sDisplay(sDisplay), m_nDecimals(nDecimals), m_sUnit(sUnit), m_bHasSeverity(false)
 {
 }
 
@@ -92,6 +92,24 @@ std::string CUIModule_ContentStatusListRow::getUnit()
 const std::vector<sStatusListMapEntry>& CUIModule_ContentStatusListRow::getMaps()
 {
 	return m_Maps;
+}
+
+void CUIModule_ContentStatusListRow::setSeverityExpression(const CUIExpression& severityExpression)
+{
+	m_SeverityExpression = severityExpression;
+	m_bHasSeverity = true;
+}
+
+bool CUIModule_ContentStatusListRow::hasSeverity()
+{
+	return m_bHasSeverity;
+}
+
+std::string CUIModule_ContentStatusListRow::evaluateSeverity(CStateMachineData* pStateMachineData)
+{
+	if (!m_bHasSeverity)
+		return "";
+	return m_SeverityExpression.evaluateStringValue(pStateMachineData);
 }
 
 std::string CUIModule_ContentStatusListRow::evaluateValue(CStateMachineData* pStateMachineData)
@@ -165,6 +183,10 @@ void CUIModule_ContentStatusList::loadFromXML(const pugi::xml_node& xmlNode)
 
 		auto pRow = std::make_shared<CUIModule_ContentStatusListRow>(sLabel, valueExpression, sDisplay, nDecimals, sUnit);
 
+		// Optional severity (severity="..." or sync:severity="formula") colors the value of any display type.
+		if (!rowNode.attribute("severity").empty() || !rowNode.attribute("sync:severity").empty())
+			pRow->setSeverityExpression(CUIExpression(rowNode, "severity", std::string("")));
+
 		// Optional explicit value->text+severity mappings for display="map".
 		auto mapNodes = rowNode.children("map");
 		for (auto mapNode : mapNodes) {
@@ -208,6 +230,9 @@ void CUIModule_ContentStatusList::writeRowsToJSON(CJSONWriter& writer, CJSONWrit
 			if (!pRow->getUnit().empty())
 				rowObject.addString("unit", pRow->getUnit());
 		}
+
+		if (pRow->hasSeverity())
+			rowObject.addString("severity", pRow->evaluateSeverity(m_pStateMachineData.get()));
 
 		const auto& maps = pRow->getMaps();
 		if (!maps.empty()) {
