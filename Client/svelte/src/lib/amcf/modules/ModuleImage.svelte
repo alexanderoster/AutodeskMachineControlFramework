@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { useModuleTick } from '$lib/amcf/poll.svelte';
+	import { themedImageUUID } from '$lib/amcf/theme.svelte';
 
 	let { module, app }: { module: any; app: any } = $props();
 	const poll = useModuleTick(() => module);
-	const nullUUID = '00000000-0000-0000-0000-000000000000';
 
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
 	let imageURL = $derived.by(() => {
 		poll.v;
-		const uuid = module.imageresource;
-		if (!uuid || uuid === nullUUID || !app) return '';
+		const uuid = themedImageUUID(module.imageresource, module.dark_imageresource);
+		if (!uuid || !app) return '';
 		return app.getImageURL(uuid);
 	});
 	let maxheight = $derived.by(() => { poll.v; return module.maxheight || 400; });

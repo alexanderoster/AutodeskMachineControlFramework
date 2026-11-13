@@ -53,6 +53,19 @@
 		return PALETTE[idx % PALETTE.length];
 	}
 
+	// Readable title from a journal variable path, e.g.
+	// "plc.displaystate.ProcessChamber_AreaTemperature" -> "Process Chamber Area Temperature".
+	function variableTitle (name: string): string {
+		const leaf = name.split('.').pop() || name;
+		const words = leaf
+			.replace(/_/g, ' ')
+			.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+			.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+			.replace(/\s+/g, ' ')
+			.trim();
+		return words ? words.charAt(0).toUpperCase() + words.slice(1) : name;
+	}
+
 	function toggleVariable (name: string) {
 		if (selected.includes(name)) {
 			selected = selected.filter((n) => n !== name);
@@ -95,6 +108,7 @@
 			const buckets = s.buckets.length ? s.buckets : base.map(() => ({ t: 0, min: NaN, max: NaN, avg: NaN, last: NaN }));
 			return {
 				label: s.name,
+				title: variableTitle(s.name),
 				color: paletteColor(s.name),
 				avg: buckets.map((b) => b.avg),
 				min: buckets.map((b) => b.min),
@@ -244,19 +258,10 @@
 					{traces}
 					fillHeight
 					showLiveLabels
+					canvasLegend
 					onHover={handleHover}
 				/>
 			{/if}
-		</div>
-
-		<div class="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs px-0.5">
-			{#each traces as trace (trace.label)}
-				<span class="inline-flex items-center gap-1.5">
-					<span class="size-2.5 rounded-sm" style={`background:${trace.color};`}></span>
-					<span class="font-medium">{trace.label}</span>
-					<span class="tabular-nums text-muted-foreground">{legendValue(trace)}</span>
-				</span>
-			{/each}
 		</div>
 	</div>
 {:else if visible}
@@ -317,9 +322,9 @@
 				<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
 					<span class="text-muted-foreground">Window: {windowLabel()}</span>
 					{#each traces as trace (trace.label)}
-						<span class="inline-flex items-center gap-1.5">
+						<span class="inline-flex items-center gap-1.5" title={trace.label}>
 							<span class="size-2.5 rounded-sm" style={`background:${trace.color};`}></span>
-							<span class="font-medium">{trace.label}</span>
+							<span class="font-medium">{trace.title || trace.label}</span>
 							<span class="tabular-nums text-muted-foreground">{legendValue(trace)}</span>
 						</span>
 					{/each}

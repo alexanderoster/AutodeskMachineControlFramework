@@ -63,6 +63,17 @@ export default {
 		},
 
 		renderRow (row) {
+			const r = this.renderRowValue(row);
+			// An explicit row severity (severity / sync:severity) colors the value as a pill.
+			let severity = (row.severity === undefined || row.severity === null ? '' : row.severity).toString().trim().toLowerCase();
+			if (severity === 'ok')
+				severity = 'success';
+			if (['success', 'warning', 'error', 'info', 'neutral'].indexOf(severity) >= 0)
+				return { pill: true, text: r.text, severity: severity };
+			return r;
+		},
+
+		renderRowValue (row) {
 			const value = (row.value === undefined || row.value === null ? '' : row.value).toString();
 			const display = (row.display || 'text').toString();
 

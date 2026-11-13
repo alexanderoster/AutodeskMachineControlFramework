@@ -16,7 +16,16 @@
 	let entities = $derived.by(() => { poll.v; return [...(module.entities || [])]; });
 	let visible = $derived.by(() => { poll.v; return module.visible !== false; });
 
-	function d(entity: any): any { poll.v; return entity?.dataObject || {}; }
+	// dataObject is a plain object outside Svelte's reactivity graph. Local edits bump
+	// editTick so sibling controls sharing the value (slider + number box) redraw at once.
+	let editTick = $state(0);
+
+	function d(entity: any): any { poll.v; editTick; return entity?.dataObject || {}; }
+
+	function setValue (entity: any, value: any) {
+		entity.dataObject.value = value;
+		editTick++;
+	}
 
 	function fireChangeEvent (entity: any) {
 		if (!entity?.dataObject?.changeevent || !app) return;
@@ -35,12 +44,12 @@
 	function onSwitchChange (entity: any, checked: boolean) {
 		// Read-only switches reflect state but must never be changed by the user.
 		if (d(entity).readonly) return;
-		entity.dataObject.value = checked;
+		setValue(entity, checked);
 		fireChangeEvent(entity);
 	}
 
 	function onComboChange (entity: any, value: string) {
-		entity.dataObject.value = value;
+		setValue(entity, value);
 		fireChangeEvent(entity);
 	}
 
@@ -89,7 +98,7 @@
 					class="h-8 text-sm"
 					onblur={() => onEditBlur(entity)}
 					onkeydown={(e: KeyboardEvent) => onEditEnter(entity, e)}
-					oninput={(e: Event) => { entity.dataObject.value = (e.target as HTMLInputElement).value; }}
+					oninput={(e: Event) => { setValue(entity, (e.target as HTMLInputElement).value); }}
 				/>
 				{#if d(entity).suffix}
 					<span class="text-xs text-muted-foreground">{d(entity).suffix}</span>
@@ -123,7 +132,7 @@
 				disabled={d(entity).disabled}
 				readonly={d(entity).readonly}
 				onblur={() => onEditBlur(entity)}
-				oninput={(e: Event) => { entity.dataObject.value = (e.target as HTMLTextAreaElement).value; }}
+				oninput={(e: Event) => { setValue(entity, (e.target as HTMLTextAreaElement).value); }}
 			></textarea>
 		</div>
 
@@ -167,7 +176,7 @@
 					class="h-8 text-sm w-full"
 					onblur={() => onEditBlur(entity)}
 					onkeydown={(e: KeyboardEvent) => onEditEnter(entity, e)}
-					oninput={(e: Event) => { entity.dataObject.value = (e.target as HTMLInputElement).value; }}
+					oninput={(e: Event) => { setValue(entity, (e.target as HTMLInputElement).value); }}
 				/>
 				{#if d(entity).unit}
 					<span class="text-xs text-muted-foreground">{d(entity).unit}</span>
@@ -189,7 +198,7 @@
 						max={parseFloat(d(entity).maxvalue) || 100}
 						step={parseFloat(d(entity).step) || 1}
 						disabled={d(entity).disabled}
-						oninput={(e: Event) => { entity.dataObject.value = (e.target as HTMLInputElement).value; }}
+						oninput={(e: Event) => { setValue(entity, (e.target as HTMLInputElement).value); }}
 						onchange={() => onEditBlur(entity)}
 					/>
 					<!-- editable numeric override: shares the slider's value for precise entry.
@@ -203,7 +212,7 @@
 							max={parseFloat(d(entity).maxvalue)}
 							step={parseFloat(d(entity).step) || 1}
 							disabled={d(entity).disabled}
-							oninput={(e: Event) => { entity.dataObject.value = (e.target as HTMLInputElement).value; }}
+							oninput={(e: Event) => { setValue(entity, (e.target as HTMLInputElement).value); }}
 							onblur={() => onEditBlur(entity)}
 							onkeydown={(e: KeyboardEvent) => onEditEnter(entity, e)}
 						/>
@@ -225,7 +234,7 @@
 				disabled={d(entity).disabled}
 				readonly={d(entity).readonly}
 				class="h-8 text-sm"
-				onchange={(e: Event) => { entity.dataObject.value = (e.target as HTMLInputElement).value; fireChangeEvent(entity); }}
+				onchange={(e: Event) => { setValue(entity, (e.target as HTMLInputElement).value); fireChangeEvent(entity); }}
 			/>
 		</div>
 
@@ -245,7 +254,7 @@
 							if (!Array.isArray(arr)) arr = [];
 							if (arr.includes(val)) arr = arr.filter((v: string) => v !== val);
 							else arr.push(val);
-							entity.dataObject.value = JSON.stringify(arr);
+							setValue(entity, JSON.stringify(arr));
 							fireChangeEvent(entity);
 						}}
 					>

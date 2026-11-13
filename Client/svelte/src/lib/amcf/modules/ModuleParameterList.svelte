@@ -73,6 +73,10 @@
 	let activeGroups = $derived.by(() => { poll.v; stateTick; return (module.filters && module.filters.groups) ? module.filters.groups : []; });
 	let activeSystems = $derived.by(() => { poll.v; stateTick; return (module.filters && module.filters.systems) ? module.filters.systems : []; });
 	let presetNames = $derived.by(() => { poll.v; stateTick; return (typeof module.listPresets === 'function') ? module.listPresets() : []; });
+	let activePreset = $derived.by(() => { poll.v; stateTick; return module.activePreset || ''; });
+	// The rows keep their object identity when only the favorites change, so the star
+	// must read a reactive value instead of calling into the plain core module.
+	let favoriteKeys = $derived.by(() => { poll.v; stateTick; return new Set<string>(module.favorites || []); });
 	let hasPreferences = $derived.by(() => { poll.v; return !!(module.preferenceKey); });
 
 	// Session-only column width overrides from drag-resizing, keyed by column value.
@@ -188,7 +192,7 @@
 		if (typeof module.toggleFavorite === 'function') module.toggleFavorite(row);
 	}
 	function isFavorite(row: any): boolean {
-		return (typeof module.isFavorite === 'function') ? module.isFavorite(row) : false;
+		return favoriteKeys.has(rowKey(row));
 	}
 	function sortBy(h: any) {
 		if (typeof module.toggleSort === 'function') module.toggleSort(h.value);
@@ -332,7 +336,7 @@
 									{#each presetNames as name (name)}
 										<DropdownMenu.Item onSelect={() => loadPreset(name)}>
 											<span class="flex-1">{name}</span>
-											{#if module.activePreset === name}<Check class="size-4" />{/if}
+											{#if activePreset === name}<Check class="size-4" />{/if}
 										</DropdownMenu.Item>
 									{/each}
 								</DropdownMenu.SubContent>

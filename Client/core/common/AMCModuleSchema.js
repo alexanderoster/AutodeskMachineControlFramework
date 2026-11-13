@@ -89,7 +89,7 @@ const MODULE_SCHEMAS = {
 	},
 	image: {
 		required: ['uuid', 'type'],
-		optional: ['caption', 'visible', 'imageresource', 'aspectratio', 'maxwidth', 'maxheight'],
+		optional: ['caption', 'visible', 'imageresource', 'dark_imageresource', 'aspectratio', 'maxwidth', 'maxheight'],
 	},
 	paragraph: {
 		required: ['uuid', 'type'],

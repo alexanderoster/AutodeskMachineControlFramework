@@ -110,6 +110,7 @@ export default class AMCApplication extends Common.AMCObject {
         this.API = {
             baseURL: apiBaseURL,
             authToken: Common.nullToken (),
+			sessionUUID: Common.nullUUID (),
             unsuccessfulUpdateCounter: 0,
 			unsuccessfulFrontendCounter: 0,
 			frontendState: null,
@@ -143,6 +144,9 @@ export default class AMCApplication extends Common.AMCObject {
         this.AppDefinition = {
             TextApplicationName: "",
 			ToolbarLogoUUID: "",
+			DarkToolbarLogoUUID: "",
+			MenuLogoUUID: "",
+			DarkMenuLogoUUID: "",
             TextCopyRight: "",
             MainPage: "",
             LogoUUID: "",
@@ -153,7 +157,9 @@ export default class AMCApplication extends Common.AMCObject {
 			LoginWelcomeMessage: "",
 			LoginStyle: "classic",
 			LoginSubtitle: "",
+			LoginShowAppName: true,
 			LoginPanelUUID: "",
+			DarkLoginPanelUUID: "",
 			FirstLaunchMode: false,
             Colors: {},
             DarkColors: {},
@@ -360,10 +366,15 @@ export default class AMCApplication extends Common.AMCObject {
             this.AppDefinition.LoginBackgroundImageUUID = resultJSON.data.loginbackgrounduuid;
             this.AppDefinition.DarkLoginBackgroundImageUUID = resultJSON.data.darkloginbackgrounduuid || "";
 			this.AppDefinition.ToolbarLogoUUID = resultJSON.data.toolbarlogouuid;
+			this.AppDefinition.DarkToolbarLogoUUID = resultJSON.data.darktoolbarlogouuid || "";
+			this.AppDefinition.MenuLogoUUID = resultJSON.data.menulogouuid || "";
+			this.AppDefinition.DarkMenuLogoUUID = resultJSON.data.darkmenulogouuid || "";
 			this.AppDefinition.LoginWelcomeMessage = resultJSON.data.loginwelcomemessage;
 			this.AppDefinition.LoginStyle = resultJSON.data.loginstyle || "classic";
 			this.AppDefinition.LoginSubtitle = resultJSON.data.loginsubtitle || "";
+			this.AppDefinition.LoginShowAppName = resultJSON.data.loginshowappname !== false;
 			this.AppDefinition.LoginPanelUUID = resultJSON.data.loginpaneluuid || "";
+			this.AppDefinition.DarkLoginPanelUUID = resultJSON.data.darkloginpaneluuid || "";
 
             this.AppDefinition.LogoAspectRatio = resultJSON.data.logoaspectratio;
             if (resultJSON.data.colors) {
@@ -406,6 +417,7 @@ export default class AMCApplication extends Common.AMCObject {
     performLogout() {
 		this.stopFrontendUpdates ();
         this.API.authToken = Common.nullToken ();
+		this.API.sessionUUID = Common.nullUUID ();
         this.API.unsuccessfulUpdateCounter = 0;
 		this.API.userUUID = Common.nullUUID ();
 		this.API.userLogin = "";
@@ -414,6 +426,19 @@ export default class AMCApplication extends Common.AMCObject {
 		this.API.userLanguage = "";
 		this.API.userPermissions = new Set ();
     }
+
+	// Handles the "logout" client action: ends the server session (best effort)
+	// and returns to the login screen.
+	logoutToLoginScreen () {
+		let sessionUUID = this.API.sessionUUID;
+		if (sessionUUID !== Common.nullUUID ()) {
+			this.axiosPostRequest ("/auth/" + sessionUUID + "/logout", {})
+				.catch (err => { console.log (err); });
+		}
+		this.closeAllDialogs ();
+		this.performLogout ();
+		this.setStatus ("login");
+	}
 
     requestLogin(userName, userPassword) {
 
@@ -439,6 +464,7 @@ export default class AMCApplication extends Common.AMCObject {
             });
 
 			this.API.authToken = Assert.SHA256Value (resultAuthenticate.data.token);
+			this.API.sessionUUID = Assert.UUIDValue (sessionuuid);
 			this.API.userUUID = Assert.UUIDValue (resultAuthenticate.data.useruuid);
 			this.API.userLogin = Assert.IdentifierString (resultAuthenticate.data.userlogin);
 			this.API.userDescription = Assert.StringValue (resultAuthenticate.data.userdescription);
@@ -729,6 +755,8 @@ export default class AMCApplication extends Common.AMCObject {
 			// resource aliases
 			if ((moduleType === "image") && (legacy.imageresource === undefined) && (legacy.resource !== undefined))
 				legacy.imageresource = legacy.resource;
+			if ((moduleType === "image") && (legacy.dark_imageresource === undefined) && (legacy.dark_resource !== undefined))
+				legacy.dark_imageresource = legacy.dark_resource;
 			if ((moduleType === "videostream") && (legacy.streamresource === undefined) && (legacy.resource !== undefined))
 				legacy.streamresource = legacy.resource;
 
@@ -760,6 +788,8 @@ export default class AMCApplication extends Common.AMCObject {
 		// v2 image attributes use "resource", legacy item constructor expects "imageresource".
 		if ((item.type === "image") && (item.imageresource === undefined) && (item.resource !== undefined))
 			item.imageresource = item.resource;
+		if ((item.type === "image") && (item.dark_imageresource === undefined) && (item.dark_resource !== undefined))
+			item.dark_imageresource = item.dark_resource;
 
 		// Keep a compatibility alias if a v2 stream item uses "resource".
 		if ((item.type === "videostream") && (item.streamresource === undefined) && (item.resource !== undefined))
@@ -2196,6 +2226,9 @@ export default class AMCApplication extends Common.AMCObject {
 						if (action.action === "streamdownload") {
 							this.streamDownload(action.downloadticket);
 						}
+						if (action.action === "logout") {
+							this.logoutToLoginScreen();
+						}
 						
 						//this.updateContentItemResult(item.uuid, item);
 					}
@@ -2233,6 +2266,9 @@ export default class AMCApplication extends Common.AMCObject {
 						}
 						if (action.action === "streamdownload") {
 							this.streamDownload(action.downloadticket);
+						}
+						if (action.action === "logout") {
+							this.logoutToLoginScreen();
 						}
 						
 						//this.updateContentItemResult(item.uuid, item);

@@ -23,6 +23,7 @@
 	import AMCApplication from '@core/common/AMCApplication.js';
 	import { applyTokens, restoreHighContrastPreference, toggleDarkMode, restoreDarkModePreference, isDarkMode } from '@core/theme/themeLoader.js';
 	import { initPollTick, initModuleChanges, type PollTick } from '$lib/amcf/poll.svelte';
+	import { theme, themedImageUUID } from '$lib/amcf/theme.svelte';
 
 	const INITIAL_TICK_DELAY_MS = 1200;
 	const POST_LOGIN_TICK_DELAY_MS = 800;
@@ -31,7 +32,6 @@
 	let drawerOpen = $state(false);
 	let sidebarVisible = $state(true);
 	let isLargeScreen = $state(false);
-	let darkMode = $state(false);
 
 	const poll: PollTick = initPollTick();
 	const moduleChanges = initModuleChanges();
@@ -55,7 +55,8 @@
 	let activeDialogName = $derived.by(() => { poll.v; return (app?.AppContent?.Dialogs || []).find((d: any) => d.dialogIsActive)?.name || ''; });
 	let appName     = $derived.by(() => { poll.v; return app?.AppDefinition?.TextApplicationName || 'AMCF'; });
 	let copyright   = $derived.by(() => { poll.v; return app?.AppDefinition?.TextCopyRight || ''; });
-	let toolbarLogoUUID = $derived.by(() => { poll.v; return app?.AppDefinition?.ToolbarLogoUUID || ''; });
+	let toolbarLogoUUID = $derived.by(() => { poll.v; return themedImageUUID(app?.AppDefinition?.ToolbarLogoUUID, app?.AppDefinition?.DarkToolbarLogoUUID); });
+	let menuLogoUUID = $derived.by(() => { poll.v; return themedImageUUID(app?.AppDefinition?.MenuLogoUUID, app?.AppDefinition?.DarkMenuLogoUUID); });
 	let activePage  = $derived.by(() => { poll.v; return app?.AppState?.activePage || ''; });
 	let currentError = $derived.by(() => { poll.v; return app?.AppState?.currentError || ''; });
 	let serverColors = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors || {}; });
@@ -82,7 +83,7 @@
 			applyServerColors(serverColors, serverDarkColors);
 			colorsApplied = true;
 
-			darkMode = restoreDarkModePreference(serverDefaultTheme);
+			theme.dark = restoreDarkModePreference(serverDefaultTheme);
 		}
 	});
 
@@ -175,14 +176,14 @@
 	}
 
 	function handleToggleDarkMode () {
-		darkMode = toggleDarkMode();
+		theme.dark = toggleDarkMode();
 		// Modules that render theme colours (e.g. the layer view) re-read the theme on a tick.
 		bumpTick();
 	}
 
 	onMount(() => {
 		restoreHighContrastPreference();
-		darkMode = restoreDarkModePreference('system');
+		theme.dark = restoreDarkModePreference('system');
 
 		mql = window.matchMedia('(min-width: 1024px)');
 		isLargeScreen = mql.matches;
@@ -298,7 +299,13 @@
 			<Sheet.Root bind:open={drawerOpen}>
 				<Sheet.Content side="left" class="w-72 p-0">
 					<Sheet.Header class="p-4 border-b">
-						<Sheet.Title>{appName}</Sheet.Title>
+						<Sheet.Title>
+							{#if menuLogoUUID}
+								<img src={app.getImageURL(menuLogoUUID)} alt={appName} class="h-8 max-w-full object-contain object-left" />
+							{:else}
+								{appName}
+							{/if}
+						</Sheet.Title>
 					</Sheet.Header>
 					<ScrollArea class="flex-1 min-h-0">
 						<nav class="flex flex-col">
@@ -346,7 +353,7 @@
 						class="p-2 hover:bg-toolbar-foreground/10 rounded"
 						onclick={handleToggleDarkMode}
 					>
-						{#if darkMode}
+						{#if theme.dark}
 							<Sun class="h-4 w-4" />
 						{:else}
 							<Moon class="h-4 w-4" />
@@ -354,7 +361,7 @@
 					</button>
 				{/snippet}
 			</Tooltip.Trigger>
-			<Tooltip.Content>{darkMode ? 'Switch to light mode' : 'Switch to dark mode'}</Tooltip.Content>
+			<Tooltip.Content>{theme.dark ? 'Switch to light mode' : 'Switch to dark mode'}</Tooltip.Content>
 		</Tooltip.Root>
 
 		{#each toolbarItems as item (item.uuid)}
@@ -383,7 +390,13 @@
 		<!-- Permanent sidebar (large screens) -->
 		{#if isLargeScreen && sidebarVisible}
 			<aside class="w-72 border-r border-border bg-card shrink-0 flex flex-col">
-				<div class="p-4 border-b font-semibold text-sm">{appName}</div>
+				<div class="p-4 border-b font-semibold text-sm">
+					{#if menuLogoUUID}
+						<img src={app.getImageURL(menuLogoUUID)} alt={appName} class="h-8 max-w-full object-contain object-left" />
+					{:else}
+						{appName}
+					{/if}
+				</div>
 				<ScrollArea class="flex-1 min-h-0">
 					<nav class="flex flex-col">
 						{#each menuItems as item (item.uuid)}

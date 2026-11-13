@@ -7,6 +7,7 @@
 	import Moon from '@lucide/svelte/icons/moon';
 
 	import { usePollTick } from '$lib/amcf/poll.svelte';
+	import { theme, themedImageUUID } from '$lib/amcf/theme.svelte';
 	import { toggleDarkMode, isDarkMode } from '@core/theme/themeLoader.js';
 
 	let { app, onLogin }: { app: any; onLogin: () => void } = $props();
@@ -14,27 +15,23 @@
 
 	let loginUser = $state('');
 	let loginPassword = $state('');
-	let darkMode = $state(false);
 
 	let loginStyle   = $derived.by(() => { poll.v; return (app?.AppDefinition?.LoginStyle || 'classic').toLowerCase(); });
 	let appName      = $derived.by(() => { poll.v; return app?.AppDefinition?.TextApplicationName || 'AMCF'; });
 	let welcomeMsg   = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginWelcomeMessage || ''; });
-	let subtitle     = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginSubtitle || ''; });
-	let lightLogoUUID = $derived.by(() => { poll.v; return app?.AppDefinition?.LogoUUID || ''; });
-	let darkLogoUUID  = $derived.by(() => { poll.v; return app?.AppDefinition?.DarkLogoUUID || ''; });
-	// Prefer the dark logo/background in dark mode, falling back to the light one.
-	let logoUUID     = $derived(darkMode && darkLogoUUID ? darkLogoUUID : lightLogoUUID);
+	let subtitle     = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginSubtitle || ''; });	// Prefer the dark logo/panel/background in dark mode, falling back to the light one.
+	let logoUUID     = $derived.by(() => { poll.v; return themedImageUUID(app?.AppDefinition?.LogoUUID, app?.AppDefinition?.DarkLogoUUID); });
 	let logoAspect   = $derived.by(() => { poll.v; return app?.AppDefinition?.LogoAspectRatio || 3; });
-	let panelUUID    = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginPanelUUID || ''; });
-	let lightBgUUID  = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginBackgroundImageUUID || ''; });
-	let darkBgUUID   = $derived.by(() => { poll.v; return app?.AppDefinition?.DarkLoginBackgroundImageUUID || ''; });
-	let bgUUID       = $derived(darkMode && darkBgUUID ? darkBgUUID : lightBgUUID);
+	let panelUUID    = $derived.by(() => { poll.v; return themedImageUUID(app?.AppDefinition?.LoginPanelUUID, app?.AppDefinition?.DarkLoginPanelUUID); });
+	let bgUUID       = $derived.by(() => { poll.v; return themedImageUUID(app?.AppDefinition?.LoginBackgroundImageUUID, app?.AppDefinition?.DarkLoginBackgroundImageUUID); });
 	let primaryColor = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors?.primary || '#1a1a1a'; });
 	let accentColor  = $derived.by(() => { poll.v; return app?.AppDefinition?.Colors?.accent || ''; });
 
 	let logoURL     = $derived(logoUUID && app ? app.getImageURL(logoUUID) : '');
 	let panelURL    = $derived(panelUUID && app ? app.getImageURL(panelUUID) : '');
 	let bgURL       = $derived(bgUUID && app ? app.getImageURL(bgUUID) : '');
+	// The app name may only be hidden when a logo is there to identify the application.
+	let showAppName = $derived.by(() => { poll.v; return app?.AppDefinition?.LoginShowAppName !== false || !logoURL; });
 
 	function hexLightness (hex: string): number {
 		hex = hex.replace('#', '');
@@ -61,7 +58,7 @@
 	function autofocus (node: HTMLElement) { tick().then(() => node.focus()); }
 
 	onMount(() => {
-		darkMode = isDarkMode();
+		theme.dark = isDarkMode();
 		tick().then(() => {
 			const el = document.querySelector<HTMLInputElement>('[data-login-user], [data-login-first]');
 			el?.focus();
@@ -79,7 +76,7 @@
 	function onEnter () { if (loginUser && loginPassword) doLogin(); }
 
 	function handleToggleTheme () {
-		darkMode = toggleDarkMode();
+		theme.dark = toggleDarkMode();
 	}
 </script>
 
@@ -87,9 +84,9 @@
 <button
 	class="fixed top-4 right-4 z-50 p-2.5 rounded-full bg-black/5 dark:bg-white/10 backdrop-blur-sm border border-black/10 dark:border-white/20 text-gray-600 dark:text-white/70 hover:text-gray-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/20 transition shadow-sm"
 	onclick={handleToggleTheme}
-	title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+	title={theme.dark ? 'Switch to light mode' : 'Switch to dark mode'}
 >
-	{#if darkMode}
+	{#if theme.dark}
 		<Sun class="h-4 w-4" />
 	{:else}
 		<Moon class="h-4 w-4" />
@@ -105,9 +102,9 @@
 				<div class="px-8 pt-8 pb-9">
 					<div class="text-center mb-6">
 						{#if logoURL}
-							<img src={logoURL} alt="Logo" class="max-h-14 mx-auto mb-4 object-contain" style="aspect-ratio: {logoAspect}" />
+							<img src={logoURL} alt={appName} class="max-h-14 mx-auto mb-4 object-contain" style="aspect-ratio: {logoAspect}" />
 						{/if}
-						<h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{appName}</h1>
+						{#if showAppName}<h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{appName}</h1>{/if}
 						{#if subtitle}<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>{/if}
 						{#if welcomeMsg}<p class="text-xs text-gray-400 dark:text-gray-500 mt-2 leading-relaxed max-w-[280px] mx-auto">{welcomeMsg}</p>{/if}
 					</div>
@@ -147,9 +144,9 @@
 				<div class="px-10 pt-10 pb-11">
 					<div class="text-center mb-8">
 						{#if logoURL}
-							<img src={logoURL} alt="Logo" class="max-h-12 mx-auto mb-5 object-contain" />
+							<img src={logoURL} alt={appName} class="max-h-12 mx-auto mb-5 object-contain" />
 						{/if}
-						<h1 class="text-2xl font-semibold tracking-wide text-white">{appName}</h1>
+						{#if showAppName}<h1 class="text-2xl font-semibold tracking-wide text-white">{appName}</h1>{/if}
 						{#if subtitle}<p class="text-[13px] text-white/55 mt-1">{subtitle}</p>{/if}
 						{#if welcomeMsg}<p class="text-xs text-white/35 mt-3 leading-relaxed max-w-[300px] mx-auto">{welcomeMsg}</p>{/if}
 					</div>
@@ -189,9 +186,9 @@
 				<div class="px-10 pt-10 pb-11">
 					<div class="text-center mb-8">
 						{#if logoURL}
-							<img src={logoURL} alt="Logo" class="max-h-12 mx-auto mb-5 object-contain" />
+							<img src={logoURL} alt={appName} class="max-h-12 mx-auto mb-5 object-contain" />
 						{/if}
-						<h1 class="text-2xl font-semibold tracking-wide text-gray-900 dark:text-white">{appName}</h1>
+						{#if showAppName}<h1 class="text-2xl font-semibold tracking-wide text-gray-900 dark:text-white">{appName}</h1>{/if}
 						{#if subtitle}<p class="text-[13px] text-gray-500 dark:text-white/55 mt-1">{subtitle}</p>{/if}
 						{#if welcomeMsg}<p class="text-xs text-gray-400 dark:text-white/35 mt-3 leading-relaxed max-w-[300px] mx-auto">{welcomeMsg}</p>{/if}
 					</div>
@@ -229,9 +226,9 @@
 			style="background:{primaryColor}">
 			<div class="text-center px-10 max-w-[420px]">
 				{#if logoURL}
-					<img src={logoURL} alt="Logo" class="max-h-14 mx-auto mb-6 object-contain" />
+					<img src={logoURL} alt={appName} class="max-h-14 mx-auto mb-6 object-contain" />
 				{/if}
-				<h1 class="text-3xl font-bold tracking-wide mb-2">{appName}</h1>
+				{#if showAppName}<h1 class="text-3xl font-bold tracking-wide mb-2">{appName}</h1>{/if}
 				{#if subtitle}<p class="text-lg opacity-85 mb-1">{subtitle}</p>{/if}
 				{#if welcomeMsg}<p class="text-sm opacity-70 leading-relaxed">{welcomeMsg}</p>{/if}
 				{#if panelURL}
@@ -242,7 +239,7 @@
 		<div class="flex-1 flex items-center justify-center bg-white dark:bg-zinc-900">
 			<div class="w-full max-w-[380px] px-8 py-12 text-center">
 				{#if logoURL}
-					<img src={logoURL} alt="Logo" class="max-h-12 mx-auto mb-4 object-contain md:hidden" />
+					<img src={logoURL} alt={appName} class="max-h-12 mx-auto mb-4 object-contain md:hidden" />
 				{/if}
 				<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Sign In</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-6">Enter your credentials to continue</p>

@@ -44,6 +44,7 @@ export default class AMCApplicationModule_Image extends Common.AMCApplicationMod
 		this.usesV2Frontend = true;
 
 		this.imageresource = Common.nullUUID ();
+		this.dark_imageresource = Common.nullUUID ();
 		this.aspectratio = 1.0;
 		this.maxwidth  = 0;
 		this.maxheight = 0;
@@ -56,6 +57,8 @@ export default class AMCApplicationModule_Image extends Common.AMCApplicationMod
 	{
 		if (updateJSON.imageresource)
 			this.imageresource = Assert.UUIDValue (updateJSON.imageresource);
+		if (updateJSON.dark_imageresource)
+			this.dark_imageresource = Assert.UUIDValue (updateJSON.dark_imageresource);
 		if (updateJSON.aspectratio !== undefined)
 			this.aspectratio = Assert.NumberValue (updateJSON.aspectratio);
 		if (updateJSON.maxwidth)
@@ -74,6 +77,9 @@ export default class AMCApplicationModule_Image extends Common.AMCApplicationMod
 		let resourceUUID = attrs.resource || attrs.imageresource;
 		if (resourceUUID)
 			this.imageresource = resourceUUID;
+		let darkResourceUUID = attrs.dark_resource || attrs.dark_imageresource;
+		if (darkResourceUUID)
+			this.dark_imageresource = darkResourceUUID;
 		if (attrs.aspectratio !== undefined)
 			this.aspectratio = parseFloat(attrs.aspectratio) || 1.0;
 		if (attrs.maxwidth !== undefined)

@@ -5,6 +5,8 @@
 
 	export interface ChartTrace {
 		label: string;
+		// Human readable name for legends; falls back to `label`.
+		title?: string;
 		color: string;
 		avg: number[];
 		min?: number[];
@@ -17,6 +19,7 @@
 		height = 320,
 		fillHeight = false,
 		showLiveLabels = false,
+		canvasLegend = false,
 		onZoom = undefined,
 		onHover = undefined
 	}: {
@@ -29,6 +32,9 @@
 		// When true the latest value of each trace is drawn directly on the canvas
 		// next to the series, at the right-hand edge of the plot.
 		showLiveLabels?: boolean;
+		// When true a legend (color, title and the latest or hovered value of each
+		// trace) is drawn on the canvas in a band reserved above the plotting area.
+		canvasLegend?: boolean;
 		onZoom?: (minX: number, maxX: number) => void;
 		onHover?: (idx: number | null) => void;
 	} = $props();
@@ -50,7 +56,7 @@
 	}
 
 	function seriesSignature (): string {
-		return traces.map((t) => `${t.label}:${t.color}`).join('|') + `|fill:${fillHeight}|live:${showLiveLabels}`;
+		return traces.map((t) => `${t.label}:${t.title ?? ''}:${t.color}`).join('|') + `|fill:${fillHeight}|live:${showLiveLabels}|legend:${canvasLegend}`;
 	}
 
 	// Resolves the height uPlot should render at. In fillHeight mode the chart tracks
@@ -128,6 +134,92 @@
 		ctx.restore();
 	}
 
+	// Canvas legend geometry, in CSS pixels.
+	const LEGEND_FONT = 11;
+	const LEGEND_LINE = 16;
+	const LEGEND_PAD = 4;
+	const LEGEND_SWATCH = 9;
+	const LEGEND_SWATCH_GAP = 5;
+	const LEGEND_VALUE_GAP = 6;
+	const LEGEND_ITEM_GAP = 16;
+
+	let measureCtx: CanvasRenderingContext2D | null = null;
+
+	function measureText (text: string): number {
+		if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
+		if (!measureCtx) return text.length * LEGEND_FONT * 0.6;
+		measureCtx.font = `${LEGEND_FONT}px system-ui, sans-serif`;
+		return measureCtx.measureText(text).width;
+	}
+
+	function traceTitle (trace: ChartTrace): string {
+		return trace.title || trace.label;
+	}
+
+	// Items flow left to right and wrap. The value slot has a fixed width so the
+	// layout (and the reserved band height) does not change while hovering.
+	function legendLayout (cssWidth: number): { items: { x: number; line: number; titleWidth: number }[]; height: number } {
+		const valueWidth = measureText('-0000.00');
+		const items: { x: number; line: number; titleWidth: number }[] = [];
+		let x = LEGEND_PAD;
+		let line = 0;
+		for (const trace of traces) {
+			const titleWidth = measureText(traceTitle(trace));
+			const itemWidth = LEGEND_SWATCH + LEGEND_SWATCH_GAP + titleWidth + LEGEND_VALUE_GAP + valueWidth;
+			if (x > LEGEND_PAD && x + itemWidth > cssWidth - LEGEND_PAD) {
+				line++;
+				x = LEGEND_PAD;
+			}
+			items.push({ x, line, titleWidth });
+			x += itemWidth + LEGEND_ITEM_GAP;
+		}
+		return { items, height: (line + 1) * LEGEND_LINE + LEGEND_PAD };
+	}
+
+	function legendValueAt (arr: (number | null)[] | undefined, idx: number | null | undefined): number {
+		if (!arr) return NaN;
+		if (idx != null && idx >= 0 && idx < arr.length) {
+			const val = arr[idx];
+			return (val != null && isFinite(val)) ? val : NaN;
+		}
+		for (let k = arr.length - 1; k >= 0; k--) {
+			const val = arr[k];
+			if (val != null && isFinite(val)) return val;
+		}
+		return NaN;
+	}
+
+	function drawLegend (u: uPlot) {
+		if (traces.length === 0) return;
+		const ctx = u.ctx;
+		const ratio = u.ctx.canvas.width / (u.width || 1);
+		const layout = legendLayout(u.width);
+
+		ctx.save();
+		ctx.font = `${Math.round(LEGEND_FONT * ratio)}px system-ui, sans-serif`;
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'middle';
+
+		traces.forEach((trace, i) => {
+			const item = layout.items[i];
+			const x = item.x * ratio;
+			const cy = (LEGEND_PAD + item.line * LEGEND_LINE + LEGEND_LINE / 2) * ratio;
+
+			ctx.fillStyle = trace.color;
+			ctx.fillRect(x, cy - (LEGEND_SWATCH / 2) * ratio, LEGEND_SWATCH * ratio, LEGEND_SWATCH * ratio);
+
+			const titleX = x + (LEGEND_SWATCH + LEGEND_SWATCH_GAP) * ratio;
+			ctx.fillStyle = '#334155';
+			ctx.fillText(traceTitle(trace), titleX, cy);
+
+			const value = legendValueAt(u.data[3 + i * 3] as (number | null)[] | undefined, u.cursor.idx);
+			ctx.fillStyle = '#64748b';
+			ctx.fillText(formatLiveValue(value) || '—', titleX + (item.titleWidth + LEGEND_VALUE_GAP) * ratio, cy);
+		});
+
+		ctx.restore();
+	}
+
 	function buildData (): (number[])[] {
 		const data: number[][] = [xValues];
 		for (const trace of traces) {
@@ -156,12 +248,18 @@
 			bands.push({ series: [maxIdx, minIdx], fill: hexToRgba(trace.color, 0.15) });
 		});
 
-		const drawHooks = showLiveLabels ? [drawLiveLabels] : [];
+		const drawHooks: ((u: uPlot) => void)[] = [];
+		if (showLiveLabels) drawHooks.push(drawLiveLabels);
+		if (canvasLegend) drawHooks.push(drawLegend);
+
+		// Repaint the legend only when the hovered sample changes.
+		let legendIdx: number | null | undefined = undefined;
 
 		return {
 			width: Math.max(width, 100),
 			height: currentHeight(),
 			legend: { show: false },
+			...(canvasLegend ? { padding: [(u: uPlot) => legendLayout(u.width).height + LEGEND_PAD, null, null, null] as uPlot.Padding } : {}),
 			cursor: {
 				drag: { x: true, y: false, setScale: false },
 				focus: { prox: 30 }
@@ -196,6 +294,10 @@
 				setCursor: [
 					(u: uPlot) => {
 						if (onHover) onHover(u.cursor.idx ?? null);
+						if (canvasLegend && u.cursor.idx !== legendIdx) {
+							legendIdx = u.cursor.idx;
+							u.redraw(false);
+						}
 					}
 				]
 			}

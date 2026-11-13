@@ -30,7 +30,21 @@
 		style: string;
 	}
 
+	function severityOf(row: any): string {
+		const s = (row.severity ?? '').toString().trim().toLowerCase();
+		return s === 'ok' ? 'success' : s;
+	}
+
 	function renderRow(row: any): RowRender {
+		const r = renderRowValue(row);
+		// An explicit row severity (severity / sync:severity) colors the value as a pill.
+		const severity = severityOf(row);
+		if (severity && severityStyle[severity])
+			return { pill: true, text: r.text, style: severityStyle[severity] };
+		return r;
+	}
+
+	function renderRowValue(row: any): RowRender {
 		const value = (row.value ?? '').toString();
 		const display = (row.display || 'text').toString();
 
@@ -82,7 +96,7 @@
 					<div class="flex items-center gap-2 py-1.5 border-b last:border-b-0 border-border/60">
 						<span class="flex-1 text-sm text-muted-foreground">{row.label}</span>
 						{#if r.pill}
-							<span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={r.style}>{r.text}</span>
+							<span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums" style={r.style}>{r.text}</span>
 						{:else}
 							<span class="text-sm tabular-nums">{r.text}</span>
 						{/if}
