@@ -2333,6 +2333,12 @@ public:
 	virtual IUserList * GetActiveUsers() = 0;
 
 	/**
+	* ILoginHandler::DeactivateUserByUUID - Deactivates a user. The user can not log in anymore and is not listed as active user. Fails if user does not exist.
+	* @param[in] sUUID - UUID of the user.
+	*/
+	virtual void DeactivateUserByUUID(const std::string & sUUID) = 0;
+
+	/**
 	* ILoginHandler::CreateLoginSession - Creates a new login session record in the database.
 	* @param[in] sSessionUUID - UUID of the session.
 	* @param[in] nCreateTimeInMicroseconds - Creation timestamp in microseconds since epoch.

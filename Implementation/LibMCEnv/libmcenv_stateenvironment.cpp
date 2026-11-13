@@ -943,9 +943,9 @@ bool CStateEnvironment::CheckUserPermission(const std::string& sUserLogin, const
 	std::string sUserRole = pLoginHandler->GetUserRole (sUserLogin);
 	AMC::PAccessRole pRole;
 	if (sUserRole.empty())
-		pRole = pAccessControl->findRole(sUserRole, true);
-	else
 		pRole = pAccessControl->getDefaultRole();
+	else
+		pRole = pAccessControl->findRole(sUserRole, true);
 
 	return pRole->hasPermission(sPermissionIdentifier);
 }

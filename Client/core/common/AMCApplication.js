@@ -49,6 +49,7 @@ import AMCApplicationModule_TogglePanel from "../modules/AMCModule_TogglePanel.j
 import AMCApplicationModule_Form from "../modules/AMCModule_Form.js"
 import AMCApplicationModule_Chart from "../modules/AMCModule_Chart.js"
 import AMCApplicationModule_JournalHistory from "../modules/AMCModule_JournalHistory.js"
+import AMCApplicationModule_UserManagement from "../modules/AMCModule_UserManagement.js"
 import AMCApplicationModule_Image from "../modules/AMCModule_Image.js"
 import AMCApplicationModule_StateMachineGraph from "../modules/AMCModule_StateMachineGraph.js"
 import AMCApplicationModule_Paragraph from "../modules/AMCModule_Paragraph.js"
@@ -134,7 +135,7 @@ export default class AMCApplication extends Common.AMCObject {
         }
 
         this.AppState = {
-            currentStatus: "initial", // one of "initial" / "login" / "ready" / "error",
+            currentStatus: "initial", // one of "initial" / "firstrun" / "login" / "ready" / "error",
             currentError: "",
             activePage: "",
 			appResizeEvent: uiResizeEvent,
@@ -384,7 +385,8 @@ export default class AMCApplication extends Common.AMCObject {
             }
             this.AppDefinition.DarkColors = resultJSON.data.darkcolors || {};
             this.AppDefinition.DefaultTheme = resultJSON.data.defaulttheme || "light";
-            this.setStatus("login");
+            this.AppDefinition.FirstLaunchMode = resultJSON.data.firstrun === true;
+            this.setStatus(this.AppDefinition.FirstLaunchMode ? "firstrun" : "login");
 
             document.title = this.AppDefinition.TextApplicationName;
 
@@ -429,6 +431,12 @@ export default class AMCApplication extends Common.AMCObject {
 
 	// Handles the "logout" client action: ends the server session (best effort)
 	// and returns to the login screen.
+	// Leaves the first-run setup, for example when another browser completed it first.
+	leaveFirstRun () {
+		this.AppDefinition.FirstLaunchMode = false;
+		this.setStatus ("login");
+	}
+
 	logoutToLoginScreen () {
 		let sessionUUID = this.API.sessionUUID;
 		if (sessionUUID !== Common.nullUUID ()) {
@@ -440,11 +448,12 @@ export default class AMCApplication extends Common.AMCObject {
 		this.setStatus ("login");
 	}
 
+    // Resolves once the login has finished; failures switch to the error status instead of rejecting.
     requestLogin(userName, userPassword) {
 
 		this.performLogout ();
 
-        this.axiosPostRequest("/auth/", {
+        return this.axiosPostRequest("/auth/", {
             "username": userName
         })
         .then(async resultCreateSession => {
@@ -477,6 +486,7 @@ export default class AMCApplication extends Common.AMCObject {
 				this.API.userPermissions.add (permission);
 			}
 
+			this.AppDefinition.FirstLaunchMode = false;
 			this.setStatus("ready");
 			this.retrieveStateUpdate();
 
@@ -852,6 +862,8 @@ export default class AMCApplication extends Common.AMCObject {
 			return new AMCApplicationModule_Chart (page, def);
 		if (def.type === "journalhistory")
 			return new AMCApplicationModule_JournalHistory (page, def);
+		if (def.type === "usermanagement")
+			return new AMCApplicationModule_UserManagement (page, def);
 		if (def.type === "image")
 			return new AMCApplicationModule_Image (page, def);
 		if (def.type === "paragraph")

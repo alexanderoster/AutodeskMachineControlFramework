@@ -458,6 +458,7 @@
 		<error name="INVALIDOPERATIONSEQUENCEREVISION" code="456" description="Invalid operation sequence revision" />
 		<error name="OPERATIONSEQUENCEREVISIONEXISTS" code="457" description="Operation sequence revision already exists" />
 		<error name="OPERATIONSEQUENCEREVISIONNOTFOUND" code="458" description="Operation sequence revision not found" />
+		<error name="COULDNOTDEACTIVATEUSER" code="459" description="Could not deactivate user" />
 
 	</errors>
 	
@@ -1915,6 +1916,10 @@
 
 		<method name="GetActiveUsers" description="Returns a list of active users.">
 			<param name="ActiveUsers" type="class" class="UserList" pass="return" description="New instance of active users." />
+		</method>
+
+		<method name="DeactivateUserByUUID" description="Deactivates a user. The user can not log in anymore and is not listed as active user. Fails if user does not exist.">
+			<param name="UUID" type="string" pass="in" description="UUID of the user." />
 		</method>
 
 		<method name="CreateLoginSession" description="Creates a new login session record in the database.">

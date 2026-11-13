@@ -2770,6 +2770,15 @@ typedef LibMCDataResult (*PLibMCDataLoginHandler_SetUserPasswordByUUIDPtr) (LibM
 typedef LibMCDataResult (*PLibMCDataLoginHandler_GetActiveUsersPtr) (LibMCData_LoginHandler pLoginHandler, LibMCData_UserList * pActiveUsers);
 
 /**
+* Deactivates a user. The user can not log in anymore and is not listed as active user. Fails if user does not exist.
+*
+* @param[in] pLoginHandler - LoginHandler instance.
+* @param[in] pUUID - UUID of the user.
+* @return error code or 0 (success)
+*/
+typedef LibMCDataResult (*PLibMCDataLoginHandler_DeactivateUserByUUIDPtr) (LibMCData_LoginHandler pLoginHandler, const char * pUUID);
+
+/**
 * Creates a new login session record in the database.
 *
 * @param[in] pLoginHandler - LoginHandler instance.
@@ -4251,6 +4260,7 @@ typedef struct {
 	PLibMCDataLoginHandler_SetUserDescriptionByUUIDPtr m_LoginHandler_SetUserDescriptionByUUID;
 	PLibMCDataLoginHandler_SetUserPasswordByUUIDPtr m_LoginHandler_SetUserPasswordByUUID;
 	PLibMCDataLoginHandler_GetActiveUsersPtr m_LoginHandler_GetActiveUsers;
+	PLibMCDataLoginHandler_DeactivateUserByUUIDPtr m_LoginHandler_DeactivateUserByUUID;
 	PLibMCDataLoginHandler_CreateLoginSessionPtr m_LoginHandler_CreateLoginSession;
 	PLibMCDataLoginHandler_UpdateLoginSessionAuthenticationPtr m_LoginHandler_UpdateLoginSessionAuthentication;
 	PLibMCDataLoginHandler_UpdateLoginSessionActivityPtr m_LoginHandler_UpdateLoginSessionActivity;

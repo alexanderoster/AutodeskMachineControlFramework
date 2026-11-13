@@ -847,6 +847,21 @@ public:
 			case LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED: return "OPERATIONSEQUENCEEDITNOTPERMITTED";
 			case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON: return "INVALIDOPERATIONSEQUENCEJSON";
 			case LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND: return "OPERATIONICONRESOURCENOTFOUND";
+			case LIBMC_ERROR_USERMANAGEMENTNOTPERMITTED: return "USERMANAGEMENTNOTPERMITTED";
+			case LIBMC_ERROR_ROLENOTASSIGNABLE: return "ROLENOTASSIGNABLE";
+			case LIBMC_ERROR_CANNOTMODIFYOWNUSER: return "CANNOTMODIFYOWNUSER";
+			case LIBMC_ERROR_LASTUSERMANAGER: return "LASTUSERMANAGER";
+			case LIBMC_ERROR_INVALIDPASSWORDPROOF: return "INVALIDPASSWORDPROOF";
+			case LIBMC_ERROR_PASSWORDCHALLENGENOTFOUND: return "PASSWORDCHALLENGENOTFOUND";
+			case LIBMC_ERROR_INVALIDUSERMANAGEMENTCAPABILITY: return "INVALIDUSERMANAGEMENTCAPABILITY";
+			case LIBMC_ERROR_DUPLICATEUSERMANAGEMENTCAPABILITY: return "DUPLICATEUSERMANAGEMENTCAPABILITY";
+			case LIBMC_ERROR_USERALREADYEXISTS: return "USERALREADYEXISTS";
+			case LIBMC_ERROR_INVALIDUSERDESCRIPTION: return "INVALIDUSERDESCRIPTION";
+			case LIBMC_ERROR_FIRSTRUNALREADYCOMPLETED: return "FIRSTRUNALREADYCOMPLETED";
+			case LIBMC_ERROR_INVALIDSETUPCODE: return "INVALIDSETUPCODE";
+			case LIBMC_ERROR_FIRSTRUNADMINROLEINVALID: return "FIRSTRUNADMINROLEINVALID";
+			case LIBMC_ERROR_INVALIDFIRSTRUNSETUPCODEMODE: return "INVALIDFIRSTRUNSETUPCODEMODE";
+			case LIBMC_ERROR_FIRSTRUNNOTAVAILABLE: return "FIRSTRUNNOTAVAILABLE";
 		}
 		return "UNKNOWN";
 	}
@@ -1528,6 +1543,21 @@ public:
 			case LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED: return "The user is not permitted to edit operation sequences.";
 			case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON: return "Invalid operation sequence JSON.";
 			case LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND: return "Operation icon resource not found.";
+			case LIBMC_ERROR_USERMANAGEMENTNOTPERMITTED: return "The user is not permitted to perform this user management operation.";
+			case LIBMC_ERROR_ROLENOTASSIGNABLE: return "The role can not be assigned by the current user.";
+			case LIBMC_ERROR_CANNOTMODIFYOWNUSER: return "This operation is not allowed on the own user account.";
+			case LIBMC_ERROR_LASTUSERMANAGER: return "The operation would leave too few users with user management rights.";
+			case LIBMC_ERROR_INVALIDPASSWORDPROOF: return "The current password is not correct.";
+			case LIBMC_ERROR_PASSWORDCHALLENGENOTFOUND: return "The password challenge does not exist or has expired.";
+			case LIBMC_ERROR_INVALIDUSERMANAGEMENTCAPABILITY: return "Invalid user management capability.";
+			case LIBMC_ERROR_DUPLICATEUSERMANAGEMENTCAPABILITY: return "Duplicate user management capability.";
+			case LIBMC_ERROR_USERALREADYEXISTS: return "A user with this login already exists.";
+			case LIBMC_ERROR_INVALIDUSERDESCRIPTION: return "Invalid user description.";
+			case LIBMC_ERROR_FIRSTRUNALREADYCOMPLETED: return "The first-run setup has already been completed.";
+			case LIBMC_ERROR_INVALIDSETUPCODE: return "Invalid setup code.";
+			case LIBMC_ERROR_FIRSTRUNADMINROLEINVALID: return "The first-run administrator role is invalid.";
+			case LIBMC_ERROR_INVALIDFIRSTRUNSETUPCODEMODE: return "Invalid first-run setup code mode.";
+			case LIBMC_ERROR_FIRSTRUNNOTAVAILABLE: return "The first-run setup is not available, because no administrator role could be determined.";
 		}
 		return "unknown error";
 	}
@@ -1775,6 +1805,7 @@ public:
 	inline void Handle(const CInputVector<LibMC_uint8> & RawBodyBuffer, std::string & sContentType, LibMC_uint32 & nHTTPCode);
 	inline void GetResultData(std::vector<LibMC_uint8> & DataBuffer);
 	inline std::string GetContentDispositionName();
+	inline void SetClientAddress(const std::string & sClientAddress);
 };
 	
 /*************************************************************************************************************************
@@ -1931,6 +1962,7 @@ public:
 		pWrapperTable->m_APIRequestHandler_Handle = nullptr;
 		pWrapperTable->m_APIRequestHandler_GetResultData = nullptr;
 		pWrapperTable->m_APIRequestHandler_GetContentDispositionName = nullptr;
+		pWrapperTable->m_APIRequestHandler_SetClientAddress = nullptr;
 		pWrapperTable->m_MCContext_RegisterLibraryPath = nullptr;
 		pWrapperTable->m_MCContext_SetTempBasePath = nullptr;
 		pWrapperTable->m_MCContext_ParseConfiguration = nullptr;
@@ -2144,6 +2176,15 @@ public:
 		dlerror();
 		#endif // _WIN32
 		if (pWrapperTable->m_APIRequestHandler_GetContentDispositionName == nullptr)
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
+		pWrapperTable->m_APIRequestHandler_SetClientAddress = (PLibMCAPIRequestHandler_SetClientAddressPtr) GetProcAddress(hLibrary, "libmc_apirequesthandler_setclientaddress");
+		#else // _WIN32
+		pWrapperTable->m_APIRequestHandler_SetClientAddress = (PLibMCAPIRequestHandler_SetClientAddressPtr) dlsym(hLibrary, "libmc_apirequesthandler_setclientaddress");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_APIRequestHandler_SetClientAddress == nullptr)
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
@@ -2413,6 +2454,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmc_apirequesthandler_getcontentdispositionname", (void**)&(pWrapperTable->m_APIRequestHandler_GetContentDispositionName));
 		if ( (eLookupError != 0) || (pWrapperTable->m_APIRequestHandler_GetContentDispositionName == nullptr) )
+			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmc_apirequesthandler_setclientaddress", (void**)&(pWrapperTable->m_APIRequestHandler_SetClientAddress));
+		if ( (eLookupError != 0) || (pWrapperTable->m_APIRequestHandler_SetClientAddress == nullptr) )
 			return LIBMC_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmc_mccontext_registerlibrarypath", (void**)&(pWrapperTable->m_MCContext_RegisterLibraryPath));
@@ -2723,6 +2768,15 @@ public:
 		CheckError(m_pWrapper->m_WrapperTable.m_APIRequestHandler_GetContentDispositionName(m_pHandle, bytesNeededContentDispositionName, &bytesWrittenContentDispositionName, &bufferContentDispositionName[0]));
 		
 		return std::string(&bufferContentDispositionName[0]);
+	}
+	
+	/**
+	* CAPIRequestHandler::SetClientAddress - Sets the network address of the client that sent the request. Call before Handle().
+	* @param[in] sClientAddress - Remote IP address of the connection, as seen by the server socket.
+	*/
+	void CAPIRequestHandler::SetClientAddress(const std::string & sClientAddress)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_APIRequestHandler_SetClientAddress(m_pHandle, sClientAddress.c_str()));
 	}
 	
 	/**

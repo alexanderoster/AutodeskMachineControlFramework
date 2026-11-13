@@ -82,7 +82,7 @@ bool CUserManagementHandler::UserUUIDExists(const std::string& sUUID)
 
 	auto pLoginHandler = m_pDataModel->CreateLoginHandler();
 
-	return pLoginHandler->UserExists(sNormalizedUUID);
+	return pLoginHandler->UserUUIDExists(sNormalizedUUID);
 
 }
 
@@ -144,7 +144,7 @@ std::string CUserManagementHandler::GetUserDescriptionByUUID(const std::string &
 	std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
 
 	auto pLoginHandler = m_pDataModel->CreateLoginHandler();
-	return pLoginHandler->GetUserDescriptionByUUID(sUUID);
+	return pLoginHandler->GetUserDescriptionByUUID(sNormalizedUUID);
 }
 
 std::string CUserManagementHandler::GetUserRole(const std::string & sUsername)
@@ -194,9 +194,11 @@ std::string CUserManagementHandler::CreateUser(const std::string & sUsername, co
 	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sUsername))
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDUSERLOGIN, "invalid user login: " + sUsername);
 
-	if (sUsername.empty())
+	if (sRole.empty())
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_EMPTYUSERROLE);
 	if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sRole))
+		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDUSERROLE, "invalid user role: " + sRole);
+	if (!m_pAccessControl->hasRole(sRole))
 		throw ELibMCEnvInterfaceException(LIBMCENV_ERROR_INVALIDUSERROLE, "invalid user role: " + sRole);
 
 	std::string sNormalizedSalt = AMCCommon::CUtils::normalizeSHA256String(sSalt);

@@ -227,6 +227,15 @@ typedef LibMCResult (*PLibMCAPIRequestHandler_GetResultDataPtr) (LibMC_APIReques
 */
 typedef LibMCResult (*PLibMCAPIRequestHandler_GetContentDispositionNamePtr) (LibMC_APIRequestHandler pAPIRequestHandler, const LibMC_uint32 nContentDispositionNameBufferSize, LibMC_uint32* pContentDispositionNameNeededChars, char * pContentDispositionNameBuffer);
 
+/**
+* Sets the network address of the client that sent the request. Call before Handle().
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] pClientAddress - Remote IP address of the connection, as seen by the server socket.
+* @return error code or 0 (success)
+*/
+typedef LibMCResult (*PLibMCAPIRequestHandler_SetClientAddressPtr) (LibMC_APIRequestHandler pAPIRequestHandler, const char * pClientAddress);
+
 /*************************************************************************************************************************
  Class definition for MCContext
 **************************************************************************************************************************/
@@ -457,6 +466,7 @@ typedef struct {
 	PLibMCAPIRequestHandler_HandlePtr m_APIRequestHandler_Handle;
 	PLibMCAPIRequestHandler_GetResultDataPtr m_APIRequestHandler_GetResultData;
 	PLibMCAPIRequestHandler_GetContentDispositionNamePtr m_APIRequestHandler_GetContentDispositionName;
+	PLibMCAPIRequestHandler_SetClientAddressPtr m_APIRequestHandler_SetClientAddress;
 	PLibMCMCContext_RegisterLibraryPathPtr m_MCContext_RegisterLibraryPath;
 	PLibMCMCContext_SetTempBasePathPtr m_MCContext_SetTempBasePath;
 	PLibMCMCContext_ParseConfigurationPtr m_MCContext_ParseConfiguration;

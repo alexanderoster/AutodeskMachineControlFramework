@@ -616,6 +616,33 @@ LibMCResult libmc_apirequesthandler_getcontentdispositionname(LibMC_APIRequestHa
 	}
 }
 
+LibMCResult libmc_apirequesthandler_setclientaddress(LibMC_APIRequestHandler pAPIRequestHandler, const char * pClientAddress)
+{
+	IBase* pIBaseClass = (IBase *)pAPIRequestHandler;
+
+	try {
+		if (pClientAddress == nullptr)
+			throw ELibMCInterfaceException (LIBMC_ERROR_INVALIDPARAM);
+		std::string sClientAddress(pClientAddress);
+		IAPIRequestHandler* pIAPIRequestHandler = dynamic_cast<IAPIRequestHandler*>(pIBaseClass);
+		if (!pIAPIRequestHandler)
+			throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDCAST);
+		
+		pIAPIRequestHandler->SetClientAddress(sClientAddress);
+
+		return LIBMC_SUCCESS;
+	}
+	catch (ELibMCInterfaceException & Exception) {
+		return handleLibMCException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 
 /*************************************************************************************************************************
  Class implementation for MCContext
@@ -1093,6 +1120,8 @@ LibMCResult LibMC::Impl::LibMC_GetProcAddress (const char * pProcName, void ** p
 		*ppProcAddress = (void*) &libmc_apirequesthandler_getresultdata;
 	if (sProcName == "libmc_apirequesthandler_getcontentdispositionname") 
 		*ppProcAddress = (void*) &libmc_apirequesthandler_getcontentdispositionname;
+	if (sProcName == "libmc_apirequesthandler_setclientaddress") 
+		*ppProcAddress = (void*) &libmc_apirequesthandler_setclientaddress;
 	if (sProcName == "libmc_mccontext_registerlibrarypath") 
 		*ppProcAddress = (void*) &libmc_mccontext_registerlibrarypath;
 	if (sProcName == "libmc_mccontext_settempbasepath") 

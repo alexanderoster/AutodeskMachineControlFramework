@@ -527,6 +527,7 @@ void CServer::executeBlocking(const std::string& sConfigurationFileName)
 					uint32_t nHttpCode;
 
 					auto pHandler = m_pContext->CreateAPIRequestHandler(sURL, sMethod, sAuthorization);
+					pHandler->SetClientAddress(req.remote_addr);
 
 					if (req.method == "GET") {
 						// In case of a get request, we can use the query parameters

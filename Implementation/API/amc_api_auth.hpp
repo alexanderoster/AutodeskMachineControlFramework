@@ -59,6 +59,7 @@ namespace AMC {
 
 		std::string m_sSessionUUID;
 		std::string m_sSessionKey;
+		std::string m_sClientAddress;
 		bool m_bIsAuthorized;
 
 		PUserInformation m_pUserInformation;
@@ -84,6 +85,10 @@ namespace AMC {
 		std::string getSessionUUID();
 
 		std::string getSessionKey();
+
+		// Remote address of the socket the request arrived on. Empty if unknown.
+		void setClientAddress(const std::string& sClientAddress);
+		std::string getClientAddress();
 
 		bool userIsAuthorized();
 

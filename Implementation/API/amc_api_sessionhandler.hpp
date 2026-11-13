@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mutex>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "common_chrono.hpp"
 #include "libmcdata_dynamic.hpp"
@@ -50,6 +51,11 @@ namespace AMC {
 	amcDeclareDependingClass(CParameterHandler, PParameterHandler);
 	amcDeclareDependingClass(CUIFrontendDefinition, PUIFrontendDefinition);
 	
+	class CAPIUserSessionInfo {
+	public:
+		std::string m_sSessionUUID;
+		uint64_t m_nLastActivityMicroseconds;
+	};
 
 	class CAPISessionHandler {
 	private:
@@ -90,6 +96,15 @@ namespace AMC {
 		void setSessionTimeout(uint64_t nAuthSeconds, uint64_t nUnauthSeconds);
 
 		void deactivateSession(const std::string& sSessionUUID);
+
+		// Ends all sessions of a user, including pending logins. Returns the number of ended sessions.
+		uint32_t deactivateSessionsOfUser(const std::string& sUserUUID, const std::string& sExceptSessionUUID);
+
+		// Returns the authenticated sessions of a user.
+		std::vector<CAPIUserSessionInfo> getSessionsOfUser(const std::string& sUserUUID);
+
+		// Returns the authenticated sessions of all users, keyed by user UUID.
+		std::map<std::string, std::vector<CAPIUserSessionInfo>> getSessionsOfAllUsers();
 
 		void cleanupExpiredSessions();
 

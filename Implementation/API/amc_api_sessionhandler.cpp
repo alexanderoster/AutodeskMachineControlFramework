@@ -254,6 +254,57 @@ void CAPISessionHandler::deactivateSession(const std::string& sSessionUUID)
 	}
 }
 
+uint32_t CAPISessionHandler::deactivateSessionsOfUser(const std::string& sUserUUID, const std::string& sExceptSessionUUID)
+{
+	std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
+
+	std::vector<std::string> sessionUUIDs;
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		for (auto& iSession : m_SessionMap) {
+			if ((iSession.first != sExceptSessionUUID) && (iSession.second->getUserUUID() == sNormalizedUserUUID))
+				sessionUUIDs.push_back(iSession.first);
+		}
+	}
+
+	for (auto& sSessionUUID : sessionUUIDs)
+		deactivateSession(sSessionUUID);
+
+	return (uint32_t)sessionUUIDs.size();
+}
+
+std::vector<CAPIUserSessionInfo> CAPISessionHandler::getSessionsOfUser(const std::string& sUserUUID)
+{
+	std::string sNormalizedUserUUID = AMCCommon::CUtils::normalizeUUIDString(sUserUUID);
+
+	auto allSessions = getSessionsOfAllUsers();
+	auto iIter = allSessions.find(sNormalizedUserUUID);
+	if (iIter == allSessions.end())
+		return std::vector<CAPIUserSessionInfo>();
+
+	return iIter->second;
+}
+
+std::map<std::string, std::vector<CAPIUserSessionInfo>> CAPISessionHandler::getSessionsOfAllUsers()
+{
+	cleanupExpiredSessions();
+
+	std::map<std::string, std::vector<CAPIUserSessionInfo>> resultMap;
+
+	std::lock_guard<std::mutex> lockGuard(m_Mutex);
+	for (auto& iSession : m_SessionMap) {
+		auto pSession = iSession.second;
+		if (pSession->isAuthenticated()) {
+			CAPIUserSessionInfo sessionInfo;
+			sessionInfo.m_sSessionUUID = iSession.first;
+			sessionInfo.m_nLastActivityMicroseconds = pSession->getLastActivityMicroseconds();
+			resultMap[pSession->getUserUUID()].push_back(sessionInfo);
+		}
+	}
+
+	return resultMap;
+}
+
 void CAPISessionHandler::cleanupExpiredSessions()
 {
 	if (!m_pGlobalChrono)

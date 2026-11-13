@@ -541,6 +541,31 @@ IUserList* CLoginHandler::GetActiveUsers()
     return userList.release();
 }
 
+void CLoginHandler::DeactivateUserByUUID(const std::string& sUUID)
+{
+    if (sUUID.empty())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_EMPTYUSERUUID);
+
+    std::string sNormalizedUUID = AMCCommon::CUtils::normalizeUUIDString(sUUID);
+
+    auto pTransaction = m_pSQLHandler->beginTransaction();
+
+    std::string sUpdateUUID = AMCCommon::CUtils::createUUID();
+    std::string sQuery = "UPDATE users SET active=0, updateuuid=? WHERE uuid=? AND active=1";
+    auto pStatement = pTransaction->prepareStatement(sQuery);
+    pStatement->setString(1, sUpdateUUID);
+    pStatement->setString(2, sNormalizedUUID);
+    pStatement->execute();
+
+    std::string sCheckQuery = "SELECT uuid FROM users WHERE updateuuid=?";
+    auto pCheckStatement = pTransaction->prepareStatement(sCheckQuery);
+    pCheckStatement->setString(1, sUpdateUUID);
+    if (!pCheckStatement->nextRow())
+        throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_COULDNOTDEACTIVATEUSER);
+
+    pTransaction->commit();
+}
+
 void CLoginHandler::CreateLoginSession(const std::string & sSessionUUID, const LibMCData_uint64 nCreateTimeInMicroseconds)
 {
     if (sSessionUUID.empty())

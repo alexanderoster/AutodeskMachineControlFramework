@@ -41,6 +41,7 @@ namespace AMC {
 
 
 	CAccessControl::CAccessControl()
+		: m_pUserManagementPolicy(std::make_shared<CUserManagementPolicy>())
 	{
 
 	}
@@ -175,6 +176,96 @@ namespace AMC {
 		auto pPermissions = pRole->getPermissions();
 		for (auto pPermission : pPermissions)
 			permissionStrings.insert(pPermission->getIdentifier ());
+	}
+
+	std::vector<PAccessRole> CAccessControl::getRoles()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+		std::vector<PAccessRole> roles;
+		for (auto iIter : m_Roles)
+			roles.push_back(iIter.second);
+
+		return roles;
+	}
+
+	std::vector<PAccessPermission> CAccessControl::getPermissions()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+		std::vector<PAccessPermission> permissions;
+		for (auto iIter : m_Permissions)
+			permissions.push_back(iIter.second);
+
+		return permissions;
+	}
+
+	std::string CAccessControl::resolveMigratedRole(const std::string& sRoleIdentifier)
+	{
+		std::string sCurrentIdentifier = sRoleIdentifier;
+		std::set<std::string> visitedRoles;
+
+		while (true) {
+			PAccessRole pRole = findRole(sCurrentIdentifier, false);
+			if (pRole.get() == nullptr)
+				return sCurrentIdentifier;
+
+			std::string sMigrateTo = pRole->getMigrateTo();
+			if (sMigrateTo.empty())
+				return sCurrentIdentifier;
+
+			visitedRoles.insert(sCurrentIdentifier);
+			if (visitedRoles.find(sMigrateTo) != visitedRoles.end())
+				throw ELibMCCustomException(LIBMC_ERROR_INVALIDACCESSROLEIDENTIFIER, "cyclic role migration: " + sRoleIdentifier);
+
+			sCurrentIdentifier = sMigrateTo;
+		}
+	}
+
+	bool CAccessControl::roleIsSubsetOf(const std::string& sRoleIdentifier, const std::string& sSuperRoleIdentifier)
+	{
+		PAccessRole pRole = findRole(sRoleIdentifier, true);
+		PAccessRole pSuperRole = findRole(sSuperRoleIdentifier, true);
+
+		for (auto pPermission : pRole->getPermissions()) {
+			if (!pSuperRole->hasPermission(pPermission->getIdentifier()))
+				return false;
+		}
+
+		return true;
+	}
+
+	std::string CAccessControl::findRoleWithAllPermissions()
+	{
+		std::vector<PAccessRole> activeRoles;
+		for (auto pRole : getRoles()) {
+			if (!pRole->isDeprecated())
+				activeRoles.push_back(pRole);
+		}
+
+		std::string sFoundIdentifier;
+		for (auto pCandidate : activeRoles) {
+			bool bHoldsAll = true;
+			for (auto pOther : activeRoles) {
+				if (!roleIsSubsetOf(pOther->getIdentifier(), pCandidate->getIdentifier())) {
+					bHoldsAll = false;
+					break;
+				}
+			}
+
+			if (bHoldsAll) {
+				if (!sFoundIdentifier.empty())
+					return "";
+				sFoundIdentifier = pCandidate->getIdentifier();
+			}
+		}
+
+		return sFoundIdentifier;
+	}
+
+	PUserManagementPolicy CAccessControl::getUserManagementPolicy()
+	{
+		return m_pUserManagementPolicy;
 	}
 }
 

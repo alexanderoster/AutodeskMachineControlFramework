@@ -157,6 +157,7 @@ void CAPISession::authorizeSessionByPassword(const std::string& sSaltedPasswordH
 
 	if (AMCCommon::CUtils::normalizeSHA256String(sSaltedPasswordHash) == sSessionKeyHash) {
 		m_bAuthenticated = true;
+		m_sHashedPassword.clear();
 	}
 	else {
 		throw ELibMCInterfaceException(LIBMC_ERROR_INVALIDLOGIN);

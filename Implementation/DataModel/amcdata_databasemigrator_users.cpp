@@ -51,24 +51,7 @@ namespace AMCData {
 				sStreamsQuery += "`updateuuid`  varchar ( 64 ))";
 				pTransaction->executeStatement(sStreamsQuery);
 
-				// Temporarily create test user
-				std::string sLogin = "test";
-				std::string sPassword = "test";
-				std::string sDescription = "Initial test user";
-				std::string sUUID = AMCCommon::CUtils::createUUID();
-				std::string sSalt = AMCCommon::CUtils::calculateRandomSHA256String(16);
-				std::string sHash = AMCCommon::CUtils::calculateSHA256FromString(sSalt + sPassword);
-
-				std::string sInsertQuery = "INSERT INTO users (uuid, login, salt, passwordhash, description) VALUES (?, ?, ?, ?, ?)";
-				auto pInsertQuery = pTransaction->prepareStatement(sInsertQuery);
-				pInsertQuery->setString(1, sUUID);
-				pInsertQuery->setString(2, sLogin);
-				pInsertQuery->setString(3, sSalt);
-				pInsertQuery->setString(4, sHash);
-				pInsertQuery->setString(5, sDescription);
-				pInsertQuery->execute();
-				pInsertQuery = nullptr;
-
+				// No initial user: the first administrator is created by the first-run setup.
 				break;
 			}
 

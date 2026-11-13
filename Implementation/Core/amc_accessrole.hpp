@@ -55,6 +55,8 @@ namespace AMC {
 
 		std::map<std::string, PAccessPermission> m_Permissions;
 
+		std::string m_sMigrateTo;
+
 	public:
 
 		CAccessRole(const std::string& sIdentifier, const CLanguageString& rDisplayName, const CLanguageString& rDescription);
@@ -74,6 +76,13 @@ namespace AMC {
 		void removePermission (const std::string& sPermissionIdentifier);
 
 		std::vector<CAccessPermission*> getPermissions();
+
+		// Deprecated roles carry the identifier of the role that replaces them.
+		void setMigrateTo(const std::string& sRoleIdentifier);
+
+		std::string getMigrateTo();
+
+		bool isDeprecated();
 
 	};
 

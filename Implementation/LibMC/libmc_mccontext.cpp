@@ -49,6 +49,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_handler.hpp"
 #include "amc_resourcepackage.hpp"
 #include "amc_accesscontrol.hpp"
+#include "amc_accessrole.hpp"
+#include "amc_firstrunhandler.hpp"
 #include "amc_statesignalhandler.hpp"
 #include "amc_operationsequencehandler.hpp"
 
@@ -202,6 +204,17 @@ void CMCContext::ParseConfiguration(const std::string & sXMLString)
         else {
             // Fall back is a single role with no specific permissions
             m_pSystemState->accessControl()->setToNoAccessControl ();
+            loadFirstRunSettings(pugi::xml_node());
+        }
+
+        auto internationalizationNode = mainNode.child("internationalization");
+        if (!internationalizationNode.empty()) {
+            auto pUserManagementPolicy = m_pSystemState->accessControl()->getUserManagementPolicy();
+            for (auto languageNode : internationalizationNode.children("language")) {
+                std::string sLanguageIdentifier = languageNode.attribute("identifier").as_string();
+                std::string sLanguageName = languageNode.attribute("name").as_string();
+                pUserManagementPolicy->addLanguage(sLanguageIdentifier, sLanguageName);
+            }
         }
 
 
@@ -290,6 +303,8 @@ void CMCContext::ParseConfiguration(const std::string & sXMLString)
             m_pSystemState->uiHandler()->setCoreResourcePackage(m_pCoreResourcePackage);
             m_pSystemState->uiHandler()->loadFromXML(userInterfaceNode, sUILibraryPath);
         }
+
+        initializeFirstRun();
 
     }
     catch (std::exception& E) {
@@ -873,10 +888,155 @@ void CMCContext::loadAccessControl(const pugi::xml_node& xmlNode)
                 pRole->addPermission(pPermission);
             }
         }
+
+        pRole->setMigrateTo(roleNode.attribute("migrateto").as_string());
     }
 
+    for (auto pRole : accessControl->getRoles()) {
+        std::string sMigrateTo = pRole->getMigrateTo();
+        if (!sMigrateTo.empty())
+            accessControl->findRole(sMigrateTo, true);
+    }
+
+    for (auto pRole : accessControl->getRoles())
+        accessControl->resolveMigratedRole(pRole->getIdentifier());
 
     accessControl->setDefaultRole(sDefaultRole);
+    if (accessControl->getDefaultRole()->isDeprecated())
+        throw ELibMCCustomException(LIBMC_ERROR_INVALIDACCESSROLEIDENTIFIER, "default role must not be deprecated: " + sDefaultRole);
+
+    if (!xmlNode.child("defaultusers").empty())
+        m_pSystemState->logger()->logMessage("<defaultusers> in <accesscontrol> is deprecated and ignored. Create users with the user management instead.", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+
+    auto userManagementNode = xmlNode.child("usermanagement");
+    if (!userManagementNode.empty())
+        loadUserManagementPolicy(userManagementNode);
+
+    loadFirstRunSettings(xmlNode.child("firstrun"));
+
+}
+
+void CMCContext::loadFirstRunSettings(const pugi::xml_node& xmlNode)
+{
+    auto accessControl = m_pSystemState->accessControl();
+    auto pFirstRunHandler = m_pSystemState->getFirstRunHandlerInstance();
+
+    std::string sAdminRole = xmlNode.attribute("adminrole").as_string();
+    bool bAdminRoleIsConfigured = !sAdminRole.empty();
+    if (!bAdminRoleIsConfigured)
+        sAdminRole = accessControl->findRoleWithAllPermissions();
+
+    if (!sAdminRole.empty()) {
+        auto pAdminRole = accessControl->findRole(sAdminRole, false);
+        if (pAdminRole.get() == nullptr)
+            throw ELibMCCustomException(LIBMC_ERROR_FIRSTRUNADMINROLEINVALID, "role not found: " + sAdminRole);
+        if (pAdminRole->isDeprecated())
+            throw ELibMCCustomException(LIBMC_ERROR_FIRSTRUNADMINROLEINVALID, "role is deprecated: " + sAdminRole);
+
+        // Without the guard permission the first administrator could not create any other account.
+        std::string sGuardPermission = accessControl->getUserManagementPolicy()->getGuardPermission();
+        if ((!sGuardPermission.empty()) && (!pAdminRole->hasPermission(sGuardPermission))) {
+            if (bAdminRoleIsConfigured)
+                throw ELibMCCustomException(LIBMC_ERROR_FIRSTRUNADMINROLEINVALID, "role " + sAdminRole + " does not hold the user management permission " + sGuardPermission);
+
+            m_pSystemState->logger()->logMessage("First-run: role " + sAdminRole + " does not hold the user management permission " + sGuardPermission + ". Set <firstrun adminrole=\"...\"/>.", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+            sAdminRole = "";
+        }
+    }
+
+    pFirstRunHandler->setAdminRoleIdentifier(sAdminRole);
+
+    if (!xmlNode.empty()) {
+        pFirstRunHandler->setSetupCodeMode(AMC::CFirstRunHandler::stringToSetupCodeMode(xmlNode.attribute("setupcode").as_string()));
+        pFirstRunHandler->setWelcomeTexts(xmlNode.attribute("welcometitle").as_string(), xmlNode.attribute("welcometext").as_string());
+
+        for (auto nextStepNode : xmlNode.children("nextstep"))
+            pFirstRunHandler->addNextStep(nextStepNode.attribute("text").as_string(), nextStepNode.attribute("page").as_string());
+    }
+}
+
+void CMCContext::initializeFirstRun()
+{
+    auto pLoginHandler = m_pSystemState->getDataModelInstance()->CreateLoginHandler();
+    bool bHasActiveUsers = pLoginHandler->GetActiveUsers()->Count() > 0;
+
+    // Databases created by older versions contain the hard-coded account test/test.
+    bool bDefaultTestUserPresent = false;
+    if (pLoginHandler->UserExists("test")) {
+        std::string sSalt;
+        std::string sHashedPassword;
+        pLoginHandler->GetUserDetails("test", sSalt, sHashedPassword);
+        std::string sDefaultHash = AMCCommon::CUtils::calculateSHA256FromString(sSalt + "test");
+        bDefaultTestUserPresent = AMCCommon::CUtils::normalizeSHA256String(sDefaultHash) == AMCCommon::CUtils::normalizeSHA256String(sHashedPassword);
+    }
+
+    if (bDefaultTestUserPresent)
+        m_pSystemState->logger()->logMessage("The default account 'test' with password 'test' still exists. Delete it or change its password in the user management.", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+
+    m_pSystemState->getFirstRunHandlerInstance()->initialize(bHasActiveUsers);
+}
+
+void CMCContext::loadUserManagementPolicy(const pugi::xml_node& xmlNode)
+{
+    auto accessControl = m_pSystemState->accessControl();
+    auto pPolicy = accessControl->getUserManagementPolicy();
+
+    std::set<AMC::eUserManagementCapability> configuredCapabilities;
+    for (auto capabilityNode : xmlNode.children("capability")) {
+        auto capability = AMC::CUserManagementPolicy::stringToCapability(capabilityNode.attribute("name").as_string());
+        if (configuredCapabilities.find(capability) != configuredCapabilities.end())
+            throw ELibMCCustomException(LIBMC_ERROR_DUPLICATEUSERMANAGEMENTCAPABILITY, AMC::CUserManagementPolicy::capabilityToString(capability));
+        configuredCapabilities.insert(capability);
+
+        std::string sPermission = capabilityNode.attribute("permission").as_string();
+        if (!sPermission.empty())
+            accessControl->findPermission(sPermission, true);
+
+        auto enabledAttrib = capabilityNode.attribute("enabled");
+        bool bEnabled = enabledAttrib.empty() ? true : enabledAttrib.as_bool();
+
+        pPolicy->setCapability(capability, bEnabled, sPermission);
+    }
+
+    std::string sGuardPermission = xmlNode.attribute("guardpermission").as_string();
+    if (sGuardPermission.empty()) {
+        auto assignRoleGrant = pPolicy->getCapability(AMC::eUserManagementCapability::AssignRole);
+        if (assignRoleGrant.m_bEnabled)
+            sGuardPermission = assignRoleGrant.m_sPermission;
+    }
+    if (!sGuardPermission.empty())
+        accessControl->findPermission(sGuardPermission, true);
+    pPolicy->setGuardPermission(sGuardPermission);
+
+    auto minimumManagersAttrib = xmlNode.attribute("minimummanagers");
+    if (!minimumManagersAttrib.empty())
+        pPolicy->setMinimumManagers(minimumManagersAttrib.as_uint());
+
+    auto assignableRolesNode = xmlNode.child("assignableroles");
+    if (!assignableRolesNode.empty()) {
+        std::set<std::string> assignableRoles;
+        for (auto roleNode : assignableRolesNode.children("role")) {
+            auto pRole = accessControl->findRole(roleNode.attribute("identifier").as_string(), true);
+            assignableRoles.insert(pRole->getIdentifier());
+        }
+        if (!assignableRoles.empty())
+            pPolicy->restrictAssignableRoles(assignableRoles);
+    }
+
+    auto passwordPolicyNode = xmlNode.child("passwordpolicy");
+    if (!passwordPolicyNode.empty()) {
+        // The client rejects anything shorter, so a smaller value would silently not apply.
+        const uint32_t nAbsoluteMinimumCharacters = 5;
+        uint32_t nMinCharacters = passwordPolicyNode.attribute("mincharacters").as_uint(pPolicy->getPasswordMinimumLength());
+        if (nMinCharacters < nAbsoluteMinimumCharacters) {
+            m_pSystemState->logger()->logMessage("<passwordpolicy mincharacters=\"" + std::to_string(nMinCharacters) + "\"> is below the minimum of " + std::to_string(nAbsoluteMinimumCharacters) + ", using " + std::to_string(nAbsoluteMinimumCharacters) + ".", LOG_SUBSYSTEM_SYSTEM, AMC::eLogLevel::Warning);
+            nMinCharacters = nAbsoluteMinimumCharacters;
+        }
+
+        pPolicy->setPasswordPolicy(nMinCharacters,
+            passwordPolicyNode.attribute("enforcedigit").as_bool(false),
+            passwordPolicyNode.attribute("enforceletter").as_bool(false));
+    }
 
 }
 

@@ -58,6 +58,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "API/amc_api_handler_widget.hpp"
 #include "API/amc_api_handler_image.hpp"
 #include "API/amc_api_handler_userpreferences.hpp"
+#include "API/amc_api_handler_users.hpp"
+#include "API/amc_api_handler_firstrun.hpp"
 
 using namespace AMC;
 CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC::PStateMachineInstance>& MachineInstanceList)
@@ -91,6 +93,9 @@ CAPIFactory::CAPIFactory(PAPI pAPI, PSystemState pSystemState, std::vector <AMC:
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Widget>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Image>(pSystemState));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_UserPreferences>(pSystemState));
+	auto pUserManagementService = std::make_shared<CUserManagementService>(pSystemState, pAPI->getSessionHandler());
+	pAPI->registerHandler(std::make_shared <CAPIHandler_Users>(pSystemState, pUserManagementService));
+	pAPI->registerHandler(std::make_shared <CAPIHandler_FirstRun>(pSystemState, pUserManagementService));
 	pAPI->registerHandler(std::make_shared <CAPIHandler_Auth>(pAPI->getSessionHandler (), pSystemState->getDataModelInstance(), pSystemState->getInstallationSecret (), pSystemState->getGitHash (), pSystemState->getClientHash (), pSystemState->getAccessControlInstance ()));
 
 }

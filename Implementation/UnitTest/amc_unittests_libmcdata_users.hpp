@@ -48,6 +48,7 @@ namespace AMCUnitTest {
 		}
 
 		void registerTests() override {
+			registerTest("FreshDatabaseHasNoUsers", "A new database has no default account", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testFreshDatabaseHasNoUsers, this));
 			registerTest("CreateUser", "Create user", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testCreateUser, this));
 			registerTest("UserExists", "Check user existence", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testUserExists, this));
 			registerTest("UserProperties", "Get user properties", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testUserProperties, this));
@@ -75,6 +76,7 @@ namespace AMCUnitTest {
 			registerTest("EmptyDescription", "Empty description", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testEmptyDescription, this));
 			registerTest("MultipleRoleChanges", "Multiple role changes", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testMultipleRoleChanges, this));
 			registerTest("UserUUIDFormat", "User UUID format", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testUserUUIDFormat, this));
+			registerTest("DeactivateUserByUUID", "Deactivated users disappear and the login can be reused", eUnitTestCategory::utMandatoryPass, std::bind(&CUnitTestGroup_LibMCData_Users::testDeactivateUserByUUID, this));
 		}
 
 		void initializeTests() override {
@@ -109,6 +111,14 @@ namespace AMCUnitTest {
 			fixture.m_pLoginHandler = fixture.m_pDataModel->CreateLoginHandler();
 
 			return fixture;
+		}
+
+		void testFreshDatabaseHasNoUsers()
+		{
+			auto fixture = createFixture("fresh");
+
+			assertTrue(fixture.m_pLoginHandler->GetActiveUsers()->Count() == 0, "A new database must not contain users");
+			assertFalse(fixture.m_pLoginHandler->UserExists("test"), "The default test account must not be created");
 		}
 
 		void testCreateUser()
@@ -357,6 +367,36 @@ namespace AMCUnitTest {
 			
 			assertTrue(sRetrievedSalt == sNewSalt, "New salt by UUID should match");
 			assertTrue(sRetrievedHash == sNewHash, "New hash by UUID should match");
+		}
+
+		void testDeactivateUserByUUID()
+		{
+			auto fixture = createFixture("deactivate");
+
+			std::string sUsername = "deactivateuser_" + AMCCommon::CUtils::createUUID().substr(0, 8);
+			std::string sSalt = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+			std::string sHash = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
+
+			std::string sUserUUID = fixture.m_pLoginHandler->CreateUser(sUsername, "role", sSalt, sHash, "desc");
+			assertTrue(fixture.m_pLoginHandler->UserUUIDExists(sUserUUID), "User should exist before deactivation");
+
+			fixture.m_pLoginHandler->DeactivateUserByUUID(sUserUUID);
+
+			assertFalse(fixture.m_pLoginHandler->UserExists(sUsername), "Deactivated user must not be found by login");
+			assertFalse(fixture.m_pLoginHandler->UserUUIDExists(sUserUUID), "Deactivated user must not be found by UUID");
+
+			bool bThrown = false;
+			try {
+				fixture.m_pLoginHandler->DeactivateUserByUUID(sUserUUID);
+			}
+			catch (...) {
+				bThrown = true;
+			}
+			assertTrue(bThrown, "Deactivating an inactive user must fail");
+
+			std::string sNewUserUUID = fixture.m_pLoginHandler->CreateUser(sUsername, "role", sSalt, sHash, "desc");
+			assertTrue(sNewUserUUID != sUserUUID, "A re-created login must get a new UUID");
+			assertTrue(fixture.m_pLoginHandler->UserExists(sUsername), "Re-created user should exist");
 		}
 		
 		void testGetDescriptionByUUID()

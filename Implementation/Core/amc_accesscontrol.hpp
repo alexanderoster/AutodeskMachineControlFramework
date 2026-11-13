@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_accessrole.hpp"
 #include "amc_accesspermission.hpp"
+#include "amc_usermanagementpolicy.hpp"
 #include <set>
 
 namespace AMC {
@@ -52,6 +53,8 @@ namespace AMC {
 		std::mutex m_Mutex;
 		
 		PAccessRole m_pDefaultRole;
+
+		PUserManagementPolicy m_pUserManagementPolicy;
 
 	public:
 
@@ -80,6 +83,22 @@ namespace AMC {
 		bool checkPermissionInRole (const std::string & sRoleIdentifier, const std::string & sPermissionIdentifier);
 
 		void getPermissionsForRole(const std::string & sRoleIdentifier, std::set<std::string> & permissionStrings);
+
+		std::vector<PAccessRole> getRoles();
+
+		std::vector<PAccessPermission> getPermissions();
+
+		// Follows migrateto of deprecated roles. Returns the identifier unchanged if the role is unknown.
+		std::string resolveMigratedRole(const std::string& sRoleIdentifier);
+
+		// True if every permission of the role is also held by the super role.
+		bool roleIsSubsetOf(const std::string& sRoleIdentifier, const std::string& sSuperRoleIdentifier);
+
+		// Returns the only active role that holds the permissions of every other active role.
+		// Returns an empty string if there is no such role or more than one.
+		std::string findRoleWithAllPermissions();
+
+		PUserManagementPolicy getUserManagementPolicy();
 
 	};
 

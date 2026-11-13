@@ -27,6 +27,7 @@
 	import ModuleStateMachineGraph from './modules/ModuleStateMachineGraph.svelte';
 	import ModuleOperationSequenceEditor from './modules/ModuleOperationSequenceEditor.svelte';
 	import ModuleHistoryBrowser from './modules/ModuleHistoryBrowser.svelte';
+	import ModuleUserManagement from './modules/ModuleUserManagement.svelte';
 	import ModuleFallback from './modules/ModuleFallback.svelte';
 
 	let { module, app }: { module: any; app: any } = $props();
@@ -60,6 +61,7 @@
 		statemachinegraph: ModuleStateMachineGraph,
 		journalhistory: ModuleHistoryBrowser,
 		operationsequenceeditor: ModuleOperationSequenceEditor,
+		usermanagement: ModuleUserManagement,
 	};
 
 	let Component = $derived(componentMap[module?.type] || ModuleFallback);

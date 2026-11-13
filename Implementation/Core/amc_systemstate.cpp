@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_meshhandler.hpp"
 #include "amc_streamregistry.hpp"
 #include "amc_operationsequencehandler.hpp"
+#include "amc_firstrunhandler.hpp"
 
 #include "libmcdata_dynamic.hpp"
 #include "libmc_types.hpp"
@@ -93,6 +94,7 @@ namespace AMC {
 		m_pDataModel->GetInstallationInformation(m_sInstallationUUID, m_sInstallationSecret);
 
 		m_pAccessControl = std::make_shared<CAccessControl> ();
+		m_pFirstRunHandler = std::make_shared<CFirstRunHandler>(m_pLogger);
 
 		auto pTelemetryWriter = std::make_shared<CTelemetryWriter> (m_pDataModel->CreateTelemetrySession (), m_pGlobalChrono, m_pDataModel->GetTelemetryEnabled ());
 		m_pTelemetryHandler = std::make_shared<CTelemetryHandler> (pTelemetryWriter);
@@ -233,6 +235,11 @@ namespace AMC {
 	COperationSequenceHandler* CSystemState::operationSequenceHandler()
 	{
 		return m_pOperationSequenceHandler.get();
+	}
+
+	PFirstRunHandler CSystemState::getFirstRunHandlerInstance()
+	{
+		return m_pFirstRunHandler;
 	}
 
 	PLogger CSystemState::getLoggerInstance()

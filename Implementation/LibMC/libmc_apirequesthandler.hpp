@@ -98,6 +98,8 @@ public:
 	void SetRequestParameter(const std::string& sName, const std::string& sValue) override;
 
 	std::string GetContentDispositionName() override;
+
+	void SetClientAddress(const std::string& sClientAddress) override;
 	
 };
 

@@ -708,6 +708,7 @@ public:
 			case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION: return "INVALIDOPERATIONSEQUENCEREVISION";
 			case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS: return "OPERATIONSEQUENCEREVISIONEXISTS";
 			case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND: return "OPERATIONSEQUENCEREVISIONNOTFOUND";
+			case LIBMCDATA_ERROR_COULDNOTDEACTIVATEUSER: return "COULDNOTDEACTIVATEUSER";
 		}
 		return "UNKNOWN";
 	}
@@ -1103,6 +1104,7 @@ public:
 			case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION: return "Invalid operation sequence revision";
 			case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS: return "Operation sequence revision already exists";
 			case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND: return "Operation sequence revision not found";
+			case LIBMCDATA_ERROR_COULDNOTDEACTIVATEUSER: return "Could not deactivate user";
 		}
 		return "unknown error";
 	}
@@ -1993,6 +1995,7 @@ public:
 	inline void SetUserDescriptionByUUID(const std::string & sUUID, const std::string & sDescription);
 	inline void SetUserPasswordByUUID(const std::string & sUUID, const std::string & sSalt, const std::string & sHashedPassword);
 	inline PUserList GetActiveUsers();
+	inline void DeactivateUserByUUID(const std::string & sUUID);
 	inline void CreateLoginSession(const std::string & sSessionUUID, const LibMCData_uint64 nCreateTimeInMicroseconds);
 	inline void UpdateLoginSessionAuthentication(const std::string & sSessionUUID, const std::string & sUserUUID, const std::string & sUsername, const std::string & sUserRole);
 	inline void UpdateLoginSessionActivity(const std::string & sSessionUUID, const LibMCData_uint64 nTimestampInMicroseconds);
@@ -2662,6 +2665,7 @@ public:
 		pWrapperTable->m_LoginHandler_SetUserDescriptionByUUID = nullptr;
 		pWrapperTable->m_LoginHandler_SetUserPasswordByUUID = nullptr;
 		pWrapperTable->m_LoginHandler_GetActiveUsers = nullptr;
+		pWrapperTable->m_LoginHandler_DeactivateUserByUUID = nullptr;
 		pWrapperTable->m_LoginHandler_CreateLoginSession = nullptr;
 		pWrapperTable->m_LoginHandler_UpdateLoginSessionAuthentication = nullptr;
 		pWrapperTable->m_LoginHandler_UpdateLoginSessionActivity = nullptr;
@@ -4994,6 +4998,15 @@ public:
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		#ifdef _WIN32
+		pWrapperTable->m_LoginHandler_DeactivateUserByUUID = (PLibMCDataLoginHandler_DeactivateUserByUUIDPtr) GetProcAddress(hLibrary, "libmcdata_loginhandler_deactivateuserbyuuid");
+		#else // _WIN32
+		pWrapperTable->m_LoginHandler_DeactivateUserByUUID = (PLibMCDataLoginHandler_DeactivateUserByUUIDPtr) dlsym(hLibrary, "libmcdata_loginhandler_deactivateuserbyuuid");
+		dlerror();
+		#endif // _WIN32
+		if (pWrapperTable->m_LoginHandler_DeactivateUserByUUID == nullptr)
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		#ifdef _WIN32
 		pWrapperTable->m_LoginHandler_CreateLoginSession = (PLibMCDataLoginHandler_CreateLoginSessionPtr) GetProcAddress(hLibrary, "libmcdata_loginhandler_createloginsession");
 		#else // _WIN32
 		pWrapperTable->m_LoginHandler_CreateLoginSession = (PLibMCDataLoginHandler_CreateLoginSessionPtr) dlsym(hLibrary, "libmcdata_loginhandler_createloginsession");
@@ -6979,6 +6992,10 @@ public:
 		
 		eLookupError = (*pLookup)("libmcdata_loginhandler_getactiveusers", (void**)&(pWrapperTable->m_LoginHandler_GetActiveUsers));
 		if ( (eLookupError != 0) || (pWrapperTable->m_LoginHandler_GetActiveUsers == nullptr) )
+			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
+		
+		eLookupError = (*pLookup)("libmcdata_loginhandler_deactivateuserbyuuid", (void**)&(pWrapperTable->m_LoginHandler_DeactivateUserByUUID));
+		if ( (eLookupError != 0) || (pWrapperTable->m_LoginHandler_DeactivateUserByUUID == nullptr) )
 			return LIBMCDATA_ERROR_COULDNOTFINDLIBRARYEXPORT;
 		
 		eLookupError = (*pLookup)("libmcdata_loginhandler_createloginsession", (void**)&(pWrapperTable->m_LoginHandler_CreateLoginSession));
@@ -10967,6 +10984,15 @@ public:
 			CheckError(LIBMCDATA_ERROR_INVALIDPARAM);
 		}
 		return std::make_shared<CUserList>(m_pWrapper, hActiveUsers);
+	}
+	
+	/**
+	* CLoginHandler::DeactivateUserByUUID - Deactivates a user. The user can not log in anymore and is not listed as active user. Fails if user does not exist.
+	* @param[in] sUUID - UUID of the user.
+	*/
+	void CLoginHandler::DeactivateUserByUUID(const std::string & sUUID)
+	{
+		CheckError(m_pWrapper->m_WrapperTable.m_LoginHandler_DeactivateUserByUUID(m_pHandle, sUUID.c_str()));
 	}
 	
 	/**

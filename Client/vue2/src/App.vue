@@ -80,6 +80,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <v-container class="fill-height" fluid v-if="appIsLogin">
 			<Dialog_Login :Application="Application" />
         </v-container>
+
+		<v-container class="fill-height" fluid v-if="appIsFirstRun">
+			<v-row align="center" justify="center">
+				<v-card max-width="480" class="pa-4">
+					<v-card-title>This machine has not been set up yet</v-card-title>
+					<v-card-text>No user account exists. Open the new web client of this machine to create the administrator account.</v-card-text>
+				</v-card>
+			</v-row>
+		</v-container>
 		
 		<v-container class="fill-height" fluid v-if="appIsError">
 			<Dialog_Error :Application="Application" />
@@ -219,6 +228,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 					return false;
 					
 				return this.Application.AppState.currentStatus === "login";
+			},
+
+			appIsFirstRun() {
+				if (!this.Application)
+					return false;
+
+				if (!this.Application.AppState)
+					return false;
+
+				return this.Application.AppState.currentStatus === "firstrun";
 			},
 
 			appIsReady() {

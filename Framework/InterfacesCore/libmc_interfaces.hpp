@@ -379,6 +379,12 @@ public:
 	*/
 	virtual std::string GetContentDispositionName() = 0;
 
+	/**
+	* IAPIRequestHandler::SetClientAddress - Sets the network address of the client that sent the request. Call before Handle().
+	* @param[in] sClientAddress - Remote IP address of the connection, as seen by the server socket.
+	*/
+	virtual void SetClientAddress(const std::string & sClientAddress) = 0;
+
 };
 
 typedef IBaseSharedPtr<IAPIRequestHandler> PIAPIRequestHandler;

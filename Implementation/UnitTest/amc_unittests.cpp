@@ -40,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_unittests_accesscontrol.hpp"
 #include "amc_unittests_accessrole.hpp"
 #include "amc_unittests_accesspermission.hpp"
+#include "amc_unittests_usermanagementpolicy.hpp"
+#include "amc_unittests_firstrun.hpp"
 
 #include "amc_unittests_signalslot.hpp"
 #include "amc_unittests_chrono.hpp"
@@ -99,6 +101,8 @@ CUnitTests::CUnitTests (PUnitTestIO pIO)
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessControl>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessRole>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_AccessPermission>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_UserManagementPolicy>());
+	registerTestGroup(std::make_shared <CUnitTestGroup_FirstRun>());
 
 	registerTestGroup(std::make_shared <CUnitTestGroup_SignalSlot>());
 	registerTestGroup(std::make_shared <CUnitTestGroup_Chrono>());

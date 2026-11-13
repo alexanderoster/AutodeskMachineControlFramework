@@ -2783,6 +2783,15 @@ LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_loginhandler_setuserpasswordbyuuid(
 LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_loginhandler_getactiveusers(LibMCData_LoginHandler pLoginHandler, LibMCData_UserList * pActiveUsers);
 
 /**
+* Deactivates a user. The user can not log in anymore and is not listed as active user. Fails if user does not exist.
+*
+* @param[in] pLoginHandler - LoginHandler instance.
+* @param[in] pUUID - UUID of the user.
+* @return error code or 0 (success)
+*/
+LIBMCDATA_DECLSPEC LibMCDataResult libmcdata_loginhandler_deactivateuserbyuuid(LibMCData_LoginHandler pLoginHandler, const char * pUUID);
+
+/**
 * Creates a new login session record in the database.
 *
 * @param[in] pLoginHandler - LoginHandler instance.

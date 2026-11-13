@@ -483,6 +483,7 @@ typedef void * LibMCData_pvoid;
 #define LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION 456 /** Invalid operation sequence revision */
 #define LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS 457 /** Operation sequence revision already exists */
 #define LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND 458 /** Operation sequence revision not found */
+#define LIBMCDATA_ERROR_COULDNOTDEACTIVATEUSER 459 /** Could not deactivate user */
 
 /*************************************************************************************************************************
  Error strings for LibMCData
@@ -878,6 +879,7 @@ inline const char * LIBMCDATA_GETERRORSTRING (LibMCDataResult nErrorCode) {
     case LIBMCDATA_ERROR_INVALIDOPERATIONSEQUENCEREVISION: return "Invalid operation sequence revision";
     case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONEXISTS: return "Operation sequence revision already exists";
     case LIBMCDATA_ERROR_OPERATIONSEQUENCEREVISIONNOTFOUND: return "Operation sequence revision not found";
+    case LIBMCDATA_ERROR_COULDNOTDEACTIVATEUSER: return "Could not deactivate user";
     default: return "unknown error";
   }
 }

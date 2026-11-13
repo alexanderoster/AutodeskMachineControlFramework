@@ -769,6 +769,21 @@ typedef void * LibMC_pvoid;
 #define LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED 753 /** The user is not permitted to edit operation sequences. */
 #define LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON 754 /** Invalid operation sequence JSON. */
 #define LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND 755 /** Operation icon resource not found. */
+#define LIBMC_ERROR_USERMANAGEMENTNOTPERMITTED 756 /** The user is not permitted to perform this user management operation. */
+#define LIBMC_ERROR_ROLENOTASSIGNABLE 757 /** The role can not be assigned by the current user. */
+#define LIBMC_ERROR_CANNOTMODIFYOWNUSER 758 /** This operation is not allowed on the own user account. */
+#define LIBMC_ERROR_LASTUSERMANAGER 759 /** The operation would leave too few users with user management rights. */
+#define LIBMC_ERROR_INVALIDPASSWORDPROOF 760 /** The current password is not correct. */
+#define LIBMC_ERROR_PASSWORDCHALLENGENOTFOUND 761 /** The password challenge does not exist or has expired. */
+#define LIBMC_ERROR_INVALIDUSERMANAGEMENTCAPABILITY 762 /** Invalid user management capability. */
+#define LIBMC_ERROR_DUPLICATEUSERMANAGEMENTCAPABILITY 763 /** Duplicate user management capability. */
+#define LIBMC_ERROR_USERALREADYEXISTS 764 /** A user with this login already exists. */
+#define LIBMC_ERROR_INVALIDUSERDESCRIPTION 765 /** Invalid user description. */
+#define LIBMC_ERROR_FIRSTRUNALREADYCOMPLETED 766 /** The first-run setup has already been completed. */
+#define LIBMC_ERROR_INVALIDSETUPCODE 767 /** Invalid setup code. */
+#define LIBMC_ERROR_FIRSTRUNADMINROLEINVALID 768 /** The first-run administrator role is invalid. */
+#define LIBMC_ERROR_INVALIDFIRSTRUNSETUPCODEMODE 769 /** Invalid first-run setup code mode. */
+#define LIBMC_ERROR_FIRSTRUNNOTAVAILABLE 770 /** The first-run setup is not available, because no administrator role could be determined. */
 
 /*************************************************************************************************************************
  Error strings for LibMC
@@ -1450,6 +1465,21 @@ inline const char * LIBMC_GETERRORSTRING (LibMCResult nErrorCode) {
     case LIBMC_ERROR_OPERATIONSEQUENCEEDITNOTPERMITTED: return "The user is not permitted to edit operation sequences.";
     case LIBMC_ERROR_INVALIDOPERATIONSEQUENCEJSON: return "Invalid operation sequence JSON.";
     case LIBMC_ERROR_OPERATIONICONRESOURCENOTFOUND: return "Operation icon resource not found.";
+    case LIBMC_ERROR_USERMANAGEMENTNOTPERMITTED: return "The user is not permitted to perform this user management operation.";
+    case LIBMC_ERROR_ROLENOTASSIGNABLE: return "The role can not be assigned by the current user.";
+    case LIBMC_ERROR_CANNOTMODIFYOWNUSER: return "This operation is not allowed on the own user account.";
+    case LIBMC_ERROR_LASTUSERMANAGER: return "The operation would leave too few users with user management rights.";
+    case LIBMC_ERROR_INVALIDPASSWORDPROOF: return "The current password is not correct.";
+    case LIBMC_ERROR_PASSWORDCHALLENGENOTFOUND: return "The password challenge does not exist or has expired.";
+    case LIBMC_ERROR_INVALIDUSERMANAGEMENTCAPABILITY: return "Invalid user management capability.";
+    case LIBMC_ERROR_DUPLICATEUSERMANAGEMENTCAPABILITY: return "Duplicate user management capability.";
+    case LIBMC_ERROR_USERALREADYEXISTS: return "A user with this login already exists.";
+    case LIBMC_ERROR_INVALIDUSERDESCRIPTION: return "Invalid user description.";
+    case LIBMC_ERROR_FIRSTRUNALREADYCOMPLETED: return "The first-run setup has already been completed.";
+    case LIBMC_ERROR_INVALIDSETUPCODE: return "Invalid setup code.";
+    case LIBMC_ERROR_FIRSTRUNADMINROLEINVALID: return "The first-run administrator role is invalid.";
+    case LIBMC_ERROR_INVALIDFIRSTRUNSETUPCODEMODE: return "Invalid first-run setup code mode.";
+    case LIBMC_ERROR_FIRSTRUNNOTAVAILABLE: return "The first-run setup is not available, because no administrator role could be determined.";
     default: return "unknown error";
   }
 }

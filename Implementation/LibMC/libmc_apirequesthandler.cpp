@@ -180,3 +180,9 @@ std::string CAPIRequestHandler::GetContentDispositionName()
 
 }
 
+void CAPIRequestHandler::SetClientAddress(const std::string& sClientAddress)
+{
+    if (m_pAuth.get() != nullptr)
+        m_pAuth->setClientAddress(sClientAddress);
+}
+

@@ -73,6 +73,16 @@ std::string CAPIAuth::getSessionKey()
 	return m_sSessionKey;
 }
 
+void CAPIAuth::setClientAddress(const std::string& sClientAddress)
+{
+	m_sClientAddress = sClientAddress;
+}
+
+std::string CAPIAuth::getClientAddress()
+{
+	return m_sClientAddress;
+}
+
 
 bool CAPIAuth::userIsAuthorized()
 {

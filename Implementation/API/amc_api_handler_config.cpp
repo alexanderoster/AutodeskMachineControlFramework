@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "amc_api_handler_config.hpp"
 #include "amc_ui_handler.hpp"
+#include "amc_firstrunhandler.hpp"
 
 #include "libmc_interfaceexception.hpp"
 
@@ -77,6 +78,7 @@ PAPIResponse CAPIHandler_Config::handleRequest(const std::string& sURI, const eA
 	writeJSONHeader(writer, AMC_API_PROTOCOL_UI);
 
 	m_pSystemState->uiHandler()->writeConfigurationToJSON(writer);
+	writer.addBoolean(AMC_API_KEY_FIRSTRUN_FIRSTRUN, m_pSystemState->getFirstRunHandlerInstance()->isFirstRun());
 
 	return std::make_shared<CAPIStringResponse>(AMC_API_HTTP_SUCCESS, AMC_API_CONTENTTYPE, writer.saveToString());
 }

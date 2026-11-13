@@ -172,7 +172,8 @@ PAPIResponse CAPI::handleRequest(const std::string& sURI, const eAPIRequestType 
 	catch (ELibMCInterfaceException& IntfException) {
 		if (pLogger != nullptr)
 			pLogger->logMessage(IntfException.what(), "api", eLogLevel::Message);
-		return makeError(AMC_API_HTTP_BADREQUEST, IntfException.getErrorCode(), IntfException.what());
+		uint32_t nHTTPCode = (IntfException.getErrorCode() == LIBMC_ERROR_USERMANAGEMENTNOTPERMITTED) ? AMC_API_HTTP_FORBIDDEN : AMC_API_HTTP_BADREQUEST;
+		return makeError(nHTTPCode, IntfException.getErrorCode(), IntfException.what());
 	}
 	catch (std::exception& StdException) {
 		if (pLogger != nullptr)

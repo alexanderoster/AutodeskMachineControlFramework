@@ -240,6 +240,15 @@ LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_getresultdata(LibMC_APIReques
 */
 LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_getcontentdispositionname(LibMC_APIRequestHandler pAPIRequestHandler, const LibMC_uint32 nContentDispositionNameBufferSize, LibMC_uint32* pContentDispositionNameNeededChars, char * pContentDispositionNameBuffer);
 
+/**
+* Sets the network address of the client that sent the request. Call before Handle().
+*
+* @param[in] pAPIRequestHandler - APIRequestHandler instance.
+* @param[in] pClientAddress - Remote IP address of the connection, as seen by the server socket.
+* @return error code or 0 (success)
+*/
+LIBMC_DECLSPEC LibMCResult libmc_apirequesthandler_setclientaddress(LibMC_APIRequestHandler pAPIRequestHandler, const char * pClientAddress);
+
 /*************************************************************************************************************************
  Class definition for MCContext
 **************************************************************************************************************************/

@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "amc_ui_module_contentitem_image.hpp"
 #include "amc_ui_module_contentitem_chart.hpp"
 #include "amc_ui_module_contentitem_journalhistory.hpp"
+#include "amc_ui_module_contentitem_usermanagement.hpp"
 #include "amc_ui_module_contentitem_upload.hpp"
 #include "amc_ui_module_contentitem_buildlist.hpp"
 #include "amc_ui_module_contentitem_partlist.hpp"
@@ -123,6 +124,8 @@ CUIModule_ContentLeaf::CUIModule_ContentLeaf(pugi::xml_node& xmlNode, const std:
 		m_pItem = CUIModule_ContentStateMachineGraph::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 	if (m_sModuleType == "journalhistory")
 		m_pItem = CUIModule_ContentJournalHistory::makeFromXML(xmlNode, m_sName, sPath);
+	if (m_sModuleType == "usermanagement")
+		m_pItem = CUIModule_ContentUserManagement::makeFromXML(xmlNode, m_sName, sPath);
 	if (m_sModuleType == "operationsequenceeditor")
 		m_pItem = CUIModule_ContentOperationSequenceEditor::makeFromXML(xmlNode, m_sName, sPath, pUIModuleEnvironment);
 
@@ -157,7 +160,7 @@ bool CUIModule_ContentLeaf::isSupportedModuleType(const std::string& sType)
 	return (sType == "paragraph") || (sType == "image") || (sType == "chart") || (sType == "videostream") ||
 		(sType == "upload") || (sType == "buildlist") || (sType == "partlist") || (sType == "executionlist") || (sType == "alertlist") ||
 		(sType == "buttongroup") || (sType == "parameterlist") || (sType == "statuslist") || (sType == "togglepanel") || (sType == "configurationlist") || (sType == "form") ||
-		(sType == "separator") || (sType == "statusbanner") || (sType == "workflow") || (sType == "statemachinegraph") || (sType == "journalhistory") || (sType == "operationsequenceeditor");
+		(sType == "separator") || (sType == "statusbanner") || (sType == "workflow") || (sType == "statemachinegraph") || (sType == "journalhistory") || (sType == "operationsequenceeditor") || (sType == "usermanagement");
 }
 
 std::string CUIModule_ContentLeaf::getType()

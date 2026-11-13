@@ -7,6 +7,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import ModuleFactory from '$lib/amcf/ModuleFactory.svelte';
 	import LoginPage from '$lib/amcf/LoginPage.svelte';
+	import FirstRunPage from '$lib/amcf/FirstRunPage.svelte';
 	import Snackbar from '$lib/amcf/Snackbar.svelte';
 	import MdiIcon from '$lib/amcf/MdiIcon.svelte';
 
@@ -272,6 +273,10 @@
 	<div class="flex-1 flex items-center justify-center bg-white dark:bg-black">
 		<div class="animate-spin h-8 w-8 border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full"></div>
 	</div>
+
+<!-- First-run setup: no user account exists yet -->
+{:else if status === 'firstrun'}
+	<FirstRunPage {app} onDone={() => setTimeout(bumpTick, POST_LOGIN_TICK_DELAY_MS)} />
 
 <!-- Login -->
 {:else if status === 'login'}

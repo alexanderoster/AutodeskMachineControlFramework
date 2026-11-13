@@ -112,6 +112,31 @@ namespace AMC {
 		return resultVector;
 	}
 
+	void CAccessRole::setMigrateTo(const std::string& sRoleIdentifier)
+	{
+		if (!sRoleIdentifier.empty()) {
+			if (!AMCCommon::CUtils::stringIsValidAlphanumericNameString(sRoleIdentifier))
+				throw ELibMCCustomException(LIBMC_ERROR_INVALIDACCESSROLEIDENTIFIER, sRoleIdentifier);
+			if (sRoleIdentifier == m_sIdentifier)
+				throw ELibMCCustomException(LIBMC_ERROR_INVALIDACCESSROLEIDENTIFIER, "role can not migrate to itself: " + sRoleIdentifier);
+		}
+
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		m_sMigrateTo = sRoleIdentifier;
+	}
+
+	std::string CAccessRole::getMigrateTo()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		return m_sMigrateTo;
+	}
+
+	bool CAccessRole::isDeprecated()
+	{
+		std::lock_guard<std::mutex> lockGuard(m_Mutex);
+		return !m_sMigrateTo.empty();
+	}
+
 }
 
 

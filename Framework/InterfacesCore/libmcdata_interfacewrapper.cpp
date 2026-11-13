@@ -8852,6 +8852,33 @@ LibMCDataResult libmcdata_loginhandler_getactiveusers(LibMCData_LoginHandler pLo
 	}
 }
 
+LibMCDataResult libmcdata_loginhandler_deactivateuserbyuuid(LibMCData_LoginHandler pLoginHandler, const char * pUUID)
+{
+	IBase* pIBaseClass = (IBase *)pLoginHandler;
+
+	try {
+		if (pUUID == nullptr)
+			throw ELibMCDataInterfaceException (LIBMCDATA_ERROR_INVALIDPARAM);
+		std::string sUUID(pUUID);
+		ILoginHandler* pILoginHandler = dynamic_cast<ILoginHandler*>(pIBaseClass);
+		if (!pILoginHandler)
+			throw ELibMCDataInterfaceException(LIBMCDATA_ERROR_INVALIDCAST);
+		
+		pILoginHandler->DeactivateUserByUUID(sUUID);
+
+		return LIBMCDATA_SUCCESS;
+	}
+	catch (ELibMCDataInterfaceException & Exception) {
+		return handleLibMCDataException(pIBaseClass, Exception);
+	}
+	catch (std::exception & StdException) {
+		return handleStdException(pIBaseClass, StdException);
+	}
+	catch (...) {
+		return handleUnhandledException(pIBaseClass);
+	}
+}
+
 LibMCDataResult libmcdata_loginhandler_createloginsession(LibMCData_LoginHandler pLoginHandler, const char * pSessionUUID, LibMCData_uint64 nCreateTimeInMicroseconds)
 {
 	IBase* pIBaseClass = (IBase *)pLoginHandler;
@@ -13156,6 +13183,8 @@ LibMCDataResult LibMCData::Impl::LibMCData_GetProcAddress (const char * pProcNam
 		*ppProcAddress = (void*) &libmcdata_loginhandler_setuserpasswordbyuuid;
 	if (sProcName == "libmcdata_loginhandler_getactiveusers") 
 		*ppProcAddress = (void*) &libmcdata_loginhandler_getactiveusers;
+	if (sProcName == "libmcdata_loginhandler_deactivateuserbyuuid") 
+		*ppProcAddress = (void*) &libmcdata_loginhandler_deactivateuserbyuuid;
 	if (sProcName == "libmcdata_loginhandler_createloginsession") 
 		*ppProcAddress = (void*) &libmcdata_loginhandler_createloginsession;
 	if (sProcName == "libmcdata_loginhandler_updateloginsessionauthentication") 

@@ -171,6 +171,8 @@ void CAPIHandler_Auth::handleNewSessionRequest(const uint8_t* pBodyData, const s
 				
 		if (sUserRoleIdentifier.empty())
 			sUserRoleIdentifier = m_pAccessControl->getDefaultRole()->getIdentifier();
+		else
+			sUserRoleIdentifier = m_pAccessControl->resolveMigratedRole(sUserRoleIdentifier);
 
 		m_pSessionHandler->setUserDetailsForSession(pAuth->getSessionUUID(), sUserName, sHashedPassword, sUserUUID, sUserDescription, sUserRoleIdentifier, sUserLanguageIdentifier);
 	}
